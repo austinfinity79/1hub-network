@@ -94,7 +94,7 @@ Baseline distinction: `tests/visual/baseline/` holds harness-owned regression ba
 
 ## 10. Git
 - Branch: `main`
-- Commit hash: recorded below in section 12 after commit.
+- Commit hash: `e2ee8b611b28e4ffe5caee88e4e8b5dbfb9d7789`
 - Commit message: `test(m0-t02b): re-verify typography foundation under Playwright`
 - Working tree status: clean.
 
