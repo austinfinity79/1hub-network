@@ -1,94 +1,120 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: M0-T05 — API client, error envelope and DTO conventions
-- Scope requested: `/api/v1` foundation — frozen error envelope with its codes, success and list envelopes, request-id correlation, DTO conventions, a typed client written from the authoritative Markdown contract, and `GET /session`.
-- Status: DONE
-- Progress estimate: M0-T05 100%. M0 milestone 6 of 13 tasks complete. WF01 not started.
+- Task ID / name: M0-T06A — PostgreSQL migration foundation and frozen schema compatibility audit
+- Scope requested: Reproducible PostgreSQL foundation, apply `001_p0_init.sql` unchanged, seed, introspect, and audit the frozen schema against higher-priority SOT. No fixes, no migration 002.
+- Status: **PARTIAL**
+- Why not DONE: the infrastructure and the audit are both complete, but the audit found five BLOCKING gaps, one of which is a genuine disagreement between two frozen SOT sources. Per the task's own rule, PostgreSQL running is not sufficient to claim DONE while blocking conflicts stand unresolved.
+- Progress estimate: infrastructure 100%, audit 100%, blocking gaps 0% resolved (out of scope). M0 milestone 7 of 13.
 
-## 2. What was implemented
-| File | Purpose |
+## 2. PostgreSQL version and config
+| Item | Value |
 |---|---|
-| `src/lib/api/error-codes.ts` | 14 frozen codes, HTTP mapping, contract-gap codes |
-| `src/lib/api/errors.ts` | `ApiError`, envelope builder, unexpected-error wrapping |
-| `src/lib/api/envelope.ts` | List envelope, cursor/limit parsing |
-| `src/lib/api/request-id.ts` | `X-Request-ID` resolution and generation |
-| `src/lib/api/idempotency.ts` | Header parsing, the seven operation classes |
-| `src/lib/api/handler.ts` | Route wrapper guaranteeing headers and envelope |
-| `src/lib/api/client.ts` | Typed client, throws `ApiError` on any failure |
-| `src/lib/api/types.ts` | Wire DTO types, hand-written from the contract |
-| `src/app/api/v1/session/route.ts` | `GET /session` |
+| Engine | PostgreSQL 17.6 (`postgres:17.6-alpine`, pinned) |
+| Host port | 55432, chosen because other local containers hold 5432 |
+| Database / user | `hubnetwork_p0` / `hubnetwork` |
+| initdb args | `--locale=C --encoding=UTF8`, so index and ORDER BY behaviour does not drift with host locale |
+| Volume | named `hubnetwork_p0_data` |
+| Healthcheck | `pg_isready`, so `db:up` waits for readiness rather than racing |
 
-## 3. Contract source used
-`docs/architecture/05_API_CONTRACT_P0_v1.0.md`, hand-transcribed. The sibling YAML was deliberately not used as the source and not generated from. It declares itself an implementation skeleton, names the Markdown authoritative, types `code` as a bare string with no enum, and defines fewer paths than the Markdown defines endpoints. A client generated from it would silently be unable to call most of WF02 and WF03. `contract.test.ts` records that evidence as assertions rather than leaving it as an opinion.
+Commands: `db:up`, `db:down`, `db:destroy`, `db:migrate`, `db:seed`, `db:reset`, `db:status`, `db:introspect`, `db:setup`, `test:db`.
 
-## 4. Conventions implemented
-| Convention | Source | Implementation |
+## 3. Migration result
+PASS. `db/migrations/001_p0_init.sql` applied **unchanged** and byte-for-byte. `git diff` on `db/` reports zero changed lines.
+
+- 27 contract tables created, plus one `schema_migrations` ledger = 28 total.
+- 12 enum types created.
+- The ledger stores a sha256 per migration, so a second `db:migrate` is a no-op (`skip ... already applied`) and editing an applied migration is refused loudly rather than diverging silently.
+
+## 4. Seed result
+PASS as an operation, with quality defects recorded. `seed_dev.sql` applied to a fresh database, populating 16 tables.
+
+Empirically confirmed on the live engine, not assumed:
+- **Not idempotent.** A second run took `leadership_records` from 1 to 2 and `role_assignments` from 2 to 4. Those two inserts lack `ON CONFLICT`, unlike every other statement in the file, and neither table has a unique constraint.
+- **Not deterministic.** Across a reset, membership ids changed from `bbd32fd6…` to `5a24fbf6…` and `events.starts_at` moved from `13:40:45Z` to `13:41:28Z`. Profile ids are fixed, so the file is only partly deterministic.
+- **Eleven tables left empty**, including `consent_records`, `membership_bootstrap` and `user_sessions`.
+
+## 5. Schema and table count
+| Metric | Value |
+|---|---|
+| Tables (contract) | 27 |
+| Tables (incl. ledger) | 28 |
+| Enum types | 12 |
+| Tables seeded | 16 |
+| Tables empty | 11 |
+
+## 6. Compatibility matrix summary
+Full matrix: `docs/implementation/DB_SCHEMA_GAPS_P0.md`. Built from live introspection, asserted by `src/lib/db/schema.db-test.ts` against the running engine.
+
+| Severity | Count |
+|---|---|
+| BLOCKING | 5 |
+| PRE-WF | 13 |
+| DEFERRED | 7 |
+
+Clean, needing no action: `visibility_level`, `consent_type`, `programme_type`, `project_type`, `project_status`, `vocab_status`, `account_status`.
+
+## 7. BLOCKING gaps
+| ID | Gap | Human decision |
 |---|---|---|
-| Base path `/api/v1` | 05:14 | `API_BASE_PATH`, route lives under `app/api/v1` |
-| DTOs, never ORM rows | 05:16 | `types.ts` declares wire shapes explicitly |
-| ISO-8601 UTC timestamps | 05:22 | `IsoDateTime` |
-| Opaque string IDs | 05:23 | `OpaqueId` |
-| JSON content type | 05:29-36 | client sets `Accept` and conditional `Content-Type` |
-| Request correlation | 05:38-46 | id on every response, client id honoured |
-| Idempotency-Key | 05:48-63 | parsed and validated; seven operations named |
-| List envelope | 05:69-79 | `listEnvelope`, default limit 50 |
-| Single resource returned bare | 05:67 | no wrapper helper exists, on purpose |
-| Error envelope | 05:83-94 | `ApiError.toEnvelope` |
-| HTTP mapping | 05:98-107 | `HTTP_STATUS_MEANING`, drift-tested |
+| B1 | Completion group 3: data freeze says "Current role/headline", API contract says `NETWORK_CONTEXT`. **Two frozen sources genuinely disagree, so no resolution is proposed** | Required |
+| B2 | `role_code` and `scope_type` are untyped `text`; the live seed contains `ORG_ADMIN` and `PLATFORM_OPS`, which appear in no role catalogue. Blocks M0-T09 RBAC | Required |
+| B3 | `role_assignments` is anchored on `account_id` where SOT and Auth architecture say `individual_profile_id`, and lacks `valid_from`/`valid_to`/`assigned_by`, so the "assignment is active" rule has nothing to evaluate | Required |
+| B4 | Seed is neither deterministic nor idempotent. Blocks M0-T07 and every authenticated pixel scenario | Reconfirm |
+| B5 | Seed leaves eleven tables empty, so WF01-S07 consent, the D2 preseed path and any logged-in scenario have no fixture | No |
 
-## 5. Frozen error codes
-All 14, verified by exact set against the contract: `AUTH_RATE_LIMITED`, `AUTH_EMAIL_INVALID`, `AUTH_LINK_EXPIRED`, `AUTH_LINK_ALREADY_USED`, `AUTH_LINK_INVALID`, `AUTH_ACCOUNT_BLOCKED`, `PROFILE_VALIDATION_FAILED`, `VOCABULARY_ITEM_INACTIVE`, `PROFILE_DEACTIVATED`, `CONSENT_NOT_REVOCABLE`, `CONSENT_ALREADY_REVOKED`, `ONBOARDING_REQUIREMENTS_MISSING`, `MEMBERSHIP_INVALID_TRANSITION`, `SCOPE_FORBIDDEN`.
+## 8. PRE-WF gaps (13)
+Most are cases where the higher-priority SOT clearly states a value and the migration is simply stale: profile `INACTIVE` should be `DEACTIVATED`; event status lacks `LIVE`/`ENDED`/`CANCELLED`; membership lacks `SUSPENDED`/`ALUMNI`/`WITHDRAWN`; leadership lacks `ALUMNI`/`REVOKED`. Also missing entirely: event registration, `file_assets`, an idempotency key store, notification preferences and deletion requests. Visibility has three incompatible storage shapes across three frozen documents.
 
-## 6. Contract gaps surfaced, not filled
-1. **No error code for 401, 404 or 500.** The envelope requires a `code` and the HTTP table maps all three statuses, but the contract names no code for any of them. Rather than minting plausible-looking codes that would harden into an unapproved contract, three are namespaced `UNCONTRACTED_UNAUTHENTICATED`, `UNCONTRACTED_NOT_FOUND`, `UNCONTRACTED_INTERNAL`. They are obvious on the wire, greppable in logs, and a test asserts none appears in the contract or in the frozen set. **Needs a contract amendment.**
-2. **No idempotency key store.** The contract requires the header on seven operation classes, but `001_p0_init.sql` has no table to record a key or replay a response. This implementation parses and validates the header and stops there rather than pretending to deduplicate. **Needs a schema decision**, already raised in the readiness report.
+## 9. Is migration 002 required?
+**Yes, and it was deliberately not created.** P1–P6, P12 and B3 are stale-migration cases where an additive 002 is the correct fix.
 
-Neither gap blocks M0-T06.
+002 must not be authored until B1 is ruled on and the B2 role catalogue is confirmed, because both change what 002 should contain.
 
-## 7. GET /session
-Returns `200 {"authenticated": false}`. The contract permits either 200 or 401 when unauthenticated and requires one consistent choice (05:149); this takes the contract's own recommendation, so app bootstrap needs no error path.
+## 10. Human decisions required
+1. B1 — which source wins on the tenth completion group. Blocks M1.
+2. B2 — the canonical role code catalogue, and whether the columns become enums.
+3. B3 — whether RoleAssignment anchors on account or profile.
+4. P8 — canonical visibility group codes and which storage shape wins.
+5. P10 — approval for an idempotency key table, absent from the schema SOT.
+6. B4 — reconfirm a deterministic seed may supersede `seed_dev.sql`.
 
-There is no session store and no database yet (M0-T06 and M0-T08), so the endpoint reports no identity rather than fabricating an account. A stub returning invented account data would be a fake success path. A Playwright test asserts the response carries no `account`, `profile` or `capabilities` key.
+## 11. PostgreSQL acceptance
+Proven end to end on a clean instance. SQLite was not used.
 
-## 8. Validation results
-All executed. `pnpm verify` exits 0; `pnpm visual` exits 0.
+| Step | Result |
+|---|---|
+| Fresh database | PASS |
+| Migrate | PASS, 27 tables + ledger |
+| Seed | PASS, 16 tables populated |
+| Application start | PASS, `/`, `/api/v1/session`, `/me` all 200 with `DATABASE_URL` set |
+| DB connectivity | PASS, 3 accounts read through the app's own pooled client, engine 17.6 |
+| Restart | PASS, `docker compose restart db` |
+| Data still present | PASS, 3 accounts, same profile id, 28 tables, ledger intact |
 
+## 12. Validation results
 - Format: PASS
-- Lint: PASS — 0 errors, 0 warnings
+- Lint: PASS — 0 errors, 0 warnings (one unused eslint-disable directive found and removed)
 - Typecheck: PASS
-- Unit tests: PASS — 61 passed / 61, 7 files (29 new for the API layer)
-- Build: PASS — 31 routes including `/api/v1/session`
-- Playwright: PASS — 64 passed / 64
-- Live contract check: PASS — `{"authenticated":false}`, `x-request-id: req_...` present, client-supplied id echoed verbatim
-- Route and gating regression: PASS — frozen routes 200, dev harnesses and `/login` 404
+- Unit tests: PASS — 61 passed / 61, hermetic, no Docker required
+- DB integration tests: PASS — 13 passed / 13 against live PostgreSQL
+- Build: PASS
+- Playwright regression: PASS — 64 passed / 64
+- M0-T01–T05 regression: PASS
 
-Disclosed: the first Playwright run had 63 passed and 1 failed, from my own test chaining `.json()` on the promise returned by `request.get()` instead of awaiting it. Fixed; runs after that pass 64 of 64.
+## 13. Visual QA
+N/A. No UI changed. The existing visual suites ran as regression and passed; baselines were not touched and `design-reference/final/**` is untouched.
 
-## 9. Visual / Foundation QA
-N/A for new work. This task adds no UI.
+## 14. Contract gap carryover
+Preserved from M0-T05 and not resolved here: the three `UNCONTRACTED_` error codes for 401/404/500, the Markdown-over-YAML authority note, and `GET /session` returning `{authenticated:false}` with no identity. The session endpoint still does not read the database, which is correct: there is no session store until M0-T08.
 
-The existing visual suites ran as regression and passed: M0-T02 typography 7, M0-T03 shell and routes 33, M0-T04 primitives 17. Baselines were neither regenerated nor touched. `design-reference/final/**` remains untouched.
-
-## 10. SOT compliance
-- Business SOT: not exercised. No workflow endpoint implemented.
-- Data SOT: not exercised. No schema, no persistence.
-- Design SOT: not exercised. No UI.
-- API Contract: implemented as frozen, with the two gaps in section 6 reported rather than resolved. No endpoint, code, status or convention was invented.
-- Deviations: none. The `UNCONTRACTED_` codes are a declared gap marker, not an invented contract; they exist because the envelope cannot omit a required field.
-
-## 11. Regression impact
-- Checked: M0-T01 bootstrap smoke, M0-T02 typography and fonts, M0-T03 shell and all 25 frozen routes, M0-T04 primitives, dev-route gating, full code gate chain.
-- Result: PASS on all. `/` serves its bootstrap markup; frozen routes 200; dev harnesses and `/login` 404.
-- Regression found: None.
-
-## 12. Git
+## 15. Git
 - Branch: `main`
-- Commit hash: `a9f36655a9413cbd34657af97ed0895c325cc9bf`
-- Commit message: `feat(m0-t05): API client, error envelope and DTO conventions`
+- Commit hash: `cc71468f7dcc44994d16471c8a2d366f94a89ee5`
+- Commit message: `feat(m0-t06a): PostgreSQL foundation and frozen schema compatibility audit`
 - Working tree status: clean.
 
-## 13. Recommended next task
-M0-T06 — database and migration foundation. Add a `docker compose` PostgreSQL service on a dedicated port, a migration runner that applies `db/migrations/001_p0_init.sql` unchanged, and `db:migrate` / `db:reset` scripts. Introspect the applied schema into the ORM layer rather than authoring a parallel schema, so the frozen SQL stays the single source. Exit criterion: a fresh database reports all 27 tables, the runner is idempotent, and the visual suite still passes as regression.
+## 16. Recommended next task
+**A human decision round, not a coding task.** Rule on B1, B2 and B3, since M0-T07 (deterministic seed) needs the role catalogue from B2, and migration 002 cannot be scoped until B1 and B3 are settled.
 
-Note for that task: the readiness report found the migration cannot store several frozen lifecycle states, including event `LIVE`/`ENDED`/`CANCELLED`, membership `SUSPENDED`/`ALUMNI`/`WITHDRAWN`, and profile `DEACTIVATED` where the schema has `INACTIVE`. M0-T06 should apply `001` unchanged and record those gaps; fixing them belongs to an additive `002` once the contract-versus-schema conflicts are ruled on.
+If you would rather keep implementing, the next codeable task is **M0-T07 — deterministic seed system**, which can proceed on B4 and B5 alone: fixed ids and fixed timestamps for every row, idempotent re-runs, and fixtures for the eleven empty tables including a `PENDING_APPROVAL` membership and `membership_bootstrap` rows. It would have to leave the seeded role codes as they are until B2 is ruled on, and I would flag that rather than guess. Not started.
