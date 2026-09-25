@@ -87,6 +87,11 @@ Test infrastructure (not product):
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `e1a458b`
 - Working tree: clean after commit except the untracked `AGENTS.md`
 
+## Decision traceability (added by WF01-S03-FINALIZE)
+- D1–D7 in this report are recorded as **DEC-WF01-S03-D1 … DEC-WF01-S03-D7** in [DECISION_LOG.md](../../decisions/DECISION_LOG.md).
+- The EXPIRED copy conflict (note 1) is resolved by **DEC-WF01-S03-D6a**.
+- The icon deviation is recorded as **DEC-WF01-S03-ICON** (INTENTIONAL-ICON-RENDERING).
+
 ## Related
 - [WF01_S03_STATE_BOARD_MAPPING.md](WF01_S03_STATE_BOARD_MAPPING.md) — frozen mapping
 - [P0_STATUS.md](P0_STATUS.md) — overall P0 state
