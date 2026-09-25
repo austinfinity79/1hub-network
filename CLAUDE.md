@@ -2,12 +2,26 @@
 
 ## 1. Source of truth precedence
 Read before coding:
-1. Business SOT / workflow docs
-2. Data SOT + data freeze
-3. Design Pixel SOT + screen contracts
-4. Architecture + API contract
-5. This file
-6. Existing code
+1. `CLAUDE.md` (this file)
+2. `1HUB_IMPLEMENTATION_MASTER_SPEC_v1.3.md`
+3. Workflow contracts
+   - `docs/workflows/WF01_IDENTITY_ONBOARDING_FINAL_v1.0.md`
+   - `docs/workflows/WF02_MEMBER_PROFILE_NETWORK_FINAL_v1.0.md`
+   - `docs/workflows/WF03_HUB_CHAPTER_CLB_OPERATIONS_FINAL_v1.0.md`
+4. Data SOT
+   - `docs/product/1HUB_DATA_SOT_v1.1.md`
+   - `docs/product/00_DATA_DECISIONS_FREEZE_v1.1.md`
+5. Design SOT
+   - `docs/design/00_DESIGN_PIXEL_SOT_FINAL_v1.0.md`
+   - `docs/design/01_SCREEN_MAP_WF01_WF03_FINAL_v1.0.md`
+   - `docs/design/SCREEN_CONTRACTS_WF01_WF03_v1.0.yaml`
+   - `docs/design/DESIGN_TOKENS_v1.0.css`
+   - `design-reference/final/manifest.yaml`
+   - `design-reference/final/**`
+6. Architecture (`docs/architecture/`, including API contract and DB schema)
+7. DB migrations / deterministic fixtures (`db/migrations/`, `db/seed/`)
+8. QA / Pixel QA rules (`docs/qa/05_PIXEL_QA_ARCHITECTURE_v1.1.md`)
+9. Existing repository code and conventions
 
 If sources conflict, do not guess. Stop and report the conflict.
 
