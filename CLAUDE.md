@@ -146,3 +146,22 @@ Every `CLAUDE_LATEST_REPORT.md` must carry these fields under Git:
 - Working tree status
 
 Never record a remote URL containing credentials.
+
+## 13. Local workspace single-writer rule
+Multiple Claude/Cowork sessions may be open against this repository. Only ONE
+may write at a time.
+
+- Only one session may modify files, commit, migrate database state or push.
+- Every other session stays read-only for the duration.
+- Record the starting HEAD before every implementation task.
+- Re-check HEAD immediately before committing.
+- If HEAD changed during a task, STOP and report `CONCURRENT WORKSPACE MUTATION`.
+- Never automatically merge, rebase, reset or revert work created by another
+  active session, and never commit files that session left uncommitted.
+
+In LOCAL REVIEW MODE, do not push unless the task explicitly authorizes it.
+
+Why this exists: during M0-T06B a second session committed and pushed three
+commits mid-task, including a memo the other session had authored and had not
+finished reviewing. Nothing was lost that time. The next collision will not be
+as lucky.
