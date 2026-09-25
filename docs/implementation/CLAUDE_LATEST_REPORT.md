@@ -1,128 +1,123 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: M0-T03 — shared web shell and frozen route groups
-- Scope requested: Minimum shared shell and the frozen route-group foundation for WF01–WF03. Placeholders only, no product screens, no business logic.
+- Task ID / name: M0-T04 — shared UI primitives foundation
+- Scope requested: Minimum reusable primitives required by the WF01–WF03 screen contracts, with states and accessibility. No product screens.
 - Status: DONE
-- Progress estimate: M0-T03 100%. M0 milestone 4 of 13 tasks complete. WF01 not started.
+- Progress estimate: M0-T04 100%. M0 milestone 5 of 13 tasks complete. WF01 not started.
 
-## 2. Screen Contract source used
-`docs/design/SCREEN_CONTRACTS_WF01_WF03_v1.0.yaml` (status `FROZEN_WF01_WF03`), parsed directly. 24 screen ids map to 25 routes because WF02-S05 declares two alternatives.
+## 2. Primitives created
+| Primitive | File | Element | Justified by |
+|---|---|---|---|
+| Button | `button.tsx` | native `<button>` | submit, create, invite, publish, approve actions |
+| TextInput | `text-input.tsx` | native `<input>` | email entry, profile fields |
+| Label | `label.tsx` | native `<label>` | every form control |
+| Field | `field.tsx` | wrapper | label/control/message wiring |
+| FieldMessage | `field-message.tsx` | `<p>` | validation and helper text |
+| Surface | `surface.tsx` | `div`/`section`/`article`/`aside` | cards and panels |
+| Notice | `notice.tsx` | `<div>` with role | auth error states, legal acceptance |
 
-## 3. Route groups and exact paths
-Route groups are Next.js parenthesised folders. They organise layouts, do not appear in the URL, and are not a security boundary; the server re-authorises every request.
+No speculative component was created. Select, checkbox, radio, toggle and table were deliberately left out; they were not in the authorised list and no primitive here needs them.
 
-| Group | Screen | Route |
-|---|---|---|
-| auth | WF01-S01 | `/auth` |
-| auth | WF01-S02 | `/auth/check-email` |
-| auth | WF01-S03 | `/auth/callback` |
-| auth | WF01-S04 | `/auth/error` |
-| onboarding | WF01-S05 | `/onboarding/purpose` |
-| onboarding | WF01-S06 | `/onboarding/profile` |
-| onboarding | WF01-S07 | `/onboarding/privacy` |
-| onboarding | WF01-S08 | `/onboarding/complete` |
-| member | WF02-S01 | `/me` |
-| member | WF02-S02 | `/me/profile/edit` |
-| member | WF02-S03 | `/me/privacy` |
-| member | WF02-S04 | `/me/roles` |
-| member | WF02-S05 | `/projects/new` and `/projects/:id/edit` |
-| member | WF02-S06 | `/projects/:id/team` |
-| member | WF02-S07 | `/me/settings` |
-| ops | WF03-S01 | `/ops/network` |
-| ops | WF03-S02 | `/ops/org/:orgId` |
-| ops | WF03-S03 | `/ops/org/:orgId/members` |
-| ops | WF03-S04 | `/ops/org/:orgId/members/:profileId` |
-| ops | WF03-S05 | `/ops/org/:orgId/programmes` |
-| ops | WF03-S06 | `/ops/org/:orgId/profile` |
-| ops | WF03-S07 | `/ops/org/:orgId/events` |
-| ops | WF03-S08 | `/ops/org/:orgId/settings` |
-| public | WF03-S09 | `/organizations/:slug` |
-
-## 4. Shell and shared primitives created
-| File | Purpose |
+## 3. Supported states
+| Primitive | States |
 |---|---|
-| `src/lib/routes.ts` | Single frozen route manifest driving pages, tests and smoke |
-| `src/components/shell/page-container.tsx` | Content width wrapper |
-| `src/components/shell/route-placeholder.tsx` | Scaffolding marker, manifest-driven |
-| `src/app/(group)/layout.tsx` x5 | Thin route-group boundary |
-| `src/app/not-found.tsx` | Token-styled route-not-found boundary |
+| Button | default, hover, focus-visible, disabled, loading, primary/secondary variant |
+| TextInput | default, focus-visible, disabled, readonly, invalid |
+| Field | default, with helper, with error (error replaces helper) |
+| FieldMessage | helper, error |
+| Notice | info, error |
+| Surface | structural only |
 
-No header, sidebar or product chrome was created. None is justified while no approved screen exists, and the task forbids designing product UI from imagination. Spacing uses Tailwind defaults because the Design SOT still defers spacing tokens.
+Loading implies disabled so a form cannot be submitted twice, and the visible label is never swapped out mid-action.
 
-## 5. Route conflicts discovered
-1. **Architecture doc 04 vs Screen Contract.** Doc 04 lists `/login`, `/register`, `/verify-email`, `/ops/members`, `/me/memberships`. The contract defines none of them. Screen Contract wins per the precedence order, so they are not implemented. A unit test and a Playwright test both assert they stay absent, and all four return 404 on a production server.
-2. **WF03-S09 workflow mode vs screen scope.** The screen sits in the WF03 workflow whose mode is `PRODUCTION_INTERNAL`, but its own contract entry carries `scope: public_or_network_visibility`. Routed into the public group because the screen-level scope is more specific. Recorded, not silently reconciled.
+## 4. Accessibility checks
+All verified in a real browser by Playwright.
 
-Neither conflict prevented implementation.
+- Native elements throughout; no clickable div stands in for a control.
+- Label associated by `htmlFor`, which `Field` supplies automatically. `htmlFor` is a required prop, so a label cannot ship unassociated. Clicking the label moves focus into the control.
+- `aria-describedby` points at the error when invalid and the helper otherwise, never both, so exactly one message describes the control.
+- `aria-invalid` conveys the error state non-visually rather than colour alone.
+- Error message carries `role="alert"`; info notice carries `role="status"`. Tone is a semantic choice, not just a colour.
+- Loading sets `aria-busy`; the spinner is `aria-hidden` because the label carries the meaning.
+- Focus ring appears for keyboard focus and not for pointer click, verified by input modality.
+- Disabled blocks pointer and keyboard activation through the native semantic.
+- Each `Field` instance generates unique ids, verified across all instances on the page.
 
-## 6. Playwright tests added
-`tests/visual/specs/shell-routes.spec.ts`, 15 test declarations expanding to 33 cases:
-- 25 per-route resolution tests, one per frozen route, so a failure names the exact route.
-- Manifest covers 25 routes across all five groups.
-- Shell declares exactly one route-group boundary and one container.
-- Be Vietnam Pro remains the default UI font on a shell page; heading is SemiBold 600; background is `--hub-canvas`.
-- Capture conditions are 1440x900 at deviceScaleFactor 1.
-- Unknown route returns 404 and renders the shell not-found boundary.
-- Doc 04 routes are not implemented.
-- Typography harness reachable only with dev routes enabled and absent from the manifest.
-- Shell render matches the harness-owned baseline.
+## 5. Existing tokens reused
+- Typography: `--font-ui`, the eight-step type scale, `--weight-medium` / `--weight-semibold`, all frozen in Design SOT 2.4.
+- Colour: the five frozen anchors through the M0-T02 semantic layer only.
+- Derived sizes: focus ring, spinner and gap use `em` relative to the frozen type scale, so they need no new token.
+- The only absolute literal in primitive CSS is the `1px` hairline border, enforced by test.
 
-Changed: `tests/visual/visual.config.ts` now sets `ENABLE_DEV_ROUTES=1` on its web server so the gated harness stays testable.
+## 6. Unresolved design tokens
+Seven, all in the `--unresolved-` namespace, listed in `src/lib/design-tokens.ts` with the screen that must settle each. Provisional values are NOT approved design.
 
-## 7. Typography harness handling
-Gated to dev/test only. `/dev/typography` returns 404 unless `ENABLE_DEV_ROUTES=1`, which only the dev server and the Playwright visual config set. `force-dynamic` keeps the check per-request rather than baking a build-time 404 into static output. It is also absent from the frozen route manifest, so it cannot appear in product navigation.
+| Token | Purpose | Provisional | Resolved by |
+|---|---|---|---|
+| `--unresolved-radius-control` | button and input radius | `0px` | WF01-S01 |
+| `--unresolved-radius-surface` | card and notice radius | `0px` | WF01-S01 |
+| `--unresolved-shadow-surface` | raised surface elevation | `none` | WF01-S01 |
+| `--unresolved-space-control-x` | horizontal control padding | `1rem` | WF01-S01 |
+| `--unresolved-space-control-y` | vertical control padding | `0.75rem` | WF01-S01 |
+| `--unresolved-space-stack` | label/control/message gap | `0.5rem` | WF01-S06 |
+| `--unresolved-space-surface` | card padding | `1.5rem` | WF01-S01 |
 
-Verified against a production server started without the flag: `/dev/typography` returns 404 while `/`, `/auth`, `/me` and `/organizations/x` return 200. That is an HTTP gating check rather than a browser test, so `curl` is the appropriate tool and no Playwright PASS is claimed for it.
+Radius and shadow are deliberately neutral so an unfinished primitive looks unfinished. A Playwright test asserts they stay `0px` and `none`, so a value cannot drift in unnoticed.
+
+Also carried forward and still open: baseline colours outside the token set, including the `#8B281F` gradient on WF01-S01 and WF03-S09, and whether `#FEF3F1` or `#FFF3F0` is canonical.
+
+## 7. Playwright tests
+`tests/visual/specs/primitives.spec.ts`, 17 tests. Behaviour is asserted in a real browser rather than jsdom, because focus-visible, native disabled semantics and aria wiring all depend on real rendering; a simulated DOM would weaken exactly the evidence this task needs.
+
+Coverage: native element check, click, Enter and Space activation, focus ring by input modality, disabled blocking activation, loading state and aria-busy, form submit, default `type="button"`, label association and label-click focus, describedby to helper, describedby to error with role alert, disabled versus readonly as distinct states, unique field ids, notice roles, 1440x900 at DPR 1 with Be Vietnam Pro at the frozen button step, unresolved radius/shadow staying unset, and spinner frozen under reduced motion.
+
+Unit tests: `src/lib/design-tokens.test.ts`, 8 tests enforcing token discipline and that no primitive carries an inline style or hardcoded colour.
 
 ## 8. Validation results
 All executed. `pnpm verify:visual` exits 0.
 
-- Format: PASS — `prettier --check .`
-- Lint: PASS — `eslint .`, 0 errors, 0 warnings
-- Typecheck: PASS — `tsc --noEmit`
-- Unit/integration: PASS — 24 passed / 24, 4 files (7 new route-manifest tests)
-- Build: PASS — `next build`, 28 routes
-- Playwright route smoke: PASS — 25 of 25 routes resolve
-- Playwright shell smoke: PASS
-- Visual regression suite: PASS — 40 passed / 40 overall, exit 0
+- Format: PASS
+- Lint: PASS — 0 errors, 0 warnings
+- Typecheck: PASS
+- Unit/component tests: PASS — 32 passed / 32, 5 files. Component behaviour is covered by Playwright in a real browser rather than jsdom, as explained in section 7.
+- Build: PASS — 30 routes
+- Playwright primitive behaviour: PASS — 17 tests
+- Playwright visual regression: PASS — 57 passed / 57 overall
+- Route regression: PASS — all frozen routes 200, `/login` 404
+- Production gating: PASS — `/dev/primitives` and `/dev/typography` both 404 without `ENABLE_DEV_ROUTES=1`, verified by direct HTTP check
 
-Run sequence disclosed: the first Playwright run reported 38 passed and 2 failed. One was a genuine bug of mine (the layout boundary and the placeholder both claimed `data-route-group`), fixed by giving the placeholder `data-placeholder-group`. The other was the shell baseline not yet existing, which Playwright wrote on that pass. Runs after the fix pass 40 of 40.
+Disclosed: the first Playwright run had 55 passed and 2 failed. One was my own test asserting a wrong premise about `:focus-visible` on programmatic focus, fixed by testing pointer versus keyboard modality. The other was the primitives baseline not yet existing. The baseline was then regenerated once more after the harness context fix in section 9. Runs after that pass 57 of 57.
 
 ## 9. Visual / Foundation QA
-Result: **FOUNDATION PASS**. Not a product-screen pixel PASS, and no such claim is made.
+Result: **FOUNDATION PASS**. Not a product pixel PASS, and no such claim is made.
 
 | Item | Value |
 |---|---|
-| Page | `/me` shell placeholder |
-| Viewport / DPR | 1440x900, deviceScaleFactor 1, both asserted in-test |
-| Actual | `tests/visual/actual/shell-member-1440x900.png` |
-| Baseline | `tests/visual/baseline/shell-member.png` — harness-owned |
+| Harness | `/dev/primitives`, dev-gated, not a product screen |
+| Viewport / DPR | 1440x900, deviceScaleFactor 1, asserted in-test |
+| Actual | `tests/visual/actual/primitives-1440x900.png` |
+| Baseline | `tests/visual/baseline/primitives.png` — harness-owned |
 | Diff | none produced; matched within `maxDiffPixelRatio: 0.01` |
 | Comparison | PASS |
 
-Baseline distinction respected: `tests/visual/baseline/**` is harness-owned regression evidence. `design-reference/final/**` is the read-only approved design baseline. Neither was copied from, synchronised with, or compared against the other. No shell placeholder was compared to any design-reference screen.
+Found by inspecting the render: the readonly input and the info notice are canvas-backgrounded, which reads correctly inside a white card but vanishes on a canvas-coloured page. Their colours are right for their real context, so the harness was changed to render each primitive where it actually lives rather than changing the components to suit a misleading harness.
 
-## 10. SOT compliance
-- Business SOT: routes only. No workflow behaviour implemented.
-- Data SOT: not exercised.
-- Design SOT: M0-T02 tokens and typography reused unchanged; verified still correct on a shell page.
-- API Contract: not exercised.
-- Deviations: none new. Doc 04's route table is not implemented, which is a documented contract precedence decision rather than a deviation.
-- Carried forward: the Design SOT still defers spacing, radius, border and shadow tokens; baseline colours outside the token set remain open and block M1.
+Baseline rule respected: `tests/visual/baseline/**` is harness-owned regression evidence; `design-reference/final/**` is the approved product baseline. Neither was copied into or compared against the other. No generic primitive was compared to any production design screen.
 
-## 11. Regression impact
-- Checked: M0-T01 bootstrap route and smoke, M0-T02 typography and font foundation, full code gate chain, and the existing visual suite.
-- Result: PASS. `/` returns 200 with `lang="vi"` and its bootstrap markup. The M0-T02 suite passes 7 of 7 within the 40-test run.
+## 10. Regression impact
+- Checked: M0-T01 bootstrap route and smoke, M0-T02 typography and fonts, M0-T03 shell and all 25 frozen routes, full code gate chain, existing visual suite.
+- Result: PASS. `/` returns 200 with its bootstrap markup. All frozen routes 200. `/login` 404. M0-T02 and M0-T03 suites pass within the 57-test run.
 - Regression found: None.
+
+## 11. Route note
+M0-T03 route decisions are preserved untouched. WF03-S09 public routing remains PROVISIONAL. Frontend route placement carries no authorisation or visibility meaning, and when WF03-S09 is implemented its auth and data visibility must be revalidated against the SOT.
 
 ## 12. Git
 - Branch: `main`
-- Commit hash: `8f93d8a0094fb176006590834ce79eb474fe06c5`
-- Commit message: `feat(m0-t03): shared web shell and frozen route groups`
+- Commit hash: `cb0927dbebbd120c859b5a33bcfb863d697639d5`
+- Commit message: `feat(m0-t04): shared UI primitives foundation`
 - Working tree status: clean.
 
 ## 13. Recommended next task
-M0-T04 — shared UI primitives. Build the reusable components the approved WF01–WF03 designs actually require, driven by the screen contracts and the baselines rather than invented: button, text input with label and error slot, form field, card/surface panel, and notice/alert. Exit criterion: each primitive has a unit test, the typography harness is extended or a primitives harness added under the same dev gating, and the visual suite still passes as regression.
-
-Note before M1 rather than M0-T04: the open design decisions still stand — the spacing, radius and shadow token scale; gradient stops and token names for WF01-S01 and WF03-S09; and whether `#FEF3F1` or `#FFF3F0` is canonical. Primitives that need radius or shadow will hit the first of these, so it is worth resolving alongside M0-T04. Not started.
+M0-T05 — API client, error envelope and DTO conventions. Implement the `/api/v1` handler scaffold with the frozen error envelope `{error:{code,message,fields,request_id}}` and its 14 codes, the list envelope with cursor pagination, request-id correlation, and a typed client hand-written from the authoritative Markdown contract rather than generated from the YAML, which is a declared skeleton missing 21 endpoints and all request bodies. Include `GET /session` returning the unauthenticated shape. Exit criterion: contract-shape unit tests pass, the build passes, and the visual suite still passes as regression. Not started.
