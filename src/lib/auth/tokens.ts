@@ -43,13 +43,5 @@ export function maskEmail(email: string): string {
   return `${local.slice(0, 1)}***@${domain}`
 }
 
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase()
-}
-
-/** Accepts only what a real address needs; deliberately strict and simple. */
-export function isPlausibleEmail(email: string): boolean {
-  const value = normalizeEmail(email)
-  if (value.length < 3 || value.length > 254) return false
-  return /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(value)
-}
+// Browser-safe; moved to ./email in WF01-S01 so the auth form shares the rule.
+export { isPlausibleEmail, normalizeEmail } from './email'

@@ -30,6 +30,7 @@ import {
 import { readPng, readPngSize } from './png'
 import { dryRun, QA_SCREENS, resolveRoute } from './qa-screens'
 import { buildReport } from './report'
+import { compareSegments } from './segments'
 
 /**
  * M0-T11 — unit tests for the Pixel QA engine. Node only; the browser half is
@@ -386,5 +387,58 @@ describe('dry run', () => {
 
   it('serialises to YAML-safe data', () => {
     expect(() => stringify(entries)).not.toThrow()
+  })
+})
+
+describe('segment comparison (WF01-S01)', () => {
+  it('aligns a segment by dy, so content moved by an intentional removal still compares strictly', () => {
+    const reference = solid(40, 60, [239, 239, 239])
+    paintRect(reference, 5, 40, 10, 5)
+    const actual = solid(40, 60, [239, 239, 239])
+    paintRect(actual, 5, 30, 10, 5) // same block, 10px higher
+
+    const [aligned] = compareSegments(
+      reference,
+      actual,
+      [{ name: 'lower', reference: { x: 0, y: 35, width: 40, height: 20 }, dy: -10 }],
+      [],
+    )
+    expect(aligned!.diff_total).toBe(0)
+
+    const [unaligned] = compareSegments(
+      reference,
+      actual,
+      [{ name: 'lower', reference: { x: 0, y: 35, width: 40, height: 20 }, dy: 0 }],
+      [],
+    )
+    expect(unaligned!.diff_outside_text).toBeGreaterThan(0)
+  })
+
+  it('splits differences inside text boxes from geometry drift outside them', () => {
+    const reference = solid(40, 20, [255, 255, 255])
+    const actual = solid(40, 20, [255, 255, 255])
+    paintRect(actual, 2, 2, 4, 4) // "glyph" change inside the text box
+    paintRect(actual, 30, 10, 3, 3) // drift outside any text
+    const [r] = compareSegments(
+      reference,
+      actual,
+      [{ name: 'all', reference: { x: 0, y: 0, width: 40, height: 20 }, dy: 0 }],
+      [{ x: 0, y: 0, width: 10, height: 10 }],
+      { diffPath: resolveOutputPath('diff', 'unit-segments.diff.png') },
+    )
+    expect(r).toMatchObject({ diff_total: 25, diff_in_text: 16, diff_outside_text: 9 })
+    expect(existsSync(resolveOutputPath('diff', 'unit-segments.diff.png'))).toBe(true)
+  })
+
+  it('refuses a segment that falls outside either image', () => {
+    const png = solid(10, 10, [0, 0, 0])
+    expect(() =>
+      compareSegments(
+        png,
+        png,
+        [{ name: 'x', reference: { x: 0, y: 5, width: 10, height: 5 }, dy: 1 }],
+        [],
+      ),
+    ).toThrow(/outside an image/)
   })
 })

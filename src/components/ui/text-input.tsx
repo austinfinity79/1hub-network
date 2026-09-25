@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from 'react'
+import type { InputHTMLAttributes, Ref } from 'react'
 
 /**
  * M0-T04 — text input primitive.
@@ -11,6 +11,8 @@ export type TextInputProps = {
   id: string
   invalid?: boolean
   describedBy?: string
+  /** React 19 passes ref as a prop; used to return focus after validation. */
+  ref?: Ref<HTMLInputElement>
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'id' | 'aria-invalid'>
 
 export function TextInput({

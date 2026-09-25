@@ -211,3 +211,27 @@ describe('M0-T05 client', () => {
     await expect(apiRequest('/auth/logout', { method: 'POST' })).resolves.toBeUndefined()
   })
 })
+
+// WF01-S01 exposed this: the client imported node:crypto transitively, so the
+// first browser component that used it failed to build. The client's whole
+// relative import graph must stay browser-safe.
+describe('browser safety of the API client', () => {
+  it('reaches no node: builtin through client.ts', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { dirname, join, resolve } = await import('node:path')
+    const seen = new Set<string>()
+    const offenders: string[] = []
+    const visit = (file: string) => {
+      if (seen.has(file)) return
+      seen.add(file)
+      const source = readFileSync(file, 'utf8')
+      for (const [, spec] of source.matchAll(/from\s+'([^']+)'/g)) {
+        if (spec!.startsWith('node:')) offenders.push(`${file} -> ${spec}`)
+        if (spec!.startsWith('./')) visit(resolve(dirname(file), `${spec}.ts`))
+      }
+    }
+    visit(join(process.cwd(), 'src', 'lib', 'api', 'client.ts'))
+    expect(seen.size).toBeGreaterThan(2)
+    expect(offenders).toEqual([])
+  })
+})

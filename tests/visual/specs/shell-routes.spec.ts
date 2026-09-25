@@ -21,6 +21,9 @@ async function waitForFonts(page: Page) {
   await page.waitForFunction(() => document.fonts.status === 'loaded', null, { timeout: 15_000 })
 }
 
+/** Screens whose production implementation has replaced the M0-T03 placeholder. */
+const IMPLEMENTED_SCREENS = new Set(['WF01-S01'])
+
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {
     expect(FROZEN_ROUTES).toHaveLength(25)
@@ -35,6 +38,14 @@ test.describe('M0-T03 frozen routes', () => {
       const response = await page.goto(route.samplePath)
 
       expect(response?.status(), `${route.samplePath} did not return 200`).toBe(200)
+
+      // An implemented screen replaces its placeholder and brings its own shell;
+      // its behaviour is proven by that screen's own spec.
+      if (IMPLEMENTED_SCREENS.has(route.screenId)) {
+        await expect(page.locator(`[data-route-group="${route.group}"]`).first()).toBeVisible()
+        await expect(page.locator('[data-route-placeholder]')).toHaveCount(0)
+        return
+      }
 
       const placeholder = page.locator(`[data-route-placeholder="${route.screenId}"]`)
       await expect(placeholder).toBeVisible()

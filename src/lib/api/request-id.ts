@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto'
-
 /**
  * M0-T05 — request correlation, 05:38-46.
  *
@@ -12,8 +10,13 @@ export const REQUEST_ID_HEADER = 'X-Request-ID'
 /** Bounded so a hostile client cannot write unbounded data into our logs. */
 const MAX_CLIENT_REQUEST_ID = 200
 
+/**
+ * Web Crypto, not node:crypto: this module is part of the API client, which
+ * WF01-S01 made the first browser consumer of. `globalThis.crypto.randomUUID`
+ * exists in Node 22 and in every supported browser.
+ */
 export function newRequestId(): string {
-  return `req_${randomUUID()}`
+  return `req_${globalThis.crypto.randomUUID()}`
 }
 
 export function resolveRequestId(headers: Headers): string {

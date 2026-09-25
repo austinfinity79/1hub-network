@@ -22,7 +22,9 @@
   /* Semantic foregrounds */
   --color-fg-default: var(--hub-burgundy);
   --color-fg-accent: var(--hub-primary);
-  --color-fg-on-accent: var(--hub-surface);
+  /* WF01-S01: every approved reference with a red CTA (16 of 24) sets its label
+     in burgundy, not white; burgundy on --hub-primary also meets WCAG AA. */
+  --color-fg-on-accent: var(--hub-burgundy);
 }
 
 html {

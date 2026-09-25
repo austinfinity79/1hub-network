@@ -13,12 +13,15 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 export type ButtonProps = {
   variant?: 'primary' | 'secondary'
   loading?: boolean
+  /** Stretch to the container width, as the WF01-S01 submit button does. */
+  fullWidth?: boolean
   children: ReactNode
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'>
 
 export function Button({
   variant = 'primary',
   loading = false,
+  fullWidth = false,
   disabled = false,
   type = 'button',
   children,
@@ -30,6 +33,7 @@ export function Button({
       type={type}
       className="ui-button"
       data-variant={variant}
+      data-full-width={fullWidth ? 'true' : undefined}
       data-loading={loading ? 'true' : undefined}
       disabled={disabled || loading}
       aria-busy={loading || undefined}

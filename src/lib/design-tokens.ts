@@ -30,47 +30,98 @@ export type UnresolvedToken = {
 export const UNRESOLVED_TOKEN_PREFIX = '--unresolved-'
 
 export const UNRESOLVED_DESIGN_TOKENS: readonly UnresolvedToken[] = [
+  // `provisional` now carries the value MEASURED from the approved WF01-S01
+  // baseline for every token that screen settles. They stay in the
+  // `--unresolved-` namespace because no SOT document froze them.
   {
     token: '--unresolved-radius-control',
-    purpose: 'Corner radius of buttons and text inputs',
-    provisional: '0px',
+    purpose: 'Corner radius of buttons, text inputs and notices',
+    provisional: '0.5rem (8px, measured WF01-S01 email field, submit button, notice)',
     resolvedBy: 'WF01-S01 auth entry (email field and submit button)',
   },
   {
     token: '--unresolved-radius-surface',
-    purpose: 'Corner radius of cards, panels and notices',
-    provisional: '0px',
+    purpose: 'Corner radius of cards and panels',
+    provisional: '0.875rem (14px, measured WF01-S01 auth card)',
     resolvedBy: 'WF01-S01 auth entry (auth card)',
   },
   {
     token: '--unresolved-shadow-surface',
     purpose: 'Elevation of raised surfaces',
-    provisional: 'none',
+    provisional: '0 0.5rem 1.875rem burgundy 7% (measured WF01-S01 auth card falloff)',
     resolvedBy: 'WF01-S01 auth entry (auth card)',
   },
   {
     token: '--unresolved-space-control-x',
     purpose: 'Horizontal padding inside controls',
-    provisional: '1rem',
+    provisional: '1rem (measured WF01-S01 email field text inset)',
     resolvedBy: 'WF01-S01 auth entry',
   },
   {
     token: '--unresolved-space-control-y',
-    purpose: 'Vertical padding inside controls',
-    provisional: '0.75rem',
+    purpose: 'Vertical padding inside buttons and notices',
+    provisional: '0.78125rem (gives the 47px WF01-S01 submit button)',
     resolvedBy: 'WF01-S01 auth entry',
+  },
+  {
+    token: '--unresolved-space-input-y',
+    purpose: 'Vertical padding inside text inputs',
+    provisional: '0.59375rem (gives the 49px WF01-S01 email field)',
+    resolvedBy: 'WF01-S01 auth entry (email field)',
   },
   {
     token: '--unresolved-space-stack',
     purpose: 'Vertical gap between a label, its control and its message',
-    provisional: '0.5rem',
-    resolvedBy: 'WF01-S06 onboarding profile (first real form)',
+    provisional: '0.3125rem (measured WF01-S01 email label to field; reconfirm on WF01-S06)',
+    resolvedBy: 'WF01-S01 auth entry (email field); reconfirmed by WF01-S06',
   },
   {
     token: '--unresolved-space-surface',
-    purpose: 'Padding inside cards, panels and notices',
-    provisional: '1.5rem',
+    purpose: 'Padding inside cards and panels',
+    provisional: '2.25rem (36px, measured WF01-S01 auth card)',
     resolvedBy: 'WF01-S01 auth entry (auth card)',
+  },
+  {
+    token: '--unresolved-space-notice-x',
+    purpose: 'Horizontal padding inside notices',
+    provisional: '0.8125rem (measured WF01-S01 one-time link notice)',
+    resolvedBy: 'WF01-S01 auth entry (notice)',
+  },
+  {
+    token: '--unresolved-border-control',
+    purpose: 'Border of text inputs',
+    provisional: 'burgundy 23% over surface (measured WF01-S01 email field)',
+    resolvedBy: 'WF01-S01 auth entry (email field)',
+  },
+  {
+    token: '--unresolved-border-surface',
+    purpose: 'Hairline border of cards and panels',
+    provisional: 'burgundy 12% over surface (measured WF01-S01 auth card)',
+    resolvedBy: 'WF01-S01 auth entry (auth card)',
+  },
+  {
+    token: '--unresolved-fill-control',
+    purpose: 'Fill of text inputs',
+    provisional: 'burgundy 2% over surface (measured WF01-S01 email field)',
+    resolvedBy: 'WF01-S01 auth entry (email field)',
+  },
+  {
+    token: '--unresolved-fill-notice',
+    purpose: 'Fill of informational notices',
+    provisional: 'burgundy 4% over surface (measured WF01-S01 one-time link notice)',
+    resolvedBy: 'WF01-S01 auth entry (notice)',
+  },
+  {
+    token: '--unresolved-fg-muted',
+    purpose: 'Secondary text: supporting copy, notices, legal lines',
+    provisional: 'burgundy 74% over surface (measured WF01-S01 subtitle, notice, legal)',
+    resolvedBy: 'WF01-S01 auth entry',
+  },
+  {
+    token: '--unresolved-fg-placeholder',
+    purpose: 'Placeholder text in inputs',
+    provisional: 'burgundy 38% over surface (measured WF01-S01 email placeholder)',
+    resolvedBy: 'WF01-S01 auth entry (email field)',
   },
 ]
 

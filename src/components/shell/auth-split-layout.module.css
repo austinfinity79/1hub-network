@@ -1,0 +1,74 @@
+/*
+ * WF01-S01 — auth split layout, measured from the approved WF01-S01 baseline at
+ * 1440x900 DPR1 (px / 16 = rem). WF01-S02's approved baseline carries the same
+ * brand panel, which is why this lives in the shared shell.
+ *
+ * Colours are frozen anchors or colour-mix()es of them, except the gradient's
+ * middle stop: a deep crimson sampled from the baseline that no mix of the five
+ * anchors reproduces (Design SOT 2.5: other shades are screen-baseline-driven).
+ */
+
+.root {
+  display: grid;
+  grid-template-columns: 35rem 1fr;
+  min-height: 100vh;
+}
+
+.brand {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  padding: 3.125rem 3.5rem 3.1875rem;
+  color: var(--hub-surface);
+  background: linear-gradient(
+    to bottom right,
+    color-mix(in srgb, var(--hub-primary) 50%, var(--hub-burgundy)) 12%,
+    #58040b 50%,
+    var(--hub-burgundy) 90%
+  );
+}
+
+.wordmark {
+  align-self: start;
+  margin: 0;
+}
+
+.pitch {
+  /* Places the pitch where the approved baseline has it, slightly above the
+     panel's true centre. */
+  margin: 0 0 1.0625rem;
+}
+
+.headline {
+  margin: 0;
+}
+
+.headline span,
+.pitchNote span {
+  display: block;
+}
+
+.muted {
+  color: color-mix(in srgb, var(--hub-surface) 70%, transparent);
+}
+
+.pitchNote {
+  margin: 1.4375rem 0 0;
+}
+
+.footnote {
+  align-self: end;
+}
+
+.footnote p {
+  margin: 0;
+}
+
+.footnote p + p {
+  margin-top: 0.5625rem;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
