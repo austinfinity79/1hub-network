@@ -1,75 +1,47 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF01-S04-DECISION-FREEZE + WF01-S04 — Auth Errors (`/auth/error`)
-- Status: **DONE**
-- Mode: LOCAL REVIEW. Committed locally, not pushed. WF01-S05 not started.
+- Task ID / name: WF01-S05 — Onboarding Purpose (plus the S04 carry-over fix)
+- Status: **BLOCKED — ONBOARDING INTENT CONTRACT GAP**. Stopped before implementation, as the task instructs.
+- Mode: LOCAL REVIEW. Committed locally, not pushed.
 
-## 2. Decisions
-DEC-WF01-S04-D1..D8 are recorded in [DECISION_LOG.md](../decisions/DECISION_LOG.md). Each entry has Status, Date, Scope, Context, Decision, Rationale, Evidence, Impact and Supersedes, with stable anchors. **D1 supersedes DEC-WF01-S03-D3 in part:** S03 now routes `AUTH_ACCOUNT_BLOCKED` to `?reason=blocked`; everything else still goes to GENERIC with no reason.
+## 2. Carry-over fix (S04) — DONE
+- **Change:** the BLOCKED body promised the reason and unblock steps were "in the HUB email sent to you", but no email delivery exists in P0. That sentence alone became "Tài khoản này đang bị tạm khoá, nên hiện chưa thể đăng nhập."
+- **Unchanged:** layout, the generic support line and every other state.
+- **Test:** the BLOCKED test now asserts no "mail" wording.
+- **Regression:** full Playwright 175/175, unit 110; BLOCKED disc diff still 1 px. Commit `386b67f`.
 
-## 3. States
-| State | Result |
-|---|---|
-| BLOCKED | PASS. `?reason=blocked`, also reached from a real blocked account through S03. No date (D4), no invented email and no action element (D5) |
-| SESSION_EXPIRED | PASS. `?reason=session_expired`; lifetime from `SESSION_TTL_SECONDS`; "Đăng nhập lại" → `/auth` (D8; no new global redirect) |
-| GENERIC | PASS (functional/a11y). Missing, unknown or `generic` reason, and an invalid callback. Neutral copy |
-| RATE_LIMITED | stays inline on S01/S02 (D3); a 429 never redirects |
-| MAIL_DOMAIN_BLOCKED | not implemented (D7); `?reason=mail_blocked` → GENERIC |
+## 3. Pre-flight (S05)
+- Single writer: PASS. Start HEAD `9f296ef`; S01–S04 green.
+- Reference `WF01-S05__onboarding-purpose__1440x900.png` is `strict` 1440×900 and was inspected.
 
-## 4. Security
-| Item | Evidence |
-|---|---|
-| Raw error leakage | Copy is static per state. No API code, message or request id is shown |
-| Query allowlist | Own-property allowlist. `unknown`, `AUTH_ACCOUNT_BLOCKED`, `rate_limited`, `mail_blocked`, `__proto__`, `constructor` and a `<script>` payload all render GENERIC and never appear in the HTML. The page is **static** (`○`), so no query value, a stray `?token=` included, reaches server HTML |
-| Enumeration | GENERIC names no account, link state, provider or internal reason (asserted). BLOCKED is reachable only after consuming a valid link, and `?reason=blocked` on its own identifies no account |
-| Support contact | none invented (D5) |
+## 4. Why S05 stopped
+See [WF01_S05_INTENT_CONTRACT_GAP.md](WF01_S05_INTENT_CONTRACT_GAP.md).
+- **The contract defines no intent values.** API §4.2 makes `primary_intent` config-backed, approved "in launch configuration", and no such configuration exists. The DB column is free `text`, and the only frozen example is `EXPLORE_NETWORK`.
+- **None of the bitmap's 5 options has a canonical code**, so implementing them would invent an enum.
+- **Option 4 "Tôi là nhà đầu tư" (dataroom) is Future scope.**
 
-## 5. Pixel QA
-The board rows become one centred AuthCard (D6), so approved **components** are compared at their own positions (1440×900 DPR1, vi-VN, fonts ready). Excluded annotations: the board title, the four "Vì sao viết thế này" lines, R1 and R4.
+Decisions needed (proposed IDs DEC-WF01-S05-D1..D6):
+- D1: intent codes;
+- D2: the investor option in P0;
+- D3: `skip_later` semantics;
+- D4: default selection;
+- D5: unauthenticated page guard;
+- D6: revisit behaviour.
 
-| State | Result |
-|---|---|
-| BLOCKED | disc vs R2 disc: **1 px** outside text. PASS |
-| SESSION_EXPIRED | disc: **1 px**; outline action vs R3 button, border and fill compared: **3 px**. PASS |
-| GENERIC | **DESIGN-GAP-GENERIC.** No approved panel, so no strict pixel claim. Typography, centring and card geometry sanity pass; manual PO review required |
+Each has a suggested option in the gap document; none is implemented.
 
-- **Typography:** DOM contract PASS for all three states.
-- **Classification:** Structural 0 / Major 0 / Component 0. Intentional: COMPOSITION (D6), DATA-ABSENCE (D4 date, D5 support action), TYPOGRAPHY-MIGRATION.
-- **Gate limitation found and handled:** text masks hide text **colour**, and the typography contract checks family and weight only. A visual review caught the body text set in the muted colour where the board uses burgundy `#170002`; it is fixed and was verified against the board ink.
+## 5. Changes
+- Implementation for S05: NONE
+- DB/API: none
+- Shared primitives: none
 
-## 6. Shared UI
-Shared primitives: **NONE** (AuthCard reused). Global tokens: **0**. The S04 components (34px disc, 128×41 outline action) are local to the screen.
-
-S03 changed only in routing blocked accounts (D1). QA infrastructure:
-- the WF01-S04 dry-run gap is cleared (15 ready, 9 gaps);
-- the now-unused `STATE_BOARD_GAP` is removed;
-- the obsolete state-board refusal assertion is removed.
-
-## 7. Validation
-| Gate | Result |
-|---|---|
-| Format / Lint / Typecheck / `verify` | PASS |
-| Unit / DB | 110 / 121 |
-| Build | PASS (`/auth/error` static) |
-| S01 / S02 / S03 regression | PASS. Segments unchanged: S01 0/0/0/0/1; S02 0/0/0/14/3; S03 71/247/97 |
-| S04 Playwright | 22 / 22 |
-| Full Playwright | 175 / 175, plus 24 screen runs skipped by design |
-| `design-reference/**` | hash unchanged |
-
-## 8. Notes for review
-1. BLOCKED body keeps "Lý do và cách mở nằm trong mail HUB gửi bạn." This still claims a HUB email was sent, which depends on an operational process outside P0. Please confirm the wording.
-2. GENERIC needs the PO visual review required by D2.
-3. The body-colour miss shows that the pixel gate is blind to text colour. A computed-colour assertion for text could be added to the typography contract in a later task.
-
-## 9. Git
-- Branch `main`; start HEAD `7e0c22d`
-- Implementation commit: `968d9a5` feat(wf01-s04): auth error states behind an allowlisted public reason
-- Report/final commit: the commit containing this report
+## 6. Git
+- Branch `main`; start HEAD `9f296ef`
+- Commits: `386b67f` (S04 copy fix) and the docs commit containing this report
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `e1a458b`
 - Working tree: clean after commit except the untracked `AGENTS.md`
 
 ## Related
-- [DECISION_LOG.md](../decisions/DECISION_LOG.md) — decision records
-- [WF01_S04_STATE_BOARD_MAPPING.md](WF01_S04_STATE_BOARD_MAPPING.md) — frozen mapping
+- [WF01_S05_INTENT_CONTRACT_GAP.md](WF01_S05_INTENT_CONTRACT_GAP.md) — gap and decisions
 - [P0_STATUS.md](P0_STATUS.md) — overall P0 state

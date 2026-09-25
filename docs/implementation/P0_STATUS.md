@@ -8,15 +8,16 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: IN PROGRESS — 4 / 8 screens DONE (50%; S01–S03 closed, S04 awaiting review).**
+**M1 — WF01 Identity & Onboarding: IN PROGRESS — 4 / 8 screens CLOSED (50%).**
 
 | Screen | State |
 |---|---|
 | WF01-S01 Auth Entry | DONE — functional + typography + pixel gate PASS ([report](reports/WF01-S01_auth-entry.md)) |
 | WF01-S02 Check Email | CLOSED / PASS — "Mở Gmail" omitted by contract; runtime copy approved; countdown from server `resend_after_seconds` ([report](reports/WF01-S02_check-email.md)) |
 | WF01-S03 Auth Callback | CLOSED / PASS — SUCCESS/EXPIRED/USED; INVALID → S04; decisions DEC-WF01-S03-D1..D7, D6a, ICON ([report](reports/WF01-S03_auth-callback-states.md), [mapping](WF01_S03_STATE_BOARD_MAPPING.md)) |
-| WF01-S04 Auth Errors | DONE — BLOCKED/SESSION_EXPIRED component pixel PASS; GENERIC = DESIGN-GAP-GENERIC (PO review); DEC-WF01-S04-D1..D8 ([report](reports/WF01-S04_auth-errors.md), [mapping](WF01_S04_STATE_BOARD_MAPPING.md)) |
-| WF01-S05 … S08 | Not started; routes remain M0-T03 placeholders |
+| WF01-S04 Auth Errors | CLOSED / PASS (BLOCKED copy neutralised: no email promise) — BLOCKED/SESSION_EXPIRED component pixel PASS; GENERIC = DESIGN-GAP-GENERIC (PO review); DEC-WF01-S04-D1..D8 ([report](reports/WF01-S04_auth-errors.md), [mapping](WF01_S04_STATE_BOARD_MAPPING.md)) |
+| WF01-S05 Onboarding Purpose | BLOCKED — ONBOARDING INTENT CONTRACT GAP, 6 decisions pending ([gap](WF01_S05_INTENT_CONTRACT_GAP.md)) |
+| WF01-S06 … S08 | Not started; routes remain M0-T03 placeholders |
 
 ## Completed (committed)
 
@@ -81,7 +82,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF01-S05 — Onboarding Purpose (recommended). Waiting for review and authorization.
+Human decisions DEC-WF01-S05-D1..D6 in [WF01_S05_INTENT_CONTRACT_GAP.md](WF01_S05_INTENT_CONTRACT_GAP.md), then WF01-S05 implementation.
 
 ## Related
 
