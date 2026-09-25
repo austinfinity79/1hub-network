@@ -1,95 +1,105 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: DECISION-AUTHZ-01B freeze, then M0-T09 — RBAC / authorization foundation
-- Scope requested: Freeze the approved authorization decisions, then implement the server-side authorization foundation.
+- Task ID / name: M0-T10 — Durable Idempotency Store Foundation
+- Scope requested: Audit for an existing durable store, add one if none exists, and prove the five required behaviours.
 - Status: **DONE**
 - Mode: LOCAL REVIEW. Committed locally, not pushed.
 
 ## 2. Pre-flight
-- Single writer: **PASS**, only this session holds the worktree.
-- Starting HEAD: `21defe4`, re-checked before commit, unchanged. No concurrent mutation.
-- M0-T07 seed and M0-T08 auth regression: **PASS**, 64 of 64 before any change.
+- Single writer: **PASS**, only this session held the worktree throughout.
+- Starting HEAD: `32f895c`, re-checked before commit, unchanged. No concurrent mutation.
+- M0-T08 auth and M0-T09 authorization regression before any change: **PASS**, 94 of 94.
+- Migrations 001 and 002: **unchanged**, verified by empty diff before and after.
 
-## 3. Matrix frozen
-`AUTHORIZATION_CAPABILITY_MATRIX_P0.md` now carries **HUMAN APPROVED — P0** and states role, capability, ALLOW/DENY, scope and predicate for all nine capabilities. It is an authorization overlay; no Product, Data, Workflow or Design SOT file was modified.
+## 3. Storage audit
+All 28 tables were inspected. **No existing table can host idempotency**, so migration 003 was created under the authorization this task grants.
 
-Two identifiers were named by the approved decision because the frozen sources granted the action but never named it: `membership:confirm` (action at 03:110) and `leadership:manage` (action at 03:111). The convention is `resource:action` throughout, with no second convention introduced.
+| Candidate | Why it cannot serve |
+|---|---|
+| `audit_events` | Append-only record of what happened. A claim is a lock that must be read back and mutated; writing locks into the audit trail would make the trail lie |
+| `analytics_events` | Append-only measurement, no uniqueness, no response storage |
+| `user_sessions` | One row per authenticated session, but the magic-link request is unauthenticated, so no session row can exist yet |
+| `auth_magic_link_requests` | Keyed by token hash, with no operation column and no response storage. Overloading it would bind a cross-cutting API concern to one auth flow |
+
+This was already a known gap: `002_p0_schema_alignment.sql:22` lists "idempotency key store" among deferred missing structures, and the gap register carried it as P10.
 
 ## 4. What was implemented
-| Module | Purpose |
+| Component | Purpose |
 |---|---|
-| `authz/matrix.ts` | The approved matrix as data. No wildcard, no inheritance, no admin branch |
-| `authz/actor.ts` | Resolves account, profile and only currently-valid assignments |
-| `authz/authorize.ts` | `authorize` / `can` / `require`, the single decision entry point |
-| `authz/session-authz.ts` | Derives `capabilities` and `managed_scopes` |
+| `003_p0_idempotency_store.sql` | One table, one enum. Additive; 001 and 002 untouched |
+| `idempotency/store.ts` | `runIdempotent`, fingerprinting, retention purge |
+| `db/client.ts` | `withTransaction` and an `Executor` type, so guarded work joins the claim's transaction |
+| `auth/magic-link/route.ts` | The first real integration |
 
-`GET /api/v1/session` now returns both fields, populated server-side. They were deliberately empty since M0-T08.
+The design choice that carries the most weight: **the claim, the work and the completion share one transaction**. The common alternative commits a PROCESSING row first, which strands the key if the process dies and then needs a lease, a clock and a reclamation sweep to recover. Sharing the transaction removes that failure mode instead of managing it.
 
-## 5. How the decision rule is enforced
-The frozen rule (03:36-42) maps directly onto the code:
+## 5. Required behaviours, all proven against live PostgreSQL
+| # | Behaviour | Evidence |
+|---|---|---|
+| A | First request executes and stores its outcome | COMPLETED row with status, body and the configured expiry; read back on a different pooled connection |
+| B | Duplicate replays, no second side effect | Work ran once; a repeated magic-link request left exactly one row in `auth_magic_link_requests` |
+| C | Same key, different content | 409 `UNCONTRACTED_IDEMPOTENCY_CONFLICT`; the conflicting work never ran and the stored record was untouched |
+| D | Concurrent duplicates | Eight simultaneous attempts, one execution. Six concurrent magic-link retries produced one link |
+| E | Failure does not poison the key | A throw left zero rows and the retry succeeded. The guarded side effect rolled back with it |
 
-| Clause | Where enforced |
-|---|---|
-| authenticated | `authorize` rejects a null actor or one with no profile |
-| assignment active | SQL: `state = 'ACTIVE' AND valid_from <= now() AND (valid_to IS NULL OR valid_to > now())` |
-| role permits capability | lookup in the approved matrix; an unknown capability is denied, not defaulted |
-| scope contains resource | an ORGANIZATION grant must match the requested `scope_id` exactly |
-| lifecycle predicate | optional hook, run **only after** the permission check passes |
-
-`PLATFORM_ADMIN` never appears in the decision logic. Its authority comes only from the data table, and a test asserts `authorize.ts` names no role at all.
+Extra properties proven: cross-actor isolation, anonymous records not claimable by an authenticated actor, key scoped per operation, payload-order independence, retention purge, and the state-shape constraint.
 
 ## 6. Security results
 | Property | How proven |
 |---|---|
-| Individual and HUB Member denied | All nine capabilities denied for a member actor |
-| Cross-org denial | Leader denied all nine in Chapter 02 while allowed all nine in Chapter 01 |
-| Leader cannot reach platform scope | All nine denied at PLATFORM |
-| Membership alone grants nothing | The pending actor holds a membership and is denied all nine |
-| Expired assignment ignored | `valid_to` in the past removes the role entirely |
-| Future assignment ignored | `valid_from` in the future removes it |
-| Non-ACTIVE assignment ignored | `state = CLOSED` removes it |
-| Stray role code ignored | `role_code` is still untyped text; `SUPER_ADMIN` is discarded at the boundary |
-| Forged role/scope ignored | localStorage, sessionStorage, a `role` cookie and forged headers all produce an empty capability list |
-| Admin cannot edit another profile | No profile-write capability exists in the catalogue; `ADMIN_MAY_EDIT_OTHER_PROFILE` is false |
-| No impersonation | Source scan of all four modules, comments stripped |
-| Enumeration safe | No-permission and wrong-scope return an identical code and message, asserted equal |
-| No raw ORM leakage | `managed_scopes` carries only the three contract fields; `individual_profile_id`, `valid_from`, `valid_to`, `assigned_by` are asserted absent from the wire |
+| Not a process-local mutex | A raw duplicate INSERT that never touches the application is rejected by PostgreSQL. Source scan confirms no in-process lock or map |
+| Actor A result unreachable by actor B | Actor is in both the unique constraint and the lookup predicate. B ran its own work and received its own result |
+| No raw secret stored | The issued magic-link token appears in no column, asserted by a full-table scan |
+| No raw payload stored | Only a sha256 fingerprint. A marker string placed in the request appears nowhere in the table |
+| M0-T08 rules unchanged | A drift guard now asserts no migration after 002 alters `user_sessions` or `auth_magic_link_requests` |
+| Half-written record impossible | A CHECK constraint rejects a COMPLETED row with no stored outcome |
 
 ## 7. Validation
 | Gate | Result |
 |---|---|
 | Format / Lint / Typecheck | PASS, 0 errors 0 warnings |
 | Unit tests | PASS — 61 of 61 |
-| DB integration + authorization + permission matrix | PASS — 94 of 94 (30 new) |
+| DB integration | PASS — 118 of 118 (24 new) |
 | Build | PASS |
-| Playwright authz smoke | PASS — 8 new tests |
-| Playwright full regression | PASS — 86 of 86 |
-| Deterministic seed regression | PASS |
-| M0-T01–T08 regression | PASS |
-| SOT untouched | PASS — `db/`, `docs/product/`, `docs/workflows/`, `docs/design/`, `docs/architecture/` all unchanged |
+| Playwright full regression | PASS — 93 of 93 (7 new) |
+| Migrations 001 / 002 unchanged | PASS — empty diff |
+| SOT untouched | PASS — `docs/product`, `docs/workflows`, `docs/design`, `docs/architecture`, `design-reference/final` all unchanged |
 
-Three test failures occurred and all three were **my own test bugs**, fixed rather than worked around: a wildcard scan matching JSDoc `/**`; an impersonation scan flagging my own comment saying impersonation is absent; and an unsound regex that matched the legitimate success `return`. The first two were fixed by stripping comments before scanning. The third was replaced, because a regex cannot distinguish a legitimate single success path from a blanket allow; that property is now proven behaviourally by the denial suites instead.
+Two failures occurred, both **my own test bugs**, fixed rather than worked around. A sweep assertion counted PROCESSING rows that the same file had hand-planted to prove a database constraint; it is now scoped to store-written rows and additionally names the fixture, so it narrows rather than hides. A Playwright case tried to send a control character that the HTTP client refuses to transmit, so it could never have reached the code it claimed to test; it now proves the over-length rejection, and the control-character path stays proven in the unit suite.
 
-## 8. Gaps
-- Blocking authorization gaps remaining: **0**.
-- Still open, unchanged and out of scope: `role_code` and `scope_type` remain untyped `text` columns. The engine discards non-catalogue values at the boundary, so this is defence in depth rather than a hole, but constraining them would need a migration and a catalogue decision.
-- WF01/WF02 self-service capabilities remain outside the ops catalogue by decision D4, using an ownership predicate instead.
+Four further failures were the **drift guards working correctly**, detecting migration 003. The guard that recorded `idempotency_keys` as absent was inverted rather than deleted, so the flip is itself the evidence the gap closed.
+
+## 8. Contract gaps
+No CONTRACT GAP stop was required. The frozen error envelope represents the conflict without a new field.
+
+05:48-63 requires the header and specifies nothing else. Seven policies were therefore chosen and recorded as PROVISIONAL in `IDEMPOTENCY_STORE_P0.md`, none presented as approved:
+
+| Item | Provisional value |
+|---|---|
+| Retention window | 24 hours |
+| Conflict error code | `UNCONTRACTED_IDEMPOTENCY_CONFLICT` |
+| Conflict HTTP status | 409, which *is* contracted at 05:104 |
+| Missing header | request still processed |
+
+**The one most likely to need revisiting is the last.** Idempotency is available but not compelled, so a client that omits the header silently gets the old behaviour. Rejecting would have required inventing a public error code for a missing key, which the contract names nowhere, and that is the harder thing to undo.
 
 ## 9. Pre-UAT security decisions, unchanged
-| Item | Provisional value | Status |
-|---|---|---|
-| CSRF mechanism | none implemented; SameSite=lax is the only mitigation | no frozen source names a mechanism |
-| Session TTL | 30 days | no frozen source states a value |
-| SameSite | `lax` | 03:200 requires it but names no value |
-
-None was invented or promoted to final in this task.
+CSRF mechanism (none implemented), session TTL (30 days) and SameSite (`lax`) are untouched by this task. None was promoted to final.
 
 ## 10. Git
 - Branch: `main`
+- Commits: `4461532` store foundation, `dec333c` endpoint integration, plus this documentation commit
 - Push status: **NOT RUN** — LOCAL REVIEW MODE
 - Remote HEAD: `2390ce2`, deliberately behind local
 - Working tree: clean after commit
+- Secrets: none committed; no credentialed remote URL recorded
 
 ## 11. Recommended next task
-**M0-T10 — idempotency store foundation.** It carries one open item: the schema SOT contains no key store, so adding one needs authorization for migration 003.
+**M0-T11 — manifest-driven pixel QA foundation.** It is the last M0 item and carries no open decision. The six other idempotent operation classes inherit the store when their endpoints are built; they need no further foundation work.
+
+## Related
+
+- [idempotency-store-p0.md](IDEMPOTENCY_STORE_P0.md) — the provisional decisions in full
+- [db-schema-gaps-p0.md](DB_SCHEMA_GAPS_P0.md) — gap P10, now closed
+- [p0-status.md](P0_STATUS.md) — overall P0 state

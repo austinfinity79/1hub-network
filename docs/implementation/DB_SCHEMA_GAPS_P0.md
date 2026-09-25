@@ -101,7 +101,7 @@ Clean, no action needed: `visibility_level`, `consent_type`, `programme_type`, `
 | P7 | `consent_records` | `accepted_at`/`withdrawn_at` | `status`, `revoked_at`, purpose, scope, recipient, expiry | SOT:275-286, API:1045-1049 | M1 |
 | P8 | visibility storage | one row + `group_overrides jsonb` | per-group rows; group code list never frozen | API:440-457, 04:406-411, SOT:268-273 | M1 |
 | P9 | `file_assets` | absent | required for avatar upload | 04:304, API:363-374 | M1 |
-| P10 | idempotency key store | absent | required by 7 operation classes | API:48-63 | M1 |
+| P10 | idempotency key store | **CLOSED by migration 003 (M0-T10)** | required by 7 operation classes | API:48-63 | done |
 | P11 | membership `source` | text, default `SELF_DECLARED`; seed writes `PRESEED` | canonical provenance set | SOT:234-237, API:509 vs API:1060 | M2 |
 | P12 | venture team state | `record_state` | PENDING_CONFIRMATION, LEFT, REMOVED | SOT:204, SCR:205-207 | M2 |
 | P13 | notification prefs, deletion request | absent | required by WF02-S07 | API:657-665 | M2 |
@@ -124,19 +124,23 @@ Clean, no action needed: `visibility_level`, `consent_type`, `programme_type`, `
 
 Per-entity enums were created rather than extending the shared ones, because `record_state` is shared by six tables and `publication_status` by three. Adding `LIVE` to `publication_status` would have let an Organization be LIVE, and `ALUMNI` in `record_state` would have let a project member be ALUMNI. Both shared enums are verified unchanged.
 
-**Still open for a later migration**, deliberately out of M0-T06B scope because they are missing structures rather than stale state domains: P5 event registration, P6 organization `verification_status`, P7 consent shape, P8 visibility storage, P9 `file_assets`, P10 idempotency store, P11 provenance, P12 venture team state, P13 notification preferences and deletion requests.
+**Still open for a later migration**, deliberately out of M0-T06B scope because they are missing structures rather than stale state domains: P5 event registration, P6 organization `verification_status`, P7 consent shape, P8 visibility storage, P9 `file_assets`, P11 provenance, P12 venture team state, P13 notification preferences and deletion requests.
+
+P10 has since been closed: migration 003 created `idempotency_keys` under M0-T10 authorization. See [idempotency-store-p0.md](IDEMPOTENCY_STORE_P0.md).
 
 ## Human decisions required
 
 Resolved by DECISION-P0-01 and implemented by M0-T06B: B1 (freeze wins), B3 (profile anchor).
 
+Resolved by the M0-T10 authorization: P10, the idempotency key table the schema SOT does not contain.
+
 Remaining:
 1. **P8** — the canonical visibility group codes and which storage shape wins.
-2. **P10** — approval for an idempotency key table, which the schema SOT does not contain.
-3. **B2, B4, B5** — settled in principle; execution belongs to M0-T07.
+2. **B2, B4, B5** — settled in principle; execution belongs to M0-T07.
 
 ## Related
 
+- [idempotency-store-p0.md](IDEMPOTENCY_STORE_P0.md) — P10 resolution and its provisional decisions
 - [claude-latest-report.md](CLAUDE_LATEST_REPORT.md) — latest task report
 - [browser-testing-rule.md](browser-testing-rule.md) — Playwright authority
 - [reports/](reports/) — archived per-task reports

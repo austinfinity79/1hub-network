@@ -31,7 +31,7 @@ to the frozen route manifest.
 
 ## Not yet built (M0)
 
-Idempotency store, manifest-driven pixel harness.
+Manifest-driven pixel harness.
 
 `GET /api/v1/session` resolves a real session and derives `capabilities` and `managed_scopes` server-side from the approved authorization matrix.
 
@@ -42,14 +42,16 @@ The transitional `role_assignments.account_id` column and its trigger, kept by 0
 | Item | Where |
 |---|---|
 | Schema vs SOT compatibility gaps | [DB_SCHEMA_GAPS_P0.md](DB_SCHEMA_GAPS_P0.md) |
+| Provisional idempotency policy, incl. lenient missing header | [IDEMPOTENCY_STORE_P0.md](IDEMPOTENCY_STORE_P0.md) |
 | Classification of blocking gaps B1–B5 | [P0_DECISIONS_REQUIRED.md](P0_DECISIONS_REQUIRED.md) |
 
 ## Next task
 
-Waiting for review and authorization.
+M0-T11 manifest-driven pixel QA foundation. Waiting for review and authorization.
 
 ## Related
 
+- [IDEMPOTENCY_STORE_P0.md](IDEMPOTENCY_STORE_P0.md) — idempotency store and its provisional decisions
 - [CLAUDE_LATEST_REPORT.md](CLAUDE_LATEST_REPORT.md) — latest task report
 - [reports/](reports/) — archived task reports
 - [README](../../README.md) — project entry point
