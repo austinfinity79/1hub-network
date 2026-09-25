@@ -68,7 +68,16 @@ All executed. Composite `pnpm verify` exits 0.
 - Workflow/E2E: NOT RUN. No WF01–WF03 workflow exists yet and Playwright is M0-T11.
 
 ## 7. Visual / Foundation QA
-Result: **FOUNDATION PASS**. This is a foundation result, not a production-screen pixel PASS.
+Result: **NOT RUN**, superseding the FOUNDATION PASS originally reported for this task.
+
+A browser-testing rule added after M0-T02 makes Playwright the only authoritative
+mechanism and forbids reporting any Visual PASS that rests on Chrome-extension
+observation. See `browser-testing-rule.md`. The verification below was performed
+through the Chrome extension, so it no longer counts as proof and the result is
+withdrawn. The observations are retained as informational only; nothing about the
+implementation changed, and re-verification under Playwright is the next task.
+
+Informational observations, not accepted as evidence:
 
 - Harness: `/dev/typography`, production build, Chrome via MCP.
 - Evidence: `docs/implementation/reports/evidence/m0-t02/typography-harness-scale.jpg` and `typography-harness-anchors.jpg`.
@@ -80,7 +89,7 @@ Result: **FOUNDATION PASS**. This is a foundation result, not a production-scree
 - Network: 9 font requests, all `localhost/fonts/*`, all 200. Zero CDN or `fonts.googleapis.com` requests.
 - Body defaults: Be Vietnam Pro, background `rgb(239,239,239)` = `--hub-canvas`, colour `rgb(22,0,2)` = `--hub-burgundy`.
 - Colour anchors: all five render from the frozen tokens.
-- Deviation: capture was at devicePixelRatio 2 and 1728 CSS px, not 1440x900 DPR1. Chrome reported the resize as successful but the window stayed at screen width, so the target viewport could not be forced. The assertions above are resolution-independent and unaffected. Exact 1440x900 DPR1 capture is deferred to the Playwright harness in M0-T11, which sets viewport and `deviceScaleFactor` programmatically.
+- Deviation: capture was at devicePixelRatio 2 and 1728 CSS px, not 1440x900 DPR1. Chrome reported the resize as successful but the window stayed at screen width, so the target viewport could not be forced. Playwright sets viewport and `deviceScaleFactor` programmatically and will remove this deviation on re-verification.
 - No pixel comparison against `design-reference/final` was attempted or claimed; the harness is not a product screen and has no baseline.
 
 ## 8. SOT compliance
@@ -109,4 +118,10 @@ Result: **FOUNDATION PASS**. This is a foundation result, not a production-scree
 - Working tree status: clean.
 
 ## 12. Recommended next task
-M0-T03 — shared web shell and route groups. Create the public, auth, onboarding, me and ops route groups with placeholder layouts using the tokens from this task, taking routes from `SCREEN_CONTRACTS_WF01_WF03_v1.0.yaml` rather than architecture doc 04, whose route table conflicts with the frozen contract. Exit criterion: every WF01–WF03 route resolves and the build passes. Also gate or relocate the `/dev/typography` harness as part of defining the groups. Not started.
+M0-T02b — re-verify the typography foundation under Playwright, replacing the withdrawn Chrome-extension result.
+
+Install Playwright, add `tests/visual/` with the `actual/`, `diff/`, `reports/`, `specs/` structure, and write one spec that loads `/dev/typography` at 1440x900 with `deviceScaleFactor: 1`, waits for `document.fonts.ready`, asserts computed family, weight and size/line-height for all ten samples, asserts no fallback substitution, asserts every font request is same-origin, and captures a screenshot into `tests/visual/actual/`. Chromium builds are already cached locally, so no environment blocker is expected.
+
+Exit criterion: the Playwright command executes successfully and the M0-T02 visual result can be restated as a genuine FOUNDATION PASS. This is the smallest slice of the M0-T11 harness that the new browser-testing rule requires now; the manifest-driven pixel diffing stays in M0-T11.
+
+Then M0-T03 — shared web shell and route groups, taking routes from `SCREEN_CONTRACTS_WF01_WF03_v1.0.yaml` rather than architecture doc 04, whose route table conflicts with the frozen contract. Not started.
