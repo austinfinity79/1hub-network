@@ -98,9 +98,6 @@ test.describe('M0-T11 deterministic state hooks', () => {
   test('refuses to run a screen whose reference configuration has a gap', async ({ page }) => {
     const { screens } = loadManifest()
     await expect(
-      runScreenQa(page, findScreen(screens, 'WF01-S04'), qaConfigFor('WF01-S04')!),
-    ).rejects.toThrow(/state-board/)
-    await expect(
       runScreenQa(page, findScreen(screens, 'WF03-S01'), qaConfigFor('WF03-S01')!),
     ).rejects.toThrow(/shorter than the 900px viewport/)
   })

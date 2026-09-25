@@ -56,9 +56,6 @@ export type QaScreenConfig = {
   gap?: string
 }
 
-const STATE_BOARD_GAP =
-  'reference_mode state-board: one reference holds several route states, and neither the manifest nor the Design SOT defines per-state regions, so a single capture has no comparable reference region'
-
 /**
  * Pixel QA section 9 makes full-page capture mandatory where a full_page
  * reference exists, but a browser full-page capture is never shorter than the
@@ -95,7 +92,8 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
   // State-board mapping approved (D1-D7, WF01_S03_STATE_BOARD_MAPPING.md):
   // each state is compared against its own board panel, not the whole board.
   cfg('WF01-S03', '/auth/callback', 'guest', 'one callback state per run; panel crops'),
-  cfg('WF01-S04', '/auth/error', 'guest', 'auth error states board', {}, STATE_BOARD_GAP),
+  // State-board mapping approved (DEC-WF01-S04-D1..D8, WF01_S04_STATE_BOARD_MAPPING.md).
+  cfg('WF01-S04', '/auth/error', 'guest', 'one error state per run; component crops'),
   cfg('WF01-S05', '/onboarding/purpose', 'newcomer', 'onboarding step 1, DRAFT profile'),
   cfg('WF01-S06', '/onboarding/profile', 'newcomer', 'onboarding step 2, DRAFT profile'),
   cfg('WF01-S07', '/onboarding/privacy', 'newcomer', 'onboarding step 3, DRAFT profile'),

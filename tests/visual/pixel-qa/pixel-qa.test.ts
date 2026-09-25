@@ -351,15 +351,14 @@ describe('dry run', () => {
     const expected = screens
       .filter(
         (s) =>
-          // WF01-S03's state board has an approved per-panel mapping.
-          (s.reference_mode === 'state-board' && s.screen_id !== 'WF01-S03') ||
+          // Both WF01 state boards (S03, S04) now have approved mappings.
+          (s.reference_mode === 'state-board' && !['WF01-S03', 'WF01-S04'].includes(s.screen_id)) ||
           (s.fullPageSize && s.fullPageSize.height < 900),
       )
       .map((s) => s.screen_id)
     const gaps = entries.filter((e) => e.status === 'REFERENCE_CONFIGURATION_GAP')
     expect(gaps.map((e) => e.screen_id)).toEqual(expected)
     expect(expected).toEqual([
-      'WF01-S04',
       'WF02-S01',
       'WF02-S02',
       'WF02-S05',
@@ -372,9 +371,9 @@ describe('dry run', () => {
     ])
     for (const gap of gaps) {
       expect(gap.reasons.length, gap.screen_id).toBeGreaterThan(0)
-      expect(gap.reasons.join(' '), gap.screen_id).toMatch(/state-board|shorter than the 900px/)
+      expect(gap.reasons.join(' '), gap.screen_id).toMatch(/shorter than the 900px/)
     }
-    expect(entries.filter((e) => e.status === 'READY_FOR_SCREEN_IMPLEMENTATION')).toHaveLength(14)
+    expect(entries.filter((e) => e.status === 'READY_FOR_SCREEN_IMPLEMENTATION')).toHaveLength(15)
   })
 
   it('resolves every route to concrete fixture values', () => {

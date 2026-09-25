@@ -1,0 +1,75 @@
+/*
+ * WF01-S04 — auth error states. Runtime composition (DEC-WF01-S04-D6): ONE
+ * state in ONE centred AuthCard on the 1440x900 canvas. The board's R2/R3
+ * rows are horizontal; in the card the same components stack vertically.
+ * Component values are LOCAL and measured from the AUTH4 board at 1440x900
+ * DPR1 (px / 16 = rem); vertical rhythm follows the WF01-S03 state cards.
+ */
+
+.canvas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Board: 34px disc on primary-soft, "!" in the strong accent red. */
+.disc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 50%;
+  background: var(--hub-primary-soft);
+  color: #b91610;
+}
+
+.disc svg {
+  width: 0.25rem;
+  height: 0.75rem;
+}
+
+.title {
+  margin: 1.125rem 0 0;
+}
+
+.body {
+  max-width: 22rem;
+  margin: 0.5rem 0 0;
+  /* Board R2/R3 body ink is burgundy (#170002), unlike the S03 panels. */
+  color: var(--color-fg-default);
+}
+
+.support {
+  max-width: 22rem;
+  margin: 1.125rem 0 0;
+  color: var(--unresolved-fg-muted);
+}
+
+/* Board: 128x41 outline action, 1px burgundy border, white fill, 8px corners. */
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 8rem;
+  height: 2.5625rem;
+  margin-top: 1.125rem;
+  border: 1px solid var(--hub-burgundy);
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+  color: var(--hub-burgundy);
+  text-decoration: none;
+}
+
+.action:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}

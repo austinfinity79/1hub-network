@@ -22,7 +22,7 @@ async function waitForFonts(page: Page) {
 }
 
 /** Screens whose production implementation has replaced the M0-T03 placeholder. */
-const IMPLEMENTED_SCREENS = new Set(['WF01-S01', 'WF01-S02', 'WF01-S03'])
+const IMPLEMENTED_SCREENS = new Set(['WF01-S01', 'WF01-S02', 'WF01-S03', 'WF01-S04'])
 
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {

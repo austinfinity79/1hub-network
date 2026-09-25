@@ -23,8 +23,9 @@ import styles from './callback.module.css'
  *   the state without the token. The page is static and reads the query only
  *   in the browser, so the token never appears in server-rendered HTML. Their action returns to /auth for a fresh request (D1);
  *   no resend is attempted from a spent token.
- * - INVALID, a missing token, a blocked account and any other failure go to
- *   /auth/error, owned by WF01-S04 (D3). No reason is passed along.
+ * - INVALID, a missing token and any other failure go to /auth/error (GENERIC),
+ *   owned by WF01-S04 (D3). A blocked account goes to ?reason=blocked, an
+ *   allowlisted public code (DEC-WF01-S04-D1, superseding D3 in that part).
  * - While consuming, only a screen-reader status is rendered (D4).
  */
 
@@ -107,6 +108,10 @@ export function CallbackScreen({ expiresInMinutes }: Props) {
         if (terminal) {
           window.history.replaceState(null, '', `/auth/callback?status=${terminal}`)
           setState(terminal)
+        } else if (code === 'AUTH_ACCOUNT_BLOCKED') {
+          // DEC-WF01-S04-D1: an allowlisted public code. Only a holder of a valid
+          // link reaches it, so it reveals nothing to anyone else.
+          router.replace('/auth/error?reason=blocked')
         } else {
           router.replace('/auth/error')
         }
