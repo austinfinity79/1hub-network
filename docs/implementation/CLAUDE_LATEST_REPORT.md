@@ -1,133 +1,81 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF01-S01 — Auth Entry (`/auth`)
-- Scope requested: Implement the first production screen against its strict approved reference, with functional QA, Playwright, the manifest-driven pixel gate and full regression.
-- Status: **DONE**
+- Task ID / name: WF01-S01-FINAL-AUDIT — shared token / typography scope check
+- Scope requested: verify WF01-S01 did not promote screen-specific measurements into global design rules; localise any proven accidental promotion without changing S01 pixels.
+- Status: **PASS WITH LOCALIZATION**
 - Mode: LOCAL REVIEW. Committed locally, not pushed. WF01-S02 not started.
 
-## 2. Pre-flight
-- Single writer: PASS. Start HEAD `31c353b`, re-checked before commit: unchanged.
-- Approved decision 1: `AGENTS.md` added to `.prettierignore`.
-  - `AGENTS.md` itself was not modified, deleted or committed; its mtime is still 04:17.
-  - `pnpm format:check` and `pnpm verify` PASS.
-- Approved decision 2: provider UI follows the runtime contract, not the bitmap.
-- Reference `WF01-S01__auth-entry__1440x900.png` is `strict`, 1440×900. It was inspected and measured before coding.
+## 2. Method
+Evidence came from the 24 approved references, not from S01 alone:
+- A colour survey: pixels within ±2 of each value S01 introduced.
+- Geometry probes: card and input corner radii, input heights, and the heights of the red CTAs.
 
-## 3. Provider state
-| Item | Result |
-|---|---|
-| `GET /api/v1/auth/providers` | `{"providers":[]}`, asserted |
-| Google CTA / divider rendered | NO. Asserted: no "Google", no "hoặc dùng email", exactly one button |
-| Deviation recorded | INTENTIONAL-BUSINESS-CONFIG. Reference region 760,285 → 480×110. Card height changes by 104px; the card stays vertically centred (above the region +52px, below it −52px) |
-
-## 4. What was built
-| File | Role |
-|---|---|
-| `src/app/(auth)/auth/page.tsx`, `auth-entry-form.tsx`, `auth-entry.module.css` | The screen. The form posts `{email, return_to}` with an `Idempotency-Key` (required by contract for `auth.magic-link.request`). On 202 it stores the 202 DTO and navigates to `/auth/check-email` |
-| `src/components/shell/auth-split-layout.*` | Brand panel plus content column. Shared because WF01-S02's approved reference shows the identical panel |
-| `src/lib/auth/email.ts` | Email rule extracted from `tokens.ts` so browser and server apply the same check; `tokens.ts` re-exports it |
-| `src/lib/auth/pending-request.ts` | S01→S02 handoff: the 4-field 202 DTO in `sessionStorage`. No token and no raw address; the address arrives already masked by the server |
-| `tests/visual/pixel-qa/segments.ts` | Segment comparison: aligned regions, with the diff split into inside text vs outside text |
-| `tests/visual/specs/wf01-s01-auth-entry.spec.ts` | 11 functional tests + 1 pixel test |
-
-Shared changes, each backed by baseline evidence:
-- **Token settling.** `design-tokens.ts` assigned radius, shadow, control and surface spacing to WF01-S01. All were measured from the reference in px/16 = rem.
-  - radius: control 8px, surface 14px; card padding 36px;
-  - button height 47px, input height 49px, label → field gap 5px;
-  - notice padding 12.5/13px;
-  - hairlines, fills and muted text as `color-mix()` of the frozen anchors.
-  - These stay `--unresolved-*`, because no SOT froze them. The manifest records each measured value.
-- **On-accent colour.** `--color-fg-on-accent` changed from surface (white) to burgundy. Evidence: all 16 references with a red CTA use a dark label, and burgundy on `#FC523C` passes WCAG AA while white does not. Hover flips the label to surface so it stays legible on the burgundy hover fill.
-- **Notice radius.** Notices now use the control radius (measured ~8px), not the card radius.
-- **Button.** New `fullWidth` prop.
-- **TextInput.** Typed `ref` prop (React 19).
-- **Auth group layout.** The `(auth)` layout no longer imposes `PageContainer`. The S02–S04 placeholders now wrap themselves, so their render is unchanged.
-
-## 5. Functional QA (Playwright, real API)
-| Item | Result |
-|---|---|
-| `/auth` | PASS. Implemented screen, no placeholder |
-| Email validation | PASS. Empty and invalid inputs show an inline `role=alert` error, set `aria-invalid`, wire `aria-describedby`, return focus to the field and send 0 requests |
-| Magic-link request | PASS. Contract body and a UUID `Idempotency-Key` |
-| 202 | PASS |
-| Navigate to S02 | PASS. `/auth/check-email`; stored state = 4 DTO keys, masked address only |
-| Anti-enumeration | PASS. A known and an unknown address get identical status and body shape |
-| Duplicate submit | PASS. While pending: disabled and `aria-busy`; a forced click plus Enter still sends 1 request |
-| API failure | PASS. Announced; the form re-enables, keeps the value, and a retry succeeds |
-| Rate limit | PASS. `AUTH_RATE_LIMITED` shows its own message |
-| Keyboard / accessibility | PASS. Tab order goes field → button, focus outline is visible, Enter submits; semantic `<form>`/`<label>`/`<button>` |
-| Console | PASS. 0 errors in every test |
-
-## 6. Pixel QA
-- **Manifest runner:** `runScreenQa` (M0-T11) ran at 1440×900, DPR1, vi-VN, fonts ready, reduced motion.
-- **Images:**
-  - REFERENCE: `design-reference/final/WF01/WF01-S01__auth-entry__1440x900.png`
-  - ACTUAL: `tests/visual/actual/pixel-qa/WF01-S01.viewport.png`
-  - DIFF: `…/WF01-S01.viewport.diff.png` and `…/WF01-S01.segments.diff.png`
-- **Full frame:** DIFFERENT, 4.68%. This is expected: the provider omission shifts the card, and the font migration changes every glyph.
-- **Typography:** DOM contract PASS, 14 text elements, 0 violations. Be Vietnam Pro 400/500/600; Archivo 700 only for the display headline (the frozen `display` 34/44 step); no fallback.
-- **Segment comparison** (strict outside text; threshold 0.2%):
-
-| Segment | dy | Outside-text diff |
+| Value S01 introduced | Found in other references | Verdict |
 |---|---|---|
-| Brand panel (gradient, wordmark, pitch, footnote) | 0 | **0 px** |
-| Canvas left / right | 0 | **0 px** |
-| Card upper (title, lede) | +52 | **0 px** |
-| Card lower (label → legal, card edge, shadow) | −52 | **1 px (0.001%)** |
+| Card hairline `#e4dede` | 24 / 24 | multi-reference |
+| Muted text `#534041` | 24 / 24 | multi-reference |
+| Notice fill `#f7f4f4` | ~15 | multi-reference |
+| Placeholder `#a79b9b` | S02, S05–S08, WF03 | multi-reference |
+| Burgundy CTA label | 16 / 16 with a red CTA | multi-reference |
+| Card radius 14px | WF01-S03/S07 ≈14; WF02 ≈11; WF03 7–11 | **contradicted** |
+| Input height 49px | WF02-S02/S05 = 44px | **contradicted** |
+| Button height 47px | 42–46px elsewhere; WF03 31–38px | **contradicted** |
+| Input border `#c9bfbf` / fill `#fbfafa`, shadow, 36px card padding, 5px stack, notice 13px padding and 8px radius | S01 only, or not measurable elsewhere | **S01-only** |
 
-- **Line structure** asserted separately: headline 3 lines, pitch note 2, footnotes 1 each, title 1. This check was added after a wrong wrap passed the text mask; see §9.
-- **Classification:**
-  - Structural: 0.
-  - Major Visual: 0.
-  - Component: 0. The notice envelope icon was redrawn to the reference's light-body/dark-fold shape.
-  - Raster noise: 1 px.
-  - Intentional Business Config: the provider block.
-  - Intentional Typography Migration: every glyph. This includes the lede and legal lines wrapping at a different word because Be Vietnam Pro is wider than the pre-freeze raster font.
-- **Pixel verdict: PASS.**
+## 3. Classification
+| Item | Before audit | Class | Action |
+|---|---|---|---|
+| radius-control 8px, radius-surface 14px | global | SCREEN_LOCAL_VALUE | reverted to 0px globally; set on the S01 card |
+| notice radius 8px (primitive rule changed) | global | COMPONENT_LOCAL_VALUE | new `--unresolved-radius-notice`, defaulting to radius-surface (M0 behaviour); S01 sets 0.5rem |
+| shadow | global | SCREEN_LOCAL_VALUE | `none` globally; set on the S01 card |
+| control-y 12.5px, surface 36px, stack 5px | global | SCREEN_LOCAL_VALUE | reverted to 0.75rem / 1.5rem / 0.5rem; set on the S01 card |
+| input-y, notice-x, border-control, fill-control | GLOBAL_NEW_TOKEN | COMPONENT_LOCAL_VALUE | kept as primitive parameters defaulting to M0 behaviour; S01 sets its values |
+| control-x 1rem | global | GLOBAL_EXISTING_TOKEN | unchanged (S01 measures the same) |
+| border-surface, fill-notice, fg-muted, fg-placeholder | GLOBAL_NEW_TOKEN | GLOBAL_NEW_TOKEN, multi-reference | kept global, evidence recorded in the manifest |
+| `--color-fg-on-accent` burgundy | GLOBAL_EXISTING_TOKEN | GLOBAL_EXISTING_TOKEN, multi-reference | kept (16/16 references; WCAG AA) |
+| Gradient mid-stop `#58040b` | screen-local | SCREEN_LOCAL_BASELINE_VALUE | no change; it lives only in `auth-split-layout.module.css`. Also appears in WF03-S09, noted for later |
+| Archivo 700 headline | via existing `.type-display` | S01 SCREEN-APPROVED DISPLAY TREATMENT | no change |
+| `Button fullWidth`, `TextInput ref` | shared | generic API | no change |
 
-## 7. M0 regression exposed and fixed
-- **Defect:** the M0-T05 API client imported `node:crypto` via `request-id.ts`, so the first browser consumer failed to build.
-- **Fix:** `globalThis.crypto.randomUUID()`, available in Node 22 and browsers.
-- **Guard:** a new unit test walks `client.ts`'s import graph and fails on any `node:` import.
+Mechanism: primitives read `var(--unresolved-*)`. The S01 card, `.card` in `auth-entry.module.css`, overrides those properties for its own subtree only. No other screen inherits S01 geometry.
 
-Harness updates (test-owned, intentional):
-- The M0-T04 "leaves cosmetic values unset" test now asserts the settled values.
-- `tests/visual/baseline/primitives.png` was regenerated; I inspected the capture first. The shell and typography harness baselines are unchanged.
-- The `shell-routes` spec treats implemented screens as no longer placeholders.
+## 4. Archivo evidence (case A)
+- Design SOT §2.3, line 51: "Display/marketing: Archivo Bold (only for large editorial/hero headings)".
+- The S01 headline is the brand panel's large marketing hero heading.
+- The bitmap measures the frozen `display` step exactly: 34px size and a 44px line pitch (348→392→436).
+- It is applied through the pre-existing `.type-display` class, so no new rule was created. The card title stays Be Vietnam Pro.
 
-## 8. Validation
+## 5. Proof S01 is unchanged
+- The S01 capture after localisation is **byte-identical** to the capture before it: 0 differing bytes, and pixelmatch at threshold 0 gives 0.
+- WF01-S01 Playwright 12/12. Segments outside text: 0 / 0 / 0 / 0 / 1 px, the same as before.
+
+## 6. Baselines
+- `design-reference/final/**`: 67 files, hash unchanged.
+- `tests/visual/baseline/primitives.png` (harness-owned) regenerated after inspection. The harness now shows the global state: square and flat, as in M0-T04, plus only the multi-reference changes (burgundy CTA label, surface hairline, notice fill and muted text, placeholder). Shell and typography baselines are unchanged.
+- The M0-T04 test "leaves unresolved cosmetic values visibly unset" is restored. The harness copy is restored.
+
+## 7. Regression
 | Gate | Result |
 |---|---|
-| Format / Lint / Typecheck | PASS (`pnpm verify` PASS) |
-| Unit | 109 / 109 (+11 auth-entry, +3 segments, +1 browser safety) |
+| Format / Lint / Typecheck | PASS |
+| Unit | 109 / 109 |
 | DB integration | 121 / 121 |
 | Build | PASS |
-| WF01-S01 Playwright | 12 / 12 |
-| Full Playwright | 124 / 124, plus 24 screen runs skipped by design |
-| `design-reference/**` | 67 files, hash unchanged |
+| Playwright | 124 / 124, plus 24 screen runs skipped by design |
 
-## 9. Notes for review
-1. **Error copy not in the reference.** Empty, invalid, failure and rate-limit messages are minimal Vietnamese copy written for this screen, pending design copy review.
-2. **Static brand-panel figures.** "12 bài toán…, 1,4 tỷ…" is approved copy rendered as-is; the Screen Contract has `reads: []`. Confirm before go-live that static figures are intended.
-3. **Unlinked legal names.** Terms and privacy are named as plain text. No `/legal` route is frozen, and consent capture belongs to WF01-S07.
-4. **Gate lesson.** A wrong line wrap on the pitch note passed the segment gate because the text mask absorbs it. I caught it by eye, fixed it with explicit breaks, and added line-count assertions.
-5. **Display font judgment.** The headline uses Archivo 700 because it is the only 34px step in the frozen scale. The Design SOT does not name this headline explicitly as an approved display use.
-6. **One-off gradient colour.** The brand gradient's middle stop `#58040b` is the one value not derivable from the anchors. It is a baseline-sampled, screen-local shade (Design SOT §2.5).
+## 8. Residual risk for S02–S24
+- Multi-reference neutrals are established by colour presence, not by confirmed role. For example, `#f7f4f4` may be a panel fill rather than a notice fill on some screens. Each screen's pixel gate will confirm or override them.
+- Burgundy CTA labels now apply to every primary button. The evidence is strong.
+- Geometry stays neutral globally. Each screen settles its own geometry locally until several screens agree on a shared value.
 
-## 10. Git
-- Branch: `main`
-- Start HEAD: `31c353b`
-- Implementation commit: `fecc9d4` feat(wf01-s01): auth entry screen on the email magic-link path
+## 9. Git
+- Branch: `main`; start HEAD `95ffe38`, unchanged before commit
+- Implementation commit: `6efee37` fix(wf01-s01): localise single-screen measurements to the auth card
 - Report/final commit: the commit containing this report
-- Remote: `origin` → `austinfinity79/1hub-network`
-- Push status: **NOT RUN** — LOCAL REVIEW MODE
-- Remote HEAD: `2390ce2`, deliberately behind local
-- Working tree: clean after commit except the untracked `AGENTS.md`, preserved and deliberately not committed
-
-## 11. Recommended next task
-WF01-S02 — Check Email (consumes the pending-request handoff; resend via `POST /auth/magic-link/resend`).
+- Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `2390ce2`
+- Working tree: clean after commit except the untracked `AGENTS.md`, preserved and not committed
 
 ## Related
+- [reports/WF01-S01_auth-entry.md](reports/WF01-S01_auth-entry.md) — the WF01-S01 implementation report
 - [P0_STATUS.md](P0_STATUS.md) — overall P0 state
-- [M0_FOUNDATION_COMPLETION_REPORT.md](M0_FOUNDATION_COMPLETION_REPORT.md) — M0 audit
