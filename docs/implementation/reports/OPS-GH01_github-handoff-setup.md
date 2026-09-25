@@ -74,17 +74,31 @@ Two sections appended. The diff is 44 lines added, 0 deleted, so this was a pure
 
 ## 8. Git
 - Branch: `main`
-- Implementation commit: `bd6a7ab` — *(see section 9 if this differs; recorded post-commit)*
-- Report/final commit: recorded at push time below
+- Implementation commit: `0b36fc9da1cb066f0e5bff2dc7c8409074be6794` — this task is a single commit, so implementation and report share it
+- Report/final commit: `0b36fc9da1cb066f0e5bff2dc7c8409074be6794`
 - Remote: `origin` → `austinfinity79/1hub-network` (SSH, no credentials in URL)
-- Push status: PASS
-- Remote HEAD: matches local HEAD, verified by SHA
+- Push status: **PASS**
+- Remote HEAD: `0b36fc9da1cb066f0e5bff2dc7c8409074be6794`, matching local HEAD and the GitHub API
 - Working tree status: clean
 
-## 9. Blockers
+This is the first report to use the section 12 format the rule introduces.
+
+## 9. External files encountered
+Two files written by the Cowork orchestration tool appeared in the working tree during this task:
+
+| File | Nature | Action |
+|---|---|---|
+| `.cowork_write_test` | 5-byte write-permission probe containing `test` | Gitignored, not pushed |
+| `docs/implementation/NEXT_TASK_PROMPT.md` | The generated OPS-GH01 prompt | Gitignored, not pushed |
+
+Neither was created by this session, neither is project content, and committing them was not part of the authorized scope. They are ignored rather than deleted, since they belong to another tool. If you want the generated prompts tracked as review provenance, say so and I will un-ignore that path.
+
+A stale zero-byte `.git/index.lock` also appeared, left by a crashed or concurrent git process. No git process was running, so it was removed after verifying that.
+
+## 10. Blockers
 None. The repository is private, history is intact, the push is SHA-verified, and the handoff rule is recorded in `CLAUDE.md`.
 
-## 10. Recommended next task
+## 11. Recommended next task
 **M0-T06A is already complete** and was reported PARTIAL in the previous turn, so it should not be repeated. The accurate next step is the decision round it asked for, or the next codeable task.
 
 Recommended: **M0-T07 — deterministic seed system**. It can proceed on gaps B4 and B5 alone, giving every row a fixed id and fixed timestamp, making re-runs idempotent, and adding fixtures for the eleven empty tables including a `PENDING_APPROVAL` membership and `membership_bootstrap` rows. It must leave the seeded role codes untouched until B2 is ruled on, and I will flag that rather than guess.
