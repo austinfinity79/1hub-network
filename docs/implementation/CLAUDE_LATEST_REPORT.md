@@ -1,111 +1,175 @@
 # Claude Task Report
 
-## 1. Task
-- Task ID / name: M0-T11 — Manifest-driven Pixel QA Foundation
-- Scope requested: Reusable infrastructure that goes from an approved manifest entry to a deterministic capture, a pixel/geometry diff and a structured report. Infrastructure only; no WF screen.
+## Task
+- Task ID / name: M0-FOUNDATION-COMPLETION-AUDIT
+- Scope requested: Final local completion gate for M0. Audit from a clean state, fix only proven defects inside approved M0 behaviour, full regression.
 - Status: **DONE**
 - Mode: LOCAL REVIEW. Committed locally, not pushed.
+- Full report: [M0_FOUNDATION_COMPLETION_REPORT.md](M0_FOUNDATION_COMPLETION_REPORT.md), reproduced below.
 
-## 2. Pre-flight
-- Single writer: **PASS**. Only this session wrote to the worktree.
-- Starting HEAD: `61e80cc`. Re-checked before commit: unchanged. No concurrent mutation.
-- Working tree clean at start, 0 stashes. Migrations 001, 002, 003 present.
-- Existing visual regression before any change: **PASS**, 93 of 93.
-- `design-reference/**`: 67 files hashed before the task. The same hash was verified after all runs.
+**Verdict: GREEN WITH DOCUMENTED LIMITATIONS**
 
-## 3. Manifest audit
-| Item | Result |
+The M0 foundation was proven from a clean clone against a brand-new PostgreSQL container, then re-proven in the working repository. P0 defects: 0. P1 defects: 0. One P2 and one P3 were fixed without inventing any business rule. The remaining items are pre-UAT, deployment-only or design-QA decisions for screens not yet built.
+
+## 1. Baseline
+| Item | Value |
 |---|---|
-| Entries | 24 (WF01 ×8, WF02 ×7, WF03 ×9), all production |
-| Viewport references resolved | 24 / 24, every one 1440×900 |
-| Full-page references | 15, every one 1440 wide |
-| Missing references | 0 |
-| Duplicate screen IDs | 0 |
-| Invalid configuration | 0 manifest errors; `manifest.json` equals `manifest.yaml` |
+| Start HEAD | `3c91480` (M0-T11 report). Unchanged through the audit |
+| Single writer | PASS. One foreign untracked file, `AGENTS.md` (created 04:17, after M0-T11, most likely by the Codex app), was left untouched and uncommitted, per CLAUDE.md §13 |
+| Migrations | 001, 002, 003 present. sha256 unchanged start to end (`71e6b511…`, `8d9e1c24…`, `af60cf15…`) |
+| Seed entrypoint | `scripts/db.mjs` → `seed_p0_deterministic.sql` |
+| `design-reference/**` | 67 files hashed before and after the audit: identical |
 
-The manifest defines screen ID, reference paths, mode, source size and typography override. It does **not** define route, actor or fixture. Those live in a tests-owned mapping (`tests/visual/pixel-qa/qa-screens.ts`), following Pixel QA §4. Routes come from `FROZEN_ROUTES`; parameters and actors come from `seed_p0_deterministic.sql`. `manifest.yaml` was not modified.
+## 2. Environment
+Node 22.23, pnpm 11.23, PostgreSQL 17.6 (`postgres:17.6-alpine`), Playwright Chromium, macOS.
+- **Audit DB:** a fresh container `hubnetwork-audit-db` on port 55433, separate from the dev DB on 55432.
+- **Audit app port:** 3985.
 
-## 4. What was built
-`tests/visual/pixel-qa/` holds the Node engine:
+## 3. Clean install — PASS
+- `git clone` of HEAD into an empty directory: no `node_modules`, no `.next`, no `.env`.
+- `pnpm install --frozen-lockfile`: success.
+- Fonts are served from committed `public/fonts`; the typography specs pass, so nothing depends on local artifacts.
+- In the clone: format, lint and typecheck PASS; unit 94/94; DB 118/118; build PASS; Playwright 108/108. The harness baselines resolved without any update flag.
 
-| File | Role |
+## 4. Fresh PostgreSQL — PASS
+- An empty DB (0 tables) took 001 → 002 → 003 in order.
+- A second `migrate` skipped all three: repeat-safe.
+- After a full reset, the same order applied again.
+- The app connected, served `/api/v1/session` and logged in personas.
+
+## 5. Seed — PASS
+- Seed applied twice without error.
+- A fingerprint over accounts, profiles, organisations, memberships, leadership, role assignments, events and projects (ids, states, timestamps) was **identical** before reset, after reset, and after an extra seed.
+- 5 accounts, 1 leadership row, 6 role assignments. No duplicate leadership or RoleAssignment.
+- Role codes are only `INDIVIDUAL_USER`, `HUB_MEMBER`, `HUB_COMMUNITY_LEADER`, `PLATFORM_ADMIN`. No `ORG_ADMIN` or `PLATFORM_OPS`.
+- **New test:** the retired `seed_dev.sql` cannot become the entrypoint through the runner or any package script.
+
+## 6. Auth / session — PASS
+Existing suites cover:
+- request, resend (which retires the previous link), consume, expiry and single use;
+- session creation, `GET /session`, logout and invalidation;
+- the HttpOnly/SameSite cookie, hash-only token storage, no token visible to page JS, and a new session token per consume.
+
+Added in this audit:
+- **New test:** 8 concurrent consumes of one link give exactly 1 success, 7 `AUTH_LINK_ALREADY_USED`, and +1 session row.
+- **Restart:** a leader session survived both an app restart and a PostgreSQL container restart. Logout afterwards returned 204 and `{authenticated:false}`.
+
+## 7. RBAC — PASS
+`authz.db-test` 31/31, plus the browser suite 8/8. They cover:
+- the matrix matching the approved document, with no admin shortcut;
+- member and membership-only denial, and unauthenticated denial;
+- Leader allowed in their own org and denied in another org and at platform scope;
+- expired, future and non-ACTIVE assignments ignored;
+- forged role and scope ignored, and unknown capabilities denied;
+- constraint D3 and no impersonation.
+
+**New test:** probing a nonexistent organisation id returns the same code, message and status as a real foreign organisation, so organisation existence does not leak.
+
+## 8. Idempotency — PASS
+`idempotency.db-test` and the browser suite cover:
+- execute once, replay, 409 on a changed payload, and operation scoping;
+- actor isolation and 8-way concurrency (one execution, locking in PostgreSQL);
+- rollback and retry, fingerprint-only storage, no magic-link token, retention purge, and the shape of migration 003.
+
+**Restart:** a COMPLETED key survived an app and DB restart. Replaying it returned the identical `request_id` without re-executing.
+
+## 9. API foundation — PASS
+- **Routes:** 6 handlers, all under `/api/v1`, all through `withApi`, which provides the error envelope and request id.
+- **Errors:** unexpected errors are normalised and their message never reaches the client.
+- **Scope:** no business endpoint exists beyond the auth/session set; this is asserted.
+- **P2 found:** `completion_percent` in `GET /session` is a hard-coded `0`, but its comment claimed M0-T09 computed it. See §15.
+
+## 10. Playwright — PASS
+112/112, plus 24 screen pixel runs skipped by design. Coverage includes:
+- 1440×900 at DPR 1, font stabilisation, and deterministic personas;
+- auth and authz browser smoke.
+
+**New spec `console-health`:** 25 frozen routes × guest/member/leader, plus 3 dev harnesses: 0 console errors, 0 page errors, no status ≥ 400.
+
+**Production-mode gating:** with `ENABLE_DEV_ROUTES` unset, `/dev/typography`, `/dev/primitives`, `/dev/pixel-qa` and `POST /dev/login` all return 404.
+
+## 11. Pixel QA — PASS
+Unit 33/33 and Playwright 15/15 cover:
+- manifest load, 24/24 references resolved, and rejection of duplicates, missing references and traversal;
+- capture, diff, identical and mismatch detection, the typography DOM assertion and full page;
+- design-baseline write refusal and harness/design baseline separation.
+
+No product pixel pass is claimed.
+
+## 12. Security / static audit — PASS
+| Check | Result |
 |---|---|
-| `paths.ts` | Path policy. References may resolve only inside `design-reference/final`. Outputs may go only to `tests/visual/{actual,diff,reports}/pixel-qa`. Any write under `design-reference/` is refused. |
-| `manifest.ts` | YAML load and validation: frozen viewport/DPR, ID format, duplicates, mode enum, traversal, existence, and dimensions read from the PNG IHDR. |
-| `qa-screens.ts` | Tests-owned route/actor/fixture mapping, plus the dry run. |
-| `compare.ts` | `pixelmatch` comparison: IDENTICAL, DIFFERENT, DIMENSION_MISMATCH, diff pixel count/ratio, diff bounding box. Always writes a diff image when sizes match. |
-| `report.ts` | Per-screen JSON listing explicit `REFERENCE` / `ACTUAL` / `DIFF` paths and `reference_kind` (APPROVED_DESIGN or HARNESS_REGRESSION). Classification is `PENDING_REVIEW` with the §6 taxonomy. `product_pixel_pass_claimed: false`. |
-| `capture.ts` | The Pixel QA §5 sequence: seed, persona login through the real magic-link flow, navigate, `document.fonts.ready`, stabilisation CSS, viewport/DPR/font assertions, DOM typography contract, viewport capture and full-page capture. |
+| Committed secrets | None. Only `.env.example`, holding the known local-only dev password (see OPS-GH01) |
+| Raw tokens logged | None. There is no `console.*` in non-test `src/` |
+| Unsafe auth data returned | None. DTOs are asserted field by field |
+| Client-trusted roles/scopes | None. Proven by forged-input tests |
+| Protected mutation without authz | None exist yet. All mutations are unauthenticated auth endpoints by definition |
+| SQL injection | Every query is parameterised; no `${}` inside SQL in non-test `src/` |
+| Pixel QA traversal / design write path | Refused, and tested |
+| Unbounded queries | All foundation SELECTs are keyed single-row lookups |
+| Error detail leakage | None. Internal faults map to a generic envelope |
 
-Other changes:
-- `src/app/dev/pixel-qa`: dev-only harness page, gated by `ENABLE_DEV_ROUTES`. Not a product screen.
-- Two Playwright specs:
-  - `pixel-qa-harness.spec.ts` proves the engine in a real browser.
-  - `pixel-qa-screens.spec.ts` always runs the audit and dry run. Screen runs execute only when named via `PIXEL_QA_SCREENS`.
-- New devDependencies: `pixelmatch`, `pngjs`, `yaml`, `@types/pngjs`. `pixelmatch` is the diff engine Playwright itself uses.
-- `vitest.config.ts` now includes `tests/visual/pixel-qa/**/*.test.ts`.
-- Two harness-owned baselines added: `tests/visual/baseline/pixel-qa-harness.{viewport,full_page}.png`. They were created only with an explicit `PIXEL_QA_UPDATE_HARNESS=1` run.
+## 13. Restart / persistence — PASS
+- App and DB restarted; no migration re-ran (three `skip`s).
+- The session and the COMPLETED idempotency key persisted, as designed.
+- Reset cleared sessions and keys, and the fixtures were restored identically.
 
-Future screen task usage: `PIXEL_QA_SCREENS=WF01-S01 pnpm visual pixel-qa-screens`. A screen run fails on V0 conditions, dimension mismatch or typography violations. Pixel differences produce evidence for review and do not fail the run.
-
-## 5. Pixel QA proof
-| Item | Result |
-|---|---|
-| 1440×900 DPR1 | PASS, asserted; a wrong viewport and DPR 2 are rejected |
-| Deterministic state | PASS. Seed re-apply is idempotent; the leader persona resolves the Chapter 01 scope; a guest mapping clears the session; two captures are pixel-identical |
-| Font assertion | PASS. Approved faces with no fallback; Georgia and Be Vietnam Pro 700 are flagged |
-| Actual capture | PASS, written at exactly 1440×900 |
-| Diff generation | PASS, diff PNG written and visually checked |
-| Identical comparison | PASS, 0 differing pixels |
-| Intentional mismatch | PASS. DIFFERENT, and the bounding box covers both the old and new block positions |
-| Long page | PASS. Full page stays 1440 wide and grows past 1500px; a change wholly below the fold leaves the viewport identical and is located exactly at `{64,1500,200,80}` |
-| Design baseline write protection | PASS. Path policy tests pass, and the `design-reference/final` hash is unchanged after every run |
-
-## 6. Production dry run
-- READY_FOR_SCREEN_IMPLEMENTATION: **13**
-- REFERENCE_CONFIGURATION_GAP: **11**
-- Product pixel PASS claimed: **NO**. No placeholder route was compared to a design.
-
-| Gap | Screens | Fact |
-|---|---|---|
-| G1 state-board | WF01-S03, WF01-S04 | One reference holds several route states. Neither the manifest nor the Design SOT defines per-state regions, so a single capture has no comparable region. |
-| G2 short full-page | WF02-S01, S02, S05, S06; WF03-S01, S02, S03, S05, S08 | `__full.png` is 550–893px tall. Pixel QA §9 makes full-page capture mandatory, but a browser full-page capture is never under 900px (verified: a 550px page captures at 1440×900). The comparison rule for this case is undefined. |
-
-G2 note: WF03-S03 and WF03-S08 are `long-page` mode with full references under 900px (893 and 888), which is internally inconsistent in the frozen manifest. `design-reference/final/README.md` explicitly allows full references shorter than 900, so the validator does not reject them. The runner refuses to run a gap screen rather than invent a crop rule.
-
-## 7. Validation
+## 14. Regression (working repository, generated output deleted first) — PASS
 | Gate | Result |
 |---|---|
-| Format / Lint / Typecheck | PASS |
-| Unit | PASS — 94 / 94 (61 existing + 33 Pixel QA) |
-| DB integration | PASS — 118 / 118 |
+| Format | PASS for the repository. The only warning is the foreign untracked `AGENTS.md` |
+| Lint / Typecheck | PASS |
+| Unit | 94 / 94 |
+| DB integration | 121 / 121 (118 + 3 new) |
+| Permission matrix (`authz.db-test`) | 31 / 31 |
 | Build | PASS |
-| Pixel QA Playwright | PASS — 15 / 15, plus 24 screen runs skipped by design |
-| Full Playwright regression | PASS — 108 / 108 (93 existing + 15), including auth, RBAC, idempotency and seed specs |
+| Playwright | 112 / 112 (108 + 4 new) |
+| Pixel QA | 33 unit + 15 browser |
 
-The 16 required tests map to the unit tests (manifest, traversal, dimensions, comparison, report, ownership, reference immutability) and the harness spec (viewport, DPR, fonts, capture, diff).
+## 15. Defects fixed during the audit
+| ID | Class | Finding | Fix |
+|---|---|---|---|
+| D1 | P2 | `GET /session` returns `completion_percent: 0` for every session, and its comment said M0-T09 computed it, so a placeholder read as a real server-derived value | Comment corrected to state plainly that it is a placeholder. The ten-group calculation was **not** built: it is Profile-domain WF01/WF02 scope and depends on the B1 group-3 ruling. It must be implemented before any screen shows completion (WF01-S06/S08, WF02-S01) |
+| D2 | P3 | `api-contract` test title said "no session store exists yet", which has been false since M0-T08 | Title and comment corrected; assertion unchanged |
 
-## 8. Decisions needed (not blockers for M0 completion)
-1. **G1:** how state-board references are compared. For example, per-state crop regions in a tests-owned map, or functional-only checks for those states.
-2. **G2:** the full-page rule when the reference is shorter than the viewport. For example, viewport comparison only, or comparing the top N rows.
+Tests added: concurrent consume, nonexistent-org probe, seed entrypoint, and console health.
 
-Both are design/QA decisions. Neither was resolved here.
+## 16. Remaining deferred items (pre-UAT / deployment)
+| Item | Status |
+|---|---|
+| CSRF mechanism | Pre-UAT. SameSite=lax is the only mitigation |
+| Session TTL (30 days), SameSite (`lax`) | Provisional, pre-UAT |
+| Idempotency retention (24 h), conflict code (`UNCONTRACTED_…` 409), lenient missing header | Provisional technical values, not business rules |
+| **Rate limiting on auth endpoints** | **Newly recorded.** Required by System Arch §9; not built; SOT gives no thresholds. `AUTH_RATE_LIMITED`/429 exist in the error catalogue only |
+| **Magic-link email delivery** | **Newly recorded.** The token is deliberately dropped at the endpoint; no email provider or outbox exists (System Arch §3.5). Local flows use `/dev/login`. Deployment work |
+| **Server-side logging of internal errors** | **Newly recorded.** `withApi` normalises unexpected errors but does not log them (System Arch §9: central logs). Deployment/observability |
+| Gap P8 visibility group codes; untyped `role_code`/`scope_type`; droppable `role_assignments.account_id` | Unchanged |
 
-## 9. Git
+## 17. Design decisions carried forward
+Both are classified **DESIGN-QA DECISION BEFORE AFFECTED SCREEN**. The runner refuses these screens until a decision is made.
+
+- **G1 state-board:** WF01-S03 and WF01-S04 have no per-state regions.
+- **G2 short full-page:** 9 screens have `__full.png` shorter than 900px. WF03-S03 and WF03-S08 are marked `long-page` but are shorter than 900.
+
+## 18. Readiness for WF01
+**YES.** WF01-S01, S02 and S05–S08 are `READY_FOR_SCREEN_IMPLEMENTATION`. Two items need attention before or during WF01:
+- D1: completion must be implemented before S06/S08 display it.
+- G1: needs a decision before S03/S04 reach their pixel gate.
+
+## Git
 - Branch: `main`
-- Starting HEAD: `61e80cc`
-- Implementation commit: `8fd8a09` feat(m0-t11): manifest-driven Pixel QA foundation
+- Start HEAD: `3c91480`. Re-checked before commit: unchanged
+- Implementation commit: `0b446eb` fix(m0-audit): harden foundation proofs found by the completion audit
 - Report/final commit: the commit containing this report
 - Remote: `origin` → `austinfinity79/1hub-network`
 - Push status: **NOT RUN** — LOCAL REVIEW MODE
 - Remote HEAD: `2390ce2`, deliberately behind local
-- Working tree: clean after commit
+- Working tree: clean after commit except the foreign untracked `AGENTS.md`, which was deliberately not committed (CLAUDE.md §13)
 - Secrets: none committed
 
-## 10. Recommended next task
-**M0 Foundation Completion Audit.** Every M0 item is now built. G1 and G2 need a decision before the affected screens reach their pixel gate, but they do not block the audit.
+## Recommended next task
+WF01 IMPLEMENTATION — screen by screen, from WF01-S01.
 
 ## Related
+- [M0_FOUNDATION_COMPLETION_REPORT.md](M0_FOUNDATION_COMPLETION_REPORT.md) — full audit
 - [P0_STATUS.md](P0_STATUS.md) — overall P0 state
-- [SESSION_HANDOFF.md](SESSION_HANDOFF.md) — session handoff (as of M0-T10)
-- [05_PIXEL_QA_ARCHITECTURE_v1.1.md](../qa/05_PIXEL_QA_ARCHITECTURE_v1.1.md) — Pixel QA SOT

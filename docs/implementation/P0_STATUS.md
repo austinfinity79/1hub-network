@@ -5,8 +5,9 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 ## Current phase
 
-**M0 — Foundation.** No WF01–WF03 screen is implemented yet; route pages are placeholders bound
-to the frozen route manifest.
+**M0 — Foundation: COMPLETE** — completion audit verdict **GREEN WITH DOCUMENTED LIMITATIONS**
+([report](M0_FOUNDATION_COMPLETION_REPORT.md)). No WF01–WF03 screen is implemented yet; route pages
+are placeholders bound to the frozen route manifest.
 
 ## Completed (committed)
 
@@ -30,10 +31,14 @@ to the frozen route manifest.
 | M0-T09 | RBAC authorization foundation: actor, scope, lifecycle, session capabilities |
 | M0-T10 | Durable idempotency store (migration 003), idempotent magic-link requests |
 | M0-T11 | Manifest-driven Pixel QA foundation: manifest audit, QA mapping, capture, diff, report, dry run |
+| M0 AUDIT | Foundation completion audit: clean install, fresh PostgreSQL, restart proof; 1 P2 + 1 P3 fixed |
 
 ## Not yet built (M0)
 
-Nothing from the M0 item list. M0 is ready for its completion audit.
+Nothing from the M0 item list.
+
+`completion_percent` in `GET /api/v1/session` is a placeholder `0`, not a computed value. The ten-group
+calculation is Profile-domain WF01/WF02 scope and must exist before any screen displays completion.
 
 `GET /api/v1/session` resolves a real session and derives `capabilities` and `managed_scopes` server-side from the approved authorization matrix.
 
@@ -57,11 +62,12 @@ No product pixel pass has been claimed for any screen.
 | Schema vs SOT compatibility gaps | [DB_SCHEMA_GAPS_P0.md](DB_SCHEMA_GAPS_P0.md) |
 | Provisional idempotency policy, incl. lenient missing header | [IDEMPOTENCY_STORE_P0.md](IDEMPOTENCY_STORE_P0.md) |
 | Classification of blocking gaps B1–B5 | [P0_DECISIONS_REQUIRED.md](P0_DECISIONS_REQUIRED.md) |
+| Deferred pre-UAT/deployment items, incl. rate limiting, email delivery, error logging | [M0 completion report §16](M0_FOUNDATION_COMPLETION_REPORT.md) |
 | Pixel QA reference configuration gaps (11 screens) | [M0-T11 report](reports/M0-T11_manifest-pixel-qa-foundation.md) |
 
 ## Next task
 
-M0 Foundation Completion Audit (recommended). Waiting for review and authorization.
+WF01 implementation, screen by screen from WF01-S01 (recommended). Waiting for review and authorization.
 
 ## Related
 
