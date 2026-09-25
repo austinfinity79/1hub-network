@@ -7,27 +7,35 @@
  * `--unresolved-*` token. No framework default is adopted silently and no raw
  * hex appears here. `design-tokens.test.ts` enforces this.
  *
- * The `--unresolved-*` values below are not SOT-frozen design tokens. Those
- * marked WF01-S01 were MEASURED from the approved WF01-S01 baseline at
- * 1440x900 DPR1 (px / 16 = rem), as src/lib/design-tokens.ts assigned them to
- * that screen; neutral shades are colour-mix()es of the frozen anchors, per
- * Design SOT 2.5 "screen-baseline-driven". space-stack still awaits WF01-S06.
+ * The `--unresolved-*` values below are not SOT-frozen design tokens.
+ *
+ * GLOBAL values are either the M0-T04 provisional values (radius 0, no shadow,
+ * so an unfinished primitive looks unfinished) or neutrals that MULTIPLE
+ * approved references share (WF01-S01 final audit, cross-reference survey):
+ * border-surface, fill-notice, fg-muted and fg-placeholder, all colour-mix()es
+ * of the frozen anchors (Design SOT 2.5 "screen-baseline-driven").
+ *
+ * Values measured from a single approved screen are NOT promoted here. A screen
+ * sets them locally by overriding these properties on its own container; see
+ * src/app/(auth)/auth/auth-entry.module.css for WF01-S01. The parameter tokens
+ * added for that (input-y, notice-x, radius-notice, border-control,
+ * fill-control) default to exactly the M0-T04 behaviour.
  */
 
 :root {
-  --unresolved-radius-control: 0.5rem;
-  --unresolved-radius-surface: 0.875rem;
-  --unresolved-shadow-surface: 0 0.5rem 1.875rem
-    color-mix(in srgb, var(--hub-burgundy) 7%, transparent);
+  --unresolved-radius-control: 0px;
+  --unresolved-radius-surface: 0px;
+  --unresolved-radius-notice: var(--unresolved-radius-surface);
+  --unresolved-shadow-surface: none;
   --unresolved-space-control-x: 1rem;
-  --unresolved-space-control-y: 0.78125rem;
-  --unresolved-space-input-y: 0.59375rem;
-  --unresolved-space-stack: 0.3125rem;
-  --unresolved-space-surface: 2.25rem;
-  --unresolved-space-notice-x: 0.8125rem;
-  --unresolved-border-control: color-mix(in srgb, var(--hub-burgundy) 23%, var(--hub-surface));
+  --unresolved-space-control-y: 0.75rem;
+  --unresolved-space-input-y: var(--unresolved-space-control-y);
+  --unresolved-space-notice-x: var(--unresolved-space-control-x);
+  --unresolved-space-stack: 0.5rem;
+  --unresolved-space-surface: 1.5rem;
+  --unresolved-border-control: var(--color-bg-canvas);
+  --unresolved-fill-control: var(--color-bg-surface);
   --unresolved-border-surface: color-mix(in srgb, var(--hub-burgundy) 12%, var(--hub-surface));
-  --unresolved-fill-control: color-mix(in srgb, var(--hub-burgundy) 2%, var(--hub-surface));
   --unresolved-fill-notice: color-mix(in srgb, var(--hub-burgundy) 4%, var(--hub-surface));
   --unresolved-fg-muted: color-mix(in srgb, var(--hub-burgundy) 74%, var(--hub-surface));
   --unresolved-fg-placeholder: color-mix(in srgb, var(--hub-burgundy) 38%, var(--hub-surface));
@@ -197,8 +205,7 @@
     font-size: var(--type-sm-size);
     line-height: var(--type-sm-line);
     padding: var(--unresolved-space-control-y) var(--unresolved-space-notice-x);
-    /* WF01-S01 baseline: notices take the control radius, not the card radius. */
-    border-radius: var(--unresolved-radius-control);
+    border-radius: var(--unresolved-radius-notice);
     border: 1px solid transparent;
   }
 

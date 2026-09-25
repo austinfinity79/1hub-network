@@ -6,6 +6,26 @@
 
 .card {
   width: 27.5rem;
+
+  /*
+   * WF01-S01 LOCAL values, measured from its approved baseline. They override
+   * the shared primitive parameters for this card only and are deliberately
+   * not global: the cross-reference survey shows other approved screens use
+   * different geometry (e.g. 44px inputs on WF02-S02/S05, 42-46px buttons,
+   * ~11px card radius on WF02). A system value needs multi-reference evidence.
+   */
+  --unresolved-radius-control: 0.5rem;
+  --unresolved-radius-surface: 0.875rem;
+  --unresolved-radius-notice: 0.5rem;
+  --unresolved-shadow-surface: 0 0.5rem 1.875rem
+    color-mix(in srgb, var(--hub-burgundy) 7%, transparent);
+  --unresolved-space-control-y: 0.78125rem;
+  --unresolved-space-input-y: 0.59375rem;
+  --unresolved-space-notice-x: 0.8125rem;
+  --unresolved-space-stack: 0.3125rem;
+  --unresolved-space-surface: 2.25rem;
+  --unresolved-border-control: color-mix(in srgb, var(--hub-burgundy) 23%, var(--hub-surface));
+  --unresolved-fill-control: color-mix(in srgb, var(--hub-burgundy) 2%, var(--hub-surface));
 }
 
 .stack {

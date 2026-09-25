@@ -186,7 +186,7 @@ export default function PrimitivesHarnessPage() {
           <Surface as="section">
             <p className="type-section-sm">Surface</p>
             <p className="type-body-sm">
-              Radius, viền và shadow đo từ baseline đã duyệt của WF01-S01.
+              Radius và shadow chưa được chốt trong Design SOT nên surface hiện phẳng và vuông.
             </p>
           </Surface>
         </div>

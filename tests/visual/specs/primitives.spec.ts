@@ -214,9 +214,7 @@ test.describe('M0-T04 deterministic rendering', () => {
     expect(state.buttonSize).toBe('16px')
   })
 
-  test('applies the cosmetic values WF01-S01 settled from its approved baseline', async ({
-    page,
-  }) => {
+  test('leaves unresolved cosmetic values visibly unset', async ({ page }) => {
     const computed = await page.evaluate(() => {
       const button = document.querySelector('.ui-button')!
       const surface = document.querySelector('.ui-surface')!
@@ -227,11 +225,12 @@ test.describe('M0-T04 deterministic rendering', () => {
       }
     })
 
-    // M0-T04 shipped these as 0/none until an approved screen settled them;
-    // src/lib/design-tokens.ts assigned that to WF01-S01, which measured them.
-    expect(computed.buttonRadius).toBe('8px')
-    expect(computed.surfaceRadius).toBe('14px')
-    expect(computed.surfaceShadow).not.toBe('none')
+    // Provisional, not approved: radius and shadow stay neutral globally. WF01-S01
+    // measured values for its own card and applies them locally only (final
+    // audit), because other approved references use different geometry.
+    expect(computed.buttonRadius).toBe('0px')
+    expect(computed.surfaceRadius).toBe('0px')
+    expect(computed.surfaceShadow).toBe('none')
   })
 
   test('freezes the loading spinner under reduced motion', async ({ page }) => {
