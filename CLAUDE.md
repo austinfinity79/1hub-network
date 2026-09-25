@@ -102,3 +102,47 @@ At task end report only:
 - commit hash (if commits are enabled)
 
 Then STOP.
+
+## 11. GitHub task handoff rule
+GitHub is the handoff layer: Claude Code → GitHub → review. Push is part of task
+completion, not an optional follow-up.
+
+For every authorized implementation task:
+1. Complete only the authorized scope.
+2. Run all applicable quality gates.
+3. Update `docs/implementation/CLAUDE_LATEST_REPORT.md`.
+4. Archive the task report under `docs/implementation/reports/`.
+5. Commit all authorized implementation/report changes.
+6. Push all task commits to the CURRENT tracked branch.
+7. Verify the remote contains the final task/report commit.
+8. Verify the working tree is clean.
+9. STOP.
+
+Hard rules:
+- Never force-push.
+- Never rewrite remote history automatically.
+- Never push credentials or secrets.
+- Never change the remote repository or branch strategy unless explicitly authorized.
+- Do not automatically create pull requests.
+- Do not automatically merge branches.
+- Do not start the next task after pushing.
+
+A task may be reported DONE only when implementation gates PASS **and** the
+report is committed **and** the remote push is verified. If gates pass but the
+push fails, the task is not handed off: report `PUSH FAILED` with the exact
+non-secret reason, and STOP.
+
+Verification means comparing the local HEAD SHA against the remote SHA. Command
+output alone is not proof of push.
+
+## 12. Report Git section
+Every `CLAUDE_LATEST_REPORT.md` must carry these fields under Git:
+- Branch
+- Implementation commit
+- Report/final commit
+- Remote
+- Push status: PASS / FAIL / NOT RUN
+- Remote HEAD
+- Working tree status
+
+Never record a remote URL containing credentials.

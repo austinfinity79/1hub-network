@@ -34,3 +34,7 @@ tests/visual/reports/
 
 # Local env
 .env.local
+
+# Cowork orchestration artifacts (external tool, regenerated per task)
+.cowork_write_test
+docs/implementation/NEXT_TASK_PROMPT.md
