@@ -1,0 +1,31 @@
+# M0-T06A — local PostgreSQL for 1hub.network Phase 0.
+#
+# PostgreSQL is frozen by the architecture (01:272, CLAUDE.md:77). The image is
+# pinned so a migration proven here is proven on the same engine everywhere.
+#
+# The host port is deliberately 55432, not 5432: other projects on this machine
+# already bind the default, and a foundation task must not depend on the
+# developer's other containers being stopped.
+services:
+  db:
+    image: postgres:17.6-alpine
+    container_name: hubnetwork-p0-db
+    environment:
+      POSTGRES_USER: hubnetwork
+      POSTGRES_PASSWORD: hubnetwork_local_dev
+      POSTGRES_DB: hubnetwork_p0
+      # Deterministic collation, so index and ORDER BY behaviour does not drift
+      # with the host locale.
+      POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8'
+    ports:
+      - '55432:5432'
+    volumes:
+      - hubnetwork_p0_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hubnetwork -d hubnetwork_p0']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  hubnetwork_p0_data:

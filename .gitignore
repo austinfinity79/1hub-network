@@ -31,3 +31,6 @@ tests/**/artifacts/
 tests/visual/actual/
 tests/visual/diff/
 tests/visual/reports/
+
+# Local env
+.env.local
