@@ -64,6 +64,9 @@ export default defineConfig({
   // what ships. `pnpm build` stays an explicit step.
   webServer: {
     command: `PORT=${PORT} pnpm start`,
+    // The typography harness is gated to dev/test only and 404s in production.
+    // The suite is the sanctioned test context, so it opts in explicitly.
+    env: { ENABLE_DEV_ROUTES: '1' },
     url: BASE_URL,
     reuseExistingServer: true,
     timeout: 120_000,

@@ -1,5 +1,7 @@
+import { notFound } from 'next/navigation'
+
 /**
- * M0-T02 — deterministic typography harness.
+ * M0-T02 — deterministic typography harness. M0-T03 gated it to dev/test only.
  *
  * NOT a product screen. It has no baseline in design-reference/final and must
  * never be pixel-compared against one. Its only job is to render every frozen
@@ -11,7 +13,15 @@
  *
  * Layout spacing uses Tailwind defaults on purpose: the Design SOT defers
  * spacing tokens, so no 1hub spacing value is invented here.
+ *
+ * GATING (M0-T03): this route is not production-facing. It returns 404 unless
+ * ENABLE_DEV_ROUTES=1, which only the dev server and the Playwright visual
+ * config set. force-dynamic keeps the check per-request rather than baking a
+ * build-time 404 into the static output. It is also absent from the frozen
+ * route manifest, so it can never appear in product navigation.
  */
+
+export const dynamic = 'force-dynamic'
 
 type Sample = {
   className: string
@@ -105,6 +115,8 @@ const SWATCHES = [
 ]
 
 export default function TypographyHarnessPage() {
+  if (process.env.ENABLE_DEV_ROUTES !== '1') notFound()
+
   return (
     <main
       className="mx-auto max-w-5xl p-10"
