@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useRef, useState, type FormEvent } from 'react'
 
-import { Button, Field, Notice, Surface, TextInput } from '@/components/ui'
+import { AuthCard } from '@/components/shell/auth-card'
+import { Button, Field, Notice, TextInput } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
 import { isApiError } from '@/lib/api/errors'
 import { isPlausibleEmail, normalizeEmail } from '@/lib/auth/email'
@@ -94,64 +95,62 @@ export function AuthEntryForm({ expiresInMinutes }: Props) {
   }
 
   return (
-    <div className={styles.card}>
-      <Surface as="section">
-        <div className={styles.stack}>
-          <div className={styles.intro}>
-            <h1 className={`type-heading-2 ${styles.title}`}>Vào HUB NETWORK</h1>
-            <p className={`type-body-sm ${styles.lede}`}>
-              Chưa có tài khoản thì hệ thống tự tạo. Bạn không phải chọn giữa đăng nhập và đăng ký.
-            </p>
-          </div>
-
-          <form
-            className={styles.form}
-            noValidate
-            onSubmit={onSubmit}
-            aria-label="Đăng nhập bằng email"
-          >
-            <Field label="Email" error={fieldError}>
-              {({ id, invalid, describedBy }) => (
-                <TextInput
-                  ref={inputRef}
-                  id={id}
-                  invalid={invalid}
-                  describedBy={describedBy}
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  placeholder="ten@donvi.gov.vn"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={submitting}
-                />
-              )}
-            </Field>
-            <Button type="submit" fullWidth loading={submitting}>
-              Gửi link đăng nhập
-            </Button>
-            {formError ? <Notice tone="error">{formError}</Notice> : null}
-          </form>
-
-          <Notice>
-            <span className={styles.noticeBody}>
-              <svg className={styles.noticeIcon} viewBox="0 0 14 10" aria-hidden="true">
-                <path fill="currentColor" d="M0 0h14v10H0z" />
-                <path className={styles.noticeIconFold} d="M.5.5 7 7 13.5.5" />
-              </svg>
-              <span className={`type-meta-xs ${styles.noticeText}`}>
-                Chúng tôi gửi một link dùng một lần, hết hạn sau {expiresInMinutes} phút. Không có
-                mật khẩu nào để nhớ hay để mất.
-              </span>
-            </span>
-          </Notice>
-
-          <p className={`type-meta-xs ${styles.legal}`}>
-            Tiếp tục nghĩa là bạn đồng ý Điều khoản sử dụng và Chính sách quyền riêng tư.
+    <AuthCard>
+      <div className={styles.stack}>
+        <div className={styles.intro}>
+          <h1 className={`type-heading-2 ${styles.title}`}>Vào HUB NETWORK</h1>
+          <p className={`type-body-sm ${styles.lede}`}>
+            Chưa có tài khoản thì hệ thống tự tạo. Bạn không phải chọn giữa đăng nhập và đăng ký.
           </p>
         </div>
-      </Surface>
-    </div>
+
+        <form
+          className={styles.form}
+          noValidate
+          onSubmit={onSubmit}
+          aria-label="Đăng nhập bằng email"
+        >
+          <Field label="Email" error={fieldError}>
+            {({ id, invalid, describedBy }) => (
+              <TextInput
+                ref={inputRef}
+                id={id}
+                invalid={invalid}
+                describedBy={describedBy}
+                type="email"
+                name="email"
+                autoComplete="email"
+                inputMode="email"
+                placeholder="ten@donvi.gov.vn"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={submitting}
+              />
+            )}
+          </Field>
+          <Button type="submit" fullWidth loading={submitting}>
+            Gửi link đăng nhập
+          </Button>
+          {formError ? <Notice tone="error">{formError}</Notice> : null}
+        </form>
+
+        <Notice>
+          <span className={styles.noticeBody}>
+            <svg className={styles.noticeIcon} viewBox="0 0 14 10" aria-hidden="true">
+              <path fill="currentColor" d="M0 0h14v10H0z" />
+              <path className={styles.noticeIconFold} d="M.5.5 7 7 13.5.5" />
+            </svg>
+            <span className={`type-meta-xs ${styles.noticeText}`}>
+              Chúng tôi gửi một link dùng một lần, hết hạn sau {expiresInMinutes} phút. Không có mật
+              khẩu nào để nhớ hay để mất.
+            </span>
+          </span>
+        </Notice>
+
+        <p className={`type-meta-xs ${styles.legal}`}>
+          Tiếp tục nghĩa là bạn đồng ý Điều khoản sử dụng và Chính sách quyền riêng tư.
+        </p>
+      </div>
+    </AuthCard>
   )
 }

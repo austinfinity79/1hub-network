@@ -214,10 +214,23 @@ export async function captureAndCompare(page: Page, run: CompareRun): Promise<Sc
  * assert conditions and typography, then viewport and (when the manifest has
  * one) full-page comparison against the APPROVED design reference.
  */
+/**
+ * Screen-state hooks for screens whose approved state needs more than a route
+ * and an actor (added for WF01-S02, which renders a pending AuthRequest and a
+ * running countdown). Both run inside the frozen capture sequence.
+ */
+export type ScreenStateHooks = {
+  /** After authentication, before navigation: seed browser state, install a clock. */
+  beforeNavigate?: (page: Page) => Promise<void>
+  /** After load, before settling: advance a clock or open a disclosed state. */
+  afterLoad?: (page: Page) => Promise<void>
+}
+
 export async function runScreenQa(
   page: Page,
   screen: ResolvedScreen,
   config: QaScreenConfig,
+  hooks: ScreenStateHooks = {},
 ): Promise<ScreenReport[]> {
   // Refuse any screen the dry run marks as a configuration gap, whether the gap
   // is declared in the mapping or derived from the reference itself.
@@ -227,8 +240,10 @@ export async function runScreenQa(
   }
   resetSeed()
   await authenticate(page, config)
+  await hooks.beforeNavigate?.(page)
   const route = resolveRoute(config)
   await page.goto(route, { waitUntil: 'networkidle' })
+  await hooks.afterLoad?.(page)
   await settle(page)
   const conditions = await readConditions(page)
   assertConditions(conditions)

@@ -1,13 +1,16 @@
-import { PageContainer } from '@/components/shell/page-container'
-import { RoutePlaceholder } from '@/components/shell/route-placeholder'
+import { AuthSplitLayout } from '@/components/shell/auth-split-layout'
 
-/** WF01-S02 — /auth/check-email. Frozen route placeholder; see M0-T03. */
+import { CheckEmailCard } from './check-email-card'
+
+/**
+ * WF01-S02 — /auth/check-email. Confirms the link was sent; resend or change
+ * email. Next: WF01-S03 (callback) or WF01-S04 (errors).
+ * Approved baseline: design-reference/final/WF01/WF01-S02__check-email__1440x900.png
+ */
 export default function Page() {
-  // The auth group layout no longer wraps pages (WF01-S01), so the placeholder
-  // keeps its container here.
   return (
-    <PageContainer>
-      <RoutePlaceholder pattern="/auth/check-email" />
-    </PageContainer>
+    <AuthSplitLayout>
+      <CheckEmailCard />
+    </AuthSplitLayout>
   )
 }

@@ -1,0 +1,18 @@
+/*
+ * Auth card surface geometry, shared by the auth screens only.
+ *
+ * Evidence: the approved WF01-S01 and WF01-S02 references show the identical
+ * card (440px wide incl. border, 14px corners, 36px padding, the same soft
+ * shadow), measured at 1440x900 DPR1. That is component-level evidence for the
+ * auth shell, NOT for the global primitives: other workflows' cards differ
+ * (e.g. ~11px corners on WF02), so the values override the Surface primitive's
+ * parameters on this subtree only.
+ */
+
+.card {
+  width: 27.5rem;
+  --unresolved-radius-surface: 0.875rem;
+  --unresolved-shadow-surface: 0 0.5rem 1.875rem
+    color-mix(in srgb, var(--hub-burgundy) 7%, transparent);
+  --unresolved-space-surface: 2.25rem;
+}
