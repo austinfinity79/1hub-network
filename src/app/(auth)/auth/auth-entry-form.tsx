@@ -53,6 +53,8 @@ export function AuthEntryForm({ expiresInMinutes }: Props) {
     event.preventDefault()
     if (inFlight.current) return
 
+    // Client validation mirrors the server rule exactly (shared email.ts), so a
+    // request the server would reject is never sent.
     setFormError(undefined)
     const value = email.trim()
     if (!value || !isPlausibleEmail(value)) {
@@ -77,6 +79,7 @@ export function AuthEntryForm({ expiresInMinutes }: Props) {
         body: { email: value, return_to: '/auth/callback' },
         idempotencyKey: key,
       })
+      // Hand the public 202 DTO to WF01-S02; the token never reaches the browser.
       savePendingRequest(window.sessionStorage, accepted)
       router.push('/auth/check-email')
       // Stay disabled while navigating, so the request cannot be repeated.

@@ -38,42 +38,60 @@ const MESSAGES = {
   failed: 'Chưa gửi lại được link. Vui lòng thử lại.',
 } as const
 
+/** Seconds as m:ss, the format the approved baseline shows ("0:45"). */
 function formatCountdown(seconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 }
 
 export function CheckEmailCard() {
   const router = useRouter()
+  // The AuthRequest handed over by WF01-S01; null until read in the browser.
   const [pending, setPending] = useState<MagicLinkRequestAccepted | null>(null)
+  // Epoch ms at which resend becomes allowed, from the server's resend_after_seconds.
   const [availableAt, setAvailableAt] = useState(0)
+  // Current time, refreshed once a second; drives the countdown label.
   const [now, setNow] = useState(0)
   const [sending, setSending] = useState(false)
   const [status, setStatus] = useState<{ tone: 'info' | 'error'; text: string }>()
+  // A ref, not state: a second click can land before React re-renders.
   const inFlight = useRef(false)
 
+  // sessionStorage only exists in the browser, so the handoff is read after
+  // mount. With nothing to confirm or resend, return to WF01-S01; replace()
+  // keeps the empty screen out of the back-button history.
   useEffect(() => {
     const stored = readPendingRequest(window.sessionStorage)
     if (!stored) {
       router.replace('/auth')
       return
     }
+    // The cooldown is measured from arrival. After a refresh it restarts at the
+    // full server value, which can only delay a resend, never allow it early.
     const start = Date.now()
     setPending(stored)
     setNow(start)
     setAvailableAt(start + stored.resend_after_seconds * 1000)
   }, [router])
 
+  // One tick per second is enough for an m:ss label.
   useEffect(() => {
     if (!pending) return
     const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)
   }, [pending])
 
+  // Render nothing until the handoff is read, so the server render and the
+  // first client render agree and no empty card flashes before a redirect.
   if (!pending) return null
 
   const remaining = Math.max(0, Math.ceil((availableAt - now) / 1000))
   const coolingDown = remaining > 0
 
+  /**
+   * POST /auth/magic-link/resend. Resend is not one of the contract's seven
+   * Idempotency-Key operations, so no key is sent: duplicates are prevented by
+   * the in-flight guard and the cooldown, and the server retires the old id.
+   */
   async function resend() {
     if (!pending || inFlight.current || coolingDown) return
     inFlight.current = true
@@ -92,6 +110,8 @@ export function CheckEmailCard() {
       setAvailableAt(at + accepted.resend_after_seconds * 1000)
       setStatus({ tone: 'info', text: MESSAGES.sent })
     } catch (error) {
+      // Contract codes only: a used or unknown request means the user must
+      // start again from WF01-S01; anything else is safe to retry.
       const code = isApiError(error) ? error.code : undefined
       setStatus({
         tone: 'error',
@@ -143,6 +163,7 @@ export function CheckEmailCard() {
             </button>
           </div>
 
+          {/* Always mounted, so screen readers announce the message when it appears. */}
           <div aria-live="polite">
             {status ? (
               <p
