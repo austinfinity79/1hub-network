@@ -12,8 +12,8 @@ import styles from './callback.module.css'
 
 /**
  * WF01-S03 — auth callback. Consumes the magic-link token once and shows ONE
- * of the three approved states (decisions D1–D7 in
- * docs/implementation/WF01_S03_STATE_BOARD_MAPPING.md).
+ * of the three approved states (DEC-WF01-S03-D1..D7 in docs/decisions/DECISION_LOG.md;
+ * mapping in docs/implementation/WF01_S03_STATE_BOARD_MAPPING.md).
  *
  * - The link is /auth/callback?token=<opaque> (D7). The token is read from the
  *   address bar and removed from it BEFORE the request is sent, is never
@@ -168,8 +168,10 @@ function Expired({ minutes }: { minutes: number }) {
       </div>
       <h1 className={`type-subtitle ${styles.title}`}>Link đã hết hạn</h1>
       <p className={`type-body-sm ${styles.body}`}>
-        Link chỉ sống {minutes} phút. Không coi đây là lỗi của người dùng — nút gửi lại phải ở ngay
-        đây, không bắt quay lại trang đăng nhập.
+        {/* DEC-WF01-S03-D6a: the board's second sentence promised an in-place resend,
+            which DEC-WF01-S03-D1 rules out; only that sentence is reworded. */}
+        Link chỉ sống {minutes} phút. Đây không phải lỗi của bạn — hãy quay lại nhập email để nhận
+        link đăng nhập mới.
       </p>
       <Link
         href="/auth"

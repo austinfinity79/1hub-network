@@ -113,6 +113,10 @@ test.describe('WF01-S03 functional', () => {
     await expect(page).toHaveURL('/auth/callback?status=expired')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Link đã hết hạn')
     await expect(page.getByText('Link chỉ sống 15 phút.', { exact: false })).toBeVisible()
+    // DEC-WF01-S03-D6a: the copy sends the user back for a new link and no
+    // longer promises an in-place resend (DEC-WF01-S03-D1).
+    await expect(page.getByText('hãy quay lại nhập email để nhận', { exact: false })).toBeVisible()
+    await expect(page.getByText('nút gửi lại phải ở ngay', { exact: false })).toHaveCount(0)
     expect(await sessionsFor(MEMBER)).toBe(before)
 
     await page.getByRole('link', { name: 'Gửi link mới' }).click()
