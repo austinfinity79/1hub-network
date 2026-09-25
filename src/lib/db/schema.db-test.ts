@@ -200,7 +200,7 @@ describe('M0-T06B lifecycle gaps CLOSED by migration 002', () => {
     }
   })
 
-  it('leaves role_code and scope_type untyped, so invalid codes are accepted', async () => {
+  it('still leaves role_code and scope_type untyped at the column level', async () => {
     const rows = await query<{ column_name: string; data_type: string }>(
       `SELECT column_name, data_type FROM information_schema.columns
        WHERE table_schema = 'public' AND table_name = 'role_assignments'
@@ -208,27 +208,34 @@ describe('M0-T06B lifecycle gaps CLOSED by migration 002', () => {
        ORDER BY column_name`,
     )
 
+    // Unchanged by 002 and 007: constraining these needs a catalogue decision.
     expect(rows.map((r) => r.data_type)).toEqual(['text', 'text'])
 
-    // The seed exercises this: ORG_ADMIN and PLATFORM_OPS are in no role
-    // catalogue, and the database accepts them silently.
+    // The column is still permissive, but M0-T07 removed the invented codes, so
+    // nothing invalid is actually stored any more. Detailed role assertions live
+    // in seed.db-test.ts.
     const seeded = await query<{ role_code: string }>(
       'SELECT DISTINCT role_code FROM role_assignments ORDER BY role_code',
     )
-    expect(seeded.map((r) => r.role_code)).toEqual(['ORG_ADMIN', 'PLATFORM_OPS'])
+    expect(seeded.map((r) => r.role_code)).not.toContain('ORG_ADMIN')
+    expect(seeded.map((r) => r.role_code)).not.toContain('PLATFORM_OPS')
   })
 })
 
-describe('M0-T06A seed fixture quality', () => {
+describe('M0-T07 seed fixture quality', () => {
   it('seeds the personas the QA fixtures depend on', async () => {
     const accounts = await query<{ email: string }>(
       'SELECT email FROM user_accounts ORDER BY email',
     )
 
+    // M0-T07 added newcomer (DRAFT, pre-onboarding) and pending
+    // (PENDING_APPROVAL membership); the old seed had neither scenario.
     expect(accounts.map((a) => a.email)).toEqual([
       'leader@example.test',
       'member@example.test',
+      'newcomer@example.test',
       'ops@example.test',
+      'pending@example.test',
     ])
   })
 
@@ -238,7 +245,7 @@ describe('M0-T06A seed fixture quality', () => {
     expect(rows[0]!.id).toBe('40000000-0000-0000-0000-000000000001')
   })
 
-  it('leaves eleven tables unseeded, so several P0 flows have no fixture', async () => {
+  it('leaves only intentionally-empty tables unseeded', async () => {
     const empty: string[] = []
     const tables = await query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables
@@ -251,26 +258,25 @@ describe('M0-T06A seed fixture quality', () => {
       if (count!.n === 0) empty.push(table_name)
     }
 
-    // Recorded, not asserted as acceptable: consent, bootstrap and sessions
-    // being empty means WF01-S07, the D2 preseed path and any authenticated
-    // visual scenario have no deterministic fixture.
+    // Down from eleven. Every remaining one is INTENTIONALLY_EMPTY_IN_M0:
+    // analytics and audit are written at runtime, magic-link requests and
+    // sessions belong to M0-T08 auth, feedback has no frozen pixel screen
+    // (API:671), and education/links are not profile-completion groups.
     expect(empty).toEqual([
       'analytics_events',
       'audit_events',
       'auth_magic_link_requests',
-      'consent_records',
       'feedback_submissions',
-      'membership_bootstrap',
-      'organization_relationships',
       'profile_education',
-      'profile_experience',
       'profile_links',
       'user_sessions',
     ])
   })
 
-  it('is not idempotent: two tables re-insert on a second run', async () => {
+  it('keeps the retired seed on disk as evidence of why it was replaced', async () => {
     const before = await query<{ n: number }>('SELECT count(*)::int AS n FROM leadership_records')
+    // seed_dev.sql is no longer applied. It stays byte-identical so the defects
+    // that retired it remain inspectable.
     const seed = readFileSync(join(process.cwd(), 'db', 'seed', 'seed_dev.sql'), 'utf8')
 
     // leadership_records and role_assignments carry no ON CONFLICT clause and

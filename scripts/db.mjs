@@ -14,14 +14,18 @@
  */
 import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import pg from 'pg'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const MIGRATIONS_DIR = join(ROOT, 'db', 'migrations')
-const SEED_FILE = join(ROOT, 'db', 'seed', 'seed_dev.sql')
+// seed_dev.sql is frozen evidence and stays byte-identical; it is neither read
+// nor applied. M0-T07 replaced it because it contradicted its own README:
+// non-deterministic ids and timestamps, and two inserts that duplicated on a
+// second run. The deterministic fixture set supersedes it.
+const SEED_FILE = join(ROOT, 'db', 'seed', 'seed_p0_deterministic.sql')
 
 const DATABASE_URL =
   process.env.DATABASE_URL ??
@@ -98,7 +102,7 @@ async function seed() {
 
   await withClient(async (client) => {
     await client.query(sql)
-    console.log('  seeded  db/seed/seed_dev.sql')
+    console.log(`  seeded  ${relative(ROOT, SEED_FILE)}`)
   })
 }
 
