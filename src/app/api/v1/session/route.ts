@@ -2,6 +2,8 @@ import { withApi } from '@/lib/api/handler'
 import type { SessionDTO } from '@/lib/api/types'
 import { readSessionToken } from '@/lib/auth/session-cookie'
 import { resolveSession } from '@/lib/auth/sessions'
+import { resolveActor } from '@/lib/authz/actor'
+import { deriveCapabilities, deriveManagedScopes } from '@/lib/authz/session-authz'
 import { query } from '@/lib/db/client'
 
 /**
@@ -13,12 +15,16 @@ import { query } from '@/lib/db/client'
  * consistent choice; this keeps the contract's own recommendation of 200 with
  * authenticated=false, so bootstrap needs no error path.
  *
- * `capabilities` and `managed_scopes` are returned EMPTY on purpose. They are
- * the output of the authorization engine, which is M0-T09. Populating them by
- * guessing from role rows would be exactly the invented authority the frozen
- * rules forbid, so the fields carry the contract shape and no fabricated
- * content. UserAccount, IndividualProfile and IdentityVerification remain
- * separate: only account identity and profile status are surfaced here.
+ * `capabilities` and `managed_scopes` are derived server-side by M0-T09 from
+ * the actor's active RoleAssignments against the approved authorization matrix.
+ * No raw RoleAssignment row is exposed, and nothing is read from the client.
+ *
+ * The capability list is a UI affordance only: holding a capability here means
+ * the actor holds it in at least one scope, never in a particular one, so every
+ * protected call still re-authorizes with the concrete resource (API:1094).
+ *
+ * UserAccount, IndividualProfile and IdentityVerification remain separate: only
+ * account identity and profile status are surfaced here.
  */
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +56,9 @@ export const GET = withApi<SessionDTO>(async ({ request }) => {
   // The session referenced an account that no longer exists.
   if (!row) return { authenticated: false }
 
+  const actor = await resolveActor(session.accountId)
+  const capabilities = deriveCapabilities(actor)
+
   return {
     authenticated: true,
     account: {
@@ -68,7 +77,7 @@ export const GET = withApi<SessionDTO>(async ({ request }) => {
       // it. Never accepted from the client (CLAUDE.md section 3).
       completion_percent: 0,
     },
-    capabilities: [],
-    managed_scopes: [],
+    capabilities,
+    managed_scopes: deriveManagedScopes(actor),
   }
 })

@@ -26,12 +26,14 @@ to the frozen route manifest.
 | DOC-README-02 | README simplified into a stable entry point; this status file created |
 | M0-T07 | Deterministic, idempotent seed fixture system |
 | M0-T08 | Auth/session foundation: magic link, server-side sessions, HTTP-only cookie |
+| DECISION-AUTHZ-01/01B | P0 role to capability matrix, human approved |
+| M0-T09 | RBAC authorization foundation: actor, scope, lifecycle, session capabilities |
 
 ## Not yet built (M0)
 
-RBAC, idempotency store, manifest-driven pixel harness.
+Idempotency store, manifest-driven pixel harness.
 
-`GET /api/v1/session` now resolves a real session. `capabilities` and `managed_scopes` return empty by design until M0-T09 implements the authorization engine.
+`GET /api/v1/session` resolves a real session and derives `capabilities` and `managed_scopes` server-side from the approved authorization matrix.
 
 The transitional `role_assignments.account_id` column and its trigger, kept by 002 so the old seed still applied, are now unused: the deterministic seed writes the profile anchor only. They can be dropped by a later migration.
 

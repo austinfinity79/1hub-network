@@ -1,88 +1,95 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: M0-T08 — auth/session foundation
-- Scope requested: The minimum production-ready auth/session foundation for WF01. No WF01 UI, no RBAC engine.
+- Task ID / name: DECISION-AUTHZ-01B freeze, then M0-T09 — RBAC / authorization foundation
+- Scope requested: Freeze the approved authorization decisions, then implement the server-side authorization foundation.
 - Status: **DONE**
 - Mode: LOCAL REVIEW. Committed locally, not pushed.
 
 ## 2. Pre-flight
-- Single writer: **PASS**. Only one `claude` process has this worktree as cwd and it is this session; the other two are in `steam-topup` and `apec27`.
-- Starting HEAD: `2390ce2`, re-checked before commit.
-- Working tree was clean; no unrelated work at risk.
-- M0-T07 seed regression: **PASS** (37 of 37) before any change.
-- Seed entrypoint unambiguous: `scripts/db.mjs` applies `seed_p0_deterministic.sql`.
+- Single writer: **PASS**, only this session holds the worktree.
+- Starting HEAD: `21defe4`, re-checked before commit, unchanged. No concurrent mutation.
+- M0-T07 seed and M0-T08 auth regression: **PASS**, 64 of 64 before any change.
 
-## 3. No migration was needed
-Migration 001 already provides everything. `auth_magic_link_requests` has `token_hash UNIQUE`, `expires_at`, `consumed_at`, `request_ip`; `user_sessions` has `token_hash UNIQUE`, `expires_at`, `revoked_at`. Single-use, expiry and revocation all map onto existing columns, so no migration was created and 001 and 002 are unchanged.
+## 3. Matrix frozen
+`AUTHORIZATION_CAPABILITY_MATRIX_P0.md` now carries **HUMAN APPROVED — P0** and states role, capability, ALLOW/DENY, scope and predicate for all nine capabilities. It is an authorization overlay; no Product, Data, Workflow or Design SOT file was modified.
+
+Two identifiers were named by the approved decision because the frozen sources granted the action but never named it: `membership:confirm` (action at 03:110) and `leadership:manage` (action at 03:111). The convention is `resource:action` throughout, with no second convention introduced.
 
 ## 4. What was implemented
 | Module | Purpose |
 |---|---|
-| `auth/config.ts` | Frozen constants plus the manifest of values no frozen source defines |
-| `auth/tokens.ts` | 256-bit opaque tokens, sha256 hashing, email masking and validation |
-| `auth/sessions.ts` | Create, resolve, revoke; revoke-all for security changes |
-| `auth/session-cookie.ts` | HttpOnly cookie directives and header parsing |
-| `auth/magic-link.ts` | Request, resend, consume with single-use enforcement |
+| `authz/matrix.ts` | The approved matrix as data. No wildcard, no inheritance, no admin branch |
+| `authz/actor.ts` | Resolves account, profile and only currently-valid assignments |
+| `authz/authorize.ts` | `authorize` / `can` / `require`, the single decision entry point |
+| `authz/session-authz.ts` | Derives `capabilities` and `managed_scopes` |
 
-Endpoints: `POST /auth/magic-link`, `/resend`, `/consume`, `POST /auth/logout`, `GET /auth/providers`, and `GET /session` replacing the M0-T05 placeholder.
+`GET /api/v1/session` now returns both fields, populated server-side. They were deliberately empty since M0-T08.
 
-## 5. Three judgement calls worth your review
-**Unstated values are named, not chosen silently.** Session TTL, the SameSite value and the CSRF mechanism are defined by no frozen source; grep returns zero hits for a TTL or a SameSite value, and 03_AUTH_RBAC:201 qualifies CSRF as "when applicable" with no mechanism. All three sit in `UNSTATED_AUTH_VALUES` with a provisional value, a reason and what would settle them, test-pinned. **No CSRF mechanism is implemented**, because inventing one would be inventing contract; SameSite=lax is the only mitigation currently present.
+## 5. How the decision rule is enforced
+The frozen rule (03:36-42) maps directly onto the code:
 
-**`capabilities` and `managed_scopes` return empty.** They are the authorization engine's output and that is M0-T09. The contract shape is present; the content is deliberately empty rather than guessed from role rows, which would be exactly the invented authority the frozen rules forbid. A Playwright test asserts they stay empty.
-
-**Dev login drives the real flow.** `/dev/login` is dev-gated, absent from the route manifest, served outside `/api/v1`, and 404s in production. It does not mint a session directly: it calls `requestMagicLink` then `consumeMagicLink`, so the browser smoke exercises the production token lifecycle and cookie attributes rather than a shortcut.
-
-## 6. Security properties
-| Concern | Handling |
+| Clause | Where enforced |
 |---|---|
-| Raw token storage | Never stored. Only sha256 reaches the database, asserted by test |
-| Raw token leakage | Never returned by an endpoint, never logged. The request response is asserted to contain neither the token nor the word |
-| Reused consumed token | `AUTH_LINK_ALREADY_USED`. Single use enforced by a conditional `UPDATE ... WHERE consumed_at IS NULL`, so two concurrent attempts cannot both win |
-| Expired token | `AUTH_LINK_EXPIRED`, filtered in SQL |
-| Malformed token | `AUTH_LINK_INVALID`, including null, empty and oversized |
-| Session fixation | A fresh token is minted on every consume; a pre-auth token can never become authenticated |
-| Session enumeration | `resolveSession` returns null for every failure mode without distinguishing them |
-| Cookie exposure | HttpOnly asserted in a real browser; `document.cookie` is asserted not to contain it |
-| Account disclosure | The request endpoint never looks up the account, so behaviour is identical for known and unknown addresses. Asserted |
-| Blocked account | `AUTH_ACCOUNT_BLOCKED` at consume time |
+| authenticated | `authorize` rejects a null actor or one with no profile |
+| assignment active | SQL: `state = 'ACTIVE' AND valid_from <= now() AND (valid_to IS NULL OR valid_to > now())` |
+| role permits capability | lookup in the approved matrix; an unknown capability is denied, not defaulted |
+| scope contains resource | an ORGANIZATION grant must match the requested `scope_id` exactly |
+| lifecycle predicate | optional hook, run **only after** the permission check passes |
 
-## 7. A contract deviation I found and fixed
-My first implementation returned 200 from the magic-link request and resend. The contract specifies **202** (05:168, 05:197). The API wrapper hardcoded 200, so I added explicit status support and set 202 on both. Caught by reading the contract rather than by a test, which is why the test now asserts 202.
+`PLATFORM_ADMIN` never appears in the decision logic. Its authority comes only from the data table, and a test asserts `authorize.ts` names no role at all.
 
-## 8. Validation
+## 6. Security results
+| Property | How proven |
+|---|---|
+| Individual and HUB Member denied | All nine capabilities denied for a member actor |
+| Cross-org denial | Leader denied all nine in Chapter 02 while allowed all nine in Chapter 01 |
+| Leader cannot reach platform scope | All nine denied at PLATFORM |
+| Membership alone grants nothing | The pending actor holds a membership and is denied all nine |
+| Expired assignment ignored | `valid_to` in the past removes the role entirely |
+| Future assignment ignored | `valid_from` in the future removes it |
+| Non-ACTIVE assignment ignored | `state = CLOSED` removes it |
+| Stray role code ignored | `role_code` is still untyped text; `SUPER_ADMIN` is discarded at the boundary |
+| Forged role/scope ignored | localStorage, sessionStorage, a `role` cookie and forged headers all produce an empty capability list |
+| Admin cannot edit another profile | No profile-write capability exists in the catalogue; `ADMIN_MAY_EDIT_OTHER_PROFILE` is false |
+| No impersonation | Source scan of all four modules, comments stripped |
+| Enumeration safe | No-permission and wrong-scope return an identical code and message, asserted equal |
+| No raw ORM leakage | `managed_scopes` carries only the three contract fields; `individual_profile_id`, `valid_from`, `valid_to`, `assigned_by` are asserted absent from the wire |
+
+## 7. Validation
 | Gate | Result |
 |---|---|
 | Format / Lint / Typecheck | PASS, 0 errors 0 warnings |
 | Unit tests | PASS — 61 of 61 |
-| DB integration tests | PASS — 64 of 64 (27 new auth) |
+| DB integration + authorization + permission matrix | PASS — 94 of 94 (30 new) |
 | Build | PASS |
-| Playwright auth smoke | PASS — 14 new tests |
-| Playwright regression | PASS — 78 of 78 overall |
+| Playwright authz smoke | PASS — 8 new tests |
+| Playwright full regression | PASS — 86 of 86 |
 | Deterministic seed regression | PASS |
-| Production gating | PASS — `/dev/login`, `/dev/typography`, `/dev/primitives` all 404 without `ENABLE_DEV_ROUTES` |
-| 001 / 002 unchanged | PASS, 0 changed lines, no third migration |
+| M0-T01–T08 regression | PASS |
+| SOT untouched | PASS — `db/`, `docs/product/`, `docs/workflows/`, `docs/design/`, `docs/architecture/` all unchanged |
 
-Three tests failed during validation and were fixed rather than worked around:
-1. An M0-T05 test asserted `/auth/magic-link` was unimplemented. It now returns 405 for GET because M0-T08 implemented it POST-only. Flipped, and a new test asserts the auth endpoints exist as POST-only.
-2. My cookie test read `context.cookies()` while logging in through the standalone `request` fixture, which has an isolated cookie jar. Fixed by using `context.request`.
-3. My auth tests create accounts and sessions, which broke the schema suite's exact-match fixture assertions depending on file order. Fixed by giving that suite its own reset, making every DB suite order-independent.
+Three test failures occurred and all three were **my own test bugs**, fixed rather than worked around: a wildcard scan matching JSDoc `/**`; an impersonation scan flagging my own comment saying impersonation is absent; and an unsound regex that matched the legitimate success `return`. The first two were fixed by stripping comments before scanning. The third was replaced, because a regex cannot distinguish a legitimate single success path from a blanket allow; that property is now proven behaviourally by the denial suites instead.
 
-## 9. Auth blockers remaining
-**0.** Two items are carried forward as contract gaps, not blockers: no CSRF mechanism is specified, and the session TTL and SameSite value are unstated. Both are declared in the manifest and neither prevents M0-T09.
+## 8. Gaps
+- Blocking authorization gaps remaining: **0**.
+- Still open, unchanged and out of scope: `role_code` and `scope_type` remain untyped `text` columns. The engine discards non-catalogue values at the boundary, so this is defence in depth rather than a hole, but constraining them would need a migration and a catalogue decision.
+- WF01/WF02 self-service capabilities remain outside the ops catalogue by decision D4, using an ownership predicate instead.
+
+## 9. Pre-UAT security decisions, unchanged
+| Item | Provisional value | Status |
+|---|---|---|
+| CSRF mechanism | none implemented; SameSite=lax is the only mitigation | no frozen source names a mechanism |
+| Session TTL | 30 days | no frozen source states a value |
+| SameSite | `lax` | 03:200 requires it but names no value |
+
+None was invented or promoted to final in this task.
 
 ## 10. Git
 - Branch: `main`
-- Implementation commit: see section 12
-- Remote: `origin` → `austinfinity79/1hub-network`
 - Push status: **NOT RUN** — LOCAL REVIEW MODE
 - Remote HEAD: `2390ce2`, deliberately behind local
-- Working tree status: clean after commit
+- Working tree: clean after commit
 
-## 11. Files changed
-New: `src/lib/auth/{config,tokens,sessions,session-cookie,magic-link}.ts`, `src/lib/auth/auth.db-test.ts`, five auth route handlers, `src/app/dev/login/route.ts`, `tests/visual/specs/auth-session.spec.ts`.
-Modified: `src/app/api/v1/session/route.ts` (real identity), `src/lib/api/handler.ts` (cookies and explicit status), `src/lib/db/schema.db-test.ts` (reset for independence), `tests/visual/specs/api-contract.spec.ts` (flip), `tests/visual/visual.config.ts` (`DATABASE_URL` for the test server).
-
-## 12. Recommended next task
-**M0-T09 — RBAC / authorization foundation.** It fills the `capabilities` and `managed_scopes` this task deliberately left empty, and it consumes the profile-anchored `role_assignments` that migration 002 aligned and M0-T07 populated with real catalogue codes.
+## 11. Recommended next task
+**M0-T10 — idempotency store foundation.** It carries one open item: the schema SOT contains no key store, so adding one needs authorization for migration 003.
