@@ -1,0 +1,125 @@
+/*
+ * M0-T02 — semantic token layer and typography primitives.
+ *
+ * SCOPE RULE: every value in this file resolves to a variable already defined
+ * in docs/design/DESIGN_TOKENS_v1.0.css, which is imported unchanged. No new
+ * colour, size or weight is introduced here.
+ *
+ * Design SOT section 2.5 states that neutral, border and text shades beyond the
+ * five anchors "remain screen-baseline-driven until extracted into a broader
+ * component token library". Spacing, radius, border and shadow scales are
+ * therefore intentionally absent: inventing them would contradict the SOT.
+ * Tailwind's defaults stand in until design extracts a real scale.
+ */
+
+:root {
+  /* Semantic backgrounds */
+  --color-bg-canvas: var(--hub-canvas);
+  --color-bg-surface: var(--hub-surface);
+  --color-bg-accent: var(--hub-primary);
+  --color-bg-accent-soft: var(--hub-primary-soft);
+
+  /* Semantic foregrounds */
+  --color-fg-default: var(--hub-burgundy);
+  --color-fg-accent: var(--hub-primary);
+  --color-fg-on-accent: var(--hub-surface);
+}
+
+html {
+  background-color: var(--color-bg-canvas);
+}
+
+body {
+  background-color: var(--color-bg-canvas);
+  color: var(--color-fg-default);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  font-weight: var(--weight-regular);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Typography primitives — Design SOT section 2.4.
+ *
+ * meta-xs and body-sm deliberately pin no weight: the SOT lists two permitted
+ * weights for each, so the caller chooses.
+ *
+ * Archivo and IBM Plex Mono are reachable ONLY through .type-display and
+ * .type-mono-meta. The SOT forbids using either face unless the approved
+ * pattern explicitly calls for a display or technical/meta treatment, so they
+ * are opt-in classes rather than anything applied globally.
+ */
+@layer components {
+  /*
+   * Weight utilities cover only the three Be Vietnam Pro faces that are
+   * actually shipped. 700 is deliberately absent: the only approved 700 face is
+   * Archivo, reachable through .type-display. Exposing a generic bold would let
+   * callers request Be Vietnam Pro 700, which is not shipped, and the browser
+   * would synthesise a faux-bold that fails the typography contract.
+   */
+  .weight-regular {
+    font-weight: var(--weight-regular);
+  }
+
+  .weight-medium {
+    font-weight: var(--weight-medium);
+  }
+
+  .weight-semibold {
+    font-weight: var(--weight-semibold);
+  }
+
+  .type-meta-xs {
+    font-size: var(--type-meta-size);
+    line-height: var(--type-meta-line);
+  }
+
+  .type-body-sm {
+    font-size: var(--type-sm-size);
+    line-height: var(--type-sm-line);
+  }
+
+  .type-body-md {
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
+    font-weight: var(--weight-regular);
+  }
+
+  .type-section-sm {
+    font-size: var(--type-section-size);
+    line-height: var(--type-section-line);
+    font-weight: var(--weight-semibold);
+  }
+
+  .type-subtitle {
+    font-size: var(--type-subtitle-size);
+    line-height: var(--type-subtitle-line);
+    font-weight: var(--weight-semibold);
+  }
+
+  .type-heading-2 {
+    font-size: var(--type-h2-size);
+    line-height: var(--type-h2-line);
+    font-weight: var(--weight-semibold);
+  }
+
+  .type-display {
+    font-family: var(--font-display);
+    font-size: var(--type-display-size);
+    line-height: var(--type-display-line);
+    font-weight: var(--weight-bold);
+  }
+
+  .type-button {
+    font-size: var(--type-button-size);
+    line-height: var(--type-button-line);
+    font-weight: var(--weight-semibold);
+  }
+
+  .type-mono-meta {
+    font-family: var(--font-mono);
+    font-size: var(--type-meta-size);
+    line-height: var(--type-meta-line);
+    font-weight: var(--weight-medium);
+  }
+}

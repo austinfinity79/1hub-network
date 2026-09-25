@@ -1,7 +1,17 @@
 /*
- * M0-T01 — baseline stylesheet.
+ * M0-T02 — global stylesheet composition order.
  *
- * Design tokens (docs/design/DESIGN_TOKENS_v1.0.css) and the Be Vietnam Pro
- * font stack are imported by M0-T02, not here.
+ * 1. Tailwind (preflight + utilities)
+ * 2. The frozen Design SOT token file, imported UNCHANGED and in place, so the
+ *    build cannot drift from docs/design/DESIGN_TOKENS_v1.0.css. That file also
+ *    sets the default UI font on html/body/controls.
+ * 3. Self-hosted @font-face declarations (generated; see scripts/sync-fonts.mjs)
+ * 4. Semantic tokens and typography primitives derived from 2.
+ *
+ * The SOT import must come after Tailwind so its unlayered rules win over
+ * preflight's base layer.
  */
 @import 'tailwindcss';
+@import '../../docs/design/DESIGN_TOKENS_v1.0.css';
+@import '../styles/fonts.css';
+@import '../styles/tokens.css';
