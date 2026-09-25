@@ -1,105 +1,111 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: M0-T10 — Durable Idempotency Store Foundation
-- Scope requested: Audit for an existing durable store, add one if none exists, and prove the five required behaviours.
+- Task ID / name: M0-T11 — Manifest-driven Pixel QA Foundation
+- Scope requested: Reusable infrastructure that goes from an approved manifest entry to a deterministic capture, a pixel/geometry diff and a structured report. Infrastructure only; no WF screen.
 - Status: **DONE**
 - Mode: LOCAL REVIEW. Committed locally, not pushed.
 
 ## 2. Pre-flight
-- Single writer: **PASS**, only this session held the worktree throughout.
-- Starting HEAD: `32f895c`, re-checked before commit, unchanged. No concurrent mutation.
-- M0-T08 auth and M0-T09 authorization regression before any change: **PASS**, 94 of 94.
-- Migrations 001 and 002: **unchanged**, verified by empty diff before and after.
+- Single writer: **PASS**. Only this session wrote to the worktree.
+- Starting HEAD: `61e80cc`. Re-checked before commit: unchanged. No concurrent mutation.
+- Working tree clean at start, 0 stashes. Migrations 001, 002, 003 present.
+- Existing visual regression before any change: **PASS**, 93 of 93.
+- `design-reference/**`: 67 files hashed before the task. The same hash was verified after all runs.
 
-## 3. Storage audit
-All 28 tables were inspected. **No existing table can host idempotency**, so migration 003 was created under the authorization this task grants.
-
-| Candidate | Why it cannot serve |
+## 3. Manifest audit
+| Item | Result |
 |---|---|
-| `audit_events` | Append-only record of what happened. A claim is a lock that must be read back and mutated; writing locks into the audit trail would make the trail lie |
-| `analytics_events` | Append-only measurement, no uniqueness, no response storage |
-| `user_sessions` | One row per authenticated session, but the magic-link request is unauthenticated, so no session row can exist yet |
-| `auth_magic_link_requests` | Keyed by token hash, with no operation column and no response storage. Overloading it would bind a cross-cutting API concern to one auth flow |
+| Entries | 24 (WF01 ×8, WF02 ×7, WF03 ×9), all production |
+| Viewport references resolved | 24 / 24, every one 1440×900 |
+| Full-page references | 15, every one 1440 wide |
+| Missing references | 0 |
+| Duplicate screen IDs | 0 |
+| Invalid configuration | 0 manifest errors; `manifest.json` equals `manifest.yaml` |
 
-This was already a known gap: `002_p0_schema_alignment.sql:22` lists "idempotency key store" among deferred missing structures, and the gap register carried it as P10.
+The manifest defines screen ID, reference paths, mode, source size and typography override. It does **not** define route, actor or fixture. Those live in a tests-owned mapping (`tests/visual/pixel-qa/qa-screens.ts`), following Pixel QA §4. Routes come from `FROZEN_ROUTES`; parameters and actors come from `seed_p0_deterministic.sql`. `manifest.yaml` was not modified.
 
-## 4. What was implemented
-| Component | Purpose |
+## 4. What was built
+`tests/visual/pixel-qa/` holds the Node engine:
+
+| File | Role |
 |---|---|
-| `003_p0_idempotency_store.sql` | One table, one enum. Additive; 001 and 002 untouched |
-| `idempotency/store.ts` | `runIdempotent`, fingerprinting, retention purge |
-| `db/client.ts` | `withTransaction` and an `Executor` type, so guarded work joins the claim's transaction |
-| `auth/magic-link/route.ts` | The first real integration |
+| `paths.ts` | Path policy. References may resolve only inside `design-reference/final`. Outputs may go only to `tests/visual/{actual,diff,reports}/pixel-qa`. Any write under `design-reference/` is refused. |
+| `manifest.ts` | YAML load and validation: frozen viewport/DPR, ID format, duplicates, mode enum, traversal, existence, and dimensions read from the PNG IHDR. |
+| `qa-screens.ts` | Tests-owned route/actor/fixture mapping, plus the dry run. |
+| `compare.ts` | `pixelmatch` comparison: IDENTICAL, DIFFERENT, DIMENSION_MISMATCH, diff pixel count/ratio, diff bounding box. Always writes a diff image when sizes match. |
+| `report.ts` | Per-screen JSON listing explicit `REFERENCE` / `ACTUAL` / `DIFF` paths and `reference_kind` (APPROVED_DESIGN or HARNESS_REGRESSION). Classification is `PENDING_REVIEW` with the §6 taxonomy. `product_pixel_pass_claimed: false`. |
+| `capture.ts` | The Pixel QA §5 sequence: seed, persona login through the real magic-link flow, navigate, `document.fonts.ready`, stabilisation CSS, viewport/DPR/font assertions, DOM typography contract, viewport capture and full-page capture. |
 
-The design choice that carries the most weight: **the claim, the work and the completion share one transaction**. The common alternative commits a PROCESSING row first, which strands the key if the process dies and then needs a lease, a clock and a reclamation sweep to recover. Sharing the transaction removes that failure mode instead of managing it.
+Other changes:
+- `src/app/dev/pixel-qa`: dev-only harness page, gated by `ENABLE_DEV_ROUTES`. Not a product screen.
+- Two Playwright specs:
+  - `pixel-qa-harness.spec.ts` proves the engine in a real browser.
+  - `pixel-qa-screens.spec.ts` always runs the audit and dry run. Screen runs execute only when named via `PIXEL_QA_SCREENS`.
+- New devDependencies: `pixelmatch`, `pngjs`, `yaml`, `@types/pngjs`. `pixelmatch` is the diff engine Playwright itself uses.
+- `vitest.config.ts` now includes `tests/visual/pixel-qa/**/*.test.ts`.
+- Two harness-owned baselines added: `tests/visual/baseline/pixel-qa-harness.{viewport,full_page}.png`. They were created only with an explicit `PIXEL_QA_UPDATE_HARNESS=1` run.
 
-## 5. Required behaviours, all proven against live PostgreSQL
-| # | Behaviour | Evidence |
+Future screen task usage: `PIXEL_QA_SCREENS=WF01-S01 pnpm visual pixel-qa-screens`. A screen run fails on V0 conditions, dimension mismatch or typography violations. Pixel differences produce evidence for review and do not fail the run.
+
+## 5. Pixel QA proof
+| Item | Result |
+|---|---|
+| 1440×900 DPR1 | PASS, asserted; a wrong viewport and DPR 2 are rejected |
+| Deterministic state | PASS. Seed re-apply is idempotent; the leader persona resolves the Chapter 01 scope; a guest mapping clears the session; two captures are pixel-identical |
+| Font assertion | PASS. Approved faces with no fallback; Georgia and Be Vietnam Pro 700 are flagged |
+| Actual capture | PASS, written at exactly 1440×900 |
+| Diff generation | PASS, diff PNG written and visually checked |
+| Identical comparison | PASS, 0 differing pixels |
+| Intentional mismatch | PASS. DIFFERENT, and the bounding box covers both the old and new block positions |
+| Long page | PASS. Full page stays 1440 wide and grows past 1500px; a change wholly below the fold leaves the viewport identical and is located exactly at `{64,1500,200,80}` |
+| Design baseline write protection | PASS. Path policy tests pass, and the `design-reference/final` hash is unchanged after every run |
+
+## 6. Production dry run
+- READY_FOR_SCREEN_IMPLEMENTATION: **13**
+- REFERENCE_CONFIGURATION_GAP: **11**
+- Product pixel PASS claimed: **NO**. No placeholder route was compared to a design.
+
+| Gap | Screens | Fact |
 |---|---|---|
-| A | First request executes and stores its outcome | COMPLETED row with status, body and the configured expiry; read back on a different pooled connection |
-| B | Duplicate replays, no second side effect | Work ran once; a repeated magic-link request left exactly one row in `auth_magic_link_requests` |
-| C | Same key, different content | 409 `UNCONTRACTED_IDEMPOTENCY_CONFLICT`; the conflicting work never ran and the stored record was untouched |
-| D | Concurrent duplicates | Eight simultaneous attempts, one execution. Six concurrent magic-link retries produced one link |
-| E | Failure does not poison the key | A throw left zero rows and the retry succeeded. The guarded side effect rolled back with it |
+| G1 state-board | WF01-S03, WF01-S04 | One reference holds several route states. Neither the manifest nor the Design SOT defines per-state regions, so a single capture has no comparable region. |
+| G2 short full-page | WF02-S01, S02, S05, S06; WF03-S01, S02, S03, S05, S08 | `__full.png` is 550–893px tall. Pixel QA §9 makes full-page capture mandatory, but a browser full-page capture is never under 900px (verified: a 550px page captures at 1440×900). The comparison rule for this case is undefined. |
 
-Extra properties proven: cross-actor isolation, anonymous records not claimable by an authenticated actor, key scoped per operation, payload-order independence, retention purge, and the state-shape constraint.
-
-## 6. Security results
-| Property | How proven |
-|---|---|
-| Not a process-local mutex | A raw duplicate INSERT that never touches the application is rejected by PostgreSQL. Source scan confirms no in-process lock or map |
-| Actor A result unreachable by actor B | Actor is in both the unique constraint and the lookup predicate. B ran its own work and received its own result |
-| No raw secret stored | The issued magic-link token appears in no column, asserted by a full-table scan |
-| No raw payload stored | Only a sha256 fingerprint. A marker string placed in the request appears nowhere in the table |
-| M0-T08 rules unchanged | A drift guard now asserts no migration after 002 alters `user_sessions` or `auth_magic_link_requests` |
-| Half-written record impossible | A CHECK constraint rejects a COMPLETED row with no stored outcome |
+G2 note: WF03-S03 and WF03-S08 are `long-page` mode with full references under 900px (893 and 888), which is internally inconsistent in the frozen manifest. `design-reference/final/README.md` explicitly allows full references shorter than 900, so the validator does not reject them. The runner refuses to run a gap screen rather than invent a crop rule.
 
 ## 7. Validation
 | Gate | Result |
 |---|---|
-| Format / Lint / Typecheck | PASS, 0 errors 0 warnings |
-| Unit tests | PASS — 61 of 61 |
-| DB integration | PASS — 118 of 118 (24 new) |
+| Format / Lint / Typecheck | PASS |
+| Unit | PASS — 94 / 94 (61 existing + 33 Pixel QA) |
+| DB integration | PASS — 118 / 118 |
 | Build | PASS |
-| Playwright full regression | PASS — 93 of 93 (7 new) |
-| Migrations 001 / 002 unchanged | PASS — empty diff |
-| SOT untouched | PASS — `docs/product`, `docs/workflows`, `docs/design`, `docs/architecture`, `design-reference/final` all unchanged |
+| Pixel QA Playwright | PASS — 15 / 15, plus 24 screen runs skipped by design |
+| Full Playwright regression | PASS — 108 / 108 (93 existing + 15), including auth, RBAC, idempotency and seed specs |
 
-Two failures occurred, both **my own test bugs**, fixed rather than worked around. A sweep assertion counted PROCESSING rows that the same file had hand-planted to prove a database constraint; it is now scoped to store-written rows and additionally names the fixture, so it narrows rather than hides. A Playwright case tried to send a control character that the HTTP client refuses to transmit, so it could never have reached the code it claimed to test; it now proves the over-length rejection, and the control-character path stays proven in the unit suite.
+The 16 required tests map to the unit tests (manifest, traversal, dimensions, comparison, report, ownership, reference immutability) and the harness spec (viewport, DPR, fonts, capture, diff).
 
-Four further failures were the **drift guards working correctly**, detecting migration 003. The guard that recorded `idempotency_keys` as absent was inverted rather than deleted, so the flip is itself the evidence the gap closed.
+## 8. Decisions needed (not blockers for M0 completion)
+1. **G1:** how state-board references are compared. For example, per-state crop regions in a tests-owned map, or functional-only checks for those states.
+2. **G2:** the full-page rule when the reference is shorter than the viewport. For example, viewport comparison only, or comparing the top N rows.
 
-## 8. Contract gaps
-No CONTRACT GAP stop was required. The frozen error envelope represents the conflict without a new field.
+Both are design/QA decisions. Neither was resolved here.
 
-05:48-63 requires the header and specifies nothing else. Seven policies were therefore chosen and recorded as PROVISIONAL in `IDEMPOTENCY_STORE_P0.md`, none presented as approved:
-
-| Item | Provisional value |
-|---|---|
-| Retention window | 24 hours |
-| Conflict error code | `UNCONTRACTED_IDEMPOTENCY_CONFLICT` |
-| Conflict HTTP status | 409, which *is* contracted at 05:104 |
-| Missing header | request still processed |
-
-**The one most likely to need revisiting is the last.** Idempotency is available but not compelled, so a client that omits the header silently gets the old behaviour. Rejecting would have required inventing a public error code for a missing key, which the contract names nowhere, and that is the harder thing to undo.
-
-## 9. Pre-UAT security decisions, unchanged
-CSRF mechanism (none implemented), session TTL (30 days) and SameSite (`lax`) are untouched by this task. None was promoted to final.
-
-## 10. Git
+## 9. Git
 - Branch: `main`
-- Commits: `4461532` store foundation, `dec333c` endpoint integration, plus this documentation commit
+- Starting HEAD: `61e80cc`
+- Implementation commit: `8fd8a09` feat(m0-t11): manifest-driven Pixel QA foundation
+- Report/final commit: the commit containing this report
+- Remote: `origin` → `austinfinity79/1hub-network`
 - Push status: **NOT RUN** — LOCAL REVIEW MODE
 - Remote HEAD: `2390ce2`, deliberately behind local
 - Working tree: clean after commit
-- Secrets: none committed; no credentialed remote URL recorded
+- Secrets: none committed
 
-## 11. Recommended next task
-**M0-T11 — manifest-driven pixel QA foundation.** It is the last M0 item and carries no open decision. The six other idempotent operation classes inherit the store when their endpoints are built; they need no further foundation work.
+## 10. Recommended next task
+**M0 Foundation Completion Audit.** Every M0 item is now built. G1 and G2 need a decision before the affected screens reach their pixel gate, but they do not block the audit.
 
 ## Related
-
-- [idempotency-store-p0.md](IDEMPOTENCY_STORE_P0.md) — the provisional decisions in full
-- [db-schema-gaps-p0.md](DB_SCHEMA_GAPS_P0.md) — gap P10, now closed
-- [p0-status.md](P0_STATUS.md) — overall P0 state
+- [P0_STATUS.md](P0_STATUS.md) — overall P0 state
+- [SESSION_HANDOFF.md](SESSION_HANDOFF.md) — session handoff (as of M0-T10)
+- [05_PIXEL_QA_ARCHITECTURE_v1.1.md](../qa/05_PIXEL_QA_ARCHITECTURE_v1.1.md) — Pixel QA SOT
