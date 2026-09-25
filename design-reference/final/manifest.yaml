@@ -1,0 +1,245 @@
+version: '1.0'
+viewport: 1440x900
+dpr: 1
+typography: APEC_FONT_STACK_v1
+screens:
+- screen_id: WF01-S01
+  slug: auth-entry
+  source: design-reference/source-thao/WF01/WF01-S01__auth-entry__SOURCE.png
+  source_size:
+  - 1440
+  - 900
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF01/WF01-S01__auth-entry__1440x900.png
+  full_page_baseline: null
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF01-S02
+  slug: check-email
+  source: design-reference/source-thao/WF01/WF01-S02__check-email__SOURCE.png
+  source_size:
+  - 1440
+  - 900
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF01/WF01-S02__check-email__1440x900.png
+  full_page_baseline: null
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF01-S03
+  slug: auth-callback-states
+  source: design-reference/source-thao/WF01/WF01-S03__auth-callback-states__SOURCE.png
+  source_size:
+  - 1440
+  - 900
+  reference_mode: state-board
+  viewport_baseline: design-reference/final/WF01/WF01-S03__auth-callback-states__1440x900.png
+  full_page_baseline: null
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF01-S04
+  slug: auth-errors
+  source: design-reference/source-thao/WF01/WF01-S04__auth-errors__SOURCE.png
+  source_size:
+  - 1440
+  - 900
+  reference_mode: state-board
+  viewport_baseline: design-reference/final/WF01/WF01-S04__auth-errors__1440x900.png
+  full_page_baseline: null
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF01-S05
+  slug: onboarding-purpose
+  source: design-reference/source-thao/WF01/WF01-S05__onboarding-purpose__SOURCE.png
+  source_size:
+  - 1440
+  - 900
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF01/WF01-S05__onboarding-purpose__1440x900.png
+  full_page_baseline: null
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF01-S06
+  slug: onboarding-profile
+  source: design-reference/source-thao/WF01/WF01-S06__onboarding-profile__SOURCE.png
+  source_size:
+  - 1440
+  - 900
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF01/WF01-S06__onboarding-profile__1440x900.png
+  full_page_baseline: null
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF01-S07
+  slug: onboarding-privacy
+  source: design-reference/source-thao/WF01/WF01-S07__onboarding-privacy__SOURCE.png
+  source_size:
+  - 1440
+  - 900
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF01/WF01-S07__onboarding-privacy__1440x900.png
+  full_page_baseline: null
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF01-S08
+  slug: onboarding-complete
+  source: design-reference/source-thao/WF01/WF01-S08__onboarding-complete__SOURCE.png
+  source_size:
+  - 1440
+  - 900
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF01/WF01-S08__onboarding-complete__1440x900.png
+  full_page_baseline: null
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF02-S01
+  slug: account-home
+  source: design-reference/source-thao/WF02/WF02-S01__account-home__SOURCE.png
+  source_size:
+  - 1440
+  - 837
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF02/WF02-S01__account-home__1440x900.png
+  full_page_baseline: design-reference/final/WF02/WF02-S01__account-home__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF02-S02
+  slug: individual-profile-edit
+  source: design-reference/source-thao/WF02/WF02-S02__individual-profile-edit__SOURCE.png
+  source_size:
+  - 1440
+  - 620
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF02/WF02-S02__individual-profile-edit__1440x900.png
+  full_page_baseline: design-reference/final/WF02/WF02-S02__individual-profile-edit__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF02-S03
+  slug: privacy-visibility
+  source: design-reference/source-thao/WF02/WF02-S03__privacy-visibility__SOURCE.png
+  source_size:
+  - 1440
+  - 1125
+  reference_mode: long-page
+  viewport_baseline: design-reference/final/WF02/WF02-S03__privacy-visibility__1440x900.png
+  full_page_baseline: design-reference/final/WF02/WF02-S03__privacy-visibility__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF02-S04
+  slug: roles-network-links
+  source: design-reference/source-thao/WF02/WF02-S04__roles-network-links__SOURCE.png
+  source_size:
+  - 1440
+  - 1594
+  reference_mode: long-page
+  viewport_baseline: design-reference/final/WF02/WF02-S04__roles-network-links__1440x900.png
+  full_page_baseline: design-reference/final/WF02/WF02-S04__roles-network-links__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF02-S05
+  slug: project-startup-profile-edit
+  source: design-reference/source-thao/WF02/WF02-S05__project-startup-profile-edit__SOURCE.png
+  source_size:
+  - 1440
+  - 883
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF02/WF02-S05__project-startup-profile-edit__1440x900.png
+  full_page_baseline: design-reference/final/WF02/WF02-S05__project-startup-profile-edit__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF02-S06
+  slug: project-team
+  source: design-reference/source-thao/WF02/WF02-S06__project-team__SOURCE.png
+  source_size:
+  - 1440
+  - 719
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF02/WF02-S06__project-team__1440x900.png
+  full_page_baseline: design-reference/final/WF02/WF02-S06__project-team__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF02-S07
+  slug: account-settings
+  source: design-reference/source-thao/WF02/WF02-S07__account-settings__SOURCE.png
+  source_size:
+  - 1440
+  - 1355
+  reference_mode: long-page
+  viewport_baseline: design-reference/final/WF02/WF02-S07__account-settings__1440x900.png
+  full_page_baseline: design-reference/final/WF02/WF02-S07__account-settings__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF03-S01
+  slug: chapter-selector-members
+  source: design-reference/source-thao/WF03/WF03-S01__chapter-selector-members__SOURCE.png
+  source_size:
+  - 1600
+  - 611
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF03/WF03-S01__chapter-selector-members__1440x900.png
+  full_page_baseline: design-reference/final/WF03/WF03-S01__chapter-selector-members__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF03-S02
+  slug: unit-dashboard
+  source: design-reference/source-thao/WF03/WF03-S02__unit-dashboard__SOURCE.png
+  source_size:
+  - 1440
+  - 782
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF03/WF03-S02__unit-dashboard__1440x900.png
+  full_page_baseline: design-reference/final/WF03/WF03-S02__unit-dashboard__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF03-S03
+  slug: member-account-list
+  source: design-reference/source-thao/WF03/WF03-S03__member-account-list__SOURCE.png
+  source_size:
+  - 1600
+  - 992
+  reference_mode: long-page
+  viewport_baseline: design-reference/final/WF03/WF03-S03__member-account-list__1440x900.png
+  full_page_baseline: design-reference/final/WF03/WF03-S03__member-account-list__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF03-S04
+  slug: member-account-detail
+  source: design-reference/source-thao/WF03/WF03-S04__member-account-detail__SOURCE.png
+  source_size:
+  - 1600
+  - 1075
+  reference_mode: long-page
+  viewport_baseline: design-reference/final/WF03/WF03-S04__member-account-detail__1440x900.png
+  full_page_baseline: design-reference/final/WF03/WF03-S04__member-account-detail__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF03-S05
+  slug: programme-challenge-list
+  source: design-reference/source-thao/WF03/WF03-S05__programme-challenge-list__SOURCE.png
+  source_size:
+  - 1600
+  - 611
+  reference_mode: strict
+  viewport_baseline: design-reference/final/WF03/WF03-S05__programme-challenge-list__1440x900.png
+  full_page_baseline: design-reference/final/WF03/WF03-S05__programme-challenge-list__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF03-S06
+  slug: unit-content-profile-management
+  source: design-reference/source-thao/WF03/WF03-S06__unit-content-profile-management__SOURCE.png
+  source_size:
+  - 1440
+  - 1839
+  reference_mode: long-page
+  viewport_baseline: design-reference/final/WF03/WF03-S06__unit-content-profile-management__1440x900.png
+  full_page_baseline: design-reference/final/WF03/WF03-S06__unit-content-profile-management__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF03-S07
+  slug: event-management
+  source: design-reference/source-thao/WF03/WF03-S07__event-management__SOURCE.png
+  source_size:
+  - 2100
+  - 1650
+  reference_mode: derived-crop
+  viewport_baseline: design-reference/final/WF03/WF03-S07__event-management__1440x900.png
+  full_page_baseline: design-reference/final/WF03/WF03-S07__event-management__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF03-S08
+  slug: unit-settings-relationships
+  source: design-reference/source-thao/WF03/WF03-S08__unit-settings-relationships__SOURCE.png
+  source_size:
+  - 1600
+  - 987
+  reference_mode: long-page
+  viewport_baseline: design-reference/final/WF03/WF03-S08__unit-settings-relationships__1440x900.png
+  full_page_baseline: design-reference/final/WF03/WF03-S08__unit-settings-relationships__full.png
+  typography_override: APEC_FONT_STACK_v1
+- screen_id: WF03-S09
+  slug: public-unit-page
+  source: design-reference/source-thao/WF03/WF03-S09__public-unit-page__SOURCE.png
+  source_size:
+  - 1520
+  - 2650
+  reference_mode: derived-crop
+  viewport_baseline: design-reference/final/WF03/WF03-S09__public-unit-page__1440x900.png
+  full_page_baseline: design-reference/final/WF03/WF03-S09__public-unit-page__full.png
+  typography_override: APEC_FONT_STACK_v1

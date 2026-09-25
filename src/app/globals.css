@@ -1,0 +1,7 @@
+/*
+ * M0-T01 — baseline stylesheet.
+ *
+ * Design tokens (docs/design/DESIGN_TOKENS_v1.0.css) and the Be Vietnam Pro
+ * font stack are imported by M0-T02, not here.
+ */
+@import 'tailwindcss';

@@ -1,0 +1,1202 @@
+# 1HUB.NETWORK — API CONTRACT P0 v1.0
+
+**Date:** 25/09/2026  
+**Status:** FROZEN FOR P0 IMPLEMENTATION  
+**Scope:** WF01 + WF02 + WF03 Production/Internal, plus required P0 support APIs (feedback, analytics, vocabulary).  
+**Basis:** Business SOT, Data SOT v1, WF01–WF03 final contracts, Auth/RBAC architecture, Design Pixel SOT.
+
+> This contract turns the frozen SOT into an executable HTTP boundary. It does **not** add new product scope. Any endpoint marked `FUTURE/DEMO` is non-production for P0.
+
+---
+
+# 1. Contract principles
+
+1. Base path: `/api/v1`.
+2. Browser auth uses an HTTP-only secure session cookie; the frontend must not trust role/scope from local storage.
+3. Every mutation is authorized server-side using `actor + capability + resource scope + lifecycle rule`.
+4. API never returns ORM/database rows directly; it returns purpose-specific DTOs.
+5. Sensitive reads are filtered server-side according to visibility, relationship, consent and role scope.
+6. Canonical taxonomy values are referenced by IDs, not arbitrary text.
+7. Historical business relations are closed/archived, not hard-deleted after activity exists.
+8. All sensitive mutations generate an audit event.
+9. Timestamps use ISO-8601 UTC strings.
+10. IDs are opaque strings (UUID/ULID implementation choice belongs to DB schema).
+
+---
+
+# 2. Common HTTP conventions
+
+## 2.1 Content type
+
+```http
+Content-Type: application/json
+Accept: application/json
+```
+
+File upload endpoints may use `multipart/form-data`.
+
+## 2.2 Request correlation
+
+Client may send:
+
+```http
+X-Request-ID: <opaque-id>
+```
+
+Server always returns a request ID in headers and in error payloads.
+
+## 2.3 Idempotency
+
+For mutations where duplicate submission is unsafe, client sends:
+
+```http
+Idempotency-Key: <opaque-key>
+```
+
+Required for:
+- auth magic-link request;
+- consent acceptance/revocation;
+- membership request;
+- feedback submit;
+- project/team invite mutations;
+- event create/publish;
+- organization relationship create/close.
+
+## 2.4 Success envelope
+
+Single-resource endpoints return the resource directly unless metadata is required.
+
+List endpoints return:
+
+```json
+{
+  "items": [],
+  "page": {
+    "next_cursor": null,
+    "limit": 50
+  }
+}
+```
+
+## 2.5 Error envelope
+
+```json
+{
+  "error": {
+    "code": "PROFILE_VALIDATION_FAILED",
+    "message": "Profile data is invalid.",
+    "fields": {
+      "region_id": "A valid region is required."
+    },
+    "request_id": "req_..."
+  }
+}
+```
+
+Canonical HTTP mapping:
+
+| HTTP | Meaning |
+|---|---|
+| 400 | malformed request / validation |
+| 401 | unauthenticated / expired session |
+| 403 | authenticated but not authorized |
+| 404 | resource not found or intentionally hidden |
+| 409 | lifecycle/state conflict / duplicate relation |
+| 422 | semantically valid JSON but business validation failed |
+| 429 | rate limited |
+| 500 | unexpected server error |
+
+---
+
+# 3. Session bootstrap & capability model
+
+## GET `/session`
+
+**Purpose:** Bootstrap authenticated UI after auth callback and on reload.
+
+**Response `200`**
+
+```json
+{
+  "authenticated": true,
+  "account": {
+    "id": "acc_...",
+    "email": "member@example.com",
+    "email_verified": true,
+    "status": "ACTIVE"
+  },
+  "profile": {
+    "id": "prf_...",
+    "status": "ACTIVE",
+    "onboarding_completed": true,
+    "completion_percent": 80
+  },
+  "capabilities": [
+    "profile:read:self",
+    "profile:update:self",
+    "network:read:self"
+  ],
+  "managed_scopes": [
+    {
+      "scope_type": "ORGANIZATION",
+      "scope_id": "org_chapter_hanoi",
+      "role_code": "HUB_COMMUNITY_LEADER"
+    }
+  ]
+}
+```
+
+Unauthenticated response may return `200 {"authenticated": false}` or `401`; implementation must choose one consistently. **Recommended:** `200 authenticated=false` for simple app bootstrap.
+
+---
+
+# 4. WF01 — Identity & Onboarding APIs
+
+## 4.1 Magic-link auth
+
+### POST `/auth/magic-link`
+
+Maps: **WF01-S01**.
+
+```json
+{
+  "email": "member@example.com",
+  "return_to": "/auth/callback"
+}
+```
+
+Response `202`:
+
+```json
+{
+  "request_id": "authreq_...",
+  "email_masked": "m***@example.com",
+  "resend_after_seconds": 60,
+  "expires_in_seconds": 900
+}
+```
+
+Rules:
+- same flow handles first-time account creation and returning user login;
+- no password is required by the frozen P0 design;
+- rate-limit by email + IP/device signals;
+- do not disclose whether an account already exists.
+
+Errors: `AUTH_RATE_LIMITED`, `AUTH_EMAIL_INVALID`.
+
+### POST `/auth/magic-link/resend`
+
+Maps: **WF01-S02**.
+
+```json
+{
+  "auth_request_id": "authreq_..."
+}
+```
+
+Response `202` with refreshed resend/expiry metadata.
+
+### POST `/auth/magic-link/consume`
+
+Maps: **WF01-S03** callback processing.
+
+```json
+{
+  "token": "opaque-one-time-token"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "result": "SUCCESS",
+  "account_created": true,
+  "onboarding": {
+    "completed": false,
+    "next_step": "PURPOSE"
+  }
+}
+```
+
+Server also sets the secure HTTP-only session cookie.
+
+Known business error codes:
+- `AUTH_LINK_EXPIRED`
+- `AUTH_LINK_ALREADY_USED`
+- `AUTH_LINK_INVALID`
+- `AUTH_ACCOUNT_BLOCKED`
+
+### POST `/auth/logout`
+
+Response `204` and revokes current session.
+
+### GET `/auth/providers`
+
+Optional config endpoint. Returns configured provider entries only. P0 must work when it returns an empty list.
+
+```json
+{
+  "providers": []
+}
+```
+
+Future 1Hub identity/CCCD integration must attach behind this/provider boundary without creating a second IndividualProfile.
+
+---
+
+## 4.2 Onboarding intent
+
+### GET `/me/onboarding`
+
+Returns current onboarding state.
+
+```json
+{
+  "completed": false,
+  "current_step": "PURPOSE",
+  "intent": null
+}
+```
+
+### PUT `/me/onboarding/intent`
+
+Maps: **WF01-S05**.
+
+```json
+{
+  "primary_intent": "EXPLORE_NETWORK"
+}
+```
+
+`primary_intent` is config-backed/product-config data. The API contract intentionally does not freeze a permanent enum beyond values approved in launch configuration.
+
+Response `200` returns onboarding state with next step.
+
+---
+
+## 4.3 Own profile
+
+### GET `/me/profile`
+
+Used by WF01-S06 and WF02.
+
+```json
+{
+  "id": "prf_...",
+  "status": "DRAFT",
+  "display_name": "Nguyễn Minh Anh",
+  "avatar": {
+    "asset_id": "asset_...",
+    "url": "/media/..."
+  },
+  "region": {"id": "region_hanoi", "label": "Hà Nội"},
+  "bio": null,
+  "domains": [],
+  "skills": [],
+  "education": [],
+  "experience": [],
+  "development_goal": null,
+  "current_need": null,
+  "links": [],
+  "completion": {
+    "percent": 30,
+    "completed_groups": 3,
+    "total_groups": 10
+  }
+}
+```
+
+### PATCH `/me/profile`
+
+Maps: **WF01-S06** and **WF02-S02**.
+
+Request is partial. Example:
+
+```json
+{
+  "display_name": "Nguyễn Minh Anh",
+  "region_id": "region_hanoi",
+  "bio": "Founder working on...",
+  "domain_ids": ["domain_ai"],
+  "skill_ids": ["skill_product"],
+  "development_goal": "Build my venture",
+  "current_need": "Find mentors"
+}
+```
+
+Rules:
+- canonical taxonomy fields accept IDs only;
+- profile completion is calculated server-side;
+- client cannot submit `completion_percent`;
+- `>=80%` is KPI, not general access gate;
+- audit profile fields only where required by governance, not every keystroke.
+
+Response `200`: updated `OwnProfileDTO`.
+
+Errors: `PROFILE_VALIDATION_FAILED`, `VOCABULARY_ITEM_INACTIVE`, `PROFILE_DEACTIVATED`.
+
+### GET `/me/profile/completion`
+
+```json
+{
+  "percent": 80,
+  "groups": [
+    {"code": "DISPLAY_NAME", "complete": true, "weight": 10},
+    {"code": "AVATAR", "complete": true, "weight": 10},
+    {"code": "REGION", "complete": true, "weight": 10},
+    {"code": "NETWORK_CONTEXT", "complete": true, "weight": 10},
+    {"code": "BIO", "complete": false, "weight": 10},
+    {"code": "DOMAIN", "complete": true, "weight": 10},
+    {"code": "SKILLS", "complete": true, "weight": 10},
+    {"code": "EXPERIENCE", "complete": true, "weight": 10},
+    {"code": "DEVELOPMENT_GOAL", "complete": true, "weight": 10},
+    {"code": "CURRENT_NEED", "complete": true, "weight": 10}
+  ]
+}
+```
+
+---
+
+## 4.4 Avatar / media
+
+### POST `/me/profile/avatar`
+
+`multipart/form-data` upload.
+
+Response:
+
+```json
+{
+  "asset_id": "asset_...",
+  "url": "/media/assets/asset_..."
+}
+```
+
+Private assets must not be returned as permanent public storage URLs.
+
+---
+
+## 4.5 Consent & visibility
+
+### GET `/legal/current`
+
+Returns currently required legal documents.
+
+```json
+{
+  "documents": [
+    {
+      "type": "TERMS_ACCEPTANCE",
+      "version": "2026-09-29",
+      "required": true,
+      "content_url": "/legal/terms/2026-09-29"
+    },
+    {
+      "type": "PRIVACY_DATA_PROCESSING",
+      "version": "2026-09-29",
+      "required": true,
+      "content_url": "/legal/privacy/2026-09-29"
+    }
+  ]
+}
+```
+
+Literal production version/date is release configuration, not hard-coded product logic.
+
+### GET `/me/consents`
+
+Returns consent/acceptance history.
+
+### POST `/me/consents/accept`
+
+Maps: **WF01-S07**, WF02-S03.
+
+```json
+{
+  "consent_type": "TERMS_ACCEPTANCE",
+  "policy_version": "2026-09-29"
+}
+```
+
+Response `201` returns `ConsentRecordDTO`.
+
+### POST `/me/consents/revoke`
+
+Only for revocable consent types. Required Terms acceptance is not revocable while continuing to use the service; account closure is handled separately.
+
+```json
+{
+  "consent_record_id": "con_..."
+}
+```
+
+Errors: `CONSENT_NOT_REVOCABLE`, `CONSENT_ALREADY_REVOKED`.
+
+### GET `/me/visibility`
+
+```json
+{
+  "groups": [
+    {"group_code": "BASIC_PUBLIC", "level": "PUBLIC"},
+    {"group_code": "SKILLS_EXPERIENCE", "level": "NETWORK_ONLY"},
+    {"group_code": "CONTACT", "level": "PRIVATE"}
+  ]
+}
+```
+
+### PUT `/me/visibility`
+
+```json
+{
+  "groups": [
+    {"group_code": "BASIC_PUBLIC", "level": "PUBLIC"},
+    {"group_code": "SKILLS_EXPERIENCE", "level": "NETWORK_ONLY"}
+  ]
+}
+```
+
+Canonical levels:
+
+`PUBLIC | NETWORK_ONLY | PROGRAMME_ACCESS | GRANTED_ACCESS | PRIVATE`
+
+Server validates which group/level combinations are allowed in P0 UI.
+
+---
+
+## 4.6 Complete onboarding
+
+### POST `/me/onboarding/complete`
+
+Maps: **WF01-S08**.
+
+Server validates minimum activation requirements:
+- valid authenticated account;
+- full/display name;
+- region;
+- required Terms/Privacy acceptance.
+
+Response:
+
+```json
+{
+  "completed": true,
+  "profile_status": "ACTIVE",
+  "completion_percent": 70,
+  "next": "/me"
+}
+```
+
+Errors: `ONBOARDING_REQUIREMENTS_MISSING` with field/group details.
+
+---
+
+# 5. WF02 — Member Profile & Network APIs
+
+## 5.1 Own network read model
+
+### GET `/me/network`
+
+Maps: **WF02-S04**.
+
+```json
+{
+  "memberships": [
+    {
+      "id": "mem_...",
+      "organization": {"id": "org_...", "name": "HUB Hà Nội", "type": "CHAPTER"},
+      "status": "ACTIVE",
+      "source": "ORGANIZATION_VERIFIED"
+    }
+  ],
+  "leadership": [
+    {
+      "id": "lead_...",
+      "organization": {"id": "org_...", "name": "HUB Hà Nội", "type": "CHAPTER"},
+      "title": "Leader",
+      "status": "ACTIVE"
+    }
+  ],
+  "roles": [],
+  "activity_summary": []
+}
+```
+
+### POST `/me/membership-requests`
+
+Fallback path only when no pre-seeded confirmed roster match exists.
+
+```json
+{
+  "organization_id": "org_..."
+}
+```
+
+Response `201` status `PENDING_APPROVAL`.
+
+Must **never** auto-create ACTIVE membership from self-selection.
+
+---
+
+## 5.2 Public/network profile projection
+
+### GET `/profiles/{profileId}`
+
+Server returns the representation appropriate to the requester context.
+
+Optional query:
+
+```text
+?view=auto|public|network
+```
+
+`view=auto` is default. Client cannot force access to data it is not entitled to.
+
+The DTO excludes registration email, phone and other private fields unless an explicit policy allows them.
+
+---
+
+## 5.3 Project / Startup profile resource
+
+WF02 uses one canonical venture record that WF05 reuses. The API calls this resource **Venture** while preserving business type `PROJECT | STARTUP`; physical DB naming is deferred to DB Schema v1.
+
+### GET `/me/ventures`
+
+Returns ventures the current user may manage or is a team member of.
+
+### POST `/ventures`
+
+Maps: **WF02-S05**.
+
+```json
+{
+  "type": "PROJECT",
+  "name": "GreenTech Solution",
+  "summary": "...",
+  "domain_ids": ["domain_green"],
+  "region_id": "region_hanoi"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "id": "ven_...",
+  "type": "PROJECT",
+  "status": "DRAFT",
+  "name": "GreenTech Solution"
+}
+```
+
+Creator becomes an authorized management relation/team membership according to DB/RBAC schema; no organization shared-login is created.
+
+### GET `/ventures/{ventureId}`
+
+Permission-filtered detail.
+
+### PATCH `/ventures/{ventureId}`
+
+Updates canonical Project/Startup profile. No programme-specific copy is created.
+
+### POST `/ventures/{ventureId}/submit-for-review`
+
+**Conditional endpoint:** only enabled if launch business configuration requires project/startup profile review. If not configured, endpoint returns `404`/capability absent. This prevents inventing a mandatory review workflow.
+
+---
+
+## 5.4 Venture team
+
+### GET `/ventures/{ventureId}/team`
+
+Maps: **WF02-S06**.
+
+### POST `/ventures/{ventureId}/team/invitations`
+
+```json
+{
+  "email": "member@example.com",
+  "role_label": "Co-founder"
+}
+```
+
+Creates an invitation/pending relationship; never silently activates membership from email alone.
+
+### PATCH `/ventures/{ventureId}/team/{membershipId}`
+
+```json
+{
+  "role_label": "Founder"
+}
+```
+
+### DELETE `/ventures/{ventureId}/team/{membershipId}`
+
+Closes/removes membership only when lifecycle policy permits; historical relation is preserved where required.
+
+---
+
+## 5.5 Account settings & sessions
+
+### GET `/me/settings`
+
+Returns account-safe settings and notification preferences.
+
+### PATCH `/me/settings`
+
+Only fields explicitly supported by current auth provider are mutable.
+
+### GET `/me/sessions`
+
+Returns active sessions/device metadata suitable for user display.
+
+### DELETE `/me/sessions/{sessionId}`
+
+Revokes one session.
+
+### GET `/me/notification-preferences`
+
+### PUT `/me/notification-preferences`
+
+Notification channel details remain config-driven; API must not assume unsupported channels.
+
+### POST `/me/account-deletion-request`
+
+Creates a controlled deletion/deactivation request; it does not synchronously hard-delete historical ecosystem records.
+
+---
+
+# 6. P0 Feedback APIs
+
+Feedback remains a Business/Data SOT P0 requirement even though no dedicated final pixel screen is frozen in WF01–WF03.
+
+### POST `/feedback`
+
+```json
+{
+  "content": "Tôi muốn...",
+  "context": {
+    "route": "/me",
+    "workflow": "WF02"
+  }
+}
+```
+
+Response `201`:
+
+```json
+{
+  "id": "fb_...",
+  "status": "RECEIVED",
+  "submitted_at": "2026-09-25T06:00:00Z"
+}
+```
+
+P0 must not invent ticket statuses/categories beyond what product explicitly adopts later.
+
+### GET `/me/feedback`
+
+Optional readback. If UI does not expose it in P0, endpoint may be deferred without affecting feedback submission metric.
+
+---
+
+# 7. Controlled Vocabulary APIs
+
+### GET `/vocabularies/{type}`
+
+`type` P0:
+- `REGION`
+- `DOMAIN`
+- `SKILL`
+
+Query:
+
+```text
+?q=product&status=ACTIVE&cursor=...&limit=50
+```
+
+Response:
+
+```json
+{
+  "items": [
+    {"id": "skill_product", "code": "PRODUCT", "label": "Product", "status": "ACTIVE"}
+  ],
+  "page": {"next_cursor": null, "limit": 50}
+}
+```
+
+Frontend must not hard-code canonical vocabulary lists.
+
+---
+
+# 8. WF03 — HUB / Chapter / CLB Operations APIs
+
+All `/ops/*` APIs require a server-verified capability and resource scope.
+
+## 8.1 Managed organization/network selector
+
+### GET `/ops/organizations`
+
+Maps: **WF03-S01**.
+
+Returns organizations the actor is allowed to manage.
+
+Filters:
+
+```text
+?type=HUB|CHAPTER|CLB&q=...&cursor=...&limit=50
+```
+
+DTO includes counts/read-model summaries only as authorized.
+
+---
+
+## 8.2 Unit dashboard
+
+### GET `/ops/organizations/{orgId}/dashboard`
+
+Maps: **WF03-S02**.
+
+Returns aggregate read model, not raw tables.
+
+```json
+{
+  "organization": {"id": "org_...", "name": "HUB Hà Nội", "type": "CHAPTER"},
+  "summary": {
+    "active_members": 120,
+    "active_leaders": 5,
+    "published_events": 3,
+    "linked_programmes": 2
+  },
+  "permissions": ["member:read", "event:manage"]
+}
+```
+
+Metric availability may vary by scope; absent metrics must not be fabricated.
+
+---
+
+## 8.3 Member operations
+
+### GET `/ops/organizations/{orgId}/members`
+
+Maps: **WF03-S03**.
+
+Filters:
+
+```text
+?q=...&membership_status=ACTIVE&leadership_status=ACTIVE&cursor=...&limit=50
+```
+
+Response items use `OpsMemberSummaryDTO`.
+
+### GET `/ops/organizations/{orgId}/members/{profileId}`
+
+Maps: **WF03-S04**.
+
+Returns permission-filtered member detail, membership/leadership history and consent summary required for operations. It must not expose full private consent content or unrelated private fields.
+
+### PATCH `/ops/organizations/{orgId}/memberships/{membershipId}`
+
+Allowed transitions only.
+
+```json
+{
+  "status": "ACTIVE"
+}
+```
+
+Common transitions: pending approval → active/rejected; active → suspended/alumni/withdrawn where policy allows.
+
+Errors: `MEMBERSHIP_INVALID_TRANSITION`, `SCOPE_FORBIDDEN`.
+
+### POST `/ops/organizations/{orgId}/leadership`
+
+```json
+{
+  "profile_id": "prf_...",
+  "title": "Leader",
+  "valid_from": "2026-09-01",
+  "valid_to": null
+}
+```
+
+Creates a leadership business record. Permission-bearing `RoleAssignment` is created/updated by backend policy only when required; client does not directly mint arbitrary roles.
+
+### PATCH `/ops/organizations/{orgId}/leadership/{leadershipId}`
+
+Closes/revokes leadership while preserving history.
+
+---
+
+## 8.4 Unit Programme/Challenge list — read bridge to WF04
+
+### GET `/ops/organizations/{orgId}/programmes`
+
+Maps: **WF03-S05**.
+
+Returns programmes/challenges associated with the organization.
+
+```json
+{
+  "items": [
+    {
+      "id": "pgm_...",
+      "type": "CHALLENGE",
+      "name": "HUB Challenge",
+      "status": "PUBLISHED",
+      "relationship": "LEAD_ORGANIZER"
+    }
+  ],
+  "page": {"next_cursor": null, "limit": 50}
+}
+```
+
+P0 WF03 does not require full create/manage Programme lifecycle; that belongs to WF04 Demo/next production phase.
+
+---
+
+## 8.5 Organization profile/content
+
+### GET `/organizations/{orgId}`
+
+Authenticated permission-filtered organization detail.
+
+### PATCH `/ops/organizations/{orgId}/profile`
+
+Maps: **WF03-S06**.
+
+Updates organization public/profile fields the actor is authorized to manage.
+
+### GET `/organizations/by-slug/{slug}`
+
+Maps: **WF03-S09**, public/network projection.
+
+Returns `OrganizationPublicDTO` and visible public events/links; no private admin fields.
+
+---
+
+## 8.6 Event management
+
+Frozen terminology: **Event**, not generic editable Activity.
+
+### GET `/ops/organizations/{orgId}/events`
+
+Maps: **WF03-S07**.
+
+### POST `/ops/organizations/{orgId}/events`
+
+```json
+{
+  "name": "Chapter Summit",
+  "programme_id": null,
+  "starts_at": "2026-10-01T02:00:00Z",
+  "ends_at": "2026-10-01T05:00:00Z",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "registration_enabled": true
+}
+```
+
+Rules:
+- `programme_id` is nullable;
+- standalone event is valid;
+- if linked to Programme, actor must also have valid relationship/scope policy;
+- event lifecycle: `DRAFT → PUBLISHED → LIVE → ENDED | CANCELLED → ARCHIVED`.
+
+### GET `/events/{eventId}`
+
+Permission-filtered detail.
+
+### PATCH `/ops/events/{eventId}`
+
+Updates event only in allowed lifecycle states.
+
+### POST `/ops/events/{eventId}/publish`
+
+Transitions `DRAFT → PUBLISHED` after required validation.
+
+### POST `/ops/events/{eventId}/cancel`
+
+Lifecycle-controlled cancellation.
+
+### GET `/ops/events/{eventId}/registrations`
+
+Returns operational registrations if registration is enabled.
+
+P0 contract intentionally does not define advanced ticketing/check-in workflow beyond existing business scope.
+
+---
+
+## 8.7 Organization relationships/settings
+
+### GET `/ops/organizations/{orgId}/relationships`
+
+Maps: **WF03-S08**.
+
+### POST `/ops/organizations/{orgId}/relationships`
+
+```json
+{
+  "target_organization_id": "org_...",
+  "relationship_type": "PARENT"
+}
+```
+
+Relationship types are controlled configuration; do not hard-code unapproved categories in frontend.
+
+### POST `/ops/organizations/{orgId}/relationships/{relationshipId}/close`
+
+```json
+{
+  "ended_at": "2026-09-25T06:00:00Z",
+  "reason": "Term ended"
+}
+```
+
+Closes relationship while preserving history.
+
+---
+
+# 9. Internal Feedback & P0 Analytics
+
+## GET `/ops/feedback`
+
+Authorized Platform/Admin/Ops view of feedback.
+
+Filters: `q`, `submitted_from`, `submitted_to`, cursor/limit.
+
+P0 does not require a complex ticket workflow.
+
+## GET `/ops/metrics/p0`
+
+Returns metrics required by roadmap validation.
+
+```json
+{
+  "registered_accounts": 92,
+  "profiles_at_least_80_percent": 68,
+  "profile_80_percent_rate": 0.739,
+  "feedback_submissions": 42,
+  "chapter_leader_coverage": {
+    "covered": 13,
+    "target": 13
+  }
+}
+```
+
+The backend/read model owns calculation. UI must not independently recalculate these from partial table data.
+
+---
+
+# 10. Analytics event contract
+
+P0 minimum events:
+
+```text
+account_authenticated
+account_created
+onboarding_started
+onboarding_completed
+profile_saved
+profile_completion_changed
+consent_accepted
+visibility_changed
+feedback_submitted
+membership_bootstrapped
+membership_requested
+```
+
+Required common properties:
+
+```json
+{
+  "event_name": "profile_saved",
+  "occurred_at": "2026-09-25T06:00:00Z",
+  "account_id": "acc_...",
+  "profile_id": "prf_...",
+  "workflow": "WF02",
+  "screen_id": "WF02-S02"
+}
+```
+
+Do not put private profile content into analytics payloads.
+
+---
+
+# 11. Core DTOs
+
+## 11.1 OrganizationRefDTO
+
+```json
+{
+  "id": "org_...",
+  "slug": "hub-ha-noi",
+  "name": "HUB Hà Nội",
+  "type": "CHAPTER"
+}
+```
+
+## 11.2 ConsentRecordDTO
+
+```json
+{
+  "id": "con_...",
+  "type": "PRIVACY_DATA_PROCESSING",
+  "policy_version": "2026-09-29",
+  "status": "ACCEPTED",
+  "accepted_at": "2026-09-25T06:00:00Z",
+  "revoked_at": null
+}
+```
+
+## 11.3 MembershipDTO
+
+```json
+{
+  "id": "mem_...",
+  "organization": {"id": "org_...", "name": "HUB Hà Nội", "type": "CHAPTER"},
+  "status": "ACTIVE",
+  "source_type": "ORGANIZATION_VERIFIED",
+  "valid_from": "2026-09-01",
+  "valid_to": null
+}
+```
+
+## 11.4 PublicProfileDTO
+
+Contains only fields allowed by current visibility/policy. Private contact/account fields are absent, not null placeholders.
+
+## 11.5 OwnProfileDTO
+
+May include editable private fields required by the owner UI, but still excludes security/session secrets.
+
+---
+
+# 12. Authorization matrix by endpoint group
+
+| Endpoint group | Required capability / policy |
+|---|---|
+| `/auth/*` | public + rate-limit/security policy |
+| `/session` | public bootstrap / authenticated detail |
+| `/me/*` | authenticated owner |
+| `/profiles/:id` | visibility + relationship + role policy |
+| `/ventures/*` | owner/team management relation |
+| `/feedback` | authenticated individual |
+| `/ops/organizations` | scoped organization/network read |
+| `/ops/organizations/:id/members*` | `member:read` / mutation capability |
+| `/ops/organizations/:id/profile` | `org:manage` |
+| `/ops/organizations/:id/events*` | `event:manage` |
+| `/ops/organizations/:id/relationships*` | `org:manage_relationship` |
+| `/ops/feedback` | platform/authorized ops |
+| `/ops/metrics/p0` | platform/authorized metrics role |
+
+Frontend capability checks are UX only; every protected API call re-authorizes.
+
+---
+
+# 13. Lifecycle conflict rules
+
+The API must return `409` rather than silently coercing invalid transitions.
+
+Examples:
+
+```text
+Profile DEACTIVATED → edit                    DENY
+Membership REJECTED → ACTIVE                  requires explicit reopen/new process
+Event ENDED → PUBLISHED                       DENY
+Consent REVOKED → mutate same record ACCEPTED DENY; create new acceptance record if policy permits
+Closed organization relationship → edit      DENY; create a new relationship period
+```
+
+---
+
+# 14. Endpoint → workflow/screen mapping
+
+## WF01
+
+| Screen | Endpoint(s) |
+|---|---|
+| WF01-S01 | `POST /auth/magic-link`, `GET /auth/providers` |
+| WF01-S02 | `POST /auth/magic-link/resend` |
+| WF01-S03 | `POST /auth/magic-link/consume`, `GET /session` |
+| WF01-S04 | auth error codes; no unique resource endpoint |
+| WF01-S05 | `GET /me/onboarding`, `PUT /me/onboarding/intent` |
+| WF01-S06 | `GET/PATCH /me/profile`, avatar, vocabularies |
+| WF01-S07 | `/legal/current`, `/me/consents*`, `/me/visibility` |
+| WF01-S08 | `POST /me/onboarding/complete` |
+
+## WF02
+
+| Screen | Endpoint(s) |
+|---|---|
+| WF02-S01 | `/session`, `/me/profile`, `/me/network`, `/me/ventures` |
+| WF02-S02 | `GET/PATCH /me/profile`, vocabularies |
+| WF02-S03 | `/me/consents`, `/me/visibility` |
+| WF02-S04 | `GET /me/network` |
+| WF02-S05 | `/ventures` |
+| WF02-S06 | `/ventures/:id/team*` |
+| WF02-S07 | `/me/settings`, `/me/sessions`, `/me/notification-preferences`, deletion request |
+
+## WF03
+
+| Screen | Endpoint(s) |
+|---|---|
+| WF03-S01 | `GET /ops/organizations` |
+| WF03-S02 | `GET /ops/organizations/:id/dashboard` |
+| WF03-S03 | `GET /ops/organizations/:id/members` |
+| WF03-S04 | member detail + membership/leadership mutations |
+| WF03-S05 | `GET /ops/organizations/:id/programmes` |
+| WF03-S06 | `PATCH /ops/organizations/:id/profile` |
+| WF03-S07 | event CRUD/publish/registration ops |
+| WF03-S08 | organization relationship endpoints |
+| WF03-S09 | `GET /organizations/by-slug/:slug` |
+
+---
+
+# 15. Explicitly out of P0 API contract
+
+Do **not** implement as production APIs for P0:
+
+- full WF04 Programme creation/configuration/judging lifecycle;
+- programme application submission/review workflow;
+- mentor/judge/challenge-owner workflows;
+- investor/fund/dataroom access;
+- recommendation/matching engine;
+- deep identity/CCCD document storage;
+- generic editable `Activity` CRUD.
+
+WF04/WF05 may use deterministic demo fixtures until promoted to production scope.
+
+---
+
+# 16. Definition of Done for API contract implementation
+
+An endpoint is not complete until:
+
+1. request/response schema implemented;
+2. server-side authorization implemented;
+3. lifecycle validation implemented;
+4. structured errors implemented;
+5. audit event added where required;
+6. unit/integration test exists;
+7. corresponding workflow E2E test passes;
+8. frontend uses the contract without duplicating business rules.
+
+---
+
+# 17. Freeze notes for DB Schema v1
+
+The following are intentionally deferred to the next task, **DB Schema v1**, and must not be guessed inconsistently by Claude:
+
+- physical table names;
+- UUID vs ULID choice;
+- normalized profile section tables vs JSONB boundaries;
+- venture physical model (`Project`/`Startup` table strategy);
+- audit/outbox table implementation;
+- session storage implementation;
+- exact search indexes;
+- literal launch taxonomy seed values;
+- literal legal document version strings.
+
+The API resource semantics above are frozen independently of those physical choices.

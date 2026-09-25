@@ -1,0 +1,13 @@
+.next/
+node_modules/
+coverage/
+pnpm-lock.yaml
+next-env.d.ts
+
+# Frozen SOT pack — never reformat
+docs/
+db/
+design-reference/
+CLAUDE.md
+README.md
+1HUB_IMPLEMENTATION_MASTER_SPEC_v1.3.md

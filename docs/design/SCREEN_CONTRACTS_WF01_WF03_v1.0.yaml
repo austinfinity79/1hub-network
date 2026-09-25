@@ -1,0 +1,346 @@
+version: '1.0'
+status: FROZEN_WF01_WF03
+workflows:
+  WF01:
+    name: Identity & Onboarding
+    mode: PRODUCTION
+    actor: Guest -> Member/Leader
+    screens:
+    - id: WF01-S01
+      route: /auth
+      source: AUTH1
+      reads: []
+      writes:
+      - AuthRequest
+      actions:
+      - continue_google_if_configured
+      - send_magic_link
+      next:
+      - WF01-S02
+      notes:
+      - Email magic-link is required P0 path; provider auth is config-driven.
+    - id: WF01-S02
+      route: /auth/check-email
+      source: AUTH2
+      reads:
+      - AuthRequest
+      writes:
+      - AuthRequest
+      actions:
+      - resend
+      - change_email
+      next:
+      - WF01-S03
+      - WF01-S04
+    - id: WF01-S03
+      route: /auth/callback
+      source: AUTH3
+      reads:
+      - AuthToken
+      writes:
+      - UserAccount
+      - Session
+      actions:
+      - activate_session
+      - request_new_link
+      next:
+      - WF01-S05
+      - WF01-S04
+    - id: WF01-S04
+      route: /auth/error
+      source: AUTH4
+      reads:
+      - AuthErrorState
+      writes: []
+      actions:
+      - retry
+      - contact_support
+      - relogin
+      next:
+      - WF01-S01
+      - WF01-S02
+    - id: WF01-S05
+      route: /onboarding/purpose
+      source: ONB1
+      reads:
+      - UserAccount
+      writes:
+      - OnboardingIntent
+      actions:
+      - select_primary_intent
+      - skip_later
+      next:
+      - WF01-S06
+    - id: WF01-S06
+      route: /onboarding/profile
+      source: ONB2
+      reads:
+      - IndividualProfile
+      - ControlledVocabulary
+      writes:
+      - IndividualProfile
+      actions:
+      - upload_avatar
+      - save_profile
+      next:
+      - WF01-S07
+    - id: WF01-S07
+      route: /onboarding/privacy
+      source: ONB3
+      reads:
+      - ConsentVersion
+      - ProfileVisibilitySetting
+      writes:
+      - ConsentRecord
+      - ProfileVisibilitySetting
+      actions:
+      - set_visibility_by_purpose
+      - accept_required_legal
+      next:
+      - WF01-S08
+    - id: WF01-S08
+      route: /onboarding/complete
+      source: ONB4
+      reads:
+      - IndividualProfile
+      - OnboardingIntent
+      - NetworkReadModel
+      writes:
+      - OnboardingCompletion
+      actions:
+      - open_challenge_library
+      - create_project_profile
+      - request_or_open_chapter
+      next:
+      - WF02-S01
+    future_insertion:
+      after: WF01-S03
+      capability: 1Hub verified identity / CCCD verification
+      p0: NOT_REQUIRED
+  WF02:
+    name: Member Profile & Network Management
+    mode: PRODUCTION
+    actor: Member/Leader
+    screens:
+    - id: WF02-S01
+      route: /me
+      source: ME0
+      reads:
+      - UserAccount
+      - IndividualProfile
+      - Membership
+      - Leadership
+      - Invitations
+      writes: []
+      actions:
+      - open_profile
+      - open_privacy
+      - open_roles
+      - open_project
+      - open_settings
+    - id: WF02-S02
+      route: /me/profile/edit
+      source: PRO2
+      reads:
+      - IndividualProfile
+      - ControlledVocabulary
+      - ActivityReadModel
+      writes:
+      - IndividualProfile
+      actions:
+      - save
+      - preview_public
+    - id: WF02-S03
+      route: /me/privacy
+      source: ME2
+      reads:
+      - ConsentRecord
+      - ProfileVisibilitySetting
+      - ProfileViewerLog
+      writes:
+      - ProfileVisibilitySetting
+      - ConsentRecord
+      actions:
+      - toggle_purpose
+      - preview_as_other
+      - export_my_data
+    - id: WF02-S04
+      route: /me/roles
+      source: ME6
+      reads:
+      - Membership
+      - Leadership
+      - RoleAssignment
+      - ActivityRecord
+      writes: []
+      actions:
+      - open_linked_entity
+      notes:
+      - system-recorded history is read-only
+    - id: WF02-S05
+      route: /projects/:id/edit | /projects/new
+      source: PRO1
+      reads:
+      - ProjectStartup
+      - ControlledVocabulary
+      writes:
+      - ProjectStartup
+      actions:
+      - create
+      - save
+      - preview_public
+      - submit_for_review_if_required
+      notes:
+      - Canonical Project/Startup reused by WF05; no per-programme duplicate.
+    - id: WF02-S06
+      route: /projects/:id/team
+      source: PRO3
+      reads:
+      - ProjectStartup
+      - TeamMembership
+      - IndividualProfile
+      writes:
+      - TeamMembership
+      actions:
+      - invite_member
+      - change_role
+      - remove_member_if_allowed
+    - id: WF02-S07
+      route: /me/settings
+      source: ME4
+      reads:
+      - UserAccount
+      - Session
+      - NotificationPreference
+      writes:
+      - UserAccountSettings
+      - NotificationPreference
+      actions:
+      - update_email_or_provider_if_supported
+      - manage_sessions
+      - request_account_deletion
+  WF03:
+    name: HUB / Chapter / CLB Operations
+    mode: PRODUCTION_INTERNAL
+    actor: HUB Leader / Chapter Admin / Authorized Representative
+    screens:
+    - id: WF03-S01
+      route: /ops/network
+      source: ADM8
+      reads:
+      - Organization
+      - MembershipSummary
+      writes: []
+      scope:
+      - network:read
+      actions:
+      - select_org
+      - open_members
+    - id: WF03-S02
+      route: /ops/org/:orgId
+      source: ORG1
+      reads:
+      - OrganizationOpsReadModel
+      writes: []
+      scope:
+      - org:read
+      actions:
+      - open_work_item
+      - navigate_module
+    - id: WF03-S03
+      route: /ops/org/:orgId/members
+      source: ADM17
+      reads:
+      - Membership
+      - IndividualProfile
+      writes: []
+      scope:
+      - member:read
+      actions:
+      - search
+      - filter
+      - open_member
+    - id: WF03-S04
+      route: /ops/org/:orgId/members/:profileId
+      source: ADM18
+      reads:
+      - IndividualProfile
+      - Membership
+      - Leadership
+      - ConsentSummary
+      writes:
+      - Membership
+      - Leadership
+      scope:
+      - member:read
+      - member:manage_if_authorized
+      actions:
+      - approve_or_update_relationship_if_allowed
+    - id: WF03-S05
+      route: /ops/org/:orgId/programmes
+      source: ADM5
+      reads:
+      - Programme
+      writes: []
+      scope:
+      - programme:read
+      actions:
+      - open_programme
+      - create_programme_if_capability
+    - id: WF03-S06
+      route: /ops/org/:orgId/profile
+      source: ORGP2
+      reads:
+      - Organization
+      - OrganizationProfile
+      writes:
+      - OrganizationProfile
+      scope:
+      - org:manage
+      actions:
+      - edit_profile_sections
+      - save
+      - archive_if_allowed
+    - id: WF03-S07
+      route: /ops/org/:orgId/events
+      source: Chapter Summit admin crop
+      reads:
+      - Event
+      - EventRegistration
+      - EventOpsReadModel
+      writes:
+      - Event
+      scope:
+      - event:manage
+      actions:
+      - create_event
+      - edit_event
+      - publish_event
+      - manage_registration
+      notes:
+      - 'Frozen rename: Quản lý sự kiện. Do not implement generic Activity CRUD.'
+    - id: WF03-S08
+      route: /ops/org/:orgId/settings
+      source: ADM21
+      reads:
+      - OrganizationRelationship
+      writes:
+      - OrganizationRelationship
+      scope:
+      - org:manage_relationship
+      actions:
+      - create_relationship
+      - close_relationship_preserve_history
+    - id: WF03-S09
+      route: /organizations/:slug
+      source: Hồ sơ Chapter crop
+      reads:
+      - OrganizationPublicReadModel
+      - EventPublicReadModel
+      writes: []
+      scope:
+      - public_or_network_visibility
+      actions:
+      - request_join
+      - open_event
+      - open_related_org

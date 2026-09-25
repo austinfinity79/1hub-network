@@ -1,0 +1,3 @@
+email,organization_slug,membership_state,leadership_role_label,source_batch
+leader@example.org,chapter-slug,ACTIVE,Chapter Leader,p0-2026-09
+member@example.org,chapter-slug,ACTIVE,,p0-2026-09

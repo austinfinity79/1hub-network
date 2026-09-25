@@ -1,0 +1,8 @@
+# Build scripts are opt-in in pnpm 11. These three are required:
+#   esbuild        - Vitest transform pipeline
+#   unrs-resolver  - eslint-import-resolver used by eslint-config-next
+#   sharp          - Next.js image optimisation
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+  sharp: true

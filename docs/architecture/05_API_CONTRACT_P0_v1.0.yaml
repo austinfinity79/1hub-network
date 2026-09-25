@@ -1,0 +1,396 @@
+openapi: 3.1.0
+info:
+  title: 1hub.network P0 API
+  version: 1.0.0
+  description: >-
+    Machine-readable implementation skeleton for the frozen WF01-WF03 P0 API contract.
+    The Markdown contract is authoritative for business semantics and permission rules.
+servers:
+  - url: /api/v1
+security:
+  - sessionCookie: []
+paths:
+  /session:
+    get:
+      security: []
+      operationId: getSession
+      responses:
+        '200':
+          description: Session bootstrap
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDTO'
+  /auth/magic-link:
+    post:
+      security: []
+      operationId: requestMagicLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+                return_to: { type: string }
+      responses:
+        '202': { description: Accepted }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/magic-link/resend:
+    post:
+      security: []
+      operationId: resendMagicLink
+      responses:
+        '202': { description: Accepted }
+  /auth/magic-link/consume:
+    post:
+      security: []
+      operationId: consumeMagicLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '200': { description: Authenticated }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /auth/logout:
+    post:
+      operationId: logout
+      responses:
+        '204': { description: Logged out }
+  /auth/providers:
+    get:
+      security: []
+      operationId: listAuthProviders
+      responses:
+        '200': { description: Configured auth providers }
+  /me/onboarding:
+    get:
+      operationId: getOnboarding
+      responses:
+        '200': { description: Onboarding state }
+  /me/onboarding/intent:
+    put:
+      operationId: updateOnboardingIntent
+      responses:
+        '200': { description: Updated }
+  /me/onboarding/complete:
+    post:
+      operationId: completeOnboarding
+      responses:
+        '200': { description: Completed }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /me/profile:
+    get:
+      operationId: getOwnProfile
+      responses:
+        '200':
+          description: Own profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OwnProfileDTO' }
+    patch:
+      operationId: updateOwnProfile
+      responses:
+        '200': { description: Updated profile }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /me/profile/completion:
+    get:
+      operationId: getProfileCompletion
+      responses:
+        '200': { description: Completion read model }
+  /me/profile/avatar:
+    post:
+      operationId: uploadAvatar
+      responses:
+        '200': { description: Uploaded }
+  /legal/current:
+    get:
+      security: []
+      operationId: getCurrentLegalDocuments
+      responses:
+        '200': { description: Current required legal documents }
+  /me/consents:
+    get:
+      operationId: getConsentHistory
+      responses:
+        '200': { description: Consent history }
+  /me/consents/accept:
+    post:
+      operationId: acceptConsent
+      responses:
+        '201': { description: Consent accepted }
+  /me/consents/revoke:
+    post:
+      operationId: revokeConsent
+      responses:
+        '200': { description: Consent revoked }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me/visibility:
+    get:
+      operationId: getOwnVisibility
+      responses:
+        '200': { description: Visibility configuration }
+    put:
+      operationId: updateOwnVisibility
+      responses:
+        '200': { description: Visibility updated }
+  /me/network:
+    get:
+      operationId: getOwnNetwork
+      responses:
+        '200': { description: Membership, leadership, roles and activity summary }
+  /me/membership-requests:
+    post:
+      operationId: requestMembership
+      responses:
+        '201': { description: Pending membership request }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /profiles/{profileId}:
+    get:
+      operationId: getProfileProjection
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+      responses:
+        '200': { description: Permission-filtered profile projection }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /me/ventures:
+    get:
+      operationId: listOwnVentures
+      responses:
+        '200': { description: Ventures visible/manageable by current user }
+  /ventures:
+    post:
+      operationId: createVenture
+      responses:
+        '201': { description: Created }
+  /ventures/{ventureId}:
+    get:
+      operationId: getVenture
+      parameters:
+        - $ref: '#/components/parameters/VentureId'
+      responses:
+        '200': { description: Venture detail }
+    patch:
+      operationId: updateVenture
+      parameters:
+        - $ref: '#/components/parameters/VentureId'
+      responses:
+        '200': { description: Venture updated }
+  /ventures/{ventureId}/team:
+    get:
+      operationId: getVentureTeam
+      parameters:
+        - $ref: '#/components/parameters/VentureId'
+      responses:
+        '200': { description: Venture team }
+  /ventures/{ventureId}/team/invitations:
+    post:
+      operationId: inviteVentureTeamMember
+      parameters:
+        - $ref: '#/components/parameters/VentureId'
+      responses:
+        '201': { description: Invitation created }
+  /feedback:
+    post:
+      operationId: submitFeedback
+      responses:
+        '201': { description: Feedback received }
+  /vocabularies/{type}:
+    get:
+      security: []
+      operationId: listVocabularyItems
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [REGION, DOMAIN, SKILL]
+      responses:
+        '200': { description: Vocabulary items }
+  /ops/organizations:
+    get:
+      operationId: listManagedOrganizations
+      responses:
+        '200': { description: Managed organizations }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /ops/organizations/{orgId}/dashboard:
+    get:
+      operationId: getOrganizationDashboard
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '200': { description: Organization dashboard read model }
+  /ops/organizations/{orgId}/members:
+    get:
+      operationId: listOrganizationMembers
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '200': { description: Members }
+  /ops/organizations/{orgId}/members/{profileId}:
+    get:
+      operationId: getOrganizationMember
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+        - $ref: '#/components/parameters/ProfileId'
+      responses:
+        '200': { description: Member ops detail }
+  /ops/organizations/{orgId}/programmes:
+    get:
+      operationId: listOrganizationProgrammes
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '200': { description: Programme/Challenge list bridge }
+  /ops/organizations/{orgId}/profile:
+    patch:
+      operationId: updateOrganizationProfile
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '200': { description: Updated organization profile }
+  /ops/organizations/{orgId}/events:
+    get:
+      operationId: listOrganizationEvents
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '200': { description: Events }
+    post:
+      operationId: createOrganizationEvent
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '201': { description: Event created }
+  /ops/organizations/{orgId}/relationships:
+    get:
+      operationId: listOrganizationRelationships
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '200': { description: Organization relationships }
+    post:
+      operationId: createOrganizationRelationship
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '201': { description: Relationship created }
+  /organizations/by-slug/{slug}:
+    get:
+      security: []
+      operationId: getPublicOrganization
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Public/network organization projection }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /ops/feedback:
+    get:
+      operationId: listFeedbackOps
+      responses:
+        '200': { description: Feedback list }
+  /ops/metrics/p0:
+    get:
+      operationId: getP0Metrics
+      responses:
+        '200': { description: P0 roadmap metrics }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: 1hub_session
+  parameters:
+    ProfileId:
+      name: profileId
+      in: path
+      required: true
+      schema: { type: string }
+    VentureId:
+      name: ventureId
+      in: path
+      required: true
+      schema: { type: string }
+    OrgId:
+      name: orgId
+      in: path
+      required: true
+      schema: { type: string }
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Conflict:
+      description: Lifecycle/state conflict
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    BusinessValidation:
+      description: Business validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    RateLimited:
+      description: Rate limited
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, request_id]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            fields:
+              type: object
+              additionalProperties: { type: string }
+            request_id: { type: string }
+    SessionDTO:
+      type: object
+      required: [authenticated]
+      properties:
+        authenticated: { type: boolean }
+        account:
+          type: [object, 'null']
+          additionalProperties: true
+        profile:
+          type: [object, 'null']
+          additionalProperties: true
+        capabilities:
+          type: array
+          items: { type: string }
+        managed_scopes:
+          type: array
+          items: { type: object, additionalProperties: true }
+    OwnProfileDTO:
+      type: object
+      additionalProperties: true
