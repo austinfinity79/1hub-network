@@ -91,6 +91,8 @@ test.describe('WF01-S04 functional', () => {
     const text = await page.locator('body').innerText()
     expect(text).not.toMatch(/\d{1,2}\/\d{1,2}/)
     expect(text).not.toMatch(/@/)
+    // No email delivery exists in P0, so nothing may promise one.
+    expect(text.toLowerCase()).not.toContain('mail')
     expect(text).toContain('Liên hệ ban điều hành HUB để được hỗ trợ.')
     // No action is invented without a configured support contact.
     await expect(page.getByRole('link')).toHaveCount(0)

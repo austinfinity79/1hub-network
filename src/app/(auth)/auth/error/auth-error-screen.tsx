@@ -68,14 +68,18 @@ function Disc() {
   )
 }
 
-/** R2. Board date dropped (D4, no data source); no support address invented (D5). */
+/**
+ * R2. Board date dropped (D4, no data source); no support address invented (D5).
+ * The board's "reason is in the HUB email" sentence is replaced: no email
+ * delivery exists in P0, so nothing may promise one.
+ */
 function Blocked() {
   return (
     <div className={styles.state} data-auth-error="blocked" role="alert">
       <Disc />
       <h1 className={`type-section-sm ${styles.title}`}>Tài khoản đang bị khoá</h1>
       <p className={`type-body-sm ${styles.body}`}>
-        Tài khoản này đang bị tạm khoá. Lý do và cách mở nằm trong mail HUB gửi bạn.
+        Tài khoản này đang bị tạm khoá, nên hiện chưa thể đăng nhập.
       </p>
       <p className={`type-meta-xs ${styles.support}`}>Liên hệ ban điều hành HUB để được hỗ trợ.</p>
     </div>
