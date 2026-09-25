@@ -1,6 +1,9 @@
 import { ApiError } from '@/lib/api/errors'
 import { withApi, withStatus } from '@/lib/api/handler'
+import { readIdempotencyKey } from '@/lib/api/idempotency'
 import { requestMagicLink } from '@/lib/auth/magic-link'
+import { normalizeEmail } from '@/lib/auth/tokens'
+import { fingerprintRequest, runIdempotent } from '@/lib/idempotency/store'
 
 /**
  * POST /api/v1/auth/magic-link — 05:157-185. Maps WF01-S01.
@@ -10,6 +13,17 @@ import { requestMagicLink } from '@/lib/auth/magic-link'
  *
  * The raw token is deliberately dropped here: it belongs in the email, never in
  * an HTTP response and never in a log line.
+ *
+ * IDEMPOTENCY (M0-T10). 05:56 lists this operation as one of the seven that
+ * require an `Idempotency-Key`. When the header is present the request runs
+ * through the durable store, so a retry returns the first response and issues no
+ * second link.
+ *
+ * When the header is ABSENT the request is still processed. That leniency is a
+ * PROVISIONAL decision, not a reading of the contract: rejecting would need an
+ * error code for a missing key, and 05:48-63 names none. The choice is recorded
+ * in docs/implementation/IDEMPOTENCY_STORE_P0.md and is the smaller of the two,
+ * because inventing a public error code is the harder thing to undo.
  */
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +40,29 @@ export const POST = withApi(async ({ request }) => {
     throw new ApiError('AUTH_EMAIL_INVALID', 400, 'A valid email address is required.')
   }
 
-  const { response } = await requestMagicLink(body.email, clientIp(request))
-  // 202 Accepted: the link is dispatched out of band (05:168).
-  return withStatus(202, response)
+  const email = body.email
+  const ip = clientIp(request)
+  const key = readIdempotencyKey(request.headers)
+
+  if (!key) {
+    const { response } = await requestMagicLink(email, ip)
+    // 202 Accepted: the link is dispatched out of band (05:168).
+    return withStatus(202, response)
+  }
+
+  // Fingerprint the NORMALISED address, so that the same mailbox written in a
+  // different case replays rather than being reported as a different request.
+  const outcome = await runIdempotent({
+    key,
+    operation: 'auth.magic-link.request',
+    // Unauthenticated by definition: this is the endpoint that starts a session.
+    actorAccountId: null,
+    fingerprint: fingerprintRequest({ email: normalizeEmail(email) }),
+    run: async (exec) => {
+      const { response } = await requestMagicLink(email, ip, exec)
+      return { status: 202, body: response }
+    },
+  })
+
+  return withStatus(outcome.status, outcome.body)
 })
