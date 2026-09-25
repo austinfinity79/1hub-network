@@ -63,11 +63,11 @@ test.describe('M0-T05 GET /session', () => {
 })
 
 test.describe('M0-T05 API surface discipline', () => {
-  test('exposes no endpoint beyond the one M0-T05 implements', async ({ request }) => {
-    // Business endpoints belong to M1 onward. Anything answering here now would
-    // be scope leakage.
+  test('exposes no business endpoint yet', async ({ request }) => {
+    // M0-T08 implemented the auth endpoints, so they are no longer absent; they
+    // are covered by auth-session.spec.ts. Business endpoints still belong to
+    // M1 onward, and anything answering here now would be scope leakage.
     for (const path of [
-      '/auth/magic-link',
       '/me/profile',
       '/me/network',
       '/ops/organizations',
@@ -75,6 +75,14 @@ test.describe('M0-T05 API surface discipline', () => {
     ]) {
       const response = await request.get(`${BASE}${path}`)
       expect(response.status(), `${path} should not be implemented yet`).toBe(404)
+    }
+  })
+
+  test('auth endpoints exist but reject the wrong method', async ({ request }) => {
+    // POST-only endpoints answer 405, not 404: they exist as of M0-T08.
+    for (const path of ['/auth/magic-link', '/auth/magic-link/consume', '/auth/logout']) {
+      const response = await request.get(`${BASE}${path}`)
+      expect(response.status(), `${path} should exist as POST-only`).toBe(405)
     }
   })
 

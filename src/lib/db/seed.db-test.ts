@@ -39,8 +39,6 @@ const FROZEN_ROLE_CATALOGUE = [
   'ADVISOR',
 ]
 
-type CountRow = { table_name: string; n: number }
-
 async function countsOf(tables: string[]): Promise<Record<string, number>> {
   const out: Record<string, number> = {}
   for (const table of tables) {

@@ -1,7 +1,8 @@
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { afterAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { closePool, query } from './client'
 
@@ -23,6 +24,13 @@ const MIGRATION = readFileSync(
   join(process.cwd(), 'db', 'migrations', '001_p0_init.sql'),
   'utf8',
 )
+
+// Reset first so this suite is independent of run order. The auth suite creates
+// accounts and sessions, which would otherwise break the exact-match fixture
+// assertions below depending on which file ran first.
+beforeAll(() => {
+  execFileSync('node', [join(process.cwd(), 'scripts', 'db.mjs'), 'reset'], { stdio: 'pipe' })
+}, 60_000)
 
 afterAll(async () => {
   await closePool()

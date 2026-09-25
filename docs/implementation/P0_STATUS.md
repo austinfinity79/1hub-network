@@ -25,13 +25,15 @@ to the frozen route manifest.
 | OPS single-writer | CLAUDE.md §13 local workspace single-writer rule |
 | DOC-README-02 | README simplified into a stable entry point; this status file created |
 | M0-T07 | Deterministic, idempotent seed fixture system |
+| M0-T08 | Auth/session foundation: magic link, server-side sessions, HTTP-only cookie |
 
 ## Not yet built (M0)
 
-Auth/session, RBAC, idempotency store, manifest-driven pixel harness.
+RBAC, idempotency store, manifest-driven pixel harness.
+
+`GET /api/v1/session` now resolves a real session. `capabilities` and `managed_scopes` return empty by design until M0-T09 implements the authorization engine.
 
 The transitional `role_assignments.account_id` column and its trigger, kept by 002 so the old seed still applied, are now unused: the deterministic seed writes the profile anchor only. They can be dropped by a later migration.
-`GET /api/v1/session` returns the contract shape only (`{authenticated:false}`).
 
 ## Open decisions / known gaps
 

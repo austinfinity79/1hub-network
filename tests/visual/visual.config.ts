@@ -66,7 +66,12 @@ export default defineConfig({
     command: `PORT=${PORT} pnpm start`,
     // The typography harness is gated to dev/test only and 404s in production.
     // The suite is the sanctioned test context, so it opts in explicitly.
-    env: { ENABLE_DEV_ROUTES: '1' },
+    env: {
+      ENABLE_DEV_ROUTES: '1',
+      DATABASE_URL:
+        process.env.DATABASE_URL ??
+        'postgresql://hubnetwork:hubnetwork_local_dev@localhost:55432/hubnetwork_p0',
+    },
     url: BASE_URL,
     reuseExistingServer: true,
     timeout: 120_000,
