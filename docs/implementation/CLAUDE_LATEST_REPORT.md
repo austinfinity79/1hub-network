@@ -1,123 +1,94 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: M0-T04 — shared UI primitives foundation
-- Scope requested: Minimum reusable primitives required by the WF01–WF03 screen contracts, with states and accessibility. No product screens.
+- Task ID / name: M0-T05 — API client, error envelope and DTO conventions
+- Scope requested: `/api/v1` foundation — frozen error envelope with its codes, success and list envelopes, request-id correlation, DTO conventions, a typed client written from the authoritative Markdown contract, and `GET /session`.
 - Status: DONE
-- Progress estimate: M0-T04 100%. M0 milestone 5 of 13 tasks complete. WF01 not started.
+- Progress estimate: M0-T05 100%. M0 milestone 6 of 13 tasks complete. WF01 not started.
 
-## 2. Primitives created
-| Primitive | File | Element | Justified by |
-|---|---|---|---|
-| Button | `button.tsx` | native `<button>` | submit, create, invite, publish, approve actions |
-| TextInput | `text-input.tsx` | native `<input>` | email entry, profile fields |
-| Label | `label.tsx` | native `<label>` | every form control |
-| Field | `field.tsx` | wrapper | label/control/message wiring |
-| FieldMessage | `field-message.tsx` | `<p>` | validation and helper text |
-| Surface | `surface.tsx` | `div`/`section`/`article`/`aside` | cards and panels |
-| Notice | `notice.tsx` | `<div>` with role | auth error states, legal acceptance |
-
-No speculative component was created. Select, checkbox, radio, toggle and table were deliberately left out; they were not in the authorised list and no primitive here needs them.
-
-## 3. Supported states
-| Primitive | States |
+## 2. What was implemented
+| File | Purpose |
 |---|---|
-| Button | default, hover, focus-visible, disabled, loading, primary/secondary variant |
-| TextInput | default, focus-visible, disabled, readonly, invalid |
-| Field | default, with helper, with error (error replaces helper) |
-| FieldMessage | helper, error |
-| Notice | info, error |
-| Surface | structural only |
+| `src/lib/api/error-codes.ts` | 14 frozen codes, HTTP mapping, contract-gap codes |
+| `src/lib/api/errors.ts` | `ApiError`, envelope builder, unexpected-error wrapping |
+| `src/lib/api/envelope.ts` | List envelope, cursor/limit parsing |
+| `src/lib/api/request-id.ts` | `X-Request-ID` resolution and generation |
+| `src/lib/api/idempotency.ts` | Header parsing, the seven operation classes |
+| `src/lib/api/handler.ts` | Route wrapper guaranteeing headers and envelope |
+| `src/lib/api/client.ts` | Typed client, throws `ApiError` on any failure |
+| `src/lib/api/types.ts` | Wire DTO types, hand-written from the contract |
+| `src/app/api/v1/session/route.ts` | `GET /session` |
 
-Loading implies disabled so a form cannot be submitted twice, and the visible label is never swapped out mid-action.
+## 3. Contract source used
+`docs/architecture/05_API_CONTRACT_P0_v1.0.md`, hand-transcribed. The sibling YAML was deliberately not used as the source and not generated from. It declares itself an implementation skeleton, names the Markdown authoritative, types `code` as a bare string with no enum, and defines fewer paths than the Markdown defines endpoints. A client generated from it would silently be unable to call most of WF02 and WF03. `contract.test.ts` records that evidence as assertions rather than leaving it as an opinion.
 
-## 4. Accessibility checks
-All verified in a real browser by Playwright.
+## 4. Conventions implemented
+| Convention | Source | Implementation |
+|---|---|---|
+| Base path `/api/v1` | 05:14 | `API_BASE_PATH`, route lives under `app/api/v1` |
+| DTOs, never ORM rows | 05:16 | `types.ts` declares wire shapes explicitly |
+| ISO-8601 UTC timestamps | 05:22 | `IsoDateTime` |
+| Opaque string IDs | 05:23 | `OpaqueId` |
+| JSON content type | 05:29-36 | client sets `Accept` and conditional `Content-Type` |
+| Request correlation | 05:38-46 | id on every response, client id honoured |
+| Idempotency-Key | 05:48-63 | parsed and validated; seven operations named |
+| List envelope | 05:69-79 | `listEnvelope`, default limit 50 |
+| Single resource returned bare | 05:67 | no wrapper helper exists, on purpose |
+| Error envelope | 05:83-94 | `ApiError.toEnvelope` |
+| HTTP mapping | 05:98-107 | `HTTP_STATUS_MEANING`, drift-tested |
 
-- Native elements throughout; no clickable div stands in for a control.
-- Label associated by `htmlFor`, which `Field` supplies automatically. `htmlFor` is a required prop, so a label cannot ship unassociated. Clicking the label moves focus into the control.
-- `aria-describedby` points at the error when invalid and the helper otherwise, never both, so exactly one message describes the control.
-- `aria-invalid` conveys the error state non-visually rather than colour alone.
-- Error message carries `role="alert"`; info notice carries `role="status"`. Tone is a semantic choice, not just a colour.
-- Loading sets `aria-busy`; the spinner is `aria-hidden` because the label carries the meaning.
-- Focus ring appears for keyboard focus and not for pointer click, verified by input modality.
-- Disabled blocks pointer and keyboard activation through the native semantic.
-- Each `Field` instance generates unique ids, verified across all instances on the page.
+## 5. Frozen error codes
+All 14, verified by exact set against the contract: `AUTH_RATE_LIMITED`, `AUTH_EMAIL_INVALID`, `AUTH_LINK_EXPIRED`, `AUTH_LINK_ALREADY_USED`, `AUTH_LINK_INVALID`, `AUTH_ACCOUNT_BLOCKED`, `PROFILE_VALIDATION_FAILED`, `VOCABULARY_ITEM_INACTIVE`, `PROFILE_DEACTIVATED`, `CONSENT_NOT_REVOCABLE`, `CONSENT_ALREADY_REVOKED`, `ONBOARDING_REQUIREMENTS_MISSING`, `MEMBERSHIP_INVALID_TRANSITION`, `SCOPE_FORBIDDEN`.
 
-## 5. Existing tokens reused
-- Typography: `--font-ui`, the eight-step type scale, `--weight-medium` / `--weight-semibold`, all frozen in Design SOT 2.4.
-- Colour: the five frozen anchors through the M0-T02 semantic layer only.
-- Derived sizes: focus ring, spinner and gap use `em` relative to the frozen type scale, so they need no new token.
-- The only absolute literal in primitive CSS is the `1px` hairline border, enforced by test.
+## 6. Contract gaps surfaced, not filled
+1. **No error code for 401, 404 or 500.** The envelope requires a `code` and the HTTP table maps all three statuses, but the contract names no code for any of them. Rather than minting plausible-looking codes that would harden into an unapproved contract, three are namespaced `UNCONTRACTED_UNAUTHENTICATED`, `UNCONTRACTED_NOT_FOUND`, `UNCONTRACTED_INTERNAL`. They are obvious on the wire, greppable in logs, and a test asserts none appears in the contract or in the frozen set. **Needs a contract amendment.**
+2. **No idempotency key store.** The contract requires the header on seven operation classes, but `001_p0_init.sql` has no table to record a key or replay a response. This implementation parses and validates the header and stops there rather than pretending to deduplicate. **Needs a schema decision**, already raised in the readiness report.
 
-## 6. Unresolved design tokens
-Seven, all in the `--unresolved-` namespace, listed in `src/lib/design-tokens.ts` with the screen that must settle each. Provisional values are NOT approved design.
+Neither gap blocks M0-T06.
 
-| Token | Purpose | Provisional | Resolved by |
-|---|---|---|---|
-| `--unresolved-radius-control` | button and input radius | `0px` | WF01-S01 |
-| `--unresolved-radius-surface` | card and notice radius | `0px` | WF01-S01 |
-| `--unresolved-shadow-surface` | raised surface elevation | `none` | WF01-S01 |
-| `--unresolved-space-control-x` | horizontal control padding | `1rem` | WF01-S01 |
-| `--unresolved-space-control-y` | vertical control padding | `0.75rem` | WF01-S01 |
-| `--unresolved-space-stack` | label/control/message gap | `0.5rem` | WF01-S06 |
-| `--unresolved-space-surface` | card padding | `1.5rem` | WF01-S01 |
+## 7. GET /session
+Returns `200 {"authenticated": false}`. The contract permits either 200 or 401 when unauthenticated and requires one consistent choice (05:149); this takes the contract's own recommendation, so app bootstrap needs no error path.
 
-Radius and shadow are deliberately neutral so an unfinished primitive looks unfinished. A Playwright test asserts they stay `0px` and `none`, so a value cannot drift in unnoticed.
-
-Also carried forward and still open: baseline colours outside the token set, including the `#8B281F` gradient on WF01-S01 and WF03-S09, and whether `#FEF3F1` or `#FFF3F0` is canonical.
-
-## 7. Playwright tests
-`tests/visual/specs/primitives.spec.ts`, 17 tests. Behaviour is asserted in a real browser rather than jsdom, because focus-visible, native disabled semantics and aria wiring all depend on real rendering; a simulated DOM would weaken exactly the evidence this task needs.
-
-Coverage: native element check, click, Enter and Space activation, focus ring by input modality, disabled blocking activation, loading state and aria-busy, form submit, default `type="button"`, label association and label-click focus, describedby to helper, describedby to error with role alert, disabled versus readonly as distinct states, unique field ids, notice roles, 1440x900 at DPR 1 with Be Vietnam Pro at the frozen button step, unresolved radius/shadow staying unset, and spinner frozen under reduced motion.
-
-Unit tests: `src/lib/design-tokens.test.ts`, 8 tests enforcing token discipline and that no primitive carries an inline style or hardcoded colour.
+There is no session store and no database yet (M0-T06 and M0-T08), so the endpoint reports no identity rather than fabricating an account. A stub returning invented account data would be a fake success path. A Playwright test asserts the response carries no `account`, `profile` or `capabilities` key.
 
 ## 8. Validation results
-All executed. `pnpm verify:visual` exits 0.
+All executed. `pnpm verify` exits 0; `pnpm visual` exits 0.
 
 - Format: PASS
 - Lint: PASS — 0 errors, 0 warnings
 - Typecheck: PASS
-- Unit/component tests: PASS — 32 passed / 32, 5 files. Component behaviour is covered by Playwright in a real browser rather than jsdom, as explained in section 7.
-- Build: PASS — 30 routes
-- Playwright primitive behaviour: PASS — 17 tests
-- Playwright visual regression: PASS — 57 passed / 57 overall
-- Route regression: PASS — all frozen routes 200, `/login` 404
-- Production gating: PASS — `/dev/primitives` and `/dev/typography` both 404 without `ENABLE_DEV_ROUTES=1`, verified by direct HTTP check
+- Unit tests: PASS — 61 passed / 61, 7 files (29 new for the API layer)
+- Build: PASS — 31 routes including `/api/v1/session`
+- Playwright: PASS — 64 passed / 64
+- Live contract check: PASS — `{"authenticated":false}`, `x-request-id: req_...` present, client-supplied id echoed verbatim
+- Route and gating regression: PASS — frozen routes 200, dev harnesses and `/login` 404
 
-Disclosed: the first Playwright run had 55 passed and 2 failed. One was my own test asserting a wrong premise about `:focus-visible` on programmatic focus, fixed by testing pointer versus keyboard modality. The other was the primitives baseline not yet existing. The baseline was then regenerated once more after the harness context fix in section 9. Runs after that pass 57 of 57.
+Disclosed: the first Playwright run had 63 passed and 1 failed, from my own test chaining `.json()` on the promise returned by `request.get()` instead of awaiting it. Fixed; runs after that pass 64 of 64.
 
 ## 9. Visual / Foundation QA
-Result: **FOUNDATION PASS**. Not a product pixel PASS, and no such claim is made.
+N/A for new work. This task adds no UI.
 
-| Item | Value |
-|---|---|
-| Harness | `/dev/primitives`, dev-gated, not a product screen |
-| Viewport / DPR | 1440x900, deviceScaleFactor 1, asserted in-test |
-| Actual | `tests/visual/actual/primitives-1440x900.png` |
-| Baseline | `tests/visual/baseline/primitives.png` — harness-owned |
-| Diff | none produced; matched within `maxDiffPixelRatio: 0.01` |
-| Comparison | PASS |
+The existing visual suites ran as regression and passed: M0-T02 typography 7, M0-T03 shell and routes 33, M0-T04 primitives 17. Baselines were neither regenerated nor touched. `design-reference/final/**` remains untouched.
 
-Found by inspecting the render: the readonly input and the info notice are canvas-backgrounded, which reads correctly inside a white card but vanishes on a canvas-coloured page. Their colours are right for their real context, so the harness was changed to render each primitive where it actually lives rather than changing the components to suit a misleading harness.
+## 10. SOT compliance
+- Business SOT: not exercised. No workflow endpoint implemented.
+- Data SOT: not exercised. No schema, no persistence.
+- Design SOT: not exercised. No UI.
+- API Contract: implemented as frozen, with the two gaps in section 6 reported rather than resolved. No endpoint, code, status or convention was invented.
+- Deviations: none. The `UNCONTRACTED_` codes are a declared gap marker, not an invented contract; they exist because the envelope cannot omit a required field.
 
-Baseline rule respected: `tests/visual/baseline/**` is harness-owned regression evidence; `design-reference/final/**` is the approved product baseline. Neither was copied into or compared against the other. No generic primitive was compared to any production design screen.
-
-## 10. Regression impact
-- Checked: M0-T01 bootstrap route and smoke, M0-T02 typography and fonts, M0-T03 shell and all 25 frozen routes, full code gate chain, existing visual suite.
-- Result: PASS. `/` returns 200 with its bootstrap markup. All frozen routes 200. `/login` 404. M0-T02 and M0-T03 suites pass within the 57-test run.
+## 11. Regression impact
+- Checked: M0-T01 bootstrap smoke, M0-T02 typography and fonts, M0-T03 shell and all 25 frozen routes, M0-T04 primitives, dev-route gating, full code gate chain.
+- Result: PASS on all. `/` serves its bootstrap markup; frozen routes 200; dev harnesses and `/login` 404.
 - Regression found: None.
-
-## 11. Route note
-M0-T03 route decisions are preserved untouched. WF03-S09 public routing remains PROVISIONAL. Frontend route placement carries no authorisation or visibility meaning, and when WF03-S09 is implemented its auth and data visibility must be revalidated against the SOT.
 
 ## 12. Git
 - Branch: `main`
-- Commit hash: `cb0927dbebbd120c859b5a33bcfb863d697639d5`
-- Commit message: `feat(m0-t04): shared UI primitives foundation`
+- Commit hash: `a9f36655a9413cbd34657af97ed0895c325cc9bf`
+- Commit message: `feat(m0-t05): API client, error envelope and DTO conventions`
 - Working tree status: clean.
 
 ## 13. Recommended next task
-M0-T05 — API client, error envelope and DTO conventions. Implement the `/api/v1` handler scaffold with the frozen error envelope `{error:{code,message,fields,request_id}}` and its 14 codes, the list envelope with cursor pagination, request-id correlation, and a typed client hand-written from the authoritative Markdown contract rather than generated from the YAML, which is a declared skeleton missing 21 endpoints and all request bodies. Include `GET /session` returning the unauthenticated shape. Exit criterion: contract-shape unit tests pass, the build passes, and the visual suite still passes as regression. Not started.
+M0-T06 — database and migration foundation. Add a `docker compose` PostgreSQL service on a dedicated port, a migration runner that applies `db/migrations/001_p0_init.sql` unchanged, and `db:migrate` / `db:reset` scripts. Introspect the applied schema into the ORM layer rather than authoring a parallel schema, so the frozen SQL stays the single source. Exit criterion: a fresh database reports all 27 tables, the runner is idempotent, and the visual suite still passes as regression.
+
+Note for that task: the readiness report found the migration cannot store several frozen lifecycle states, including event `LIVE`/`ENDED`/`CANCELLED`, membership `SUSPENDED`/`ALUMNI`/`WITHDRAWN`, and profile `DEACTIVATED` where the schema has `INACTIVE`. M0-T06 should apply `001` unchanged and record those gaps; fixing them belongs to an additive `002` once the contract-versus-schema conflicts are ruled on.
