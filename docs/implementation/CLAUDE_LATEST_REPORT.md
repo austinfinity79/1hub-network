@@ -1,44 +1,92 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF01-S02-FINALIZE + WF01-S03-STATE-BOARD-DECISION
-- Status: **HUMAN DECISION REQUIRED** (S03 not implemented, by design)
-- Mode: LOCAL REVIEW. Committed locally, not pushed. No code, API, DB, SOT, manifest or reference change.
+- Task ID / name: WF01-S03-STATE-BOARD-FREEZE + WF01-S03 — Auth Callback States (`/auth/callback`)
+- Status: **DONE**
+- Mode: LOCAL REVIEW. Committed locally, not pushed. WF01-S04 not started.
 
-## 2. Part A — WF01-S02 closed
-| Decision | Verification |
+## 2. Freeze
+D1–D7 are recorded as approved in [WF01_S03_STATE_BOARD_MAPPING.md](WF01_S03_STATE_BOARD_MAPPING.md). The final crops are inset 1px inside each panel border so the D2 annotation's anti-aliasing is excluded.
+
+## 3. States
+| State | Behaviour | Result |
+|---|---|---|
+| SUCCESS | consume 200 → one session → `/onboarding/purpose` (incomplete) or `/me` (complete); the success panel shows while navigating | PASS |
+| EXPIRED | 400 → no session; `?status=expired`; "Gửi link mới" → `/auth` | PASS |
+| USED | 409 → no second session; `?status=used`; "Gửi link mới" → `/auth` | PASS |
+| INVALID → S04 | invalid or missing token, blocked account, other failure → `/auth/error`, no reason passed | PASS (functional only) |
+
+## 4. Security
+| Item | Evidence |
 |---|---|
-| "Mở Gmail" not implemented | Already absent; Playwright asserts no "Gmail" text and exactly one button. Recorded as INTENTIONAL-BUSINESS-CONTRACT |
-| Runtime copy only in runtime states | Resend-success, stale, rate-limit and failure messages are set only inside `resend()`; the "Gửi lại link" label only when the cooldown has elapsed. Neither shows in the default state |
-| Countdown from the server | UI logic uses `resend_after_seconds` only (`check-email-card.tsx`). The only literal 60 is the seconds-per-minute divisor in `formatCountdown`. The test asserting 60 checks server output, not UI policy |
+| Single use | Server SQL claim (M0-T08). A USED revisit creates 0 sessions |
+| Concurrent consume | Two browser contexts on one link: exactly one lands on onboarding, the other on USED, with +1 session. Also the M0 DB test of 8 concurrent consumes |
+| Raw token leakage | Only the email-click document request carries it. Not in fetch, RSC or asset requests; not in storage, DOM or HTML; no Referer. **Found and fixed:** a dynamic render embedded the request URL, token included, in the inline RSC payload. The callback page is now **static** (`○`) and reads the query only in the browser |
+| URL cleanup | `history.replaceState` runs before the consume request. No later URL or history entry contains the token, and Back does not restore it |
+| Session creation | Only on SUCCESS: EXPIRED and USED leave the session count unchanged |
+| Resend from a spent token | never; asserted with 0 calls to `/resend` |
 
-No S02 change was needed. **S02: CLOSED / PASS. WF01 progress 2 / 8 = 25%.**
+Nothing in auth writes audit or analytics payloads, so the token cannot reach them.
 
-## 3. Part B — WF01-S03 state board
-The full mapping is in [WF01_S03_STATE_BOARD_MAPPING.md](WF01_S03_STATE_BOARD_MAPPING.md).
+## 5. Pixel QA (per-state panel crop, 1440×900 DPR1, vi-VN, fonts ready)
+Method:
+- The runtime card is compared to its own board panel only (433×290 content crop), aligned on the icon disc.
+- Excluded annotations: the board title, P2's red outline and the other panels.
+- Text boxes are masked; only the pill *labels* are masked, so pill fill and corners are compared.
 
-- **Frozen business states: 4 on S03.** SUCCESS, EXPIRED, USED and INVALID. BLOCKED and generic failure belong to WF01-S04.
-- **Visual states on the board: 3** (P1, P2, P3), plus a board title and a red border on P2.
-- **Mapped: 3.** P1 → SUCCESS, P2 → EXPIRED, P3 → USED.
-- **Ambiguous: 3.** INVALID has no panel; P2's red border; the body copy reads as designer notes.
-- **Unsupported: 1.** The board title is an annotation.
-- **Decisions D1–D7 are required:**
-  - D1: how in-place `request_new_link` works with only a token. The resend endpoint needs `auth_request_id`, and resend of a used request returns 409.
-  - D2: P2 border.
-  - D3: INVALID routing.
-  - D4: processing state.
-  - D5: runtime page composition.
-  - D6: body copy.
-  - D7: link URL format.
+| State | Outside-text diff | Classification |
+|---|---|---|
+| SUCCESS | 71 px (0.057%) | icon glyph (SVG vs board ✓ glyph) |
+| EXPIRED | 247 px (0.197%) | 173 px icon: the board's ⏱ is a multicolour OS emoji approximated by an SVG. ~74 px pill edge anti-aliasing |
+| USED | 97 px (0.077%) | icon glyph (SVG ↻ vs board glyph) |
 
-S03 safe to implement: **NO**. D1 and D5 decide behaviour and layout; D3 decides routing.
+- **Typography:** DOM contract PASS for all three states.
+- **Classification:**
+  - Structural 0; Major Visual 0; Component 0 unresolved. The icons were refitted to the board's glyph geometry; the remainder is emoji/glyph raster style.
+  - Raster Noise: pill anti-aliasing.
+  - Intentional Annotation: board title and P2 outline.
+  - Intentional Typography Migration: all glyphs.
+- **Pixel verdict: PASS.** EXPIRED sits close to the 0.2% gate because its icon is an OS emoji. If exact icon fidelity is wanted, design should supply icon assets.
 
-## 4. Git
-- Branch `main`; start HEAD `e1a458b`, unchanged before commit
-- Commit: `docs(wf01-s03): …`, the commit containing this report
+## 6. Shared UI
+| Item | Result |
+|---|---|
+| Shared primitives changed | NONE |
+| AuthCard | reused unchanged (D5) |
+| Global tokens added | 0 |
+| Screen-local values | disc 64px; success disc/check green `#e8f0e6` / `#2a3b24` (sampled, not anchor-derived); muted pill fill (burgundy 6%); pill widths 126/148px from the board (static labels); title, body and pill spacing |
+
+Test infrastructure (not product):
+- `runScreenQa` gains `query`, `name` and `waitUntil` hooks.
+- Segments gain `dx`.
+- The WF01-S03 dry-run gap is cleared by the approved mapping: 14 screens ready, 10 gaps.
+- `eslint.config.mjs` ignores the gitignored Playwright output directories, which previously made `pnpm lint` fail whenever a report existed.
+
+## 7. Validation
+| Gate | Result |
+|---|---|
+| Format / Lint / Typecheck / `verify` | PASS |
+| Unit | 110 / 110 |
+| DB integration | 121 / 121 |
+| Build | PASS (`/auth/callback` static) |
+| S01 regression | PASS; segments 0/0/0/0/1, unchanged |
+| S02 regression | PASS; segments 0/0/0/14/3, unchanged |
+| S03 Playwright | 15 / 15 |
+| Full Playwright | 153 / 153, plus 24 screen runs skipped by design |
+| `design-reference/**` | hash unchanged |
+
+## 8. Notes for review
+1. **P2 copy contradicts D1.** The approved copy says "nút gửi lại phải ở ngay đây, không bắt quay lại trang đăng nhập", but D1 sends the user to `/auth`. The copy is kept verbatim per D6; design may want to reword it.
+2. **SUCCESS panel is transient.** It is visible only while navigating, and its pixel capture holds the destination request open.
+3. **S04 must choose its own error presentation.** `/auth/error` receives no reason by design.
+
+## 9. Git
+- Branch `main`; start HEAD `d225636`
+- Implementation commit: `676ebc6` feat(wf01-s03): auth callback states on a static, token-safe page
+- Report/final commit: the commit containing this report
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `e1a458b`
 - Working tree: clean after commit except the untracked `AGENTS.md`
 
 ## Related
-- [WF01_S03_STATE_BOARD_MAPPING.md](WF01_S03_STATE_BOARD_MAPPING.md) — S03 mapping and decisions
+- [WF01_S03_STATE_BOARD_MAPPING.md](WF01_S03_STATE_BOARD_MAPPING.md) — frozen mapping
 - [P0_STATUS.md](P0_STATUS.md) — overall P0 state

@@ -1,6 +1,6 @@
 # WF01 S03 State Board Mapping
 
-State-to-reference mapping for **WF01-S03 Auth Callback** (`/auth/callback`, AUTH3, `reference_mode: state-board`). This is a proposal for human approval. No crop, baseline, manifest or SOT change has been made.
+State-to-reference mapping for **WF01-S03 Auth Callback** (`/auth/callback`, AUTH3, `reference_mode: state-board`). **FROZEN**: decisions D1–D7 are human-approved and implemented. No crop, baseline, manifest or SOT change was made; crops are QA comparison regions only.
 
 ## Frozen business states
 
@@ -41,7 +41,7 @@ The content block inside each panel spans y 344–603: icon disc 344–408, titl
 | S03-EXPIRED | 400 EXPIRED | P2 | MAPPED; border AMBIGUOUS (D2) | `request_new_link` (D1) | Mint a token, set `expires_at` in the past, open; compare the P2 content crop |
 | S03-USED | 409 ALREADY_USED | P3 | MAPPED | `request_new_link` (D1) | Mint a token, consume it once, reopen; compare the P3 content crop |
 | S03-INVALID | 400 INVALID | none | AMBIGUOUS (D3) | per D3 | Random token; functional test only until D3 is decided |
-| Processing | consume in flight | none | HUMAN DESIGN DECISION (D4) | none | functional test only |
+| Processing | consume in flight | none | RESOLVED by D4 (not a state) | none | not pixel-tested |
 
 Proposed comparison regions (a proposal only; nothing is cropped yet):
 - **Content crops** (recommended), because the board's 764px card height is a board artifact:
@@ -51,17 +51,19 @@ Proposed comparison regions (a proposal only; nothing is cropped yet):
 - **Full-panel crops**: the panel rows above, if D5 decides the runtime card equals the board panel.
 - **Method:** the implementation's state element is located via DOM and compared at the same size. The segment/text-mask method from WF01-S01/S02 applies.
 
-## Decisions required before implementation
+## Approved decisions (frozen)
 
-| ID | Decision | Why it blocks |
+| ID | Decision | Implemented as |
 |---|---|---|
-| D1 | **How `request_new_link` works from the callback.** P2 copy says resend must happen in place, without returning to login. The only contract endpoint is `resend {auth_request_id}`, but the callback holds just the token. The request id exists only if the link is opened in the same browser tab session that stored the S01 handoff. Resend of a *used* request returns `409` (M0-T08). Options: (a) resend in place when the S02 handoff is present, otherwise go to `/auth`; (b) add a token-based resend endpoint, which is an API contract change | behaviour + contract |
-| D2 | Is P2's red border UI (an error-state card style) or board emphasis? | component styling |
-| D3 | Does `AUTH_LINK_INVALID` render the P3 "used" state (WF01 groups "already-used/invalid") or go to WF01-S04? | state routing |
-| D4 | What renders while consume is in flight (no frozen state)? e.g. an empty canvas, or a neutral disc + title | first paint |
-| D5 | **Runtime page composition.** The board shows three 437×764 cards on canvas with no brand panel and no single-state layout. For one state at 1440×900: a single board-size card centred on the canvas, or the auth split layout with `AuthCard`? | layout, and whether full-panel or content crops apply |
-| D6 | Body copy for P1–P3 reads as design annotation. Ship it verbatim, or supply user-facing copy? | copy |
-| D7 | Email link URL format (e.g. `/auth/callback?token=…`) is unstated. `return_to` names the path only | callback input |
+| D1 | EXPIRED / USED "Gửi link mới" navigates to `/auth` for a fresh request; never a resend from the spent token | `<Link href="/auth">`; Playwright asserts 0 resend calls |
+| D2 | P2 red outline is a designer annotation, not UI | not rendered; crops inset 1px so its anti-aliasing is excluded |
+| D3 | INVALID (and missing token, blocked, other failures) → `/auth/error` (WF01-S04), no reason passed | `router.replace('/auth/error')` |
+| D4 | Processing is transient, not an approved state | only a screen-reader `role=status`; no visual, no baseline |
+| D5 | Runtime renders ONE state in ONE centred `AuthCard` on the canvas; the board is evidence only | compared by panel crop, aligned on the icon disc |
+| D6 | Approved panel copy preserved verbatim | P2's "15 phút" comes from the frozen expiry constant |
+| D7 | Link format `/auth/callback?token=<opaque>` | read in the browser, stripped from the URL before consume; static page, `referrer: no-referrer` |
+
+Final comparison crops (board coordinates, 1px inside each panel border): P1 x46 y330 433×290, P2 x504 y330 433×290, P3 x961 y330 433×290.
 
 ## Related
 

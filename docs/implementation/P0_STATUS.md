@@ -8,13 +8,13 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: IN PROGRESS — 2 / 8 screens CLOSED (25%).**
+**M1 — WF01 Identity & Onboarding: IN PROGRESS — 3 / 8 screens DONE (37.5%; S01, S02 closed, S03 awaiting review).**
 
 | Screen | State |
 |---|---|
 | WF01-S01 Auth Entry | DONE — functional + typography + pixel gate PASS ([report](reports/WF01-S01_auth-entry.md)) |
 | WF01-S02 Check Email | CLOSED / PASS — "Mở Gmail" omitted by contract; runtime copy approved; countdown from server `resend_after_seconds` ([report](reports/WF01-S02_check-email.md)) |
-| WF01-S03 Auth Callback | NOT STARTED — state-board mapping proposed, 7 decisions pending ([mapping](WF01_S03_STATE_BOARD_MAPPING.md)) |
+| WF01-S03 Auth Callback | DONE — SUCCESS/EXPIRED/USED functional + typography + per-state pixel PASS; INVALID → S04 ([report](reports/WF01-S03_auth-callback-states.md), [mapping](WF01_S03_STATE_BOARD_MAPPING.md)) |
 | WF01-S04 … S08 | Not started; routes remain M0-T03 placeholders |
 
 ## Completed (committed)
@@ -43,6 +43,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S01 | Auth Entry: email magic-link path, provider-free per contract |
 | WF01-S01 audit | Token scope audit: single-screen measurements localised to the auth card |
 | WF01-S02 | Check Email: masked address, server-timed resend countdown, resend, change email |
+| WF01-S03 | Auth Callback: token consumed once, success redirect by onboarding state, expired/used states |
 
 ## Not yet built (M0)
 
@@ -57,11 +58,11 @@ The transitional `role_assignments.account_id` column and its trigger, kept by 0
 
 ## Pixel QA readiness (M0-T11 dry run)
 
-13 of 24 production screens are `READY_FOR_SCREEN_IMPLEMENTATION`. 11 are `REFERENCE_CONFIGURATION_GAP`, awaiting a design/QA decision:
+14 of 24 production screens are `READY_FOR_SCREEN_IMPLEMENTATION`. 10 are `REFERENCE_CONFIGURATION_GAP`, awaiting a design/QA decision:
 
 | Gap | Screens |
 |---|---|
-| `state-board` reference with no per-state region definition | WF01-S03, WF01-S04 |
+| `state-board` reference with no per-state region definition | WF01-S04 (WF01-S03 resolved by approved mapping) |
 | `__full.png` shorter than the 900px viewport; a full-page capture is never below 900px | WF02-S01, S02, S05, S06; WF03-S01, S02, S03, S05, S08 |
 
 No product pixel pass has been claimed for any screen.
@@ -78,7 +79,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-Human decisions D1–D7 in [WF01_S03_STATE_BOARD_MAPPING.md](WF01_S03_STATE_BOARD_MAPPING.md), then WF01-S03 implementation.
+WF01-S04 — Auth Errors (recommended; its state board needs the same mapping step as S03). Waiting for review and authorization.
 
 ## Related
 
