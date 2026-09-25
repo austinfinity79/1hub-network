@@ -1,0 +1,106 @@
+/*
+ * WF01-S03 — auth callback states. Runtime composition (decision D5): ONE
+ * state in ONE centred AuthCard on the 1440x900 canvas. Every value below is
+ * LOCAL and measured from the approved AUTH3 state-board panels at 1440x900
+ * DPR1 (px / 16 = rem); nothing is promoted to a shared token.
+ */
+
+.canvas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.disc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+}
+
+.disc svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* Success disc and check: a green sampled from the board (no anchor mix reproduces it). */
+.discSuccess {
+  background: #e8f0e6;
+  color: #2a3b24;
+}
+
+.discExpired {
+  background: var(--hub-primary-soft);
+  color: color-mix(in srgb, var(--hub-canvas) 45%, var(--hub-burgundy));
+}
+
+.discUsed {
+  background: var(--action-muted-fill);
+  color: var(--unresolved-fg-muted);
+}
+
+.title {
+  margin: 1.375rem 0 0;
+}
+
+.body {
+  max-width: 18.25rem;
+  margin: 0.75rem 0 0;
+  line-height: 1.4375rem;
+  color: var(--unresolved-fg-muted);
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* The board draws each pill at a fixed width for its static label. */
+  width: 7.875rem;
+  margin-top: 1.125rem;
+  padding: 0.65625rem 0;
+  border-radius: 0.5rem;
+  text-decoration: none;
+}
+
+.action:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.actionPrimary {
+  background: var(--color-bg-accent);
+  color: var(--color-fg-on-accent);
+}
+
+.actionWide {
+  width: 9.25rem;
+}
+
+.actionMuted {
+  background: var(--action-muted-fill);
+  color: var(--unresolved-fg-muted);
+}
+
+/* Muted pill fill sampled from the board: burgundy 6% over surface. */
+.root {
+  --action-muted-fill: color-mix(in srgb, var(--hub-burgundy) 6%, var(--hub-surface));
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

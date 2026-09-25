@@ -224,6 +224,15 @@ export type ScreenStateHooks = {
   beforeNavigate?: (page: Page) => Promise<void>
   /** After load, before settling: advance a clock or open a disclosed state. */
   afterLoad?: (page: Page) => Promise<void>
+  /** Query string appended to the route, e.g. `?token=…` for WF01-S03. */
+  query?: string
+  /** Capture/report name when one screen has several states, e.g. `WF01-S03.expired`. */
+  name?: string
+  /**
+   * Navigation wait. Default `networkidle`; a transient state that is held on
+   * screen by an intentionally pending request needs `load` (WF01-S03 success).
+   */
+  waitUntil?: 'load' | 'networkidle'
 }
 
 export async function runScreenQa(
@@ -242,7 +251,7 @@ export async function runScreenQa(
   await authenticate(page, config)
   await hooks.beforeNavigate?.(page)
   const route = resolveRoute(config)
-  await page.goto(route, { waitUntil: 'networkidle' })
+  await page.goto(`${route}${hooks.query ?? ''}`, { waitUntil: hooks.waitUntil ?? 'networkidle' })
   await hooks.afterLoad?.(page)
   await settle(page)
   const conditions = await readConditions(page)
@@ -250,7 +259,7 @@ export async function runScreenQa(
   const typography = await assertTypography(page)
 
   const common = {
-    name: screen.screen_id,
+    name: hooks.name ?? screen.screen_id,
     referenceKind: 'APPROVED_DESIGN' as const,
     route,
     actor: config.actor,

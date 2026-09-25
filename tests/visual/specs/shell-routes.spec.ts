@@ -22,7 +22,7 @@ async function waitForFonts(page: Page) {
 }
 
 /** Screens whose production implementation has replaced the M0-T03 placeholder. */
-const IMPLEMENTED_SCREENS = new Set(['WF01-S01', 'WF01-S02'])
+const IMPLEMENTED_SCREENS = new Set(['WF01-S01', 'WF01-S02', 'WF01-S03'])
 
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {
@@ -43,7 +43,9 @@ test.describe('M0-T03 frozen routes', () => {
       // its behaviour is proven by that screen's own spec.
       if (IMPLEMENTED_SCREENS.has(route.screenId)) {
         await expect(page.locator(`[data-route-group="${route.group}"]`).first()).toBeVisible()
-        await expect(page.locator('[data-route-placeholder]')).toHaveCount(0)
+        // Its own placeholder is gone. (WF01-S03 without a token redirects to
+        // /auth/error, which is still WF01-S04's placeholder.)
+        await expect(page.locator(`[data-route-placeholder="${route.screenId}"]`)).toHaveCount(0)
         return
       }
 

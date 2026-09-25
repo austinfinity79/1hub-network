@@ -28,12 +28,18 @@ export type Segment = {
   reference: Rect
   /** Capture y = reference y + dy. */
   dy: number
+  /**
+   * Capture x = reference x + dx (default 0). Added for WF01-S03, whose
+   * state-board panels sit side by side while the runtime card is centred.
+   */
+  dx?: number
 }
 
 export type SegmentResult = {
   name: string
   reference: Rect
   dy: number
+  dx: number
   pixels: number
   diff_total: number
   diff_in_text: number
@@ -66,8 +72,18 @@ export function compareSegments(
 
   for (const seg of segments) {
     const r = seg.reference
-    const a: Rect = { ...r, y: r.y + seg.dy }
-    if (r.y < 0 || r.y + r.height > reference.height || a.y < 0 || a.y + a.height > actual.height) {
+    const dx = seg.dx ?? 0
+    const a: Rect = { ...r, x: r.x + dx, y: r.y + seg.dy }
+    if (
+      r.y < 0 ||
+      r.y + r.height > reference.height ||
+      a.y < 0 ||
+      a.y + a.height > actual.height ||
+      r.x < 0 ||
+      r.x + r.width > reference.width ||
+      a.x < 0 ||
+      a.x + a.width > actual.width
+    ) {
       throw new Error(`segment ${seg.name} falls outside an image`)
     }
     const ref = crop(reference, r)
@@ -91,6 +107,7 @@ export function compareSegments(
       name: seg.name,
       reference: r,
       dy: seg.dy,
+      dx,
       pixels: r.width * r.height,
       diff_total: total,
       diff_in_text: inText,

@@ -92,7 +92,9 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
   // WF01 — Identity & Onboarding
   cfg('WF01-S01', '/auth', 'guest', 'auth entry, empty form'),
   cfg('WF01-S02', '/auth/check-email', 'guest', 'after a magic-link request'),
-  cfg('WF01-S03', '/auth/callback', 'guest', 'callback states board', {}, STATE_BOARD_GAP),
+  // State-board mapping approved (D1-D7, WF01_S03_STATE_BOARD_MAPPING.md):
+  // each state is compared against its own board panel, not the whole board.
+  cfg('WF01-S03', '/auth/callback', 'guest', 'one callback state per run; panel crops'),
   cfg('WF01-S04', '/auth/error', 'guest', 'auth error states board', {}, STATE_BOARD_GAP),
   cfg('WF01-S05', '/onboarding/purpose', 'newcomer', 'onboarding step 1, DRAFT profile'),
   cfg('WF01-S06', '/onboarding/profile', 'newcomer', 'onboarding step 2, DRAFT profile'),

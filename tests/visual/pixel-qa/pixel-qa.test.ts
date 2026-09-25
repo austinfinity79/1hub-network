@@ -351,13 +351,14 @@ describe('dry run', () => {
     const expected = screens
       .filter(
         (s) =>
-          s.reference_mode === 'state-board' || (s.fullPageSize && s.fullPageSize.height < 900),
+          // WF01-S03's state board has an approved per-panel mapping.
+          (s.reference_mode === 'state-board' && s.screen_id !== 'WF01-S03') ||
+          (s.fullPageSize && s.fullPageSize.height < 900),
       )
       .map((s) => s.screen_id)
     const gaps = entries.filter((e) => e.status === 'REFERENCE_CONFIGURATION_GAP')
     expect(gaps.map((e) => e.screen_id)).toEqual(expected)
     expect(expected).toEqual([
-      'WF01-S03',
       'WF01-S04',
       'WF02-S01',
       'WF02-S02',
@@ -373,7 +374,7 @@ describe('dry run', () => {
       expect(gap.reasons.length, gap.screen_id).toBeGreaterThan(0)
       expect(gap.reasons.join(' '), gap.screen_id).toMatch(/state-board|shorter than the 900px/)
     }
-    expect(entries.filter((e) => e.status === 'READY_FOR_SCREEN_IMPLEMENTATION')).toHaveLength(13)
+    expect(entries.filter((e) => e.status === 'READY_FOR_SCREEN_IMPLEMENTATION')).toHaveLength(14)
   })
 
   it('resolves every route to concrete fixture values', () => {
@@ -428,6 +429,20 @@ describe('segment comparison (WF01-S01)', () => {
     )
     expect(r).toMatchObject({ diff_total: 25, diff_in_text: 16, diff_outside_text: 9 })
     expect(existsSync(resolveOutputPath('diff', 'unit-segments.diff.png'))).toBe(true)
+  })
+
+  it('aligns horizontally by dx, as a state-board panel against a centred runtime card', () => {
+    const reference = solid(60, 20, [255, 255, 255])
+    paintRect(reference, 5, 5, 6, 6)
+    const actual = solid(60, 20, [255, 255, 255])
+    paintRect(actual, 35, 5, 6, 6)
+    const [r] = compareSegments(
+      reference,
+      actual,
+      [{ name: 'panel', reference: { x: 0, y: 0, width: 20, height: 20 }, dy: 0, dx: 30 }],
+      [],
+    )
+    expect(r).toMatchObject({ dx: 30, diff_total: 0 })
   })
 
   it('refuses a segment that falls outside either image', () => {
