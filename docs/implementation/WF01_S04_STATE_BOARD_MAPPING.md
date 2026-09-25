@@ -1,6 +1,6 @@
 # WF01 S04 State Board Mapping
 
-State-to-reference mapping for **WF01-S04 Auth Errors** (`/auth/error`, AUTH4, `reference_mode: state-board`). **PROPOSAL** for human approval. No crop, baseline, manifest or SOT change has been made.
+State-to-reference mapping for **WF01-S04 Auth Errors** (`/auth/error`, AUTH4, `reference_mode: state-board`). **FROZEN**: decisions [DEC-WF01-S04-D1..D8](../decisions/DECISION_LOG.md#dec-wf01-s04-d1) are approved and implemented. No crop, baseline, manifest or SOT change was made.
 
 ## Frozen business states
 
@@ -33,13 +33,17 @@ Rows share: a "!" disc on primary-soft, title, body, a "Vì sao viết thế nà
 
 Counts: frozen/real states 3 (plus RATE-LIMITED, ambiguous) · visual panels 4 · mapped 2 · ambiguous 1 · unsupported 1 · annotations 5 (title + 4 rationale lines).
 
-## Proposed QA (after decisions; nothing cropped)
+## Runtime states and QA (implemented)
 
-| State | Deterministic trigger | Proposed comparison region (board) |
-|---|---|---|
-| S04-BLOCKED | Seed or test sets an account `BLOCKED`, mints a token, opens the callback → S04 | R2 content x 45–1394, y 235–358, **excluding** the rationale line y 318–335 |
-| S04-SESSION-EXPIRED | Log in, expire `user_sessions.expires_at`, hit a protected route | R3 content x 45–1394, y 377–500, excluding y 460–477 |
-| S04-LINK-INVALID | `/auth/callback?token=bogus` | none until D-S04-2 |
+| State | Trigger | Presentation | Pixel QA |
+|---|---|---|---|
+| BLOCKED | `?reason=blocked`; S03 routes `AUTH_ACCOUNT_BLOCKED` here ([D1](../decisions/DECISION_LOG.md#dec-wf01-s04-d1)) | R2 meaning, no date ([D4](../decisions/DECISION_LOG.md#dec-wf01-s04-d4)), generic support copy ([D5](../decisions/DECISION_LOG.md#dec-wf01-s04-d5)) | disc component vs R2 disc (x61 y251 46×46): 1 px outside text |
+| SESSION_EXPIRED | `?reason=session_expired` ([D8](../decisions/DECISION_LOG.md#dec-wf01-s04-d8)) | R3, lifetime from config, "Đăng nhập lại" → `/auth` | disc vs R3 disc (x61 y393 46×46): 1 px; action vs R3 button (x1240 y394 138×51): 3 px |
+| GENERIC | no, unknown or `generic` reason; invalid callback ([D2](../decisions/DECISION_LOG.md#dec-wf01-s04-d2)) | shared centred AuthCard, neutral copy | DESIGN-GAP-GENERIC: typography and geometry only; manual PO review |
+| — | rate limit | inline on S01/S02 ([D3](../decisions/DECISION_LOG.md#dec-wf01-s04-d3)) | not an S04 state |
+| — | mail blocked by domain | out of P0 ([D7](../decisions/DECISION_LOG.md#dec-wf01-s04-d7)) | not implemented |
+
+Composition ([D6](../decisions/DECISION_LOG.md#dec-wf01-s04-d6)): the board's horizontal rows become one centred AuthCard, so whole-row crops cannot apply. The approved **components** (disc, outline action) are compared at their own positions. Titles and bodies are text-masked and checked by the DOM typography contract. Their **colour** is not covered by either check, so it was verified against the board ink by hand (body `#170002`).
 
 ## Security check
 
@@ -50,18 +54,18 @@ Counts: frozen/real states 3 (plus RATE-LIMITED, ambiguous) · visual panels 4 �
 - **Membership/profile status:** no row references them.
 - **Transport:** S03 currently passes no reason (D3). BLOCKED needs a safe, non-secret carrier (D-S04-1).
 
-## Decisions required
+## Decision resolution
 
-| ID | Decision |
+| Proposal | Resolved by |
 |---|---|
-| D-S04-1 | How S04 learns its state, given DEC-WF01-S03-D3 passes no reason. For example a closed `?reason=blocked\|session\|link` enum, with anything else collapsing to the generic state |
-| D-S04-2 | Presentation for LINK-INVALID / GENERIC, which has no board panel (reuse R3's layout with generic copy, or design supplies one) |
-| D-S04-3 | Is RATE-LIMITED an S04 state or only inline on S01/S02? If S04: approved numbers and the action (Google is not configured) |
-| D-S04-4 | BLOCKED body date "20/09" has no data source: drop the date, or make the copy static |
-| D-S04-5 | R4 mail-blocked: out of P0 (no signal) or static help? |
-| D-S04-6 | Runtime composition: one full-width row card as on the board, or a centred AuthCard like S03 (compare DEC-WF01-S03-D5) |
-| D-S04-7 | Support address `hotro@1hub.network`: confirm, since S02 uses `hub@1hub.network` |
-| D-S04-8 | SESSION-EXPIRED trigger: no protected route redirects on 401 yet. Who routes to `/auth/error?reason=session`? |
+| D-S04-1 state transport | [DEC-WF01-S04-D1](../decisions/DECISION_LOG.md#dec-wf01-s04-d1) |
+| D-S04-2 generic presentation | [DEC-WF01-S04-D2](../decisions/DECISION_LOG.md#dec-wf01-s04-d2) |
+| D-S04-3 rate limit | [DEC-WF01-S04-D3](../decisions/DECISION_LOG.md#dec-wf01-s04-d3) |
+| D-S04-4 blocked date | [DEC-WF01-S04-D4](../decisions/DECISION_LOG.md#dec-wf01-s04-d4) |
+| D-S04-5 mail-blocked | [DEC-WF01-S04-D7](../decisions/DECISION_LOG.md#dec-wf01-s04-d7) |
+| D-S04-6 composition | [DEC-WF01-S04-D6](../decisions/DECISION_LOG.md#dec-wf01-s04-d6) |
+| D-S04-7 support address | [DEC-WF01-S04-D5](../decisions/DECISION_LOG.md#dec-wf01-s04-d5) |
+| D-S04-8 session trigger | [DEC-WF01-S04-D8](../decisions/DECISION_LOG.md#dec-wf01-s04-d8) |
 
 ## Related
 
