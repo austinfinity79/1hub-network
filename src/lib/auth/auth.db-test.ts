@@ -336,13 +336,34 @@ describe('M0-T08 boundaries and fixtures', () => {
     expect(maskEmail('broken')).toBe('***')
   })
 
-  it('required no schema change: 001 and 002 are unchanged', () => {
+  it('required no schema change, and no later migration touches the auth tables', () => {
     const one = readFileSync(join(ROOT, 'db', 'migrations', '001_p0_init.sql'), 'utf8')
     expect(one).toContain('CREATE TABLE user_sessions')
     expect(one).toContain('CREATE TABLE auth_magic_link_requests')
 
-    // Only two migrations exist; M0-T08 added none.
-    const migrations = readdirSync(join(ROOT, 'db', 'migrations')).filter((f) => f.endsWith('.sql'))
-    expect(migrations).toEqual(['001_p0_init.sql', '002_p0_schema_alignment.sql'])
+    const migrations = readdirSync(join(ROOT, 'db', 'migrations'))
+      .filter((f) => f.endsWith('.sql'))
+      .sort()
+
+    // M0-T08 itself added none: the auth tables were already in 001.
+    expect(migrations.slice(0, 2)).toEqual(['001_p0_init.sql', '002_p0_schema_alignment.sql'])
+
+    // Stronger than counting files, and the assertion that actually matters:
+    // no migration after 002 may alter the auth tables. M0-T10 added 003 and is
+    // forbidden from changing the magic-link security rules, so this is the
+    // mechanical check of that constraint.
+    for (const filename of migrations.slice(2)) {
+      const sql = readFileSync(join(ROOT, 'db', 'migrations', filename), 'utf8')
+      const statements = sql.replace(/--[^\n]*/g, '')
+      expect(statements, `${filename} must not alter user_sessions`).not.toMatch(
+        /ALTER\s+TABLE\s+user_sessions/i,
+      )
+      expect(statements, `${filename} must not alter auth_magic_link_requests`).not.toMatch(
+        /ALTER\s+TABLE\s+auth_magic_link_requests/i,
+      )
+      expect(statements, `${filename} must not drop an auth table`).not.toMatch(
+        /DROP\s+TABLE\s+(IF\s+EXISTS\s+)?(user_sessions|auth_magic_link_requests)/i,
+      )
+    }
   })
 })

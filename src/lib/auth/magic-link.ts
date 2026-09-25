@@ -1,4 +1,5 @@
 import { ApiError } from '@/lib/api/errors'
+import type { Executor } from '@/lib/db/client'
 import { query } from '@/lib/db/client'
 
 import {
@@ -59,10 +60,16 @@ function fromRequestId(requestId: string): string | null {
  * Deliberately does NOT look up whether the account exists. Creation happens at
  * consume time, so this path cannot leak account existence through behaviour or
  * timing differences.
+ *
+ * `exec` defaults to a pooled query. M0-T10 passes a transaction-bound executor
+ * so the insert below commits or rolls back together with its idempotency
+ * claim; nothing else about the flow changes, and the M0-T08 security rules are
+ * untouched.
  */
 export async function requestMagicLink(
   email: string,
   requestIp: string | null,
+  exec: Executor = query,
 ): Promise<MagicLinkRequestResult> {
   if (!isPlausibleEmail(email)) {
     throw new ApiError('AUTH_EMAIL_INVALID', 400, 'A valid email address is required.')
@@ -72,7 +79,7 @@ export async function requestMagicLink(
   const token = generateToken()
   const expiresAt = new Date(Date.now() + MAGIC_LINK_EXPIRES_IN_SECONDS * 1000)
 
-  const rows = await query<{ id: string }>(
+  const rows = await exec<{ id: string }>(
     `INSERT INTO auth_magic_link_requests (email_normalized, token_hash, expires_at, request_ip)
      VALUES ($1, $2, $3, $4)
      RETURNING id::text`,

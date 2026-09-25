@@ -51,6 +51,12 @@ export const UNCONTRACTED_ERROR_CODES = [
   'UNCONTRACTED_UNAUTHENTICATED',
   'UNCONTRACTED_NOT_FOUND',
   'UNCONTRACTED_INTERNAL',
+  // M0-T10. 05:48-63 requires the Idempotency-Key header on seven operations
+  // but names no code for a key replayed against different content, and no code
+  // for a key whose first attempt is still in flight. 409 is the contract's own
+  // mapping for "lifecycle/state conflict / duplicate relation" (05:104), so the
+  // status is contracted even though the code is not.
+  'UNCONTRACTED_IDEMPOTENCY_CONFLICT',
 ] as const
 
 export type UncontractedErrorCode = (typeof UNCONTRACTED_ERROR_CODES)[number]

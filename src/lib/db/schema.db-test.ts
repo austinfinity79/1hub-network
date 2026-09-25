@@ -120,7 +120,7 @@ describe('M0-T06A PostgreSQL foundation', () => {
     expect(live).toContain('schema_migrations')
   })
 
-  it('records both applied migrations with checksums', async () => {
+  it('records every applied migration with checksums', async () => {
     const rows = await query<{ filename: string; sha256: string }>(
       'SELECT filename, sha256 FROM schema_migrations ORDER BY filename',
     )
@@ -128,6 +128,7 @@ describe('M0-T06A PostgreSQL foundation', () => {
     expect(rows.map((r) => r.filename)).toEqual([
       '001_p0_init.sql',
       '002_p0_schema_alignment.sql',
+      '003_p0_idempotency_store.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -196,14 +197,22 @@ describe('M0-T06B lifecycle gaps CLOSED by migration 002', () => {
     expect(rows).toHaveLength(0)
   })
 
-  it('has no store for idempotency keys, file assets, outbox or notifications', async () => {
+  it('still has no store for file assets or outbox, but now has one for idempotency keys', async () => {
     const live = (
       await query<{ table_name: string }>(
         `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`,
       )
     ).map((r) => r.table_name)
 
-    for (const absent of ['idempotency_keys', 'file_assets', 'outbox_events']) {
+    // FLIPPED BY M0-T10. This assertion used to record idempotency_keys as a
+    // missing structure, alongside the others 002 deferred. Migration 003 closed
+    // exactly that one gap, so the inversion here IS the evidence that the gap
+    // closed, rather than the test being quietly relaxed.
+    expect(live, 'migration 003 must create the idempotency store').toContain('idempotency_keys')
+
+    // The other deferred structures remain absent and still need their own
+    // decisions; M0-T10 was authorised for the idempotency store only.
+    for (const absent of ['file_assets', 'outbox_events']) {
       expect(live, `${absent} unexpectedly present`).not.toContain(absent)
     }
   })
@@ -275,6 +284,9 @@ describe('M0-T07 seed fixture quality', () => {
       'audit_events',
       'auth_magic_link_requests',
       'feedback_submissions',
+      // M0-T10: a runtime concurrency store. Seeding it would be meaningless,
+      // and a seeded key would suppress a real request.
+      'idempotency_keys',
       'profile_education',
       'profile_links',
       'user_sessions',

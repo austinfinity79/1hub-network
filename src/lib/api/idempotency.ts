@@ -4,10 +4,10 @@
  * The contract requires the header on seven operation classes. This module
  * parses and validates it, and names the operations that require it.
  *
- * STORAGE IS NOT IMPLEMENTED. Replaying a stored response needs a key store,
- * and no such table exists in db/migrations/001_p0_init.sql. That gap was
- * raised in the readiness report and belongs to a schema decision, so this
- * module deliberately stops at parsing rather than pretending to deduplicate.
+ * STORAGE LIVES IN `@/lib/idempotency/store`, added by M0-T10 on migration 003.
+ * This module remains parsing-only on purpose: header validation is a pure
+ * function with no database, which keeps it testable and keeps the storage
+ * policy in one place.
  */
 export const IDEMPOTENCY_HEADER = 'Idempotency-Key'
 
