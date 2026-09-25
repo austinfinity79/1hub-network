@@ -16,8 +16,10 @@ export default defineConfig({
   esbuild: { jsx: 'automatic' },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
-    exclude: ['node_modules/**', '.next/**', 'tests/e2e/**', 'tests/visual/**'],
+    // M0-T11: the Pixel QA engine is Node code under tests/visual/pixel-qa and
+    // its unit tests run here; Playwright specs stay excluded.
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'tests/visual/pixel-qa/**/*.test.ts'],
+    exclude: ['node_modules/**', '.next/**', 'tests/e2e/**', 'tests/visual/specs/**'],
   },
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
