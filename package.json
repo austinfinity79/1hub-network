@@ -17,7 +17,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "visual": "playwright test --config=tests/visual/visual.config.ts",
+    "visual:update": "playwright test --config=tests/visual/visual.config.ts --update-snapshots",
+    "visual:report": "playwright show-report tests/visual/reports/html",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "verify:visual": "pnpm verify && pnpm visual"
   },
   "dependencies": {
     "next": "^15.5.26",
@@ -29,6 +33,7 @@
     "@fontsource/archivo": "^5.3.0",
     "@fontsource/be-vietnam-pro": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",

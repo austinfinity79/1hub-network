@@ -68,7 +68,16 @@ across WF01 to WF03. Do not build a large generic E2E suite up front.
 | Task | Impact |
 |---|---|
 | M0-T01 | None. Its smoke check was `curl`, not a browser. |
-| M0-T02 | Its foundation QA used the Chrome extension, so it is downgraded to NOT RUN and needs re-verification under Playwright. |
+| M0-T02 | Its foundation QA used the Chrome extension and was withdrawn. Re-verified under Playwright in M0-T02b; FOUNDATION PASS now rests on a real Playwright run. |
+
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `pnpm visual` | Run the Playwright visual/foundation suite |
+| `pnpm visual:update` | Regenerate harness baselines, only when a change is intended |
+| `pnpm visual:report` | Open the HTML report |
+| `pnpm verify:visual` | Full code gates, then the visual suite |
 
 ## Related
 

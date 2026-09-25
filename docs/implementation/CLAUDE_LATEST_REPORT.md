@@ -1,127 +1,105 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: M0-T02 — design tokens, typography and font foundation
-- Scope requested: Build-time self-hosted fonts with pinned families/weights, no runtime CDN; design token integration; global typography primitives; normalize the token foundation where the Design SOT supports it.
+- Task ID / name: M0-T02b — Playwright re-verification of the typography foundation
+- Scope requested: Install Playwright, establish `tests/visual/`, and re-verify the M0-T02 typography foundation under a real Playwright run at 1440x900 DPR1, replacing the withdrawn Chrome-extension result.
 - Status: DONE
-- Progress estimate: M0-T02 100%. M0 milestone 2 of 12 tasks complete. WF01 not started.
+- Progress estimate: M0-T02b 100%. M0 milestone 3 of 13 tasks complete. WF01 not started.
 
 ## 2. What was implemented
-- Self-hosted 15 woff2 faces under `public/fonts`, served from our own origin. No CDN request at runtime and no network needed at build.
-- `scripts/sync-fonts.mjs` owns the font layer: it copies the pinned files and regenerates `src/styles/fonts.css`. A test fails if the committed CSS stops matching the generator, so the shipped faces cannot drift from the frozen list.
-- `globals.css` imports `docs/design/DESIGN_TOKENS_v1.0.css` in place and unchanged, so the build reads the frozen file rather than a copy that could drift.
-- `src/styles/tokens.css` adds a semantic background/foreground layer plus the eight type-scale primitives from Design SOT 2.4. Every value resolves to a frozen token; the file contains no raw colour at all.
-- Archivo and IBM Plex Mono are reachable only through `.type-display` and `.type-mono-meta`, matching the SOT rule that neither face may be used unless an approved pattern calls for it.
-- Weight utilities expose only the three shipped Be Vietnam Pro weights. A generic bold is deliberately withheld so no caller can request an unshipped Be Vietnam Pro 700 and get a synthesised faux-bold.
-- `/dev/typography` foundation harness rendering every primitive with the family and weight the SOT requires, as machine-readable data attributes.
-- 17 unit tests, including a font asset resolution check, a generator drift guard, a no-CDN check and an APEC-blue guard.
+- Installed `@playwright/test` 1.63.0 and downloaded the matching Chromium build (revision 1243, Chrome for Testing 153.0.8010.12). The cache held 1208/1228/1234, none of which matched, so no `executablePath` pinning was needed after the download.
+- Created `tests/visual/` with the `actual/`, `baseline/`, `diff/`, `reports/`, `specs/` structure required by the browser-testing rule.
+- `tests/visual/visual.config.ts` fixes the frozen capture conditions: Chromium, viewport 1440x900, `deviceScaleFactor: 1`, locale `vi-VN`, timezone `Asia/Ho_Chi_Minh`, `reducedMotion: 'reduce'`, serial with one worker and no retries. It serves the production build on its own port, not the dev server.
+- `typography-foundation.spec.ts` with 7 tests re-verifying every claim M0-T02 originally made through the Chrome extension.
+- Scripts: `visual`, `visual:update`, `visual:report`, and `verify:visual` which chains the code gates then the visual suite.
+- Updated `browser-testing-rule.md` to record that the M0-T02 gap is closed.
 
-Two defects found and fixed during validation, not worked around:
-- Vitest transformed JSX in classic mode, so the harness test failed. Fixed at source with `esbuild: { jsx: 'automatic' }` rather than adding a React import.
-- `noUncheckedIndexedAccess` caught a possibly-undefined regex capture in a test. Fixed properly with `flatMap`, not a non-null assertion.
+One defect found and fixed: Playwright loads its config and specs as CommonJS, so `import.meta.url` threw `SyntaxError: Cannot use 'import.meta' outside a module`. Fixed at source by using `__dirname` in both files.
 
-## 3. Fonts and weights installed
-Exactly the set frozen by Design SOT 2.3. Each family ships latin, latin-ext and vietnamese subsets, because the product locale is vi-VN.
-
-| Family | Weights | Faces | Approved usage |
-|---|---|---|---|
-| Be Vietnam Pro | 400, 500, 600 | 9 | default product UI |
-| Archivo | 700 | 3 | large editorial/hero display only |
-| IBM Plex Mono | 500 | 3 | IDs, compact metadata, technical labels only |
-
-- Asset path: `public/fonts/<pkg>-<subset>-<weight>-normal.woff2`, served at `/fonts/...`. Total 236 KB.
-- Source: `@fontsource/*` packages as devDependencies, copied at sync time. Nothing is fetched at runtime.
-- `font-display: block` on all 15 faces, so text never paints in a fallback and then reflows.
-- Be Vietnam Pro 400 latin and vietnamese are preloaded in the document head.
-
-## 4. Files changed
+## 3. Files changed
 Created:
-- `scripts/sync-fonts.mjs`, `scripts/sync-fonts.d.mts`
-- `src/styles/fonts.css` (generated), `src/styles/tokens.css`
-- `src/styles/fonts.test.ts`, `src/styles/tokens.test.ts`
-- `src/app/dev/typography/page.tsx`
-- `public/fonts/` — 15 woff2 files
-- `docs/implementation/reports/evidence/m0-t02/` — 2 QA screenshots
+- `tests/visual/visual.config.ts`
+- `tests/visual/specs/typography-foundation.spec.ts`
+- `tests/visual/baseline/typography-foundation.png` — harness baseline, tracked
 
 Modified:
-- `src/app/globals.css` — import order: Tailwind, frozen SOT tokens, fonts, semantic layer
-- `src/app/layout.tsx` — font preload links
-- `package.json` — `fonts:sync` script, fontsource devDependencies
-- `.prettierignore` — exclude the generated `fonts.css`
+- `package.json` — `@playwright/test` devDependency and four scripts
+- `.gitignore` — ignore `tests/visual/actual/`, `diff/`, `reports/`; baselines stay tracked
+- `docs/implementation/browser-testing-rule.md` — impact table and command table
 
-No frozen SOT file was modified. Verified: 0 changes under `docs/`, `db/` or `design-reference/` outside our own `docs/implementation/` report area.
+No frozen SOT file was modified. `design-reference/final` was neither read nor written by the harness.
 
-## 5. DB / API / Data changes
+## 4. DB / API / Data changes
 - Migration/schema: None.
 - API: None.
 - Seed/data: None.
 
-## 6. Validation results
-All executed. Composite `pnpm verify` exits 0.
+## 5. Validation results
+All executed.
 
 - Format: PASS — `prettier --check .`
 - Lint: PASS — `eslint .`, 0 errors, 0 warnings
-- Typecheck: PASS — `tsc --noEmit`
-- Unit/integration: PASS — 17 passed / 17 total, 3 files
-- Build: PASS — `next build`, 3 routes
-- Font asset resolution: PASS — all 15 files exist and are non-empty; all served 200 as `font/woff2`
-- Workflow/E2E: NOT RUN. No WF01–WF03 workflow exists yet and Playwright is M0-T11.
+- Typecheck: PASS — `tsc --noEmit`, now covering the Playwright config and spec
+- Unit/integration: PASS — 17 passed / 17, 3 files
+- Build: PASS — `next build`
+- Visual/E2E: PASS — `pnpm visual`, 7 passed / 7, exit 0
+- Workflow smoke: NOT RUN. No WF01–WF03 workflow exists yet to smoke.
 
-## 7. Visual / Foundation QA
-Result: **NOT RUN**, superseding the FOUNDATION PASS originally reported for this task.
+Run sequence disclosed in full: the first `pnpm visual` run reported 6 passed and 1 failed, because no harness baseline existed and Playwright wrote one on that pass. The second run, with the baseline in place, passed 7 of 7. Two later confirmation runs also passed 7 of 7. The PASS above refers to those complete runs, not the first.
 
-A browser-testing rule added after M0-T02 makes Playwright the only authoritative
-mechanism and forbids reporting any Visual PASS that rests on Chrome-extension
-observation. See `browser-testing-rule.md`. The verification below was performed
-through the Chrome extension, so it no longer counts as proof and the result is
-withdrawn. The observations are retained as informational only; nothing about the
-implementation changed, and re-verification under Playwright is the next task.
+## 6. Visual / Foundation QA
+Result: **FOUNDATION PASS**, now resting on an actual Playwright execution.
 
-Informational observations, not accepted as evidence:
+| Item | Value |
+|---|---|
+| Harness route | `/dev/typography` (not a product screen) |
+| Runner | Playwright 1.63.0, Chromium 1243 |
+| Viewport | 1440 x 900, asserted in-test |
+| deviceScaleFactor | 1, asserted in-test; capture is 1440 px wide, confirming it |
+| Actual screenshot | `tests/visual/actual/typography-foundation-1440x900.png` (1440x1178 full page) |
+| Baseline | `tests/visual/baseline/typography-foundation.png` — harness-owned |
+| Diff image | none produced; comparison matched within `maxDiffPixelRatio: 0.01` |
+| Comparison result | PASS |
+| Report | `tests/visual/reports/results.json` — expected 7, unexpected 0, flaky 0 |
 
-- Harness: `/dev/typography`, production build, Chrome via MCP.
-- Evidence: `docs/implementation/reports/evidence/m0-t02/typography-harness-scale.jpg` and `typography-harness-anchors.jpg`.
-- Computed font-family: 10 of 10 samples match the SOT-required family.
-- Computed font-weight: 10 of 10 match, covering all five pinned faces.
-- Size/line-height: all 10 match the SOT 2.4 scale exactly (34/44, 26/36, 20/30, 17/26, 16/28, 14/24, 13/18, 16/20).
-- Font loading: `document.fonts.check` true for all five pinned faces; 15 `@font-face` rules registered.
-- Fallback substitution: none. Canvas width probe against a deliberately absent family differed for every sample.
-- Network: 9 font requests, all `localhost/fonts/*`, all 200. Zero CDN or `fonts.googleapis.com` requests.
-- Body defaults: Be Vietnam Pro, background `rgb(239,239,239)` = `--hub-canvas`, colour `rgb(22,0,2)` = `--hub-burgundy`.
-- Colour anchors: all five render from the frozen tokens.
-- Deviation: capture was at devicePixelRatio 2 and 1728 CSS px, not 1440x900 DPR1. Chrome reported the resize as successful but the window stayed at screen width, so the target viewport could not be forced. Playwright sets viewport and `deviceScaleFactor` programmatically and will remove this deviation on re-verification.
-- No pixel comparison against `design-reference/final` was attempted or claimed; the harness is not a product screen and has no baseline.
+What the 7 tests assert:
+1. Capture conditions are exactly 1440x900 at DPR 1 with `document.fonts.status === 'loaded'`.
+2. All 10 samples match the required family, weight, font-size and line-height against the SOT 2.4 scale.
+3. Every sample resolves its real face, with no fallback substitution (canvas width probe against an impossible family).
+4. All five pinned faces load and exactly 15 `@font-face` rules register.
+5. Every font request is same-origin under `/fonts/`; no CDN.
+6. Body background is `rgb(239,239,239)` and colour `rgb(22,0,2)`, the frozen anchors.
+7. Full-page render matches the harness baseline.
 
-## 8. SOT compliance
-- Business SOT: not exercised. No workflow behaviour implemented.
+Baseline distinction: `tests/visual/baseline/` holds harness-owned regression baselines, not approved design baselines. `design-reference/final` remains read-only and untouched. No design pixel comparison was performed or claimed; the harness has no approved baseline, and manifest-driven comparison is M0-T11.
+
+## 7. SOT compliance
+- Business SOT: not exercised.
 - Data SOT: not exercised.
-- Design SOT: implemented as frozen. Sections 2.2, 2.3, 2.4 and 2.5 are all reflected. Be Vietnam Pro is the default UI font; Archivo and IBM Plex Mono are opt-in only; the red/burgundy identity is preserved and a test fails the build on any blue-dominant colour.
+- Design SOT: re-confirmed under Playwright. Sections 2.3, 2.4 and 2.5 all verified by assertion rather than observation. The capture now runs at the frozen 1440x900 DPR1 that section 3 requires.
 - API Contract: not exercised.
-- Deviation, declared: the task asked me to normalize spacing, radius, borders and shadows. Design SOT 2.5 explicitly defers these ("remain screen-baseline-driven until extracted into a broader component token library"), and the same task forbids adding values the SOT does not support. I implemented none of them and left Tailwind's defaults as the interim scale. A test asserts no such scale is invented. This needs a design decision before M1 screens land.
-- Open gap, unchanged from the readiness report: baselines use colours absent from the token set, including the `#8B281F` gradient on WF01-S01 and the `#FEF3F1` vs `#FFF3F0` soft-tint inconsistency. Not resolvable in M0-T02; blocks M1.
+- Deviations: none new. The DPR 2 / 1728 px deviation reported in M0-T02 is resolved; Playwright forces the correct conditions and the test fails if they drift.
+- Carried forward from M0-T02, unchanged: the Design SOT defers spacing, radius, border and shadow tokens, so none are implemented. Baseline colours outside the token set, including the `#8B281F` gradient and the `#FEF3F1` vs `#FFF3F0` inconsistency, remain open and block M1.
 
-## 9. Issues / blockers
+## 8. Issues / blockers
 - Remaining bugs: None.
-- Technical debt: the harness lives at `/dev/typography` inside the normal app and is included in the production build. It should be route-gated or excluded once M0-T03 defines route groups.
-- Human decisions required before M1: spacing/radius/shadow token scale (see section 8); gradient stops and token names for WF01-S01 and WF03-S09; whether `#FEF3F1` or `#FFF3F0` is canonical.
-- None of the above blocks M0-T03.
+- Technical debt: `/dev/typography` still ships in the production build and should be route-gated or relocated when M0-T03 defines route groups. The harness baseline is platform-specific, so it will need regenerating if the suite ever runs on a different OS or in CI.
+- Human decisions required before M1: spacing/radius/shadow token scale; gradient stops and token names for WF01-S01 and WF03-S09; whether `#FEF3F1` or `#FFF3F0` is canonical.
+- None blocks M0-T03.
 
-## 10. Regression impact
-- Previous functionality checked: M0-T01 bootstrap route and the full quality gate chain.
-- Result: PASS. `/` still returns 200 with `lang="vi"` and its bootstrap markup intact. All five gates green after the typography changes.
+## 9. Regression impact
+- Previous functionality checked: M0-T01 bootstrap route and smoke, M0-T02 typography foundation, and the full code gate chain.
+- Result: PASS. `/` returns 200 with `lang="vi"` and its bootstrap markup. All five code gates green. Visual suite 7 of 7 after a reformat pass.
 - Regression found: None.
 
-## 11. Git
+## 10. Git
 - Branch: `main`
-- Commit hash: `88289e19cd2bcd4e35448394631d41f385ed857c`
-- Commit message: `feat(m0-t02): self-hosted font foundation and design tokens`
+- Commit hash: recorded below in section 12 after commit.
+- Commit message: `test(m0-t02b): re-verify typography foundation under Playwright`
 - Working tree status: clean.
 
-## 12. Recommended next task
-M0-T02b — re-verify the typography foundation under Playwright, replacing the withdrawn Chrome-extension result.
+## 11. Recommended next task
+M0-T03 — shared web shell and route groups. Create the public, auth, onboarding, me and ops route groups with placeholder layouts built on the M0-T02 tokens, taking routes from `docs/design/SCREEN_CONTRACTS_WF01_WF03_v1.0.yaml` rather than architecture doc 04, whose route table conflicts with the frozen contract. Gate or relocate `/dev/typography` as part of defining the groups. Exit criterion: every WF01–WF03 route resolves, the build passes, and the visual suite still passes as regression. Not started.
 
-Install Playwright, add `tests/visual/` with the `actual/`, `diff/`, `reports/`, `specs/` structure, and write one spec that loads `/dev/typography` at 1440x900 with `deviceScaleFactor: 1`, waits for `document.fonts.ready`, asserts computed family, weight and size/line-height for all ten samples, asserts no fallback substitution, asserts every font request is same-origin, and captures a screenshot into `tests/visual/actual/`. Chromium builds are already cached locally, so no environment blocker is expected.
-
-Exit criterion: the Playwright command executes successfully and the M0-T02 visual result can be restated as a genuine FOUNDATION PASS. This is the smallest slice of the M0-T11 harness that the new browser-testing rule requires now; the manifest-driven pixel diffing stays in M0-T11.
-
-Then M0-T03 — shared web shell and route groups, taking routes from `SCREEN_CONTRACTS_WF01_WF03_v1.0.yaml` rather than architecture doc 04, whose route table conflicts with the frozen contract. Not started.
+## 12. Commit
+- `test(m0-t02b): re-verify typography foundation under Playwright` — see `git log` for the hash; the report is committed immediately after the implementation commit.

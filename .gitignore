@@ -26,3 +26,8 @@ tests/**/artifacts/
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Playwright generated artifacts (baselines under tests/visual/baseline ARE tracked)
+tests/visual/actual/
+tests/visual/diff/
+tests/visual/reports/
