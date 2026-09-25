@@ -7,6 +7,7 @@
  *    sets the default UI font on html/body/controls.
  * 3. Self-hosted @font-face declarations (generated; see scripts/sync-fonts.mjs)
  * 4. Semantic tokens and typography primitives derived from 2.
+ * 5. Shared UI primitives (M0-T04)
  *
  * The SOT import must come after Tailwind so its unlayered rules win over
  * preflight's base layer.
@@ -15,3 +16,4 @@
 @import '../../docs/design/DESIGN_TOKENS_v1.0.css';
 @import '../styles/fonts.css';
 @import '../styles/tokens.css';
+@import '../styles/primitives.css';

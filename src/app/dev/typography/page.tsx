@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
 
+import { devRoutesEnabled } from '@/lib/dev-routes'
+
 /**
  * M0-T02 — deterministic typography harness. M0-T03 gated it to dev/test only.
  *
@@ -115,7 +117,7 @@ const SWATCHES = [
 ]
 
 export default function TypographyHarnessPage() {
-  if (process.env.ENABLE_DEV_ROUTES !== '1') notFound()
+  if (!devRoutesEnabled()) notFound()
 
   return (
     <main

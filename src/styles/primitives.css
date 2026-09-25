@@ -1,0 +1,190 @@
+/*
+ * M0-T04 — shared UI primitives.
+ *
+ * VALUE RULE: every colour comes from a frozen Design SOT anchor (via the
+ * semantic layer in tokens.css) and every size comes either from the frozen type
+ * scale, from an `em`/`rem` derived from it, or from a declared
+ * `--unresolved-*` token. No framework default is adopted silently and no raw
+ * hex appears here. `design-tokens.test.ts` enforces this.
+ *
+ * The `--unresolved-*` values below are PROVISIONAL, not approved design. Radius
+ * and shadow are deliberately neutral (0 and none) so an unfinished primitive
+ * looks unfinished rather than pretending to be designed. See
+ * src/lib/design-tokens.ts for what settles each one.
+ */
+
+:root {
+  --unresolved-radius-control: 0px;
+  --unresolved-radius-surface: 0px;
+  --unresolved-shadow-surface: none;
+  --unresolved-space-control-x: 1rem;
+  --unresolved-space-control-y: 0.75rem;
+  --unresolved-space-stack: 0.5rem;
+  --unresolved-space-surface: 1.5rem;
+}
+
+@layer components {
+  /* ---------------------------------------------------------------- Button */
+
+  .ui-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    font-family: var(--font-ui);
+    font-size: var(--type-button-size);
+    line-height: var(--type-button-line);
+    font-weight: var(--weight-semibold);
+    padding: var(--unresolved-space-control-y) var(--unresolved-space-control-x);
+    border-radius: var(--unresolved-radius-control);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  /* Keyboard users get a visible ring; pointer users do not. Ring width is em
+     derived from the frozen button size, so it needs no new token. */
+  .ui-button:focus-visible,
+  .ui-input:focus-visible {
+    outline: 0.125em solid var(--color-fg-accent);
+    outline-offset: 0.125em;
+  }
+
+  .ui-button[data-variant='primary'] {
+    background-color: var(--color-bg-accent);
+    color: var(--color-fg-on-accent);
+  }
+
+  .ui-button[data-variant='secondary'] {
+    background-color: var(--color-bg-surface);
+    color: var(--color-fg-default);
+    border-color: var(--color-bg-canvas);
+  }
+
+  .ui-button[data-variant='primary']:hover:not(:disabled) {
+    background-color: var(--color-fg-default);
+  }
+
+  .ui-button[data-variant='secondary']:hover:not(:disabled) {
+    background-color: var(--color-bg-accent-soft);
+  }
+
+  .ui-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Size follows the text, so no dimension token is needed. */
+  .ui-button__spinner {
+    width: 1em;
+    height: 1em;
+    border: 0.125em solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: ui-spin 0.7s linear infinite;
+  }
+
+  @keyframes ui-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Deterministic capture and vestibular safety: freeze the spinner. */
+  @media (prefers-reduced-motion: reduce) {
+    .ui-button__spinner {
+      animation: none;
+    }
+  }
+
+  /* ----------------------------------------------------------------- Input */
+
+  .ui-input {
+    display: block;
+    width: 100%;
+    font-family: var(--font-ui);
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
+    color: var(--color-fg-default);
+    background-color: var(--color-bg-surface);
+    padding: var(--unresolved-space-control-y) var(--unresolved-space-control-x);
+    border: 1px solid var(--color-bg-canvas);
+    border-radius: var(--unresolved-radius-control);
+  }
+
+  .ui-input[aria-invalid='true'] {
+    border-color: var(--color-fg-accent);
+  }
+
+  .ui-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .ui-input:read-only:not(:disabled) {
+    background-color: var(--color-bg-canvas);
+  }
+
+  /* ----------------------------------------------------------- Field/Label */
+
+  .ui-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--unresolved-space-stack);
+  }
+
+  .ui-label {
+    font-family: var(--font-ui);
+    font-size: var(--type-sm-size);
+    line-height: var(--type-sm-line);
+    font-weight: var(--weight-medium);
+    color: var(--color-fg-default);
+  }
+
+  .ui-field-message {
+    font-family: var(--font-ui);
+    font-size: var(--type-meta-size);
+    line-height: var(--type-meta-line);
+  }
+
+  .ui-field-message[data-tone='helper'] {
+    color: var(--color-fg-default);
+  }
+
+  .ui-field-message[data-tone='error'] {
+    color: var(--color-fg-accent);
+    font-weight: var(--weight-medium);
+  }
+
+  /* --------------------------------------------------------------- Surface */
+
+  .ui-surface {
+    background-color: var(--color-bg-surface);
+    padding: var(--unresolved-space-surface);
+    border-radius: var(--unresolved-radius-surface);
+    box-shadow: var(--unresolved-shadow-surface);
+  }
+
+  /* ---------------------------------------------------------------- Notice */
+
+  .ui-notice {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: var(--type-sm-size);
+    line-height: var(--type-sm-line);
+    padding: var(--unresolved-space-control-y) var(--unresolved-space-control-x);
+    border-radius: var(--unresolved-radius-surface);
+    border: 1px solid transparent;
+  }
+
+  .ui-notice[data-tone='info'] {
+    background-color: var(--color-bg-canvas);
+    color: var(--color-fg-default);
+  }
+
+  .ui-notice[data-tone='error'] {
+    background-color: var(--color-bg-accent-soft);
+    color: var(--color-fg-default);
+    border-color: var(--color-fg-accent);
+  }
+}
