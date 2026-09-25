@@ -1,81 +1,111 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF01-S01-FINAL-AUDIT — shared token / typography scope check
-- Scope requested: verify WF01-S01 did not promote screen-specific measurements into global design rules; localise any proven accidental promotion without changing S01 pixels.
-- Status: **PASS WITH LOCALIZATION**
-- Mode: LOCAL REVIEW. Committed locally, not pushed. WF01-S02 not started.
+- Task ID / name: WF01-S02 — Check Email (`/auth/check-email`)
+- Status: **DONE**
+- Mode: LOCAL REVIEW. Committed locally, not pushed. WF01-S03 not started.
 
-## 2. Method
-Evidence came from the 24 approved references, not from S01 alone:
-- A colour survey: pixels within ±2 of each value S01 introduced.
-- Geometry probes: card and input corner radii, input heights, and the heights of the red CTAs.
+## 2. Pre-flight
+- Single writer: PASS. Start HEAD `4a158e3`, re-checked before commit: unchanged. `AGENTS.md` untouched.
+- WF01-S01 green at start. Reference `WF01-S02__check-email__1440x900.png` is `strict` 1440×900 and was measured before coding.
 
-| Value S01 introduced | Found in other references | Verdict |
-|---|---|---|
-| Card hairline `#e4dede` | 24 / 24 | multi-reference |
-| Muted text `#534041` | 24 / 24 | multi-reference |
-| Notice fill `#f7f4f4` | ~15 | multi-reference |
-| Placeholder `#a79b9b` | S02, S05–S08, WF03 | multi-reference |
-| Burgundy CTA label | 16 / 16 with a red CTA | multi-reference |
-| Card radius 14px | WF01-S03/S07 ≈14; WF02 ≈11; WF03 7–11 | **contradicted** |
-| Input height 49px | WF02-S02/S05 = 44px | **contradicted** |
-| Button height 47px | 42–46px elsewhere; WF03 31–38px | **contradicted** |
-| Input border `#c9bfbf` / fill `#fbfafa`, shadow, 36px card padding, 5px stack, notice 13px padding and 8px radius | S01 only, or not measurable elsewhere | **S01-only** |
-
-## 3. Classification
-| Item | Before audit | Class | Action |
+## 3. Contract vs bitmap decisions
+| Bitmap shows | Contract / API | Implemented | Class |
 |---|---|---|---|
-| radius-control 8px, radius-surface 14px | global | SCREEN_LOCAL_VALUE | reverted to 0px globally; set on the S01 card |
-| notice radius 8px (primitive rule changed) | global | COMPONENT_LOCAL_VALUE | new `--unresolved-radius-notice`, defaulting to radius-surface (M0 behaviour); S01 sets 0.5rem |
-| shadow | global | SCREEN_LOCAL_VALUE | `none` globally; set on the S01 card |
-| control-y 12.5px, surface 36px, stack 5px | global | SCREEN_LOCAL_VALUE | reverted to 0.75rem / 1.5rem / 0.5rem; set on the S01 card |
-| input-y, notice-x, border-control, fill-control | GLOBAL_NEW_TOKEN | COMPONENT_LOCAL_VALUE | kept as primitive parameters defaulting to M0 behaviour; S01 sets its values |
-| control-x 1rem | global | GLOBAL_EXISTING_TOKEN | unchanged (S01 measures the same) |
-| border-surface, fill-notice, fg-muted, fg-placeholder | GLOBAL_NEW_TOKEN | GLOBAL_NEW_TOKEN, multi-reference | kept global, evidence recorded in the manifest |
-| `--color-fg-on-accent` burgundy | GLOBAL_EXISTING_TOKEN | GLOBAL_EXISTING_TOKEN, multi-reference | kept (16/16 references; WCAG AA) |
-| Gradient mid-stop `#58040b` | screen-local | SCREEN_LOCAL_BASELINE_VALUE | no change; it lives only in `auth-split-layout.module.css`. Also appears in WF03-S09, noted for later |
-| Archivo 700 headline | via existing `.type-display` | S01 SCREEN-APPROVED DISPLAY TREATMENT | no change |
-| `Button fullWidth`, `TextInput ref` | shared | generic API | no change |
+| "Mở Gmail" dark full-width button | S02 actions are `resend`, `change_email` only | not rendered | INTENTIONAL-BUSINESS-CONTRACT, reference region 760,370 → 480×70 |
+| Full address `chi.dang@tracely.vn` | 202 returns `email_masked` only | masked address (`c***@tracely.vn`) | INTENTIONAL-BUSINESS-CONTRACT, text only |
+| "Gửi lại sau 0:45" | 202 returns `resend_after_seconds` (60) | countdown from the server value; nothing invented | conforms |
+| (direct entry is not specified) | no SOT rule | `replace('/auth')` when no pending request | ambiguity; resolved by the task's preferred option |
 
-Mechanism: primitives read `var(--unresolved-*)`. The S01 card, `.card` in `auth-entry.module.css`, overrides those properties for its own subtree only. No other screen inherits S01 geometry.
+## 4. What was built
+| File | Role |
+|---|---|
+| `src/app/(auth)/auth/check-email/page.tsx`, `check-email-card.tsx`, `check-email.module.css` | Reads the S01 handoff and shows the masked address. The countdown is gated by `resend_after_seconds`. Resend calls `POST /auth/magic-link/resend {auth_request_id}`, stores the rotated request id and restarts the countdown. "Đổi email khác" is a `<Link>` to `/auth` |
+| `src/components/shell/auth-card.*` | **Shared auth-shell component (new).** Card surface geometry: 440px wide, 14px radius, 36px padding, shadow |
+| `tests/visual/pixel-qa/capture.ts` | `runScreenQa` gains optional `beforeNavigate` / `afterLoad` state hooks (test infrastructure) |
+| `tests/visual/specs/wf01-s02-check-email.spec.ts` | 13 functional tests + 1 pixel test |
 
-## 4. Archivo evidence (case A)
-- Design SOT §2.3, line 51: "Display/marketing: Archivo Bold (only for large editorial/hero headings)".
-- The S01 headline is the brand panel's large marketing hero heading.
-- The bitmap measures the frozen `display` step exactly: 34px size and a 44px line pitch (348→392→436).
-- It is applied through the pre-existing `.type-display` class, so no new rule was created. The card title stays Be Vietnam Pro.
+State transfer: the S01 `sessionStorage` handoff is reused unchanged. It holds the 4 contract DTO fields, with no token and no raw address. On refresh the state is kept; the countdown restarts from the server's value, which never allows an earlier resend.
 
-## 5. Proof S01 is unchanged
-- The S01 capture after localisation is **byte-identical** to the capture before it: 0 differing bytes, and pixelmatch at threshold 0 gives 0.
-- WF01-S01 Playwright 12/12. Segments outside text: 0 / 0 / 0 / 0 / 1 px, the same as before.
+Idempotency: resend is not one of the contract's seven `Idempotency-Key` operations, so no key is sent. Duplicates are prevented by the in-flight guard and the cooldown, and the server retires the superseded request id.
 
-## 6. Baselines
-- `design-reference/final/**`: 67 files, hash unchanged.
-- `tests/visual/baseline/primitives.png` (harness-owned) regenerated after inspection. The harness now shows the global state: square and flat, as in M0-T04, plus only the multi-reference changes (burgundy CTA label, surface hairline, notice fill and muted text, placeholder). Shell and typography baselines are unchanged.
-- The M0-T04 test "leaves unresolved cosmetic values visibly unset" is restored. The harness copy is restored.
+## 5. Shared UI gate
+| Item | Result |
+|---|---|
+| Shared primitive changed | NONE. Button, TextInput, Notice, Surface and tokens are untouched |
+| Shared shell component | NEW `AuthCard`, with two-reference evidence: S01 and S02 measure identical card geometry (card top-left corner curve, 36px padding, shadow falloff). It is component-local to the auth shell, not a global token |
+| S01 refactor | S01 now uses `AuthCard`; its control overrides moved inside the card. S01 capture is **byte-identical** (0 differing bytes) and its pixel verdict is unchanged |
+| Global tokens added | **0** |
+| Screen-local values | tile 56px / 14px radius (fill = frozen `--hub-primary-soft`), divider 2px at burgundy 8%, help panel 8px radius, eyebrow 10px, tip pitch 22px / gap 8px, all spacing. Accent `#b91610` for bullets and the link: sampled, not derivable from the anchors, kept screen-local. It occurs in 22/24 references, so it is a candidate for later promotion |
+| Archivo | not used. S02 has no hero display pattern |
 
-## 7. Regression
+## 6. Functional QA (Playwright, real API)
+| Item | Result |
+|---|---|
+| Route / S01→S02 | PASS. A real S01 submit lands on S02 |
+| Email masking | PASS. `n***@example.test`; the raw address is absent from the DOM |
+| Token / enumeration | PASS. No token in the DOM or storage; a known and an unknown address render identical screens |
+| Countdown | PASS. `1:00` → `0:45` → enabled `Gửi lại link`, driven by the fixed clock |
+| Resend | PASS. Posts the current `auth_request_id`, gets 202, rotates the stored id and restarts the countdown; announced with `role=status` |
+| Duplicate prevention | PASS. Busy with `aria-busy`; a forced second click sends no request |
+| Failure / 429 / 409 stale | PASS. Each shows its own `role=alert` message and the button stays usable |
+| Change email | PASS. Returns to `/auth` |
+| Invalid direct entry | PASS. Replaced by `/auth` |
+| Accessibility | PASS. `h1`; resend is a `<button>`, change-email an `<a>`; Tab order and visible focus verified; the tips panel is a labelled `<section>` with an `<h2>` and `<ul>`. No "Gmail" text; exactly one button |
+| Console | 0 errors |
+
+## 7. Pixel QA
+- **Runner:** `runScreenQa` at 1440×900, DPR1, vi-VN, fonts ready. State: a real 202 DTO and a clock pinned to T0+15s ("0:45").
+- **Images:**
+  - REFERENCE: `design-reference/final/WF01/WF01-S02__check-email__1440x900.png`
+  - ACTUAL: `tests/visual/actual/pixel-qa/WF01-S02.viewport.png`
+  - DIFF: `…/WF01-S02.viewport.diff.png` and `…/WF01-S02.segments.diff.png`
+- **Full frame:** DIFFERENT 3.28%. Expected: the Gmail omission shifts the card ±33px, and the font migration changes every glyph.
+- **Typography:** DOM contract PASS (18 text elements, 0 violations).
+- **Segments, outside text** (threshold 0.2%):
+
+| Segment | dy | Outside-text diff |
+|---|---|---|
+| Brand panel | 0 | 0 px |
+| Canvas left / right | 0 | 0 px |
+| Card upper (tile, title, lede, address) | +33 | 14 px (0.012%) |
+| Card lower (divider → change-email link, card edge) | −33 | 3 px |
+
+- **Classification:**
+  - Structural 0; Major Visual 0; Component 0. The envelope icon strokes were refitted, cutting the icon diff from 28 to 14px.
+  - Raster Noise: 17px. The icon anti-aliases differently from the bitmap's OS emoji glyph.
+  - Intentional: Gmail button and masked address (business-contract); every glyph (typography migration).
+- **Pixel verdict: PASS.**
+
+## 8. Validation
 | Gate | Result |
 |---|---|
-| Format / Lint / Typecheck | PASS |
+| Format / Lint / Typecheck / `verify` | PASS |
 | Unit | 109 / 109 |
 | DB integration | 121 / 121 |
 | Build | PASS |
-| Playwright | 124 / 124, plus 24 screen runs skipped by design |
+| S01 regression | 12 / 12. Pixel segments 0/0/0/0/1, unchanged |
+| S02 Playwright | 14 / 14 |
+| Full Playwright | 138 / 138, plus 24 screen runs skipped by design |
+| `design-reference/**` | hash unchanged |
 
-## 8. Residual risk for S02–S24
-- Multi-reference neutrals are established by colour presence, not by confirmed role. For example, `#f7f4f4` may be a panel fill rather than a notice fill on some screens. Each screen's pixel gate will confirm or override them.
-- Burgundy CTA labels now apply to every primary button. The evidence is strong.
-- Geometry stays neutral globally. Each screen settles its own geometry locally until several screens agree on a shared value.
+## 9. Notes for review
+1. **"Mở Gmail" omitted.** It is not a contract action, following the S01 Google precedent. If approved, it could be added as a plain external link; say so and it is a small change.
+2. **Invented copy.** Resend-success, stale, rate-limit and failure messages, and the enabled label "Gửi lại link", are minimal copy pending design review.
+3. **No server-side resend cooldown.** The countdown is client-side UX. Server rate limiting remains the recorded pre-UAT deferral.
+4. **Direct-entry redirect.** Redirect to `/auth` was chosen because no SOT rule exists.
+5. **S01 flake.** One cold-start timeout was seen on the first S01 test right after a rebuild. It passed on rerun and did not recur in the full run.
 
-## 9. Git
-- Branch: `main`; start HEAD `95ffe38`, unchanged before commit
-- Implementation commit: `6efee37` fix(wf01-s01): localise single-screen measurements to the auth card
+## 10. Git
+- Branch `main`; start HEAD `4a158e3`
+- Implementation commit: `8906aa5` feat(wf01-s02): check email screen with server-timed resend
 - Report/final commit: the commit containing this report
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `2390ce2`
-- Working tree: clean after commit except the untracked `AGENTS.md`, preserved and not committed
+- Working tree: clean after commit except the untracked `AGENTS.md`
+
+## 11. Recommended next task
+WF01-S03 — Auth Callback States. Note the known G1 state-board Pixel QA gap for its reference.
 
 ## Related
-- [reports/WF01-S01_auth-entry.md](reports/WF01-S01_auth-entry.md) — the WF01-S01 implementation report
 - [P0_STATUS.md](P0_STATUS.md) — overall P0 state
+- [reports/WF01-S01_auth-entry.md](reports/WF01-S01_auth-entry.md) — WF01-S01 report

@@ -13,7 +13,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | Screen | State |
 |---|---|
 | WF01-S01 Auth Entry | DONE — functional + typography + pixel gate PASS ([report](reports/WF01-S01_auth-entry.md)) |
-| WF01-S02 … S08 | Not started; routes remain M0-T03 placeholders |
+| WF01-S02 Check Email | DONE — functional + typography + pixel gate PASS ([report](reports/WF01-S02_check-email.md)) |
+| WF01-S03 … S08 | Not started; routes remain M0-T03 placeholders |
 
 ## Completed (committed)
 
@@ -38,7 +39,9 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | M0-T10 | Durable idempotency store (migration 003), idempotent magic-link requests |
 | M0-T11 | Manifest-driven Pixel QA foundation: manifest audit, QA mapping, capture, diff, report, dry run |
 | M0 AUDIT | Foundation completion audit: clean install, fresh PostgreSQL, restart proof; 1 P2 + 1 P3 fixed |
-| WF01-S01 | Auth Entry: email magic-link path, provider-free per contract; settles WF01-S01 design tokens |
+| WF01-S01 | Auth Entry: email magic-link path, provider-free per contract |
+| WF01-S01 audit | Token scope audit: single-screen measurements localised to the auth card |
+| WF01-S02 | Check Email: masked address, server-timed resend countdown, resend, change email |
 
 ## Not yet built (M0)
 
@@ -74,7 +77,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF01-S02 — Check Email (recommended). Waiting for review and authorization.
+WF01-S03 — Auth Callback States (recommended). Note: WF01-S03 is a state-board reference with a known Pixel QA configuration gap (G1). Waiting for review and authorization.
 
 ## Related
 
