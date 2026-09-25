@@ -307,4 +307,21 @@ describe('M0-T07 seed fixture quality', () => {
 
     expect(before[0]!.n).toBeGreaterThan(0)
   })
+
+  // M0 completion audit: the retired seed must not be reachable as the normal
+  // entrypoint through the runner or any package script.
+  it('makes the deterministic seed the only seed entrypoint', () => {
+    const runner = readFileSync(join(process.cwd(), 'scripts', 'db.mjs'), 'utf8')
+    const seedFileLines = runner.split('\n').filter((line) => /SEED_FILE\s*=/.test(line))
+    expect(seedFileLines).toHaveLength(1)
+    expect(seedFileLines[0]).toMatch(/'seed_p0_deterministic\.sql'/)
+    // seed_dev.sql may appear only in comments, never as a path the runner reads.
+    const code = runner.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '')
+    expect(code).not.toMatch(/seed_dev/)
+
+    const scripts = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8'))
+      .scripts as Record<string, string>
+    expect(scripts['db:seed']).toBe('node scripts/db.mjs seed')
+    expect(Object.values(scripts).join('\n')).not.toMatch(/seed_dev/)
+  })
 })

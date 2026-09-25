@@ -47,11 +47,10 @@ test.describe('M0-T05 GET /session', () => {
     expect(response.headers()['content-type']).toContain('application/json')
   })
 
-  test('reports no authenticated identity, since no session store exists yet', async ({
-    request,
-  }) => {
-    // M0-T05 has no database and no session store, so the endpoint must not
-    // fabricate an account. A stub with invented data would be a fake success.
+  test('reports no authenticated identity for a request without a session', async ({ request }) => {
+    // Written in M0-T05, before the session store existed; since M0-T08 the
+    // store is real, and a request carrying no session cookie must still get no
+    // fabricated account, profile or capabilities.
     const response = await request.get(`${BASE}/session`)
     const body = (await response.json()) as Record<string, unknown>
 

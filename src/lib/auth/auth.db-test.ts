@@ -276,6 +276,29 @@ describe('M0-T08 magic link', () => {
 
     expect(second.sessionToken).not.toBe(first.sessionToken)
   })
+
+  // M0 completion audit: single use must hold under concurrency, not only in
+  // sequence. The claim is one conditional UPDATE, so PostgreSQL row locking
+  // must let exactly one consumer through.
+  it('lets exactly one of several concurrent consumes succeed', async () => {
+    const { token } = await requestMagicLink(SEEDED_MEMBER, null)
+    const sessionsBefore = await query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM user_sessions',
+    )
+
+    const results = await Promise.allSettled(
+      Array.from({ length: 8 }, () => consumeMagicLink(token)),
+    )
+
+    const ok = results.filter((r) => r.status === 'fulfilled')
+    const failed = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+    expect(ok).toHaveLength(1)
+    expect(failed).toHaveLength(7)
+    for (const f of failed) expect(f.reason).toMatchObject({ code: 'AUTH_LINK_ALREADY_USED' })
+
+    const sessionsAfter = await query<{ n: number }>('SELECT count(*)::int AS n FROM user_sessions')
+    expect(sessionsAfter[0]!.n - sessionsBefore[0]!.n).toBe(1)
+  })
 })
 
 describe('M0-T08 cookie semantics', () => {

@@ -73,8 +73,11 @@ export const GET = withApi<SessionDTO>(async ({ request }) => {
       id: row.profile_id ?? '',
       status: row.profile_status ?? 'NOT_CREATED',
       onboarding_completed: Boolean(row.onboarding_completed_at),
-      // Derived server-side from the frozen ten groups; M0-T09 onward computes
-      // it. Never accepted from the client (CLAUDE.md section 3).
+      // PLACEHOLDER, not a computed value. The contract requires this to be
+      // derived server-side from the frozen ten groups (CLAUDE.md section 3),
+      // but that Profile-domain calculation is WF01/WF02 scope and is not built
+      // yet. Until it is, every session reports 0; no screen may treat this as
+      // a real completion figure. It is never accepted from the client.
       completion_percent: 0,
     },
     capabilities,

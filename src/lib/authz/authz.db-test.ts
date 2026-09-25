@@ -393,6 +393,25 @@ describe('M0-T09 require() error mapping', () => {
     )
   })
 
+  // M0 completion audit: probing an organization id must not reveal whether it
+  // exists. A nonexistent id and a real foreign one must be indistinguishable.
+  it('answers a nonexistent organization exactly like a foreign one', async () => {
+    const foreign = await requireCapability(leader, 'member:read', {
+      scopeType: 'ORGANIZATION',
+      scopeId: CHAPTER_02,
+    }).catch((e: unknown) => e)
+    const nonexistent = await requireCapability(leader, 'member:read', {
+      scopeType: 'ORGANIZATION',
+      scopeId: '10000000-0000-0000-0000-00000000dead',
+    }).catch((e: unknown) => e)
+
+    expect(nonexistent).toMatchObject({
+      code: (foreign as { code: string }).code,
+      message: (foreign as { message: string }).message,
+    })
+    expect((nonexistent as { status: number }).status).toBe((foreign as { status: number }).status)
+  })
+
   it('runs the lifecycle predicate only after permission passes, and maps it to 409', async () => {
     let ran = false
 
