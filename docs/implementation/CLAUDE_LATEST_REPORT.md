@@ -1,92 +1,97 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF01-S06-DECISION-FREEZE + WF01-S06 — Onboarding Profile (`/onboarding/profile`)
-- Status: **DONE**
-- Mode: LOCAL REVIEW. Committed locally, not pushed. WF01-S07 not started.
+- Task ID / name: WF01-S07-DECISION-FREEZE + WF01-S07 — Privacy & Visibility (`/onboarding/privacy`)
+- Status: **DONE**. The one remaining blocker is release content: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
+- Mode: LOCAL REVIEW. Committed locally, not pushed. WF01-S08 not started.
 
 ## 2. Decisions
-- DEC-WF01-S06-D1..D6 are recorded in [DECISION_LOG.md](../decisions/DECISION_LOG.md), with Context, Decision, Why, Evidence and Impact.
-- NETWORK_CONTEXT → HEADLINE is recorded as **RESOLVED_BY_PRECEDENCE**; the historical SOT is not edited.
-- [WF01_S06_PROFILE_FIELD_CONTRACT.md](WF01_S06_PROFILE_FIELD_CONTRACT.md) is now **HUMAN APPROVED — P0**.
+- DEC-WF01-S07-D1..D8 are recorded in [DECISION_LOG.md](../decisions/DECISION_LOG.md).
+- [WF01_S07_PRIVACY_CONSENT_CONTRACT.md](WF01_S07_PRIVACY_CONSENT_CONTRACT.md) is now **HUMAN APPROVED — P0**.
+- `LEGAL_DOCUMENT_VERSION_STALE` (409) and `VISIBILITY_VALIDATION_FAILED` (422) sit in `DECISION_ERROR_CODES`; a unit test guards that both are recorded in the log.
 
 ## 3. Scope implemented
-| Item | Result |
+| Area | Result |
 |---|---|
-| Fields | avatar, name, headline, region, bio, "Chuyên môn". Required: name, headline, region, ≥1 expertise. Optional: avatar, bio (D2) |
-| Profile API | `GET /me/profile` returns a DTO (NOT_CREATED shape when there is no profile). `PATCH` is partial, atomic and own-profile only. It refuses `completion_percent`, `status` and non-S06 fields |
-| Vocabulary | `GET /vocabularies/{type}` for REGION, DOMAIN and SKILL (q, status, cursor, limit). New selections must be ACTIVE and type-checked; archived links stay readable (D1) |
-| Max 5 | DOMAIN + SKILL ≤ 5, counting kept relations. Enforced in the picker and by the server with 422 (D4) |
-| Completion | One service (`src/lib/profile/completion.ts`) with 10 frozen groups. `/session` no longer returns the placeholder `0` |
-| Avatar | Multipart upload stores bytes privately with a sidecar owner record under an opaque `asset_<hex>` id; the profile stores only that id. Served by `/media/assets/:id` to sessions only. No migration (D3) |
-| Lifecycle | S06 keeps the profile DRAFT and never sets `onboarding_completed_at`. `current_step` becomes PRIVACY once the D2 fields are saved |
-| Skip | None. The header action is omitted; the action column keeps its width (D5) |
-| Shell | `OnboardingShell` gains a done-step disc (`#2a3b24`, SVG check) and a fixed action column. S05 is unchanged |
+| Legal | `GET /legal/current`: per type, the latest effective, non-retired document. `/legal/{kind}/{version}` serves text from `LEGAL_CONTENT_DIR`; dev servers fall back to marked non-production fixtures, production has no fallback (404 = release blocker) |
+| Consent | `GET /me/consents`, `POST /me/consents/accept`. Idempotency store with the key scoped to the actor; UNIQUE-backed deduplication; 201 new / 200 existing; server timestamp; `CONSENT_ACCEPTED` audit |
+| Visibility | `GET/PUT /me/visibility`, own profile only; `PROFILE_DISCOVERY` NETWORK_ONLY / PRIVATE; the override is stored only when it departs from the default; `PROFILE_VISIBILITY_CHANGED` audit on real changes |
+| Media | `/media/assets/:id`: owner always; others only for the current avatar with discovery NETWORK_ONLY or wider; otherwise 404 (D5 closes the S06 bypass) |
+| UI | One switch, one acknowledgement with links to both current documents, read-only card preview, "Quay lại", "Xong, vào HUB" → `/onboarding/complete`. No skip (D6), no Future purposes (D3), lede emphasis without asterisks (D7) |
+| Lifecycle | S07 never sets ACTIVE or `onboarding_completed_at`; S08 owns completion |
+| Bug found by the DB tests | Legal state first matched acceptances by version string, so an old Terms acceptance could count when its version string equalled the current Privacy version. It now matches by document id |
 
 ## 4. Files
 - **API/domain:**
-  - `src/lib/{profile,vocabulary,media}/*`
-  - `src/app/api/v1/me/profile/{route,completion/route,avatar/route}.ts`
-  - `src/app/api/v1/vocabularies/[type]/route.ts`
-  - `src/app/media/assets/[id]/route.ts`
-  - Edited: `session/route.ts`, `lib/onboarding/state.ts`, and `lib/api/client.ts` (FormData)
-- **UI:**
-  - `onboarding/profile/{page,profile-form}.tsx`, `profile.module.css`
-  - `components/shell/onboarding-shell.*`
+  - `src/lib/{legal/legal,legal/content,audit/audit,profile/visibility}.ts`
+  - Routes: `api/v1/legal/current`, `api/v1/me/consents{,/accept}`, `api/v1/me/visibility`, `app/legal/[kind]/[version]`
+  - `media/assets/[id]` (authorisation)
+  - `lib/api/error-codes.ts` plus its contract test
+- **UI:** `onboarding/privacy/{page,privacy-form}.tsx`, `privacy.module.css`
 - **Tests:**
-  - `profile.db-test.ts` (19), `avatar-storage.test.ts` (4), `wf01-s06-onboarding-profile.spec.ts` (23)
-  - `shell-routes`: S06 marked as guarded
-  - `api-contract`: `/me/profile` and `/vocabularies` removed from the not-implemented list
-- **Config/fixtures:**
-  - `.env.example` (`MEDIA_STORAGE_DIR`, `MEDIA_AVATAR_MAX_BYTES`)
-  - `.gitignore` (`.data/`)
-  - `tests/visual/fixtures/wf01-s06-qa-vocabulary.sql` (QA only, D6)
+  - `legal.db-test.ts` (14)
+  - `wf01-s07-onboarding-privacy.spec.ts` (21)
+  - `shell-routes`: S07 marked as guarded
+- **Content/config:** `content/legal-fixtures/*` (marked non-production), `.env.example` (`LEGAL_CONTENT_DIR`)
 - **Migrations / production data:** **none**
 
-## 5. Pixel QA (1440×900 DPR1)
-The typography contract passes. Text colours asserted within ±3: title, lede, label, input, selected and unselected chips, caption, Back and CTA.
+## 5. Security / privacy QA (Playwright 21/21, DB 14/14)
+Covered:
+- guest → `/auth` and 401 on all S07 APIs;
+- current documents from the server, with content links working and fixtures marked;
+- versions never asserted as literals;
+- one checkbox → two records;
+- no acceptance → no progression;
+- triple submit → 2 accept calls and 2 records;
+- idempotent replay and duplicate-safe re-accept (one audit event);
+- stale version → 409;
+- race A (Privacy fails, retry, Terms not duplicated), race B (V2 published while S07 is open → reload, V2 required), race C (revisit, nothing re-sent);
+- default NETWORK_ONLY; OFF → PRIVATE override; ON removes it;
+- audit events for both mutation types; unknown group or level → 422;
+- no cross-profile write; DTOs without contact data or metadata;
+- avatar: owner 200 / member 200 → 404 after PRIVATE / guest 404;
+- no skip, no Future purpose;
+- D7 emphasis;
+- keyboard/a11y; computed text colours;
+- zero console errors.
 
-**Outside-text diff by segment:**
-- header, discs, connectors and canvas: all 0;
-- card-upper: 6 px (0.007%);
-- card-lower: 503 px (0.081%).
+## 6. Pixel QA (1440×900 DPR1)
+The typography contract passes. Outside-text diff by segment:
+- header and canvas: 0;
+- card-upper (title, lede, discovery option): 26 px (0.013%);
+- card-lower (preview, divider, footer): 75 px (0.035%).
 
-**Control geometry** (upload button and the four inputs): every box sits exactly at the baseline position + dy.
+The discovery option, preview card, Back button and CTA all sit exactly at the baseline position + dy.
 
-**Classification:** Structural 0 / Major 0 / Component 0. The differences are all intentional or raster noise:
+**Classification:** Structural 0 / Major 0 / Component 0.
 
 | Class | What differs |
 |---|---|
-| INTENTIONAL-CONTRACT | Skip link not rendered (D5) |
-| INTENTIONAL-COMPOSITION | The baseline is a viewport scrolled 65px, with the card drawn over the header band. The runtime card sits under the header, so it is compared on a full-page capture at dy +65 |
-| INTENTIONAL-TYPOGRAPHY-MIGRATION | The lede wraps to two lines (+28px below it); stepper discs 2–3 shift +6/+9px |
-| INTENTIONAL-ICON-RENDERING | SVG check marks instead of a glyph |
-| INTENTIONAL-DATA-FIXTURE | Chip labels come from the QA fixture (D6) |
-| RASTER-NOISE | The baseline puts control edges on half pixels; only those edge rows are excluded, and the boxes are asserted within 1px instead |
+| INTENTIONAL-LEGAL-REQUIREMENT | Acknowledgement block and links (D1); skip omitted (D6); two copy clauses omitted because they would misstate D2 visibility ("Thẻ này Google tìm thấy được", "người chưa đăng nhập thấy đúng ngần này") |
+| INTENTIONAL-P0-SCOPE | Investor, challenge-owner and recruitment toggles (reference y 300–620) |
+| INTENTIONAL-COMPOSITION | The baseline is a scrolled viewport with the card over the header, and the stepper is hidden under the card, so the stepper is not compared |
+| INTENTIONAL-TYPOGRAPHY-MIGRATION | Text glyphs, including the 13px preview caption and chips |
+| RASTER-NOISE | Half-pixel box edges; the boxes are asserted within 1px instead |
 
-**Screen-local values** (single-screen evidence): 13px labels, 14px input values, 48px inputs, chip geometry.
-
-## 6. Validation
+## 7. Validation
 | Gate | Result |
 |---|---|
 | Format / Lint / Typecheck | PASS |
-| Unit / DB | 114 / 155 |
+| Unit / DB | 115 / 169 |
 | Build | PASS |
-| S06 Playwright | 23 / 23 (22 functional + pixel) |
-| S01–S05 regression | PASS. Segments unchanged: S01 0/0/0/0/1; S02 0/0/0/14/3; S03 71/247/97; S04 1, 1/3; S05 193/245 |
-| Full Playwright | 215 passed (192 + 23); 24 screen runs skipped by design |
-| Auth/RBAC suites | PASS (inside the full run) |
+| S01–S06 regression | PASS. Segments unchanged: S01 0/0/0/0/1; S02 0/0/0/14/3; S03 71/247/97; S04 1, 1/3; S05 193/245; S06 6/503 |
+| Full Playwright | 236 passed (215 + 21); 24 screen runs skipped by design |
 | `design-reference/**` | untouched |
 
-## 7. Notes for review
-1. The error and placeholder copy (validation, avatar, region placeholder) has no approved bitmap and needs design copy review.
-2. The seeded demo avatar ids (`asset_demo_*`) point at no stored file, so those personas count AVATAR as incomplete (e.g. Demo Member scores 90%).
-3. `/media/assets/:id` serves any signed-in session. Visibility rules for avatars belong to WF01-S07/WF02.
-4. The QA vocabulary stays in the dev database after a run (deterministic ids, `qa_fixture` metadata).
+## 8. Notes for review
+1. **Release blocker `PRODUCTION_LEGAL_CONTENT_REQUIRED`.** Real Terms and Privacy text and versions must be supplied through `LEGAL_CONTENT_DIR` plus `legal_documents` rows.
+2. **Region vs D2.** The approved copy and preview include region ("tỉnh"); D2's field list does not. The preview is owner-only; confirm before building the `/profiles/{id}` projection.
+3. **Copy review.** The acknowledgement sentence and the error/stale messages have no approved bitmap.
+4. **Seed.** The newcomer and ops personas have `default_level = PRIVATE` and pending has PUBLIC, so the pixel test sets NETWORK_ONLY explicitly. The PUBLIC seed value is displayed as ON and is not offered.
 
-## 8. Git
-- Branch: `main`; start HEAD `8d31b7e`
-- Implementation commit: `01f6573` feat(wf01-s06): onboarding profile, completion service, private avatars
+## 9. Git
+- Branch: `main`; start HEAD `250d263`
+- Implementation commit: `8167942` feat(wf01-s07): privacy and visibility with versioned legal acceptance
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `2093836`
@@ -94,5 +99,5 @@ The typography contract passes. Text colours asserted within ±3: title, lede, l
 
 ## Related
 - [DECISION_LOG.md](../decisions/DECISION_LOG.md) — decision records
-- [WF01_S06_PROFILE_FIELD_CONTRACT.md](WF01_S06_PROFILE_FIELD_CONTRACT.md) — approved field contract
+- [WF01_S07_PRIVACY_CONSENT_CONTRACT.md](WF01_S07_PRIVACY_CONSENT_CONTRACT.md) — approved contract
 - [P0_STATUS.md](P0_STATUS.md) — overall P0 state

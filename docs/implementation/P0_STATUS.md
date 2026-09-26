@@ -8,7 +8,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: IN PROGRESS — 6 / 8 screens CLOSED (75%).**
+**M1 — WF01 Identity & Onboarding: IN PROGRESS — 7 / 8 screens CLOSED (87.5%).**
 
 | Screen | State |
 |---|---|
@@ -18,7 +18,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S04 Auth Errors | CLOSED / PASS (BLOCKED copy neutralised: no email promise) — BLOCKED/SESSION_EXPIRED component pixel PASS; GENERIC = DESIGN-GAP-GENERIC (PO review); DEC-WF01-S04-D1..D8 ([report](reports/WF01-S04_auth-errors.md), [mapping](WF01_S04_STATE_BOARD_MAPPING.md)) |
 | WF01-S05 Onboarding Purpose | CLOSED / PASS — P0 intent allowlist (4 codes, no investor), skip keeps intent NULL, server guard; investor option = INTENTIONAL-P0-SCOPE; DEC-WF01-S05-D1..D6 ([report](reports/WF01-S05_onboarding-purpose.md), [contract](WF01_S05_INTENT_CONTRACT_GAP.md)) |
 | WF01-S06 Onboarding Profile | CLOSED / PASS — six fields; DOMAIN+SKILL picker (max 5); private avatar storage; one completion service for `/session`, `/me/profile`, `/me/profile/completion`; DEC-WF01-S06-D1..D6 ([report](reports/WF01-S06_onboarding-profile.md), [contract](WF01_S06_PROFILE_FIELD_CONTRACT.md)) |
-| WF01-S07 … S08 | Not started; routes remain M0-T03 placeholders |
+| WF01-S07 Privacy & Visibility | CLOSED / PASS — one acknowledgement → two versioned ConsentRecords; PROFILE_DISCOVERY (NETWORK_ONLY/PRIVATE); avatar visibility enforced at `/media/assets/:id`; Future purposes and skip omitted; DEC-WF01-S07-D1..D8 ([report](reports/WF01-S07_privacy-visibility.md), [contract](WF01_S07_PRIVACY_CONSENT_CONTRACT.md)) |
+| WF01-S08 Onboarding Complete | Not started; route remains an M0-T03 placeholder |
 
 ## Completed (committed)
 
@@ -50,6 +51,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S04 | Auth Errors: allowlisted public reason, blocked / session expired / generic |
 | WF01-S05 | Onboarding Purpose: `GET /me/onboarding`, `PUT /me/onboarding/intent`, onboarding header shell |
 | WF01-S06 | Onboarding Profile: `GET/PATCH /me/profile`, `/me/profile/completion`, `/me/profile/avatar`, `/vocabularies/{type}`, `/media/assets/:id` |
+| WF01-S07 | Privacy & Visibility: `/legal/current`, `/legal/{kind}/{version}`, `/me/consents`, `/me/consents/accept`, `/me/visibility`, audit writer |
 
 ## Not yet built (M0)
 
@@ -80,11 +82,12 @@ No product pixel pass has been claimed for any screen.
 | Provisional idempotency policy, incl. lenient missing header | [IDEMPOTENCY_STORE_P0.md](IDEMPOTENCY_STORE_P0.md) |
 | Classification of blocking gaps B1–B5 | [P0_DECISIONS_REQUIRED.md](P0_DECISIONS_REQUIRED.md) |
 | Deferred pre-UAT/deployment items, incl. rate limiting, email delivery, error logging | [M0 completion report §16](M0_FOUNDATION_COMPLETION_REPORT.md) |
+| **Release blocker** `PRODUCTION_LEGAL_CONTENT_REQUIRED`: real Terms/Privacy text and versions (local uses marked fixtures) | [WF01_S07_PRIVACY_CONSENT_CONTRACT.md](WF01_S07_PRIVACY_CONSENT_CONTRACT.md) |
 | Pixel QA reference configuration gaps (11 screens) | [M0-T11 report](reports/M0-T11_manifest-pixel-qa-foundation.md) |
 
 ## Next task
 
-WF01-S07 Privacy & Visibility — awaiting explicit authorization. Not started.
+WF01-S08 Onboarding Complete — awaiting explicit authorization. Not started.
 
 ## Related
 
