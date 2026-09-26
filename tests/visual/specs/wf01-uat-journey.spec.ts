@@ -1,0 +1,452 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type BrowserContext,
+  type Page,
+} from '@playwright/test'
+
+import { requestMagicLink } from '../../../src/lib/auth/magic-link'
+import { hashToken } from '../../../src/lib/auth/tokens'
+import { closePool, query } from '../../../src/lib/db/client'
+import { REPO_ROOT } from '../pixel-qa/paths'
+
+/**
+ * WF01-COMPLETION-AUDIT — happy-path UAT across S01 → S08 as ONE journey per
+ * scenario (docs/implementation/WF01_UAT_MATRIX.md). The "mail" step reads the
+ * link the way the inbox would receive it: requestMagicLink() returns the raw
+ * token only to its caller, never to storage.
+ *
+ * Two tests are marked test.fail(): they encode frozen P0 requirements the
+ * audit found NOT implemented (GAP-ROSTER, GAP-ANALYTICS-REG). They pass while
+ * the gap exists and start failing once it is closed, so the marker must then
+ * be removed.
+ */
+
+const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-s06-qa-vocabulary.sql')
+const REGION = '20000000-0000-0000-0000-000000000002'
+
+let consoleErrors: string[] = []
+
+test.beforeAll(async () => {
+  await query(readFileSync(FIXTURE, 'utf8'))
+})
+
+test.beforeEach(async ({ page }) => {
+  consoleErrors = []
+  page.on('console', (m) => {
+    // Spent/expired links (400/409) and the stale-version race (409) are scenarios.
+    if (m.type() === 'error' && !/status of (400|409|422)/.test(m.text()))
+      consoleErrors.push(m.text())
+  })
+  page.on('pageerror', (e) => consoleErrors.push(e.message))
+  await page.context().clearCookies()
+})
+
+test.afterEach(() => {
+  expect(consoleErrors, 'browser console errors').toEqual([])
+})
+
+test.afterAll(async () => {
+  await closePool()
+})
+
+const newEmail = (tag: string) =>
+  `uat-${tag}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@example.test`
+
+/** S01 → S02 in the UI, then open the emailed link (S03). Returns the raw token. */
+async function signInThroughUi(page: Page, email: string): Promise<string> {
+  await page.goto('/auth', { waitUntil: 'networkidle' })
+  await page.getByLabel('Email', { exact: true }).fill(email)
+  await page.getByRole('button', { name: 'Gửi link đăng nhập' }).click()
+  await expect(page).toHaveURL('/auth/check-email')
+  await expect(page.getByRole('button', { name: /Gửi lại/ })).toBeVisible()
+  // The inbox: the newest link for this address (a resend retires older ones).
+  const { token } = await requestMagicLink(email, null)
+  await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
+  return token
+}
+
+async function accountId(email: string): Promise<string> {
+  const [row] = await query<{ id: string }>(
+    'SELECT id::text FROM user_accounts WHERE email_normalized = $1',
+    [email],
+  )
+  return row!.id
+}
+
+async function state(id: string) {
+  const [row] = await query<{
+    profiles: number
+    status: string | null
+    completed_at: Date | null
+    intent: string | null
+    consents: number
+    activated: number
+    consent_audits: number
+    completed_events: number
+  }>(
+    `SELECT (SELECT count(*)::int FROM individual_profiles WHERE account_id = $1) AS profiles,
+            (SELECT status::text FROM individual_profiles WHERE account_id = $1) AS status,
+            (SELECT onboarding_completed_at FROM individual_profiles WHERE account_id = $1) AS completed_at,
+            (SELECT primary_intent FROM individual_profiles WHERE account_id = $1) AS intent,
+            (SELECT count(*)::int FROM consent_records WHERE account_id = $1) AS consents,
+            (SELECT count(*)::int FROM audit_events WHERE actor_account_id = $1 AND action = 'PROFILE_ACTIVATED') AS activated,
+            (SELECT count(*)::int FROM audit_events WHERE actor_account_id = $1 AND action = 'CONSENT_ACCEPTED') AS consent_audits,
+            (SELECT count(*)::int FROM analytics_events WHERE account_id = $1 AND event_name = 'onboarding_completed') AS completed_events`,
+    [id],
+  )
+  return row!
+}
+
+async function s05(page: Page, choice: 'SUBMIT_SOLUTION' | 'skip') {
+  await expect(page).toHaveURL('/onboarding/purpose')
+  if (choice === 'skip') {
+    await page.getByRole('link', { name: 'Bỏ qua, làm sau' }).click()
+  } else {
+    await page.locator(`[data-intent="${choice}"]`).click()
+    await page.getByRole('button', { name: 'Tiếp tục' }).click()
+  }
+  await expect(page).toHaveURL('/onboarding/profile')
+}
+
+async function s06(page: Page) {
+  await page.getByLabel('Họ và tên').fill('Người Dùng UAT')
+  await page.getByLabel('Chức danh hiện tại').fill('Kỹ sư')
+  await page.getByLabel('Tỉnh / thành phố').selectOption(REGION)
+  await page.getByRole('checkbox', { name: 'Logistics', exact: true }).check({ force: true })
+  await page.getByRole('button', { name: 'Tiếp tục' }).click()
+  await expect(page).toHaveURL('/onboarding/privacy')
+}
+
+async function s07(page: Page) {
+  await page.getByRole('checkbox').check()
+  await page.getByRole('button', { name: 'Xong, vào HUB' }).click()
+  await expect(page).toHaveURL('/onboarding/complete')
+}
+
+async function s08(page: Page) {
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Xong. Giờ làm gì?')
+  await expect(page.getByRole('link', { name: 'Vào 1hub.network' })).toBeVisible()
+}
+
+async function sessionOf(request: APIRequestContext) {
+  return (await request.get('/api/v1/session')).json()
+}
+
+async function logout(context: BrowserContext) {
+  const response = await context.request.post('/api/v1/auth/logout')
+  expect(response.status()).toBe(204)
+  await context.clearCookies()
+}
+
+test.describe('WF01 UAT journeys', () => {
+  test('UAT-01 new member completes S01 → S08 as one journey', async ({ page, context }) => {
+    const email = newEmail('01')
+    const token = await signInThroughUi(page, email)
+    // S03: session established, token stripped from the URL.
+    await expect(page).toHaveURL('/onboarding/purpose')
+    expect(page.url()).not.toContain(token)
+    const cookie = (await context.cookies()).find((c) => c.httpOnly)
+    expect(cookie, 'HttpOnly session cookie').toBeTruthy()
+    const id = await accountId(email)
+    expect(await state(id)).toMatchObject({ profiles: 0 })
+
+    await s05(page, 'SUBMIT_SOLUTION')
+    expect(await state(id)).toMatchObject({
+      profiles: 1,
+      status: 'DRAFT',
+      intent: 'SUBMIT_SOLUTION',
+    })
+    await s06(page)
+    expect(await state(id)).toMatchObject({ profiles: 1, status: 'DRAFT', completed_at: null })
+    await s07(page)
+    await s08(page)
+
+    const final = await state(id)
+    expect(final).toMatchObject({
+      profiles: 1,
+      status: 'ACTIVE',
+      consents: 2,
+      activated: 1,
+      consent_audits: 2,
+      completed_events: 1,
+    })
+    expect(final.completed_at).toBeInstanceOf(Date)
+    const session = await sessionOf(page.request)
+    const completion = await (await page.request.get('/api/v1/me/profile/completion')).json()
+    expect(session.profile).toMatchObject({
+      status: 'ACTIVE',
+      onboarding_completed: true,
+      completion_percent: completion.percent,
+    })
+    await expect(page.locator('[data-completion]')).toContainText(`${completion.percent}%`)
+
+    // The raw token is stored nowhere: only its hash, and never in audit or analytics.
+    const leaks = await query<{ n: number }>(
+      `SELECT (SELECT count(*) FROM auth_magic_link_requests WHERE token_hash = $1)::int
+            + (SELECT count(*) FROM audit_events
+                WHERE coalesce(before_data::text, '') || coalesce(after_data::text, '') LIKE '%' || $1 || '%')::int
+            + (SELECT count(*) FROM analytics_events WHERE properties::text LIKE '%' || $1 || '%')::int AS n`,
+      [token],
+    )
+    expect(leaks[0]!.n).toBe(0)
+    const hashed = await query('SELECT 1 FROM auth_magic_link_requests WHERE token_hash = $1', [
+      hashToken(token),
+    ])
+    expect(hashed).toHaveLength(1)
+
+    await page.getByRole('link', { name: 'Vào 1hub.network' }).click()
+    await expect(page).toHaveURL('/me')
+  })
+
+  test('UAT-02 skipping the intent still completes (intent NULL)', async ({ page }) => {
+    const email = newEmail('02')
+    await signInThroughUi(page, email)
+    await s05(page, 'skip')
+    await s06(page)
+    await s07(page)
+    await s08(page)
+    expect(await state(await accountId(email))).toMatchObject({ status: 'ACTIVE', intent: null })
+  })
+
+  test('UAT-03a resuming partial onboarding is safe: data kept, continuing completes', async ({
+    page,
+    context,
+  }) => {
+    const email = newEmail('03')
+    await signInThroughUi(page, email)
+    await s05(page, 'SUBMIT_SOLUTION')
+    await s06(page)
+    await logout(context)
+    await page.goto('/onboarding/privacy')
+    await expect(page).toHaveURL('/auth')
+
+    await signInThroughUi(page, email)
+    await expect(page).toHaveURL(/\/onboarding\//)
+    // Wherever it lands, earlier answers are kept and the journey finishes.
+    await page.goto('/onboarding/profile', { waitUntil: 'networkidle' })
+    await expect(page.getByLabel('Họ và tên')).toHaveValue('Người Dùng UAT')
+    await page.goto('/onboarding/privacy', { waitUntil: 'networkidle' })
+    await s07(page)
+    await s08(page)
+    expect(await state(await accountId(email))).toMatchObject({ profiles: 1, status: 'ACTIVE' })
+  })
+
+  test('UAT-03b DEFECT-RESUME: sign-in resumes at the first incomplete step', async ({
+    page,
+    context,
+  }) => {
+    // WF01 state rule: "Existing account + incomplete onboarding resumes at first
+    // incomplete onboarding step". consume always answers next_step PURPOSE.
+    test.fail(true, 'DEFECT-RESUME (P2): consume next_step is always PURPOSE')
+    const email = newEmail('03b')
+    await signInThroughUi(page, email)
+    await s05(page, 'SUBMIT_SOLUTION')
+    await s06(page)
+    await logout(context)
+    await signInThroughUi(page, email)
+    await expect(page).toHaveURL('/onboarding/privacy', { timeout: 5_000 })
+  })
+
+  test('UAT-04 expired and used links never sign in; invalid goes to S04', async ({ page }) => {
+    const email = newEmail('04')
+    const { token } = await requestMagicLink(email, null)
+    await query(
+      `UPDATE auth_magic_link_requests SET expires_at = now() - interval '1 second' WHERE token_hash = $1`,
+      [hashToken(token)],
+    )
+    await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
+    await expect(page).toHaveURL('/auth/callback?status=expired')
+    expect((await sessionOf(page.request)).authenticated).toBe(false)
+
+    const fresh = (await requestMagicLink(email, null)).token
+    await page.goto(`/auth/callback?token=${encodeURIComponent(fresh)}`)
+    await expect(page).toHaveURL('/onboarding/purpose')
+    await page.context().clearCookies()
+    await page.goto(`/auth/callback?token=${encodeURIComponent(fresh)}`)
+    await expect(page).toHaveURL('/auth/callback?status=used')
+    expect((await sessionOf(page.request)).authenticated).toBe(false)
+
+    await page.goto('/auth/callback?token=not-a-token')
+    await expect(page).toHaveURL('/auth/error')
+  })
+
+  test('UAT-05 required profile fields block S06 and nothing is saved', async ({ page }) => {
+    const email = newEmail('05')
+    await signInThroughUi(page, email)
+    await s05(page, 'skip')
+    await page.getByRole('button', { name: 'Tiếp tục' }).click()
+    await expect(page.getByText('Vui lòng nhập họ và tên.')).toBeVisible()
+    await expect(page).toHaveURL('/onboarding/profile')
+    const [row] = await query<{ display_name: string | null }>(
+      'SELECT display_name FROM individual_profiles WHERE account_id = $1',
+      [await accountId(email)],
+    )
+    expect(row?.display_name ?? null).toBeNull()
+  })
+
+  test('UAT-06 a legal version published mid-journey must be accepted in its new version', async ({
+    page,
+  }) => {
+    const email = newEmail('06')
+    await signInThroughUi(page, email)
+    await s05(page, 'skip')
+    await s06(page)
+    const version = `uat-${Date.now()}`
+    await query(
+      `INSERT INTO legal_documents (document_type, version, title, content_uri, effective_at)
+       VALUES ('PRIVACY_DATA_PROCESSING', $1, 'Chính sách quyền riêng tư', $2, now())`,
+      [version, `/legal/privacy/${version}`],
+    )
+    try {
+      await page.getByRole('checkbox').check()
+      await page.getByRole('button', { name: 'Xong, vào HUB' }).click()
+      await expect(page.getByText(/Văn bản vừa được cập nhật/)).toBeVisible()
+      await s07(page)
+      await s08(page)
+      const [row] = await query<{ version: string }>(
+        `SELECT d.version FROM consent_records c JOIN legal_documents d ON d.id = c.legal_document_id
+          WHERE c.account_id = $1 AND c.consent_type = 'PRIVACY_DATA_PROCESSING'`,
+        [await accountId(email)],
+      )
+      expect(row!.version).toBe(version)
+    } finally {
+      await query('UPDATE legal_documents SET retired_at = now() WHERE version = $1', [version])
+    }
+  })
+
+  test('UAT-07 PRIVATE discovery hides the avatar from other members; NETWORK_ONLY shows it', async ({
+    page,
+    browser,
+  }) => {
+    const email = newEmail('07')
+    await signInThroughUi(page, email)
+    await s05(page, 'skip')
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    )
+    const upload = page.waitForResponse((r) => r.url().endsWith('/api/v1/me/profile/avatar'))
+    await page
+      .locator('input[type="file"]')
+      .setInputFiles({ name: 'a.png', mimeType: 'image/png', buffer: png })
+    const { url } = await (await upload).json()
+    await s06(page)
+    await page.getByRole('switch').click() // OFF → PRIVATE
+    await s07(page)
+    await s08(page)
+
+    const other = await browser.newContext({ baseURL: test.info().project.use.baseURL })
+    await other.request.post('/dev/login', { data: { email: newEmail('07-other') } })
+    expect((await other.request.get(url)).status()).toBe(404)
+    await page.request.put('/api/v1/me/visibility', {
+      data: { groups: [{ group_code: 'PROFILE_DISCOVERY', level: 'NETWORK_ONLY' }] },
+    })
+    expect((await other.request.get(url)).status()).toBe(200)
+    const guest = await browser.newContext({ baseURL: test.info().project.use.baseURL })
+    expect((await guest.request.get(url)).status()).toBe(404)
+    await other.close()
+    await guest.close()
+  })
+
+  test('UAT-08 a profile below 80% completes onboarding', async ({ page }) => {
+    const email = newEmail('08')
+    await signInThroughUi(page, email)
+    await s05(page, 'skip')
+    await s06(page)
+    await s07(page)
+    await s08(page)
+    const completion = await (await page.request.get('/api/v1/me/profile/completion')).json()
+    expect(completion.percent).toBeLessThan(80)
+    expect(completion.groups.map((g: { code: string }) => g.code)).not.toContain('NETWORK_CONTEXT')
+    expect(await state(await accountId(email))).toMatchObject({ status: 'ACTIVE' })
+  })
+
+  test('UAT-09 retried and concurrent completion make one transition', async ({ page }) => {
+    const email = newEmail('09')
+    await signInThroughUi(page, email)
+    await s05(page, 'skip')
+    await s06(page)
+    await s07(page)
+    await s08(page)
+    const id = await accountId(email)
+    const before = await state(id)
+    const responses = await Promise.all(
+      Array.from({ length: 4 }, () => page.request.post('/api/v1/me/onboarding/complete')),
+    )
+    expect(responses.map((r) => r.status())).toEqual([200, 200, 200, 200])
+    await page.reload({ waitUntil: 'networkidle' })
+    await s08(page)
+    const after = await state(id)
+    expect(after).toEqual(before)
+  })
+
+  test('UAT-10 a returning completed member goes to /me; nothing is rewritten', async ({
+    page,
+    context,
+  }) => {
+    const email = newEmail('10')
+    await signInThroughUi(page, email)
+    await s05(page, 'SUBMIT_SOLUTION')
+    await s06(page)
+    await s07(page)
+    await s08(page)
+    const id = await accountId(email)
+    const before = await state(id)
+    await logout(context)
+
+    await signInThroughUi(page, email)
+    await expect(page).toHaveURL('/me')
+    for (const step of ['/onboarding/purpose', '/onboarding/profile', '/onboarding/privacy']) {
+      await page.goto(step)
+      await expect(page).toHaveURL('/me')
+    }
+    await page.goto('/onboarding/complete', { waitUntil: 'networkidle' })
+    await s08(page)
+    expect(await state(id)).toEqual(before)
+  })
+})
+
+test.describe('WF01 frozen P0 requirements found missing by the audit', () => {
+  test('GAP-ROSTER: a known launch-roster email gets its confirmed membership at sign-up', async ({
+    page,
+  }) => {
+    // Freeze D2: known roster → normalized email match → ACTIVE membership attached.
+    test.fail(true, 'GAP-ROSTER (P1, go-live): membership_bootstrap is never consumed')
+    const email = newEmail('roster')
+    const [org] = await query<{ id: string }>(
+      `SELECT id::text FROM organizations WHERE type = 'CHAPTER' ORDER BY slug LIMIT 1`,
+    )
+    await query(
+      `INSERT INTO membership_bootstrap (email_normalized, organization_id, membership_state, source_batch)
+       VALUES ($1, $2, 'ACTIVE', 'uat-audit')`,
+      [email, org!.id],
+    )
+    await signInThroughUi(page, email)
+    await expect(page).toHaveURL('/onboarding/purpose')
+    const rows = await query(
+      `SELECT 1 FROM community_memberships m JOIN individual_profiles p ON p.id = m.profile_id
+         JOIN user_accounts a ON a.id = p.account_id
+        WHERE a.email_normalized = $1 AND m.state = 'ACTIVE'`,
+      [email],
+    )
+    expect(rows).toHaveLength(1)
+  })
+
+  test('GAP-ANALYTICS-REG: account creation records account_created', async ({ page }) => {
+    // API 05 §10 P0 minimum events; Data SOT: "at minimum registration".
+    test.fail(true, 'GAP-ANALYTICS-REG (P1, go-live): no account_created event is written')
+    const email = newEmail('reg')
+    await signInThroughUi(page, email)
+    await expect(page).toHaveURL('/onboarding/purpose')
+    const rows = await query(
+      `SELECT 1 FROM analytics_events WHERE account_id = $1 AND event_name = 'account_created'`,
+      [await accountId(email)],
+    )
+    expect(rows).toHaveLength(1)
+  })
+})
