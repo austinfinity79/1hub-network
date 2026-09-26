@@ -30,6 +30,8 @@ import type { ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
  */
 
 const CHANGE_EVENT = 'hub:wf04-demo-store'
+/** Snapshot when the browser refuses to read the store (distinct from "nothing stored"). */
+const READ_FAILED = '\u0000wf04-demo-read-failed'
 const noSubscription = () => () => {}
 
 type DemoStore = {
@@ -43,6 +45,10 @@ type DemoStore = {
   flash: string | null
   /** False during the server render and hydration: the session state is not read yet. */
   ready: boolean
+  /** The browser refused to read the session store; nothing can be shown or saved safely. */
+  readFailed: boolean
+  /** Reads the session store again (after a read failure). */
+  reread: () => void
   setFlash: (message: string | null) => void
 }
 
@@ -77,7 +83,7 @@ export function ProgrammeDemoProvider({
     try {
       return storage()?.getItem(key) ?? memory.current
     } catch {
-      return memory.current
+      return READ_FAILED
     }
   }, [key])
   // The server (and hydration) always renders the fixture state.
@@ -87,7 +93,8 @@ export function ProgrammeDemoProvider({
     () => true,
     () => false,
   )
-  const state = useMemo(() => parseDemoState(raw), [raw])
+  const readFailed = raw === READ_FAILED
+  const state = useMemo(() => parseDemoState(readFailed ? null : raw), [raw, readFailed])
 
   const commit = useCallback(
     (next: DemoSessionState | null): boolean => {
@@ -111,8 +118,17 @@ export function ProgrammeDemoProvider({
     () => ({
       state,
       allowance,
-      save: (detail, created) => commit(withProgramme(parseDemoState(read()), detail, created)),
-      remove: (id) => commit(withoutProgramme(parseDemoState(read()), id)),
+      // Never write over a store that could not be read.
+      save: (detail, created) => {
+        const current = read()
+        return (
+          current !== READ_FAILED && commit(withProgramme(parseDemoState(current), detail, created))
+        )
+      },
+      remove: (id) => {
+        const current = read()
+        return current !== READ_FAILED && commit(withoutProgramme(parseDemoState(current), id))
+      },
       reset: () => {
         commit(null)
         memory.current = null
@@ -122,8 +138,10 @@ export function ProgrammeDemoProvider({
       flash,
       setFlash,
       ready,
+      readFailed,
+      reread: () => window.dispatchEvent(new Event(CHANGE_EVENT)),
     }),
-    [state, allowance, commit, read, flash, ready],
+    [state, allowance, commit, read, flash, ready, readFailed],
   )
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>

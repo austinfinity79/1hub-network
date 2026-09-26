@@ -150,10 +150,9 @@ test.describe('WF04-S05 registration configuration', () => {
     expect(text).not.toMatch(
       /mở đăng ký|đóng đăng ký|hạn đăng ký|điều kiện|chấm|duyệt hồ sơ|tải lên|thanh toán|vé/i,
     )
+    // DEC-WF04-S06-D3: next opens the operating-team step.
     const next = page.locator('[data-setup-next]')
-    await expect(next).toBeDisabled()
-    await expect(next).toHaveAttribute('title', 'Chưa có trong phiên bản này')
-    await expect(page.locator('a[href*="/setup/team"]')).toHaveCount(0)
+    await expect(next).toHaveAttribute('href', `/demo/programmes/${PROGRAMME}/setup/team`)
     await page.reload({ waitUntil: 'networkidle' })
     expect(await chips(page)).toEqual(['Đội', 'Startup'])
     await page.locator('[data-nav="registration-back"]').click()

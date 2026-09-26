@@ -28,7 +28,7 @@ import { SetupScreen, type Apply } from './setup-screen'
  * questions, saved to the actor's session copy; the profile-reuse rule of
  * SOT §12 stated; application counts shown read-only. No registration or
  * application engine, no open / close switch, period or eligibility rule.
- * Back → events; "Tiếp theo" waits for WF04-S06.
+ * Back → events; "Tiếp theo" opens WF04-S06 (DEC-WF04-S06-D3).
  */
 
 const COPY = {
@@ -73,7 +73,7 @@ export function ProgrammeRegistration({
       step="registration"
       screen="WF04-S05"
       back={{ href: demoRoutes.setup(id, 'events'), label: COPY.back, nav: 'registration-back' }}
-      next={null}
+      next={demoRoutes.setup(id, 'team')}
     >
       {({ detail, apply }) => <RegistrationBody detail={detail} apply={apply} />}
     </SetupScreen>

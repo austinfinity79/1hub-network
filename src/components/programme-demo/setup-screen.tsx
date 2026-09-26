@@ -20,8 +20,9 @@ import { SetupStepper } from './setup-stepper'
 /**
  * WF04 — the frame of every setup step (DEC-WF04-S03-D2/D3, DEC-WF04-S04-D3):
  * resolves the programme (the server fixture or the actor's session draft,
- * inside the actor's allowance), shows loading / not-found, the header with
- * back / next, the stepper, and a save error with "Thử lại". `apply` stores
+ * inside the actor's allowance), shows loading / not-found / a read error with
+ * "Thử lại" (DEC-WF04-S06-D2), the header with back / next, the stepper, and a
+ * save error with "Thử lại". `apply` stores
  * one atomic edit of the session copy; nothing reaches the server.
  */
 
@@ -35,6 +36,8 @@ const COPY = {
   missing: 'Không tìm thấy chương trình này trong bản demo của bạn.',
   toList: 'Về danh sách',
   failed: 'Chưa lưu được thay đổi. Vui lòng thử lại.',
+  readFailedTitle: 'Chưa tải được dữ liệu',
+  readFailed: 'Trình duyệt chưa cho đọc dữ liệu demo của phiên này.',
   retry: 'Thử lại',
 } as const
 
@@ -56,7 +59,7 @@ export function SetupScreen({
   next: string | null
   children: (context: { detail: ProgrammeDemoDetailDTO; apply: Apply }) => ReactNode
 }) {
-  const { state, allowance, ready, save } = useProgrammeDemo()
+  const { state, allowance, ready, save, readFailed, reread } = useProgrammeDemo()
   const [retry, setRetry] = useState<ProgrammeDemoDetailDTO | null>(null)
   // A successful retry re-mounts the step body, so the editor that failed closes.
   const [epoch, setEpoch] = useState(0)
@@ -68,6 +71,26 @@ export function SetupScreen({
           <p className="type-body-sm" data-state="setup-loading">
             {COPY.loading}
           </p>
+        </DemoPage>
+      </div>
+    )
+  }
+
+  if (readFailed) {
+    return (
+      <div data-screen={screen}>
+        <DemoPage title={COPY.readFailedTitle}>
+          <div className={styles.missing} role="alert" data-state="setup-read-failed">
+            <p className="type-body-sm">{COPY.readFailed}</p>
+            <button
+              type="button"
+              className={`weight-medium ${buttons.secondary}`}
+              onClick={reread}
+              data-action="reread"
+            >
+              {COPY.retry}
+            </button>
+          </div>
         </DemoPage>
       </div>
     )

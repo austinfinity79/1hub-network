@@ -40,3 +40,8 @@ export const APPLICATION_STATUS_LABEL: Record<ApplicationStatus, string> = {
   RESUBMITTED: 'Đã nộp lại',
   CLOSED: 'Đã đóng',
 }
+
+/** Programme team display labels (architecture 03 §4: designed, not active; grants nothing). */
+export const TEAM_ROLE_LABEL: Record<string, string> = {
+  PROGRAMME_ORGANIZER: 'Người tổ chức chương trình',
+}
