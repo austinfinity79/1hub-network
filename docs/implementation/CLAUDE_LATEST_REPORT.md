@@ -1,45 +1,73 @@
 # Claude Task Report
 
 ## Task
-WF03 DECISION FREEZE G1–G15 + INSTALL PROCESS-P0-ACCELERATED-SAFE-V2
+WF03-T00 — OPS FOUNDATION (PRECHECK + IMPLEMENT). Process: PROCESS-P0-ACCELERATED-SAFE-V2, full preflight (new shell + security foundation).
 
 ## Status
-**DONE**, documentation only. Two new conflict records (C1, C2) were found and recorded, not silently resolved.
+**DONE — LOCAL REVIEW.** The contract-freeze precheck found every T00 input frozen (G9, G11, G15, AUTHZ-01B, API §8.1 / §11.1), so no STOP was needed.
 
 ## Scope completed
-- DEC-WF03-G1..G15 recorded; OPEN-WF03-G1..G15 → CLOSED.
-- WF03 executable scope = 8 screens; S05 = FUTURE / WF04.
-- Plan, happy paths and audit header updated.
-- Process installed: `PROCESS_P0_ACCELERATED_SAFE_V2.md`, CLAUDE.md §14, DECISION_LOG process record.
+| Item | Where |
+|---|---|
+| OpsShell (family "Quản trị HUB tổng") + client nav | `src/components/shell/ops-shell.*`, `ops-nav.tsx`, `src/lib/ops/nav.ts` |
+| /ops page guard + organization context | `src/lib/ops/guard.ts`; layouts `(ops)/ops/network`, `(ops)/ops/org/[orgId]` |
+| Scope helper (exact RoleAssignment scope, no inheritance) | `src/lib/ops/scope.ts` |
+| Canonical hierarchy reader | `src/lib/ops/hierarchy.ts` |
+| Read model + `GET /api/v1/ops/organizations` | `src/lib/ops/organizations.ts`, `src/app/api/v1/ops/organizations/route.ts` |
+| C2 fixture | `seed_p0_deterministic.sql` row `d000…03` HUB → Chapter 02 PARENT |
 
-## Files changed
-`CLAUDE.md`, `docs/decisions/DECISION_LOG.md`, `docs/implementation/{PROCESS_P0_ACCELERATED_SAFE_V2.md, P0_STATUS.md, CLAUDE_LATEST_REPORT.md, WF03_PRE_IMPLEMENTATION_AUDIT.md, WF03_SCREEN_IMPLEMENTATION_PLAN.md, WF03_HAPPY_PATH_PLAN.md}`, `docs/implementation/reports/WF03_decision-freeze.md`.
+S01–S09 not implemented; placeholders now render inside OpsShell for authorized actors.
 
 ## Decision delta
-| Item | Result |
-|---|---|
-| G1–G15 | Frozen as given |
-| G5 boundary | P0 implements only PENDING → ACTIVE / REJECTED, because API §8.3 grants the other transitions only "where policy allows" and no policy is frozen |
-| G14 reuse mapping | None (no existing code means the same action); no relationship audit code frozen |
-| **OPEN-WF03-C1** | The task text calls S08 "Organization Edit" and puts profile editing there; the frozen contract has S06 = profile (`org:manage`) and S08 = relationships (`org:manage_relationship`). Blocks S06 and S08 only |
-| **OPEN-WF03-C2** | `chapter-02` `parent_id` = HUB but no ACTIVE PARENT relationship (dev DB checked); reported per G9, not reconciled |
+DEC-WF03-C2 (OPEN-WF03-C2 CLOSED); DEC-WF03-T00-D1..D4 (shell family, context/breadcrumb, guard/API semantics, migration 009 not required). C1 stays OPEN (S06/S08 only).
 
 ## Business / Data / API delta
-None to runtime. Product decisions changed by the process update: **NONE**.
+- New endpoint `GET /ops/organizations` (API §8.1).
+- DTO: `{id, slug, name, type, status, parent, active_members}`.
+- Seed gains 1 relationship row.
+- No new entity, lifecycle or capability.
 
-## Migration · Security · Tests · Pixel
-No migration, no seed change, no runtime code; `design-reference/final` untouched. Tests not run (docs only). Last green `160b620`.
+## Migration
+None. Migration 009 is not required for T00 (D4).
+
+## Security
+Scope comes only from ACTIVE RoleAssignments:
+- A leader sees exactly Chapter 01.
+- Child, sibling, parent and malformed ids get the same 404.
+- Membership, leadership "Chủ tịch" and HUB_MEMBER grant nothing (403 from the API, 404 on pages).
+- Query/header context spoofing is ignored.
+- The DTO carries no person, role, audit or metadata data.
+- Logs contain 0 email/token/cookie lines.
+
+## Tests
+| Gate | Result |
+|---|---|
+| Format / lint / typecheck / build | PASS |
+| Unit | 157 passed |
+| DB | 288 passed (+7 ops) |
+| T00 Playwright | 7/7 |
+| Targeted regression | 134 passed / 24 skipped: shell-routes, console-health, auth-session, authz-session, api-contract, pixel-qa harness + screens, WF01 UAT journey, WF02-T00, WF02-S01, M0-ENTRY-01, SEC-OBS-01 |
+| Restart (app + PostgreSQL) | Leader / admin / member results identical |
+
+## Pixel
+The OpsShell sidebar was compared against the WF03-S08 reference: head, active item (dy −116), body and edge all 0 outside text. Structural 0, major 0, component 0. Glyphs are masked (typography migration). Harness baseline `shell-ops-placeholder.png` was replaced by `shell-public-placeholder.png`, because `/ops` is now guarded. `design-reference/final` is untouched.
+
+## Regression
+- WF01 and WF02 (protected): targeted PASS.
+- Test updates follow frozen contracts:
+  - the M0-T05 surface test now treats `/ops/organizations` as implemented;
+  - console health expects the safe 404s for sample ops routes.
 
 ## Blocking gaps
-C1 (S06/S08 only). T00 is not blocked.
+0 for T00. C1 still blocks S06/S08.
 
 ## Git
-- Branch: `main`; start HEAD `e5dacef`
-- Implementation commit: none
+- Branch: `main`; start HEAD `f330d2a` (checked again before the commit)
+- Implementation commit: `47d506f`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-WF03-T00 — OPS FOUNDATION (PRECHECK + IMPLEMENT). Decide C1 before S06/S08.
+WF03-S01 — ORGANIZATION SELECTOR / LIST

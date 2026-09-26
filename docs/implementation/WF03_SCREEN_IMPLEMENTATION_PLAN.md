@@ -1,12 +1,12 @@
 # WF03 Screen Implementation Plan
 
-**Status: DECISIONS FROZEN** ([DEC-WF03-G1..G15](../decisions/DECISION_LOG.md#dec-wf03-g1)). Executable P0 scope = **8 screens**; WF03-S05 = FUTURE / WF04 (G12). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). Open conflicts: [C1](../decisions/DECISION_LOG.md#open-wf03-c1) (S06/S08 mapping; blocks S06 and S08 only) and [C2](../decisions/DECISION_LOG.md#open-wf03-c2) (hierarchy fixture).
+**Status: DECISIONS FROZEN** ([DEC-WF03-G1..G15](../decisions/DECISION_LOG.md#dec-wf03-g1)). Executable P0 scope = **8 screens**; WF03-S05 = FUTURE / WF04 (G12). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). Open conflict: [C1](../decisions/DECISION_LOG.md#open-wf03-c1) (S06/S08 mapping; blocks S06 and S08 only). C2 closed by [DEC-WF03-C2](../decisions/DECISION_LOG.md#dec-wf03-c2).
 
 ## Order
 | # | Task | Route | Inputs | Scope | Path | State |
 |---|---|---|---|---|---|---|
-| 0 | WF03-T00 Ops foundation | `/ops/*` shell + guard | G9, G11, G15 (C2 fixture) | OpsShell (G15); server guard session → `require(capability, ORGANIZATION orgId)`; hierarchy service over `organization_relationships` (G9); org read model; `GET /ops/organizations` | Full preflight (new shell + security foundation) | **READY** |
-| 1 | S01 Organization selector / list | `/ops/network` | T00, G11 | Orgs in exact scope (PLATFORM_ADMIN per contract); HUB / CHAPTER / CLB | Fast path | after T00 |
+| 0 | WF03-T00 Ops foundation | `/ops/*` shell + guard | G9, G11, G15 (C2 fixture) | OpsShell (G15); server guard session → `require(capability, ORGANIZATION orgId)`; hierarchy service over `organization_relationships` (G9); org read model; `GET /ops/organizations` | Full preflight (new shell + security foundation) | **DONE** ([report](reports/WF03-T00_ops-foundation.md)) |
+| 1 | S01 Organization selector / list | `/ops/network` | T00, G11 | Orgs in exact scope (PLATFORM_ADMIN per contract); HUB / CHAPTER / CLB | Fast path | **NEXT** |
 | 2 | S02 Organization dashboard | `/ops/org/:orgId` | T00, G1 | Canonical counters only, each with a named query | Fast path | after T00 |
 | 3 | S03 Organization members | `/ops/org/:orgId/members` | T00, G3, G4 | Safe projection + membership state/provenance + leadership facts | Full preflight (privacy DTO) | after T00 |
 | 4 | S04 Membership review / leadership ops | `/ops/org/:orgId/members/:profileId` | S03, G5, G6, G14 | PENDING → ACTIVE / REJECTED; leadership create/end per API; audit | Full preflight (mutations + audit) | after S03 |
