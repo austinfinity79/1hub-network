@@ -57,6 +57,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-REMEDIATION-02 | GAP-ANALYTICS-REG: `account_created` in the account-insert transaction; race-safe first sign-in |
 | WF01-REMEDIATION-03A/03 | DEFECT-RESUME: migration 005, S05 SKIP action, one onboarding resolver for sign-in, `/session`, guards |
 | WF01 FINAL RE-AUDIT | Fresh install/DB/restart, full suite, UAT gate: GREEN WITH DOCUMENTED LIMITATIONS — WF01 CLOSED |
+| WF02 PRE-IMPLEMENTATION AUDIT | 7 screens audited; HUMAN DECISION REQUIRED (H1–H13); no code change |
 
 ## Not yet built (M0)
 
@@ -96,7 +97,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02 — Member Profile & Network Core — awaiting explicit authorization.
+WF02 pre-implementation audit done: **HUMAN DECISION REQUIRED** (13 decisions, H6/H7 block S05/S06) — see [audit](WF02_PRE_IMPLEMENTATION_AUDIT.md) and [plan](WF02_SCREEN_IMPLEMENTATION_PLAN.md). Next: WF02 decision freeze (H1–H13), then WF02 foundation (member shell + `/me/network` read model) → WF02-S01.
 
 ## Related
 
