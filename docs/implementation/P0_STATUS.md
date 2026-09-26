@@ -108,7 +108,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S06 preflight: HUMAN DECISION REQUIRED — 8 open decisions (OPEN-WF02-S06 G1–G8: P12 shape, invitee accept/decline, resend, permission column/actions, owner row, terminal states, audit, member view); migration 008 (P12) proposed, not created. [Audit](WF02_S06_PREFLIGHT_AUDIT.md). WF02 6 / 7 screens.
+WF02-S06: BLOCKED before migration 008 — [OPEN-WF02-S06-G9](../decisions/DECISION_LOG.md#open-wf02-s06-g9): the deterministic seed has a profile-targeted `PENDING_APPROVAL` member row that cannot map to the frozen G1 shape. DEC-WF02-S06-G1..G8 recorded. WF02 6 / 7 screens.
 
 ## Related
 

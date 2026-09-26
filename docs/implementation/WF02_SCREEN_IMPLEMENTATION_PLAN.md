@@ -12,7 +12,7 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | 4 | S02 Profile edit | `/me/profile/edit` | Canonical IndividualProfile fields + Experience / Development goal / Current need (H1, H2). Activity panel Future | 0 | **DONE** (WF02-S02) |
 | 5 | S07 Settings | `/me/settings` | Sessions list, revoke one, revoke all, deletion request (H8) | 0; P13 deletion subset; revoke-all API addendum | **DONE** (WF02-S07; migration 006) |
 | 6 | S05 Project/Startup | `/projects/new`, `/projects/:id/edit` | Five fields; owner-only write; review button omitted (H6, H7) | 0; venture taxonomy migration ([DEC-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#dec-wf02-venture-taxonomy-storage)) | **DONE** (WF02-S05; migration 007; DEC-WF02-S05-G1..G5) |
-| 7 | S06 Team | `/projects/:id/team` | Owner manages invitations/roles; members read-only; no permission tiers (H7) | 6; P12 | **HUMAN DECISION REQUIRED** (OPEN-WF02-S06 G1–G8; then migration 008 = P12) — [preflight](WF02_S06_PREFLIGHT_AUDIT.md) |
+| 7 | S06 Team | `/projects/:id/team` | Owner manages invitations/roles; members read-only; no permission tiers (H7) | 6; P12 | **BLOCKED** (G1–G8 frozen; OPEN-WF02-S06-G9: seeded `PENDING_APPROVAL` member row cannot map; migration 008 not created) — [preflight](WF02_S06_PREFLIGHT_AUDIT.md) |
 
 **Order unchanged:** Foundation → S01 → S03 → S04 → S02 → S07 → S05 → S06. No decision creates a new dependency. After the foundation, S03, S04, S02 and S07 are independent of each other.
 
