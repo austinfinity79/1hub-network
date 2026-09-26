@@ -23,9 +23,11 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S05 Onboarding Purpose | CLOSED / PASS — P0 intent allowlist (4 codes, no investor), skip keeps intent NULL, server guard; investor option = INTENTIONAL-P0-SCOPE; DEC-WF01-S05-D1..D6 ([report](reports/WF01-S05_onboarding-purpose.md), [contract](WF01_S05_INTENT_CONTRACT_GAP.md)) |
 | WF01-S06 Onboarding Profile | CLOSED / PASS — six fields; DOMAIN+SKILL picker (max 5); private avatar storage; one completion service for `/session`, `/me/profile`, `/me/profile/completion`; DEC-WF01-S06-D1..D6 ([report](reports/WF01-S06_onboarding-profile.md), [contract](WF01_S06_PROFILE_FIELD_CONTRACT.md)) |
 | WF01-S07 Privacy & Visibility | CLOSED / PASS — one acknowledgement → two versioned ConsentRecords; PROFILE_DISCOVERY (NETWORK_ONLY/PRIVATE); avatar visibility enforced at `/media/assets/:id`; Future purposes and skip omitted; DEC-WF01-S07-D1..D8 ([report](reports/WF01-S07_privacy-visibility.md), [contract](WF01_S07_PRIVACY_CONSENT_CONTRACT.md)) |
-| WF01-S08 Onboarding Complete | CLOSED / PASS — completion on entry (idempotent, atomic DRAFT → ACTIVE); activation minimum only; `PROFILE_ACTIVATED` audit and `onboarding_completed` analytics once; Challenge/Project/Chapter cards deferred; exit → `/me`; DEC-WF01-S08-D1..D8 ([report](reports/WF01-S08_onboarding-complete.md), [contract](WF01_S08_COMPLETION_CONTRACT.md)) |
+| WF01-S08 Onboarding Complete | CLOSED / PASS — completion on entry (idempotent, atomic DRAFT → ACTIVE); activation minimum only; `PROFILE_ACTIVATED` audit and `onboarding_completed` analytics once; Challenge/Chapter cards deferred (card 02 Project rendered since DEC-P0-SHELL-D6); exit → `/me`; DEC-WF01-S08-D1..D8 ([report](reports/WF01-S08_onboarding-complete.md), [contract](WF01_S08_COMPLETION_CONTRACT.md)) |
 
 **INTERNAL ALPHA — P0-LANDING: DONE** — `/` is the public homepage (DEC-P0-LANDING-D1..D3; [report](P0_LANDING_IMPLEMENTATION_REPORT.md)). WF01–WF03 remain PROTECTED / CLOSED / GREEN.
+
+**INTERNAL ALPHA — P0-SHELL: DONE (GREEN)** — one integrated app shell: wordmark → `/`, member ↔ ops entries, editor back links, venture editor ↔ team, project-creation entry (S08 card 02 + S01 link), inert items with stated reasons, auth entry responsive below 1024px (DEC-P0-SHELL-D1..D7; [audit](P0_SHELL_NAVIGATION_AUDIT.md), [report](reports/P0-SHELL_navigation-audit.md)). Navigation matrix: 274 links × 5 personas, 0 dead. Only placeholder left: `/ops/org/:id/programmes` (FUTURE / WF04, unlinked).
 
 ## Completed (committed)
 
@@ -115,7 +117,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-INTERNAL ALPHA — P0-SHELL Integrated Product Shell + Navigation Audit. WF04 is not started automatically.
+WF04 — Programme / Challenge Demo: PRE-IMPLEMENTATION AUDIT FIRST. WF04 is not started automatically.
 
 ## Related
 
