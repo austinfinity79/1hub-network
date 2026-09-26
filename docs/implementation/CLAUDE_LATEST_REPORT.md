@@ -1,53 +1,98 @@
 # Claude Task Report
 
 ## Task
-WF03-S07 — EVENT MANAGEMENT. Process: PROCESS-P0-ACCELERATED-SAFE-V2, focused full preflight → implement if safe.
+WF03-S07 — EVENT MANAGEMENT. Process: PROCESS-P0-ACCELERATED-SAFE-V2, focused full preflight → implement.
 
 ## Status
-**BLOCKED** at preflight, on the task's own stop rule: "If lifecycle is not fully defined: STOP. Do NOT guess."
+**DONE — LOCAL REVIEW.** The earlier preflight had found the lifecycle undefined and recorded OPEN-WF03-S07-EVENT-LIFECYCLE (E1–E5). In this task the human decided E1–E5 (the recommended options), and the gap is closed as DEC-WF03-S07-EVENT-LIFECYCLE.
 
-- No runtime code, no migration, no seed change, no push.
-
-## Preflight
-| Area | Result |
+## Lifecycle (frozen)
+| Operation | Rule |
 |---|---|
-| Business | Create / edit / publish / cancel are named by SCR S07, G10 and API §8.6. Registration and WF04 content are out (G2, G10) |
-| Data | Canonical `events` table with `organization_id` NOT NULL, nullable `programme_id`, `event_status` = the SOT chain, unique `slug`. Fixture: one PUBLISHED standalone event and one DRAFT event linked to a programme (left as is, G10) |
-| API | §8.6: `GET/POST /ops/organizations/{orgId}/events`, `GET /events/{id}`, `PATCH /ops/events/{id}`, `POST …/publish`, `POST …/cancel`. Idempotency on create / publish (§2.3) |
-| RBAC | `event:manage` (HUB_COMMUNITY_LEADER exact org, PLATFORM_ADMIN) |
-| Audit | EVENT_CREATED / _UPDATED / _PUBLISHED / _CANCELLED frozen (G14); none emitted yet |
-| Design | S07 bitmap = WF04 collage, not authority (G2); build from WF03 primitives |
-| **Lifecycle** | **Not fully defined → OPEN-WF03-S07-EVENT-LIFECYCLE** |
+| Create | → DRAFT; `programme_id` NULL; organization from the path |
+| Edit | DRAFT and PUBLISHED; name, summary, starts_at, ends_at, location_text |
+| Publish | DRAFT → PUBLISHED, needing name + starts_at + ends_at, ends ≥ starts, start not in the past |
+| Cancel | PUBLISHED or LIVE → CANCELLED; terminal; never deleted |
+| LIVE / ENDED / ARCHIVED | No operation in P0 |
 
-## Open gap (E1–E5)
-Full record: [OPEN-WF03-S07-EVENT-LIFECYCLE](../../decisions/DECISION_LOG.md#open-wf03-s07-event-lifecycle).
-
-| Gap | Question | Recommended |
-|---|---|---|
-| E1 | Cancel from which states? The literal chain allows it after LIVE only | PUBLISHED and LIVE → CANCELLED; DRAFT not cancellable |
-| E2 | PATCH in which states / with which fields? | DRAFT and PUBLISHED, all editable fields; other states read-only |
-| E3 | Publish required validation? | name + starts_at + ends_at, ends ≥ starts, start not in the past |
-| E4 | Field set (`timezone` / `registration_enabled` in the example vs the `summary` / `location_text` columns) | name, summary, starts_at, ends_at, location_text; `programme_id` null only; `registration_enabled` rejected; `timezone` only `Asia/Ho_Chi_Minh`, not stored |
-| E5 | LIVE / ENDED in P0? | Not in P0: no operation and no time derivation; show the stored status |
+## Scope completed
+- **API:**
+  - `GET` / `POST /api/v1/ops/organizations/{orgId}/events`
+  - `GET /api/v1/events/{eventId}` (manager view)
+  - `PATCH /api/v1/ops/events/{eventId}`
+  - `POST …/publish`, `POST …/cancel`
+  - Idempotency-Key on create and publish
+- **Page:** `/ops/org/:orgId/events` inside OpsShell. It replaces the placeholder.
+  - Events table.
+  - Side card: create form, or the selected event with edit / publish / confirmed cancel.
+- **States:** empty list, validation error per field, API error + retry, stale-action refresh, success notices, read-only.
 
 ## Files changed
-- `docs/decisions/DECISION_LOG.md` (OPEN-WF03-S07-EVENT-LIFECYCLE)
-- `docs/implementation/WF03_SCREEN_IMPLEMENTATION_PLAN.md`, `P0_STATUS.md`, `CLAUDE_LATEST_REPORT.md`
-- This report
+- `src/lib/ops/events.ts`, `event-rules.ts`, `event-request.ts`, `events.db-test.ts`
+- `src/lib/audit/audit.ts` (+4 codes)
+- API routes:
+  - `src/app/api/v1/ops/organizations/[orgId]/events/route.ts`
+  - `src/app/api/v1/ops/events/[eventId]/{route.ts, publish/route.ts, cancel/route.ts}`
+  - `src/app/api/v1/events/[eventId]/route.ts`
+- `src/app/(ops)/ops/org/[orgId]/events/{page.tsx, event-management.tsx, events.module.css}`
+- `tests/visual/specs/wf03-s07-event-management.spec.ts`, `tests/visual/pixel-qa/qa-screens.ts`, `tests/visual/specs/api-contract.spec.ts` (comment)
+- Docs: DECISION_LOG (DEC-WF03-S07-EVENT-LIFECYCLE, DEC-WF03-S07-D1..D4), WF03 plan, P0_STATUS, CLAUDE_LATEST_REPORT
+
+## Migration
+None. The canonical `events` table and `event_status` enum are reused; seed unchanged.
+
+## Security (14 cases PASS)
+| # | Case | Result |
+|---|---|---|
+| 1 | Guest → /auth; API 401 | PASS |
+| 2 | Member → page 404, list 403, event-id routes 404 | PASS |
+| 3 | ACTIVE membership → no authority | PASS |
+| 4 | Leadership title → no authority | PASS |
+| 5 | Foreign organization → 404 page / 403 API | PASS |
+| 6 | Spoofed `?orgId`, headers and body `organization_id` → no effect or 422 | PASS |
+| 7 | Non-null `programme_id` on create → 422; in PATCH → 422 | PASS |
+| 8 | Re-publish, cancel of DRAFT / ENDED, edit when CANCELLED / LIVE → 409 | PASS |
+| 9 | Publish enforced server-side (foreign / member → 404) | PASS |
+| 10 | Cancel enforced server-side (foreign / member → 404) | PASS |
+| 11 | Another organization's event cannot be edited (404, unchanged) | PASS |
+| 12 | Failed mutations leave the rows and the audit log unchanged | PASS |
+| 13 | DTO has exactly 11 keys; no PII, programme or metadata | PASS |
+| 14 | Audit holds ids + status + field names only; server log has 0 email / token / cookie lines | PASS |
 
 ## Tests
-Not run: no code changed. The last full gates were green at `a9659a8` (WF03-S08).
+| Gate | Result |
+|---|---|
+| Format / lint / typecheck / build | PASS |
+| Unit | 157 passed |
+| DB (full) | 334 passed (+7 S07: create, lifecycle, cancel, PATCH refusals, concurrency, scope) |
+| S07 Playwright | 7/7 (security, UI lifecycle, error / retry / stale, idempotency, visual) |
+| Targeted regression | 101 passed: T00, S01–S04, S06, S07, S08, api-contract, shell-routes, console-health |
+
+## Visual QA (1440×900 DPR1)
+The S07 bitmap is a WF04 collage: no pixel equivalence is claimed, and the delta is INTENTIONAL-CONTRACT (G2). The screen's primitives were compared with the approved ADM21 (S08) reference.
+
+| Segment | Outside-text drift |
+|---|---|
+| Header + pinned button | 32 px (edge AA) |
+| Table card top | 0 |
+| Form card top | 2 px |
+
+- Button geometry is asserted at 931,32 / 122 px, and the side card at 1071,23.
+- Structural / major / component: 0 / 0 / 0.
 
 ## Blocking gaps
-1: OPEN-WF03-S07-EVENT-LIFECYCLE (E1–E5). It blocks S07 only; S09 is independent.
+0. Contract notes (non-blocking):
+- 409 reuses `MEMBERSHIP_INVALID_TRANSITION`.
+- Idempotency-Key is optional (provisional leniency).
+- The public event projection belongs to S09.
 
 ## Git
-- Branch: `main`; start HEAD `a9659a8` (checked again before the commit)
-- Implementation commit: none (preflight only)
+- Branch: `main`; start HEAD `e71fb29` (checked again before each commit)
+- Implementation commit: `35a8fe4`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-Decide E1–E5 (RESOLVE OPEN-WF03-S07-EVENT-LIFECYCLE) → WF03-S07 fast path. WF03-S09 — PUBLIC ORGANIZATION PAGE may run first.
+WF03-S09 — PUBLIC ORGANIZATION PAGE.

@@ -12,7 +12,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **M2 — WF02 Member Profile & Network: CLOSED** — 7/7 screens; completion audit **GREEN** ([audit](WF02_COMPLETION_AUDIT.md), [UAT matrix](WF02_UAT_MATRIX.md), [report](reports/WF02_completion-audit.md)). P0/P1/P2 = 0; UAT 7/7 cases (12 HC steps + 6 alternates) on the dev DB, a fresh install and after a restart. Release inputs: outbound email provider (magic link + team invitations), PO copy review for S05/S06, plus the WF01 inputs.
 
-**M3 — WF03 HUB / Chapter / CLB Operations: DECISIONS FROZEN, NOT STARTED** — DEC-WF03-G1..G15; executable scope **8 screens** (S01–S04, S06–S09); S05 = FUTURE / WF04. C1 closed (DEC-WF03-C1: S06 = profile / detail, S08 = relationships); S08 relationship contract frozen (DEC-WF03-S08-RELATIONSHIP-CONTRACT; migration 009); C2 closed (DEC-WF03-C2). **WF03-T00 ops foundation DONE** (OpsShell, /ops guard, org context, hierarchy reader, `GET /ops/organizations`). **WF03-S01 organization selector / list, WF03-S02 organization dashboard, WF03-S03 organization members, WF03-S04 membership review / leadership ops, WF03-S06 organization profile / detail and WF03-S08 organization settings / relationships DONE.** WF03: 6 / 8 executable screens. **WF03-S07 BLOCKED** on OPEN-WF03-S07-EVENT-LIFECYCLE (E1–E5: cancel source states, edit states, publish validation, field set, LIVE / ENDED). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). WF01 and WF02 are PROTECTED / CLOSED / GREEN.
+**M3 — WF03 HUB / Chapter / CLB Operations: DECISIONS FROZEN, NOT STARTED** — DEC-WF03-G1..G15; executable scope **8 screens** (S01–S04, S06–S09); S05 = FUTURE / WF04. C1 closed (DEC-WF03-C1: S06 = profile / detail, S08 = relationships); S08 relationship contract frozen (DEC-WF03-S08-RELATIONSHIP-CONTRACT; migration 009); C2 closed (DEC-WF03-C2). **WF03-T00 ops foundation DONE** (OpsShell, /ops guard, org context, hierarchy reader, `GET /ops/organizations`). **WF03-S01 organization selector / list, WF03-S02 organization dashboard, WF03-S03 organization members, WF03-S04 membership review / leadership ops, WF03-S06 organization profile / detail, WF03-S07 standalone event management (DEC-WF03-S07-EVENT-LIFECYCLE) and WF03-S08 organization settings / relationships DONE.** WF03: 7 / 8 executable screens. Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). WF01 and WF02 are PROTECTED / CLOSED / GREEN.
 
 | Screen | State |
 |---|---|
@@ -113,7 +113,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-Human decision on OPEN-WF03-S07-EVENT-LIFECYCLE E1–E5, then WF03-S07 — EVENT MANAGEMENT (fast path). S09 may go first. [Plan](WF03_SCREEN_IMPLEMENTATION_PLAN.md).
+WF03-S09 — PUBLIC ORGANIZATION PAGE (DEC-WF03-G13). [Plan](WF03_SCREEN_IMPLEMENTATION_PLAN.md).
 
 ## Related
 
