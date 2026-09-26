@@ -108,7 +108,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S06 — Venture Team / Members (`/projects/:id/team`; needs P12 migration). WF02 6 / 7 screens.
+WF02-S06 preflight: HUMAN DECISION REQUIRED — 8 open decisions (OPEN-WF02-S06 G1–G8: P12 shape, invitee accept/decline, resend, permission column/actions, owner row, terminal states, audit, member view); migration 008 (P12) proposed, not created. [Audit](WF02_S06_PREFLIGHT_AUDIT.md). WF02 6 / 7 screens.
 
 ## Related
 
