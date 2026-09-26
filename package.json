@@ -20,6 +20,7 @@
     "db:status": "node scripts/db.mjs status",
     "db:introspect": "node scripts/db.mjs introspect",
     "db:setup": "pnpm db:up && pnpm db:migrate && pnpm db:seed",
+    "roster:import": "node scripts/roster.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

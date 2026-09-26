@@ -1,6 +1,7 @@
 import { ApiError } from '@/lib/api/errors'
 import type { Executor } from '@/lib/db/client'
 import { query } from '@/lib/db/client'
+import { reconcileRoster } from '@/lib/roster/reconcile'
 
 import {
   AUTH_REQUEST_ID_PREFIX,
@@ -195,6 +196,16 @@ export async function consumeMagicLink(token: unknown): Promise<ConsumeResult> {
     )
     accountId = created[0]!.id
     accountCreated = true
+  }
+
+  // Known launch-roster emails get their confirmed relationships (Freeze D2).
+  // Runs on every sign-in, so a roster imported after the account existed is
+  // picked up too; it is idempotent. A failure must not block sign-in: the
+  // next sign-in (or `pnpm roster:import`) retries. Nothing personal is logged.
+  try {
+    await reconcileRoster(accountId)
+  } catch (error) {
+    console.error('roster reconciliation failed', (error as { code?: string }).code ?? 'unknown')
   }
 
   // A fresh session token every time: this is the session-fixation defence.

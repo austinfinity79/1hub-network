@@ -1,0 +1,8 @@
+email,organization_slug,membership_state,leadership_role_label,source_batch
+roster-member@example.test,chapter-01,ACTIVE,,qa-roster-01
+roster-chapter-leader@example.test,chapter-01,ACTIVE,Chapter Leader,qa-roster-01
+roster-clb-leader@example.test,club-01,ACTIVE,CLB Leader,qa-roster-01
+  Roster-Member@Example.TEST ,chapter-01,ACTIVE,,qa-roster-01
+roster-member@example.test,chapter-02,ACTIVE,,qa-roster-01
+member@example.test,chapter-01,ACTIVE,,qa-roster-01
+pending@example.test,chapter-01,ACTIVE,,qa-roster-01

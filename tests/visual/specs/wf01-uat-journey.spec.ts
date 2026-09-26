@@ -20,10 +20,10 @@ import { REPO_ROOT } from '../pixel-qa/paths'
  * link the way the inbox would receive it: requestMagicLink() returns the raw
  * token only to its caller, never to storage.
  *
- * Two tests are marked test.fail(): they encode frozen P0 requirements the
- * audit found NOT implemented (GAP-ROSTER, GAP-ANALYTICS-REG). They pass while
- * the gap exists and start failing once it is closed, so the marker must then
- * be removed.
+ * test.fail() marks frozen requirements the audit found NOT implemented
+ * (GAP-ANALYTICS-REG, DEFECT-RESUME). Such a test passes while the gap exists
+ * and fails once it is closed, so the marker must then be removed — as done
+ * for UAT-11 when GAP-ROSTER was closed (WF01-REMEDIATION-01).
  */
 
 const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-s06-qa-vocabulary.sql')
@@ -411,30 +411,65 @@ test.describe('WF01 UAT journeys', () => {
   })
 })
 
-test.describe('WF01 frozen P0 requirements found missing by the audit', () => {
-  test('GAP-ROSTER: a known launch-roster email gets its confirmed membership at sign-up', async ({
+test.describe('WF01 frozen P0 requirements (audit follow-up)', () => {
+  test('UAT-11 launch-roster members get confirmed relationships at sign-up (GAP-ROSTER closed)', async ({
     page,
+    context,
   }) => {
-    // Freeze D2: known roster → normalized email match → ACTIVE membership attached.
-    test.fail(true, 'GAP-ROSTER (P1, go-live): membership_bootstrap is never consumed')
-    const email = newEmail('roster')
+    // Freeze D2: known roster → normalized email match → ACTIVE membership;
+    // leadership only when the roster row states it. Rows are inserted as the
+    // importer (pnpm roster:import) stores them.
+    const member = newEmail('roster-member')
+    const leader = newEmail('roster-leader')
     const [org] = await query<{ id: string }>(
-      `SELECT id::text FROM organizations WHERE type = 'CHAPTER' ORDER BY slug LIMIT 1`,
+      `SELECT id::text FROM organizations WHERE slug = 'chapter-01'`,
     )
     await query(
-      `INSERT INTO membership_bootstrap (email_normalized, organization_id, membership_state, source_batch)
-       VALUES ($1, $2, 'ACTIVE', 'uat-audit')`,
-      [email, org!.id],
+      `INSERT INTO membership_bootstrap
+         (email_normalized, organization_id, membership_state, leadership_role_label, source_batch)
+       VALUES ($1, $3, 'ACTIVE', NULL, 'uat-audit'), ($2, $3, 'ACTIVE', 'Chapter Leader', 'uat-audit')`,
+      [member, leader, org!.id],
     )
-    await signInThroughUi(page, email)
+    const relations = async (email: string) =>
+      query<{ kind: string; state: string; label: string | null }>(
+        `SELECT 'membership' AS kind, m.state::text AS state, NULL AS label
+           FROM community_memberships m JOIN individual_profiles p ON p.id = m.profile_id
+           JOIN user_accounts a ON a.id = p.account_id WHERE a.email_normalized = $1
+         UNION ALL
+         SELECT 'leadership', l.state::text, l.role_label
+           FROM leadership_records l JOIN individual_profiles p ON p.id = l.profile_id
+           JOIN user_accounts a ON a.id = p.account_id WHERE a.email_normalized = $1
+         ORDER BY 1`,
+        [email],
+      )
+
+    // Member: ACTIVE membership, no leadership, one profile; onboarding proceeds.
+    await signInThroughUi(page, member)
     await expect(page).toHaveURL('/onboarding/purpose')
-    const rows = await query(
-      `SELECT 1 FROM community_memberships m JOIN individual_profiles p ON p.id = m.profile_id
-         JOIN user_accounts a ON a.id = p.account_id
-        WHERE a.email_normalized = $1 AND m.state = 'ACTIVE'`,
-      [email],
-    )
-    expect(rows).toHaveLength(1)
+    expect(await relations(member)).toEqual([{ kind: 'membership', state: 'ACTIVE', label: null }])
+    const id = await accountId(member)
+    await s05(page, 'skip')
+    await s06(page)
+    await s07(page)
+    await s08(page)
+    expect(await state(id)).toMatchObject({ profiles: 1, status: 'ACTIVE' })
+    // Signing in again attaches nothing new.
+    await logout(context)
+    await signInThroughUi(page, member)
+    await expect(page).toHaveURL('/me')
+    expect(await relations(member)).toHaveLength(1)
+
+    // Leader: membership AND leadership, no permission-bearing role.
+    await logout(context)
+    await signInThroughUi(page, leader)
+    await expect(page).toHaveURL('/onboarding/purpose')
+    expect(await relations(leader)).toEqual([
+      { kind: 'leadership', state: 'ACTIVE', label: 'Chapter Leader' },
+      { kind: 'membership', state: 'ACTIVE', label: null },
+    ])
+    const session = await sessionOf(page.request)
+    expect(session.capabilities).toEqual([])
+    expect(session.managed_scopes).toEqual([])
   })
 
   test('GAP-ANALYTICS-REG: account creation records account_created', async ({ page }) => {

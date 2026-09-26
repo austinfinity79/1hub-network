@@ -1,0 +1,6 @@
+email,organization_slug,membership_state,leadership_role_label,source_batch
+not-an-email,chapter-01,ACTIVE,,qa-roster-bad
+ok@example.test,no-such-org,ACTIVE,,qa-roster-bad
+ok2@example.test,chapter-01,PENDING_APPROVAL,,qa-roster-bad
+ok3@example.test,chapter-01,ACTIVE,,bad batch!
+ok4@example.test,chapter-01,ACTIVE
