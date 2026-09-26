@@ -1,86 +1,50 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF02-S06 — Venture Team / Members (resolve G9, implement)
-- Status: **DONE — LOCAL REVIEW**. The final WF02 screen: WF02 is 7 / 7.
-- Mode: LOCAL REVIEW. WF03 and WF05 UI were not implemented. Nothing was pushed.
+- Task ID / name: WF02 COMPLETION AUDIT + HAPPY PATH UAT
+- Verdict: **GREEN — WF02 CLOSED**
+- Mode: LOCAL REVIEW. No WF03 work, no new WF02 feature, no product code change, no push.
 
-## 2. Decisions
-| Item | Result |
+## 2. Output
+| File | Content |
 |---|---|
-| G1–G8 | DEC-WF02-S06-G1..G8 (human approved, unchanged) |
-| G9 | DEC-WF02-S06-G9: repair the fixture; the migration never infers legacy meaning. OPEN-WF02-S06 → CLOSED; remaining human decisions: 0 |
-| D1–D3 | API shape, reused frozen error codes, UI (for review) |
-| Matrix §E | `venture:read` / `venture:team_manage` routes listed; accept/decline need no capability (recipient email match only) |
+| [WF02_COMPLETION_AUDIT.md](WF02_COMPLETION_AUDIT.md) | 12 audits, race re-test, pixel table, defects, release inputs |
+| [WF02_UAT_MATRIX.md](WF02_UAT_MATRIX.md) | HC-WF02-01..12 + ALT-01..06, PO review strings |
+| `tests/visual/specs/wf02-uat-journey.spec.ts` | One UI journey (magic link → S07) + 6 alternates, data checked after each step |
 
-## 3. Migration 008 (`008_p0_venture_team.sql`)
-- Guard: any `project_members` row that is not an open ACTIVE row aborts the whole transaction with a clear message; `PENDING_APPROVAL` is never mapped.
-- Enum `team_membership_state` = PENDING_CONFIRMATION, ACTIVE, LEFT, REMOVED, REJECTED; the `state` column is converted, and `record_state` is left untouched.
-- `profile_id` and `joined_at` become nullable. New columns: `invite_email_normalized`, `invited_by_profile_id`, `invited_at`, `updated_at`.
-- One CHECK per state (pending, active, left, removed, rejected) plus a normalised-email CHECK. Partial unique indexes on ACTIVE (project, profile) and PENDING (project, email).
-
-| Proof | Result |
-|---|---|
-| Fresh DB 001→008 + seed | PASS |
-| Rerun (migrate + seed) | 008 skipped; `project_members` md5 identical |
-| Upgrade 001→007 with the legacy fixture → 008 | **Aborts loudly**; no ledger row; column type unchanged |
-| Upgrade 001→007 with canonical ACTIVE rows → 008 | PASS; row values preserved |
-| CHECK / unique probes (14 cases) | All invalid shapes and duplicates rejected; valid shapes accepted |
-| Old migrations / design-reference | Untouched |
-
-## 4. Seed (G9)
-- The owner `'Founder'` member row is removed; the owner is `projects.owner_profile_id` only.
-- `…-0002` is now PENDING_CONFIRMATION: `profile_id NULL`, `leader@example.test`, inviter = owner, fixed `invited_at`, role `Contributor`. It is not auto-linked.
-- The seed stays deterministic and idempotent.
-- Only the disposable local dev DB (`localhost:55432`) was reset. No deployment, PRE-UAT or remote DB was touched.
-
-## 5. Behaviour
-| Area | Result |
-|---|---|
-| Invite | Owner only; email normalised; 201 PENDING_CONFIRMATION; no account lookup (no enumeration); the owner's own email → 422; duplicate / parallel duplicate → one row, others 409 |
-| Accept | Explicit; only the signed-in account whose email matches; PENDING → ACTIVE atomically (profile, `joined_at`, email cleared); repeated or concurrent accept → one row, one event; already-ACTIVE recipient → 409; another user → 404 |
-| Decline | PENDING → REJECTED, `ended_at`; idempotent; no membership |
-| Cancel / remove | Owner DELETE: PENDING or ACTIVE → REMOVED with `ended_at`; rows are never deleted; closed rows → 409 |
-| Role edit | Owner, ACTIVE rows only; display text ≤ 100; grants nothing (a member labelled "Owner" still gets 403) |
-| Owner protection | The owner has no row; legacy owner rows are hidden and give 404; `owner_profile_id` is never written |
-| Privacy (G8) | A member sees the owner and ACTIVE members only; no email, profile/account ids or metadata in the DTO |
-| Audit (G7) | 5 codes, only on real transitions; payload = `project_id` + state |
-| UI | Owner table + "Tuỳ chọn" menu (Sửa vai trò, Gỡ khỏi đội) + "Huỷ lời mời"; invite form that states that no email is sent; member read-only view; recipient panel (Nhận lời mời / Từ chối) |
-
-## 6. Tests / build
+## 3. Results
 | Gate | Result |
 |---|---|
-| Format / lint / typecheck / build | PASS |
+| Format / lint / typecheck | PASS |
 | Unit | 157 passed |
-| DB | 281 passed (+22 team, +1 enum); 3 clean reruns |
-| Playwright full | 358 passed, 24 skipped, 0 failed (WF01 specs incl. screen pixel, WF01 UAT, WF02 T00/S01–S07, M0-ENTRY-01, SEC-OBS-01, shell, console health) |
-| Restart proof | App + PostgreSQL restarted: owner DTO, member DTO and page rows identical; 0 email/token/cookie lines in logs; fixture removed |
+| DB | 281 passed |
+| Playwright full | 365 passed (358 + 7 UAT), 24 skipped, 0 failed |
+| UAT on a fresh PostgreSQL (001→008 + seed) | 7/7; after an app + PostgreSQL restart 7/7 again |
+| Fresh install | Ordered apply; rerun skipped 8/8; ledger sha = file sha; 001–007 unchanged; seed rerun: 16 tables identical |
+| Global invariants (SQL, before/after UAT) | All 0 / unchanged |
+| Server logs | 0 email / token / cookie lines |
+| Race re-test | 49 runs, ~200 concurrent scenarios, 0 failures; the earlier single failure was a test-ordering assumption (proved with two sessions), not a product defect |
+| Pixel | WF01 8/8 PASS; WF02 7/7: structural 0, major 0, component 0, raster S04 / S06 / S07 |
 
-## 7. Visual QA (1440×900 DPR1)
-| Segment | Outside-text drift |
-|---|---|
-| Editor header | 0 |
-| Team table | 16 px (raster) |
-| Note cards | 0 |
-| Full page (H12) | 0 unexpected below the reference |
+## 4. Defects
+- P0 / P1 / P2: **0**. Nothing was fixed; no product code changed.
+- P3: WF02-P3-01 (S05/S06 copy for PO review); WF02-P3-02 (`audit_events.created_at` is transaction-start time, recorded).
 
-Intentional: "Gửi lại" (P0-SCOPE, G3); "Đổi quyền" → "Tuỳ chọn" and pending "Huỷ lời mời" (CONTRACT, G4/G6); "Quyền" without tiers and owner "Tham gia từ" "—" (CONTRACT, G4/G5); "Ba mức quyền" card text (P0-SCOPE); history note copy (COPY).
+## 5. External / release inputs
+Outbound email provider (magic link + invitations); invitees need the shared team link; WF01 inputs (`PRODUCTION_LEGAL_CONTENT_REQUIRED`, roster data, production vocabulary); manual real-mailbox UAT.
 
-## 8. Deviations / notes
-- Harness: the shell evidence moved to `/ops/network` because no member placeholder is left. The baseline `shell-member-placeholder.png` was replaced by `shell-ops-placeholder.png`. Harness only; `design-reference/final` is untouched.
-- Flaky assertion fixed: the first final DB run had 1 intermittent failure in the accept-vs-cancel race test. It was not reproduced in 20+ reruns. Most likely cause: `audit_events.created_at` is the transaction start time, not commit order, so the test's order assumption was wrong. The assertion now compares event sets. Product behaviour is unchanged.
-- Added copy (invite note, menu labels, notes, recipient panel) awaits PO review (D3).
-- Blocking gaps: 0.
+## 6. Environments
+The dev DB was used by the regular suites. Two disposable PostgreSQL containers (port 55433) served the fresh-install and restart audits and were removed afterwards. No deployment, PRE-UAT or remote DB was touched.
 
-## 9. Git
-- Branch: `main`; start HEAD `755f2a7` (checked again before the commit)
-- Implementation commit: `4dc50b5`
+## 7. Git
+- Branch: `main`; start HEAD `0b4095f`
+- Implementation commit: the UAT spec + audit docs commit
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
-- Push status: **PASS** — pushed on the user's "push & commit" (fast-forward `d54cc8d..ca5463f`, no force); remote HEAD verified equal to local `ca5463f` via `git ls-remote`. This push-record commit is pushed the same way
+- Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Related
-- [WF02_S06_PREFLIGHT_AUDIT.md](WF02_S06_PREFLIGHT_AUDIT.md) — preflight
-- [WF02_SCREEN_IMPLEMENTATION_PLAN.md](WF02_SCREEN_IMPLEMENTATION_PLAN.md) — plan
+- [WF02_COMPLETION_AUDIT.md](WF02_COMPLETION_AUDIT.md) — audit
+- [WF02_UAT_MATRIX.md](WF02_UAT_MATRIX.md) — UAT
 - [P0_STATUS.md](P0_STATUS.md) — status

@@ -47,6 +47,8 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | QA | Short full-page crop rule in the pixel harness | first WF02 pixel task |
 
 ## Happy paths
+
+**WF02 CLOSED — completion audit GREEN** ([audit](WF02_COMPLETION_AUDIT.md)). The authoritative happy-path set is now [WF02_UAT_MATRIX.md](WF02_UAT_MATRIX.md) (HC-WF02-01..12 + ALT-01..06, all PASS). The rows below are the pre-audit checklist, kept as history; HC-WF02-04 there (public profile view) stays outside P0 (H3).
 | ID | Path | Status |
 |---|---|---|
 | HC-WF02-01 | Completed member opens `/me` | **PASS** (WF02-S01) |

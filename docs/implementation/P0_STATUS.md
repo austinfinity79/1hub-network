@@ -10,6 +10,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **M1 — WF01 Identity & Onboarding: CLOSED** — 8/8 screens; final re-audit **GREEN WITH DOCUMENTED LIMITATIONS** ([report](reports/WF01_FINAL_REAUDIT.md), [audit](WF01_COMPLETION_AUDIT.md), [UAT matrix](WF01_UAT_MATRIX.md)). P0/P1/P2 = 0; UAT 14/14, 0 expected-fail. External release inputs: `PRODUCTION_LEGAL_CONTENT_REQUIRED`, real production roster data, production REGION/DOMAIN/SKILL taxonomy.
 
+**M2 — WF02 Member Profile & Network: CLOSED** — 7/7 screens; completion audit **GREEN** ([audit](WF02_COMPLETION_AUDIT.md), [UAT matrix](WF02_UAT_MATRIX.md), [report](reports/WF02_completion-audit.md)). P0/P1/P2 = 0; UAT 7/7 cases (12 HC steps + 6 alternates) on the dev DB, a fresh install and after a restart. Release inputs: outbound email provider (magic link + team invitations), PO copy review for S05/S06, plus the WF01 inputs.
+
 | Screen | State |
 |---|---|
 | WF01-S01 Auth Entry | DONE — functional + typography + pixel gate PASS ([report](reports/WF01-S01_auth-entry.md)) |
@@ -109,7 +111,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02 COMPLETION AUDIT + HAPPY PATH UAT. WF02 7 / 7 screens.
+WF03 PRE-IMPLEMENTATION BUSINESS/DATA/DESIGN AUDIT (not started).
 
 ## Related
 
