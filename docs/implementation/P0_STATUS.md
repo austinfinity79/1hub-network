@@ -12,6 +12,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **M2 — WF02 Member Profile & Network: CLOSED** — 7/7 screens; completion audit **GREEN** ([audit](WF02_COMPLETION_AUDIT.md), [UAT matrix](WF02_UAT_MATRIX.md), [report](reports/WF02_completion-audit.md)). P0/P1/P2 = 0; UAT 7/7 cases (12 HC steps + 6 alternates) on the dev DB, a fresh install and after a restart. Release inputs: outbound email provider (magic link + team invitations), PO copy review for S05/S06, plus the WF01 inputs.
 
+**M3 — WF03 HUB / Chapter / CLB Operations: DECISIONS FROZEN, NOT STARTED** — DEC-WF03-G1..G15; executable scope **8 screens** (S01–S04, S06–S09); S05 = FUTURE / WF04. Open conflicts: C1 (S06/S08 mapping; blocks S06/S08), C2 (hierarchy fixture). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). WF01 and WF02 are PROTECTED / CLOSED / GREEN.
+
 | Screen | State |
 |---|---|
 | WF01-S01 Auth Entry | DONE — functional + typography + pixel gate PASS ([report](reports/WF01-S01_auth-entry.md)) |
@@ -111,7 +113,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF03 pre-implementation audit: HUMAN DECISION REQUIRED — 15 open decisions ([OPEN-WF03 G1–G15](../decisions/DECISION_LOG.md#open-wf03-g1)); 0 / 9 screens ready. [Audit](WF03_PRE_IMPLEMENTATION_AUDIT.md), [plan](WF03_SCREEN_IMPLEMENTATION_PLAN.md), [happy paths](WF03_HAPPY_PATH_PLAN.md). Next: DECIDE OPEN-WF03 G1–G15.
+WF03-T00 — OPS FOUNDATION: PRECHECK + IMPLEMENT (full preflight per the process: new shell + security foundation). Safe to start: YES. C1 must be decided before S06/S08. [Plan](WF03_SCREEN_IMPLEMENTATION_PLAN.md).
 
 ## Related
 

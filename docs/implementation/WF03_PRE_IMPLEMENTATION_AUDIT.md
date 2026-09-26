@@ -1,6 +1,8 @@
 # WF03 Pre-Implementation Audit
 
-**Verdict: HUMAN DECISION REQUIRED (15 — [OPEN-WF03 G1–G15](../decisions/DECISION_LOG.md#open-wf03-g1)).** Audit only: no runtime code, no migration, no seed or design change. HEAD `160b620`, 2026-09-26.
+**Update 2026-09-26: G1–G15 FROZEN** as [DEC-WF03-G1..G15](../decisions/DECISION_LOG.md#dec-wf03-g1). Executable scope = 8 screens (S05 → FUTURE / WF04). New conflicts: [C1](../decisions/DECISION_LOG.md#open-wf03-c1) (S06/S08 mapping) and [C2](../decisions/DECISION_LOG.md#open-wf03-c2) (hierarchy fixture). The findings below are the original audit, kept as history.
+
+**Original verdict: HUMAN DECISION REQUIRED (15 — [OPEN-WF03 G1–G15](../decisions/DECISION_LOG.md#open-wf03-g1)).** Audit only: no runtime code, no migration, no seed or design change. HEAD `160b620`, 2026-09-26.
 
 **Sources** (precedence order): CLAUDE.md; Master Spec §WF03 / M3; WF03 contract (`WF03_…_FINAL_v1.0.md`); SCR = `SCREEN_CONTRACTS…yaml` WF03; Data SOT + Freeze D1–D5; Design Pixel SOT §6–§9, screen map, manifest, the 9 `design-reference/final/WF03` bitmaps (element inventory taken at 1440 px); architecture 03 (RBAC) and 06; migrations 001–008 + deterministic seed; API contract §8, §12–§14; approved Matrix (DECISION-AUTHZ-01B); DB gap register (P5, P6, P11, D6, D7).
 

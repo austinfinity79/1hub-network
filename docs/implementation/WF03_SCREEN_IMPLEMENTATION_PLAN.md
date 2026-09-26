@@ -1,36 +1,36 @@
 # WF03 Screen Implementation Plan
 
-**Status: NOT STARTED — HUMAN DECISION REQUIRED** ([OPEN-WF03 G1–G15](../decisions/DECISION_LOG.md#open-wf03-g1)). Derived from the [pre-implementation audit](WF03_PRE_IMPLEMENTATION_AUDIT.md). Each row states what it would build **if** the recommended option is approved.
+**Status: DECISIONS FROZEN** ([DEC-WF03-G1..G15](../decisions/DECISION_LOG.md#dec-wf03-g1)). Executable P0 scope = **8 screens**; WF03-S05 = FUTURE / WF04 (G12). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). Open conflicts: [C1](../decisions/DECISION_LOG.md#open-wf03-c1) (S06/S08 mapping; blocks S06 and S08 only) and [C2](../decisions/DECISION_LOG.md#open-wf03-c2) (hierarchy fixture).
 
-## Order (by dependency)
-| # | Task | Route | Depends on | Build if recommended options pass | State |
-|---|---|---|---|---|---|
-| 0 | WF03-T00 ops foundation | shell + `/ops/*` guard | G15 | One ops shell (WF03 links only); server guard: session → `require(capability, ORGANIZATION orgId)`; ops org read model (org, ACTIVE members, ACTIVE leaders, published events); `GET /ops/organizations` | BLOCKED |
-| 1 | S01 Network selector | `/ops/network` | 0, G11 | Orgs with `network:read` (all HUB/CHAPTER/CLB for PLATFORM_ADMIN): name, type, active leaders, ACTIVE members, published events in the next 30 days | BLOCKED |
-| 2 | S02 Unit dashboard | `/ops/org/:orgId` | 0, G1 | API §8.2 summary (4 metrics) + one canonical work item: pending membership requests | BLOCKED |
-| 3 | S03 Member list | `…/members` | 0, G3, G4 | Org-scoped memberships (all states) + leadership; search by name; status filter | BLOCKED |
-| 4 | S05 Unit programmes | `…/programmes` | 0, G12 | Read-only list of programmes with `organization_id = orgId` | BLOCKED |
-| 5 | S04 Member detail + mutations | `…/members/:profileId` | 3, G5, G6, G14 | Detail, membership transitions, leadership create/close, audit | BLOCKED |
-| 6 | S09 Public page | `/organizations/:slug` | 0, G8, G9, G10, G13 | Public projection + join CTA (reuses `POST /me/membership-requests`) | BLOCKED |
-| 7 | S06 Unit profile | `…/profile` | 6, G7, G8, G14 | Edit canonical org fields; logo via the media pipeline | BLOCKED |
-| 8 | S07 Events | `…/events` | 0, G2, G10, G14 | Standalone Event list / create / edit / publish / cancel | BLOCKED |
-| 9 | S08 Relationships | `…/settings` | 0, G9, G14 (+ migration 009 if G9a) | Relationship list / create / close with history | BLOCKED |
-| 10 | WF03 completion audit + UAT | — | 1–9 | As for WF02 | — |
+## Order
+| # | Task | Route | Inputs | Scope | Path | State |
+|---|---|---|---|---|---|---|
+| 0 | WF03-T00 Ops foundation | `/ops/*` shell + guard | G9, G11, G15 (C2 fixture) | OpsShell (G15); server guard session → `require(capability, ORGANIZATION orgId)`; hierarchy service over `organization_relationships` (G9); org read model; `GET /ops/organizations` | Full preflight (new shell + security foundation) | **READY** |
+| 1 | S01 Organization selector / list | `/ops/network` | T00, G11 | Orgs in exact scope (PLATFORM_ADMIN per contract); HUB / CHAPTER / CLB | Fast path | after T00 |
+| 2 | S02 Organization dashboard | `/ops/org/:orgId` | T00, G1 | Canonical counters only, each with a named query | Fast path | after T00 |
+| 3 | S03 Organization members | `/ops/org/:orgId/members` | T00, G3, G4 | Safe projection + membership state/provenance + leadership facts | Full preflight (privacy DTO) | after T00 |
+| 4 | S04 Membership review / leadership ops | `/ops/org/:orgId/members/:profileId` | S03, G5, G6, G14 | PENDING → ACTIVE / REJECTED; leadership create/end per API; audit | Full preflight (mutations + audit) | after S03 |
+| 5 | S06 Organization profile | `/ops/org/:orgId/profile` | G8, G14, **C1** | Canonical + design-approved fields only | per C1 | **BLOCKED (C1)** |
+| 6 | S08 Organization relationships / settings | `/ops/org/:orgId/settings` | G9, **C1** (+ optional 009) | Per C1 outcome | per C1 | **BLOCKED (C1)** |
+| 7 | S07 Event management | `/ops/org/:orgId/events` | T00, G2, G10, G14 | Standalone list / detail / create / edit / publish / cancel; S07 screen-contract addendum | Full preflight (addendum + lifecycle) | after T00 |
+| 8 | S09 Public organization page | `/organizations/:slug` | G13, G9, G10 | Public-safe projection + published standalone events | Fast path | after S07 |
+| 9 | WF03 completion audit + UAT | — | 1–8 | Closing gate (§I) | — | — |
+| — | S05 Unit programmes | `/ops/org/:orgId/programmes` | G12 | **FUTURE / WF04 — not implemented** | — | FUTURE |
 
-Reads before mutations; the public page before profile editing (so the edit preview has a target); events and relationships last, because they carry the most open semantics.
+**Why S06 before S08:** S06 (profile) needs no hierarchy writes, while S08 depends on the G9 invariant and on optional migration 009. Both wait for C1. If C1 is not settled by the time S04 is done, S07 and S09 may go first: they do not depend on C1.
 
-## Design element classification (per reference)
-| Screen | CANONICAL-P0 (if approved) | INTERNAL / contract addendum | WF04 | FUTURE / UNSUPPORTED |
-|---|---|---|---|---|
-| S01 | Chapter name, member count, events-in-30-days count, the table frame | Leader column = active leadership holders (no "head" field) | "Summit đang chạy", summit-lock notice | "Tạo chapter" (no API), SENDER / sender email, ADM sidebar items (ADM1–14 except 8), CSV / export lock |
-| S02 | KPI-card frame, work-list frame | 4 §8.2 metrics, pending-request work item | bài toán, giải pháp, vòng trong, pilot, nghiệm thu | capability chips, data-access requests, NDA |
-| S03 | Table frame, name, org, status chip, search | status = membership state; "Vai trò HUB" = leadership title | — | email column, email verification / lock chips, last login, CSV, account counts 12.480 |
-| S04 | Header name, membership/leadership history | consent summary (PROFILE_DISCOVERY level, legal acceptance dates) | Chapter-founding proposal (ADM15) | resend verification, lock account, "Quỹ liên hệ" / "Đơn vị đặt bài toán liên hệ" consents, account log |
-| S05 | List frame, programme name / status | — | "Tạo challenge", đơn vị chủ trì, bài toán, giai đoạn, chapter hưởng ứng, publish rule | — |
-| S06 | Header (name, type, parent), description / logo edit | publish-condition card (G8) | "Programme liên quan", co-organizer rows | representatives card (G7), org visibility matrix, verification, archive request, change history, "Yêu cầu đổi chapter cha" |
-| S07 | — (no event CRUD drawn) | Event list + form (G2) | qualifying round, push to national round, summit approval | analytics funnel, landing views, registrants list, campaign mail, sender/tracking |
-| S08 | Tree breadcrumb, active / ended relationship tables, add form | valid parent–child pairs (G9) | "Đồng tổ chức" with a programme | change-parent request queue, verification, notifications, "Tạo hồ sơ tổ chức" |
-| S09 | Hero (name, type, parent, description, logo), child CLB cards, upcoming published events, join CTA | aggregate member count (G13) | summit CTA, "Nộp bài không qua chapter", rounds | leaders' emails, partner strip, referral link, capacity / registration chips, "3 ngày làm việc" SLA |
+## Design element classification (per reference; frozen by G1–G15)
+| Screen | Canonical P0 | Intentional contract | Intentional P0 scope / WF04 / Future |
+|---|---|---|---|
+| S01 | Table frame, org name, type, ACTIVE members, counts with a query | Leadership holders column (no "head" inference) | "Tạo chapter", summit, SENDER, CSV, ADM sidebar items |
+| S02 | Header, KPI-card and work-list frames with canonical counters | Pending-request work item | Enterprise problem / pilot / data-access content (G1) |
+| S03 | Table frame, name, org, membership state, search | Provenance column | Email, verification, lock, last login, CSV, account totals (G3) |
+| S04 | Name header, membership / leadership history, review actions | Consent summary per G4 | Resend link, lock, fund / problem-owner consents, account log, ADM15 proposal |
+| S06 | Header, canonical profile fields | Field list per G8 | Representatives (G7), visibility matrix, verification, archive request, programme links |
+| S07 | — (no drawn CRUD) | Event table + form addendum (G2) | Qualifying round, registrants, campaign mail, funnel (WF04 / Future) |
+| S08 | Tree breadcrumb, relationship tables | Per C1 | Change-parent request queue, notifications, co-organizer with a programme (WF04) |
+| S09 | Hero, parent/children, published events, join CTA | Aggregate counts (G13) | Leaders' emails, partner strip, referral link, capacity / registration chips, summit CTA |
+| S05 | — | — | Whole screen FUTURE / WF04 (G12) |
 
 ## Related
 - [WF03_PRE_IMPLEMENTATION_AUDIT.md](WF03_PRE_IMPLEMENTATION_AUDIT.md) — audit

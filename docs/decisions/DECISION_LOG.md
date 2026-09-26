@@ -723,7 +723,7 @@ Resolved by precedence (not asked):
 
 ## OPEN-WF03 — WF03 pre-implementation gaps (human decision required)
 
-**Status:** OPEN 2026-09-26. Found by the WF03 pre-implementation audit.
+**Status:** CLOSED 2026-09-26 by [DEC-WF03-G1..G15](#dec-wf03-g1) (history kept). Found by the WF03 pre-implementation audit. New conflicts found during the freeze: [OPEN-WF03-C1](#open-wf03-c1), [OPEN-WF03-C2](#open-wf03-c2).
 **Audit:** [WF03_PRE_IMPLEMENTATION_AUDIT.md](../implementation/WF03_PRE_IMPLEMENTATION_AUDIT.md).
 **Already frozen:** 9 screens and routes (WF03 contract); 9 capabilities, exact org scope, no inheritance (Matrix, DECISION-AUTHZ-01B); Membership / Leadership / RoleAssignment separation; Event standalone-or-child (SOT §11); Freeze D2 (preseed + pending fallback).
 
@@ -744,6 +744,62 @@ Resolved by precedence (not asked):
 | <a id="open-wf03-g13"></a>WF03-G13 | What may the public S09 page show about people and counts? The bitmap shows leaders' names + email, member counts, CLB counts, partners, capacity | Guests see no person data in P0 (DEC-WF02-H3 / projection); registration email is PRIVATE | S09 bitmap; SOT §8; `projection.ts` | Public: org identity, parent, child CLBs (PUBLISHED), upcoming PUBLISHED events (date, name, place), aggregate ACTIVE member count; leaders = titles only for guests, names for signed-in NETWORK viewers under PROFILE_DISCOVERY, never email; join: guest → /auth, member → WF02-S04 request; partners, referral link, summit = WF04 / FUTURE | Leadership as a public organizational fact (names public); or no counts at all | DTO, privacy | S09 | SCR S09; SOT §8; DEC-WF02-H3 |
 | <a id="open-wf03-g14"></a>WF03-G14 | Which audit action codes do WF03 mutations write? | SOT requires AuditLog for membership, representation and shared entity changes; no WF03 code is frozen | SOT §3 AuditLog; 03 §9; `audit.ts` union | Mint `MEMBERSHIP_STATE_CHANGED`, `LEADERSHIP_CREATED`, `LEADERSHIP_CLOSED`, `ORGANIZATION_PROFILE_UPDATED`, `ORGANIZATION_RELATIONSHIP_CREATED`, `ORGANIZATION_RELATIONSHIP_CLOSED`, `EVENT_CREATED`, `EVENT_UPDATED`, `EVENT_PUBLISHED`, `EVENT_CANCELLED`; payload = ids + states only | Audit membership / leadership / relationships only | Audit | S04, S06, S07, S08 | SOT §3, §15; 03 §9 |
 | <a id="open-wf03-g15"></a>WF03-G15 | The 9 references use four different shells (platform "Quản trị" ADM sidebar, "Quản trị HUB tổng" sidebar, unit top nav, public). Which ops shell does P0 use? | Pixel SOT §6: one navigation shell per actor context; many drawn nav items have no P0 screen | S01 / S05, S03 / S04 / S08, S02 / S06 bitmaps | One ops shell from the "Quản trị HUB tổng" sidebar (S03 / S04 / S08) for every `/ops` route, nav = WF03 routes only (H9 precedent); other shells' nav = INTENTIONAL-P0-SCOPE; S09 keeps its public layout | Replicate each drawn shell per screen | UI, pixel | T00, S01–S08 | Pixel SOT §6; DEC-WF02-H9 |
+
+## DEC-WF03 — WF03 decision freeze (G1–G15, human approved)
+
+**Status:** HUMAN APPROVED — P0, 2026-09-26. Closes [OPEN-WF03 G1–G15](#open-wf03-g1). Immutable implementation inputs (PROCESS-P0-ACCELERATED-SAFE-V2 §G); new contradictory evidence → a new conflict record + STOP.
+
+| ID | Decision | Implementation boundary |
+|---|---|---|
+| <a id="dec-wf03-g1"></a>DEC-WF03-G1 | S02 = dashboard of the selected Organization with only metrics computable from canonical P0 data (e.g. ACTIVE members, pending requests, active leadership, events, upcoming/published events, canonical child orgs). No Challenge/Programme funnel, investor, fundraising, application or startup KPI; no hardcoded numbers | Every counter names its server query. Bitmap enterprise content = INTENTIONAL-P0-SCOPE |
+| <a id="dec-wf03-g2"></a>DEC-WF03-G2 | S07 = canonical EVENT MANAGEMENT; the S07 bitmap (WF04 content) is not business authority. A WF03-S07 screen-contract addendum uses only approved WF03 ops primitives (OpsShell, table, form, card, breadcrumb, button, typography, spacing). Business-content difference = INTENTIONAL-CONTRACT | Structures without approved precedent stay local to S07 and never become global tokens; `design-reference/final` untouched |
+| <a id="dec-wf03-g3"></a>DEC-WF03-G3 | No platform account administration in WF03. S03 = ORGANIZATION MEMBERS (safe profile projection, membership state and provenance, leadership facts). S04 = MEMBERSHIP REVIEW / LEADERSHIP OPERATIONS (review, approve, reject, inspect provenance, frozen leadership lifecycle where the contract permits) | No password, login/email, account disable, platform-role editing or other account admin |
+| <a id="dec-wf03-g4"></a>DEC-WF03-G4 | Ops access does not bypass IndividualProfile visibility. Reuse PROFILE_DISCOVERY, visibility and consent filtering; add only the minimum relationship facts (membership state, organization, leadership title/state, provenance). PLATFORM_ADMIN gets no blanket PII bypass | Server-side DTO filtering; any future admin PII override needs its own decision |
+| <a id="dec-wf03-g5"></a>DEC-WF03-G5 | Review path PENDING_APPROVAL → ACTIVE (provenance `ORGANIZATION_VERIFIED`, the existing identifier) or → REJECTED. SUSPENDED / ALUMNI / WITHDRAWN stay valid states, implemented only where the WF03/API contract explicitly supports the transition. Approver identity not stored/displayed (schema has no field) | API §8.3 grants ACTIVE → SUSPENDED / ALUMNI / WITHDRAWN only "where policy allows" and no policy is frozen, so P0 implements the **two review transitions only**; others need a policy decision first |
+| <a id="dec-wf03-g6"></a>DEC-WF03-G6 | LeadershipRecord is a business fact: it creates no RoleAssignment, capability or managed scope; the title has zero authority | No inference from Chapter Leader / President / Chairman / Head |
+| <a id="dec-wf03-g7"></a>DEC-WF03-G7 | OrganizationRepresentation runtime DEFERRED; no table/migration for P0. Authorization = existing scoped RoleAssignment / capabilities; RoleAssignment is not presented as representation | Representation UI = INTENTIONAL-P0-SCOPE |
+| <a id="dec-wf03-g8"></a>DEC-WF03-G8 | Existing organizations only; operational types HUB, CHAPTER, CLB. No create, delete or lifecycle-transition controls unless a frozen contract defines them; archived/inactive records are read per the canonical lifecycle and never mutated through unsupported operations. The profile-edit screen edits only fields present in the canonical Organization model/API **and** approved by the screen contract/design mapping; no design-only DB fields; verification/trust display-only | Which screen hosts profile editing: see [OPEN-WF03-C1](#open-wf03-c1) (the freeze text says S08; the frozen contract says S06) |
+| <a id="dec-wf03-g9"></a>DEC-WF03-G9 | Canonical hierarchy for new WF03 logic = `organization_relationships` with the frozen PARENT type; never inferred from name, slug, region or type. No new writes to `parent_id` (legacy / read-compatibility only). One hierarchy service. P0 invariant: at most one ACTIVE PARENT per child (migration 009 may enforce later; none now). Disagreement is reported, never silently reconciled | Current fixture disagreement: [OPEN-WF03-C2](#open-wf03-c2) |
+| <a id="dec-wf03-g10"></a>DEC-WF03-G10 | Standalone Events: list, detail, create, edit, publish, cancel per the frozen lifecycle/API; WF03-created events have `programme_id` NULL (existing canonical links are left as they are). No registration, participant application, Programme/Challenge journey, eligibility or operating team (WF04+). Programme never mandatory | Registration fields / `registration_enabled` / capacity not implemented |
+| <a id="dec-wf03-g11"></a>DEC-WF03-G11 | S01 = OPS ORGANIZATION SELECTOR / LIST (not the dashboard). HUB_COMMUNITY_LEADER: exact assigned scope only, no inheritance; PLATFORM_ADMIN: per the existing platform-admin contract; types HUB / CHAPTER / CLB. Selection = UI context only | Every API re-authorizes |
+| <a id="dec-wf03-g12"></a>DEC-WF03-G12 | WF03-S05 = FUTURE / WF04: not implemented, bitmap not WF03 authority, ID kept for traceability. WF03 executable P0 scope = **8 screens** (S01, S02, S03, S04, S06, S07, S08, S09); completion denominator = 8 | Route `/ops/org/:orgId/programmes` stays a frozen placeholder |
+| <a id="dec-wf03-g13"></a>DEC-WF03-G13 | S09 public page shows only public-safe canonical content: name, type, public description, region / approved public links **where canonical**, canonical parent and children, public-safe aggregate counts, published standalone events. Never: member email, pending memberships or requester identity, private profile fields, internal leadership management data, RoleAssignment, capability, audit data. Membership never publishes an IndividualProfile; any rendered person passes canonical visibility | `organizations` has no region or links columns today, so none are rendered |
+| <a id="dec-wf03-g14"></a>DEC-WF03-G14 | Frozen audit actions, emitted only when the mutation is implemented: `ORGANIZATION_UPDATED`, `MEMBERSHIP_APPROVED`, `MEMBERSHIP_REJECTED`, `MEMBERSHIP_STATUS_CHANGED`, `LEADERSHIP_CREATED`, `LEADERSHIP_UPDATED`, `LEADERSHIP_ENDED`, `EVENT_CREATED`, `EVENT_UPDATED`, `EVENT_PUBLISHED`, `EVENT_CANCELLED`. No read events; payload = canonical ids + state deltas only | Reuse mapping: **none**. No existing code means the same action (`MEMBERSHIP_REQUESTED` = a member's own request, WF02-S04). No relationship code is frozen (see C1) |
+| <a id="dec-wf03-g15"></a>DEC-WF03-G15 | Dedicated **OpsShell** for `/ops/*` (not MemberShell), reusing approved fonts, colours, typography, buttons, cards, tables and spacing. Responsibilities: ops navigation, organization context, breadcrumb, actor-safe menu visibility. Not a security boundary | Leader: exact scope; PLATFORM_ADMIN: per frozen capability/scope; no shared organization login |
+
+<a id="open-wf03-c1"></a>**OPEN-WF03-C1 — S06/S08 naming vs the frozen WF03 contract (new conflict found during the freeze; blocks S06 and S08 only)**
+
+| Field | Record |
+|---|---|
+| Question | The freeze task names S06 "Organization Profile/Detail" and S08 "Organization Edit", and applies the G8 profile-edit rule to S08. The frozen WF03 contract defines S06 = `/ops/org/:orgId/profile`, "manage organization profile/content groups", `org:manage` (API `PATCH …/profile`), and S08 = `/ops/org/:orgId/settings`, "parent/child/partner/co-organizer relationships + settings; preserve history", `org:manage_relationship` (API §8.7). Which is intended? |
+| Why this matters | Swapping the screens would put profile editing on the relationships route/capability and leave relationship management unscoped. If S08 stays relationships, its mutation scope is still undecided: relationship types, who may create/close PARENT, and audit codes (G14 freezes none for relationships) |
+| Evidence | `WF03_HUB_CHAPTER_CLB_OPERATIONS_FINAL_v1.0.md:33,35`; SCR WF03-S06/S08; API §8.5, §8.7; Matrix §B |
+| Recommended | Keep the contract: S06 = Organization Profile (G8 field rule applies here); S08 = Organization Relationships, P0 **read + close** of existing relationships, and PARENT create by PLATFORM_ADMIN only under the G9 invariant; mint `ORGANIZATION_RELATIONSHIP_CREATED` / `_CLOSED` |
+| Alternative | Follow the freeze text: S08 = organization edit; relationships shown read-only (S06/S08) and relationship mutations deferred |
+| Impact | Screen/route/capability mapping; audit catalogue |
+| Blocks | S06, S08 (not T00–S04, S07, S09) |
+| Source anchor | WF03:33-35; SCR WF03; API §8.5, §8.7 |
+
+<a id="open-wf03-c2"></a>**OPEN-WF03-C2 — Hierarchy fixture disagreement (reported per DEC-WF03-G9)**
+
+| Field | Record |
+|---|---|
+| Question | `chapter-02` has `parent_id` = `hub-network` but no ACTIVE PARENT relationship; the other rows agree (checked on the dev DB). Under the canonical source Chapter 02 has **no parent**. Fix the fixture? |
+| Why this matters | S01/S08/S09 would show Chapter 02 without a parent, while legacy `parent_id` says HUB |
+| Evidence | `seed_p0_deterministic.sql` organizations (Chapter 02 → HUB) vs `organization_relationships` d000…01/02 (HUB → Chapter 01, Chapter 01 → Club 01) |
+| Recommended | Fixture remediation in the first task that needs hierarchy (T00): add the PARENT relationship HUB → Chapter 02 to the deterministic seed (seed change needs that task's authorization); never write `parent_id` |
+| Alternative | Keep the fixture; Chapter 02 is a parentless test chapter |
+| Impact | Seed only |
+| Blocks | Nothing for T00 logic; S01/S08/S09 hierarchy display of Chapter 02 |
+| Source anchor | DEC-WF03-G9; DB gaps D7 |
+
+<a id="process-p0-accelerated-safe-v2"></a>**PROCESS-P0-ACCELERATED-SAFE-V2 — execution process (installed 2026-09-26)**
+
+| Field | Record |
+|---|---|
+| Decision | Contract freeze gate; fast path vs full preflight; design lock; targeted tests/pixel with full regression at defined triggers; immutable CLOSED decisions; human-stop policy; workflow closing gate; protected WF01/WF02; SHA-exact deploy handoff; shorter reports; golden rules |
+| Product/business decisions changed | **NONE** |
+| Where | [PROCESS_P0_ACCELERATED_SAFE_V2.md](../implementation/PROCESS_P0_ACCELERATED_SAFE_V2.md); CLAUDE.md §14 |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

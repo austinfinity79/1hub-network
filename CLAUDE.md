@@ -179,3 +179,12 @@ Why this exists: during M0-T06B a second session committed and pushed three
 commits mid-task, including a memo the other session had authored and had not
 finished reviewing. Nothing was lost that time. The next collision will not be
 as lucky.
+
+## 14. Execution process — PROCESS-P0-ACCELERATED-SAFE-V2
+Installed 2026-09-26 for remaining Phase 0 work: [docs/implementation/PROCESS_P0_ACCELERATED_SAFE_V2.md](docs/implementation/PROCESS_P0_ACCELERATED_SAFE_V2.md).
+- Contract freeze gate before every runtime task: all applicable Business / Data / API / Design / Security contracts frozen → fast path; otherwise full preflight → decision → STOP.
+- Targeted tests and pixel per task; full regression when a workflow closes, the auth/security foundation, a broad migration or a shared/global primitive changes, or for a release candidate. Thresholds are unchanged (P0–P2 pixel mismatches must be fixed).
+- CLOSED decisions are immutable inputs; reopen only on new contradictory evidence with a traceable conflict record.
+- A workflow closes only through the closing gate with a GREEN verdict. WF01 and WF02 are PROTECTED / CLOSED / GREEN.
+- Deploys use the exact approved SHA, never HEAD.
+- Speed never overrides correctness; a Design/SOT conflict is a STOP. This process changes no product decision, and §1–§13 remain in force.
