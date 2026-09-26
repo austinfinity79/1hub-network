@@ -1,0 +1,213 @@
+'use client'
+
+import Link from 'next/link'
+import { Fragment, useState, type ReactNode } from 'react'
+
+import { Notice } from '@/components/ui'
+import { INERT_REASONS } from '@/lib/member/nav'
+import { STATUS_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
+import type { EditResult } from '@/lib/programme-demo/journey'
+import { demoRoutes, type SetupStep } from '@/lib/programme-demo/routes'
+import { effectiveDetail, inAllowance } from '@/lib/programme-demo/session-store'
+import type { ProgrammeDemoDetail, ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
+
+import buttons from './demo-buttons.module.css'
+import { DemoPage } from './demo-page'
+import { useProgrammeDemo } from './demo-store'
+import styles from './journey.module.css'
+import { SetupStepper } from './setup-stepper'
+
+/**
+ * WF04 — the frame of every setup step (DEC-WF04-S03-D2/D3, DEC-WF04-S04-D3):
+ * resolves the programme (the server fixture or the actor's session draft,
+ * inside the actor's allowance), shows loading / not-found, the header with
+ * back / next, the stepper, and a save error with "Thử lại". `apply` stores
+ * one atomic edit of the session copy; nothing reaches the server.
+ */
+
+export type Applied<E> = { ok: boolean; errors?: E }
+export type Apply = <E>(result: EditResult<E> | { ok: false; reason: string }) => Applied<E>
+
+const COPY = {
+  next: 'Tiếp theo',
+  loading: 'Đang tải…',
+  missingTitle: 'Không tìm thấy chương trình',
+  missing: 'Không tìm thấy chương trình này trong bản demo của bạn.',
+  toList: 'Về danh sách',
+  failed: 'Chưa lưu được thay đổi. Vui lòng thử lại.',
+  retry: 'Thử lại',
+} as const
+
+export function SetupScreen({
+  id,
+  server,
+  step,
+  screen,
+  back,
+  next,
+  children,
+}: {
+  id: string
+  server: ProgrammeDemoDetailDTO | null
+  step: SetupStep
+  screen: string
+  back: { href: string; label: string; nav: string }
+  /** The next step's route, or null while it is not built (disabled with its reason). */
+  next: string | null
+  children: (context: { detail: ProgrammeDemoDetailDTO; apply: Apply }) => ReactNode
+}) {
+  const { state, allowance, ready, save } = useProgrammeDemo()
+  const [retry, setRetry] = useState<ProgrammeDemoDetailDTO | null>(null)
+  // A successful retry re-mounts the step body, so the editor that failed closes.
+  const [epoch, setEpoch] = useState(0)
+
+  if (!ready) {
+    return (
+      <div data-screen={screen}>
+        <DemoPage title={COPY.loading}>
+          <p className="type-body-sm" data-state="setup-loading">
+            {COPY.loading}
+          </p>
+        </DemoPage>
+      </div>
+    )
+  }
+
+  const detail = effectiveDetail(state, id, server ?? undefined)
+  if (!detail || !inAllowance(detail, allowance)) {
+    return (
+      <div data-screen={screen}>
+        <DemoPage title={COPY.missingTitle}>
+          <div className={styles.missing} data-state="setup-missing">
+            <p className="type-body-sm">{COPY.missing}</p>
+            <Link href={demoRoutes.list()} className={`weight-medium ${buttons.secondary}`}>
+              {COPY.toList}
+            </Link>
+          </div>
+        </DemoPage>
+      </div>
+    )
+  }
+
+  const { programme, organization } = detail
+  const store = (copy: ProgrammeDemoDetailDTO) => {
+    if (save(copy)) {
+      setRetry(null)
+      return true
+    }
+    setRetry(copy)
+    return false
+  }
+  const apply: Apply = (result) => {
+    if (!result.ok) {
+      return 'errors' in result && result.reason === 'invalid'
+        ? { ok: false, errors: result.errors }
+        : { ok: false }
+    }
+    const copy: ProgrammeDemoDetailDTO = {
+      ...(result.detail as ProgrammeDemoDetail),
+      organization,
+      demo: true,
+    }
+    return { ok: store(copy) }
+  }
+
+  return (
+    <div data-screen={screen} data-programme-type={programme.type}>
+      <DemoPage
+        title={programme.name}
+        meta={`${TYPE_LABEL[programme.type]} · ${STATUS_LABEL[programme.status]} · ${organization.name}`}
+        actions={
+          <div className={buttons.group}>
+            <Link
+              href={back.href}
+              className={`weight-medium ${buttons.secondary}`}
+              data-nav={back.nav}
+            >
+              {back.label}
+            </Link>
+            {next ? (
+              <Link href={next} className={`weight-medium ${buttons.primary}`} data-setup-next>
+                {COPY.next}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className={`weight-medium ${buttons.primary}`}
+                disabled
+                aria-disabled="true"
+                title={INERT_REASONS.NO_P0_SCREEN}
+                aria-label={`${COPY.next} — ${INERT_REASONS.NO_P0_SCREEN}`}
+                data-nav-kind="INERT"
+                data-setup-next
+              >
+                {COPY.next}
+              </button>
+            )}
+          </div>
+        }
+      >
+        <div className={styles.stepper}>
+          <SetupStepper current={step} />
+        </div>
+        {retry ? (
+          <div
+            className={`${styles.notice} ${styles.failed}`}
+            role="alert"
+            data-state="save-failed"
+          >
+            <Notice tone="error">{COPY.failed}</Notice>
+            <button
+              type="button"
+              className={`weight-medium ${buttons.secondary}`}
+              onClick={() => {
+                if (store(retry)) setEpoch((e) => e + 1)
+              }}
+              data-action="retry"
+            >
+              {COPY.retry}
+            </button>
+          </div>
+        ) : null}
+        <Fragment key={epoch}>{children({ detail, apply })}</Fragment>
+      </DemoPage>
+    </div>
+  )
+}
+
+/** The inline confirmation used for removals (the WF02 settings pattern). */
+export function Confirm({
+  text,
+  yes,
+  no,
+  onYes,
+  onNo,
+}: {
+  text: string
+  yes: string
+  no: string
+  onYes: () => void
+  onNo: () => void
+}) {
+  return (
+    <div className={styles.confirm} role="group" aria-label={text} data-confirm>
+      <p className={`type-body-sm weight-medium ${styles.confirmText}`}>{text}</p>
+      <button
+        type="button"
+        className={`weight-medium ${buttons.primary}`}
+        onClick={onYes}
+        data-confirm="yes"
+      >
+        {yes}
+      </button>
+      <button
+        type="button"
+        className={`weight-medium ${buttons.secondary}`}
+        onClick={onNo}
+        data-confirm="no"
+      >
+        {no}
+      </button>
+    </div>
+  )
+}

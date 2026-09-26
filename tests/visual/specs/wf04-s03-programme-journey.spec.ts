@@ -108,7 +108,7 @@ const stage = (page: Page, name: string) =>
 
 async function open(page: Page, id: string) {
   await page.goto(journey(id), { waitUntil: 'networkidle' })
-  await expect(page.locator('[data-state="journey-loading"]')).toHaveCount(0)
+  await expect(page.locator('[data-state="setup-loading"]')).toHaveCount(0)
 }
 
 async function reset(page: Page) {
@@ -137,10 +137,10 @@ test.describe('WF04-S03 stages', () => {
       'Hành trình',
     )
     await expect(page.locator('[data-setup-stepper] a')).toHaveCount(0)
-    const next = page.locator('[data-journey-next]')
-    await expect(next).toBeDisabled()
-    await expect(next).toHaveAttribute('title', 'Chưa có trong phiên bản này')
-    await expect(page.locator('a[href*="/setup/events"]')).toHaveCount(0)
+    // DEC-WF04-S04-D3: "Tiếp theo" opens the events step.
+    const next = page.locator('[data-setup-next]')
+    await expect(next).toHaveAttribute('href', `/demo/programmes/${PROGRAMME}/setup/events`)
+    await expect(next).toHaveText('Tiếp theo')
     await expect(page.locator('[data-nav="programme-demo"]')).toHaveAttribute(
       'aria-current',
       'page',
@@ -374,7 +374,7 @@ test.describe('WF04-S03 authorization and IDOR', () => {
     }
     // A UUID that is no draft of this session: nothing is revealed.
     expect((await page.goto(journey('7c9e6679-7425-40de-944b-e07fc1f90ae7')))?.status()).toBe(200)
-    await expect(page.locator('[data-state="journey-missing"]')).toHaveText(
+    await expect(page.locator('[data-state="setup-missing"]')).toHaveText(
       /Không tìm thấy chương trình này/,
     )
     await expect(page.locator('[data-stage-id]')).toHaveCount(0)
@@ -422,7 +422,7 @@ test.describe('WF04-S03 authorization and IDOR', () => {
       ],
     )
     await open(page, draftId)
-    await expect(page.locator('[data-state="journey-missing"]')).toBeVisible()
+    await expect(page.locator('[data-state="setup-missing"]')).toBeVisible()
 
     for (const who of [
       'member@example.test',
