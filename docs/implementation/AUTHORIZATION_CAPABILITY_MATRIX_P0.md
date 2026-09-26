@@ -69,6 +69,16 @@ An assignment is active when its `state` is `ACTIVE`, `valid_from` is not in the
 
 WF01 and WF02 own-account and own-profile actions are **not** in this catalogue and do not block M0-T09. They use an explicit ownership predicate (`actor.profile_id == resource.profile_id`) rather than a session capability identifier. No identifier is minted for them here; that happens when their workflow implementation freezes them.
 
+**WF02 venture relation capabilities (minted with WF02-S05, DEC-WF02-H7).** They are granted by a relation to the venture, never by a RoleAssignment. They are not part of the ops catalogue above and never appear in the session `capabilities`.
+
+| Capability | Held by | Enforced in |
+|---|---|---|
+| `venture:read` | the owner (`projects.owner_profile_id`) and ACTIVE `project_members` | `GET /ventures/{id}`, `/projects/:id/edit` |
+| `venture:manage` | the owner only | `PATCH /ventures/{id}` |
+| `venture:team_manage` | the owner only | WF02-S06 (`/ventures/{id}/team*`) |
+
+`role_label` never grants anything. Creating a venture needs no capability: onboarding DONE is enough (DEC-WF02-S05-G2).
+
 The three `:self` identifiers in the session DTO example (`profile:read:self`, `profile:update:self`, `network:read:self`, API:135-137) are therefore **not** part of the ops catalogue. They remain frozen aliases in that contract example only, and D5 forbids adopting that convention as a second naming scheme.
 
 ## F. Still open — PRE-UAT SECURITY DECISIONS

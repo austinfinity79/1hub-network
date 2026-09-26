@@ -135,6 +135,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '005_p0_purpose_step_completion.sql',
       // WF02-S07 (DEC-WF02-S07-G1): P13 account-deletion request storage.
       '006_p0_account_deletion_request.sql',
+      // WF02-S05 (DEC-WF02-VENTURE-TAXONOMY-STORAGE): projects.region_id + project_domains.
+      '007_p0_venture_taxonomy.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -297,6 +299,8 @@ describe('M0-T07 seed fixture quality', () => {
       'idempotency_keys',
       'profile_education',
       'profile_links',
+      // WF02-S05: venture domains are written at runtime; the seeded startup has none.
+      'project_domains',
       'user_sessions',
     ])
   })

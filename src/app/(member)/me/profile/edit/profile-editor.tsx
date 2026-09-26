@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from 'react'
 
+import { EditorHeader } from '@/components/shell/editor-header'
 import { Button, Notice, TextInput } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
 
@@ -237,18 +238,15 @@ export function ProfileEditor({
 
   return (
     <form className={styles.page} onSubmit={onSubmit} noValidate data-editor>
-      <header className={styles.header}>
-        <div>
-          <p className={`type-body-md weight-medium ${styles.name}`}>{saved.display_name}</p>
-          <p className={`type-meta-xs ${styles.status}`} data-status>
-            {discoverable ? COPY.visible : COPY.hidden}
-            {savedAt ? ` · ${COPY.savedAt} ${savedAt}` : ''}
-          </p>
-        </div>
-        <Button type="submit" loading={saving}>
-          {COPY.save}
-        </Button>
-      </header>
+      <EditorHeader
+        title={saved.display_name}
+        status={`${discoverable ? COPY.visible : COPY.hidden}${savedAt ? ` · ${COPY.savedAt} ${savedAt}` : ''}`}
+        actions={
+          <Button type="submit" loading={saving}>
+            {COPY.save}
+          </Button>
+        }
+      />
 
       <div className={styles.columns}>
         <div className={styles.form}>

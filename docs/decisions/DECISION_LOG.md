@@ -617,7 +617,7 @@ Not a gap: `membership_requested` analytics stays deferred (DEC-WF01-ANALYTICS-E
 
 ## OPEN-WF02-S05 — Project / Startup preflight gaps (human decision required)
 
-**Status:** OPEN — found by the WF02-S05 preflight on 2026-09-26; no code, no migration.
+**Status:** CLOSED 2026-09-26 by [DEC-WF02-S05-G1..G5](#dec-wf02-s05-g1) (history kept). Found by the WF02-S05 preflight.
 **Audit:** [WF02_S05_PREFLIGHT_AUDIT.md](../implementation/WF02_S05_PREFLIGHT_AUDIT.md).
 **Already frozen:** one `projects` entity (type PROJECT/STARTUP); the H6 write model; the H7 ownership and capability model; the venture taxonomy storage shape.
 
@@ -634,6 +634,33 @@ Resolved by precedence (not asked):
 - "Gửi HUB duyệt" → omitted (H6: no launch configuration).
 - Data room, fundraising, investor and A–J rules → excluded (H6, WF02 non-goals).
 - Region/domain storage → DEC-WF02-VENTURE-TAXONOMY-STORAGE.
+
+## DEC-WF02-S05 — Project / Startup (G1–G5, human approved)
+
+**Status:** HUMAN APPROVED — P0.
+**Date:** 2026-09-26.
+**Closes:** [OPEN-WF02-S05 G1–G5](#open-wf02-s05-g1).
+**Remaining S05 human decisions:** 0.
+
+| ID | Context | Decision | Rationale / consequences | Affected | Anchor |
+|---|---|---|---|---|---|
+| <a id="dec-wf02-s05-g1"></a>DEC-WF02-S05-G1 | The PRO1 bitmap draws almost none of the H6 fields | Keep the editor header and page frame; add one canonical form: Loại (`type`), Tên (`name`), Tóm tắt (`summary`), Lĩnh vực (`domain_ids`), Tỉnh / Thành phố (`region_id`), "Lưu". The same form serves `/projects/new` | Form = INTENTIONAL-CONTRACT; navigator A–J, required-field bar, completion %, section C, image upload, editorial rules, "Xem bản public", "Gửi HUB duyệt" = INTENTIONAL-P0-SCOPE; `design-reference/final` untouched | UI | S05-G1; H6 |
+| <a id="dec-wf02-s05-g2"></a>DEC-WF02-S05-G2 | No creation rule existed | Any authenticated account with onboarding DONE may create; enforced in `POST /ventures` (not DONE → 403 `SCOPE_FORBIDDEN`; guest → 401). No membership, leadership, role or capability required | Same boundary as every WF02 member page; pages redirect via the resolver | API, UI | S05-G2 |
+| <a id="dec-wf02-s05-g3"></a>DEC-WF02-S05-G3 | No frozen status trigger | Create → DRAFT. DRAFT and ACTIVE editable; ARCHIVED read-only (PATCH refused, code per [DEC-WF02-S05-D2](#dec-wf02-s05-d2)). No transition UI or endpoint | No publish, submit, approve, reject or restore invented | API, UI | S05-G3; SOT lifecycle |
+| <a id="dec-wf02-s05-g4"></a>DEC-WF02-S05-G4 | Type mutability | `type` (PROJECT/STARTUP) is fixed at creation; a PATCH carrying `type` is refused with the standard envelope (code per [DEC-WF02-S05-D2](#dec-wf02-s05-d2)), never silently applied | Stable identity for WF05 reuse | API | S05-G4 |
+| <a id="dec-wf02-s05-g5"></a>DEC-WF02-S05-G5 | Owner membership row | `owner_profile_id` from the session; no `project_members` row for the owner. `project_members` stays for team relations (S06/P12) | Ownership lives in one place | DB, API | S05-G5; H7 |
+
+## DEC-WF02-S05-D — Project / Startup implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within approved scope (H6, H7, S05-G1..G5).
+**Date:** 2026-09-26.
+**Task:** [WF02-S05](../implementation/reports/WF02-S05_project-startup.md).
+
+| ID | Topic | Decision | Source anchors |
+|---|---|---|---|
+| <a id="dec-wf02-s05-d1"></a>DEC-WF02-S05-D1 | API shape | `POST /ventures` 201 and `GET/PATCH /ventures/{id}` 200 return `{id, type, name, summary, status, region, domains, relation, can_edit}`, a superset of the §5.3 create response. `slug` is server-generated (`v-<18 hex>`) and never serialised; `metadata` is never read or written. Technical bounds (not business rules): name 200, summary 2000, 10 domains. Name is trimmed and required; summary blank → null; region and domains optional | API §5.3; DEC-WF02-H6 |
+| <a id="dec-wf02-s05-d2"></a>DEC-WF02-S05-D2 | Error codes (frozen set only; the SOT calls the venture a "Startup profile") | Validation → 422 `PROFILE_VALIDATION_FAILED` (`type: immutable` on PATCH; `not_accepted` for owner/status/slug/metadata/other keys). Archived vocabulary → `VOCABULARY_ITEM_INACTIVE` (the shared `assertSelectable`). Create before onboarding DONE → 403 `SCOPE_FORBIDDEN`. Member editing → 403 `SCOPE_FORBIDDEN`. Non-member or unknown id → 404 alike. ARCHIVED edit → 409 `PROFILE_DEACTIVATED` | API §2.5 error set; SOT §lifecycle |
+| <a id="dec-wf02-s05-d3"></a>DEC-WF02-S05-D3 | UI | The editor header (84px band, title/status/actions) is identical on the approved S02 and S05 references, so it is extracted as the shared `EditorHeader` (S02 migrated to it, pixel re-proven). Header status shows the lifecycle label (Bản nháp / Đang hoạt động / Đã lưu trữ) + "đã lưu lúc". The form uses the S02 field language. Type is a radio pair, disabled after creation. Members and ARCHIVED ventures see the form read-only with a notice. Copy is pending PO review | DEC-WF02-S05-G1/G3/G4 |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

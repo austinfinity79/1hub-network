@@ -37,6 +37,7 @@ const IMPLEMENTED_SCREENS = new Set([
   'WF02-S02',
   'WF02-S03',
   'WF02-S04',
+  'WF02-S05',
   'WF02-S07',
 ])
 
@@ -50,14 +51,16 @@ const GUARDED_SCREENS = new Set([
   'WF02-S02',
   'WF02-S03',
   'WF02-S04',
+  'WF02-S05',
   'WF02-S07',
 ])
 
 /**
  * An unguarded placeholder route of the member group. /me was used until
- * WF02-T00 put it behind the member shell guard.
+ * WF02-T00 guarded it, and /projects/new until WF02-S05 did; WF02-S06 is the
+ * last member placeholder.
  */
-const PLACEHOLDER_ROUTE = '/projects/new'
+const PLACEHOLDER_ROUTE = '/projects/sample-project/team'
 
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {

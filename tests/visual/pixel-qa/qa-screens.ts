@@ -130,7 +130,7 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
     'member',
     'roles: owned startup, ACTIVE Chapter 01, Chapter 01 leadership (test hook)',
   ),
-  cfg('WF02-S05', '/projects/:id/edit', 'member', 'edit own startup profile', {
+  cfg('WF02-S05', '/projects/:id/edit', 'member', 'owner edits the seeded ACTIVE startup', {
     id: FIXTURES.demoStartupId,
   }),
   cfg('WF02-S06', '/projects/:id/team', 'member', 'team of own startup', {
