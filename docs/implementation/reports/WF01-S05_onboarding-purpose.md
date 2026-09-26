@@ -3,7 +3,7 @@
 ## 1. Task
 - Task ID / name: WF01-S05-DECISION-FREEZE + WF01-S05 — Onboarding Purpose (`/onboarding/purpose`)
 - Status: **DONE**
-- Mode: LOCAL REVIEW. Committed locally, not pushed. WF01-S06 not started.
+- Mode: LOCAL REVIEW; push explicitly authorized afterwards. WF01-S06 not started.
 
 ## 2. Decisions
 DEC-WF01-S05-D1..D6 are recorded in [DECISION_LOG.md](../../decisions/DECISION_LOG.md) with stable anchors. [WF01_S05_INTENT_CONTRACT_GAP.md](../WF01_S05_INTENT_CONTRACT_GAP.md) is marked **HUMAN APPROVED — P0**.
@@ -88,8 +88,10 @@ All below 0.2%.
 ## 9. Git
 - Branch `main`; start HEAD `d4e978b`
 - Implementation commit: `eb5c49e` feat(wf01-s05): onboarding purpose with a P0 intent allowlist
-- Report/final commit: the commit containing this report
-- Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `e1a458b`
+- Report commit: `231e872` docs(wf01-s05): report onboarding purpose and close S05
+- Final commit: the commit recording this push status
+- Remote: `origin` (github.com:austinfinity79/1hub-network), branch `main`
+- Push status: **PASS** — `e1a458b..231e872` verified (local HEAD = `origin/main`); this status commit is pushed the same way
 - Working tree: clean after commit except the untracked `AGENTS.md`
 
 ## Related
