@@ -11,8 +11,8 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | 3 | S04 Roles & links | `/me/roles` | Memberships, leadership, venture roles with source label; membership request → PENDING_APPROVAL (H5, H11) | 0 | **DONE** (WF02-S04) |
 | 4 | S02 Profile edit | `/me/profile/edit` | Canonical IndividualProfile fields + Experience / Development goal / Current need (H1, H2). Activity panel Future | 0 | **DONE** (WF02-S02) |
 | 5 | S07 Settings | `/me/settings` | Sessions list, revoke one, revoke all, deletion request (H8) | 0; P13 deletion subset; revoke-all API addendum | **DONE** (WF02-S07; migration 006) |
-| 6 | S05 Project/Startup | `/projects/new`, `/projects/:id/edit` | Five fields; owner-only write; review button omitted (H6, H7) | 0; venture taxonomy migration ([DEC-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#dec-wf02-venture-taxonomy-storage)) | **HUMAN DECISION REQUIRED** (OPEN-WF02-S05 G1–G5; then migration 007) |
-| 7 | S06 Team | `/projects/:id/team` | Owner manages invitations/roles; members read-only; no permission tiers (H7) | 6; P12 | **READY AFTER MIGRATION** (P12), after S05 |
+| 6 | S05 Project/Startup | `/projects/new`, `/projects/:id/edit` | Five fields; owner-only write; review button omitted (H6, H7) | 0; venture taxonomy migration ([DEC-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#dec-wf02-venture-taxonomy-storage)) | **DONE** (WF02-S05; migration 007; DEC-WF02-S05-G1..G5) |
+| 7 | S06 Team | `/projects/:id/team` | Owner manages invitations/roles; members read-only; no permission tiers (H7) | 6; P12 | **READY AFTER MIGRATION** (P12); S05 done |
 
 **Order unchanged:** Foundation → S01 → S03 → S04 → S02 → S07 → S05 → S06. No decision creates a new dependency. After the foundation, S03, S04, S02 and S07 are independent of each other.
 
@@ -41,9 +41,9 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 |---|---|---|
 | DB | P12 additive migration: invitations, target email/identity, team lifecycle, integrity | S06 (with S05) |
 | DB | P13 subset: account deletion request only — **done** (migration 006) | S07 |
-| DB | Venture taxonomy: `projects.region_id` + `project_domains` | S05 |
+| DB | Venture taxonomy: `projects.region_id` + `project_domains` — **done** (migration 007) | S05 |
 | API | `/me/network` (**done**, T00), `/me/membership-requests`, `/me/profile` allowlist (H1/H2), `/me/sessions` + revoke-all addendum, `/me/account-deletion-request`, `/ventures*` (5 fields), `/ventures/{id}/team*` | per screen |
-| Authz | `venture:read`, `venture:manage`, `venture:team_manage` added to the Matrix | S05 |
+| Authz | `venture:read`, `venture:manage`, `venture:team_manage` added to the Matrix §E — **done** | S05 |
 | QA | Short full-page crop rule in the pixel harness | first WF02 pixel task |
 
 ## Happy paths
@@ -55,7 +55,7 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | HC-WF02-04 | Network-visible profile | Owner view only; `/profiles/{id}` UI not in P0 (H3) |
 | HC-WF02-05 | Roster member sees membership/leadership | **PASS** (WF02-S04) |
 | HC-WF02-06 | Unmatched member requests membership → PENDING_APPROVAL | **PASS** (WF02-S04) |
-| HC-WF02-07 | Member creates canonical Project/Startup | After S05 (taxonomy migration) |
+| HC-WF02-07 | Member creates canonical Project/Startup | **PASS** (WF02-S05) |
 
 ## Related
 - [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md) — findings

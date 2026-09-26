@@ -68,6 +68,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF02-S07 | Settings `/me/settings`: sessions list/revoke/revoke-all, account deletion REQUEST; migration 006 (P13 subset); G1–G6 frozen; pixel PASS; SEC-OBS-01 still open |
 | SEC-OBS-01 | Magic-link callback: `Referrer-Policy: no-referrer` header (callback only); asset Referers carry no token; auth behaviour unchanged — CLOSED |
 | M0-ENTRY-01 | Root `/`: bootstrap placeholder removed; server-side redirect through the canonical onboarding resolver |
+| WF02-S05 | Project/Startup `/projects/new`, `/projects/:id/edit`; `POST/GET/PATCH /ventures*`; migration 007 (region + domains); G1–G5 frozen; shared EditorHeader; pixel PASS |
 
 ## Not yet built (M0)
 
@@ -107,7 +108,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S05 preflight: HUMAN DECISION REQUIRED — 5 open decisions (OPEN-WF02-S05 G1–G5: P0 form addendum, create permission, lifecycle, type mutability, owner member row); migration 007 proposed, not created. [Audit](WF02_S05_PREFLIGHT_AUDIT.md). WF02 5 / 7 screens.
+WF02-S06 — Venture Team / Members (`/projects/:id/team`; needs P12 migration). WF02 6 / 7 screens.
 
 ## Related
 
