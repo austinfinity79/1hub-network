@@ -315,7 +315,6 @@ test.describe('WF04-T00 session store, reset and the demo frame', () => {
       await expect(page.locator('[data-demo-notice]'), other).toHaveCount(0)
     }
     for (const unbuilt of [
-      '/demo/programmes/new',
       `/demo/programmes/${CHALLENGE}`,
       `/demo/programmes/${CHALLENGE}/setup/basic`,
       '/demo/unknown',

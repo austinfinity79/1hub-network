@@ -154,18 +154,20 @@ test.describe('WF04-S01 list content', () => {
     await expect(rows(page)).toHaveCount(2)
   })
 
-  test('rows do not navigate and "Tạo mới" is disabled with its reason (S02 / S08 not built)', async ({
+  test('rows do not navigate (S08 not built); "Tạo mới" opens S02 (DEC-WF04-S02-D3)', async ({
     page,
   }) => {
     await login(page.request, 'leader@example.test')
     await open(page)
     await expect(page.locator('[data-programme-table] a')).toHaveCount(0)
-    await expect(page.locator('a[href^="/demo/programmes/"]')).toHaveCount(0)
+    expect(
+      await page
+        .locator('a[href^="/demo/programmes/"]')
+        .evaluateAll((els) => els.map((e) => e.getAttribute('href'))),
+    ).toEqual(['/demo/programmes/new'])
     const create = page.locator('[data-demo-create]')
-    await expect(create).toBeDisabled()
-    await expect(create).toHaveAttribute('aria-disabled', 'true')
-    await expect(create).toHaveAttribute('title', 'Chưa có trong phiên bản này')
-    await expect(create).toHaveAccessibleName('Tạo mới — Chưa có trong phiên bản này')
+    await expect(create).toHaveText('Tạo mới')
+    await expect(create).not.toHaveAttribute('aria-disabled', 'true')
     await rows(page).first().click()
     await expect(page).toHaveURL('/demo/programmes')
     // OpsShell: the demo entry is current; WF03 nav unchanged; no WF03-S05 link.
@@ -499,7 +501,7 @@ test.describe('WF04-S01 visual QA (ADM5 primitives; no WF04 bitmap)', () => {
         {
           class: 'INTENTIONAL-DEMO',
           reason:
-            'DEC-WF04-H1 / S01-D3: composed from ADM5 primitives; "Chapter hưởng ứng" track shows canonical dates; the problem-count track is 29px narrower so the status pill sits at x 1282 and is never clipped; the demo notice sits between header and table; "Tạo mới" disabled until S02; no WF04 pixel parity claimed',
+            'DEC-WF04-H1 / S01-D3: composed from ADM5 primitives; "Chapter hưởng ứng" track shows canonical dates; the problem-count track is 29px narrower so the status pill sits at x 1282 and is never clipped; the demo notice sits between header and table; no WF04 pixel parity claimed',
         },
       ],
       typography,

@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { ApiError, notFound } from '@/lib/api/errors'
 import { resolveActor, type Actor } from '@/lib/authz/actor'
 import { query } from '@/lib/db/client'
-import type { OrganizationRefDTO } from '@/lib/ops/organizations'
+import { OPS_ORGANIZATION_TYPES, type OrganizationRefDTO } from '@/lib/ops/organizations'
 import { organizationScope } from '@/lib/ops/scope'
 
 import { DEMO_PROGRAMMES, demoFixture } from './fixtures'
@@ -87,4 +87,28 @@ export async function getDemoProgramme(
   const detail = (await visibleDetails(allowance)).find((d) => d.programme.id === id)
   if (!detail) throw notFound()
   return detail
+}
+
+/**
+ * WF04-S02 (DEC-WF04-S02-D2): the organizations a new demo draft may belong to,
+ * computed on the server from the actor's `programme:read` scope — every
+ * operational organization (HUB / CHAPTER / CLB) for PLATFORM_ADMIN, exactly
+ * the assigned ones for a HUB_COMMUNITY_LEADER. Nothing from the request
+ * (query, body, header) is an input. Sorted by name.
+ */
+export async function demoOwnerOptions(accountId: string): Promise<OrganizationRefDTO[]> {
+  const allowance = allowanceOf(await resolveActor(accountId))
+  if (!allowance) return []
+  const types = [...OPS_ORGANIZATION_TYPES]
+  return allowance === 'ALL'
+    ? query<OrgRow>(
+        `SELECT id::text, slug, name, type::text AS type FROM organizations
+          WHERE type::text = ANY($1::text[]) ORDER BY name, id`,
+        [types],
+      )
+    : query<OrgRow>(
+        `SELECT id::text, slug, name, type::text AS type FROM organizations
+          WHERE type::text = ANY($1::text[]) AND id = ANY($2::uuid[]) ORDER BY name, id`,
+        [types, allowance],
+      )
 }

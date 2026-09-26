@@ -1,15 +1,18 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 
+import { Notice } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
 import type { ListEnvelope } from '@/lib/api/types'
-import { INERT_REASONS } from '@/lib/member/nav'
 import { DEMO_COPY, TYPE_LABEL } from '@/lib/programme-demo/copy'
 import { formatDemoDateRange } from '@/lib/programme-demo/format'
+import { demoRoutes } from '@/lib/programme-demo/routes'
 import { mergedSummaries } from '@/lib/programme-demo/session-store'
 import type { ProgrammeDemoSummaryDTO } from '@/lib/programme-demo/types'
 
+import buttons from './demo-buttons.module.css'
 import { DemoPage } from './demo-page'
 import { useProgrammeDemo } from './demo-store'
 import styles from './programme-list.module.css'
@@ -24,8 +27,9 @@ import { ProgrammeStatusPill } from './status-pill'
  * are DTO fields only: name, owning organization, type, dates, problem count
  * (CHALLENGE only) and lifecycle status.
  *
- * Rows do not navigate until WF04-S08 builds the detail (S01-D1); "Tạo mới" is
- * shown disabled with its reason until WF04-S02 (S01-D2).
+ * Rows do not navigate until WF04-S08 builds the detail (S01-D1). "Tạo mới"
+ * opens WF04-S02 (S02-D3 supersedes S01-D2); a draft saved there is confirmed
+ * here once.
  */
 
 const COPY = {
@@ -41,8 +45,13 @@ type State =
   { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; items: ProgrammeDemoSummaryDTO[] }
 
 export function ProgrammeList() {
-  const { state: session, allowance } = useProgrammeDemo()
+  const { state: session, allowance, flash, setFlash } = useProgrammeDemo()
   const [state, setState] = useState<State>({ kind: 'loading' })
+  // The confirmation from S02 is shown once, then cleared (gone on reload).
+  const [created] = useState(flash)
+  useEffect(() => {
+    if (created) setFlash(null)
+  }, [created, setFlash])
 
   const load = useCallback(async () => {
     setState({ kind: 'loading' })
@@ -72,20 +81,21 @@ export function ProgrammeList() {
         title={DEMO_COPY.title}
         meta={meta}
         actions={
-          <button
-            type="button"
-            className={`weight-medium ${styles.create}`}
-            disabled
-            aria-disabled="true"
-            title={INERT_REASONS.NO_P0_SCREEN}
-            aria-label={`${COPY.create} — ${INERT_REASONS.NO_P0_SCREEN}`}
-            data-nav-kind="INERT"
+          <Link
+            href={demoRoutes.create()}
+            className={`weight-medium ${buttons.primary}`}
+            data-nav="programme-create"
             data-demo-create
           >
             {COPY.create}
-          </button>
+          </Link>
         }
       >
+        {created ? (
+          <div className={styles.flash} data-state="created">
+            <Notice>{created}</Notice>
+          </div>
+        ) : null}
         {state.kind === 'failed' ? (
           <div className={styles.failed} role="alert" data-state="list-failed">
             <p className="type-body-sm">{COPY.failed}</p>

@@ -108,22 +108,6 @@
   outline-offset: 0.125em;
 }
 
-/* The ADM5 header button family (#fc523c, 7px radius, 35px), shown disabled
-   until WF04-S02 (DEC-WF04-S01-D2). */
-.create {
-  flex: none;
-  height: 2.1875rem;
-  margin-top: 0.0625rem;
-  padding: 0 1.125rem;
-  border: 0;
-  border-radius: 0.4375rem;
-  background: #fc523c;
-  font-size: 0.8125rem;
-  color: #160002;
-  white-space: nowrap;
-}
-
-.create:disabled {
-  opacity: 0.55;
-  cursor: default;
+.flash {
+  margin-bottom: 1rem;
 }

@@ -6,6 +6,7 @@ import {
   useContext,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
@@ -23,8 +24,9 @@ import type { ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
 /**
  * WF04-T00 — browser side of the Programme demo session store
  * (DEC-WF04-T00-D3). `sessionStorage` under one key per actor; a same-tab event
- * re-renders subscribers after each write. When the browser refuses storage the
- * state is kept in memory for the page's life. Nothing is sent to the server.
+ * re-renders subscribers after each write. A write the browser refuses is
+ * reported to the caller and changes nothing (DEC-WF04-S02-D4). Nothing is sent
+ * to the server.
  */
 
 const CHANGE_EVENT = 'hub:wf04-demo-store'
@@ -32,9 +34,13 @@ const CHANGE_EVENT = 'hub:wf04-demo-store'
 type DemoStore = {
   state: DemoSessionState
   allowance: OrganizationAllowance
-  save: (detail: ProgrammeDemoDetailDTO, created?: boolean) => void
-  remove: (id: string) => void
+  /** False when the browser refused to store it; nothing is saved then. */
+  save: (detail: ProgrammeDemoDetailDTO, created?: boolean) => boolean
+  remove: (id: string) => boolean
   reset: () => void
+  /** A one-off confirmation for the next screen (kept in memory, gone on reload). */
+  flash: string | null
+  setFlash: (message: string | null) => void
 }
 
 const StoreContext = createContext<DemoStore | null>(null)
@@ -58,6 +64,7 @@ export function ProgrammeDemoProvider({
 }) {
   const key = demoStoreKey(actorKey)
   const memory = useRef<string | null>(null)
+  const [flash, setFlash] = useState<string | null>(null)
 
   const subscribe = useCallback((notify: () => void) => {
     window.addEventListener(CHANGE_EVENT, notify)
@@ -75,17 +82,19 @@ export function ProgrammeDemoProvider({
   const state = useMemo(() => parseDemoState(raw), [raw])
 
   const commit = useCallback(
-    (next: DemoSessionState | null) => {
+    (next: DemoSessionState | null): boolean => {
       const value = next ? JSON.stringify(next) : null
-      memory.current = value
       try {
         const s = storage()
-        if (value === null) s?.removeItem(key)
-        else s?.setItem(key, value)
+        if (!s) return false
+        if (value === null) s.removeItem(key)
+        else s.setItem(key, value)
       } catch {
-        // Memory keeps the state for this page.
+        return false
       }
+      memory.current = value
       window.dispatchEvent(new Event(CHANGE_EVENT))
+      return true
     },
     [key],
   )
@@ -96,9 +105,16 @@ export function ProgrammeDemoProvider({
       allowance,
       save: (detail, created) => commit(withProgramme(parseDemoState(read()), detail, created)),
       remove: (id) => commit(withoutProgramme(parseDemoState(read()), id)),
-      reset: () => commit(null),
+      reset: () => {
+        commit(null)
+        memory.current = null
+        setFlash(null)
+        window.dispatchEvent(new Event(CHANGE_EVENT))
+      },
+      flash,
+      setFlash,
     }),
-    [state, allowance, commit, read],
+    [state, allowance, commit, read, flash],
   )
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>

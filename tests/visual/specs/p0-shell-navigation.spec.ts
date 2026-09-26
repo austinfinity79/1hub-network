@@ -185,8 +185,9 @@ test.describe('P0-SHELL navigation matrix', () => {
       `/ops/org/${CHAPTER_01}/profile`,
       `/ops/org/${CHAPTER_01}/events`,
       `/ops/org/${CHAPTER_01}/settings`,
-      // WF04-T00 (DEC-WF04-H2): the Programme demo entry and its frame.
+      // WF04 (DEC-WF04-H2): the Programme demo list and its create form.
       '/demo/programmes',
+      '/demo/programmes/new',
     ])
       await crawl(page, 'operator', source)
   })
@@ -198,6 +199,7 @@ test.describe('P0-SHELL navigation matrix', () => {
       `/ops/org/${HUB}`,
       `/ops/org/${HUB}/settings`,
       '/demo/programmes',
+      '/demo/programmes/new',
     ])
       await crawl(page, 'admin', source)
   })

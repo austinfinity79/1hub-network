@@ -1,0 +1,51 @@
+/*
+ * WF04 — demo header buttons in the ADM5 header-button family (#fc523c fill,
+ * 7px radius, 35px, burgundy label) and its secondary counterpart (the WF03
+ * ops secondary: #e6e1e1 border on white). Shared by the demo screens.
+ */
+
+.primary,
+.secondary {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 2.1875rem;
+  margin-top: 0.0625rem;
+  padding: 0 1.125rem;
+  border-radius: 0.4375rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primary {
+  border: 0;
+  background: #fc523c;
+  color: #160002;
+}
+
+.secondary {
+  border: 1px solid #e6e1e1;
+  background: var(--hub-surface);
+  color: #442f30;
+}
+
+.primary:disabled,
+.primary[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.group {
+  display: flex;
+  flex: none;
+  gap: 0.625rem;
+}

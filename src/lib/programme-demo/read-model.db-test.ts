@@ -7,7 +7,7 @@ import { listOrganizationEvents } from '@/lib/ops/events'
 import { hasOpsAccess } from '@/lib/ops/scope'
 
 import { DEMO_CHALLENGE_ID, DEMO_PROGRAMME_ID } from './fixtures'
-import { demoAccess, getDemoProgramme, listDemoProgrammes } from './read-model'
+import { demoAccess, demoOwnerOptions, getDemoProgramme, listDemoProgrammes } from './read-model'
 
 /**
  * WF04-T00 — the demo read model against live PostgreSQL (DEC-WF04-H2,
@@ -166,6 +166,31 @@ describe('WF04-T00 demo scope (programme:read, exact organization)', () => {
       '',
     ])
       expect(await refusal(getDemoProgramme(ADMIN, id))).toMatchObject({ status: 404 })
+  })
+})
+
+describe('WF04-S02 owner options (DEC-WF04-S02-D2)', () => {
+  it('admin: every HUB / CHAPTER / CLB by name; leader: exactly its organization; member: none', async () => {
+    const ops = await query<{ id: string }>(
+      `SELECT id::text FROM organizations WHERE type::text IN ('HUB', 'CHAPTER', 'CLB') ORDER BY name, id`,
+    )
+    expect((await demoOwnerOptions(ADMIN)).map((o) => o.id)).toEqual(ops.map((o) => o.id))
+    expect(await demoOwnerOptions(LEADER)).toEqual([
+      { id: CHAPTER_01, slug: 'chapter-01', name: 'Chapter 01', type: 'CHAPTER' },
+    ])
+    expect(await demoOwnerOptions(MEMBER)).toEqual([])
+    const { account } = await person({
+      code: 'HUB_COMMUNITY_LEADER',
+      scopeType: 'ORGANIZATION',
+      scopeId: CHAPTER_02,
+    })
+    expect((await demoOwnerOptions(account)).map((o) => o.id)).toEqual([CHAPTER_02])
+    const labelled = await person({
+      code: 'PROGRAMME_ORGANIZER',
+      scopeType: 'PLATFORM',
+      scopeId: null,
+    })
+    expect(await demoOwnerOptions(labelled.account)).toEqual([])
   })
 })
 
