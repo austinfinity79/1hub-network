@@ -821,6 +821,22 @@ Resolution: a focused S08 preflight / decision freeze before any S08 relationshi
 | Not P0 | Change-parent request / approval queue, notifications, partner / co-organizer / programme relationships, audit-log card (INTENTIONAL-P0-SCOPE) |
 | Human decisions remaining | 0 |
 
+<a id="open-wf03-s07-event-lifecycle"></a>**OPEN-WF03-S07-EVENT-LIFECYCLE — Event lifecycle / edit / publish semantics for S07 (OPEN 2026-09-26; blocks WF03-S07 runtime only)**
+
+Found by the S07 focused preflight. The frozen sources give only the chain `DRAFT → PUBLISHED → LIVE → ENDED | CANCELLED → ARCHIVED` (Data SOT §state machines; API §8.6) and three operation sentences: PATCH "only in allowed lifecycle states", publish "`DRAFT → PUBLISHED` after required validation", cancel "lifecycle-controlled". The `event_status` enum matches the chain. Nothing below is decided by S07.
+
+| Gap | Question | Why it blocks | Options (recommended first) |
+|---|---|---|---|
+| E1 Cancel source states | From which states may `POST /ops/events/{id}/cancel` move to CANCELLED? Read literally, the chain puts CANCELLED only after LIVE | The central lifecycle guard of the screen | (a) PUBLISHED and LIVE → CANCELLED; DRAFT is not cancellable (never visible). (b) DRAFT, PUBLISHED, LIVE → CANCELLED. (c) LIVE only (literal) |
+| E2 Edit states | In which states does `PATCH /ops/events/{id}` accept changes, and are any fields locked after publish? | "Allowed lifecycle states" is undefined | (a) DRAFT and PUBLISHED, all editable fields; LIVE / ENDED / CANCELLED / ARCHIVED read-only. (b) DRAFT only. (c) PUBLISHED with a restricted field set |
+| E3 Publish validation | Which fields are "required validation" for `DRAFT → PUBLISHED` (starts_at, ends_at, ends ≥ starts, future start, location)? | Publish must refuse an incomplete draft | (a) name + starts_at + ends_at with ends_at ≥ starts_at; starts_at not in the past; summary / location optional. (b) name only |
+| E4 Field set | The create example carries `timezone` and `registration_enabled` (no column; registration excluded by G10), while the columns `summary` and `location_text` are not in the example. Which fields does S07 create / edit? | Create and PATCH payloads | (a) name, summary, starts_at, ends_at, location_text; `programme_id` must be null or absent (else 422); `registration_enabled` rejected (G10); `timezone` accepted only as `Asia/Ho_Chi_Minh` (display zone) and not stored. (b) reject `timezone` |
+| E5 LIVE / ENDED | Are LIVE and ENDED set by time, by an operator, or not at all in P0? | Status display, edit guard (E2) and cancel guard (E1) all depend on it | (a) Not in P0: no operation and no time derivation; S07 shows the stored status only. (b) Derive LIVE / ENDED for display from starts_at / ends_at without storing |
+
+Already settled by frozen sources (no decision needed): canonical `events` table; organization ownership from the path, server-set; `programme_id` NULL for WF03-created events (G10) and existing links left as they are; capability `event:manage`, exact organization scope; audit codes `EVENT_CREATED` / `EVENT_UPDATED` / `EVENT_PUBLISHED` / `EVENT_CANCELLED` (G14); Idempotency-Key on create / publish (API §2.3, provisional leniency); no registration (G10); the bitmap is not authority (G2).
+
+Resolution: a human decision on E1–E5, recorded as DEC-WF03-S07-EVENT-LIFECYCLE, then a fast-path S07 implementation.
+
 <a id="open-wf03-c2"></a>**OPEN-WF03-C2 — Hierarchy fixture disagreement (reported per DEC-WF03-G9) — CLOSED by [DEC-WF03-C2](#dec-wf03-c2)**
 
 | Field | Record |

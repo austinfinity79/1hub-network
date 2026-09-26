@@ -12,12 +12,12 @@
 | 4 | S04 Membership review / leadership ops | `/ops/org/:orgId/members/:profileId` | S03, G5, G6, G14 | PENDING → ACTIVE / REJECTED; leadership create/end per API; audit | Full preflight (mutations + audit) | **DONE** ([report](reports/WF03-S04_membership-review-leadership.md)) |
 | 5 | S06 Organization profile / detail | `/ops/org/:orgId/profile` | G8, G9, G14, DEC-WF03-C1 | Canonical profile read + name / description edit; hierarchy read-only | Full preflight (C1 freeze + mutation) | **DONE** ([report](reports/WF03-S06_organization-profile.md)) |
 | 6 | S08 Organization settings / relationships | `/ops/org/:orgId/settings` | G9, DEC-WF03-C1, DEC-WF03-S08-RELATIONSHIP-CONTRACT, migration 009 | PARENT create / change / close over `organization_relationships` (`org:manage_relationship`, both ends) | Focused full preflight + freeze | **DONE** ([report](reports/WF03-S08_organization-relationships.md)) |
-| 7 | S07 Event management | `/ops/org/:orgId/events` | T00, G2, G10, G14 | Standalone list / detail / create / edit / publish / cancel; S07 screen-contract addendum | Full preflight (addendum + lifecycle) | **NEXT** |
+| 7 | S07 Event management | `/ops/org/:orgId/events` | T00, G2, G10, G14 | Standalone list / detail / create / edit / publish / cancel; S07 screen-contract addendum | Full preflight (addendum + lifecycle) | **BLOCKED** — [OPEN-WF03-S07-EVENT-LIFECYCLE](../decisions/DECISION_LOG.md#open-wf03-s07-event-lifecycle) E1–E5 ([preflight](reports/WF03-S07_event-management_blocked.md)) |
 | 8 | S09 Public organization page | `/organizations/:slug` | G13, G9, G10 | Public-safe projection + published standalone events | Fast path | after S07 |
 | 9 | WF03 completion audit + UAT | — | 1–8 | Closing gate (§I) | — | — |
 | — | S05 Unit programmes | `/ops/org/:orgId/programmes` | G12 | **FUTURE / WF04 — not implemented** | — | FUTURE |
 
-**Why S06 before S08:** S06 (profile) needs no hierarchy writes, while S08 depends on the G9 invariant and on optional migration 009. C1 is closed (DEC-WF03-C1) and the S08 relationship contract is frozen; S06 and S08 are done. S07 and S09 remain.
+**Why S06 before S08:** S06 (profile) needs no hierarchy writes, while S08 depends on the G9 invariant and on optional migration 009. C1 is closed (DEC-WF03-C1) and the S08 relationship contract is frozen; S06 and S08 are done. S07 is blocked on OPEN-WF03-S07-EVENT-LIFECYCLE (E1–E5); S09 does not depend on it and may go first.
 
 ## Design element classification (per reference; frozen by G1–G15)
 | Screen | Canonical P0 | Intentional contract | Intentional P0 scope / WF04 / Future |

@@ -1,132 +1,53 @@
 # Claude Task Report
 
 ## Task
-WF03-S08 — ORGANIZATION SETTINGS / RELATIONSHIPS. Process: PROCESS-P0-ACCELERATED-SAFE-V2, focused full preflight → decision freeze → implement.
+WF03-S07 — EVENT MANAGEMENT. Process: PROCESS-P0-ACCELERATED-SAFE-V2, focused full preflight → implement if safe.
 
 ## Status
-**DONE — LOCAL REVIEW.**
+**BLOCKED** at preflight, on the task's own stop rule: "If lifecycle is not fully defined: STOP. Do NOT guess."
+
+- No runtime code, no migration, no seed change, no push.
 
 ## Preflight
 | Area | Result |
 |---|---|
-| Relationship contract | API §8.7 (list / create / close), SCR S08 (`create_relationship`, `close_relationship_preserve_history`), G9, C1 |
-| Lifecycle | `organization_relationships.state` (`record_state`: ACTIVE → CLOSED) + `ended_at` represent history. No schema gap |
-| RBAC | `org:manage_relationship` exists (HUB_COMMUNITY_LEADER exact org, PLATFORM_ADMIN) |
-| Migration | The DB did **not** guarantee one ACTIVE parent → 009 required; current data is consistent |
-| Audit | No relationship code existed → minimum 2 new codes |
-| New human decisions | 0 |
+| Business | Create / edit / publish / cancel are named by SCR S07, G10 and API §8.6. Registration and WF04 content are out (G2, G10) |
+| Data | Canonical `events` table with `organization_id` NOT NULL, nullable `programme_id`, `event_status` = the SOT chain, unique `slug`. Fixture: one PUBLISHED standalone event and one DRAFT event linked to a programme (left as is, G10) |
+| API | §8.6: `GET/POST /ops/organizations/{orgId}/events`, `GET /events/{id}`, `PATCH /ops/events/{id}`, `POST …/publish`, `POST …/cancel`. Idempotency on create / publish (§2.3) |
+| RBAC | `event:manage` (HUB_COMMUNITY_LEADER exact org, PLATFORM_ADMIN) |
+| Audit | EVENT_CREATED / _UPDATED / _PUBLISHED / _CANCELLED frozen (G14); none emitted yet |
+| Design | S07 bitmap = WF04 collage, not authority (G2); build from WF03 primitives |
+| **Lifecycle** | **Not fully defined → OPEN-WF03-S07-EVENT-LIFECYCLE** |
 
-## Decision freeze
-**OPEN-WF03-S08-RELATIONSHIP-CONTRACT → CLOSED** by DEC-WF03-S08-RELATIONSHIP-CONTRACT; implementation decisions DEC-WF03-S08-D1..D4.
+## Open gap (E1–E5)
+Full record: [OPEN-WF03-S07-EVENT-LIFECYCLE](../../decisions/DECISION_LOG.md#open-wf03-s07-event-lifecycle).
 
-| Item | Decision |
-|---|---|
-| Relationship | PARENT only, stored source = parent → target = child |
-| Valid pairs | HUB → CHAPTER and CHAPTER → CLB |
-| Delta vs the task list | HUB → CLB excluded, following the higher-precedence Design SOT (ADM21 / BR-FS03-09) |
-| Parents per child | One ACTIVE parent, enforced by DB index + transaction; never a silent replace |
-| Change parent | Explicit `replaces_relationship_id`: close old + create new in one transaction |
-| End | `close` sets CLOSED + `ended_at` (+ optional reason); no DELETE |
-| Authority | `org:manage_relationship` on **both** ends, exact scope |
-
-## Scope completed
-- **API:**
-  - `GET` / `POST /api/v1/ops/organizations/{orgId}/relationships`
-  - `POST …/relationships/{relationshipId}/close`
-  - `Idempotency-Key` honoured per §2.3
-- **Page:** `/ops/org/:orgId/settings` inside OpsShell. It replaces the placeholder.
-  - Title and counts, "+ Thêm quan hệ".
-  - Tree position.
-  - Active table with "Kết thúc" and an inline reason.
-  - History.
-  - Add / change-parent form fed by server candidates.
-  - Valid-pair rules.
+| Gap | Question | Recommended |
+|---|---|---|
+| E1 | Cancel from which states? The literal chain allows it after LIVE only | PUBLISHED and LIVE → CANCELLED; DRAFT not cancellable |
+| E2 | PATCH in which states / with which fields? | DRAFT and PUBLISHED, all editable fields; other states read-only |
+| E3 | Publish required validation? | name + starts_at + ends_at, ends ≥ starts, start not in the past |
+| E4 | Field set (`timezone` / `registration_enabled` in the example vs the `summary` / `location_text` columns) | name, summary, starts_at, ends_at, location_text; `programme_id` null only; `registration_enabled` rejected; `timezone` only `Asia/Ho_Chi_Minh`, not stored |
+| E5 | LIVE / ENDED in P0? | Not in P0: no operation and no time derivation; show the stored status |
 
 ## Files changed
-- `db/migrations/009_p0_one_active_parent.sql`
-- `src/lib/ops/relationships.ts`, `relationship-rules.ts`, `relationships.db-test.ts`, `relationships.capability.db-test.ts`
-- `src/lib/audit/audit.ts` (+2 codes)
-- `src/app/api/v1/ops/organizations/[orgId]/relationships/{route.ts, [relationshipId]/close/route.ts}`
-- `src/app/(ops)/ops/org/[orgId]/settings/{page.tsx, organization-relationships.tsx, relationships.module.css}`
-- Tests:
-  - `tests/visual/specs/wf03-s08-organization-relationships.spec.ts`
-  - `tests/visual/pixel-qa/qa-screens.ts`
-  - `src/lib/db/schema.db-test.ts` (+009)
-  - `src/lib/ops/ops.db-test.ts` (a second ACTIVE parent is now refused by the DB)
-  - `tests/visual/specs/api-contract.spec.ts` (comment)
-- Docs: DECISION_LOG, WF03 plan, WF03 pre-implementation audit, P0_STATUS, CLAUDE_LATEST_REPORT
-
-## Migration 009
-- A guard aborts with DATA INCONSISTENCY if a child has more than one ACTIVE PARENT; it never repairs.
-- One partial unique index, `uq_active_parent_per_child`.
-
-| Check | Result |
-|---|---|
-| Fresh DB (throwaway): migrate + seed | PASS |
-| Upgrade of the dev DB | PASS |
-| Rerun | PASS (skipped) |
-| Guard on a seeded violation | Aborted and rolled back, as intended |
-
-## Security (14 cases PASS)
-| # | Case | Result |
-|---|---|---|
-| 1 | Guest → /auth; API 401 | PASS |
-| 2 | Member → page 404, API 403 | PASS |
-| 3 | ACTIVE membership → no authority | PASS |
-| 4 | Leadership title → no authority | PASS |
-| 5 | `org:manage` without `org:manage_relationship` → 403 on read, create and close (authorizer substitution test) | PASS |
-| 6 | Foreign organization → 404 / 403 | PASS |
-| 7 | Spoofed ids / headers, and a leader reaching another org → 403, no change | PASS |
-| 8 | Unsupported pair / type → 422 | PASS |
-| 9 | Second ACTIVE parent → 409 (service and DB) | PASS |
-| 10 | Self-parent → 422 | PASS |
-| 11 | 2- and 3-cycles → 422 | PASS |
-| 12 | Concurrent parents → exactly one ACTIVE; stale change → 409; idempotent replay → first result | PASS |
-| 13 | Refused calls write no audit | PASS |
-| 14 | DTO / log contain no PII; server log has 0 email / token / cookie lines | PASS |
+- `docs/decisions/DECISION_LOG.md` (OPEN-WF03-S07-EVENT-LIFECYCLE)
+- `docs/implementation/WF03_SCREEN_IMPLEMENTATION_PLAN.md`, `P0_STATUS.md`, `CLAUDE_LATEST_REPORT.md`
+- This report
 
 ## Tests
-| Gate | Result |
-|---|---|
-| Format / lint / typecheck / build | PASS |
-| Unit | 157 passed |
-| DB (full) | 327 passed (+11 S08) |
-| S08 Playwright | 8/8 |
-| Targeted regression | 94 passed: T00, S01–S04, S06, S08, api-contract, shell-routes, console-health |
-
-## Pixel (1440×900 DPR1)
-Full page: CROP_TO_REFERENCE_HEIGHT; only the sidebar continues below.
-
-| Segment | Outside-text drift |
-|---|---|
-| Header incl. button | 32 px (0.045%, edge AA) |
-| Tree card | 0 |
-| Active card top | 0 |
-| First row | 20 px (raster) |
-| History card | 0 |
-| Add card top | 2 px |
-| Rules card top | 0 |
-
-- Structural / major / component: 0 / 0 / 0.
-- Intentional:
-  - the request queue, partner / co-organizer / programme rows and the audit-log card are omitted (the cards below move up);
-  - the add form is shown idle;
-  - typography migration.
-
-## Contract notes (non-blocking)
-- The only frozen conflict code is `MEMBERSHIP_INVALID_TRANSITION`, which is reused for 409s.
-- Idempotency-Key is optional (provisional leniency), as for the other §2.3 operations.
+Not run: no code changed. The last full gates were green at `a9659a8` (WF03-S08).
 
 ## Blocking gaps
-0.
+1: OPEN-WF03-S07-EVENT-LIFECYCLE (E1–E5). It blocks S07 only; S09 is independent.
 
 ## Git
-- Branch: `main`; start HEAD `e9ff1ec` (checked again before each commit)
-- Implementation commit: `2b081a5`
+- Branch: `main`; start HEAD `a9659a8` (checked again before the commit)
+- Implementation commit: none (preflight only)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-WF03-S07 — EVENT MANAGEMENT.
+Decide E1–E5 (RESOLVE OPEN-WF03-S07-EVENT-LIFECYCLE) → WF03-S07 fast path. WF03-S09 — PUBLIC ORGANIZATION PAGE may run first.
