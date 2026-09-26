@@ -2,10 +2,18 @@
 # APP_SHA comes from ./.env, written by bin/release.sh.
 name: onehub
 
+# Bounded container logs: 3 x 10 MB per service.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
 services:
   db:
     image: postgres:17.6-alpine
     restart: unless-stopped
+    logging: *logging
     env_file: ../shared/env/db.env
     environment:
       POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8'
@@ -21,6 +29,7 @@ services:
   app:
     image: onehub-app:${APP_SHA:?APP_SHA is required}
     restart: unless-stopped
+    logging: *logging
     env_file: ../shared/env/app.env
     depends_on:
       db:

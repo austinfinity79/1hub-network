@@ -5,7 +5,7 @@ PRE-UAT / staging-like environment for 1hub.network P0. **Not Production Go-Live
 ## Architecture
 
 ```
-Internet ─▶ Nginx :80 (:443 after DNS + certbot) ─▶ 127.0.0.1:3100 ─▶ app container :3000
+Browser ─HTTPS─▶ OneShield/WAF ─▶ Nginx :80/:443 (origin) ─▶ 127.0.0.1:3100 ─▶ app container :3000
                                                                         │ compose network only
                                                                         ▼
                                                         PostgreSQL 17.6 (no published port)
@@ -16,7 +16,7 @@ Internet ─▶ Nginx :80 (:443 after DNS + certbot) ─▶ 127.0.0.1:3100 ─�
 | VPS | `103.252.93.145`, Ubuntu 24.04, SSH alias `hub-vps` (root, key only) |
 | Domain | `1hubnetwork.io.vn` |
 | Firewall | `ufw` allows 22, 80, 443 only |
-| Compose project | `onehub` (`db`, `app`); restart `unless-stopped`; both have healthchecks |
+| Compose project | `onehub` (`db`, `app`); restart `unless-stopped`; healthchecks; json-file logs 3 x 10 MB |
 | Image | `onehub-app:<full-sha>`, built from `git archive <sha>` with `deploy/Dockerfile` |
 
 ## Server paths
@@ -69,10 +69,18 @@ docker compose exec -T db pg_restore -U "$POSTGRES_USER" -d restore_check < FILE
 - The container healthcheck calls `GET /api/v1/auth/providers`. The app has no dedicated health endpoint.
 - The smoke test checks that `/auth` and `/api/v1/session` return 200 and `/dev/typography` returns 404. It also reads `/api/v1/vocabularies/REGION`, which is DB-backed.
 
-## DNS / TLS
+## DNS / TLS (OneShield)
 
-1. Set `1hubnetwork.io.vn A 103.252.93.145` and remove the AAAA record (the VPS has no IPv6).
-2. Then run `certbot --nginx -d 1hubnetwork.io.vn --redirect`, then `certbot renew --dry-run`.
+| Item | State |
+|---|---|
+| Nameservers | `sapa.vclouddns.com`, `laocai.vclouddns.com` (do not change) |
+| Public A/AAAA | OneShield edge IPs, not the VPS; the origin `103.252.93.145` is set in OneShield |
+| Browser TLS | OneShield certificate; OneShield does the HTTP→HTTPS redirect and adds HSTS |
+| Origin TLS | Let's Encrypt `1hubnetwork.io.vn` via `certbot certonly --nginx` (HTTP-01 through OneShield); renewed by `certbot.timer` |
+| Origin port 80 | proxies, never redirects: OneShield reaches the origin over HTTP, so a redirect would loop |
+| Forwarded proto | Nginx keeps OneShield's `X-Forwarded-Proto: https`, else its own `$scheme` |
+
+The previous VPS `103.211.207.236` is expired and is not referenced by any active config.
 
 ## Known release blockers
 
