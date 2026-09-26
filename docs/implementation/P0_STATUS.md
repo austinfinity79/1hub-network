@@ -111,7 +111,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF03 PRE-IMPLEMENTATION BUSINESS/DATA/DESIGN AUDIT (not started).
+WF03 pre-implementation audit: HUMAN DECISION REQUIRED — 15 open decisions ([OPEN-WF03 G1–G15](../decisions/DECISION_LOG.md#open-wf03-g1)); 0 / 9 screens ready. [Audit](WF03_PRE_IMPLEMENTATION_AUDIT.md), [plan](WF03_SCREEN_IMPLEMENTATION_PLAN.md), [happy paths](WF03_HAPPY_PATH_PLAN.md). Next: DECIDE OPEN-WF03 G1–G15.
 
 ## Related
 
