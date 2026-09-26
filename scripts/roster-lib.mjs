@@ -244,14 +244,37 @@ export async function importRoster(exec, text, { dryRun = false } = {}) {
   report.accounts_matched = accounts.length
   const matched = new Set(accounts.map((a) => a.email_normalized))
   for (const row of valid.filter((r) => matched.has(r.email))) {
-    const [open] = await exec(
-      `SELECT 1 FROM community_memberships m JOIN individual_profiles p ON p.id = m.profile_id
+    // The same decision roster_reconcile_account will take (migration 004).
+    const [existing] = await exec(
+      `SELECT m.state::text AS state FROM community_memberships m
+         JOIN individual_profiles p ON p.id = m.profile_id
          JOIN user_accounts a ON a.id = p.account_id
-        WHERE a.email_normalized = $1 AND m.organization_id = $2 AND m.state = 'ACTIVE'`,
+        WHERE a.email_normalized = $1 AND m.organization_id = $2
+        ORDER BY (m.state = 'ACTIVE') DESC, (m.state = 'PENDING_APPROVAL') DESC, m.updated_at DESC
+        LIMIT 1`,
       [row.email, row.organization_id],
     )
-    if (!open) report.memberships_to_attach++
-    if (row.leadership_role_label) report.leadership_to_attach++
+    if (existing && existing.state !== 'ACTIVE') {
+      if (dryRun) {
+        report.conflicts.push({
+          who: maskEmail(row.email),
+          organization_slug: row.organization_slug,
+          outcome: `CONFLICT_${existing.state}`,
+        })
+      }
+      continue
+    }
+    if (!existing) report.memberships_to_attach++
+    if (row.leadership_role_label) {
+      const [lead] = await exec(
+        `SELECT 1 FROM leadership_records l JOIN individual_profiles p ON p.id = l.profile_id
+           JOIN user_accounts a ON a.id = p.account_id
+          WHERE a.email_normalized = $1 AND l.organization_id = $2 AND l.role_label = $3
+            AND l.state = 'ACTIVE'`,
+        [row.email, row.organization_id, row.leadership_role_label],
+      )
+      if (!lead) report.leadership_to_attach++
+    }
   }
 
   if (dryRun) return report
