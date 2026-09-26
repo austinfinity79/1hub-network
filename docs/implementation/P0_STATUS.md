@@ -8,7 +8,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: IN PROGRESS — 4 / 8 screens CLOSED (50%).**
+**M1 — WF01 Identity & Onboarding: IN PROGRESS — 5 / 8 screens CLOSED (62.5%).**
 
 | Screen | State |
 |---|---|
@@ -16,8 +16,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S02 Check Email | CLOSED / PASS — "Mở Gmail" omitted by contract; runtime copy approved; countdown from server `resend_after_seconds` ([report](reports/WF01-S02_check-email.md)) |
 | WF01-S03 Auth Callback | CLOSED / PASS — SUCCESS/EXPIRED/USED; INVALID → S04; decisions DEC-WF01-S03-D1..D7, D6a, ICON ([report](reports/WF01-S03_auth-callback-states.md), [mapping](WF01_S03_STATE_BOARD_MAPPING.md)) |
 | WF01-S04 Auth Errors | CLOSED / PASS (BLOCKED copy neutralised: no email promise) — BLOCKED/SESSION_EXPIRED component pixel PASS; GENERIC = DESIGN-GAP-GENERIC (PO review); DEC-WF01-S04-D1..D8 ([report](reports/WF01-S04_auth-errors.md), [mapping](WF01_S04_STATE_BOARD_MAPPING.md)) |
-| WF01-S05 Onboarding Purpose | BLOCKED — ONBOARDING INTENT CONTRACT GAP, 6 decisions pending ([gap](WF01_S05_INTENT_CONTRACT_GAP.md)) |
-| WF01-S06 … S08 | Not started; routes remain M0-T03 placeholders |
+| WF01-S05 Onboarding Purpose | CLOSED / PASS — P0 intent allowlist (4 codes, no investor), skip keeps intent NULL, server guard; investor option = INTENTIONAL-P0-SCOPE; DEC-WF01-S05-D1..D6 ([report](reports/WF01-S05_onboarding-purpose.md), [contract](WF01_S05_INTENT_CONTRACT_GAP.md)) |
+| WF01-S06 … S08 | Not started; routes remain M0-T03 placeholders (header shell `OnboardingShell` ready for reuse) |
 
 ## Completed (committed)
 
@@ -47,6 +47,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S02 | Check Email: masked address, server-timed resend countdown, resend, change email |
 | WF01-S03 | Auth Callback: token consumed once, success redirect by onboarding state, expired/used states |
 | WF01-S04 | Auth Errors: allowlisted public reason, blocked / session expired / generic |
+| WF01-S05 | Onboarding Purpose: `GET /me/onboarding`, `PUT /me/onboarding/intent`, onboarding header shell |
 
 ## Not yet built (M0)
 
@@ -82,7 +83,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-Human decisions DEC-WF01-S05-D1..D6 in [WF01_S05_INTENT_CONTRACT_GAP.md](WF01_S05_INTENT_CONTRACT_GAP.md), then WF01-S05 implementation.
+WF01-S06 Onboarding Profile — awaiting explicit authorization. Not started.
 
 ## Related
 
