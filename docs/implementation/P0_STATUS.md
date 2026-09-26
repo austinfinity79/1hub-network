@@ -65,6 +65,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF02-S03 | Privacy `/me/privacy`: PROFILE_DISCOVERY (NETWORK_ONLY/PRIVATE), current legal status + re-acceptance, consent history; WF01-S07 services reused; pixel drift 0 |
 | WF02-S04 | Roles `/me/roles` + `POST /me/membership-requests` (PENDING_APPROVAL only, G1–G5 frozen); read-only canonical rows; pixel PASS |
 | WF02-S02 | Profile edit `/me/profile/edit`: all 10 completion groups editable (H1 addendum), ≥80% reachable through UI; PATCH extended, no migration; pixel drift 0 |
+| WF02-S07 | Settings `/me/settings`: sessions list/revoke/revoke-all, account deletion REQUEST; migration 006 (P13 subset); G1–G6 frozen; pixel PASS; SEC-OBS-01 still open |
 
 ## Not yet built (M0)
 
@@ -104,7 +105,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S07 BLOCKED at preflight: 6 open decisions (OPEN-WF02-S07 G1–G6: P13 shape, duplicate rule, owner precondition, audit code, revoke-all route, outcomes); security observation SEC-OBS-01 (callback Referer). [Report](reports/WF02-S07_settings-sessions-deletion-request.md). WF02 4 / 7 screens.
+WF02-S07 done ([report](reports/WF02-S07_settings-sessions-deletion-request.md)); WF02 5 / 7 screens. Next: SEC-OBS-01 remediation (callback Referrer-Policy), then WF02-S05 Project / Startup (needs the venture taxonomy migration).
 
 ## Related
 
