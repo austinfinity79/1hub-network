@@ -92,6 +92,14 @@ Every row carries these shared fields. **Status:** HUMAN APPROVED — P0. **Date
 | <a id="dec-wf01-s08-d7"></a>DEC-WF01-S08-D7 | Info copy and icon | Panel claims events and solution-submission rules; OS emoji ℹ | Neutral copy: the server's percent plus "Bạn có thể cập nhật hồ sơ bất cứ lúc nào."; deterministic SVG info mark | No invented product rules; deterministic pixels | Playwright: no "dự sự kiện"; percent equals the server's | Pixel: INTENTIONAL-ICON-RENDERING, replaced-copy regions masked |
 | <a id="dec-wf01-s08-d8"></a>DEC-WF01-S08-D8 | Audit and analytics | No analytics writer existed | Audit `PROFILE_ACTIVATED` once on the real DRAFT → ACTIVE transition (before/after status, request id). One analytics writer on `analytics_events`: `onboarding_completed` once at first completion; `profile_completion_changed` when the authoritative percent moves. Frozen common properties only | Once-only, non-personal telemetry | DB and Playwright: 5 concurrent calls → 1 audit, 1 event; payloads without names, email or consent content | Other API §10 events are not emitted yet (open) |
 
+## DEC-WF01-ANALYTICS-EXT-DEFER — Deferred analytics events
+
+<a id="dec-wf01-analytics-ext-defer"></a>**DEC-WF01-ANALYTICS-EXT-DEFER.** **Status:** APPROVED P0 DEFERRED. **Date:** 2026-09-26. **Scope:** API 05 §10 event list vs WF01.
+
+| Context | Decision | Why | Evidence | Impact |
+|---|---|---|---|---|
+| API 05 §10 lists more "P0 minimum" events than WF01 emits (audit item ANALYTICS-EXT) | WF01's required analytics for current P0 are `account_created`, `profile_completion_changed` and `onboarding_completed`. **Deferred, not blocking WF01:** `account_authenticated`, `onboarding_started`, `consent_accepted`, `visibility_changed`, `membership_*`, `profile_saved`, `feedback_submitted` | The registration and profile-completion funnel minimum is already measurable | [WF01-REMEDIATION-02 report](../implementation/reports/WF01-REMEDIATION-02_gap-analytics-registration.md) (funnel proof) | Each deferred event is added later through the SAME analytics writer (`src/lib/analytics/analytics.ts`) when its owning workflow or release analytics scope is implemented; no other analytics system |
+
 ## Related
 
 - [p0-status.md](../implementation/P0_STATUS.md) — overall P0 state
