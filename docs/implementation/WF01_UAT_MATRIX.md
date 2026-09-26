@@ -15,19 +15,19 @@ Automated in `tests/visual/specs/wf01-uat-journey.spec.ts` (Playwright, 1440×90
 | UAT-08 Complete below 80% | Minimum fields only | Finish the journey | Completes; percent < 80; no NETWORK_CONTEXT group | Auto | PASS |
 | UAT-09 Retry / concurrent completion | Completed | 4 parallel `POST /me/onboarding/complete`, reload S08 | All 200; state, audit and analytics unchanged | Auto | PASS |
 | UAT-10 Returning completed member | Completed, logged out | Sign in; open S05–S08 | Callback → `/me`; S05–S07 → `/me`; S08 viewable; nothing rewritten | Auto | PASS |
-| UAT-11 Launch-roster member (Freeze D2) | Roster row for the email | Sign in | ACTIVE membership attached | Auto (expected-fail) | **FAIL — GAP-ROSTER (P1)** |
+| UAT-11 Launch-roster member (Freeze D2) | Roster rows for a member and a leader | Sign in; onboard; sign in again | One profile; ACTIVE membership; leadership only for the leader; no capability; onboarding completes; nothing duplicated | Auto | **PASS** (GAP-ROSTER closed, marker removed) |
 | UAT-12 Registration metric | New email | Sign in | `account_created` analytics row | Auto (expected-fail) | **FAIL — GAP-ANALYTICS-REG (P1)** |
 | UAT-M1 Real legal documents | Production content supplied | Read Terms/Privacy from S07 links | Approved legal text and versions | **Manual** | BLOCKED — PRODUCTION_LEGAL_CONTENT_REQUIRED |
 | UAT-M2 Copy sign-off | — | PO reviews the strings in the audit's copy review (§7) | Approved wording | **Manual** | OPEN |
 | UAT-M3 Real mailbox | Email delivery configured | Receive and open the link | Link arrives and works | **Manual** | NOT AVAILABLE in P0 local (no email delivery) |
 
 **Totals:**
-- Automated: 13 (10 PASS; 3 expected-fail markers confirming the gaps).
+- Automated: 13 (11 PASS; 2 expected-fail markers confirming the open gaps).
 - Manual: 3.
-- Passed: 10.
-- Failed (known, tracked): 3.
+- Passed: 11.
+- Failed (known, tracked): 2.
 
-**Expected-fail tests:** `test.fail()` marks UAT-03b, UAT-11 and UAT-12. They start failing when the gap is fixed, so the marker must then be removed.
+**Expected-fail tests:** `test.fail()` marks UAT-03b and UAT-12 (UAT-11's marker was removed when GAP-ROSTER closed). They start failing when the gap is fixed, so the marker must then be removed.
 
 ## Related
 
