@@ -65,9 +65,10 @@ test.describe('M0-T05 API surface discipline', () => {
   test('exposes no business endpoint beyond the implemented screens', async ({ request }) => {
     // M0-T08 implemented the auth endpoints, so they are no longer absent; they
     // are covered by auth-session.spec.ts. WF01-S06 implemented /me/profile and
-    // /vocabularies/{type} (wf01-s06-onboarding-profile.spec.ts). Other business
+    // /vocabularies/{type} (wf01-s06-onboarding-profile.spec.ts); WF02-T00
+    // implemented /me/network (wf02-t00-member-foundation.spec.ts). Other business
     // endpoints still belong to later screens; answering now would be scope leakage.
-    for (const path of ['/me/network', '/ops/organizations', '/vocabularies/STARTUP_STAGE']) {
+    for (const path of ['/me/ventures', '/ops/organizations', '/vocabularies/STARTUP_STAGE']) {
       const response = await request.get(`${BASE}${path}`)
       expect(response.status(), `${path} should not be implemented yet`).toBe(404)
     }

@@ -31,10 +31,31 @@ const IMPLEMENTED_SCREENS = new Set([
   'WF01-S06',
   'WF01-S07',
   'WF01-S08',
+  // WF02-T00: the member shell wraps these routes and guards them; their
+  // placeholder body is proven by wf02-t00-member-foundation.spec.ts.
+  'WF02-S01',
+  'WF02-S03',
+  'WF02-S04',
+  'WF02-S07',
 ])
 
-/** Implemented screens that send a guest to /auth (DEC-WF01-S05-D5, WF01-S06..S08). */
-const GUARDED_SCREENS = new Set(['WF01-S05', 'WF01-S06', 'WF01-S07', 'WF01-S08'])
+/** Screens that send a guest to /auth (DEC-WF01-S05-D5, WF01-S06..S08, WF02-T00 shell). */
+const GUARDED_SCREENS = new Set([
+  'WF01-S05',
+  'WF01-S06',
+  'WF01-S07',
+  'WF01-S08',
+  'WF02-S01',
+  'WF02-S03',
+  'WF02-S04',
+  'WF02-S07',
+])
+
+/**
+ * An unguarded placeholder route of the member group. /me was used until
+ * WF02-T00 put it behind the member shell guard.
+ */
+const PLACEHOLDER_ROUTE = '/projects/new'
 
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {
@@ -80,7 +101,7 @@ test.describe('M0-T03 frozen routes', () => {
 
 test.describe('M0-T03 shared shell', () => {
   test('declares exactly one route-group boundary and one container', async ({ page }) => {
-    await page.goto('/me')
+    await page.goto(PLACEHOLDER_ROUTE)
 
     const groups = await page
       .locator('[data-route-group]')
@@ -91,7 +112,7 @@ test.describe('M0-T03 shared shell', () => {
   })
 
   test('keeps Be Vietnam Pro as the default UI font on a shell page', async ({ page }) => {
-    await page.goto('/me')
+    await page.goto(PLACEHOLDER_ROUTE)
     await waitForFonts(page)
 
     const typography = await page.evaluate(() => {
@@ -120,7 +141,7 @@ test.describe('M0-T03 shared shell', () => {
   })
 
   test('captures under the frozen conditions: 1440x900 at DPR 1', async ({ page }) => {
-    await page.goto('/me')
+    await page.goto(PLACEHOLDER_ROUTE)
 
     const conditions = await page.evaluate(() => ({
       width: window.innerWidth,
@@ -164,16 +185,16 @@ test.describe('M0-T03 route boundaries', () => {
 
 test.describe('M0-T03 shell evidence', () => {
   test('renders identically to the shell baseline', async ({ page }) => {
-    await page.goto('/me')
+    await page.goto(PLACEHOLDER_ROUTE)
     await waitForFonts(page)
 
     await page.screenshot({
-      path: path.join(ACTUAL_DIR, 'shell-member-1440x900.png'),
+      path: path.join(ACTUAL_DIR, 'shell-member-placeholder-1440x900.png'),
       fullPage: true,
       animations: 'disabled',
     })
 
-    await expect(page).toHaveScreenshot('shell-member.png', {
+    await expect(page).toHaveScreenshot('shell-member-placeholder.png', {
       fullPage: true,
       animations: 'disabled',
       maxDiffPixelRatio: 0.01,

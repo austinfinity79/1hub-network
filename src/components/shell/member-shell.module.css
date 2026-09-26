@@ -1,0 +1,134 @@
+/*
+ * Member shell (WF02-T00): dark header band plus the "Tài khoản của tôi"
+ * sidebar. Evidence: the approved WF02-S01, S03, S04 and S07 references draw
+ * this frame identically; only the active sidebar item moves. Values measured
+ * at 1440x900 DPR1 (px / 16 = rem) and local to this shell: no global token is
+ * derived from them.
+ */
+
+.root {
+  min-height: 100vh;
+  background: var(--hub-canvas);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  height: 3.75rem;
+  padding: 0 4rem;
+  background: var(--hub-burgundy);
+  color: #f2e6e6;
+}
+
+.wordmark {
+  margin: 0;
+  /* This band's wordmark is set smaller than the onboarding header's. */
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.productNav {
+  display: flex;
+  gap: 1.75rem;
+  margin-left: 1.75rem;
+}
+
+.productItem {
+  color: #c9afaf;
+  text-decoration: none;
+}
+
+.productItem[aria-disabled='true'] {
+  cursor: default;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.bell {
+  display: inline-flex;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-right: 1.5rem;
+}
+
+.bell svg {
+  width: 100%;
+  height: 100%;
+  fill: #c9afaf;
+}
+
+.memberName {
+  color: #f2e6e6;
+}
+
+.avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-left: 1.125rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #453335;
+}
+
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.body {
+  display: flex;
+  gap: 1.625rem;
+  padding: 2rem 4rem 4rem;
+}
+
+.sidebar {
+  flex: 0 0 15.625rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.9375rem;
+  font-size: 0.625rem;
+  line-height: 0.875rem;
+  color: #534041;
+}
+
+.sideList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sideItem {
+  display: flex;
+  align-items: center;
+  height: 2.625rem;
+  padding: 0 0.875rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  color: #534041;
+  text-decoration: none;
+}
+
+.sideItem[aria-disabled='true'] {
+  cursor: default;
+}
+
+.sideItemActive {
+  border-color: #dcd6d6;
+  background: var(--hub-surface);
+  color: var(--hub-burgundy);
+}
+
+.main {
+  flex: 1 1 auto;
+  min-width: 0;
+}

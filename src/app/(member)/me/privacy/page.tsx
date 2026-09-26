@@ -1,6 +1,19 @@
+import { MemberShell } from '@/components/shell/member-shell'
 import { RoutePlaceholder } from '@/components/shell/route-placeholder'
+import { requireMember } from '@/lib/member/guard'
 
-/** WF02-S03 — /me/privacy. Frozen route placeholder; see M0-T03. */
-export default function Page() {
-  return <RoutePlaceholder pattern="/me/privacy" />
+/**
+ * WF02-S03 — /me/privacy. WF02-T00 places the frozen route inside the member shell
+ * (guest → /auth, onboarding not done → its resolver step). The screen body is
+ * still the M0-T03 placeholder until WF02-S03 is implemented.
+ */
+export const dynamic = 'force-dynamic'
+
+export default async function Page() {
+  const member = await requireMember()
+  return (
+    <MemberShell active="privacy" member={member}>
+      <RoutePlaceholder pattern="/me/privacy" />
+    </MemberShell>
+  )
 }

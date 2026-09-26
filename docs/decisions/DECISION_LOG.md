@@ -310,6 +310,24 @@ These records are addenda to the WF02 screen contracts and the API contract. The
 | Supersedes/amends | — |
 | Source anchors | Freeze §D3; CLAUDE.md §3/§7; DEC-WF01-S08-D7 |
 
+<a id="dec-wf02-venture-taxonomy-storage"></a>**DEC-WF02-VENTURE-TAXONOMY-STORAGE — Venture region and domain storage**
+
+**Status:** HUMAN APPROVED — P0.
+**Date:** 2026-09-26.
+**Resolves:** [OPEN-WF02-VENTURE-TAXONOMY-STORAGE](#open-wf02-venture-taxonomy-storage).
+**Amends:** [DEC-WF02-H6](#dec-wf02-h6) (storage only; fields unchanged).
+
+| Field | Record |
+|---|---|
+| Context | H6 froze `domain_ids` and `region_id` as venture write fields. `projects` has neither a region column nor a domain link, and `metadata` is forbidden for them |
+| Decision | Keep all five H6 fields. Canonical persistence: `projects.region_id` → a REGION vocabulary item (nullable); `project_domains (project_id, vocabulary_item_id)` → DOMAIN vocabulary items (zero or more). Never `metadata` JSON, never free text |
+| Rules | Only ACTIVE vocabulary items may be newly selected. Archived existing links stay readable. Wrong vocabulary type → rejected. A duplicate domain relation is impossible (unique `project_id, vocabulary_item_id`). Domain replacement is atomic (one transaction) |
+| Rationale | Mirrors the frozen profile pattern (`region_vocab_id`, `profile_domains`, DEC-WF01-S06-D1); taxonomy stays controlled (Freeze §D5, CLAUDE.md §3) |
+| Consequences | An additive migration is required. It belongs to the S05 foundation task and is **not created now** |
+| Affected screens | WF02-S05 (write), WF02-S04 / S01 (read, later) |
+| API/data impact | `POST/PATCH /ventures` validate `region_id` / `domain_ids` against vocabulary type and status. New migration: `projects.region_id` FK to `vocabulary_items`; `project_domains` table with FKs and a unique pair |
+
+
 <a id="open-wf02-venture-taxonomy-storage"></a>**OPEN-WF02-VENTURE-TAXONOMY-STORAGE — Human decision required (found during this freeze)**
 
 | Field | Record |
@@ -318,7 +336,22 @@ These records are addenda to the WF02 screen contracts and the API contract. The
 | Problem | `projects` has no region column and there is no project↔DOMAIN link table (`001_p0_init.sql:244-255`; no later migration adds them). H6 forbids storing them in `metadata`. The only authorized migrations are P12 (team) and the P13 deletion subset. Storing them would therefore need a migration nobody has authorized |
 | Options found | (a) Authorize an additive migration for venture region + domain storage (vocabulary-backed IDs, like `profile_domains` / `region_vocab_id`). (b) Drop `domain_ids` / `region_id` from the P0 venture write model |
 | Blocks | WF02-S05 (and so S06) |
-| Status | OPEN — not decided here |
+| Status | **RESOLVED 2026-09-26** by [DEC-WF02-VENTURE-TAXONOMY-STORAGE](#dec-wf02-venture-taxonomy-storage) (option a). Record kept for history |
+
+## DEC-WF02-T00 — Member foundation / network read model (technical)
+
+**Status:** IMPLEMENTATION DECISIONS within approved scope (no new business rule).
+**Date:** 2026-09-26.
+**Task:** [WF02-T00](../implementation/reports/WF02-T00_member-foundation-network-read-model.md).
+
+| ID | Topic | Decision | Source anchors |
+|---|---|---|---|
+| <a id="dec-wf02-t00-d1"></a>DEC-WF02-T00-D1 | Member-shell page guard | `/me`, `/me/privacy`, `/me/roles`, `/me/settings`: no session → `/auth`. An account whose onboarding is not DONE → `routeFor(state)` of the one resolver. Page routing only; every API re-authorizes | DEC-WF01-RESUME-D1 (DONE → `/me`); WF01 page-guard convention; CLAUDE.md §4 |
+| <a id="dec-wf02-t00-d2"></a>DEC-WF02-T00-D2 | Membership provenance | DTO key `source_type` (05 §11.3 MembershipDTO; §5.1's `source` example is the older spelling, GAPS P11). Values are Data SOT §7 codes only. The dev seed's `PRESEED` maps to `ORGANIZATION_VERIFIED` (Freeze §D2 preseed = confirmed roster, as the roster importer stores it). Any other stored value → `null`, never guessed. Leadership has no provenance column, so none is shown | SOT §7; API §11.3; Freeze §D2; `004_p0_roster_bootstrap.sql` |
+| <a id="dec-wf02-t00-d3"></a>DEC-WF02-T00-D3 | `roles` content | `roles` = canonical venture relations (DEC-WF02-H5): `OWNER` via `projects.owner_profile_id`; `MEMBER` via an ACTIVE `project_members` row (not repeated for owned ventures). `role_label` is display text only. `activity_summary` is always `[]` | DEC-WF02-H5/H7; API §5.1 |
+| <a id="dec-wf02-t00-d4"></a>DEC-WF02-T00-D4 | Dates and order | `valid_from` / `valid_to` are calendar dates in Asia/Ho_Chi_Minh, as in the §11.3 example. Order: organisation name, then creation, then id; ventures OWNER first, then name | API §11.3 |
+| <a id="dec-wf02-t00-d5"></a>DEC-WF02-T00-D5 | Shell and layout | The member route group no longer imposes PageContainer (as the onboarding group); placeholder pages wrap it themselves. The M0-T03 harness shell evidence moves from `/me` (now guarded) to `/projects/new`: `tests/visual/baseline/shell-member.png` is removed and `shell-member-placeholder.png` added. It is a harness baseline, not a design reference | M0-T03; CLAUDE.md §6 |
+| <a id="dec-wf02-t00-d6"></a>DEC-WF02-T00-D6 | Bell | Inert deterministic SVG bell with no counter, in place of the OS emoji and "2" | DEC-WF02-H9/H10; precedent DEC-WF01-S08-D7 |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
