@@ -499,6 +499,37 @@ Not a gap: `membership_requested` analytics stays deferred (DEC-WF01-ANALYTICS-E
 | <a id="dec-wf02-s02-d6"></a>DEC-WF02-S02-D6 | Copy | Status reads "Hiển thị trong mạng lưới" / "Đang ẩn khỏi mạng lưới" from PROFILE_DISCOVERY, plus "đã lưu lúc HH:MM" after a save. "Xem bản public" is omitted (H3). The note body becomes "Email đăng nhập thuộc tài khoản, không phải một ô trong hồ sơ, và không hiển thị cho người khác." (the bitmap's contact-consent claim is not P0). "≤ 60 từ" stays guidance only: no frozen limit exists and WF01-S06 accepts longer text. Pending PO copy review | DEC-WF02-H3/H4; DEC-WF01-S07-D2 |
 | <a id="dec-wf02-s02-d7"></a>DEC-WF02-S02-D7 | Save semantics | "Lưu" sends one PATCH with only the fields changed since the last successful save (an unchanged save sends `{}`); the server validates everything before the first write and recomputes completion. The avatar uses the existing upload route immediately. `GET /me/profile` gains the additive `no_experience_yet` | API 05 §4.3; DEC-WF01-S06-D3 |
 
+## OPEN-WF02-S07 — Settings preflight gaps (human decision required)
+
+**Status:** OPEN — found by the WF02-S07 preflight on 2026-09-26; no migration, no code.
+**Report:** [WF02-S07 preflight](../implementation/reports/WF02-S07_settings-sessions-deletion-request.md).
+
+**Supported without a decision:**
+- `user_sessions` (id, account_id, token_hash, expires_at, revoked_at, created_at);
+- owner key `account_id`;
+- revocation by `revoked_at`, filtered in `resolveSession`;
+- expiry by `expires_at`;
+- `GET /me/sessions` and `DELETE /me/sessions/{sessionId}` (API §5.5);
+- `revokeAllSessionsForAccount` in code;
+- current session identifiable server-side (`sessionId` from the cookie's token hash);
+- safe DTO fields: id (a uuid, not the token), created_at, expires_at, current. No device, last-used or IP data is stored.
+
+| ID | Gap | Evidence | Options found | Recommended |
+|---|---|---|---|---|
+| <a id="open-wf02-s07-g1"></a>S07-G1 | P13 persistence shape is not frozen: table, columns, states | API §5.5 "controlled deletion/deactivation request"; DEC-WF02-H8 "deletion-request storage only"; GAPS P13 names no fields | (a) Minimal: `account_deletion_requests(id, account_id → user_accounts, requested_at, request_id)`, no status and no processing fields (no workflow is frozen). (b) Same plus a status column, with its values frozen first | (a) |
+| <a id="open-wf02-s07-g2"></a>S07-G2 | Duplicate rule | nothing frozen | (a) One request per account, DB `UNIQUE(account_id)`; a repeat returns the existing request (200). (b) Allow several, one "open" (needs G1 b) | (a) |
+| <a id="open-wf02-s07-g3"></a>S07-G3 | Venture-owner precondition: the bitmap disables "Yêu cầu xoá tài khoản" for an owner ("Phải chuyển giao … trước khi xoá") but transfer is Future (H7/H8) | S07 bitmap; DEC-WF02-H7/H8 | (a) The request is always allowed; ownership is left to later processing; a neutral note. (b) 409 while the member owns a venture, so owners cannot request in P0 | (a) |
+| <a id="open-wf02-s07-g4"></a>S07-G4 | Audit: the deletion request is a sensitive account-lifecycle mutation (CLAUDE.md §4) with no frozen action code. Session revocation is outside the Data SOT audit list, and logout writes none today | CLAUDE.md §4; Data SOT:93; Auth arch:208 | `ACCOUNT_DELETION_REQUESTED` (after `{requested: true}`, request id). Sessions: no audit (as logout), or `SESSION_REVOKED` | `ACCOUNT_DELETION_REQUESTED`; no session audit |
+| <a id="open-wf02-s07-g5"></a>S07-G5 | Revoke-all endpoint shape (H8 delegated it to this task contract, which does not state it) | DEC-WF02-H8; API §5.5 | (a) `DELETE /me/sessions` → 204, clears the cookie. (b) `POST /auth/logout-all` | (a) |
+| <a id="open-wf02-s07-g6"></a>S07-G6 | Outcomes: foreign vs unknown vs already-revoked session; repeat deletion request | API §2.5; §13 | Foreign or unknown id → 404 (no probing); own revoked/expired → 204 (idempotent); own current → 204 + cookie cleared; repeat deletion request → 200 with the existing request | as stated |
+
+**Security observation SEC-OBS-01 (not part of S07 scope; not fixed):**
+- `/auth/callback?token=…` loads its same-origin CSS/JS with the full callback URL, including the token, in the `Referer` header. 10 requests were observed.
+- The `<meta name="referrer" content="no-referrer">` comes after those links, and no `Referrer-Policy` header is sent.
+- The application log does not contain the token.
+- Risk: server or proxy access logs that record Referer.
+- Candidate fix, separate task: a `Referrer-Policy: no-referrer` response header on `/auth/callback`.
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

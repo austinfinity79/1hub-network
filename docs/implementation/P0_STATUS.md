@@ -104,7 +104,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S02 done ([report](reports/WF02-S02_profile-edit.md)); WF02 4 / 7 screens. Next: WF02-S07 — Settings / Session / Account Deletion Request (needs the P13 deletion subset).
+WF02-S07 BLOCKED at preflight: 6 open decisions (OPEN-WF02-S07 G1–G6: P13 shape, duplicate rule, owner precondition, audit code, revoke-all route, outcomes); security observation SEC-OBS-01 (callback Referer). [Report](reports/WF02-S07_settings-sessions-deletion-request.md). WF02 4 / 7 screens.
 
 ## Related
 
