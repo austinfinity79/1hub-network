@@ -1,54 +1,60 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: SEC-OBS-01 — Magic-link callback Referrer-Policy remediation
-- Status: **DONE — SEC-OBS-01 CLOSED**
-- Mode: LOCAL REVIEW. No business logic, DB or visual change. No push.
+- Task ID / name: M0-ENTRY-01 — Root entry routing remediation
+- Status: **DONE**
+- Mode: LOCAL REVIEW. No business, data, schema, API or UI change. No push.
 
-## 2. Issue (from the WF02-S07 preflight)
-- `/auth/callback?token=…` loaded its same-origin CSS/JS before the page's `<meta name="referrer" content="no-referrer">` took effect.
-- 10 asset requests carried the token-bearing URL as `Referer`.
-- No `Referrer-Policy` header was sent.
-
-## 3. Fix
+## 2. Change
 | Item | Result |
 |---|---|
-| Header location | `next.config.ts` → `headers()`: `Referrer-Policy: no-referrer` for `source: '/auth/callback'` |
-| Scope | Callback route only; `/auth`, `/me`, `/auth/error` send no such header (asserted) |
-| Kept | The existing meta tag (defence in depth) |
-| Business logic changed | None: token TTL, single use, session creation, redirects, URL stripping and callback states untouched |
+| Before | `/` rendered the M0-T01 placeholder "Foundation bootstrap. No workflow screens are implemented yet." |
+| After | `src/app/page.tsx` is a server-side redirect only (307, no body of its own): no valid session → `/auth`; otherwise `routeFor(getOnboardingState(account))` |
+| Resolver reused | The one onboarding resolver of DEC-WF01-RESUME-D1 (`src/lib/onboarding/state.ts`), as used by sign-in `next_step`, `GET /me/onboarding`, `/session` and the page guards; no step mapping duplicated |
+| New business logic | None |
+| DB migration / API / UI | None; no new screen, no landing page |
+| Placeholder | Removed from `/`; the obsolete placeholder unit test is replaced by a routing test |
 
-## 4. Evidence
-| Check | Before | After |
-|---|---|---|
-| Callback response header | none | `Referrer-Policy: no-referrer` |
-| Token-bearing Referers (production build, 20 requests) | 10 | **0** |
-| Spec `sec-obs-01-referrer.spec.ts` | — | valid link (1 session, redirect, re-use → USED), expired, invalid: every document/CSS/JS/font/image request has no `token=`, token value or `/auth/callback?` in Referer |
-| App log | 0 token hits | 0 token hits; no logging added |
-| Proxy/access-log exposure | Referer carried the token | Browsers send no Referer from the callback page, so access logs cannot record it; the token hash stays server-only |
+## 3. Routing evidence
+| Case | Result |
+|---|---|
+| Guest | `/` → 307 `/auth`; body has no placeholder, profile, onboarding or session data |
+| PURPOSE (new account) | → `/onboarding/purpose` |
+| PROFILE | → `/onboarding/profile` |
+| PRIVACY | → `/onboarding/privacy` |
+| COMPLETE | → `/onboarding/complete` |
+| DONE (ACTIVE, completed) | → `/me` (also the seeded member) |
+| Refresh | Stable destination |
+| Invalid / revoked / expired session | → `/auth` |
+| Restart | Member → `/me`, new account → `/onboarding/purpose`, guest → `/auth`, identical after app + PostgreSQL restart; no email/token in logs |
 
-## 5. Regression
+Each Playwright target is read back from `GET /api/v1/me/onboarding` (the same resolver), so the test does not hard-code the state machine.
+
+## 4. Tests / build
 | Gate | Result |
 |---|---|
 | Format / lint (0 warnings) / typecheck / build | PASS |
-| Unit / DB | 152/152 · 248/248 |
-| Playwright (full) | 340 passed, 24 skipped by design (includes the WF01-S03 callback spec, auth-session, WF01 UAT, WF02 screens) |
-| Pixel | WF01 8/8 PASS; no rendering change |
+| Unit | 157/157 (`page.test.tsx`: 7 routing cases with the real `routeFor`) |
+| DB | 248/248 (resolver matrix unchanged) |
+| Playwright (full) | 344 passed, 24 skipped by design; new `m0-entry-01-root.spec.ts` (4) |
+| WF01 UAT / Pixel | PASS / 8 of 8 PASS |
+| WF02 smoke | T00, S01, S02, S03, S04, S07 specs PASS (full suite) |
 
-## 6. Files changed
-- `next.config.ts`
-- `tests/visual/specs/sec-obs-01-referrer.spec.ts` (new, 3 tests)
-- `docs/decisions/DECISION_LOG.md` (SEC-OBS-01 CLOSED with evidence)
+No pixel baseline for `/`: it redirects and renders nothing.
+
+## 5. Files changed
+- `src/app/page.tsx`, `src/app/page.test.tsx`
+- `tests/visual/specs/m0-entry-01-root.spec.ts` (new)
 - `P0_STATUS.md`, this report and its archive
 
-## 7. Git
-- Branch: `main`; start HEAD `8363956`
-- Implementation commit: `283bdb9`
+## 6. Git
+- Branch: `main`; start HEAD `d54cc8d`
+- Implementation commit: `8903b2a`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
-- Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `fed0b25`
+- Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `d54cc8d`
 - Working tree: clean after commit, except the untracked `AGENTS.md`
 
 ## Related
 - [P0_STATUS.md](P0_STATUS.md) — status
-- [DECISION_LOG.md](../decisions/DECISION_LOG.md) — SEC-OBS-01 record
+- [DECISION_LOG.md](../decisions/DECISION_LOG.md) — DEC-WF01-RESUME-D1 (the resolver)

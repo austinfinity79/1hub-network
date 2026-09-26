@@ -67,6 +67,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF02-S02 | Profile edit `/me/profile/edit`: all 10 completion groups editable (H1 addendum), ≥80% reachable through UI; PATCH extended, no migration; pixel drift 0 |
 | WF02-S07 | Settings `/me/settings`: sessions list/revoke/revoke-all, account deletion REQUEST; migration 006 (P13 subset); G1–G6 frozen; pixel PASS; SEC-OBS-01 still open |
 | SEC-OBS-01 | Magic-link callback: `Referrer-Policy: no-referrer` header (callback only); asset Referers carry no token; auth behaviour unchanged — CLOSED |
+| M0-ENTRY-01 | Root `/`: bootstrap placeholder removed; server-side redirect through the canonical onboarding resolver |
 
 ## Not yet built (M0)
 
@@ -106,7 +107,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-SEC-OBS-01 closed ([report](reports/SEC-OBS-01_magic-link-referrer-policy.md)). WF02 5 / 7 screens. Next: WF02-S05 — Project / Startup (needs the venture taxonomy migration).
+M0-ENTRY-01 done ([report](reports/M0-ENTRY-01_root-entry-routing.md)): `/` now redirects (guest → /auth; resolver step; DONE → /me). WF02 5 / 7 screens. Next: WF02-S05 — Project / Startup preflight.
 
 ## Related
 
