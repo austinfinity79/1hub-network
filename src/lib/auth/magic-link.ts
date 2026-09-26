@@ -1,6 +1,7 @@
+import { trackEvent } from '@/lib/analytics/analytics'
 import { ApiError } from '@/lib/api/errors'
 import type { Executor } from '@/lib/db/client'
-import { query } from '@/lib/db/client'
+import { query, withTransaction } from '@/lib/db/client'
 import { reconcileRoster } from '@/lib/roster/reconcile'
 
 import {
@@ -174,29 +175,41 @@ export async function consumeMagicLink(token: unknown): Promise<ConsumeResult> {
 
   // One flow serves creation and login (05:180). Creation happens here, not at
   // request time, so the request endpoint leaks nothing about existence.
-  const existingAccount = await query<{ id: string; status: string }>(
-    `SELECT id::text, status::text FROM user_accounts WHERE email_normalized = $1`,
-    [email],
-  )
-
-  let accountId: string
-  let accountCreated = false
-
-  if (existingAccount[0]) {
-    if (existingAccount[0].status === 'BLOCKED') {
-      throw new ApiError('AUTH_ACCOUNT_BLOCKED', 403, 'This account cannot sign in.')
-    }
-    accountId = existingAccount[0].id
-  } else {
-    const created = await query<{ id: string }>(
+  // ON CONFLICT makes concurrent first sign-ins for one address converge on a
+  // single account instead of failing on the UNIQUE email. account_created
+  // (API 05 §10) is written in the SAME transaction as the insert, so it exists
+  // exactly when a new account committed: never for a returning user, a retry
+  // or a rolled-back insert (GAP-ANALYTICS-REG).
+  const resolved = await withTransaction(async (exec) => {
+    const [created] = await exec<{ id: string }>(
       `INSERT INTO user_accounts (email, email_normalized, status)
        VALUES ($1, $1, 'ACTIVE')
+       ON CONFLICT (email_normalized) DO NOTHING
        RETURNING id::text`,
       [email],
     )
-    accountId = created[0]!.id
-    accountCreated = true
+    if (created) {
+      await trackEvent(exec, {
+        name: 'account_created',
+        accountId: created.id,
+        profileId: null,
+        workflow: 'WF01',
+        screenId: 'WF01-S03',
+      })
+      return { id: created.id, status: 'ACTIVE', created: true }
+    }
+    const [existing] = await exec<{ id: string; status: string }>(
+      `SELECT id::text, status::text FROM user_accounts WHERE email_normalized = $1`,
+      [email],
+    )
+    return { id: existing!.id, status: existing!.status, created: false }
+  })
+
+  if (resolved.status === 'BLOCKED') {
+    throw new ApiError('AUTH_ACCOUNT_BLOCKED', 403, 'This account cannot sign in.')
   }
+  const accountId = resolved.id
+  const accountCreated = resolved.created
 
   // Known launch-roster emails get their confirmed relationships (Freeze D2).
   // Runs on every sign-in, so a roster imported after the account existed is

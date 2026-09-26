@@ -20,10 +20,11 @@ import { REPO_ROOT } from '../pixel-qa/paths'
  * link the way the inbox would receive it: requestMagicLink() returns the raw
  * token only to its caller, never to storage.
  *
- * test.fail() marks frozen requirements the audit found NOT implemented
- * (GAP-ANALYTICS-REG, DEFECT-RESUME). Such a test passes while the gap exists
- * and fails once it is closed, so the marker must then be removed — as done
- * for UAT-11 when GAP-ROSTER was closed (WF01-REMEDIATION-01).
+ * test.fail() marks a frozen requirement the audit found NOT implemented
+ * (DEFECT-RESUME). Such a test passes while the gap exists and fails once it
+ * is closed, so the marker must then be removed — as done for UAT-11
+ * (GAP-ROSTER, WF01-REMEDIATION-01) and UAT-12 (GAP-ANALYTICS-REG,
+ * WF01-REMEDIATION-02).
  */
 
 const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-s06-qa-vocabulary.sql')
@@ -472,16 +473,62 @@ test.describe('WF01 frozen P0 requirements (audit follow-up)', () => {
     expect(session.managed_scopes).toEqual([])
   })
 
-  test('GAP-ANALYTICS-REG: account creation records account_created', async ({ page }) => {
+  test('UAT-12 account creation records account_created exactly once (GAP-ANALYTICS-REG closed)', async ({
+    page,
+    context,
+  }) => {
     // API 05 §10 P0 minimum events; Data SOT: "at minimum registration".
-    test.fail(true, 'GAP-ANALYTICS-REG (P1, go-live): no account_created event is written')
     const email = newEmail('reg')
+    const token = await signInThroughUi(page, email)
+    await expect(page).toHaveURL('/onboarding/purpose')
+    const id = await accountId(email)
+    const count = async () =>
+      (
+        await query<{ n: number }>(
+          `SELECT count(*)::int AS n FROM analytics_events WHERE account_id = $1 AND event_name = 'account_created'`,
+          [id],
+        )
+      )[0]!.n
+    expect(await count()).toBe(1)
+    // Retrying the same link: USED, no new event.
+    await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
+    await expect(page).toHaveURL('/auth/callback?status=used')
+    // Signing out and in again: no new event.
+    await logout(context)
     await signInThroughUi(page, email)
     await expect(page).toHaveURL('/onboarding/purpose')
-    const rows = await query(
-      `SELECT 1 FROM analytics_events WHERE account_id = $1 AND event_name = 'account_created'`,
-      [await accountId(email)],
+    expect(await count()).toBe(1)
+  })
+
+  test('UAT-13 the WF01 funnel reads account_created → completion changes → onboarding_completed', async ({
+    page,
+  }) => {
+    const email = newEmail('funnel')
+    const token = await signInThroughUi(page, email)
+    await s05(page, 'SUBMIT_SOLUTION')
+    await s06(page)
+    await s07(page)
+    await s08(page)
+    const id = await accountId(email)
+    const rows = await query<{ event_name: string; properties: Record<string, unknown> }>(
+      `SELECT event_name, properties FROM analytics_events WHERE account_id = $1 ORDER BY occurred_at, id`,
+      [id],
     )
-    expect(rows).toHaveLength(1)
+    const names = rows.map((r) => r.event_name)
+    expect(names[0]).toBe('account_created')
+    expect(names.at(-1)).toBe('onboarding_completed')
+    expect(names.filter((n) => n === 'account_created')).toHaveLength(1)
+    expect(names.filter((n) => n === 'onboarding_completed')).toHaveLength(1)
+    expect(new Set(names.slice(1, -1))).toEqual(new Set(['profile_completion_changed']))
+    // Every change is a real move of the authoritative percent.
+    for (const r of rows.filter((x) => x.event_name === 'profile_completion_changed')) {
+      expect(r.properties.from_percent).not.toBe(r.properties.to_percent)
+    }
+    // One account correlates the funnel; no personal or secret content.
+    expect(rows.every((r) => r.properties.account_id === id)).toBe(true)
+    const text = JSON.stringify(rows)
+    for (const secret of [email, token, 'Người Dùng UAT', 'Kỹ sư', 'TERMS', 'PRIVACY', '@']) {
+      expect(text, secret).not.toContain(secret)
+    }
   })
 })

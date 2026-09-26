@@ -9,14 +9,16 @@ import type { Executor } from '@/lib/db/client'
  * small non-personal numbers. Never profile text, contact data or consent
  * content (05 §10: "Do not put private profile content into analytics").
  */
-export type AnalyticsEventName = 'onboarding_completed' | 'profile_completion_changed'
+export type AnalyticsEventName =
+  'account_created' | 'onboarding_completed' | 'profile_completion_changed'
 
 export async function trackEvent(
   exec: Executor,
   event: {
     name: AnalyticsEventName
     accountId: string
-    profileId: string
+    /** Null when the account has no profile yet (e.g. account_created). */
+    profileId: string | null
     workflow: 'WF01' | 'WF02'
     screenId: string
     /** Non-personal extras, e.g. completion percentages. */
