@@ -28,6 +28,11 @@ export type AuditAction =
   // WF03-S08 relationships (DEC-WF03-S08-RELATIONSHIP-CONTRACT): ids, type, state only.
   | 'ORGANIZATION_RELATIONSHIP_CREATED'
   | 'ORGANIZATION_RELATIONSHIP_ENDED'
+  // WF03-S07 standalone events (DEC-WF03-G14): ids, status and field names only.
+  | 'EVENT_CREATED'
+  | 'EVENT_UPDATED'
+  | 'EVENT_PUBLISHED'
+  | 'EVENT_CANCELLED'
 
 export async function writeAudit(
   exec: Executor,

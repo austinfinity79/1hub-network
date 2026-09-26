@@ -821,7 +821,7 @@ Resolution: a focused S08 preflight / decision freeze before any S08 relationshi
 | Not P0 | Change-parent request / approval queue, notifications, partner / co-organizer / programme relationships, audit-log card (INTENTIONAL-P0-SCOPE) |
 | Human decisions remaining | 0 |
 
-<a id="open-wf03-s07-event-lifecycle"></a>**OPEN-WF03-S07-EVENT-LIFECYCLE — Event lifecycle / edit / publish semantics for S07 (OPEN 2026-09-26; blocks WF03-S07 runtime only)**
+<a id="open-wf03-s07-event-lifecycle"></a>**OPEN-WF03-S07-EVENT-LIFECYCLE — Event lifecycle / edit / publish semantics for S07 — CLOSED 2026-09-26 by [DEC-WF03-S07-EVENT-LIFECYCLE](#dec-wf03-s07-event-lifecycle)** (history kept)
 
 Found by the S07 focused preflight. The frozen sources give only the chain `DRAFT → PUBLISHED → LIVE → ENDED | CANCELLED → ARCHIVED` (Data SOT §state machines; API §8.6) and three operation sentences: PATCH "only in allowed lifecycle states", publish "`DRAFT → PUBLISHED` after required validation", cancel "lifecycle-controlled". The `event_status` enum matches the chain. Nothing below is decided by S07.
 
@@ -836,6 +836,16 @@ Found by the S07 focused preflight. The frozen sources give only the chain `DRAF
 Already settled by frozen sources (no decision needed): canonical `events` table; organization ownership from the path, server-set; `programme_id` NULL for WF03-created events (G10) and existing links left as they are; capability `event:manage`, exact organization scope; audit codes `EVENT_CREATED` / `EVENT_UPDATED` / `EVENT_PUBLISHED` / `EVENT_CANCELLED` (G14); Idempotency-Key on create / publish (API §2.3, provisional leniency); no registration (G10); the bitmap is not authority (G2).
 
 Resolution: a human decision on E1–E5, recorded as DEC-WF03-S07-EVENT-LIFECYCLE, then a fast-path S07 implementation.
+
+<a id="dec-wf03-s07-event-lifecycle"></a>**DEC-WF03-S07-EVENT-LIFECYCLE — P0 standalone Event lifecycle (HUMAN APPROVED 2026-09-26; closes OPEN-WF03-S07-EVENT-LIFECYCLE; all recommended options)**
+
+| Gap | Decision |
+|---|---|
+| E1 Cancel | `POST /ops/events/{id}/cancel`: **PUBLISHED → CANCELLED** and **LIVE → CANCELLED** only. DRAFT is not cancellable (409). CANCELLED is terminal for S07: not editable, not publishable. No hard delete |
+| E2 Edit | `PATCH /ops/events/{id}` in **DRAFT and PUBLISHED**, all editable fields; LIVE / ENDED / CANCELLED / ARCHIVED are read-only (409) |
+| E3 Publish | `POST /ops/events/{id}/publish`: **DRAFT → PUBLISHED** only when `name`, `starts_at` and `ends_at` are present, `ends_at ≥ starts_at`, and `starts_at` is not in the past. `summary` / `location_text` optional. Otherwise 422 with field reasons; any other state 409 |
+| E4 Fields | Create / edit: `name` (required), `summary`, `starts_at`, `ends_at`, `location_text`. `programme_id` must be null or absent on create (a value → 422) and is not editable. `registration_enabled` is rejected (G10). `timezone` is accepted only as `Asia/Ho_Chi_Minh` (the display zone) and is not stored. Everything else (id, slug, status, organization, metadata, timestamps) is server-owned → 422 |
+| E5 LIVE / ENDED | Not in P0: no operation and no time derivation; S07 shows the stored status only |
 
 <a id="open-wf03-c2"></a>**OPEN-WF03-C2 — Hierarchy fixture disagreement (reported per DEC-WF03-G9) — CLOSED by [DEC-WF03-C2](#dec-wf03-c2)**
 
@@ -941,6 +951,17 @@ Resolution: a human decision on E1–E5, recorded as DEC-WF03-S07-EVENT-LIFECYCL
 | <a id="dec-wf03-s08-d2"></a>DEC-WF03-S08-D2 | **Errors.** Validation, type, self and cycle → 422 `PROFILE_VALIDATION_FAILED` with field reasons. Duplicate, second parent, stale change, archived and re-close → 409 `MEMBERSHIP_INVALID_TRANSITION` (the only frozen conflict code, as in DEC-WF03-S04-D2 / S06-D2; contract gap noted). Out of scope → 403 `SCOPE_FORBIDDEN`. Unknown / non-operational organization or a relationship of another organization → 404. **Idempotency (API §2.3):** create and close honour `Idempotency-Key` through the durable store (operation `organization.relationship-create-or-close`, keyed per actor; a replay returns the first response, a different body with the same key → 409 `UNCONTRACTED_IDEMPOTENCY_CONFLICT`). A request without a key is still processed — the same PROVISIONAL leniency as the other listed operations (IDEMPOTENCY_STORE_P0.md); the UI always sends a key |
 | <a id="dec-wf03-s08-d3"></a>DEC-WF03-S08-D3 | **Tests.** Mutations use test-only organizations; the seeded tree is only read. The T00 test that inserted two ACTIVE parents now asserts that the database refuses the second one (the reader's INCONSISTENT branch stays as a defence) |
 | <a id="dec-wf03-s08-d4"></a>DEC-WF03-S08-D4 | **UI mapping of ADM21.** Title "{org} · quan hệ tổ chức" + counts; "+ Thêm quan hệ" (pinned 122×33) focuses the add form. Cards: tree position (parent → current → n trực thuộc); "Đang hiệu lực" table (Thuộc / Đơn vị cha của, organization, since, type, "Kết thúc" when manageable, with an inline reason); "Đã kết thúc · giữ lịch sử"; the add form (Đơn vị cha của / Thuộc — or "Đổi đơn vị cha" when a parent exists, with the history note); and the frozen valid-pair rules. Not rendered: change-parent request card, partner / co-organizer / programme rows, audit-log card. Copy pending PO review |
+
+## DEC-WF03-S07-D — Standalone Event management implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within DEC-WF03-S07-EVENT-LIFECYCLE / G2 / G10 / G14 / G15 (for review).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf03-s07-d1"></a>DEC-WF03-S07-D1 | **Standalone only.** Every S07 call (list, detail, PATCH, publish, cancel) works on `events.programme_id IS NULL`; a programme-linked event is WF04 and answers 404 (no edit, no leak). Create sets `organization_id` from the path, `programme_id` NULL and `status` DRAFT; the server generates `slug` (name + 8 hex). Limits: name ≤ 200, summary ≤ 2000, location ≤ 200; timestamps are ISO-8601 with an offset, stored in UTC; the UI enters and shows Asia/Ho_Chi_Minh |
+| <a id="dec-wf03-s07-d2"></a>DEC-WF03-S07-D2 | **Detail endpoint.** `GET /events/{eventId}` ("permission-filtered detail") returns the manager DTO to an actor with `event:manage` on the owning organization; every other caller gets the same 404. The public / network projection of published events belongs to S09 |
+| <a id="dec-wf03-s07-d3"></a>DEC-WF03-S07-D3 | **Authorization, errors, idempotency, audit.** `event:manage` for exactly the owning organization. Organization routes answer 403 `SCOPE_FORBIDDEN`; event-id routes answer 404 for an event the actor cannot manage (no id probing). Validation → 422 `PROFILE_VALIDATION_FAILED` with field reasons (`required`, `past`, `before_start`, `not_supported`, `not_accepted`). Lifecycle conflicts (re-publish, cancel of DRAFT / ENDED, edit outside DRAFT / PUBLISHED, archived organization) → 409 `MEMBERSHIP_INVALID_TRANSITION` (the only frozen conflict code; contract gap noted as in S04 / S06 / S08). A PUBLISHED event keeps the publish requirements on edit; `past` is checked only when starts_at changes. Row lock (`FOR UPDATE`) + in-transaction state checks give one result under races. Idempotency-Key on create and publish through the store (`event.create-or-publish`; optional, provisional leniency); cancel repeats are 409. Audit EVENT_CREATED / _UPDATED (`changed_fields`) / _PUBLISHED / _CANCELLED with `event_id`, `organization_id` and status only; a no-op PATCH writes nothing |
+| <a id="dec-wf03-s07-d4"></a>DEC-WF03-S07-D4 | **UI (G2 addendum).** Built from the ADM21 / S08 primitives: title "Sự kiện" + counts, pinned "+ Tạo sự kiện" (122×33), "Sự kiện độc lập" table (name, one-line time, place, status chip, "Mở"), side card with the create form or the selected event (editable in DRAFT / PUBLISHED, "Công khai" for DRAFT, "Huỷ sự kiện" with confirmation for PUBLISHED / LIVE, read-only otherwise). Not rendered: every WF04 element of the S07 collage (funnel, qualifying round, campaign mail, registrants). Visual QA compares these primitives with the approved S08 reference; the S07 bitmap delta is INTENTIONAL-CONTRACT. Copy pending PO review |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

@@ -174,7 +174,13 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
     'Chapter 01 leader: canonical profile (view state), parent HUB, child Club 01, read-only hierarchy',
     ORG,
   ),
-  cfg('WF03-S07', '/ops/org/:orgId/events', 'leader', 'Chapter 01 events', ORG),
+  cfg(
+    'WF03-S07',
+    '/ops/org/:orgId/events',
+    'leader',
+    'Chapter 01 leader: seeded standalone events (the programme-linked draft is WF04 and hidden), create form open',
+    ORG,
+  ),
   cfg(
     'WF03-S08',
     '/ops/org/:orgId/settings',

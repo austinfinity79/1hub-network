@@ -1,0 +1,343 @@
+/*
+ * WF03-S07 — standalone Event management. The approved S07 bitmap is a WF04
+ * collage (DEC-WF03-G2), so the screen reuses the approved WF03 ops primitives
+ * of ADM21 / S08 as drawn there (px / 16 = rem): 810px main + 342px side
+ * columns, the pinned 122x33 header button, card chrome, table, chips and form
+ * fields. Local to this screen; no global token changes.
+ */
+
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21.375rem;
+  align-items: start;
+  gap: 1.125rem;
+  min-height: 100vh;
+  padding: 1.4375rem 1.6875rem 1.5rem;
+}
+
+.main,
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.375rem;
+  line-height: 1.875rem;
+  font-weight: var(--weight-semibold);
+  color: #140002;
+}
+
+.subtitle {
+  margin: 0.1875rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: #533f41;
+}
+
+.primary,
+.primaryInline,
+.secondary,
+.danger {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.primary {
+  /* The S08 header button, pinned (122x33). */
+  width: 7.625rem;
+  height: 2.0625rem;
+  margin-top: 0.5625rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.4375rem;
+  background: #fc523c;
+  font-size: 0.75rem;
+  color: #160002;
+  box-shadow:
+    0 -1px 0 rgb(252 82 60 / 0.25),
+    0 1px 0 rgb(252 82 60 / 0.3);
+}
+
+.primaryInline {
+  height: 2.125rem;
+  padding: 0 1rem;
+  border: 0;
+  background: #fc523c;
+  color: #160002;
+}
+
+.secondary {
+  height: 2.125rem;
+  padding: 0 1rem;
+  border: 1px solid #e6e1e1;
+  background: var(--hub-surface);
+  color: #442f30;
+}
+
+.danger {
+  height: 2.125rem;
+  padding: 0 0.875rem;
+  border: 0;
+  background: #b91610;
+  color: #ffffff;
+}
+
+.primary:disabled,
+.primaryInline:disabled,
+.secondary:disabled,
+.danger:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.primary:focus-visible,
+.primaryInline:focus-visible,
+.secondary:focus-visible,
+.danger:focus-visible,
+.textAction:focus-visible,
+.linkAction:focus-visible,
+.input:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.card {
+  padding: 1.25rem;
+  border: 1px solid #e4dfdf;
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+  box-shadow:
+    0 1px 2px rgb(20 0 2 / 0.04),
+    0 4px 16px rgb(20 0 2 / 0.04);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.625rem;
+  line-height: 1rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #b91610;
+}
+
+.sideHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.table {
+  margin-top: 0.5rem;
+}
+
+.head,
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem 7.5rem 7rem 2rem;
+  align-items: center;
+  column-gap: 0.75rem;
+}
+
+.head {
+  height: 1.8125rem;
+  border-bottom: 1px solid #f1ebeb;
+  font-size: 0.625rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #533f41;
+}
+
+.row {
+  min-height: 2.75rem;
+  border-bottom: 1px solid #f1ebeb;
+}
+
+.selected {
+  background: #fff7f5;
+}
+
+.name {
+  font-size: 0.875rem;
+  font-weight: var(--weight-medium);
+  color: #170002;
+}
+
+.cell {
+  font-size: 0.75rem;
+  color: #533f41;
+  white-space: nowrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 1.4375rem;
+  padding: 0 0.625rem;
+  border: 1px solid #e3dede;
+  border-radius: 0.75rem;
+  background: var(--hub-surface);
+  font-size: 0.625rem;
+  color: #533f41;
+  white-space: nowrap;
+}
+
+.statusPUBLISHED,
+.statusLIVE {
+  border-color: #e8f0e6;
+  background: #e8f0e6;
+  color: #2a3b24;
+}
+
+.statusCANCELLED {
+  border-color: #f8c2b8;
+  background: #fef3f1;
+  color: #b91610;
+}
+
+.actionCell {
+  justify-self: end;
+}
+
+.textAction,
+.linkAction {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-medium);
+  color: #b91610;
+  cursor: pointer;
+}
+
+.linkAction {
+  margin-top: 0.875rem;
+  color: #533f41;
+}
+
+.empty {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: #533f41;
+}
+
+.failed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: #b00000;
+}
+
+.notice {
+  margin: 0.625rem 0 0;
+  font-size: 0.8125rem;
+}
+
+.noticeOk {
+  color: #2a3b24;
+}
+
+.noticeError {
+  color: #b00000;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6875rem;
+  margin-top: 0.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.label {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  font-weight: var(--weight-medium);
+  color: #160001;
+}
+
+.input {
+  height: 2.4375rem;
+  padding: 0 0.75rem;
+  border: 1px solid #d7cfcf;
+  border-top-color: #cec5c5;
+  border-bottom-color: #e6e1e1;
+  border-radius: 0.375rem;
+  background: #fbfafa;
+  font-size: 0.8125rem;
+  color: #160001;
+  box-shadow:
+    0 1px 0 #dbd5d5,
+    0 0 0 1px rgb(20 0 2 / 0.03);
+}
+
+.input:disabled {
+  color: #6b5a5b;
+}
+
+.input[aria-invalid='true'] {
+  border-color: #bb1c16;
+}
+
+.textarea {
+  height: auto;
+  padding: 0.5rem 0.75rem;
+  line-height: 1.25rem;
+  resize: vertical;
+}
+
+.fieldError {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #bb1c16;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #533f41;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cancelBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid #f1ebeb;
+}
