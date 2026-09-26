@@ -385,6 +385,28 @@ These records are addenda to the WF02 screen contracts and the API contract. The
 | <a id="dec-wf02-s03-d5"></a>DEC-WF02-S03-D5 | Repeated evidence | The 46×26 switch now appears on two approved references (WF01-S07, WF02-S03); the card frame (radius 14, #e4dede border, soft shadow) on two WF02 references (S01, S03). Recorded here; the values stay local until promoted by a design-system task | CLAUDE.md §7; Design SOT §2.5 |
 | <a id="dec-wf02-s03-d6"></a>DEC-WF02-S03-D6 | Legal content | Documents and texts come from `legal_documents` (fixture content in dev). PRODUCTION_LEGAL_CONTENT_REQUIRED stays a release dependency | DEC-WF01-S07 legal fixture note |
 
+## OPEN-WF02-S04 — Membership request preflight gaps (human decision required)
+
+**Status:** OPEN — found by the WF02-S04 preflight on 2026-09-26; nothing implemented.
+**Report:** [WF02-S04 preflight](../implementation/reports/WF02-S04_roles-network.md).
+
+**Supported without a decision:**
+- memberships and leadership (T00 read model);
+- PENDING_APPROVAL (`membership_state`);
+- `POST /me/membership-requests` shape (API §5.1);
+- duplicate and concurrency protection (`uq_open_membership`, PENDING_APPROVAL/ACTIVE);
+- source `SELF_DECLARED` for a request.
+
+| ID | Gap | Evidence | Options found | Recommended |
+|---|---|---|---|---|
+| <a id="open-wf02-s04-g1"></a>S04-G1 | No member-facing source for the organisations a member may choose, and the "requestable" rule is only partly frozen | API has `/ops/organizations` (managers only), `/organizations/{orgId}` and `/by-slug/{slug}` (known target only); Data SOT:168/566 names HUB/Chapter/CLB; nothing freezes publication status | (a) `/me/roles` server-renders the options from `organizations` where type ∈ {HUB, CHAPTER, CLB} and status = PUBLISHED, the same predicate the POST validates; no new API route. (b) API addendum `GET /organizations?requestable=true` → `{id, name, type}`. (c) Defer the request action | (a) |
+| <a id="open-wf02-s04-g2"></a>S04-G2 | Audit action for a membership request is required but has no frozen code | Data SOT:93 (AuditLog required for membership changes); Auth arch:208; CLAUDE.md §4 | `MEMBERSHIP_REQUESTED` on `community_membership`, after `{organization_id, state: PENDING_APPROVAL}`, request id | `MEMBERSHIP_REQUESTED` |
+| <a id="open-wf02-s04-g3"></a>S04-G3 | 409 "duplicate relation" has no frozen error code for this endpoint | API §2.5 (409 meaning); frozen list has `MEMBERSHIP_INVALID_TRANSITION` (ops PATCH) | (a) reuse `MEMBERSHIP_INVALID_TRANSITION`; (b) new decision code (e.g. `MEMBERSHIP_REQUEST_CONFLICT`) | (a) |
+| <a id="open-wf02-s04-g4"></a>S04-G4 | Whether a new request is allowed when the member already has a SUSPENDED, ALUMNI, REJECTED or WITHDRAWN membership in that organisation | DB blocks only PENDING_APPROVAL/ACTIVE; API §13 "REJECTED → ACTIVE requires explicit reopen/new process" | 409 for ACTIVE, PENDING_APPROVAL and SUSPENDED; a new PENDING_APPROVAL record allowed after REJECTED, WITHDRAWN or ALUMNI (history kept) | as stated |
+| <a id="open-wf02-s04-g5"></a>S04-G5 | The H11 design / screen-contract addendum for the request UI was never produced; SCR S04 still has `writes: []` | DEC-WF02-H11 ("Add a design/screen-contract addendum") | (a) Reuse the S04 card/row pattern: one card with an organisation select + "Gửi yêu cầu" (INTENTIONAL-CONTRACT, not pixel-compared), as S03 did for H4 content. (b) Wait for a design addendum | (a) |
+
+Not a gap: `membership_requested` analytics stays deferred (DEC-WF01-ANALYTICS-EXT-DEFER). RoleAssignment is listed in SCR S04 reads, but H5 fixes the S04 content without it.
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

@@ -102,7 +102,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S03 done ([report](reports/WF02-S03_privacy-visibility.md)); WF02 2 / 7 screens. Next: WF02-S04 — Roles / Network.
+WF02-S04 BLOCKED at preflight: 5 open decisions (OPEN-WF02-S04 G1–G5, membership request); [report](reports/WF02-S04_roles-network.md). WF02 2 / 7 screens. Next: decide G1–G5, then WF02-S04.
 
 ## Related
 

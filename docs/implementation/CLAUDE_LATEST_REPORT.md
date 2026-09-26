@@ -1,76 +1,40 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF02-S03 — Privacy / Visibility (`/me/privacy`)
-- Status: **DONE**
-- Mode: LOCAL REVIEW. No migration, no API change, no push.
+- Task ID / name: WF02-S04 — Roles / Network (`/me/roles`)
+- Status: **BLOCKED at PREFLIGHT** — human decisions required before runtime code
+- Mode: LOCAL REVIEW. No runtime code, no migration, no push. `/me/roles` stays the T00 shell + placeholder.
 
-## 2. Scope implemented (DEC-WF02-H4)
-| Part | Result |
-|---|---|
-| PROFILE_DISCOVERY | One switch: ON = NETWORK_ONLY, OFF = PRIVATE; saves via `PUT /me/visibility`, shows the server's answer; PUBLIC never offered |
-| Current legal | "Điều khoản đang áp dụng": each current document (from `/legal/current`) with version and acceptance date, or "chưa đồng ý phiên bản này"; "Đọc" link to its content |
-| Re-acceptance | Acknowledgement + "Đồng ý phiên bản mới" posts only the missing current documents (Idempotency-Key per version); 409 reloads the new version |
-| Consent history | Every record from `/me/consents`, marked current / stale / revoked |
-| Not rendered | Future purpose toggles, viewer history, "view as others", data export, consent revocation |
+## 2. Preflight result
+| # | Check | Result |
+|---|---|---|
+| 1 | Read memberships | SUPPORTED: T00 `GET /me/network`, MembershipDTO |
+| 2 | Read leadership | SUPPORTED: LeadershipDTO (no provenance column; none shown) |
+| 3 | PENDING_APPROVAL | SUPPORTED: `membership_state` |
+| 4 | `POST /me/membership-requests` | Contract exists (API §5.1: `{organization_id}` → 201 PENDING_APPROVAL, never ACTIVE); not implemented yet |
+| 5 | Duplicate / concurrent protection | SUPPORTED: `uq_open_membership` (PENDING_APPROVAL, ACTIVE), so the DB rejects concurrent duplicates. **Error code not frozen (G3); re-request after other states undecided (G4)** |
+| 6 | Organisation target validation | **GAP (G1)**: no member-facing list of requestable organisations; publication-status rule not frozen |
+| 7 | Source / trust | SUPPORTED: request = `SELF_DECLARED`; roster = `ORGANIZATION_VERIFIED`; T00-D2 mapping |
+| — | Audit for the mutation | **GAP (G2)**: required by Data SOT:93 / Auth arch:208; no frozen action code |
+| — | Request UI | **GAP (G5)**: the H11 design addendum does not exist |
 
-Decisions: [DEC-WF02-S03-D1..D6](../decisions/DECISION_LOG.md#dec-wf02-s03-d1). Audit events are the existing ones only: PROFILE_VISIBILITY_CHANGED and CONSENT_ACCEPTED. No analytics added.
+Details, evidence and recommended options: [OPEN-WF02-S04 G1–G5](../decisions/DECISION_LOG.md#open-wf02-s04-g1).
 
-## 3. Files changed
-- New: `src/app/(member)/me/privacy/{privacy-view.tsx,privacy.module.css,privacy-model.ts,privacy-model.test.ts}`, `tests/visual/specs/wf02-s03-privacy-visibility.spec.ts`
-- Changed: `src/app/(member)/me/privacy/page.tsx`, `tests/visual/pixel-qa/qa-screens.ts` (S03 state text)
+## 3. What can proceed once decided
+- Recommended: G1 (a), G2 `MEMBERSHIP_REQUESTED`, G3 reuse `MEMBERSHIP_INVALID_TRANSITION`, G4 as stated, G5 (a).
+- None needs a migration.
+- The read-only part of S04 (memberships, leadership, venture relations, source labels, empty and failure states, pixel QA) needs none of G1–G5. It could be authorised separately if the request action should wait.
 
-## 4. Migrations / data
-None.
+## 4. Files changed
+- `docs/decisions/DECISION_LOG.md`: OPEN-WF02-S04 G1–G5
+- This report and its archive `reports/WF02-S04_roles-network.md`; `P0_STATUS.md`
 
 ## 5. Tests / build
-| Gate | Result |
-|---|---|
-| Format / lint / typecheck / build | PASS |
-| Unit | 147/147 |
-| DB | 217/217 |
-| Playwright (full) | 301 passed, 24 skipped by design |
-| S03 spec | 12/12 |
-| State matrix | 1–14 and 16 automated; 15 restart: visibility, consents and legal current identical after app + PostgreSQL restart; no email/token in logs |
-| WF01 pixel runs | 8 screens PASS |
+Not run: no code changed. The last green state is unchanged (`7ae9f98`: unit 147, DB 217, Playwright 301).
 
-State matrix coverage:
-- 1: NETWORK_ONLY
-- 2/10/14: PRIVATE, update, refresh
-- 3/4/5: stale Terms, stale Privacy, both stale
-- 6/7: one type accepted
-- 8/9: re-accept and repeat
-- 11: invalid levels and groups
-- 12: guest
-- 13: avatar projection
-- 16: failures
-- Also covered: a 409 race.
-
-## 6. Security
-| Check | Result |
-|---|---|
-| Owner mutation | Session-derived; body `profile_id`/`account_id` ignored; the other member's level unchanged |
-| Forged level/group | PUBLIC, PROGRAMME_ACCESS, GRANTED_ACCESS, unknown group → 422 VISIBILITY_VALIDATION_FAILED |
-| History isolation | Page shows exactly the owner's records |
-| Leakage | No other member email, no `legal_document_id`, metadata, request or device data |
-| Media | Owner 200; other member 200 → 404 after PRIVATE; guest 404 |
-| Re-acceptance | Profile status, `onboarding_completed_at` and visibility unchanged; one record per document |
-
-## 7. Visual QA
-| Class | Result |
-|---|---|
-| Structural / Major / Component | 0 |
-| Raster | 0 outside text (shell + header + discovery card; sidebar) |
-| Intentional-P0-Scope | rows 2–4 + footnote, viewer history card, "Dữ liệu của bạn" card, bell counter |
-| Intentional-Contract | legal and history cards (no approved geometry), eyebrow/hint/lede copy |
-| Verdict | **PASS** (viewport authoritative; full page 1125 > 900, H12 not applicable) |
-
-## 8. Deviations / blockers
-None blocking. Copy awaits PO review. PRODUCTION_LEGAL_CONTENT_REQUIRED remains a release dependency.
-
-## 9. Git
-- Branch: `main`; start HEAD `efaf055`
-- Implementation commit: `7c836c6`
+## 6. Git
+- Branch: `main`; start HEAD `7ae9f98`
+- Implementation commit: none
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `fed0b25`
@@ -78,5 +42,5 @@ None blocking. Copy awaits PO review. PRODUCTION_LEGAL_CONTENT_REQUIRED remains 
 
 ## Related
 - [WF02_SCREEN_IMPLEMENTATION_PLAN.md](WF02_SCREEN_IMPLEMENTATION_PLAN.md) — plan
-- [DECISION_LOG.md](../decisions/DECISION_LOG.md) — decisions
+- [DECISION_LOG.md](../decisions/DECISION_LOG.md) — OPEN-WF02-S04
 - [P0_STATUS.md](P0_STATUS.md) — status
