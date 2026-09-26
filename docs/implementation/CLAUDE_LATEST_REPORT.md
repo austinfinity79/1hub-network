@@ -1,66 +1,71 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF02-S04 — Roles / Network (`/me/roles`), resumed after the G1–G5 freeze
+- Task ID / name: WF02-S02 — Profile Edit (`/me/profile/edit`)
 - Status: **DONE**
 - Mode: LOCAL REVIEW. No migration, no push.
 
-## 2. Decisions
-- [DEC-WF02-S04-G1..G5](../decisions/DECISION_LOG.md#dec-wf02-s04-g1): human approved; OPEN-WF02-S04 CLOSED; remaining S04 decisions 0.
-- [DEC-WF02-S04-D1..D4](../decisions/DECISION_LOG.md#dec-wf02-s04-d1): rows, provenance labels, request-card copy/behaviour, pixel fixture.
+## 2. Preflight
+| Check | Result |
+|---|---|
+| Canonical fields | All 10 groups have storage. PATCH covered name, headline, region, bio, domains, skills; avatar has its own route |
+| Experience | `profile_experience` (title required) + `no_experience_yet`; write shape per DEC-WF02-S02-D1 |
+| Goal / need | Columns exist; both in the API §4.3 PATCH example |
+| Vocabulary | Existing `assertSelectable` (ACTIVE-only new, archived kept, type checked, max 5) |
+| Migration / human decision | None |
 
 ## 3. Scope implemented
 | Part | Result |
 |---|---|
-| Roles card | Read-only rows from `GET /me/network`: ventures, memberships (every stored state), leadership; chip = type; right = stored source + start date; no approver names |
-| Request card (G5) | One organisation selector + "Gửi yêu cầu" → `POST /me/membership-requests` with Idempotency-Key; view reloads the read model after each attempt |
-| API | `POST /me/membership-requests`: session profile; only `organization_id` read; target must be HUB/CHAPTER/CLB and PUBLISHED (G1), else 404; ACTIVE/PENDING_APPROVAL/SUSPENDED/ALUMNI → 409 `MEMBERSHIP_INVALID_TRANSITION` (G3/G4); REJECTED/WITHDRAWN → new record; creates PENDING_APPROVAL + SELF_DECLARED only; audit `MEMBERSHIP_REQUESTED` once (G2) |
-| Concurrency | Profile row lock + `uq_open_membership`; a unique violation maps to 409 |
-| Not rendered | Activity journal (H5, P0 scope); bell counter |
+| API | `PATCH /me/profile` gains `development_goal`, `current_need`, `experience`, `no_experience_yet`, `links`; validated before the first write; ACTIVE profiles keep name + region; `GET` gains `no_experience_yet` |
+| UI | Editor header (name, "Hiển thị trong mạng lưới"/"Đang ẩn khỏi mạng lưới", "đã lưu lúc", "Lưu"); approved fields (Chức danh, Giới thiệu, Nhóm chuyên môn picker DOMAIN+SKILL, Liên kết ngoài); H1 sections (Kinh nghiệm + "chưa có kinh nghiệm", Mục tiêu phát triển, Nhu cầu hiện tại); side card with avatar, Họ và tên, Tỉnh / thành phố; reworded note card |
+| Not rendered | "Xem bản public" (H3), "Ẩn mục trong tiến trình" (H2) |
+| Save | One PATCH with only the changed fields; avatar via the existing upload route |
+
+Decisions: [DEC-WF02-S02-D1..D7](../decisions/DECISION_LOG.md#dec-wf02-s02-d1). Analytics: the existing `profile_completion_changed` only on a real change (screen WF02-S02 once onboarded). No new audit or analytics event.
 
 ## 4. Files changed
-- New: `src/lib/network/membership-request.ts` (+ `.db-test.ts`, 12), `src/app/api/v1/me/membership-requests/route.ts`, `src/app/(member)/me/roles/{roles-view.tsx,roles.module.css,roles-model.ts,roles-model.test.ts}`, `tests/visual/specs/wf02-s04-roles-network.spec.ts` (12)
-- Changed: `src/app/(member)/me/roles/page.tsx`, `src/lib/audit/audit.ts` (`MEMBERSHIP_REQUESTED`), `tests/visual/pixel-qa/qa-screens.ts`, `wf02-t00-member-foundation.spec.ts` (placeholder check → `/me/settings`)
+- New: `src/app/(member)/me/profile/edit/{profile-editor.tsx,profile-edit.module.css}`, `src/lib/profile/profile-edit.db-test.ts` (9), `tests/visual/specs/wf02-s02-profile-edit.spec.ts` (12)
+- Changed: `src/app/(member)/me/profile/edit/page.tsx`, `src/lib/profile/profile.ts`, `tests/visual/pixel-qa/qa-screens.ts`, `shell-routes.spec.ts` (S02 guarded)
 
-## 5. Migrations / data
-None. Existing `community_memberships`, `uq_open_membership`, `audit_events`, idempotency store.
-
-## 6. Tests / build
+## 5. Tests / build
 | Gate | Result |
 |---|---|
 | Format / lint / typecheck / build | PASS |
 | Unit | 152/152 |
-| DB | 229/229 |
-| Playwright (full) | 313 passed, 24 skipped by design |
+| DB | 238/238 (completion matrix 0/10/60/70/80/90/100 and back to 80 from canonical groups) |
+| Playwright (full) | 325 passed, 24 skipped by design |
 | WF01 pixel runs | 8 screens PASS |
-| S01 / S03 / T00 specs | PASS (in the full suite) |
-| Restart | `GET /me/network` + `/session` identical after app + PostgreSQL restart; the pending request persists; a repeat is still 409; no email/token in logs |
+| S01 / S03 / S04 / T00 | PASS (full suite); S01 shows "90% · còn thiếu ảnh đại diện" after S02 edits |
+| Restart | `/me/profile`, `/me/profile/completion`, `/session` identical after app + PostgreSQL restart (80% on all three); no email/token in logs |
 
-## 7. Security
+## 6. Data integrity and security
 | Check | Result |
 |---|---|
-| Owner derivation | Session only; body `profile_id`/`account_id`/`state`/`source` ignored → the caller's own PENDING_APPROVAL/SELF_DECLARED |
-| IDOR | `?profile_id=` shows only the caller's rows |
-| Duplicate / concurrent / replay | 1 record each (409 for repeats and 5 of 6 parallel; same key replays the same id) |
-| Invalid target | Unknown, malformed, DRAFT, ARCHIVED, COMPANY, missing, nested object → 404; no audit |
-| Capability | `/session` capabilities and managed_scopes `[]` before and after ACTIVE, PENDING, leadership and a request; no leadership or RoleAssignment rows created |
-| Leakage | No bootstrap batch/email, other member email, metadata or slug in the page |
+| Atomic save | A wrong-type DOMAIN id with four other fields changes nothing; experience+flag conflict changes nothing |
+| Null semantics | Missing = unchanged; null/blank text = cleared (group incomplete); `[]` = list cleared; ACTIVE name/region cannot be cleared |
+| Vocabulary | Archived new → 422; wrong type → 422; archived linked item retained |
+| Server-owned fields | `completion_percent`, `status`, `onboarding_completed_at`, `avatar_asset_id` (incl. a foreign asset), `profile_id`, `account_id`, `education`, `primary_intent` → 422 |
+| Side effects | Visibility, memberships, leadership, role assignments unchanged by edits |
+| Links | Only http(s); `javascript:` refused |
+| Leakage | Owner DTO has no email, account id, token or metadata |
 
-## 8. Visual QA
+## 7. Visual QA
 | Class | Result |
 |---|---|
-| Structural / Major / Component | 0 (row pitch, name column, chip box fixed to the reference) |
-| Raster | 58 px outside text (0.006%): chip right edges following label width in the frozen font (TYPOGRAPHY-MIGRATION) |
-| Intentional-P0-Scope | activity journal card, bell counter |
-| Intentional-Contract | request card (G5); provenance text without approver names |
-| Verdict | **PASS** (viewport authoritative; full page 1594 > 900) |
+| Structural / Major / Component | 0 |
+| Raster | 0 outside text (header, approved fields, note card) |
+| Intentional-P0-Scope | "Xem bản public", activity-hide panel |
+| Intentional-Contract | side basic-info card, H1 sections, reworded note/status |
+| Full page (H12) | 620px reference: content below it is only the H1 sections inside the form column (x 64–924) |
+| Verdict | **PASS** (viewport authoritative) |
 
-## 9. Deviations / blockers
-None. Request-card copy awaits PO review.
+## 8. Deviations / blockers
+None. Copy awaits PO review.
 
-## 10. Git
-- Branch: `main`; start HEAD `9523859`
-- Implementation commit: `39c4e57`
+## 9. Git
+- Branch: `main`; start HEAD `95e9ee8`
+- Implementation commit: `82cc480`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `fed0b25`

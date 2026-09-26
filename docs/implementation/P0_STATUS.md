@@ -64,6 +64,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF02-S01 | Account Home `/me`: identity, server completion, nav cards, canonical organisations/ventures; pixel drift 0 outside text; H12 harness rule live |
 | WF02-S03 | Privacy `/me/privacy`: PROFILE_DISCOVERY (NETWORK_ONLY/PRIVATE), current legal status + re-acceptance, consent history; WF01-S07 services reused; pixel drift 0 |
 | WF02-S04 | Roles `/me/roles` + `POST /me/membership-requests` (PENDING_APPROVAL only, G1–G5 frozen); read-only canonical rows; pixel PASS |
+| WF02-S02 | Profile edit `/me/profile/edit`: all 10 completion groups editable (H1 addendum), ≥80% reachable through UI; PATCH extended, no migration; pixel drift 0 |
 
 ## Not yet built (M0)
 
@@ -103,7 +104,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S04 done ([report](reports/WF02-S04_roles-network.md)); WF02 3 / 7 screens. Next: WF02-S02 — Profile Edit.
+WF02-S02 done ([report](reports/WF02-S02_profile-edit.md)); WF02 4 / 7 screens. Next: WF02-S07 — Settings / Session / Account Deletion Request (needs the P13 deletion subset).
 
 ## Related
 
