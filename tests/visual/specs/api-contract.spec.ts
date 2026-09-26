@@ -67,12 +67,13 @@ test.describe('M0-T05 API surface discipline', () => {
     // are covered by auth-session.spec.ts. WF01-S06 implemented /me/profile and
     // /vocabularies/{type} (wf01-s06-onboarding-profile.spec.ts); WF02-T00
     // implemented /me/network (wf02-t00-member-foundation.spec.ts); WF03-T00
-    // implemented GET /ops/organizations (wf03-t00-ops-foundation.spec.ts). Other
+    // implemented GET /ops/organizations (wf03-t00-ops-foundation.spec.ts), WF03-S02
+    // GET /ops/organizations/{id}/dashboard (wf03-s02-organization-dashboard.spec.ts). Other
     // business endpoints still belong to later screens; answering now would be
     // scope leakage.
     for (const path of [
       '/me/ventures',
-      '/ops/organizations/10000000-0000-0000-0000-000000000101/dashboard',
+      '/ops/organizations/10000000-0000-0000-0000-000000000101/members',
       '/ops/feedback',
       '/vocabularies/STARTUP_STAGE',
     ]) {

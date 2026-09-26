@@ -1,0 +1,165 @@
+/*
+ * WF03-S02 — organization dashboard. Component geometry measured from the
+ * approved ORG1 reference at 1440x900 DPR1 (px / 16 = rem); local to this
+ * screen. The reference is drawn without a sidebar; inside OpsShell the same
+ * 48px margins apply to the narrower content area, so card widths shrink while
+ * card heights, paddings and inner geometry stay as drawn.
+ */
+
+.page {
+  min-height: 100vh;
+}
+
+.header {
+  height: 5.25rem;
+  padding: 1.25rem 3rem 0;
+  border-bottom: 1px solid #e3dddd;
+  background: var(--hub-surface);
+}
+
+.title {
+  margin: 0;
+  line-height: 1.5rem;
+  color: #170002;
+}
+
+.subtitle {
+  margin: 0.375rem 0 0;
+  color: #5e4c4d;
+}
+
+.body {
+  padding: 1.75rem 3rem 3rem;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.kpi,
+.work {
+  border: 1px solid #e3dddd;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+}
+
+.kpi {
+  height: 8.9375rem;
+  padding: 1.25rem 1.375rem 0;
+}
+
+.kpiLabel {
+  margin: 0;
+  font-size: 0.625rem;
+  line-height: 1rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #8e7677;
+}
+
+.kpiValue {
+  margin: 0.8125rem 0 0;
+  font-size: 2rem;
+  line-height: 2.5rem;
+  font-weight: var(--weight-medium);
+  color: #b91610;
+}
+
+.kpiSub {
+  margin: 0.6875rem 0 0;
+  color: #5e4c4d;
+}
+
+.work {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.itemTitle {
+  margin: 0;
+  line-height: 1.5rem;
+  color: #170002;
+}
+
+.itemSub {
+  margin: 0.125rem 0 0;
+  color: #5e4c4d;
+}
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chip {
+  /* Drawn size pinned (85x28), so glyph-width changes from the font migration
+     cannot move the component geometry. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.3125rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid #f8c2b8;
+  border-radius: 0.875rem;
+  background: #fef3f1;
+  font-size: 0.6875rem;
+  color: #b91610;
+}
+
+.act {
+  /* Drawn size pinned (97x36), as for the chip. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 6.0625rem;
+  height: 2.25rem;
+  padding: 0;
+  border-radius: 0.375rem;
+  background: #fc523c;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-medium);
+  color: #160002;
+  text-decoration: none;
+}
+
+.act:focus-visible,
+.retry:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.none {
+  margin: 0.75rem 0 0;
+  color: #5e4c4d;
+}
+
+.failed {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.375rem;
+  border: 1px solid #e3dddd;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+  color: #5e4c4d;
+}
+
+.retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-fg-accent);
+  cursor: pointer;
+}

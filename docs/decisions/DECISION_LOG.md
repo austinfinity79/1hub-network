@@ -832,6 +832,16 @@ Resolved by precedence (not asked):
 | <a id="dec-wf03-s01-d3"></a>DEC-WF03-S01-D3 | **Pixel state.** The S01 QA state uses the PLATFORM_ADMIN persona (seeded HUB, Chapter 01/02, Club 01 + one test-hook CLB = the 5 drawn rows); the leader path is proven functionally. Below the 550px reference only the OpsShell sidebar continues (its colour differs from the ADM sidebar by T00-D1); the content area must be pure canvas |
 | <a id="dec-wf03-s01-d4"></a>DEC-WF03-S01-D4 | **Fixture convergence fix.** `seed_p0_deterministic.sql` now also resets `role_assignments.valid_to` on reseed. An authz test that expires the leader restores by reseeding, but the old upsert left the expiry in place, so targeted runs saw an expired leader. No product behaviour change |
 
+## DEC-WF03-S02-D — Organization dashboard implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within DEC-WF03-G1/G10/G11/G15 (for review).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf03-s02-d1"></a>DEC-WF03-S02-D1 | **Metrics and API.** `GET /ops/organizations/{orgId}/dashboard` (API §8.2) returns `{organization, summary, permissions}`. `summary` holds `active_members` (ACTIVE memberships), `pending_memberships` (PENDING_APPROVAL), `active_leaders` (ACTIVE leadership records), `standalone_events` and `published_events` (events with `programme_id IS NULL`, the WF03 Event scope; PUBLISHED by status) and `child_organizations` (direct ACTIVE PARENT relations via the hierarchy reader). `linked_programmes` (the §8.2 example) and "upcoming" events are omitted: WF04, and no frozen time semantics. `permissions` = the actor's capabilities for the org (display only). Aggregates only; no identities |
+| <a id="dec-wf03-s02-d2"></a>DEC-WF03-S02-D2 | **Authorization.** API: `org:read` for exactly this organization via the M0-T09 `require` → out of scope, malformed or foreign id = 403 `SCOPE_FORBIDDEN`; an in-scope id that is not an operational organization → 404; no session → 401. Page: `requireOpsOrg(orgId, 'org:read')` (404), repeated in the page. `require` is imported under an alias because webpack refuses a bare `require(…)` call |
+| <a id="dec-wf03-s02-d3"></a>DEC-WF03-S02-D3 | **UI mapping of ORG1.** Header band = organization name + "Bảng điều khiển · {type}". Four KPI cards: Thành viên (sub: direct child organizations), Yêu cầu chờ duyệt, Ban điều hành, Sự kiện đã công khai (sub: of all standalone events). One work item "{n} yêu cầu thành viên chờ duyệt" with the drawn chip and "Làm ngay" → `/ops/org/:orgId/members`; "Không có việc cần làm." at zero. Capability chips, scope notice, enterprise KPIs and the pilot card are not rendered. The reference has no sidebar: inside OpsShell the 48px margins are kept and card widths follow the content width. Chip and button use their drawn sizes (85×28, 97×36) so glyph-width changes cannot move them. Copy pending PO review |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 
