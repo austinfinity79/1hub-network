@@ -5,7 +5,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 import { closePool, query } from '../../../src/lib/db/client'
 import { runScreenQa } from '../pixel-qa/capture'
 import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { FIXTURES, qaConfigFor } from '../pixel-qa/qa-screens'
+import { qaConfigFor } from '../pixel-qa/qa-screens'
 import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
 import { decodePng, readPng } from '../pixel-qa/png'
 import { writeJsonReport } from '../pixel-qa/report'

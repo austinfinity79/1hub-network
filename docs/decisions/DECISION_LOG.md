@@ -501,7 +501,7 @@ Not a gap: `membership_requested` analytics stays deferred (DEC-WF01-ANALYTICS-E
 
 ## OPEN-WF02-S07 — Settings preflight gaps (human decision required)
 
-**Status:** OPEN — found by the WF02-S07 preflight on 2026-09-26; no migration, no code.
+**Status:** CLOSED 2026-09-26 by [DEC-WF02-S07-G1..G6](#dec-wf02-s07-g1) (history kept). SEC-OBS-01 below stays OPEN as a separate remediation task.
 **Report:** [WF02-S07 preflight](../implementation/reports/WF02-S07_settings-sessions-deletion-request.md).
 
 **Supported without a decision:**
@@ -529,6 +529,91 @@ Not a gap: `membership_requested` analytics stays deferred (DEC-WF01-ANALYTICS-E
 - The application log does not contain the token.
 - Risk: server or proxy access logs that record Referer.
 - Candidate fix, separate task: a `Referrer-Policy: no-referrer` response header on `/auth/callback`.
+
+## DEC-WF02-S07 — Settings, sessions and deletion request (G1–G6, human approved)
+
+**Status:** HUMAN APPROVED — P0.
+**Date:** 2026-09-26.
+**Closes:** [OPEN-WF02-S07 G1–G6](#open-wf02-s07-g1).
+**Remaining S07 human decisions:** 0.
+
+<a id="dec-wf02-s07-g1"></a>**DEC-WF02-S07-G1 — P13 storage**
+
+| Field | Record |
+|---|---|
+| Context | API §5.5 and DEC-WF02-H8 authorised deletion-request storage without a shape |
+| Decision | `account_deletion_requests(id uuid PK, account_id uuid NOT NULL → user_accounts, requested_at timestamptz NOT NULL DEFAULT now())`, `UNIQUE(account_id)`. Nothing else: no status, processing, retention, grace, cancellation, reason or metadata |
+| Rationale | Request storage only; no workflow is frozen |
+| Consequences | Additive migration `006_p0_account_deletion_request.sql`; older migrations untouched |
+| Affected | DB |
+| Anchor | S07-G1; GAPS P13 |
+
+<a id="dec-wf02-s07-g2"></a>**DEC-WF02-S07-G2 — One request per account**
+
+| Field | Record |
+|---|---|
+| Context | No duplicate rule existed |
+| Decision | The first request creates the row → 201. Any later request by the same account returns that row → 200, with no new row. Concurrent requests leave exactly one row (`UNIQUE(account_id)` + `ON CONFLICT DO NOTHING`) |
+| Rationale | The database is authoritative, not the client |
+| Consequences | Idempotency-Key replay is optional; the uniqueness rule decides |
+| Affected | DB, API |
+| Anchor | S07-G2 |
+
+<a id="dec-wf02-s07-g3"></a>**DEC-WF02-S07-G3 — Request always available**
+
+| Field | Record |
+|---|---|
+| Context | The bitmap disabled the action for venture owners pending a transfer, which is Future |
+| Decision | "Yêu cầu xoá tài khoản" is enabled for every member, behind a deliberate confirmation. It is a request only; nothing is deleted or deactivated |
+| Rationale | P0 business contract supersedes the bitmap state |
+| Consequences | INTENTIONAL-CONTRACT pixel difference; the transfer button and owner warning are not rendered (INTENTIONAL-P0-SCOPE) |
+| Affected | UI |
+| Anchor | S07-G3; DEC-WF02-H7/H8 |
+
+<a id="dec-wf02-s07-g4"></a>**DEC-WF02-S07-G4 — Audit**
+
+| Field | Record |
+|---|---|
+| Context | The deletion request is a sensitive account-lifecycle mutation (CLAUDE.md §4) |
+| Decision | `ACCOUNT_DELETION_REQUESTED`, resource `account_deletion_request` / new id, written once in the same transaction as the first insert. A repeat writes nothing. Session revocation writes no audit (outside the Data SOT audit list, as logout) |
+| Rationale | Exactly-once, minimal payload |
+| Consequences | Never tokens, hashes, cookies, email or raw auth data |
+| Affected | `audit_events`, `AuditAction` |
+| Anchor | S07-G4 |
+
+<a id="dec-wf02-s07-g5"></a>**DEC-WF02-S07-G5 — Revoke all**
+
+| Field | Record |
+|---|---|
+| Context | H8 left the revoke-all route to this task |
+| Decision | `DELETE /me/sessions`: revokes every valid session of the account, including the current one, in one statement; 204; clears the cookie. No other logout-all endpoint |
+| Rationale | The collection resource of API §5.5 |
+| Consequences | The next protected request is 401 / redirect to /auth |
+| Affected | API |
+| Anchor | S07-G5; API §5.5 |
+
+<a id="dec-wf02-s07-g6"></a>**DEC-WF02-S07-G6 — Outcomes**
+
+| Field | Record |
+|---|---|
+| Context | Outcome semantics were unconfirmed |
+| Decision | `GET /me/sessions` 200 with caller-owned active sessions only. `DELETE /me/sessions/{id}`: own active → 204; own current → 204 + cookie cleared; own already revoked/expired → 204 (idempotent); foreign or unknown (or malformed) → 404 `UNCONTRACTED_NOT_FOUND` alike. `DELETE /me/sessions` → 204 + cookie cleared. `POST /me/account-deletion-request` (API §5.5): 201 / 200 as G2. Every route: unauthenticated → 401 |
+| Rationale | No existence leak, idempotent retries |
+| Consequences | A deletion request never touches account, profile, membership, leadership, roles, ventures, consents, visibility, media or sessions |
+| Affected | API |
+| Anchor | S07-G6; API §2.5, §13 |
+
+## DEC-WF02-S07-D — Settings implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within approved scope (H8, G1–G6).
+**Date:** 2026-09-26.
+**Task:** [WF02-S07](../implementation/reports/WF02-S07_settings-sessions-deletion-request.md).
+
+| ID | Topic | Decision | Source anchors |
+|---|---|---|---|
+| <a id="dec-wf02-s07-d1"></a>DEC-WF02-S07-D1 | Session rows | `SessionDTO {id, created_at, expires_at, current}`; current first, then newest. Row title "Phiên này" / "Phiên đăng nhập"; detail "bắt đầu {dd/mm/yyyy HH:MM} · hết hạn {dd/mm/yyyy}" (Asia/Ho_Chi_Minh). Current row shows the "Hiện tại" pill (no button, as the bitmap); other rows "Đăng xuất". Revoking this browser's session or all sessions sends it to `/auth` after the server cleared the cookie | DEC-WF02-H8; DEC-WF02-S07-G5/G6 |
+| <a id="dec-wf02-s07-d2"></a>DEC-WF02-S07-D2 | Copy | Login card: email + "Email đăng nhập · đã xác thực" (no verification date is stored) and the approved passwordless note (the 15-minute link matches `MAGIC_LINK_EXPIRES_IN_SECONDS = 900`). Danger card: request-only wording, "Yêu cầu xoá tài khoản" → confirmation "Bạn chắc chắn muốn gửi yêu cầu xoá tài khoản?" / "Xác nhận gửi yêu cầu" / "Huỷ"; after a request "Đã nhận yêu cầu xoá tài khoản lúc {time}." + "Tài khoản của bạn vẫn hoạt động; yêu cầu không xoá dữ liệu nào ngay lập tức." No processing promise. Pending PO copy review | DEC-WF02-S07-G3; API §5.5 |
+| <a id="dec-wf02-s07-d3"></a>DEC-WF02-S07-D3 | Existing request and pixel fixture | The page reads the owner's request server-side (no GET route). The pixel run keeps only the session it just created for the seeded member and removes a leftover request (test-only hook) | Pixel QA §4 |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

@@ -136,7 +136,7 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
   cfg('WF02-S06', '/projects/:id/team', 'member', 'team of own startup', {
     id: FIXTURES.demoStartupId,
   }),
-  cfg('WF02-S07', '/me/settings', 'member', 'account settings'),
+  cfg('WF02-S07', '/me/settings', 'member', 'settings: one current session, no deletion request'),
 
   // WF03 — HUB / Chapter / CLB Operations
   cfg('WF03-S01', '/ops/network', 'leader', 'unit selector for a Chapter 01 leader'),

@@ -1,19 +1,26 @@
 import { MemberShell } from '@/components/shell/member-shell'
-import { RoutePlaceholder } from '@/components/shell/route-placeholder'
+import { getDeletionRequest } from '@/lib/account/settings'
 import { requireMember } from '@/lib/member/guard'
 
+import { SettingsView } from './settings-view'
+
 /**
- * WF02-S07 — /me/settings. WF02-T00 places the frozen route inside the member shell
- * (guest → /auth, onboarding not done → its resolver step). The screen body is
- * still the M0-T03 placeholder until WF02-S07 is implemented.
+ * WF02-S07 — /me/settings, Account Settings. Production.
+ * Approved baseline: design-reference/final/WF02/WF02-S07__account-settings__1440x900.png
+ * Decisions DEC-WF02-H8, DEC-WF02-S07-G1..G6, DEC-WF02-S07-D1..D3.
+ *
+ * Guest → /auth; onboarding not done → its resolver step (DEC-WF02-T00-D1).
+ * The existing deletion request (if any) is read server-side for the owner;
+ * no extra API route exists for it.
  */
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
   const member = await requireMember()
+  const request = await getDeletionRequest(member.accountId)
   return (
     <MemberShell active="settings" member={member}>
-      <RoutePlaceholder pattern="/me/settings" />
+      <SettingsView initialRequest={request} />
     </MemberShell>
   )
 }

@@ -7,7 +7,11 @@ import type { Executor } from '@/lib/db/client'
  * Callers pass only what review needs; no free text, no contact data.
  */
 export type AuditAction =
-  'CONSENT_ACCEPTED' | 'PROFILE_VISIBILITY_CHANGED' | 'PROFILE_ACTIVATED' | 'MEMBERSHIP_REQUESTED'
+  | 'CONSENT_ACCEPTED'
+  | 'PROFILE_VISIBILITY_CHANGED'
+  | 'PROFILE_ACTIVATED'
+  | 'MEMBERSHIP_REQUESTED'
+  | 'ACCOUNT_DELETION_REQUESTED'
 
 export async function writeAudit(
   exec: Executor,
