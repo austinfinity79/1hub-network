@@ -159,10 +159,13 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
     'platform admin: a test-hook CLB with five relationships (two pending, one leader), as drawn',
     { orgId: 'e8000000-0000-0000-0000-000000000001' },
   ),
-  cfg('WF03-S04', '/ops/org/:orgId/members/:profileId', 'leader', 'member detail', {
-    ...ORG,
-    profileId: FIXTURES.memberProfileId,
-  }),
+  cfg(
+    'WF03-S04',
+    '/ops/org/:orgId/members/:profileId',
+    'leader',
+    'Chapter 01 leader reviewing Demo Pending (PENDING_APPROVAL) with a test-hook ALUMNI membership in history',
+    { ...ORG, profileId: '40000000-0000-0000-0000-000000000005' },
+  ),
   cfg('WF03-S05', '/ops/org/:orgId/programmes', 'leader', 'Chapter 01 programmes', ORG),
   cfg('WF03-S06', '/ops/org/:orgId/profile', 'leader', 'Chapter 01 content/profile', ORG),
   cfg('WF03-S07', '/ops/org/:orgId/events', 'leader', 'Chapter 01 events', ORG),

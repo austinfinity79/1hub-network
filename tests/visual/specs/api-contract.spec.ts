@@ -69,7 +69,9 @@ test.describe('M0-T05 API surface discipline', () => {
     // implemented /me/network (wf02-t00-member-foundation.spec.ts); WF03-T00
     // implemented GET /ops/organizations (wf03-t00-ops-foundation.spec.ts), WF03-S02
     // GET /ops/organizations/{id}/dashboard (wf03-s02-organization-dashboard.spec.ts),
-    // WF03-S03 GET /ops/organizations/{id}/members (wf03-s03-organization-members.spec.ts). Other
+    // WF03-S03 GET /ops/organizations/{id}/members (wf03-s03-organization-members.spec.ts),
+    // WF03-S04 member detail, membership review and leadership
+    // (wf03-s04-membership-review.spec.ts). Other
     // business endpoints still belong to later screens; answering now would be
     // scope leakage.
     for (const path of [

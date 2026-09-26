@@ -18,6 +18,11 @@ export type AuditAction =
   | 'VENTURE_TEAM_INVITATION_REJECTED'
   | 'VENTURE_TEAM_ROLE_CHANGED'
   | 'VENTURE_TEAM_REMOVED'
+  // WF03-S04 membership review / leadership ops (DEC-WF03-G14): ids and states only.
+  | 'MEMBERSHIP_APPROVED'
+  | 'MEMBERSHIP_REJECTED'
+  | 'LEADERSHIP_CREATED'
+  | 'LEADERSHIP_ENDED'
 
 export async function writeAudit(
   exec: Executor,
