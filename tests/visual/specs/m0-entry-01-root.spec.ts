@@ -5,10 +5,13 @@ import { STEP_ROUTES } from '../../../src/lib/onboarding/state'
 import { closePool, query } from '../../../src/lib/db/client'
 
 /**
- * M0-ENTRY-01 — `/` redirects server-side: guest → /auth, otherwise wherever
- * the canonical onboarding resolver sends the account (DEC-WF01-RESUME-D1).
- * Each expected target is read back from GET /api/v1/me/onboarding, the same
- * resolver, so no step is hard-coded twice.
+ * M0-ENTRY-01, as amended by P0-LANDING (DEC-P0-LANDING-D1): `/` renders the
+ * public homepage for everyone and no longer redirects. The entry decision it
+ * used to make moved into the homepage's primary call to action: a guest is
+ * sent to /auth, a signed-in account wherever the canonical onboarding
+ * resolver sends it (DEC-WF01-RESUME-D1). Each expected target is read back
+ * from GET /api/v1/me/onboarding, the same resolver, so no step is hard-coded
+ * twice. Protected routes keep their own guards (checked below).
  */
 
 const REGION = '20000000-0000-0000-0000-000000000002'
@@ -28,28 +31,25 @@ async function resolverTarget(request: APIRequestContext): Promise<string> {
 }
 
 async function expectRoot(page: Page, target: string) {
-  // Server-side redirect: the root answers 307 with no page body of its own.
+  // The root renders the homepage (200, no redirect); its primary CTA is the entry.
   const raw = await page.request.get('/', { maxRedirects: 0 })
-  expect(raw.status()).toBe(307)
-  expect(raw.headers()['location']).toBe(target)
-  expect(await raw.text()).not.toContain('Foundation bootstrap')
-  expect(await resolverTarget(page.request).catch(() => '/auth')).toBe(
-    target === '/auth' ? '/auth' : target,
-  )
+  expect(raw.status()).toBe(200)
+  const body = await raw.text()
+  expect(body).toContain('data-screen="P0-LANDING"')
+  expect(body).not.toContain('Foundation bootstrap')
+  // A guest has no resolver state (401); a signed-in account's target is the resolver's.
+  if (target !== '/auth') expect(await resolverTarget(page.request)).toBe(target)
   await page.goto('/')
+  await expect(page).toHaveURL('/')
+  const cta = page.locator('[data-cta="primary"]')
+  await expect(cta).toHaveAttribute('href', target)
+  await cta.click()
   await expect(page).toHaveURL(target)
 }
 
 test.describe('M0-ENTRY-01 root entry', () => {
-  test('1. a guest goes to /auth; no placeholder, no session data', async ({ page }) => {
-    const raw = await page.request.get('/', { maxRedirects: 0 })
-    expect(raw.status()).toBe(307)
-    expect(raw.headers()['location']).toBe('/auth')
-    const body = await raw.text()
-    expect(body).not.toContain('Foundation bootstrap')
-    expect(body).not.toMatch(/profile|onboarding|session/i)
-    await page.goto('/')
-    await expect(page).toHaveURL('/auth')
+  test('1. a guest sees the homepage and is sent to /auth; no placeholder', async ({ page }) => {
+    await expectRoot(page, '/auth')
   })
 
   test('2–7. every onboarding state lands where the resolver says; refresh is stable', async ({
@@ -91,7 +91,9 @@ test.describe('M0-ENTRY-01 root entry', () => {
     await page.reload() // 7. refresh keeps the canonical destination
     await expect(page).toHaveURL('/me')
     await page.goto('/')
-    await expect(page).toHaveURL('/me')
+    await page.reload()
+    await expect(page).toHaveURL('/')
+    await expect(page.locator('[data-cta="primary"]')).toHaveAttribute('href', '/me')
   })
 
   test('the seeded completed member goes to /me', async ({ page }) => {
@@ -101,7 +103,10 @@ test.describe('M0-ENTRY-01 root entry', () => {
     await expectRoot(page, '/me')
   })
 
-  test('9. an invalid, revoked or expired session goes to /auth', async ({ page, context }) => {
+  test('9. an invalid, revoked or expired session is a guest (CTA /auth)', async ({
+    page,
+    context,
+  }) => {
     // Invalid token.
     await context.addCookies([
       {
@@ -110,8 +115,8 @@ test.describe('M0-ENTRY-01 root entry', () => {
         url: test.info().project.use.baseURL!,
       },
     ])
-    let raw = await page.request.get('/', { maxRedirects: 0 })
-    expect(raw.headers()['location']).toBe('/auth')
+    await page.goto('/')
+    await expect(page.locator('[data-screen="P0-LANDING"]')).toHaveAttribute('data-entry', 'GUEST')
 
     // Revoked.
     await context.clearCookies()
@@ -122,8 +127,8 @@ test.describe('M0-ENTRY-01 root entry', () => {
       [email],
     )
     await query('UPDATE user_sessions SET revoked_at = now() WHERE account_id = $1', [account!.id])
-    raw = await page.request.get('/', { maxRedirects: 0 })
-    expect(raw.headers()['location']).toBe('/auth')
+    await page.goto('/')
+    await expect(page.locator('[data-screen="P0-LANDING"]')).toHaveAttribute('data-entry', 'GUEST')
 
     // Expired.
     expect((await page.request.post('/dev/login', { data: { email } })).ok()).toBe(true)
@@ -131,9 +136,12 @@ test.describe('M0-ENTRY-01 root entry', () => {
       `UPDATE user_sessions SET expires_at = now() - interval '1 second' WHERE account_id = $1 AND revoked_at IS NULL`,
       [account!.id],
     )
-    raw = await page.request.get('/', { maxRedirects: 0 })
-    expect(raw.headers()['location']).toBe('/auth')
     await page.goto('/')
+    await expect(page.locator('[data-screen="P0-LANDING"]')).toHaveAttribute('data-entry', 'GUEST')
+    await page.goto('/')
+    await expect(page.locator('[data-cta="primary"]')).toHaveAttribute('href', '/auth')
+    // Protected routes keep their own guard: /me still sends this visitor to /auth.
+    await page.goto('/me')
     await expect(page).toHaveURL('/auth')
   })
 })
