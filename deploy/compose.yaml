@@ -1,0 +1,44 @@
+# 1hub.network P0 — server stack. Lives in /opt/1hub-network/app.
+# APP_SHA comes from ./.env, written by bin/release.sh.
+name: onehub
+
+services:
+  db:
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    env_file: ../shared/env/db.env
+    environment:
+      POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # No ports: PostgreSQL is reachable only on the compose network.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    image: onehub-app:${APP_SHA:?APP_SHA is required}
+    restart: unless-stopped
+    env_file: ../shared/env/app.env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:3100:3000'
+    volumes:
+      - /opt/1hub-network/shared/media:/data/media
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/v1/auth/providers').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+volumes:
+  pgdata:
