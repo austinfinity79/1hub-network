@@ -1,0 +1,201 @@
+/*
+ * WF02-S03 — privacy & visibility body. LOCAL values measured from the
+ * approved WF02-S03 baseline at 1440x900 DPR1 (px / 16 = rem).
+ *
+ * Repeated evidence, recorded but not promoted (DEC-WF02-S03-D5): the card
+ * frame matches WF02-S01, and the 46x26 switch matches WF01-S07. The legal and
+ * history cards have no approved geometry; they reuse this screen's eyebrow,
+ * row and divider pattern so they add no new visual rule.
+ */
+
+.page {
+  --unresolved-radius-surface: 0.875rem;
+  --unresolved-border-surface: #e4dede;
+  --unresolved-shadow-surface: 0 0.25rem 1rem
+    color-mix(in srgb, var(--hub-burgundy) 6%, transparent);
+  --unresolved-space-surface: 1.5rem;
+  --unresolved-radius-control: 0.5rem;
+  --unresolved-space-control-y: 0.8125rem;
+  --unresolved-space-control-x: 1.5rem;
+}
+
+.title {
+  margin: 0;
+}
+
+.lede {
+  margin: 0.25rem 0 0;
+  color: var(--unresolved-fg-muted);
+}
+
+.card {
+  margin-top: 1.125rem;
+}
+
+.card + .card {
+  margin-top: 1.1875rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.625rem;
+  line-height: 0.875rem;
+  color: #b91610;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.125rem 0;
+}
+
+.card .row:first-child,
+.card h2 + .row {
+  padding-top: 0.75rem;
+}
+
+.list > .row + .row {
+  border-top: 1px solid #efe9e9;
+}
+
+.list > .row:last-child {
+  padding-bottom: 0.25rem;
+}
+
+.rowTitle {
+  margin: 0;
+  /* The baseline sets the row title on a 24px line. */
+  line-height: 1.5rem;
+  color: var(--hub-burgundy);
+}
+
+.muted {
+  margin: 0.125rem 0 0;
+  color: var(--unresolved-fg-muted);
+}
+
+.warning {
+  margin: 0.125rem 0 0;
+  color: #b91610;
+}
+
+.link {
+  flex: none;
+  color: #b91610;
+  text-decoration: none;
+}
+
+/* Switch (as WF01-S07): 46x26 track, 20px white knob inset 3px. */
+.switch {
+  position: relative;
+  flex: none;
+  width: 2.875rem;
+  height: 1.625rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.8125rem;
+  background: color-mix(in srgb, var(--hub-burgundy) 19%, var(--hub-surface));
+  cursor: pointer;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--hub-surface);
+}
+
+/* Centred on the two-line text block, the baseline switch sits 1px higher. */
+.row > .switch {
+  margin-top: -0.125rem;
+}
+
+.switch[aria-checked='true'] {
+  background: var(--color-bg-accent);
+}
+
+.switch[aria-checked='true']::after {
+  left: auto;
+  right: 0.1875rem;
+}
+
+.switch:disabled {
+  cursor: default;
+}
+
+.switch:focus-visible,
+.checkbox:focus-visible,
+.ack a:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.reaccept {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #efe9e9;
+}
+
+.ack {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--hub-burgundy);
+}
+
+.ack a {
+  color: var(--hub-burgundy);
+  font-weight: var(--weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.checkbox {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  accent-color: var(--color-bg-accent);
+  cursor: pointer;
+}
+
+.notice {
+  margin-top: 0.75rem;
+}
+
+.failed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.875rem;
+}
+
+.failed p {
+  margin: 0;
+}
+
+.retry {
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--unresolved-border-surface);
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+  color: var(--hub-burgundy);
+  cursor: pointer;
+}

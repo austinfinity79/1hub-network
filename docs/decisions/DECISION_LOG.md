@@ -369,6 +369,22 @@ These records are addenda to the WF02 screen contracts and the API contract. The
 | <a id="dec-wf02-s01-d5"></a>DEC-WF02-S01-D5 | "Điền nốt" | Shown only below 100%; links to `/me/profile/edit` (frozen route; body lands with S02). 80% is not presented as a gate | Freeze §D3; DEC-WF02-H1 |
 | <a id="dec-wf02-s01-d6"></a>DEC-WF02-S01-D6 | Pixel fixture and H12 harness | The QA state (60%, owned startup, ACTIVE Chapter 01) is set by a test-only hook on the seeded member, then the seed is restored. The first application of DEC-WF02-H12 lands in the harness: short full-page references are no longer dry-run gaps; the full-page capture is cropped to the reference height and rows below are checked against the reference's last row | DEC-WF02-H12; Pixel QA §4/§9 |
 
+## DEC-WF02-S03 — Privacy & Visibility
+
+**Status:** IMPLEMENTATION DECISIONS within approved scope.
+**Date:** 2026-09-26.
+**Task:** [WF02-S03](../implementation/reports/WF02-S03_privacy-visibility.md).
+**Builds on:** DEC-WF02-H3/H4, DEC-WF01-S07-D1..D8, DEC-WF02-T00-D1.
+
+| ID | Topic | Decision | Source anchors |
+|---|---|---|---|
+| <a id="dec-wf02-s03-d1"></a>DEC-WF02-S03-D1 | Composition | Card 1 keeps the approved frame and its first row only: the PROFILE_DISCOVERY switch. The Future rows and footnote, the viewer-history card and the "Dữ liệu của bạn" card are not rendered (INTENTIONAL-P0-SCOPE). The freed area holds the H4 content, which has no approved geometry: "Điều khoản đang áp dụng" (current Terms/Privacy, "Đọc" link, re-acceptance) and "Lịch sử đồng ý". Both reuse this screen's eyebrow/row/divider pattern and are not pixel-compared (INTENTIONAL-CONTRACT) | DEC-WF02-H4; DEC-WF01-S07-D3 |
+| <a id="dec-wf02-s03-d2"></a>DEC-WF02-S03-D2 | Copy | The eyebrow is "HIỂN THỊ HỒ SƠ", not "ĐỒNG Ý THEO MỤC ĐÍCH": visibility is not consent. The hint "Google tìm thấy được…" becomes "Chỉ thành viên mạng lưới thấy. Tắt thì không ai tìm ra bạn." The lede (which claimed revocation) becomes "Bạn quyết định ai thấy thẻ hồ sơ của mình. Thay đổi có hiệu lực ngay." History states read "phiên bản hiện hành / phiên bản cũ / đã rút lại". Pending PO copy review | DEC-WF02-H3/H4; DEC-WF01-S07-D2 |
+| <a id="dec-wf02-s03-d3"></a>DEC-WF02-S03-D3 | APIs | No new or changed API. The page reuses `GET/PUT /me/visibility`, `GET /legal/current`, `GET /me/consents` and `POST /me/consents/accept` (Idempotency-Key per document version). "Accepted" = a non-revoked record of the same type and the current version, the WF01-S07 client rule; a stale record stays in the history | DEC-WF01-S07-D1/D8; API 05 §4.5 |
+| <a id="dec-wf02-s03-d4"></a>DEC-WF02-S03-D4 | Switch and re-acceptance | The switch saves immediately (`PUT`) and shows the server's answer; a failed save keeps the previous state with an error. Re-acceptance needs the explicit acknowledgement (as WF01-S07-D1), sends only the missing current documents, and handles 409 by reloading the new version. It never changes visibility, profile status or `onboarding_completed_at` | DEC-WF01-S07-D1/D4/D8 |
+| <a id="dec-wf02-s03-d5"></a>DEC-WF02-S03-D5 | Repeated evidence | The 46×26 switch now appears on two approved references (WF01-S07, WF02-S03); the card frame (radius 14, #e4dede border, soft shadow) on two WF02 references (S01, S03). Recorded here; the values stay local until promoted by a design-system task | CLAUDE.md §7; Design SOT §2.5 |
+| <a id="dec-wf02-s03-d6"></a>DEC-WF02-S03-D6 | Legal content | Documents and texts come from `legal_documents` (fixture content in dev). PRODUCTION_LEGAL_CONTENT_REQUIRED stays a release dependency | DEC-WF01-S07 legal fixture note |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 
