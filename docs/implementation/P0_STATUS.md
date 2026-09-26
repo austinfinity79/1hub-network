@@ -29,7 +29,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **INTERNAL ALPHA — P0-SHELL: DONE (GREEN)** — one integrated app shell: wordmark → `/`, member ↔ ops entries, editor back links, venture editor ↔ team, project-creation entry (S08 card 02 + S01 link), inert items with stated reasons, auth entry responsive below 1024px (DEC-P0-SHELL-D1..D7; [audit](P0_SHELL_NAVIGATION_AUDIT.md), [report](reports/P0-SHELL_navigation-audit.md)). Navigation matrix: 274 links × 5 personas, 0 dead. Only placeholder left: `/ops/org/:id/programmes` (FUTURE / WF04, unlinked).
 
-**INTERNAL ALPHA — M4 WF04 Programme / Challenge (DEMO): PRE-IMPLEMENTATION AUDIT DONE — HUMAN DECISION REQUIRED** ([audit](WF04_PRE_IMPLEMENTATION_AUDIT.md), [scope](WF04_DEMO_SCOPE.md), [plan](WF04_SCREEN_IMPLEMENTATION_PLAN.md), [happy path](WF04_HAPPY_PATH_PLAN.md), [report](reports/WF04_pre-implementation-audit.md)). 8 executable demo screens (6 required + 2 supporting), 9 tasks, fixture-backed under `/demo/programmes/*`, no migration. Open: [OPEN-WF04 H1–H5](../decisions/DECISION_LOG.md#open-wf04-h1) (design source, access / entry, journey shape, Challenge problem statements, publish readiness). No WF04 code started.
+**INTERNAL ALPHA — M4 WF04 Programme / Challenge (DEMO): IN PROGRESS — T00 DONE (1 / 9 tasks).** Decisions frozen: [DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1) (human decisions remaining: 0). **WF04-T00 Demo Foundation DONE** ([report](reports/WF04-T00_demo-foundation.md); [DEC-WF04-T00-D1..D5](../decisions/DECISION_LOG.md#dec-wf04-t00-d1)): deterministic fixture (1 Programme + 1 Challenge, Chapter 01), read-only `GET /api/v1/demo/programmes[/{id}]` scoped by `programme:read`, `/demo/programmes` guard + frame ("Dữ liệu demo · Internal Alpha", "Đặt lại demo"), per-actor `sessionStorage` store, OpsShell foot entry; no migration, no DB / audit writes. Plan: [audit](WF04_PRE_IMPLEMENTATION_AUDIT.md), [scope](WF04_DEMO_SCOPE.md), [plan](WF04_SCREEN_IMPLEMENTATION_PLAN.md), [happy path](WF04_HAPPY_PATH_PLAN.md). Next: WF04-S01.
 
 ## Completed (committed)
 
@@ -119,7 +119,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF04 — HUMAN DECISION FREEZE (OPEN-WF04 H1–H5), then WF04-T00 Demo Foundation. WF04 implementation is not started automatically.
+WF04-S01 — Programme / Challenge List (demo). Not started automatically.
 
 ## Related
 

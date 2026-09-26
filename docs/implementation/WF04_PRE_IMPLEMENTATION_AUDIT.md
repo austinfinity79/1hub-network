@@ -1,5 +1,7 @@
 # WF04 Pre-Implementation Audit
 
+**Update 2026-09-27: H1–H5 FROZEN** as [DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1) (OPEN-WF04 closed, history kept). **WF04-T00 Demo Foundation DONE** ([DEC-WF04-T00-D1..D5](../decisions/DECISION_LOG.md#dec-wf04-t00-d1), [report](reports/WF04-T00_demo-foundation.md)). Human decisions remaining: 0. Implementation deviation from the recommendations below: both fixtures are owned by one organization (Chapter 01; T00-D1). The findings below are the original audit, kept as history.
+
 **Verdict: HUMAN DECISION REQUIRED (5 — [OPEN-WF04 H1–H5](../decisions/DECISION_LOG.md#open-wf04-h1)).** Audit only: no runtime code, no migration, no seed or design change. HEAD `0fcfb59`, 2026-09-27. Mode: WF04 = **DEMO** for INTERNAL ALPHA (Master Spec §4, M4).
 
 **Sources** (precedence order): CLAUDE.md; Master Spec v1.3 §4 WF04, §5, §6, M4, §15; Data Freeze v1.1 D1; Data SOT v1.1 §2, §6 (lifecycles), §8 (visibility), §10–§14; architecture 01 §7, 02 §2.5–2.6, 03 §3–4, 04 A1–A3 / C6 / D; API contract §8.4, §15; capability matrix; migrations 001–009 + `seed_dev.sql`; DB gap register D1; `WF04_EXTERNAL_REFERENCE.md`; `design-reference/final` manifest (WF03-S05 = ADM5); DEC-WF03-G12, DEC-WF03-S07-EVENT-LIFECYCLE, DEC-WF01-S08-D2, DEC-P0-LANDING-D2/D3, DEC-P0-SHELL-D2.

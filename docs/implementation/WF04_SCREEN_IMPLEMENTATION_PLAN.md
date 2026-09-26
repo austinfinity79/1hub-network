@@ -1,8 +1,11 @@
 # WF04 Screen Implementation Plan
 
-**Status: PROPOSED — blocked on [OPEN-WF04 H1–H5](../decisions/DECISION_LOG.md#open-wf04-h1).** WF04 = DEMO. Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). 8 executable demo screens ([scope](WF04_DEMO_SCOPE.md)), 9 tasks. No task starts before H1–H5 are answered.
+**Status: FROZEN** ([DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1)); **T00 DONE** ([DEC-WF04-T00-D1..D5](../decisions/DECISION_LOG.md#dec-wf04-t00-d1), [report](reports/WF04-T00_demo-foundation.md)). WF04 = DEMO. Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). 8 executable demo screens ([scope](WF04_DEMO_SCOPE.md)), 9 tasks. Next: S01.
 
-## Routing (04 A2; H2 for access)
+## Routing (04 A2; DEC-WF04-H2, T00-D4/D5)
+
+T00 built the guard, the frame at `/demo/programmes`, the demo API and the route builders (`src/lib/programme-demo/routes.ts`). Every other route below is the ordinary 404 until its task builds it.
+
 | Route | Screen | Render | Back | Next | Refresh / unknown id |
 |---|---|---|---|---|---|
 | `/demo/programmes` | S01 | Server (fixture) + client (session drafts) | OpsShell / wordmark | row → S08; "Tạo mới" → `/new` | Stable |
@@ -14,24 +17,24 @@
 | `…/setup/registration` | S05 | Client | `events` | `team` | Same |
 | `…/setup/team` | S06 | Client | `registration` | `review` | Same |
 | `…/setup/review` | S07 | Client | `team` | publish → S08 | Same |
-| `GET /api/v1/demo/programmes`, `GET /api/v1/demo/programmes/:id` | fixture read | Server | — | — | Same guard as pages; 404 for unknown |
+| `GET /api/v1/demo/programmes`, `GET /api/v1/demo/programmes/:id` | fixture read (**T00**) | Server | — | — | 401 guest; list 403 without `programme:read`; detail 404 for unknown / out of scope; no mutation method |
 
 Setup steps share one stepper; each step saves to the session layer and never to the server. Fixture programmes open in setup as a session copy (the fixture file never changes).
 
 ## Order
-| # | Task | Screens | Inputs | Scope | Path |
-|---|---|---|---|---|---|
-| 0 | WF04-T00 Demo foundation | — | H1, H2 | Fixture repository + DTOs (canonical shapes), demo API, `/demo` guard, demo layout inside OpsShell, entry link, "DỮ LIỆU DEMO" banner + "Đặt lại demo", session store | Full preflight (new route group + shell entry + guard) |
-| 1 | WF04-S01 List | S01 | T00, H1 | Table (type, name, owning org, status, dates, current stage), type filter, counts from rows | Fast path |
-| 2 | WF04-S02 Create + basic info | S02 | S01 | Type, name, summary, owning org (from the actor's `GET /ops/organizations` scope), start / end (end ≥ start, Asia/Ho_Chi_Minh) | Fast path |
-| 3 | WF04-S08 Detail / manage | S08 | S01, S02 | Overview cards, status chip, sections for journey / events / team / application counts, edit entry | Fast path |
-| 4 | WF04-S03 Journey | S03 | S02, H3, H4 | Per H3 (stages) and H4 (Challenge problem statements) | Focused preflight |
-| 5 | WF04-S04 Events | S04 | S02 | Programme-linked events in `EventDTO` shape; S07 validation limits (`EVENT_LIMITS`, `EVENT_TIMEZONE`); no WF03 service change | Fast path |
-| 6 | WF04-S05 + S06 Registration config + operating team | S05, S06 | S02 | Same risk (config / display only), same components: applicant types, questions, profile-reuse notice; team list `PROGRAMME_ORGANIZER` label | Fast path |
-| 7 | WF04-S07 Review + publish | S07 | S02–S06, H5 | Checklist per H5; DRAFT → PUBLISHED in session; detail reflects it | Focused preflight |
-| 8 | WF04 demo happy-path closure | all | 0–7 | Journeys J1–J3, navigation crawl, regression, completion audit | Closing gate |
+| # | Task | Screens | Inputs | Scope | Path | State |
+|---|---|---|---|---|---|---|
+| 0 | WF04-T00 Demo foundation | — | H1, H2 | Fixture repository + DTOs (canonical shapes), demo API, `/demo` guard, demo layout inside OpsShell, entry link, "DỮ LIỆU DEMO" banner + "Đặt lại demo", session store | Full preflight (new route group + shell entry + guard) | **DONE** ([report](reports/WF04-T00_demo-foundation.md)) |
+| 1 | WF04-S01 List | S01 | T00, H1 | Table (type, name, owning org, status, dates, current stage), type filter, counts from rows | Fast path | NEXT |
+| 2 | WF04-S02 Create + basic info | S02 | S01 | Type, name, summary, owning org (from the actor's `GET /ops/organizations` scope), start / end (end ≥ start, Asia/Ho_Chi_Minh) | Fast path | TODO |
+| 3 | WF04-S08 Detail / manage | S08 | S01, S02 | Overview cards, status chip, sections for journey / events / team / application counts, edit entry | Fast path | TODO |
+| 4 | WF04-S03 Journey | S03 | S02, H3, H4 | Per H3 (stages) and H4 (Challenge problem statements) | Focused preflight | TODO |
+| 5 | WF04-S04 Events | S04 | S02 | Programme-linked events in `EventDTO` shape; S07 validation limits (`EVENT_LIMITS`, `EVENT_TIMEZONE`); no WF03 service change | Fast path | TODO |
+| 6 | WF04-S05 + S06 Registration config + operating team | S05, S06 | S02 | Same risk (config / display only), same components: applicant types, questions, profile-reuse notice; team list `PROGRAMME_ORGANIZER` label | Fast path | TODO |
+| 7 | WF04-S07 Review + publish | S07 | S02–S06, H5 | Checklist per H5; DRAFT → PUBLISHED in session; detail reflects it | Focused preflight | TODO |
+| 8 | WF04 demo happy-path closure | all | 0–7 | Journeys J1–J3, navigation crawl, regression, completion audit | Closing gate | TODO |
 
-**Why this order:** foundation and read model first; S08 before the setup steps so every created draft has a destination; S03 and S07 carry the open decisions and come after the low-risk screens.
+**Why this order:** foundation and read model first; S08 before the setup steps so every created draft has a destination; S03 and S07 carry the most rules (H3–H5) and come after the low-risk screens. Shared helpers already exist from T00: `publishReadiness` (H5), the session store, `DemoPage`, `demoRoutes`.
 
 ## QA gates per task
 | Gate | Required |
