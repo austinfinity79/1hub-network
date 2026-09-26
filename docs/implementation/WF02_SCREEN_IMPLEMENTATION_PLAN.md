@@ -11,7 +11,7 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | 3 | S04 Roles & links | `/me/roles` | Memberships, leadership, venture roles with source label; membership request → PENDING_APPROVAL (H5, H11) | 0 | **DONE** (WF02-S04) |
 | 4 | S02 Profile edit | `/me/profile/edit` | Canonical IndividualProfile fields + Experience / Development goal / Current need (H1, H2). Activity panel Future | 0 | **DONE** (WF02-S02) |
 | 5 | S07 Settings | `/me/settings` | Sessions list, revoke one, revoke all, deletion request (H8) | 0; P13 deletion subset; revoke-all API addendum | **DONE** (WF02-S07; migration 006) |
-| 6 | S05 Project/Startup | `/projects/new`, `/projects/:id/edit` | Five fields; owner-only write; review button omitted (H6, H7) | 0; venture taxonomy migration ([DEC-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#dec-wf02-venture-taxonomy-storage)) | **READY AFTER MIGRATION** (venture taxonomy) |
+| 6 | S05 Project/Startup | `/projects/new`, `/projects/:id/edit` | Five fields; owner-only write; review button omitted (H6, H7) | 0; venture taxonomy migration ([DEC-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#dec-wf02-venture-taxonomy-storage)) | **HUMAN DECISION REQUIRED** (OPEN-WF02-S05 G1–G5; then migration 007) |
 | 7 | S06 Team | `/projects/:id/team` | Owner manages invitations/roles; members read-only; no permission tiers (H7) | 6; P12 | **READY AFTER MIGRATION** (P12), after S05 |
 
 **Order unchanged:** Foundation → S01 → S03 → S04 → S02 → S07 → S05 → S06. No decision creates a new dependency. After the foundation, S03, S04, S02 and S07 are independent of each other.

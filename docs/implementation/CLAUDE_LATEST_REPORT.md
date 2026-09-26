@@ -1,60 +1,45 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: M0-ENTRY-01 — Root entry routing remediation
-- Status: **DONE**
-- Mode: LOCAL REVIEW. No business, data, schema, API or UI change. No push.
+- Task ID / name: WF02-S05 — Project / Startup PREFLIGHT
+- Status: **HUMAN DECISION REQUIRED** (5 decisions); audit only
+- Mode: LOCAL REVIEW. No runtime code, no migration, no push.
 
-## 2. Change
-| Item | Result |
+## 2. Output
+[WF02_S05_PREFLIGHT_AUDIT.md](WF02_S05_PREFLIGHT_AUDIT.md) covers the 12 areas: schema, type, ownership, region, domains, API, lifecycle, authorization, design mapping, completion, WF05 reuse, migration. [OPEN-WF02-S05 G1–G5](../decisions/DECISION_LOG.md#open-wf02-s05-g1) records the gaps.
+
+## 3. Summary
+| Area | Result |
 |---|---|
-| Before | `/` rendered the M0-T01 placeholder "Foundation bootstrap. No workflow screens are implemented yet." |
-| After | `src/app/page.tsx` is a server-side redirect only (307, no body of its own): no valid session → `/auth`; otherwise `routeFor(getOnboardingState(account))` |
-| Resolver reused | The one onboarding resolver of DEC-WF01-RESUME-D1 (`src/lib/onboarding/state.ts`), as used by sign-in `next_step`, `GET /me/onboarding`, `/session` and the page guards; no step mapping duplicated |
-| New business logic | None |
-| DB migration / API / UI | None; no new screen, no landing page |
-| Placeholder | Removed from `/`; the obsolete placeholder unit test is replaced by a routing test |
+| Entity | One `projects` table, `type` PROJECT/STARTUP; reusable by WF05; no per-programme copy |
+| Owner / members | `owner_profile_id` (server-derived, only writer); `project_members` read-only; `role_label` display only; no RoleAssignment |
+| Region / domains | Decided, not stored → migration 007 proposed (`projects.region_id`, `project_domains`), not created |
+| API | `POST/GET/PATCH /ventures*` missing; submit-for-review absent (no config) |
+| Lifecycle | DRAFT on create; no frozen ACTIVE/ARCHIVED trigger (G3) |
+| Design | The PRO1 bitmap draws none of the five H6 fields except the name (G1) |
+| Completion | No profile-completion side effect |
 
-## 3. Routing evidence
-| Case | Result |
-|---|---|
-| Guest | `/` → 307 `/auth`; body has no placeholder, profile, onboarding or session data |
-| PURPOSE (new account) | → `/onboarding/purpose` |
-| PROFILE | → `/onboarding/profile` |
-| PRIVACY | → `/onboarding/privacy` |
-| COMPLETE | → `/onboarding/complete` |
-| DONE (ACTIVE, completed) | → `/me` (also the seeded member) |
-| Refresh | Stable destination |
-| Invalid / revoked / expired session | → `/auth` |
-| Restart | Member → `/me`, new account → `/onboarding/purpose`, guest → `/auth`, identical after app + PostgreSQL restart; no email/token in logs |
+## 4. Human decisions
+- G1: P0 form addendum.
+- G2: create permission.
+- G3: lifecycle transitions.
+- G4: type mutability.
+- G5: owner `project_members` row.
 
-Each Playwright target is read back from `GET /api/v1/me/onboarding` (the same resolver), so the test does not hard-code the state machine.
+Recommendations are in the log. The public preview, review button, Data room and A–J rules are resolved by precedence.
 
-## 4. Tests / build
-| Gate | Result |
-|---|---|
-| Format / lint (0 warnings) / typecheck / build | PASS |
-| Unit | 157/157 (`page.test.tsx`: 7 routing cases with the real `routeFor`) |
-| DB | 248/248 (resolver matrix unchanged) |
-| Playwright (full) | 344 passed, 24 skipped by design; new `m0-entry-01-root.spec.ts` (4) |
-| WF01 UAT / Pixel | PASS / 8 of 8 PASS |
-| WF02 smoke | T00, S01, S02, S03, S04, S07 specs PASS (full suite) |
-
-No pixel baseline for `/`: it redirects and renders nothing.
-
-## 5. Files changed
-- `src/app/page.tsx`, `src/app/page.test.tsx`
-- `tests/visual/specs/m0-entry-01-root.spec.ts` (new)
-- `P0_STATUS.md`, this report and its archive
+## 5. Tests / build
+Not run: no code changed. Last green: `c795ee7` (unit 157, DB 248, Playwright 344).
 
 ## 6. Git
-- Branch: `main`; start HEAD `d54cc8d`
-- Implementation commit: `8903b2a`
+- Branch: `main`; start HEAD `c795ee7`
+- Implementation commit: none
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `d54cc8d`
 - Working tree: clean after commit, except the untracked `AGENTS.md`
 
 ## Related
+- [WF02_S05_PREFLIGHT_AUDIT.md](WF02_S05_PREFLIGHT_AUDIT.md) — audit
+- [WF02_SCREEN_IMPLEMENTATION_PLAN.md](WF02_SCREEN_IMPLEMENTATION_PLAN.md) — plan
 - [P0_STATUS.md](P0_STATUS.md) — status
-- [DECISION_LOG.md](../decisions/DECISION_LOG.md) — DEC-WF01-RESUME-D1 (the resolver)

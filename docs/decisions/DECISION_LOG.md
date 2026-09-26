@@ -615,6 +615,26 @@ Not a gap: `membership_requested` analytics stays deferred (DEC-WF01-ANALYTICS-E
 | <a id="dec-wf02-s07-d2"></a>DEC-WF02-S07-D2 | Copy | Login card: email + "Email đăng nhập · đã xác thực" (no verification date is stored) and the approved passwordless note (the 15-minute link matches `MAGIC_LINK_EXPIRES_IN_SECONDS = 900`). Danger card: request-only wording, "Yêu cầu xoá tài khoản" → confirmation "Bạn chắc chắn muốn gửi yêu cầu xoá tài khoản?" / "Xác nhận gửi yêu cầu" / "Huỷ"; after a request "Đã nhận yêu cầu xoá tài khoản lúc {time}." + "Tài khoản của bạn vẫn hoạt động; yêu cầu không xoá dữ liệu nào ngay lập tức." No processing promise. Pending PO copy review | DEC-WF02-S07-G3; API §5.5 |
 | <a id="dec-wf02-s07-d3"></a>DEC-WF02-S07-D3 | Existing request and pixel fixture | The page reads the owner's request server-side (no GET route). The pixel run keeps only the session it just created for the seeded member and removes a leftover request (test-only hook) | Pixel QA §4 |
 
+## OPEN-WF02-S05 — Project / Startup preflight gaps (human decision required)
+
+**Status:** OPEN — found by the WF02-S05 preflight on 2026-09-26; no code, no migration.
+**Audit:** [WF02_S05_PREFLIGHT_AUDIT.md](../implementation/WF02_S05_PREFLIGHT_AUDIT.md).
+**Already frozen:** one `projects` entity (type PROJECT/STARTUP); the H6 write model; the H7 ownership and capability model; the venture taxonomy storage shape.
+
+| ID | Gap | Evidence | Options found | Recommended |
+|---|---|---|---|---|
+| <a id="open-wf02-s05-g1"></a>S05-G1 | The approved PRO1 bitmap draws none of the five H6 fields except the name: its A–J navigator, "Còn 11 trường bắt buộc", completion %, section C, image upload and editorial rules are all outside P0 | PRO1 bitmap; DEC-WF02-H6 | (a) Addendum as S04-G5/S02-H1: keep the editor header and canvas; one form with Loại (PROJECT/STARTUP), Tên, Tóm tắt, Lĩnh vực (DOMAIN), Tỉnh / thành phố (REGION) in the S02 field language; header "Lưu"; the rest INTENTIONAL-P0-SCOPE; pixel strict on the header only. The same form serves `/projects/new`. (b) Wait for a new S05 design | (a) |
+| <a id="open-wf02-s05-g2"></a>S05-G2 | Who may create a venture | API §5.3 names no rule; H7 covers edit/team only | (a) Any authenticated account whose onboarding is DONE (same guard as every WF02 member page), enforced in `POST /ventures` too. (b) Any authenticated account | (a) |
+| <a id="open-wf02-s05-g3"></a>S05-G3 | Lifecycle in S05: create → DRAFT is shown in the API example, but no frozen trigger exists for DRAFT → ACTIVE (review is conditional and unconfigured) or → ARCHIVED | SOT §Team/Startup/Solution profile; API §5.3 | (a) S05 creates DRAFT and offers no status transition in P0; edits allowed in DRAFT and ACTIVE, not in ARCHIVED. (b) An owner "publish" DRAFT → ACTIVE action. (c) An owner "archive" action | (a) |
+| <a id="open-wf02-s05-g4"></a>S05-G4 | Is `type` (PROJECT/STARTUP) editable after creation? | PATCH has no body example | (a) Set at creation, immutable afterwards (stable identity for WF05 reuse). (b) Editable while DRAFT | (a) |
+| <a id="open-wf02-s05-g5"></a>S05-G5 | Does creation also insert a `project_members` row for the owner? | API §5.3 "authorized management relation/team membership according to DB/RBAC schema"; H7 owner = `owner_profile_id` | (a) No: ownership is `owner_profile_id` only; S06 lists the owner from it (S01/S04 already dedupe). (b) Yes, with an owner row (a `role_label` would carry no permission) | (a) |
+
+Resolved by precedence (not asked):
+- "Xem bản public" → omitted (H3).
+- "Gửi HUB duyệt" → omitted (H6: no launch configuration).
+- Data room, fundraising, investor and A–J rules → excluded (H6, WF02 non-goals).
+- Region/domain storage → DEC-WF02-VENTURE-TAXONOMY-STORAGE.
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

@@ -107,7 +107,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-M0-ENTRY-01 done ([report](reports/M0-ENTRY-01_root-entry-routing.md)): `/` now redirects (guest → /auth; resolver step; DONE → /me). WF02 5 / 7 screens. Next: WF02-S05 — Project / Startup preflight.
+WF02-S05 preflight: HUMAN DECISION REQUIRED — 5 open decisions (OPEN-WF02-S05 G1–G5: P0 form addendum, create permission, lifecycle, type mutability, owner member row); migration 007 proposed, not created. [Audit](WF02_S05_PREFLIGHT_AUDIT.md). WF02 5 / 7 screens.
 
 ## Related
 
