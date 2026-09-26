@@ -29,7 +29,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **INTERNAL ALPHA — P0-SHELL: DONE (GREEN)** — one integrated app shell: wordmark → `/`, member ↔ ops entries, editor back links, venture editor ↔ team, project-creation entry (S08 card 02 + S01 link), inert items with stated reasons, auth entry responsive below 1024px (DEC-P0-SHELL-D1..D7; [audit](P0_SHELL_NAVIGATION_AUDIT.md), [report](reports/P0-SHELL_navigation-audit.md)). Navigation matrix: 274 links × 5 personas, 0 dead. Only placeholder left: `/ops/org/:id/programmes` (FUTURE / WF04, unlinked).
 
-**INTERNAL ALPHA — M4 WF04 Programme / Challenge (DEMO): IN PROGRESS — T00, S01 DONE (2 / 9 tasks).** **WF04-S01 Programme / Challenge list DONE** ([report](reports/WF04-S01_programme-list.md); [DEC-WF04-S01-D1..D3](../decisions/DECISION_LOG.md#dec-wf04-s01-d1)): `/demo/programmes` lists the in-scope fixtures + session drafts in the ADM5 table; rows non-navigable until S08, "Tạo mới" disabled until S02. Decisions frozen: [DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1) (human decisions remaining: 0). **WF04-T00 Demo Foundation DONE** ([report](reports/WF04-T00_demo-foundation.md); [DEC-WF04-T00-D1..D5](../decisions/DECISION_LOG.md#dec-wf04-t00-d1)): deterministic fixture (1 Programme + 1 Challenge, Chapter 01), read-only `GET /api/v1/demo/programmes[/{id}]` scoped by `programme:read`, `/demo/programmes` guard + frame ("Dữ liệu demo · Internal Alpha", "Đặt lại demo"), per-actor `sessionStorage` store, OpsShell foot entry; no migration, no DB / audit writes. Plan: [audit](WF04_PRE_IMPLEMENTATION_AUDIT.md), [scope](WF04_DEMO_SCOPE.md), [plan](WF04_SCREEN_IMPLEMENTATION_PLAN.md), [happy path](WF04_HAPPY_PATH_PLAN.md). Next: WF04-S02.
+**INTERNAL ALPHA — M4 WF04 Programme / Challenge (DEMO): IN PROGRESS — T00, S01, S02 DONE (3 / 9 tasks).** **WF04-S02 Create + basic info DONE** ([report](reports/WF04-S02_programme-create.md); [DEC-WF04-S02-D1..D4](../decisions/DECISION_LOG.md#dec-wf04-s02-d1)): `/demo/programmes/new` creates a session DRAFT with the canonical Programme fields, owner from the server-side scope; no DB / audit write. **WF04-S01 Programme / Challenge list DONE** ([report](reports/WF04-S01_programme-list.md); [DEC-WF04-S01-D1..D3](../decisions/DECISION_LOG.md#dec-wf04-s01-d1)): `/demo/programmes` lists the in-scope fixtures + session drafts in the ADM5 table; rows non-navigable until S08; "Tạo mới" opens S02 (was disabled until S02). Decisions frozen: [DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1) (human decisions remaining: 0). **WF04-T00 Demo Foundation DONE** ([report](reports/WF04-T00_demo-foundation.md); [DEC-WF04-T00-D1..D5](../decisions/DECISION_LOG.md#dec-wf04-t00-d1)): deterministic fixture (1 Programme + 1 Challenge, Chapter 01), read-only `GET /api/v1/demo/programmes[/{id}]` scoped by `programme:read`, `/demo/programmes` guard + frame ("Dữ liệu demo · Internal Alpha", "Đặt lại demo"), per-actor `sessionStorage` store, OpsShell foot entry; no migration, no DB / audit writes. Plan: [audit](WF04_PRE_IMPLEMENTATION_AUDIT.md), [scope](WF04_DEMO_SCOPE.md), [plan](WF04_SCREEN_IMPLEMENTATION_PLAN.md), [happy path](WF04_HAPPY_PATH_PLAN.md). Next: WF04-S03.
 
 ## Completed (committed)
 
@@ -119,7 +119,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF04-S02 — Create + Basic Info (demo). Not started automatically.
+WF04-S03 — Structure / Journey (demo). Not started automatically.
 
 ## Related
 

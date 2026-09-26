@@ -2,7 +2,7 @@
 
 **Status: FROZEN** ([DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1)). WF04 = DEMO. The dataset below is implemented by WF04-T00 ([DEC-WF04-T00-D1](../decisions/DECISION_LOG.md#dec-wf04-t00-d1)).
 
-**Progress:** J1 step 1 and J2's list step run today (WF04-S01: both fixtures listed, scoped, resettable). Row → S08 and "Tạo mới" → S02 open with those tasks (DEC-WF04-S01-D1/D2).
+**Progress:** J1 steps 1–2 run today: S01 lists the fixtures; "Tạo mới" → S02 creates a session DRAFT (canonical fields only, owner from scope) and returns to the list with a confirmation until S03 exists (DEC-WF04-S02-D3). J3's first half (a draft kept in the session, listed after refresh) runs too. Row → S08 opens with that task.
 
 ## Demo data (fixture, labelled DỮ LIỆU DEMO)
 | Record | Values | Notes |
@@ -18,7 +18,7 @@ Deterministic ids in the reserved `d40…` range, stable slugs, fixed absolute d
 ## Happy paths
 | ID | Actor | Steps |
 |---|---|---|
-| J1 Create and publish a Challenge | Leader (Chapter 01) | 1 sign in → `/ops/network` → OpsShell "Chương trình & Challenge" → S01 lists P1 and C1 · 2 "Tạo mới" → S02: CHALLENGE, name, summary, owning org Chapter 01, dates → 3 S03: 2 stages; 1 problem statement · 4 S04: add 1 event, end ≥ start · 5 S05: applicant types TEAM + STARTUP, 1 question, profile-reuse notice · 6 S06: team list · 7 S07: checklist all green → publish · 8 S08: PUBLISHED, current stage, event, team · 9 back to S01: new row PUBLISHED · 10 refresh: still there · 11 "Đặt lại demo": only P1, C1 remain |
+| J1 Create and publish a Challenge | Leader (Chapter 01) | 1 sign in → `/ops/network` → OpsShell "Chương trình & Challenge" → S01 lists P1 and C1 · 2 "Tạo mới" → S02: CHALLENGE, name, summary, owner Chapter 01 (read-only for this leader), dates → "Lưu" → 3 S03: 2 stages; 1 problem statement · 4 S04: add 1 event, end ≥ start · 5 S05: applicant types TEAM + STARTUP, 1 question, profile-reuse notice · 6 S06: team list · 7 S07: checklist all green → publish · 8 S08: PUBLISHED, current stage, event, team · 9 back to S01: new row PUBLISHED · 10 refresh: still there · 11 "Đặt lại demo": only P1, C1 remain |
 | J2 Browse a running Programme | Platform admin | S01 → P1 → S08: PUBLISHED, current stage by date, events, team, application counts; "Chỉnh sửa" opens setup on a session copy; P1 in the fixture unchanged after reset |
 | J3 Keep a draft | Leader | S02 → S03 → leave at S04 → S01 shows the DRAFT → reopen → resumes at the saved data |
 

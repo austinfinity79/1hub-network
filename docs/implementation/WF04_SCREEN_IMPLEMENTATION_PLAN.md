@@ -1,10 +1,10 @@
 # WF04 Screen Implementation Plan
 
-**Status: FROZEN** ([DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1)); **T00 DONE** ([DEC-WF04-T00-D1..D5](../decisions/DECISION_LOG.md#dec-wf04-t00-d1), [report](reports/WF04-T00_demo-foundation.md)); **S01 DONE** ([DEC-WF04-S01-D1..D3](../decisions/DECISION_LOG.md#dec-wf04-s01-d1), [report](reports/WF04-S01_programme-list.md)). WF04 = DEMO. Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). 8 executable demo screens ([scope](WF04_DEMO_SCOPE.md)), 9 tasks. Next: S02.
+**Status: FROZEN** ([DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1)); **T00 DONE** ([DEC-WF04-T00-D1..D5](../decisions/DECISION_LOG.md#dec-wf04-t00-d1), [report](reports/WF04-T00_demo-foundation.md)); **S01 DONE** ([DEC-WF04-S01-D1..D3](../decisions/DECISION_LOG.md#dec-wf04-s01-d1), [report](reports/WF04-S01_programme-list.md)); **S02 DONE** ([DEC-WF04-S02-D1..D4](../decisions/DECISION_LOG.md#dec-wf04-s02-d1), [report](reports/WF04-S02_programme-create.md)). WF04 = DEMO. Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). 8 executable demo screens ([scope](WF04_DEMO_SCOPE.md)), 9 tasks. Next: S03.
 
 ## Routing (04 A2; DEC-WF04-H2, T00-D4/D5)
 
-T00 built the guard, the frame, the demo API and the route builders (`src/lib/programme-demo/routes.ts`); S01 built the list at `/demo/programmes`. Every other route below is the ordinary 404 until its task builds it; S01 rows do not link and "Tạo mới" is disabled until then (S01-D1/D2).
+T00 built the guard, the frame, the demo API and the route builders (`src/lib/programme-demo/routes.ts`); S01 built the list at `/demo/programmes`; S02 built `/demo/programmes/new` (S01 "Tạo mới" opens it; a save returns to the list until S03, S02-D3). Every other route below is the ordinary 404 until its task builds it; S01 rows do not link until S08 (S01-D1).
 
 | Route | Screen | Render | Back | Next | Refresh / unknown id |
 |---|---|---|---|---|---|
@@ -26,9 +26,9 @@ Setup steps share one stepper; each step saves to the session layer and never to
 |---|---|---|---|---|---|---|
 | 0 | WF04-T00 Demo foundation | — | H1, H2 | Fixture repository + DTOs (canonical shapes), demo API, `/demo` guard, demo layout inside OpsShell, entry link, "DỮ LIỆU DEMO" banner + "Đặt lại demo", session store | Full preflight (new route group + shell entry + guard) | **DONE** ([report](reports/WF04-T00_demo-foundation.md)) |
 | 1 | WF04-S01 List | S01 | T00, H1 | Table (name, owning org, type, dates, problem count, status), header totals, loading / empty / error states; no type filter or current stage (not in the list DTO) | Fast path | **DONE** ([report](reports/WF04-S01_programme-list.md)) |
-| 2 | WF04-S02 Create + basic info | S02 | S01 | Type, name, summary, owning org (from the actor's `GET /ops/organizations` scope), start / end (end ≥ start, Asia/Ho_Chi_Minh); enables S01 "Tạo mới" | Fast path | NEXT |
-| 3 | WF04-S08 Detail / manage | S08 | S01, S02 | Overview cards, status chip, sections for journey / events / team / application counts, edit entry; makes S01 rows navigate | Fast path | TODO |
-| 4 | WF04-S03 Journey | S03 | S02, H3, H4 | Per H3 (stages) and H4 (Challenge problem statements) | Focused preflight | TODO |
+| 2 | WF04-S02 Create + basic info | S02 | S01 | Loại (once), Tên, Tóm tắt, Thời gian (optional, end ≥ start, Asia/Ho_Chi_Minh), Đơn vị chủ trì from the server-computed scope; enables S01 "Tạo mới" | Fast path + human decision (S02-D1/D2) | **DONE** ([report](reports/WF04-S02_programme-create.md)) |
+| 3 | WF04-S08 Detail / manage | S08 | S01, S02 | Overview cards, status chip, sections for journey / events / team / application counts, edit entry (`setup/basic` with the S02 form, type locked); makes S01 rows navigate | Fast path | TODO |
+| 4 | WF04-S03 Journey | S03 | S02, H3, H4 | Per H3 (stages) and H4 (Challenge problem statements); becomes the step after an S02 save | Focused preflight | NEXT |
 | 5 | WF04-S04 Events | S04 | S02 | Programme-linked events in `EventDTO` shape; S07 validation limits (`EVENT_LIMITS`, `EVENT_TIMEZONE`); no WF03 service change | Fast path | TODO |
 | 6 | WF04-S05 + S06 Registration config + operating team | S05, S06 | S02 | Same risk (config / display only), same components: applicant types, questions, profile-reuse notice; team list `PROGRAMME_ORGANIZER` label | Fast path | TODO |
 | 7 | WF04-S07 Review + publish | S07 | S02–S06, H5 | Checklist per H5; DRAFT → PUBLISHED in session; detail reflects it | Focused preflight | TODO |
