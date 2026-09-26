@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
+  DECISION_ERROR_CODES,
   FROZEN_ERROR_CODES,
   HTTP_STATUS_MEANING,
   UNCONTRACTED_ERROR_CODES,
@@ -73,6 +74,18 @@ describe('M0-T05 frozen error codes', () => {
     expect(declared).not.toContain('UNAUTHENTICATED')
     expect(declared).not.toContain('NOT_FOUND')
     expect(declared).not.toContain('INTERNAL_ERROR')
+  })
+})
+
+describe('decision-frozen error codes', () => {
+  const LOG = readFileSync(join(ROOT, 'docs', 'decisions', 'DECISION_LOG.md'), 'utf8')
+
+  it('are neither contract codes nor gap codes, and each is recorded in the decision log', () => {
+    for (const code of DECISION_ERROR_CODES) {
+      expect(isFrozenErrorCode(code), code).toBe(false)
+      expect(code.startsWith('UNCONTRACTED_'), code).toBe(false)
+      expect(LOG, `${code} must be recorded in DECISION_LOG.md`).toContain(code)
+    }
   })
 })
 

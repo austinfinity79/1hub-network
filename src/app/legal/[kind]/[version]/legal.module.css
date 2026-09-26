@@ -1,0 +1,14 @@
+/* Legal document reader: plain, readable measure; no screen reference exists. */
+.page {
+  max-width: 45rem;
+  margin: 2.8125rem auto;
+}
+
+.meta {
+  margin: 0.375rem 0 0;
+  color: var(--unresolved-fg-muted);
+}
+
+.paragraph {
+  margin: 1rem 0 0;
+}

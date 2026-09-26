@@ -61,7 +61,21 @@ export const UNCONTRACTED_ERROR_CODES = [
 
 export type UncontractedErrorCode = (typeof UNCONTRACTED_ERROR_CODES)[number]
 
-export type ApiErrorCode = FrozenErrorCode | UncontractedErrorCode
+/**
+ * Codes frozen by an approved human decision rather than by the Markdown
+ * contract (so the drift test against 05 does not list them). Each names its
+ * decision record in docs/decisions/DECISION_LOG.md; they are not gap codes.
+ */
+export const DECISION_ERROR_CODES = [
+  // DEC-WF01-S07-D8: 409, the submitted legal document version is no longer current.
+  'LEGAL_DOCUMENT_VERSION_STALE',
+  // DEC-WF01-S07-D8: 422, unsupported visibility group/level combination.
+  'VISIBILITY_VALIDATION_FAILED',
+] as const
+
+export type DecisionErrorCode = (typeof DECISION_ERROR_CODES)[number]
+
+export type ApiErrorCode = FrozenErrorCode | UncontractedErrorCode | DecisionErrorCode
 
 /** Canonical HTTP mapping, 05:98-107. */
 export const HTTP_STATUS_MEANING = {
