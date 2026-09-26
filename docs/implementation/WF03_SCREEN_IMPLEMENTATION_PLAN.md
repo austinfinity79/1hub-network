@@ -9,7 +9,7 @@
 | 1 | S01 Organization selector / list | `/ops/network` | T00, G11 | Orgs in exact scope (PLATFORM_ADMIN per contract); HUB / CHAPTER / CLB | Fast path | **DONE** ([report](reports/WF03-S01_organization-list.md)) |
 | 2 | S02 Organization dashboard | `/ops/org/:orgId` | T00, G1 | Canonical counters only, each with a named query | Fast path | **DONE** ([report](reports/WF03-S02_organization-dashboard.md)) |
 | 3 | S03 Organization members | `/ops/org/:orgId/members` | T00, G3, G4 | Safe projection + membership state/provenance + leadership facts | Full preflight (privacy DTO) | **DONE** ([report](reports/WF03-S03_organization-members.md)) |
-| 4 | S04 Membership review / leadership ops | `/ops/org/:orgId/members/:profileId` | S03, G5, G6, G14 | PENDING → ACTIVE / REJECTED; leadership create/end per API; audit | Full preflight (mutations + audit) | **NEXT** (precheck first) |
+| 4 | S04 Membership review / leadership ops | `/ops/org/:orgId/members/:profileId` | S03, G5, G6, G14 | PENDING → ACTIVE / REJECTED; leadership create/end per API; audit | Full preflight (mutations + audit) | **DONE** ([report](reports/WF03-S04_membership-review-leadership.md)) |
 | 5 | S06 Organization profile | `/ops/org/:orgId/profile` | G8, G14, **C1** | Canonical + design-approved fields only | per C1 | **BLOCKED (C1)** |
 | 6 | S08 Organization relationships / settings | `/ops/org/:orgId/settings` | G9, **C1** (+ optional 009) | Per C1 outcome | per C1 | **BLOCKED (C1)** |
 | 7 | S07 Event management | `/ops/org/:orgId/events` | T00, G2, G10, G14 | Standalone list / detail / create / edit / publish / cancel; S07 screen-contract addendum | Full preflight (addendum + lifecycle) | after T00 |
