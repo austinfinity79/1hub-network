@@ -1,0 +1,60 @@
+/*
+ * WF04 — setup stepper in the approved WF01 onboarding stepper language (22px
+ * discs, 26px connectors, accent disc on the current step). Not interactive:
+ * steps are built one task at a time, so none of them is a link.
+ */
+
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.5625rem;
+  color: var(--unresolved-fg-muted);
+}
+
+.step + .step::before {
+  content: '';
+  width: 1.625rem;
+  height: 1px;
+  margin: 0 0.125rem 0 0.75rem;
+  background: var(--unresolved-border-surface);
+}
+
+.number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  background: var(--unresolved-border-surface);
+}
+
+.current {
+  color: var(--color-fg-default);
+}
+
+.current .number {
+  background: var(--color-bg-accent);
+  color: var(--color-fg-on-accent);
+}
+
+/* Narrow screens: the steps wrap as a plain list, without connectors. */
+@media (max-width: 767px) {
+  .steps {
+    gap: 0.5rem 0.875rem;
+  }
+
+  .step + .step::before {
+    display: none;
+  }
+}

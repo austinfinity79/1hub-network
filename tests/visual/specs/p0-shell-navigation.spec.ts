@@ -188,6 +188,8 @@ test.describe('P0-SHELL navigation matrix', () => {
       // WF04 (DEC-WF04-H2): the Programme demo list and its create form.
       '/demo/programmes',
       '/demo/programmes/new',
+      '/demo/programmes/d4000000-0000-0000-0000-000000000001/setup/journey',
+      '/demo/programmes/d4000000-0000-0000-0000-000000000002/setup/journey',
     ])
       await crawl(page, 'operator', source)
   })
@@ -200,6 +202,8 @@ test.describe('P0-SHELL navigation matrix', () => {
       `/ops/org/${HUB}/settings`,
       '/demo/programmes',
       '/demo/programmes/new',
+      '/demo/programmes/d4000000-0000-0000-0000-000000000001/setup/journey',
+      '/demo/programmes/d4000000-0000-0000-0000-000000000002/setup/journey',
     ])
       await crawl(page, 'admin', source)
   })

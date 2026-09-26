@@ -14,8 +14,8 @@ import { compareSegments, type Rect } from '../pixel-qa/segments'
 /**
  * WF04-S02 — create a demo Programme / Challenge (DEC-WF04-S02-D1..D4):
  * canonical basic information only, owner from the server-side scope, one
- * session DRAFT per save, no database / audit write, back to the list with a
- * confirmation until S03 exists.
+ * session DRAFT per save, no database / audit write, then the journey step
+ * (S03) with a one-off confirmation.
  */
 
 const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
@@ -97,7 +97,16 @@ async function snapshot() {
   return row
 }
 
+const JOURNEY = /\/demo\/programmes\/[0-9a-f-]{36}\/setup\/journey$/
 const form = (page: Page) => page.locator('[data-programme-form]')
+
+/** After a save: the journey step of the new draft, then back to the list. */
+async function backToList(page: Page) {
+  await expect(page).toHaveURL(JOURNEY)
+  await expect(page.locator('[data-screen="WF04-S03"]')).toBeVisible()
+  await page.locator('[data-nav="journey-back"]').click()
+  await expect(page).toHaveURL('/demo/programmes')
+}
 const save = (page: Page) => page.locator('[data-demo-save]')
 const rows = (page: Page) => page.locator('[data-programme-row]')
 
@@ -164,10 +173,17 @@ test.describe('WF04-S02 create', () => {
       end: '2026-12-31',
     })
     await save(page).click()
-    await expect(page).toHaveURL('/demo/programmes')
+    // DEC-WF04-S03-D3: a save continues to the journey step with the confirmation.
+    await expect(page).toHaveURL(JOURNEY)
+    await expect(page.locator('[data-screen="WF04-S03"]')).toHaveAttribute(
+      'data-programme-type',
+      'PROGRAMME',
+    )
     await expect(page.locator('[data-state="created"]')).toHaveText(
       'Đã tạo bản nháp “Chương trình kết nối (demo)”.',
     )
+    await page.locator('[data-nav="journey-back"]').click()
+    await expect(page).toHaveURL('/demo/programmes')
     await expect(rows(page)).toHaveCount(3)
     expect((await cells(page))[0]).toEqual([
       'Chương trình kết nối (demo)',
@@ -215,7 +231,7 @@ test.describe('WF04-S02 create', () => {
     await openCreate(page)
     await fill(page, { type: 'Challenge', name: 'Thử thách tối giản' })
     await save(page).click()
-    await expect(page).toHaveURL('/demo/programmes')
+    await backToList(page)
     await expect(rows(page)).toHaveCount(3)
     expect((await cells(page))[0]).toEqual([
       'Thử thách tối giản',
@@ -289,7 +305,7 @@ test.describe('WF04-S02 create', () => {
     await openCreate(page)
     await fill(page, { type: 'Challenge', name: 'Nhấn hai lần' })
     await save(page).dblclick()
-    await expect(page).toHaveURL('/demo/programmes')
+    await backToList(page)
     const state = (await stored(page, LEADER_ACCOUNT))!
     expect(state.created).toHaveLength(1)
     await expect(rows(page)).toHaveCount(3)
@@ -320,7 +336,7 @@ test.describe('WF04-S02 create', () => {
     expect(await stored(page, LEADER_ACCOUNT)).toBeNull()
     await page.evaluate(() => (window as unknown as { __restore: () => void }).__restore())
     await save(page).click()
-    await expect(page).toHaveURL('/demo/programmes')
+    await backToList(page)
     await expect(rows(page)).toHaveCount(3)
   })
 })
@@ -359,7 +375,7 @@ test.describe('WF04-S02 owner and authorization', () => {
     await select.selectOption({ label: 'Chapter 02' })
     await expect(page.locator('[data-error="organization_id"]')).toHaveCount(0)
     await save(page).click()
-    await expect(page).toHaveURL('/demo/programmes')
+    await backToList(page)
     await expect(rows(page)).toHaveCount(3)
     expect((await cells(page))[0]!.slice(0, 3)).toEqual([
       'Challenge của admin',

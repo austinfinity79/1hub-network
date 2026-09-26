@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
-import { Button } from '@/components/ui'
+import { Button, Notice } from '@/components/ui'
 import { DEMO_COPY } from '@/lib/programme-demo/copy'
 
 import { useProgrammeDemo } from './demo-store'
@@ -40,6 +40,7 @@ export function DemoPage({
       </header>
       <div className={styles.body}>
         <DemoNotice />
+        <DemoFlash />
         {children ? <div className={styles.content}>{children}</div> : null}
       </div>
     </div>
@@ -94,4 +95,18 @@ export function DemoNotice() {
       </div>
     </section>
   )
+}
+
+/** A one-off confirmation handed over by the previous screen (e.g. a created draft). */
+function DemoFlash() {
+  const { flash, setFlash } = useProgrammeDemo()
+  const [shown] = useState(flash)
+  useEffect(() => {
+    if (shown) setFlash(null)
+  }, [shown, setFlash])
+  return shown ? (
+    <div className={styles.flash} data-state="created">
+      <Notice>{shown}</Notice>
+    </div>
+  ) : null
 }

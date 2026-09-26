@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 
-import { Notice } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
 import type { ListEnvelope } from '@/lib/api/types'
 import { DEMO_COPY, TYPE_LABEL } from '@/lib/programme-demo/copy'
@@ -45,13 +44,8 @@ type State =
   { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; items: ProgrammeDemoSummaryDTO[] }
 
 export function ProgrammeList() {
-  const { state: session, allowance, flash, setFlash } = useProgrammeDemo()
+  const { state: session, allowance } = useProgrammeDemo()
   const [state, setState] = useState<State>({ kind: 'loading' })
-  // The confirmation from S02 is shown once, then cleared (gone on reload).
-  const [created] = useState(flash)
-  useEffect(() => {
-    if (created) setFlash(null)
-  }, [created, setFlash])
 
   const load = useCallback(async () => {
     setState({ kind: 'loading' })
@@ -91,11 +85,6 @@ export function ProgrammeList() {
           </Link>
         }
       >
-        {created ? (
-          <div className={styles.flash} data-state="created">
-            <Notice>{created}</Notice>
-          </div>
-        ) : null}
         {state.kind === 'failed' ? (
           <div className={styles.failed} role="alert" data-state="list-failed">
             <p className="type-body-sm">{COPY.failed}</p>

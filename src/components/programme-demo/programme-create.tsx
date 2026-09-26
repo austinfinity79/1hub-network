@@ -29,8 +29,8 @@ import styles from './programme-form.module.css'
  * Basic information only, the canonical Programme fields: Loại (chosen once),
  * Tên, Tóm tắt, Đơn vị chủ trì (from the server-computed scope), Thời gian.
  * "Lưu" validates, then stores ONE new DRAFT in this browser session's demo
- * store — never the database — and returns to the list with a confirmation
- * until WF04-S03 provides the next setup step (S02-D3).
+ * store — never the database — and continues to the journey step (WF04-S03)
+ * with a one-off confirmation (DEC-WF04-S03-D3).
  */
 
 const COPY = {
@@ -110,7 +110,7 @@ export function ProgrammeCreate({ owners }: { owners: OrganizationRefDTO[] }) {
       return
     }
     setFlash(COPY.created(draft.programme.name))
-    router.push(demoRoutes.list())
+    router.push(demoRoutes.setup(draft.programme.id, 'journey'))
   }
 
   const error = (field: BasicInfoField) => {

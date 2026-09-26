@@ -49,3 +49,21 @@
   flex: none;
   gap: 0.625rem;
 }
+
+/* Below desktop the header buttons wrap instead of widening the page. */
+@media (max-width: 1023px) {
+  .group {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .primary,
+  .secondary {
+    height: auto;
+    min-height: 2.1875rem;
+    max-width: 100%;
+    padding: 0.375rem 1rem;
+    white-space: normal;
+    text-align: center;
+  }
+}

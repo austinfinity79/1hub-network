@@ -30,6 +30,7 @@ import type { ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
  */
 
 const CHANGE_EVENT = 'hub:wf04-demo-store'
+const noSubscription = () => () => {}
 
 type DemoStore = {
   state: DemoSessionState
@@ -40,6 +41,8 @@ type DemoStore = {
   reset: () => void
   /** A one-off confirmation for the next screen (kept in memory, gone on reload). */
   flash: string | null
+  /** False during the server render and hydration: the session state is not read yet. */
+  ready: boolean
   setFlash: (message: string | null) => void
 }
 
@@ -79,6 +82,11 @@ export function ProgrammeDemoProvider({
   }, [key])
   // The server (and hydration) always renders the fixture state.
   const raw = useSyncExternalStore(subscribe, read, () => null)
+  const ready = useSyncExternalStore(
+    noSubscription,
+    () => true,
+    () => false,
+  )
   const state = useMemo(() => parseDemoState(raw), [raw])
 
   const commit = useCallback(
@@ -113,8 +121,9 @@ export function ProgrammeDemoProvider({
       },
       flash,
       setFlash,
+      ready,
     }),
-    [state, allowance, commit, read, flash],
+    [state, allowance, commit, read, flash, ready],
   )
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>

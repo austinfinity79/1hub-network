@@ -36,7 +36,8 @@ export type BasicInfoErrors = Partial<Record<BasicInfoField, BasicInfoIssue>>
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
-function validDay(value: string): boolean {
+/** A real calendar day in yyyy-mm-dd (shared by the S02 and S03 date fields). */
+export function isValidDay(value: string): boolean {
   if (!DAY.test(value)) return false
   const time = Date.parse(`${value}T00:00:00+07:00`)
   return Number.isFinite(time) && new Date(time + 7 * 3600_000).toISOString().startsWith(value)
@@ -62,7 +63,7 @@ export function validateBasicInfo(
   if (!input.name.trim()) errors.name = 'required'
   const start = input.starts_on.trim()
   const end = input.ends_on.trim()
-  if ((start && !validDay(start)) || (end && !validDay(end))) errors.dates = 'invalid'
+  if ((start && !isValidDay(start)) || (end && !isValidDay(end))) errors.dates = 'invalid'
   else if (start && end && end < start) errors.dates = 'order'
   if (!input.organization_id) errors.organization_id = 'required'
   else if (!owners.some((o) => o.id === input.organization_id)) errors.organization_id = 'invalid'
