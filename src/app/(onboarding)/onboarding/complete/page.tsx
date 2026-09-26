@@ -1,13 +1,40 @@
-import { PageContainer } from '@/components/shell/page-container'
-import { RoutePlaceholder } from '@/components/shell/route-placeholder'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-/** WF01-S08 — /onboarding/complete. Frozen route placeholder; see M0-T03. */
-export default function Page() {
-  // The onboarding group layout no longer wraps pages (WF01-S05), so the
-  // placeholder keeps its container here.
+import { OnboardingShell } from '@/components/shell/onboarding-shell'
+import { SESSION_COOKIE_NAME } from '@/lib/auth/config'
+import { resolveSession } from '@/lib/auth/sessions'
+import { getOnboardingState } from '@/lib/onboarding/state'
+import { getProfileCompletion } from '@/lib/profile/completion'
+
+import { CompleteView } from './complete-view'
+
+/**
+ * WF01-S08 — /onboarding/complete. Next: WF02-S01 /me.
+ * Approved baseline: design-reference/final/WF01/WF01-S08__onboarding-complete__1440x900.png
+ * Decisions DEC-WF01-S08-D1..D8.
+ *
+ * No session → /auth. Unlike S05–S07, a completed account is NOT sent away:
+ * S08 stays viewable (refresh, revisit). A not-yet-completed account gets the
+ * view in its pending state, which performs POST /me/onboarding/complete and
+ * shows success only after the server confirms (D1). The Challenge, Project
+ * and Chapter cards are not rendered (D2–D4); the only exit is /me (D6).
+ */
+export const dynamic = 'force-dynamic'
+
+export default async function Page() {
+  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
+  const session = await resolveSession(token)
+  if (!session) redirect('/auth')
+
+  const state = await getOnboardingState(session.accountId)
+  const initial = state.completed
+    ? ({ kind: 'done', percent: (await getProfileCompletion(session.accountId)).percent } as const)
+    : ({ kind: 'pending' } as const)
+
   return (
-    <PageContainer>
-      <RoutePlaceholder pattern="/onboarding/complete" />
-    </PageContainer>
+    <OnboardingShell currentStep={4}>
+      <CompleteView initial={initial} />
+    </OnboardingShell>
   )
 }

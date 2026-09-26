@@ -6,11 +6,12 @@ import { writeAudit } from '@/lib/audit/audit'
  * Profile visibility — GET/PUT /me/visibility (05 §4.5; DEC-WF01-S07-D2/D4/D8).
  *
  * P0 freezes one group, PROFILE_DISCOVERY (display name, avatar, headline,
- * bio, domain), settable to NETWORK_ONLY or PRIVATE. Storage is the existing
- * profile_visibility_settings row: `default_level` (NETWORK_ONLY) plus a
- * `group_overrides` map of group code → level holding only departures from
- * the default. No row means every group is at the default. Visibility is
- * never consent: nothing here touches consent_records.
+ * bio, domain and region — DEC-WF01-S07-D2A), settable to NETWORK_ONLY or
+ * PRIVATE. Storage is the existing profile_visibility_settings row:
+ * `default_level` (NETWORK_ONLY) plus a `group_overrides` map of group code →
+ * level holding only departures from the default. No row means every group
+ * is at the default. Visibility is never consent: nothing here touches
+ * consent_records.
  */
 
 export const VISIBILITY_GROUPS = ['PROFILE_DISCOVERY'] as const

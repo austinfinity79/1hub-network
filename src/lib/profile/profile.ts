@@ -1,3 +1,4 @@
+import { trackCompletionChange } from '@/lib/analytics/analytics'
 import { ApiError } from '@/lib/api/errors'
 import { query, withTransaction, type Executor } from '@/lib/db/client'
 import { assetUrl } from '@/lib/media/avatar-storage'
@@ -207,11 +208,18 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
   const patch = parsePatch(body)
 
   return withTransaction(async (exec) => {
-    const [current] = await exec<{ id: string; status: string; region_vocab_id: string | null }>(
-      `SELECT id::text, status::text AS status, region_vocab_id::text
+    const [current] = await exec<{
+      id: string
+      status: string
+      region_vocab_id: string | null
+      onboarded: boolean
+    }>(
+      `SELECT id::text, status::text AS status, region_vocab_id::text,
+              onboarding_completed_at IS NOT NULL AS onboarded
          FROM individual_profiles WHERE account_id = $1 FOR UPDATE`,
       [accountId],
     )
+    const before = computeCompletion(await loadCompletionFacts(accountId, exec)).percent
     if (current?.status === 'DEACTIVATED') {
       throw new ApiError('PROFILE_DEACTIVATED', 409, 'Profile is deactivated.')
     }
@@ -284,7 +292,15 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
         [profile!.id, ids],
       )
     }
-    return getOwnProfile(accountId, exec)
+    const dto = await getOwnProfile(accountId, exec)
+    await trackCompletionChange(exec, {
+      accountId,
+      profileId: profile!.id,
+      from: before,
+      to: dto.completion.percent,
+      onboarded: current?.onboarded ?? false,
+    })
+    return dto
   })
 }
 

@@ -30,10 +30,11 @@ const IMPLEMENTED_SCREENS = new Set([
   'WF01-S05',
   'WF01-S06',
   'WF01-S07',
+  'WF01-S08',
 ])
 
-/** Implemented screens that send a guest to /auth (DEC-WF01-S05-D5, WF01-S06, WF01-S07). */
-const GUARDED_SCREENS = new Set(['WF01-S05', 'WF01-S06', 'WF01-S07'])
+/** Implemented screens that send a guest to /auth (DEC-WF01-S05-D5, WF01-S06..S08). */
+const GUARDED_SCREENS = new Set(['WF01-S05', 'WF01-S06', 'WF01-S07', 'WF01-S08'])
 
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {

@@ -6,8 +6,8 @@ import styles from './onboarding-shell.module.css'
 const STEPS = ['Vai trò', 'Thông tin', 'Quyền riêng tư'] as const
 
 type Props = {
-  /** 1-based index of the current step. */
-  currentStep: 1 | 2 | 3
+  /** 1-based index of the current step; 4 = onboarding finished, all steps done (WF01-S08). */
+  currentStep: 1 | 2 | 3 | 4
   /** Right-hand header action; each screen supplies its own. */
   action?: ReactNode
   children: ReactNode

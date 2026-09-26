@@ -1,3 +1,4 @@
+import { trackCompletionChange } from '@/lib/analytics/analytics'
 import { ApiError, unauthenticated } from '@/lib/api/errors'
 import { withApi } from '@/lib/api/handler'
 import { readSessionToken } from '@/lib/auth/session-cookie'
@@ -10,6 +11,7 @@ import {
   saveAvatarAsset,
   sniffAvatarType,
 } from '@/lib/media/avatar-storage'
+import { computeCompletion, loadCompletionFacts } from '@/lib/profile/completion'
 
 /**
  * POST /api/v1/me/profile/avatar — 05 §4.4. Maps WF01-S06 `upload_avatar`
@@ -47,20 +49,35 @@ export const POST = withApi(async ({ request }) => {
   let previous: string | null = null
   try {
     previous = await withTransaction(async (exec) => {
-      const [row] = await exec<{ status: string; avatar_asset_id: string | null }>(
-        `SELECT status::text AS status, avatar_asset_id FROM individual_profiles
-          WHERE account_id = $1 FOR UPDATE`,
+      const [row] = await exec<{
+        status: string
+        avatar_asset_id: string | null
+        onboarded: boolean
+      }>(
+        `SELECT status::text AS status, avatar_asset_id,
+                onboarding_completed_at IS NOT NULL AS onboarded
+           FROM individual_profiles WHERE account_id = $1 FOR UPDATE`,
         [session.accountId],
       )
       if (row?.status === 'DEACTIVATED') {
         throw new ApiError('PROFILE_DEACTIVATED', 409, 'Profile is deactivated.')
       }
-      await exec(
+      const before = computeCompletion(await loadCompletionFacts(session.accountId, exec)).percent
+      const [profile] = await exec<{ id: string }>(
         `INSERT INTO individual_profiles (account_id, avatar_asset_id) VALUES ($1, $2)
          ON CONFLICT (account_id) DO UPDATE
-           SET avatar_asset_id = EXCLUDED.avatar_asset_id, updated_at = now()`,
+           SET avatar_asset_id = EXCLUDED.avatar_asset_id, updated_at = now()
+         RETURNING id::text`,
         [session.accountId, assetId],
       )
+      const after = computeCompletion(await loadCompletionFacts(session.accountId, exec)).percent
+      await trackCompletionChange(exec, {
+        accountId: session.accountId,
+        profileId: profile!.id,
+        from: before,
+        to: after,
+        onboarded: row?.onboarded ?? false,
+      })
       return row?.avatar_asset_id ?? null
     })
   } catch (error) {

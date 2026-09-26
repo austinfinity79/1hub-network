@@ -77,6 +77,21 @@ Every row carries these shared fields. **Status:** HUMAN APPROVED — P0. **Date
 | <a id="dec-wf01-s07-d7"></a>DEC-WF01-S07-D7 | Copy artefact | The bitmap lede shows a literal `**mục đích**` | Render "mục đích" with emphasis (semibold); never show asterisks | Formatting artefact, not copy | Playwright: `strong` "mục đích", no `**` | — |
 | <a id="dec-wf01-s07-d8"></a>DEC-WF01-S07-D8 | Version / errors / re-acceptance | No codes existed for these cases | `409 LEGAL_DOCUMENT_VERSION_STALE`: a version that is not current is refused; the client reloads `/legal/current`, clears the acknowledgement and asks again. `422 VISIBILITY_VALIDATION_FAILED`: unsupported group or level. Post-onboarding re-acceptance belongs to WF02-S03 | Server-authoritative versions; errors never expose internals | Playwright race B; DB tests; `contract.test.ts` guards that both codes are recorded here | Codes live in `DECISION_ERROR_CODES`, not in the 05 drift list |
 
+## DEC-WF01-S08 — Onboarding complete (lifecycle)
+
+Every row carries these shared fields. **Status:** HUMAN APPROVED — P0. **Date:** 2026-09-26. **Scope:** WF01-S08 `/onboarding/complete`, `POST /api/v1/me/onboarding/complete`, `/session`, analytics writer. **Evidence (shared):** [WF01_S08_COMPLETION_CONTRACT.md](../implementation/WF01_S08_COMPLETION_CONTRACT.md), [WF01-S08 report](../implementation/reports/WF01-S08_onboarding-complete.md).
+
+| ID | Topic | Context | Decision | Why | Evidence | Impact |
+|---|---|---|---|---|---|---|
+| <a id="dec-wf01-s08-d1"></a>DEC-WF01-S08-D1 | Completion trigger | The API maps completion to S08; the bitmap has no confirm control | S07 saves consent and visibility, then navigates to S08. S08 issues the idempotent `POST /me/onboarding/complete` on entry and shows success only after the server confirms; a refusal shows what is missing, a failure offers a retry | S08 owns the write; no false success | Playwright: success after 200; 422 and 500 views without success | S07 unchanged |
+| <a id="dec-wf01-s08-d2"></a>DEC-WF01-S08-D2 | Challenge Library | WF04 is demo; no Production route | Card 01 not rendered; no route, no demo navigation | Demo must not look like Production | Playwright: no challenge text or link | Pixel: INTENTIONAL-DEMO-SCOPE |
+| <a id="dec-wf01-s08-d3"></a>DEC-WF01-S08-D3 | Create Project | `/projects/new` is a placeholder; `POST /ventures` is missing | Card 02 not rendered until WF02-S05 is Production-ready | No stub success | Playwright: no project link | Pixel: TEMPORARY-PRODUCTION-DEPENDENCY |
+| <a id="dec-wf01-s08-d4"></a>DEC-WF01-S08-D4 | Chapter action | No region → chapter data, route or request UX | Card 03 not rendered; S08 creates or infers no relationship; existing ACTIVE/PENDING rows stay as they are | Never fabricate network data | DB test: PENDING stays PENDING, no new membership | Pixel: TEMPORARY-PRODUCTION-DEPENDENCY |
+| <a id="dec-wf01-s08-d5"></a>DEC-WF01-S08-D5 | Primary intent | Intent may be NULL (S05-D3) | No per-intent cards or copy; NULL never blocks completion | Intent is stored for future logic only | DB test: NULL intent completes | Lede keeps only intent-neutral text |
+| <a id="dec-wf01-s08-d6"></a>DEC-WF01-S08-D6 | Exit and stepper | The bitmap has no `/me` exit and shows a skip link | CTA "Vào 1hub.network" → `/me`; no "Bỏ qua, làm sau"; stepper finished (all done, none current, not interactive) | One safe exit that depends on no optional action | Playwright: the only link is `/me`; no `aria-current` | Pixel: INTENTIONAL-CONTRACT (skip, disc 3, CTA, shorter card) |
+| <a id="dec-wf01-s08-d7"></a>DEC-WF01-S08-D7 | Info copy and icon | Panel claims events and solution-submission rules; OS emoji ℹ | Neutral copy: the server's percent plus "Bạn có thể cập nhật hồ sơ bất cứ lúc nào."; deterministic SVG info mark | No invented product rules; deterministic pixels | Playwright: no "dự sự kiện"; percent equals the server's | Pixel: INTENTIONAL-ICON-RENDERING, replaced-copy regions masked |
+| <a id="dec-wf01-s08-d8"></a>DEC-WF01-S08-D8 | Audit and analytics | No analytics writer existed | Audit `PROFILE_ACTIVATED` once on the real DRAFT → ACTIVE transition (before/after status, request id). One analytics writer on `analytics_events`: `onboarding_completed` once at first completion; `profile_completion_changed` when the authoritative percent moves. Frozen common properties only | Once-only, non-personal telemetry | DB and Playwright: 5 concurrent calls → 1 audit, 1 event; payloads without names, email or consent content | Other API §10 events are not emitted yet (open) |
+
 ## Related
 
 - [p0-status.md](../implementation/P0_STATUS.md) — overall P0 state
@@ -85,3 +100,4 @@ Every row carries these shared fields. **Status:** HUMAN APPROVED — P0. **Date
 - [wf01-s05-intent-contract-gap.md](../implementation/WF01_S05_INTENT_CONTRACT_GAP.md) — S05 intent contract (approved)
 - [wf01-s06-profile-field-contract.md](../implementation/WF01_S06_PROFILE_FIELD_CONTRACT.md) — S06 field contract (approved)
 - [wf01-s07-privacy-consent-contract.md](../implementation/WF01_S07_PRIVACY_CONSENT_CONTRACT.md) — S07 consent contract (approved)
+- [wf01-s08-completion-contract.md](../implementation/WF01_S08_COMPLETION_CONTRACT.md) — S08 completion contract (approved)
