@@ -1,17 +1,17 @@
 # WF02 Screen Implementation Plan
 
-Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md) and updated after the **WF02 decision freeze** (2026-09-26, [DEC-WF02-H1..H13](../decisions/DECISION_LOG.md#dec-wf02-h1)). Ordered by data and API dependency. Nothing is implemented yet.
+Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md) and updated after the **WF02 decision freeze** (2026-09-26, [DEC-WF02-H1..H13](../decisions/DECISION_LOG.md#dec-wf02-h1)). Ordered by data and API dependency. **WF02-T00 (foundation) is implemented**; no screen body yet.
 
 ## Readiness after the freeze
 | Order | Screen | Route | Frozen P0 scope | Dependencies | Readiness |
 |---|---|---|---|---|---|
-| 0 | WF02 Foundation | — | Member shell: P0 links live, the rest inert, no counters (H9). Editor header. `GET /me/network` read model: memberships, leadership, venture relations, `activity_summary: []` (H5) | WF01 services | **READY** |
-| 1 | S01 Account home | `/me` | Summary, server completion + neutral missing-group copy (H13), navigation cards, "Tổ chức của tôi". "Đang chờ bạn" omitted (H10). No public link (H3) | 0 | **READY AFTER FOUNDATION** |
-| 2 | S03 Privacy | `/me/privacy` | PROFILE_DISCOVERY, consent history, re-acceptance (H4) | 0 | **READY AFTER FOUNDATION** |
-| 3 | S04 Roles & links | `/me/roles` | Memberships, leadership, venture roles with source label; membership request → PENDING_APPROVAL (H5, H11) | 0 | **READY AFTER FOUNDATION** |
-| 4 | S02 Profile edit | `/me/profile/edit` | Canonical IndividualProfile fields + Experience / Development goal / Current need (H1, H2). Activity panel Future | 0 | **READY AFTER FOUNDATION** (no migration) |
+| 0 | WF02 Foundation | — | Member shell: P0 links live, the rest inert, no counters (H9). `GET /me/network`: memberships, leadership, venture relations, `activity_summary: []` (H5). PROFILE_DISCOVERY projection helper | WF01 services | **DONE** (WF02-T00) |
+| 1 | S01 Account home | `/me` | Summary, server completion + neutral missing-group copy (H13), navigation cards, "Tổ chức của tôi". "Đang chờ bạn" omitted (H10). No public link (H3) | 0 | **READY** (foundation done) |
+| 2 | S03 Privacy | `/me/privacy` | PROFILE_DISCOVERY, consent history, re-acceptance (H4) | 0 | **READY** (foundation done) |
+| 3 | S04 Roles & links | `/me/roles` | Memberships, leadership, venture roles with source label; membership request → PENDING_APPROVAL (H5, H11) | 0 | **READY** (foundation done) |
+| 4 | S02 Profile edit | `/me/profile/edit` | Canonical IndividualProfile fields + Experience / Development goal / Current need (H1, H2). Activity panel Future | 0 | **READY** (foundation done; no migration) |
 | 5 | S07 Settings | `/me/settings` | Sessions list, revoke one, revoke all, deletion request (H8) | 0; P13 deletion subset; revoke-all API addendum | **READY AFTER MIGRATION** (P13 subset) |
-| 6 | S05 Project/Startup | `/projects/new`, `/projects/:id/edit` | Five fields; owner-only write; review button omitted (H6, H7) | 0; venture region/domain storage | **BLOCKED** by [OPEN-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#open-wf02-venture-taxonomy-storage) |
+| 6 | S05 Project/Startup | `/projects/new`, `/projects/:id/edit` | Five fields; owner-only write; review button omitted (H6, H7) | 0; venture taxonomy migration ([DEC-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#dec-wf02-venture-taxonomy-storage)) | **READY AFTER MIGRATION** (venture taxonomy) |
 | 7 | S06 Team | `/projects/:id/team` | Owner manages invitations/roles; members read-only; no permission tiers (H7) | 6; P12 | **READY AFTER MIGRATION** (P12), after S05 |
 
 **Order unchanged:** Foundation → S01 → S03 → S04 → S02 → S07 → S05 → S06. No decision creates a new dependency. After the foundation, S03, S04, S02 and S07 are independent of each other.
@@ -32,14 +32,17 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | H11 Membership request | CLOSED | [DEC-WF02-H11](../decisions/DECISION_LOG.md#dec-wf02-h11) |
 | H12 Short full-page refs | CLOSED | [DEC-WF02-H12](../decisions/DECISION_LOG.md#dec-wf02-h12) |
 | H13 S01 copy | RESOLVED_BY_PRECEDENCE | [DEC-WF02-H13](../decisions/DECISION_LOG.md#dec-wf02-h13) |
-| Venture region/domain storage | **OPEN (new)** | [OPEN-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#open-wf02-venture-taxonomy-storage) |
+| Venture region/domain storage | CLOSED | [DEC-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#dec-wf02-venture-taxonomy-storage) |
+
+**Remaining WF02 human decisions: 0.**
 
 ## Authorized work (not yet started)
 | Kind | Item | Task |
 |---|---|---|
 | DB | P12 additive migration: invitations, target email/identity, team lifecycle, integrity | S06 (with S05) |
 | DB | P13 subset: account deletion request only | S07 |
-| API | `/me/network`, `/me/membership-requests`, `/me/profile` allowlist (H1/H2), `/me/sessions` + revoke-all addendum, `/me/account-deletion-request`, `/ventures*` (5 fields), `/ventures/{id}/team*` | per screen |
+| DB | Venture taxonomy: `projects.region_id` + `project_domains` | S05 |
+| API | `/me/network` (**done**, T00), `/me/membership-requests`, `/me/profile` allowlist (H1/H2), `/me/sessions` + revoke-all addendum, `/me/account-deletion-request`, `/ventures*` (5 fields), `/ventures/{id}/team*` | per screen |
 | Authz | `venture:read`, `venture:manage`, `venture:team_manage` added to the Matrix | S05 |
 | QA | Short full-page crop rule in the pixel harness | first WF02 pixel task |
 
@@ -52,7 +55,7 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | HC-WF02-04 | Network-visible profile | Owner view only; `/profiles/{id}` UI not in P0 (H3) |
 | HC-WF02-05 | Roster member sees membership/leadership | After 0/S04 |
 | HC-WF02-06 | Unmatched member requests membership → PENDING_APPROVAL | After S04 (H11) |
-| HC-WF02-07 | Member creates canonical Project/Startup | Blocked by the storage gap |
+| HC-WF02-07 | Member creates canonical Project/Startup | After S05 (taxonomy migration) |
 
 ## Related
 - [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md) — findings
