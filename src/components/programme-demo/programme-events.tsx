@@ -30,8 +30,8 @@ import { EventStatusPill } from './status-pill'
  * Only events whose `programme_id` is this programme, from the fixture plus
  * the actor's session edits — never a WF03 standalone event, never the
  * database. Add (DRAFT), edit (DRAFT / PUBLISHED), remove a DRAFT; the
- * canonical Event fields and rules. Back → the journey; "Tiếp theo" waits for
- * WF04-S05.
+ * canonical Event fields and rules. Back → the journey; "Tiếp theo" opens
+ * WF04-S05 (DEC-WF04-S05-D3).
  */
 
 const COPY = {
@@ -77,7 +77,7 @@ export function ProgrammeEvents({
       step="events"
       screen="WF04-S04"
       back={{ href: demoRoutes.setup(id, 'journey'), label: COPY.back, nav: 'events-back' }}
-      next={null}
+      next={demoRoutes.setup(id, 'registration')}
     >
       {({ detail, apply }) => <EventsBody detail={detail} apply={apply} />}
     </SetupScreen>

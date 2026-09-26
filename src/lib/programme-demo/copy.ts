@@ -1,4 +1,4 @@
-import type { ProgrammeDemoStatus, ProgrammeType } from './types'
+import type { ApplicantType, ApplicationStatus, ProgrammeDemoStatus, ProgrammeType } from './types'
 
 /** WF04 demo copy shared by the demo screens (pending PO copy review). */
 export const DEMO_COPY = {
@@ -22,4 +22,21 @@ export const STATUS_LABEL: Record<ProgrammeDemoStatus, string> = {
 export const TYPE_LABEL: Record<ProgrammeType, string> = {
   PROGRAMME: 'Chương trình',
   CHALLENGE: 'Challenge',
+}
+
+/** SOT §12 primary applicant kinds. */
+export const APPLICANT_LABEL: Record<ApplicantType, string> = {
+  INDIVIDUAL: 'Cá nhân',
+  TEAM: 'Đội',
+  STARTUP: 'Startup',
+}
+
+/** SOT §6 Application states (shown as demo counts only). */
+export const APPLICATION_STATUS_LABEL: Record<ApplicationStatus, string> = {
+  DRAFT: 'Nháp',
+  SUBMITTED: 'Đã nộp',
+  UNDER_REVIEW: 'Đang xem xét',
+  NEEDS_UPDATE: 'Cần bổ sung',
+  RESUBMITTED: 'Đã nộp lại',
+  CLOSED: 'Đã đóng',
 }

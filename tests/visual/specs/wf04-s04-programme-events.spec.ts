@@ -156,11 +156,9 @@ test.describe('WF04-S04 events', () => {
     expect(standalone.length).toBeGreaterThan(0)
     const text = await page.locator('main').innerText()
     for (const { name } of standalone) expect(text).not.toContain(name)
-    // Next waits for S05; back returns to the journey.
+    // DEC-WF04-S05-D3: next opens the registration step; back returns to the journey.
     const next = page.locator('[data-setup-next]')
-    await expect(next).toBeDisabled()
-    await expect(next).toHaveAttribute('title', 'Chưa có trong phiên bản này')
-    await expect(page.locator('a[href*="/setup/registration"]')).toHaveCount(0)
+    await expect(next).toHaveAttribute('href', `/demo/programmes/${PROGRAMME}/setup/registration`)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(rows(page)).toHaveCount(2)
     await page.locator('[data-nav="events-back"]').click()
