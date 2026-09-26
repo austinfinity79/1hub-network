@@ -723,7 +723,7 @@ Resolved by precedence (not asked):
 
 ## OPEN-WF03 — WF03 pre-implementation gaps (human decision required)
 
-**Status:** CLOSED 2026-09-26 by [DEC-WF03-G1..G15](#dec-wf03-g1) (history kept). Found by the WF03 pre-implementation audit. New conflicts found during the freeze: [OPEN-WF03-C1](#open-wf03-c1), [OPEN-WF03-C2](#open-wf03-c2).
+**Status:** CLOSED 2026-09-26 by [DEC-WF03-G1..G15](#dec-wf03-g1) (history kept). Found by the WF03 pre-implementation audit. New conflicts found during the freeze: [OPEN-WF03-C1](#open-wf03-c1) (open), [OPEN-WF03-C2](#open-wf03-c2) (closed by DEC-WF03-C2).
 **Audit:** [WF03_PRE_IMPLEMENTATION_AUDIT.md](../implementation/WF03_PRE_IMPLEMENTATION_AUDIT.md).
 **Already frozen:** 9 screens and routes (WF03 contract); 9 capabilities, exact org scope, no inheritance (Matrix, DECISION-AUTHZ-01B); Membership / Leadership / RoleAssignment separation; Event standalone-or-child (SOT §11); Freeze D2 (preseed + pending fallback).
 
@@ -780,7 +780,7 @@ Resolved by precedence (not asked):
 | Blocks | S06, S08 (not T00–S04, S07, S09) |
 | Source anchor | WF03:33-35; SCR WF03; API §8.5, §8.7 |
 
-<a id="open-wf03-c2"></a>**OPEN-WF03-C2 — Hierarchy fixture disagreement (reported per DEC-WF03-G9)**
+<a id="open-wf03-c2"></a>**OPEN-WF03-C2 — Hierarchy fixture disagreement (reported per DEC-WF03-G9) — CLOSED by [DEC-WF03-C2](#dec-wf03-c2)**
 
 | Field | Record |
 |---|---|
@@ -800,6 +800,26 @@ Resolved by precedence (not asked):
 | Decision | Contract freeze gate; fast path vs full preflight; design lock; targeted tests/pixel with full regression at defined triggers; immutable CLOSED decisions; human-stop policy; workflow closing gate; protected WF01/WF02; SHA-exact deploy handoff; shorter reports; golden rules |
 | Product/business decisions changed | **NONE** |
 | Where | [PROCESS_P0_ACCELERATED_SAFE_V2.md](../implementation/PROCESS_P0_ACCELERATED_SAFE_V2.md); CLAUDE.md §14 |
+
+<a id="dec-wf03-c2"></a>**DEC-WF03-C2 — Hierarchy fixture remediation (human approved; closes OPEN-WF03-C2)**
+
+| Field | Record |
+|---|---|
+| Decision | Deterministic fixture remediation only: `seed_p0_deterministic.sql` gains `d0000000-…-0003`, an ACTIVE PARENT HUB Network → Chapter 02, matching what the fixture's legacy `parent_id` already expressed |
+| Not done (by decision) | No runtime fallback to `parent_id`, no inference of production relationships from it, no reconciliation migration, no repair of arbitrary data; `parent_id` stays non-canonical |
+| Runtime | Hierarchy is read only from `organization_relationships` (`src/lib/ops/hierarchy.ts`). Future disagreement in non-fixture data is reported as DATA INCONSISTENCY |
+| Applied | WF03-T00 |
+
+## DEC-WF03-T00-D — Ops foundation implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within DEC-WF03-G1..G15 (for review).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf03-t00-d1"></a>DEC-WF03-T00-D1 | **OpsShell family.** OpsShell follows the "Quản trị HUB tổng" sidebar drawn identically on S03/S04/S08 (216px column, wordmark, subtitle, group label, 38px items, bordered active box), per the OPEN-WF03-G15 recommendation approved with G15. The ADM-coded S01/S05 sidebar and the S02/S06 top nav are INTENTIONAL-CONTRACT differences. Drawn items without an executable destination are not rendered |
+| <a id="dec-wf03-t00-d2"></a>DEC-WF03-T00-D2 | **Context + breadcrumb.** The subtitle slot carries "Tổ chức › {organization}" (breadcrumb nav) inside an org route and "Vận hành tổ chức" otherwise, so no bar is added above the screens' content. Nav: "Danh sách tổ chức"; in an org: Tổng quan, Thành viên, Hồ sơ tổ chức, Sự kiện, Quan hệ tổ chức, each shown only with its capability; S05 not listed. Copy pending PO review |
+| <a id="dec-wf03-t00-d3"></a>DEC-WF03-T00-D3 | **Guard / API semantics.** Pages: guest → /auth; onboarding not DONE → resolver; no ops scope, or an out-of-scope / malformed / non-operational `orgId` → the same 404. Layouts check `network:read` / `org:read`; each screen still checks its own capability. `GET /ops/organizations`: 401 without a session, 403 `SCOPE_FORBIDDEN` with no ops scope; DTO = OrganizationRefDTO + `status` + canonical `parent` (shown if PUBLISHED or in the actor's scope) + `active_members`; ordered by name; keyset cursor; ≤ 50 per page. An unknown `type` matches nothing and an unusable cursor starts from page one (the `parseListQuery` convention; no error code is contracted) |
+| <a id="dec-wf03-t00-d4"></a>DEC-WF03-T00-D4 | **Migration 009 not required for T00.** No relationship is written yet; the reader reports more than one ACTIVE PARENT as DATA INCONSISTENCY and shows no parent. Enforcement is decided with the first relationship writes (S08, after C1) |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

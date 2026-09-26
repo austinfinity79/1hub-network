@@ -37,7 +37,22 @@ async function visit(page: Page, url: string): Promise<{ status: number; problem
  * browser's own "Failed to load resource: 404" line for that document is the
  * only console line tolerated for it.
  */
-const RESOURCE_SCOPED = new Set(['/projects/[id]/edit', '/projects/[id]/team'])
+const RESOURCE_SCOPED = new Set([
+  '/projects/[id]/edit',
+  '/projects/[id]/team',
+  // WF03-T00: `sample-org` is no organization id, so every /ops/org route is the
+  // same safe 404 for a signed-in visitor, whatever their scope.
+  '/ops/org/[orgId]',
+  '/ops/org/[orgId]/members',
+  '/ops/org/[orgId]/members/[profileId]',
+  '/ops/org/[orgId]/programmes',
+  '/ops/org/[orgId]/profile',
+  '/ops/org/[orgId]/events',
+  '/ops/org/[orgId]/settings',
+])
+
+/** WF03-T00: /ops/network exists only for an actor with an ops scope (the leader). */
+const OPS_ONLY = new Set(['/ops/network'])
 
 const PERSONAS = [
   { name: 'guest', email: null },
@@ -54,7 +69,10 @@ for (const persona of PERSONAS) {
     const problems: Problem[] = []
     for (const route of FROZEN_ROUTES) {
       const result = await visit(page, route.samplePath)
-      if (persona.email && RESOURCE_SCOPED.has(route.pattern)) {
+      if (
+        (persona.email && RESOURCE_SCOPED.has(route.pattern)) ||
+        (persona.name === 'member' && OPS_ONLY.has(route.pattern))
+      ) {
         expect(result.status, `${route.samplePath} status`).toBe(404)
         problems.push(...result.problems.filter((p) => !/status of 404/.test(p.text)))
         continue

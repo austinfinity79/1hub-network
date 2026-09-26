@@ -55,15 +55,25 @@ const GUARDED_SCREENS = new Set([
   'WF02-S05',
   'WF02-S06',
   'WF02-S07',
+  // WF03-T00: every /ops route is guarded by the ops guard; the placeholder body
+  // still renders inside OpsShell for an authorized actor (wf03-t00 spec).
+  'WF03-S01',
+  'WF03-S02',
+  'WF03-S03',
+  'WF03-S04',
+  'WF03-S05',
+  'WF03-S06',
+  'WF03-S07',
+  'WF03-S08',
 ])
 
 /**
  * An unguarded placeholder route. The member group has none left since
- * WF02-S06 (the last one) was implemented, so the shell evidence moves to the
- * first WF03 ops placeholder.
+ * WF02-S06, and WF03-T00 guarded the ops group, so the shell evidence moves to
+ * the public WF03-S09 placeholder.
  */
-const PLACEHOLDER_ROUTE = '/ops/network'
-const PLACEHOLDER_GROUP = 'ops'
+const PLACEHOLDER_ROUTE = '/organizations/sample-org'
+const PLACEHOLDER_GROUP = 'public'
 
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {
@@ -80,13 +90,15 @@ test.describe('M0-T03 frozen routes', () => {
 
       expect(response?.status(), `${route.samplePath} did not return 200`).toBe(200)
 
+      // A guarded route sends a guest to /auth; what it renders for an
+      // authorized actor is proven by its own spec.
+      if (GUARDED_SCREENS.has(route.screenId)) {
+        await expect(page).toHaveURL('/auth')
+        return
+      }
       // An implemented screen replaces its placeholder and brings its own shell;
       // its behaviour is proven by that screen's own spec.
       if (IMPLEMENTED_SCREENS.has(route.screenId)) {
-        if (GUARDED_SCREENS.has(route.screenId)) {
-          await expect(page).toHaveURL('/auth')
-          return
-        }
         await expect(page.locator(`[data-route-group="${route.group}"]`).first()).toBeVisible()
         // Its own placeholder is gone. (WF01-S03 without a token redirects to
         // /auth/error, which is still WF01-S04's placeholder.)
@@ -197,12 +209,12 @@ test.describe('M0-T03 shell evidence', () => {
     await waitForFonts(page)
 
     await page.screenshot({
-      path: path.join(ACTUAL_DIR, 'shell-ops-placeholder-1440x900.png'),
+      path: path.join(ACTUAL_DIR, 'shell-public-placeholder-1440x900.png'),
       fullPage: true,
       animations: 'disabled',
     })
 
-    await expect(page).toHaveScreenshot('shell-ops-placeholder.png', {
+    await expect(page).toHaveScreenshot('shell-public-placeholder.png', {
       fullPage: true,
       animations: 'disabled',
       maxDiffPixelRatio: 0.01,
