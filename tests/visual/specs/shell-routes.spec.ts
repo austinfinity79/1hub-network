@@ -38,6 +38,7 @@ const IMPLEMENTED_SCREENS = new Set([
   'WF02-S03',
   'WF02-S04',
   'WF02-S05',
+  'WF02-S06',
   'WF02-S07',
 ])
 
@@ -52,15 +53,17 @@ const GUARDED_SCREENS = new Set([
   'WF02-S03',
   'WF02-S04',
   'WF02-S05',
+  'WF02-S06',
   'WF02-S07',
 ])
 
 /**
- * An unguarded placeholder route of the member group. /me was used until
- * WF02-T00 guarded it, and /projects/new until WF02-S05 did; WF02-S06 is the
- * last member placeholder.
+ * An unguarded placeholder route. The member group has none left since
+ * WF02-S06 (the last one) was implemented, so the shell evidence moves to the
+ * first WF03 ops placeholder.
  */
-const PLACEHOLDER_ROUTE = '/projects/sample-project/team'
+const PLACEHOLDER_ROUTE = '/ops/network'
+const PLACEHOLDER_GROUP = 'ops'
 
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {
@@ -112,7 +115,7 @@ test.describe('M0-T03 shared shell', () => {
       .locator('[data-route-group]')
       .evaluateAll((els) => els.map((el) => el.getAttribute('data-route-group')))
 
-    expect(groups).toEqual(['member'])
+    expect(groups).toEqual([PLACEHOLDER_GROUP])
     await expect(page.locator('[data-shell="page-container"]')).toHaveCount(1)
   })
 
@@ -194,12 +197,12 @@ test.describe('M0-T03 shell evidence', () => {
     await waitForFonts(page)
 
     await page.screenshot({
-      path: path.join(ACTUAL_DIR, 'shell-member-placeholder-1440x900.png'),
+      path: path.join(ACTUAL_DIR, 'shell-ops-placeholder-1440x900.png'),
       fullPage: true,
       animations: 'disabled',
     })
 
-    await expect(page).toHaveScreenshot('shell-member-placeholder.png', {
+    await expect(page).toHaveScreenshot('shell-ops-placeholder.png', {
       fullPage: true,
       animations: 'disabled',
       maxDiffPixelRatio: 0.01,

@@ -163,10 +163,16 @@ describe('GET /me/network read model (WF02-T00)', () => {
     const pending = await project(other.profileId, 'Gamma Venture')
     await query(
       `INSERT INTO project_members (project_id, profile_id, role_label, state) VALUES
-         ($1, $4, 'Owner row', 'ACTIVE'),
-         ($2, $4, 'Co-founder', 'ACTIVE'),
-         ($3, $4, 'Invitee', 'PENDING_APPROVAL')`,
-      [owned, joined, pending, owner.profileId],
+         ($1, $3, 'Owner row', 'ACTIVE'),
+         ($2, $3, 'Co-founder', 'ACTIVE')`,
+      [owned, joined, owner.profileId],
+    )
+    // A pending invitation to this member's email is not a relation yet (DEC-WF02-S06-G2).
+    await query(
+      `INSERT INTO project_members (project_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at)
+       SELECT $1, 'Invitee', 'PENDING_CONFIRMATION', NULL, a.email_normalized, $2, now()
+         FROM user_accounts a WHERE a.id = $3`,
+      [pending, other.profileId, owner.accountId],
     )
     const { roles } = await getOwnNetwork(owner.accountId)
     expect(roles).toEqual([

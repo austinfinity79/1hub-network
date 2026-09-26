@@ -664,7 +664,7 @@ Resolved by precedence (not asked):
 
 ## OPEN-WF02-S06 — Venture team preflight gaps (human decision required)
 
-**Status:** G1–G8 CLOSED 2026-09-26 by [DEC-WF02-S06-G1..G8](#dec-wf02-s06-g1) (history kept). **G9 OPEN** (blocking). Found by the WF02-S06 preflight.
+**Status:** CLOSED 2026-09-26 — G1–G8 by [DEC-WF02-S06-G1..G8](#dec-wf02-s06-g1), G9 by [DEC-WF02-S06-G9](#dec-wf02-s06-g9) (history kept). Found by the WF02-S06 preflight.
 **Audit:** [WF02_S06_PREFLIGHT_AUDIT.md](../implementation/WF02_S06_PREFLIGHT_AUDIT.md).
 **Already frozen:** owner = `projects.owner_profile_id` (no owner row, S05-G5); team lifecycle `PENDING_CONFIRMATION → ACTIVE → LEFT | REMOVED | REJECTED` (SOT, H7); `venture:team_manage` = owner only; `role_label` display only; email invitations never activate; routes `GET …/team`, `POST …/team/invitations`, `PATCH`/`DELETE …/team/{membershipId}` (API §5.4); P12 authorized, not created.
 
@@ -685,7 +685,7 @@ Resolved by precedence (not asked):
 - Invitation expiry / EXPIRED, INVITED, DECLINED states → not frozen; not introduced.
 - Error codes (409 `MEMBERSHIP_INVALID_TRANSITION`, 422 `PROFILE_VALIDATION_FAILED`, 403 `SCOPE_FORBIDDEN`, 404) and the `role_label` length bound → implementation decisions (D) at implementation time.
 
-<a id="open-wf02-s06-g9"></a>**OPEN-WF02-S06-G9 — Existing non-ACTIVE `project_members` rows (found while resolving G1–G8; BLOCKING migration 008)**
+<a id="open-wf02-s06-g9"></a>**OPEN-WF02-S06-G9 — Existing non-ACTIVE `project_members` rows (found while resolving G1–G8) — CLOSED by [DEC-WF02-S06-G9](#dec-wf02-s06-g9)**
 
 | Field | Record |
 |---|---|
@@ -696,7 +696,7 @@ Resolved by precedence (not asked):
 
 ## DEC-WF02-S06 — Venture team / members (G1–G8, human approved)
 
-**Status:** HUMAN APPROVED — P0, 2026-09-26. Closes [OPEN-WF02-S06 G1–G8](#open-wf02-s06-g1). G9 above remains open.
+**Status:** HUMAN APPROVED — P0, 2026-09-26. Closes [OPEN-WF02-S06 G1–G8](#open-wf02-s06-g1); G9 closed below. **Remaining S06 human decisions: 0.**
 
 | ID | Decision |
 |---|---|
@@ -708,6 +708,18 @@ Resolved by precedence (not asked):
 | <a id="dec-wf02-s06-g6"></a>DEC-WF02-S06-G6 | Owner cancels pending → REMOVED; owner removes ACTIVE → REMOVED; no DELETE of rows; LEFT is modelled but has no P0 UI/API; the owner cannot remove self, leave or transfer |
 | <a id="dec-wf02-s06-g7"></a>DEC-WF02-S06-G7 | Audit actions `VENTURE_TEAM_INVITED`, `VENTURE_TEAM_JOINED`, `VENTURE_TEAM_INVITATION_REJECTED`, `VENTURE_TEAM_ROLE_CHANGED`, `VENTURE_TEAM_REMOVED`; only on real transitions, not on retries; payload = ids and states only (no email, token, cookie or metadata) |
 | <a id="dec-wf02-s06-g8"></a>DEC-WF02-S06-G8 | The owner sees members, pending invitations with their email, role labels and state. An ACTIVE member sees a read-only list of the owner and ACTIVE members (names, role labels, canonical join dates); never pending, rejected or cancelled emails |
+| <a id="dec-wf02-s06-g9"></a>DEC-WF02-S06-G9 | **Context:** the legacy deterministic fixture conflicts with the canonical invitation lifecycle. **Decision (option a):** repair the fixture; the migration never infers legacy business meaning. `seed_p0_deterministic.sql` deletes the owner `'Founder'` member row (`11000000-…-0001`) and replaces `11000000-…-0002` with a canonical PENDING_CONFIRMATION invitation (`profile_id NULL`, `leader@example.test`, inviter = owner, fixed `invited_at`, role `Contributor`), never auto-linked. Migration 008 aborts on any non-ACTIVE or closed row and never maps `PENDING_APPROVAL`. Only the disposable local dev DB is reset. **Rationale:** a profile-bound PENDING_APPROVAL membership is not a PENDING_CONFIRMATION invitation. **Consequences:** owner duplicate removed; pending fixture canonical; explicit acceptance testable; migration deterministic |
+
+## DEC-WF02-S06-D — Venture team implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within approved scope (H7, S06-G1..G9); for review.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf02-s06-d1"></a>DEC-WF02-S06-D1 | **API shape.** `GET …/team` → `{venture, viewer: OWNER\|MEMBER, can_manage, counts{members, pending\|null}, rows[]}`; row kinds `OWNER` (derived, `membership_id` null), `ACTIVE_MEMBER`, `PENDING_INVITATION` (owner only; carries the email). Invite → 201 the pending row; PATCH → `{membership_id, state, role_label}`; DELETE / accept / decline → 200 `{membership_id, state}`. Repeated accept or decline of the same row returns the same outcome without a new event. `role_label` trimmed, empty → null, ≤ 100 chars (technical bound). An ARCHIVED venture's team is read-only (G3 of S05); accept on it → 409 |
+| <a id="dec-wf02-s06-d2"></a>DEC-WF02-S06-D2 | **Error codes (frozen set reused).** 422 `PROFILE_VALIDATION_FAILED` (fields: invalid email, owner's own email, unknown/authority keys `not_accepted`, `too_long`); 409 `MEMBERSHIP_INVALID_TRANSITION` (duplicate pending email, closed row, already a member); 409 `PROFILE_DEACTIVATED` (archived venture); 403 `SCOPE_FORBIDDEN` (ACTIVE member mutating; accept before onboarding DONE); 404 for strangers, unknown/foreign/cross-project ids, another person's invitation and the owner's legacy row |
+| <a id="dec-wf02-s06-d3"></a>DEC-WF02-S06-D3 | **UI.** The shared `EditorHeader` (82px band override); table geometry measured from PRO3; "Đổi quyền" → "Tuỳ chọn" menu; pending row "Huỷ lời mời"; note cards keep the frames with P0 copy; the invite form and the recipient panel (same route, shown only to the matching signed-in recipient, venture name + own invitation only) reuse this screen's card and the S02 field language. All added copy pending PO review |
+
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

@@ -278,9 +278,16 @@ describe('WF02-S05 update and read', () => {
     const invited = await member()
     const stranger = await member()
     const v = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Team' })
+    // A pending invitation (DEC-WF02-S06-G1) carries the invitee's email, never a profile.
     await query(
-      `INSERT INTO project_members (project_id, profile_id, role_label, state) VALUES ($1, $2, 'Owner', 'ACTIVE'), ($1, $3, 'Co-founder', 'PENDING_APPROVAL')`,
-      [v.id, teammate.profileId, invited.profileId],
+      `INSERT INTO project_members (project_id, profile_id, role_label, state) VALUES ($1, $2, 'Owner', 'ACTIVE')`,
+      [v.id, teammate.profileId],
+    )
+    await query(
+      `INSERT INTO project_members (project_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at)
+       SELECT $1, 'Co-founder', 'PENDING_CONFIRMATION', NULL, a.email_normalized, $2, now()
+         FROM user_accounts a WHERE a.id = $3`,
+      [v.id, owner.profileId, invited.accountId],
     )
     const seen = await getVenture(teammate.accountId, v.id)
     expect([seen.relation, seen.can_edit]).toEqual(['MEMBER', false])

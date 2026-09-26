@@ -228,11 +228,21 @@ ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name, summary = EXCLUDED.summary, status = EXCLUDED.status,
   updated_at = EXCLUDED.updated_at;
 
-INSERT INTO project_members(id, project_id, profile_id, role_label, state, joined_at) VALUES
-  ('11000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', 'Founder',    'ACTIVE',           '2026-01-15T09:00:00Z'),
-  ('11000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000002', 'Contributor','PENDING_APPROVAL', '2026-01-15T09:00:00Z')
+-- Team (DEC-WF02-S06-G1, G5, G9). The owner is projects.owner_profile_id only,
+-- so the legacy owner 'Founder' member row is gone (deleted by id so a reseed
+-- converges). The legacy profile-bound PENDING_APPROVAL row is replaced by a
+-- canonical pending email invitation for the Demo Leader account; it stays
+-- unlinked (profile_id NULL) until that account explicitly accepts (G2).
+DELETE FROM project_members WHERE id = '11000000-0000-0000-0000-000000000001';
+
+INSERT INTO project_members(id, project_id, profile_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at, updated_at) VALUES
+  ('11000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', NULL, 'Contributor', 'PENDING_CONFIRMATION', NULL, 'leader@example.test', '40000000-0000-0000-0000-000000000001', '2026-01-15T09:00:00Z', '2026-01-15T09:00:00Z')
 ON CONFLICT (id) DO UPDATE SET
-  role_label = EXCLUDED.role_label, state = EXCLUDED.state, joined_at = EXCLUDED.joined_at;
+  project_id = EXCLUDED.project_id, profile_id = EXCLUDED.profile_id,
+  role_label = EXCLUDED.role_label, state = EXCLUDED.state, joined_at = EXCLUDED.joined_at,
+  ended_at = NULL, invite_email_normalized = EXCLUDED.invite_email_normalized,
+  invited_by_profile_id = EXCLUDED.invited_by_profile_id,
+  invited_at = EXCLUDED.invited_at, updated_at = EXCLUDED.updated_at;
 
 -- ------------------------------------------------------- WF03 programmes/events
 

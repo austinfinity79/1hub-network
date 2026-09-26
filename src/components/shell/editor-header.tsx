@@ -3,7 +3,9 @@ import type { ReactNode } from 'react'
 import styles from './editor-header.module.css'
 
 /**
- * Editor header shared by the WF02 editors (S02 profile, S05 venture).
+ * Editor header shared by the WF02 editors (S02 profile, S05 venture) and the
+ * S06 team page. S06 draws the same band 2px shorter (82px + rule), passed in
+ * as `className` by that screen.
  *
  * Evidence: the approved WF02-S02 and WF02-S05 references draw the same band
  * (84px + 1px rule, title and status on the left, actions right-aligned at
@@ -14,13 +16,18 @@ export function EditorHeader({
   title,
   status,
   actions,
+  className,
 }: {
   title: ReactNode
   status: ReactNode
   actions: ReactNode
+  className?: string
 }) {
   return (
-    <header className={styles.header} data-shell="editor-header">
+    <header
+      className={className ? `${styles.header} ${className}` : styles.header}
+      data-shell="editor-header"
+    >
       <div>
         <p className={`type-body-md weight-medium ${styles.title}`}>{title}</p>
         <p className={`type-meta-xs ${styles.status}`} data-status>

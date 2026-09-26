@@ -12,6 +12,12 @@ export type AuditAction =
   | 'PROFILE_ACTIVATED'
   | 'MEMBERSHIP_REQUESTED'
   | 'ACCOUNT_DELETION_REQUESTED'
+  // WF02-S06 venture team (DEC-WF02-S06-G7): ids and states only, never the email.
+  | 'VENTURE_TEAM_INVITED'
+  | 'VENTURE_TEAM_JOINED'
+  | 'VENTURE_TEAM_INVITATION_REJECTED'
+  | 'VENTURE_TEAM_ROLE_CHANGED'
+  | 'VENTURE_TEAM_REMOVED'
 
 export async function writeAudit(
   exec: Executor,

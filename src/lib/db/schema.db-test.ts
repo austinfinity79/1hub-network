@@ -137,6 +137,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '006_p0_account_deletion_request.sql',
       // WF02-S05 (DEC-WF02-VENTURE-TAXONOMY-STORAGE): projects.region_id + project_domains.
       '007_p0_venture_taxonomy.sql',
+      // WF02-S06 (DEC-WF02-S06-G1, P12): team lifecycle + pending email invitations.
+      '008_p0_venture_team.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -180,6 +182,22 @@ describe('M0-T06B lifecycle gaps CLOSED by migration 002', () => {
 
     expect(values).toEqual(['DRAFT', 'ACTIVE', 'DEACTIVATED'])
     expect(values).not.toContain('INACTIVE')
+  })
+
+  it('stores the team membership states the SOT defines (008)', async () => {
+    // Data SOT :204 PENDING_CONFIRMATION -> ACTIVE -> LEFT | REMOVED | REJECTED.
+    expect(await enumValues('team_membership_state')).toEqual([
+      'PENDING_CONFIRMATION',
+      'ACTIVE',
+      'LEFT',
+      'REMOVED',
+      'REJECTED',
+    ])
+    const [column] = await query<{ udt_name: string }>(
+      `SELECT udt_name FROM information_schema.columns
+        WHERE table_name = 'project_members' AND column_name = 'state'`,
+    )
+    expect(column!.udt_name).toBe('team_membership_state')
   })
 
   it('leaves the shared enums unpolluted', async () => {

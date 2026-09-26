@@ -37,7 +37,7 @@ async function visit(page: Page, url: string): Promise<{ status: number; problem
  * browser's own "Failed to load resource: 404" line for that document is the
  * only console line tolerated for it.
  */
-const RESOURCE_SCOPED = new Set(['/projects/[id]/edit'])
+const RESOURCE_SCOPED = new Set(['/projects/[id]/edit', '/projects/[id]/team'])
 
 const PERSONAS = [
   { name: 'guest', email: null },

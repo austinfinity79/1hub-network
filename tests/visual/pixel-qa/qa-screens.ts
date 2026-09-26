@@ -133,9 +133,15 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
   cfg('WF02-S05', '/projects/:id/edit', 'member', 'owner edits the seeded ACTIVE startup', {
     id: FIXTURES.demoStartupId,
   }),
-  cfg('WF02-S06', '/projects/:id/team', 'member', 'team of own startup', {
-    id: FIXTURES.demoStartupId,
-  }),
+  cfg(
+    'WF02-S06',
+    '/projects/:id/team',
+    'member',
+    'owner views the seeded startup team: owner row, three ACTIVE members (test hook), the seeded pending invitation',
+    {
+      id: FIXTURES.demoStartupId,
+    },
+  ),
   cfg('WF02-S07', '/me/settings', 'member', 'settings: one current session, no deletion request'),
 
   // WF03 — HUB / Chapter / CLB Operations

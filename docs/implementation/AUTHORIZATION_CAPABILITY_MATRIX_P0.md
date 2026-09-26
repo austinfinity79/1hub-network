@@ -73,11 +73,11 @@ WF01 and WF02 own-account and own-profile actions are **not** in this catalogue 
 
 | Capability | Held by | Enforced in |
 |---|---|---|
-| `venture:read` | the owner (`projects.owner_profile_id`) and ACTIVE `project_members` | `GET /ventures/{id}`, `/projects/:id/edit` |
+| `venture:read` | the owner (`projects.owner_profile_id`) and ACTIVE `project_members` | `GET /ventures/{id}`, `/projects/:id/edit`, `GET /ventures/{id}/team`, `/projects/:id/team` (members: read-only, no pending data) |
 | `venture:manage` | the owner only | `PATCH /ventures/{id}` |
-| `venture:team_manage` | the owner only | WF02-S06 (`/ventures/{id}/team*`) |
+| `venture:team_manage` | the owner only | `POST /ventures/{id}/team/invitations`, `PATCH`/`DELETE /ventures/{id}/team/{membershipId}` (WF02-S06) |
 
-`role_label` never grants anything. Creating a venture needs no capability: onboarding DONE is enough (DEC-WF02-S05-G2).
+`role_label` never grants anything. Creating a venture needs no capability: onboarding DONE is enough (DEC-WF02-S05-G2). Accepting or declining a team invitation (`POST …/team/invitations/{membershipId}/accept|decline`, DEC-WF02-S06-G2) needs no capability either: only the signed-in recipient whose normalised account email equals the invitation email may act, and an ACTIVE membership grants `venture:read` only, never a RoleAssignment.
 
 The three `:self` identifiers in the session DTO example (`profile:read:self`, `profile:update:self`, `network:read:self`, API:135-137) are therefore **not** part of the ops catalogue. They remain frozen aliases in that contract example only, and D5 forbids adopting that convention as a second naming scheme.
 
