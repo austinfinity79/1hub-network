@@ -12,7 +12,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **M2 — WF02 Member Profile & Network: CLOSED** — 7/7 screens; completion audit **GREEN** ([audit](WF02_COMPLETION_AUDIT.md), [UAT matrix](WF02_UAT_MATRIX.md), [report](reports/WF02_completion-audit.md)). P0/P1/P2 = 0; UAT 7/7 cases (12 HC steps + 6 alternates) on the dev DB, a fresh install and after a restart. Release inputs: outbound email provider (magic link + team invitations), PO copy review for S05/S06, plus the WF01 inputs.
 
-**M3 — WF03 HUB / Chapter / CLB Operations: DECISIONS FROZEN, NOT STARTED** — DEC-WF03-G1..G15; executable scope **8 screens** (S01–S04, S06–S09); S05 = FUTURE / WF04. C1 closed (DEC-WF03-C1: S06 = profile / detail, S08 = relationships); S08 relationship contract frozen (DEC-WF03-S08-RELATIONSHIP-CONTRACT; migration 009); C2 closed (DEC-WF03-C2). **WF03-T00 ops foundation DONE** (OpsShell, /ops guard, org context, hierarchy reader, `GET /ops/organizations`). **WF03-S01 organization selector / list, WF03-S02 organization dashboard, WF03-S03 organization members, WF03-S04 membership review / leadership ops, WF03-S06 organization profile / detail, WF03-S07 standalone event management (DEC-WF03-S07-EVENT-LIFECYCLE), WF03-S08 organization settings / relationships and WF03-S09 public organization page DONE.** WF03: 8 / 8 executable screens; closing gate pending. Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). WF01 and WF02 are PROTECTED / CLOSED / GREEN.
+**M3 — WF03 HUB / Chapter / CLB Operations: PROTECTED / CLOSED / GREEN** — completion audit **GREEN** ([audit](WF03_COMPLETION_AUDIT.md), [UAT matrix](WF03_UAT_MATRIX.md), [report](reports/WF03_completion-audit.md)); P0/P1/P2 = 0; UAT-WF03-J1 20 steps + SEC-WF03-01 + NEG-WF03; fresh / upgrade / restart PASS. History: DEC-WF03-G1..G15; executable scope **8 screens** (S01–S04, S06–S09); S05 = FUTURE / WF04. C1 closed (DEC-WF03-C1: S06 = profile / detail, S08 = relationships); S08 relationship contract frozen (DEC-WF03-S08-RELATIONSHIP-CONTRACT; migration 009); C2 closed (DEC-WF03-C2). **WF03-T00 ops foundation DONE** (OpsShell, /ops guard, org context, hierarchy reader, `GET /ops/organizations`). **WF03-S01 organization selector / list, WF03-S02 organization dashboard, WF03-S03 organization members, WF03-S04 membership review / leadership ops, WF03-S06 organization profile / detail, WF03-S07 standalone event management (DEC-WF03-S07-EVENT-LIFECYCLE), WF03-S08 organization settings / relationships and WF03-S09 public organization page DONE.** WF03: 8 / 8 executable screens; closing gate PASSED. Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). WF01 and WF02 are PROTECTED / CLOSED / GREEN.
 
 | Screen | State |
 |---|---|
@@ -113,7 +113,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF03 COMPLETION AUDIT + HAPPY PATH UAT + FRESH DB / MIGRATION / RESTART + FULL WORKFLOW PIXEL REGRESSION. [Plan](WF03_SCREEN_IMPLEMENTATION_PLAN.md).
+PHASE 0 INTEGRATED RELEASE / PO REVIEW BUILD (WF01, WF02, WF03 all PROTECTED / CLOSED / GREEN). WF04 is not started automatically.
 
 ## Related
 

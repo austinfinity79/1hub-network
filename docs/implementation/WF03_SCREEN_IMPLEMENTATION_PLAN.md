@@ -1,6 +1,6 @@
 # WF03 Screen Implementation Plan
 
-**Status: DECISIONS FROZEN** ([DEC-WF03-G1..G15](../decisions/DECISION_LOG.md#dec-wf03-g1)). Executable P0 scope = **8 screens**; WF03-S05 = FUTURE / WF04 (G12). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). C1 closed by [DEC-WF03-C1](../decisions/DECISION_LOG.md#dec-wf03-c1) (S06 = profile / detail, S08 = relationships). S08 relationship contract frozen by [DEC-WF03-S08-RELATIONSHIP-CONTRACT](../decisions/DECISION_LOG.md#dec-wf03-s08-relationship-contract) (closes OPEN-WF03-S08-RELATIONSHIP-CONTRACT). C2 closed by [DEC-WF03-C2](../decisions/DECISION_LOG.md#dec-wf03-c2).
+**Status: CLOSED / GREEN** ([completion audit](WF03_COMPLETION_AUDIT.md)); decisions frozen ([DEC-WF03-G1..G15](../decisions/DECISION_LOG.md#dec-wf03-g1)). Executable P0 scope = **8 screens**; WF03-S05 = FUTURE / WF04 (G12). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). C1 closed by [DEC-WF03-C1](../decisions/DECISION_LOG.md#dec-wf03-c1) (S06 = profile / detail, S08 = relationships). S08 relationship contract frozen by [DEC-WF03-S08-RELATIONSHIP-CONTRACT](../decisions/DECISION_LOG.md#dec-wf03-s08-relationship-contract) (closes OPEN-WF03-S08-RELATIONSHIP-CONTRACT). C2 closed by [DEC-WF03-C2](../decisions/DECISION_LOG.md#dec-wf03-c2).
 
 ## Order
 | # | Task | Route | Inputs | Scope | Path | State |
@@ -14,7 +14,7 @@
 | 6 | S08 Organization settings / relationships | `/ops/org/:orgId/settings` | G9, DEC-WF03-C1, DEC-WF03-S08-RELATIONSHIP-CONTRACT, migration 009 | PARENT create / change / close over `organization_relationships` (`org:manage_relationship`, both ends) | Focused full preflight + freeze | **DONE** ([report](reports/WF03-S08_organization-relationships.md)) |
 | 7 | S07 Event management | `/ops/org/:orgId/events` | T00, G2, G10, G14 | Standalone list / detail / create / edit / publish / cancel; S07 screen-contract addendum | Full preflight (addendum + lifecycle) | **DONE** ([report](reports/WF03-S07_event-management.md); lifecycle [DEC-WF03-S07-EVENT-LIFECYCLE](../decisions/DECISION_LOG.md#dec-wf03-s07-event-lifecycle)) |
 | 8 | S09 Public organization page | `/organizations/:slug` | G13, G9, G10 | Public-safe projection + published standalone events | Fast path | **DONE** ([report](reports/WF03-S09_public-organization.md)) |
-| 9 | WF03 completion audit + UAT | — | 1–8 | Closing gate (§I) | — | — |
+| 9 | WF03 completion audit + UAT | — | 1–8 | Closing gate (§I) | — | **DONE — GREEN** ([audit](WF03_COMPLETION_AUDIT.md), [UAT](WF03_UAT_MATRIX.md)) |
 | — | S05 Unit programmes | `/ops/org/:orgId/programmes` | G12 | **FUTURE / WF04 — not implemented** | — | FUTURE |
 
 **Why S06 before S08:** S06 (profile) needs no hierarchy writes, while S08 depends on the G9 invariant and on optional migration 009. C1 is closed (DEC-WF03-C1) and the S08 relationship contract is frozen; S06 and S08 are done. S07 and S09 are done: all 8 executable screens are implemented. Next: the WF03 closing gate (#9).

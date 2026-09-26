@@ -1,51 +1,36 @@
 # Claude Task Report
 
 ## Task
-WF03-S09 — PUBLIC ORGANIZATION PAGE. Process: PROCESS-P0-ACCELERATED-SAFE-V2, fast path.
+WF03 COMPLETION AUDIT + HAPPY PATH UAT + FRESH DB / MIGRATION / RESTART + FULL WF03 PIXEL / SECURITY / REGRESSION. Process: PROCESS-P0-ACCELERATED-SAFE-V2, workflow closure.
 
-## Status
-**DONE — LOCAL REVIEW.** The contract freeze precheck (SCR S09, API §8.5, G4 / G9 / G10 / G13, DEC-WF01-S07-D2, schema, ADM reference) found no new conflict. Implementation decisions: DEC-WF03-S09-D1..D4.
+## Verdict
+**GREEN — WF03 PROTECTED / CLOSED / GREEN.** Details: [WF03_COMPLETION_AUDIT.md](../WF03_COMPLETION_AUDIT.md) and [WF03_UAT_MATRIX.md](../WF03_UAT_MATRIX.md).
 
-## Scope completed
-- **API:** `GET /api/v1/organizations/by-slug/{slug}` returns `OrganizationPublicDTO`: public, one projection for every caller.
-- **Page:** `/organizations/:slug`, its own public layout (no OpsShell / MemberShell). It replaces the placeholder.
-  - Top bar, hero with three canonical counts, children cards, upcoming events, join band, footer.
-  - A not-found slug renders the shell 404.
-- **Public route group:** no longer wraps a width container (S09 is its only screen).
-- **Shell evidence:** moved from the former S09 placeholder to the last placeholder, WF03-S05, with a new baseline `shell-ops-placeholder.png`. The orphaned `shell-public-placeholder.png` was removed. The route sample slug is now the seeded `chapter-01`.
+## Scope
+- New UAT spec `tests/visual/specs/wf03-uat-journey.spec.ts`:
+  - UAT-WF03-J1: the 20-step happy path with DB checks;
+  - SEC-WF03-01: 4 actors × 18 protected calls incl. IDOR;
+  - NEG-WF03: workflow invariants.
+- Fresh DB, upgrade (006 → 009), rerun, restart and full regression proofs.
+- Closure docs.
+- No product code changed; no defect needed a fix.
 
 ## Files changed
-- `src/lib/public/organization.ts`
-- `src/app/api/v1/organizations/by-slug/[slug]/route.ts`
-- `src/app/(public)/layout.tsx`, `src/app/(public)/organizations/[slug]/{page.tsx, public-organization.module.css}`
-- `src/lib/routes.ts` (sample slug)
-- Tests:
-  - `tests/visual/specs/wf03-s09-public-organization.spec.ts`
-  - `tests/visual/specs/shell-routes.spec.ts`
-  - `tests/visual/pixel-qa/qa-screens.ts`
-  - `tests/visual/specs/api-contract.spec.ts` (comment)
-  - `tests/visual/baseline/shell-ops-placeholder.png` (new); `shell-public-placeholder.png` (removed)
-- Docs: DECISION_LOG (DEC-WF03-S09-D1..D4), WF03 plan, P0_STATUS, CLAUDE_LATEST_REPORT
+- `tests/visual/specs/wf03-uat-journey.spec.ts` (new)
+- `docs/implementation/WF03_COMPLETION_AUDIT.md`, `WF03_UAT_MATRIX.md` (new)
+- `docs/implementation/WF03_SCREEN_IMPLEMENTATION_PLAN.md`, `P0_STATUS.md`, `CLAUDE_LATEST_REPORT.md`
+- This report
 
-## Migration / data
-None. Schema, seed and `design-reference/final` are unchanged.
+## Migrations / data
+No new migration.
 
-## Security / privacy (14 cases PASS)
-| # | Case | Result |
-|---|---|---|
-| 1 | Guest sees the PUBLISHED Chapter 01 page | PASS |
-| 2 | Unknown slug → public 404 (page + API) | PASS |
-| 3 | DRAFT / ARCHIVED / COMPANY / malformed slugs → identical 404 | PASS |
-| 4–8 | No email, phone, pending / rejected / provenance data, roles or capabilities, audit data | PASS |
-| 9 | A PUBLIC-override profile stays hidden (discovery is never public for a guest) | PASS |
-| 10 | Leadership does not surface a person | PASS |
-| 11 | A programme-linked PUBLISHED event does not appear | PASS |
-| 12 | DRAFT / CANCELLED / LIVE / past events do not appear | PASS |
-| 13 | No metadata and no UUIDs in the DTO | PASS |
-| 14 | Member, leader and admin receive exactly the guest DTO and page text | PASS |
-
-- Hierarchy: a DRAFT child and a `parent_id`-only child are not listed.
-- Server log: 0 email / token / cookie lines.
+| Proof | Result |
+|---|---|
+| Fresh DB | 001→009 in order; rerun skipped 9/9; checksums match; seed deterministic (12 tables) |
+| Upgrade 006 → 009 | 10 canonical tables identical |
+| Restart (app + PostgreSQL) | 14 tables identical; session and public page identical |
+| Throwaway databases | Dropped afterwards |
+| Dev fixtures | Intact (see WF03-P3-01) |
 
 ## Tests
 | Gate | Result |
@@ -53,34 +38,33 @@ None. Schema, seed and `design-reference/final` are unchanged.
 | Format / lint / typecheck / build | PASS |
 | Unit | 157 passed |
 | DB (full) | 334 passed |
-| S09 Playwright | 7/7 |
-| Targeted regression | 108 passed: T00, S01–S04, S06–S09, api-contract, shell-routes (33), console-health |
+| WF03 UAT spec | 3/3 on the dev DB; 3/3 on the fresh DB; 3/3 ×2 after restart |
+| WF03 screen specs on the fresh DB | 66 passed |
+| Full visual suite (WF01 + WF02 + WF03 + shell / contract / console) | 431 passed, 24 skipped (pre-existing), 0 failed |
+| Server log (full run) | 0 email / token / cookie / session lines |
 
-## Pixel (1440×900 DPR1; full reference 2511px, compared per section)
-| Segment | Outside-text drift |
-|---|---|
-| Frame / top bar / hero | 0 / 44 / 400 px (≤ 0.07%) |
-| Children section / card top | 0 / 4 |
-| Events section / card top | 0 / 0 |
-| Join band | 713 px (0.17%, gradient raster) |
-| Footer | 0 |
+## Visual QA
+- P0 structural / P1 major / P2 component: 0.
+- P3 raster: S03, S04, S07, S08, S09 (≤ 0.17% outside text).
+- Intentional classes are per screen.
+- Approved baselines untouched.
 
-- Structural / major / component: 0 / 0 / 0.
-- Intentional:
-  - the omitted sections move the later sections up (page height 1933px);
-  - no-source content is not rendered (DEC-WF03-S09-D4);
-  - typography migration.
+## Defects
+- P0 / P1 / P2: 0.
+- P3: 5 (WF03-P3-01..05 in the audit), including one closure-harness incident: dev fixtures were changed by the first matrix draft, then restored and the spec fixed. Not a product defect.
 
-## Blocking gaps
-0.
+## External / release inputs
+1. Real roster data and organization tree.
+2. Production legal content, production vocabulary, email provider.
+3. PO copy review.
 
 ## Git
-- Branch: `main`; start HEAD `6a63cce` (checked again before each commit)
-- Implementation commit: `8e56450`
+- Branch: `main`; start HEAD `5780870` (checked again before each commit)
+- Implementation commit: `4bfc637` (UAT spec; no product code changed)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-WF03 COMPLETION AUDIT + HAPPY PATH UAT + FRESH DB / MIGRATION / RESTART + FULL WORKFLOW PIXEL REGRESSION.
+PHASE 0 INTEGRATED RELEASE / PO REVIEW BUILD. Do not start WF04 automatically.
