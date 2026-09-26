@@ -1085,7 +1085,18 @@ Resolution: a human decision on E1–E5, recorded as DEC-WF03-S07-EVENT-LIFECYCL
 |---|---|
 | <a id="dec-wf04-s05-d1"></a>DEC-WF04-S05-D1 | **Configuration = the frozen `RegistrationConfigDTO`.** CONFIG DEMO: who may apply — primary applicant types `INDIVIDUAL` / `TEAM` / `STARTUP` ("Cá nhân" / "Đội" / "Startup"; SOT §12, one primary applicant per application), and programme-specific questions as plain text (SOT §12 `programme_specific_answers`; no types, rules, branching, uploads or form builder). REUSE: the SOT §12 profile-reuse rule, stated on the screen. DEMO read-only: application counts by SOT §6 state, never changed by S05. FUTURE (not frozen, not rendered): open / close switch, registration period, eligibility conditions, review, verification, notifications, payment. An empty configuration is allowed ("Chưa cấu hình đăng ký"). H5 unchanged: registration is never a publish prerequisite. A choice never grants a capability |
 | <a id="dec-wf04-s05-d2"></a>DEC-WF04-S05-D2 | **Edit rules.** One pure, atomic edit (`registration.ts`): an unknown applicant type or a blank question refuses the whole save and changes nothing; types are stored in canonical order, once; questions are trimmed. Save is guarded against a double submit; success shows "Đã lưu cấu hình đăng ký."; a refused browser write uses the `SetupScreen` "Thử lại" |
-| <a id="dec-wf04-s05-d3"></a>DEC-WF04-S05-D3 | **Navigation.** S04 "Tiếp theo" → `setup/registration`; S05 "← Sự kiện" → `setup/events`; S05 "Tiếp theo" disabled with its reason until WF04-S06 |
+| <a id="dec-wf04-s05-d3"></a>DEC-WF04-S05-D3 | **Navigation.** S04 "Tiếp theo" → `setup/registration`; S05 "← Sự kiện" → `setup/events`; S05 "Tiếp theo" disabled with its reason until WF04-S06 (**now opens S06, [DEC-WF04-S06-D3](#dec-wf04-s06-d3)**) |
+
+
+## DEC-WF04-S06 — Operating team implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS under WF04-S06 (2026-09-27), inside DEC-WF04-H2 and T00-D1; no field, role, capability or route added. Report: [WF04-S06](../implementation/reports/WF04-S06_programme-team.md).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf04-s06-d1"></a>DEC-WF04-S06-D1 | **Display only.** S06 renders the current programme's `team` rows from the fixture / session copy — `display_name` and `role_label` shown as "Người tổ chức chương trình" in a neutral pill — plus a count and an empty state; the WF02-S06 member row language (32 px avatar disc, medium name). No invite, add, remove, role, permission, scope, ownership or account column or control; no member-directory read. PROGRAMME_ORGANIZER stays a display label (H2): it grants no capability and writes no RoleAssignment. IndividualProfile, membership, leadership, RoleAssignment and the programme label stay separate and untouched |
+| <a id="dec-wf04-s06-d2"></a>DEC-WF04-S06-D2 | **Read error + retry.** S06 makes no request and no write, so its only failure is a session store the browser refuses to read. `SetupScreen` (all setup steps) then shows "Trình duyệt chưa cho đọc dữ liệu demo của phiên này." with "Thử lại" (re-read), shows no programme data, and every store write is refused until the store can be read, so session data is never overwritten |
+| <a id="dec-wf04-s06-d3"></a>DEC-WF04-S06-D3 | **Navigation.** S05 "Tiếp theo" → `setup/team`; S06 "← Đăng ký" → `setup/registration`; S06 "Tiếp theo" disabled with its reason until WF04-S07 |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
