@@ -19,6 +19,17 @@ Browser ─HTTPS─▶ OneShield/WAF ─▶ Nginx :80/:443 (origin) ─▶ 127.0
 | Compose project | `onehub` (`db`, `app`); restart `unless-stopped`; healthchecks; json-file logs 3 x 10 MB |
 | Image | `onehub-app:<full-sha>`, built from `git archive <sha>` with `deploy/Dockerfile` |
 
+## Current release
+
+| Item | Value |
+|---|---|
+| Deployed | `0a2df094b941f6d0f0fc87cdb7767b2e92272198` (Phase 0: WF01–WF03 GREEN), 2026-09-26 16:41 UTC |
+| Previous | `95e9ee87011fc67befdc6d87f7ce4513fc78fcab`; rollback round trip verified on schema 009 |
+| Migrations | 001–009 applied; a rerun skips all 9 |
+| Pre-deploy backup | `onehub-20260926T164120Z.dump` (81,932 B, 185 `pg_restore --list` entries) |
+| Data fix | DEC-WF02-S06-G9: before 008, the legacy fixture row `project_members 11000000-…-0002` (PENDING_APPROVAL) was deleted; the reseed recreated it as a canonical PENDING_CONFIRMATION invitation |
+| Review guide | [PO_UI_UX_REVIEW.md](PO_UI_UX_REVIEW.md), [PO_REVIEW_CHECKLIST.md](PO_REVIEW_CHECKLIST.md) |
+
 ## Server paths
 
 | Path | Purpose |
