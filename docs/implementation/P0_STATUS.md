@@ -8,7 +8,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: IN PROGRESS — 7 / 8 screens CLOSED (87.5%).**
+**M1 — WF01 Identity & Onboarding: 8 / 8 screens CLOSED (100%)** — pending the WF01 completion audit and happy-path UAT. Release/UAT blocker: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
 
 | Screen | State |
 |---|---|
@@ -19,7 +19,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S05 Onboarding Purpose | CLOSED / PASS — P0 intent allowlist (4 codes, no investor), skip keeps intent NULL, server guard; investor option = INTENTIONAL-P0-SCOPE; DEC-WF01-S05-D1..D6 ([report](reports/WF01-S05_onboarding-purpose.md), [contract](WF01_S05_INTENT_CONTRACT_GAP.md)) |
 | WF01-S06 Onboarding Profile | CLOSED / PASS — six fields; DOMAIN+SKILL picker (max 5); private avatar storage; one completion service for `/session`, `/me/profile`, `/me/profile/completion`; DEC-WF01-S06-D1..D6 ([report](reports/WF01-S06_onboarding-profile.md), [contract](WF01_S06_PROFILE_FIELD_CONTRACT.md)) |
 | WF01-S07 Privacy & Visibility | CLOSED / PASS — one acknowledgement → two versioned ConsentRecords; PROFILE_DISCOVERY (NETWORK_ONLY/PRIVATE); avatar visibility enforced at `/media/assets/:id`; Future purposes and skip omitted; DEC-WF01-S07-D1..D8 ([report](reports/WF01-S07_privacy-visibility.md), [contract](WF01_S07_PRIVACY_CONSENT_CONTRACT.md)) |
-| WF01-S08 Onboarding Complete | Not started; route remains an M0-T03 placeholder |
+| WF01-S08 Onboarding Complete | CLOSED / PASS — completion on entry (idempotent, atomic DRAFT → ACTIVE); activation minimum only; `PROFILE_ACTIVATED` audit and `onboarding_completed` analytics once; Challenge/Project/Chapter cards deferred; exit → `/me`; DEC-WF01-S08-D1..D8 ([report](reports/WF01-S08_onboarding-complete.md), [contract](WF01_S08_COMPLETION_CONTRACT.md)) |
 
 ## Completed (committed)
 
@@ -52,6 +52,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S05 | Onboarding Purpose: `GET /me/onboarding`, `PUT /me/onboarding/intent`, onboarding header shell |
 | WF01-S06 | Onboarding Profile: `GET/PATCH /me/profile`, `/me/profile/completion`, `/me/profile/avatar`, `/vocabularies/{type}`, `/media/assets/:id` |
 | WF01-S07 | Privacy & Visibility: `/legal/current`, `/legal/{kind}/{version}`, `/me/consents`, `/me/consents/accept`, `/me/visibility`, audit writer |
+| WF01-S08 | Onboarding Complete: `POST /me/onboarding/complete`, analytics writer (`onboarding_completed`, `profile_completion_changed`) |
 
 ## Not yet built (M0)
 
@@ -87,7 +88,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF01-S08 Onboarding Complete — awaiting explicit authorization. Not started.
+WF01 completion audit + happy-path UAT — awaiting explicit authorization. WF02 not started.
 
 ## Related
 

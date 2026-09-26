@@ -1,97 +1,92 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF01-S07-DECISION-FREEZE + WF01-S07 — Privacy & Visibility (`/onboarding/privacy`)
-- Status: **DONE**. The one remaining blocker is release content: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
-- Mode: LOCAL REVIEW. Committed locally, not pushed. WF01-S08 not started.
+- Task ID / name: WF01-S08-DECISION-FREEZE + WF01-S08 — Onboarding Complete (`/onboarding/complete`)
+- Status: **DONE**. The one remaining blocker is release/UAT: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
+- Mode: LOCAL REVIEW. Committed locally, not pushed. WF02 not started.
 
 ## 2. Decisions
-- DEC-WF01-S07-D1..D8 are recorded in [DECISION_LOG.md](../decisions/DECISION_LOG.md).
-- [WF01_S07_PRIVACY_CONSENT_CONTRACT.md](WF01_S07_PRIVACY_CONSENT_CONTRACT.md) is now **HUMAN APPROVED — P0**.
-- `LEGAL_DOCUMENT_VERSION_STALE` (409) and `VISIBILITY_VALIDATION_FAILED` (422) sit in `DECISION_ERROR_CODES`; a unit test guards that both are recorded in the log.
+- DEC-WF01-S08-D1..D8 are recorded in [DECISION_LOG.md](../decisions/DECISION_LOG.md), together with DEC-WF01-S07-D2A (region belongs to PROFILE_DISCOVERY).
+- [WF01_S08_COMPLETION_CONTRACT.md](WF01_S08_COMPLETION_CONTRACT.md) is now **HUMAN APPROVED — P0**.
 
 ## 3. Scope implemented
 | Area | Result |
 |---|---|
-| Legal | `GET /legal/current`: per type, the latest effective, non-retired document. `/legal/{kind}/{version}` serves text from `LEGAL_CONTENT_DIR`; dev servers fall back to marked non-production fixtures, production has no fallback (404 = release blocker) |
-| Consent | `GET /me/consents`, `POST /me/consents/accept`. Idempotency store with the key scoped to the actor; UNIQUE-backed deduplication; 201 new / 200 existing; server timestamp; `CONSENT_ACCEPTED` audit |
-| Visibility | `GET/PUT /me/visibility`, own profile only; `PROFILE_DISCOVERY` NETWORK_ONLY / PRIVATE; the override is stored only when it departs from the default; `PROFILE_VISIBILITY_CHANGED` audit on real changes |
-| Media | `/media/assets/:id`: owner always; others only for the current avatar with discovery NETWORK_ONLY or wider; otherwise 404 (D5 closes the S06 bypass) |
-| UI | One switch, one acknowledgement with links to both current documents, read-only card preview, "Quay lại", "Xong, vào HUB" → `/onboarding/complete`. No skip (D6), no Future purposes (D3), lede emphasis without asterisks (D7) |
-| Lifecycle | S07 never sets ACTIVE or `onboarding_completed_at`; S08 owns completion |
-| Bug found by the DB tests | Legal state first matched acceptances by version string, so an old Terms acceptance could count when its version string equalled the current Privacy version. It now matches by document id |
+| API | `POST /me/onboarding/complete` checks only the activation minimum; 422 `ONBOARDING_REQUIREMENTS_MISSING` returns `fields` (display_name, region_id, TERMS_ACCEPTANCE, PRIVACY_DATA_PROCESSING); already completed → 200 with the same body; the request body is ignored |
+| Transition | One transaction with the row locked: DRAFT → ACTIVE, `onboarding_completed_at = now()` once. Deactivated → 409 |
+| Audit | `PROFILE_ACTIVATED` (before/after status, request id) only on the real DRAFT → ACTIVE transition |
+| Analytics | One writer (`src/lib/analytics/analytics.ts`) on `analytics_events`: `onboarding_completed` once; `profile_completion_changed` from `PATCH /me/profile` and avatar upload when the percent moves. API §10 common properties only |
+| UI | S08 completes on entry. Pending → success after the server confirms; 422 → what is missing, linked to S06/S07; failure → retry. Title, neutral lede, server percent plus neutral panel copy, SVG info mark, "Vào 1hub.network" → `/me`. Finished stepper (all done, none current), no skip |
+| Not rendered | Challenge (demo scope), Project and Chapter (WF02 dependencies) |
+| Shell | `OnboardingShell` accepts `currentStep={4}` (all done); S05–S07 unchanged |
+| Bug found during work | The first analytics SQL used `$1` as both uuid and text ("inconsistent types"), which made `PATCH /me/profile` fail with 500. The DB tests caught it before commit and it was fixed |
 
 ## 4. Files
 - **API/domain:**
-  - `src/lib/{legal/legal,legal/content,audit/audit,profile/visibility}.ts`
-  - Routes: `api/v1/legal/current`, `api/v1/me/consents{,/accept}`, `api/v1/me/visibility`, `app/legal/[kind]/[version]`
-  - `media/assets/[id]` (authorisation)
-  - `lib/api/error-codes.ts` plus its contract test
-- **UI:** `onboarding/privacy/{page,privacy-form}.tsx`, `privacy.module.css`
+  - `src/lib/onboarding/complete.ts`, `src/lib/analytics/analytics.ts`
+  - `api/v1/me/onboarding/complete/route.ts`
+  - Edited: `profile.ts`, `avatar/route.ts` (completion events), `audit.ts`, `visibility.ts` (comment for D2A)
+- **UI:** `onboarding/complete/{page,complete-view}.tsx`, `complete.module.css`, `components/shell/onboarding-shell.tsx`
 - **Tests:**
-  - `legal.db-test.ts` (14)
-  - `wf01-s07-onboarding-privacy.spec.ts` (21)
-  - `shell-routes`: S07 marked as guarded
-- **Content/config:** `content/legal-fixtures/*` (marked non-production), `.env.example` (`LEGAL_CONTENT_DIR`)
-- **Migrations / production data:** **none**
+  - `complete.db-test.ts` (12)
+  - `wf01-s08-onboarding-complete.spec.ts` (14)
+  - `shell-routes`: S08 marked as guarded
+- **Migrations / production data:** **none**. `OnboardingCompletion` is logical
 
-## 5. Security / privacy QA (Playwright 21/21, DB 14/14)
-Covered:
-- guest → `/auth` and 401 on all S07 APIs;
-- current documents from the server, with content links working and fixtures marked;
-- versions never asserted as literals;
-- one checkbox → two records;
-- no acceptance → no progression;
-- triple submit → 2 accept calls and 2 records;
-- idempotent replay and duplicate-safe re-accept (one audit event);
-- stale version → 409;
-- race A (Privacy fails, retry, Terms not duplicated), race B (V2 published while S07 is open → reload, V2 required), race C (revisit, nothing re-sent);
-- default NETWORK_ONLY; OFF → PRIVATE override; ON removes it;
-- audit events for both mutation types; unknown group or level → 422;
-- no cross-profile write; DTOs without contact data or metadata;
-- avatar: owner 200 / member 200 → 404 after PRIVATE / guest 404;
-- no skip, no Future purpose;
-- D7 emphasis;
-- keyboard/a11y; computed text colours;
+## 5. Functional / security QA
+DB 12/12 and Playwright 13/13 functional tests, covering:
+- guest → `/auth` and 401;
+- missing name, region, Terms or Privacy → 422 with no change;
+- completion below 80% and with NULL intent;
+- DRAFT → ACTIVE with a server timestamp that is kept on retry;
+- retry and refresh return 200;
+- 4–5 concurrent calls → one audit and one analytics row;
+- `/session` shows ACTIVE and completed immediately;
+- the percent equals the service's, and a client `completion_percent` is ignored;
+- still one profile;
+- a PENDING membership stays PENDING and none is created;
+- a deactivated profile → 409;
+- audit and analytics payloads contain no name, email or consent content;
+- a 500 shows no success and the retry works;
+- the only link is `/me`; no challenge, project, chapter or skip;
+- the stepper is not interactive; keyboard; text colours;
 - zero console errors.
 
 ## 6. Pixel QA (1440×900 DPR1)
-The typography contract passes. Outside-text diff by segment:
-- header and canvas: 0;
-- card-upper (title, lede, discovery option): 26 px (0.013%);
-- card-lower (preview, divider, footer): 75 px (0.035%).
-
-The discovery option, preview card, Back button and CTA all sit exactly at the baseline position + dy.
+The typography contract passes. **Every segment has 0 px outside text:** header, discs 1–2, connectors, canvas, card-upper (dy +142), info-panel-top (dy −192) and card-bottom (dy −140).
 
 **Classification:** Structural 0 / Major 0 / Component 0.
 
 | Class | What differs |
 |---|---|
-| INTENTIONAL-LEGAL-REQUIREMENT | Acknowledgement block and links (D1); skip omitted (D6); two copy clauses omitted because they would misstate D2 visibility ("Thẻ này Google tìm thấy được", "người chưa đăng nhập thấy đúng ngần này") |
-| INTENTIONAL-P0-SCOPE | Investor, challenge-owner and recruitment toggles (reference y 300–620) |
-| INTENTIONAL-COMPOSITION | The baseline is a scrolled viewport with the card over the header, and the stepper is hidden under the card, so the stepper is not compared |
-| INTENTIONAL-TYPOGRAPHY-MIGRATION | Text glyphs, including the 13px preview caption and chips |
-| RASTER-NOISE | Half-pixel box edges; the boxes are asserted within 1px instead |
+| INTENTIONAL-DEMO-SCOPE | Card 01 |
+| TEMPORARY-PRODUCTION-DEPENDENCY | Cards 02 and 03 |
+| INTENTIONAL-CONTRACT | Skip omitted, disc 3 shown done, `/me` CTA added, card shorter and re-centred |
+| INTENTIONAL-COPY | Old lede and panel wording, masked |
+| INTENTIONAL-ICON-RENDERING | SVG info mark instead of the OS emoji |
+| RASTER-NOISE | Half-pixel card edges |
 
 ## 7. Validation
 | Gate | Result |
 |---|---|
 | Format / Lint / Typecheck | PASS |
-| Unit / DB | 115 / 169 |
+| Unit / DB | 115 / 181 |
 | Build | PASS |
-| S01–S06 regression | PASS. Segments unchanged: S01 0/0/0/0/1; S02 0/0/0/14/3; S03 71/247/97; S04 1, 1/3; S05 193/245; S06 6/503 |
-| Full Playwright | 236 passed (215 + 21); 24 screen runs skipped by design |
+| S01–S07 regression | PASS. Segments unchanged: S01 0/0/0/0/1; S02 0/0/0/14/3; S03 71/247/97; S04 1, 1/3; S05 193/245; S06 6/503; S07 26/75 |
+| S08 Playwright | 14 / 14 |
+| Full Playwright | 250 passed (236 + 14); 24 screen runs skipped by design |
 | `design-reference/**` | untouched |
 
 ## 8. Notes for review
-1. **Release blocker `PRODUCTION_LEGAL_CONTENT_REQUIRED`.** Real Terms and Privacy text and versions must be supplied through `LEGAL_CONTENT_DIR` plus `legal_documents` rows.
-2. **Region vs D2.** The approved copy and preview include region ("tỉnh"); D2's field list does not. The preview is owner-only; confirm before building the `/profiles/{id}` projection.
-3. **Copy review.** The acknowledgement sentence and the error/stale messages have no approved bitmap.
-4. **Seed.** The newcomer and ops personas have `default_level = PRIVATE` and pending has PUBLIC, so the pixel test sets NETWORK_ONLY explicitly. The PUBLIC seed value is displayed as ON and is not offered.
+1. **Release/UAT blocker `PRODUCTION_LEGAL_CONTENT_REQUIRED`.** Production must not complete onboarding against fixture documents.
+2. **Copy review.** The lede, neutral panel sentence, CTA label and the pending/missing/failure messages have no approved bitmap.
+3. **Analytics not yet emitted.** The other API §10 events (account_created, consent_accepted, visibility_changed, membership_* …) are still not emitted. They can use the same writer in a later task.
+4. **Roster pre-seed.** `membership_bootstrap` consumption is still absent (WF02/roster scope).
+5. **Test data.** The pixel run leaves the seeded newcomer's consent rows and audit/analytics rows in the dev database. Re-seeding resets only the profile row.
 
 ## 9. Git
-- Branch: `main`; start HEAD `250d263`
-- Implementation commit: `8167942` feat(wf01-s07): privacy and visibility with versioned legal acceptance
+- Branch: `main`; start HEAD `6a3e205`
+- Implementation commit: `a3ee8fd` feat(wf01-s08): onboarding completion with an atomic, idempotent activation
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `2093836`
@@ -99,5 +94,5 @@ The discovery option, preview card, Back button and CTA all sit exactly at the b
 
 ## Related
 - [DECISION_LOG.md](../decisions/DECISION_LOG.md) — decision records
-- [WF01_S07_PRIVACY_CONSENT_CONTRACT.md](WF01_S07_PRIVACY_CONSENT_CONTRACT.md) — approved contract
+- [WF01_S08_COMPLETION_CONTRACT.md](WF01_S08_COMPLETION_CONTRACT.md) — approved contract
 - [P0_STATUS.md](P0_STATUS.md) — overall P0 state
