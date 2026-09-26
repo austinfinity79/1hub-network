@@ -1031,6 +1031,17 @@ Resolution: a human decision on E1–E5, recorded as DEC-WF03-S07-EVENT-LIFECYCL
 | <a id="dec-wf04-t00-d4"></a>DEC-WF04-T00-D4 | **Guard and entry.** `/demo/programmes/*` pages: the existing ops entry (no session → /auth; onboarding → resolver; no ops scope → 404), then `programme:read` somewhere, else 404. OpsShell foot shows "Demo · Internal Alpha / Chương trình & Challenge" → `/demo/programmes` in every OpsShell context, current on demo pages. WF03 navigation and the FUTURE route `/ops/org/:orgId/programmes` (WF03-S05) are unchanged and unlinked |
 | <a id="dec-wf04-t00-d5"></a>DEC-WF04-T00-D5 | **Frame and routes.** Every demo screen renders in `DemoPage`: the ADM header band, then the ADM5-style "Dữ liệu demo · Internal Alpha" notice with "Đặt lại demo"; no WF01–WF03 screen uses it. T00 renders `/demo/programmes` as that frame with in-scope totals; the other audit routes (`/new`, `/:id`, `/:id/setup/{basic,journey,events,registration,team,review}`) are built by S01–S08 and are the ordinary 404 until then (no placeholder, no link). Route builders live in `src/lib/programme-demo/routes.ts`, apart from the WF01–WF03 contract manifest |
 
+
+## DEC-WF04-S01 — Programme / Challenge list implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS under WF04-S01 (2026-09-27), within DEC-WF04-H1..H5 and T00-D1..D5; no business rule, field, status or route added. Report: [WF04-S01](../implementation/reports/WF04-S01_programme-list.md).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf04-s01-d1"></a>DEC-WF04-S01-D1 | **Rows do not navigate yet.** `/demo/programmes/:id` has no screen until WF04-S08, so rows carry no link (INTENTIONAL-DEMO); no placeholder detail is built. S08 makes the row the entry to the detail |
+| <a id="dec-wf04-s01-d2"></a>DEC-WF04-S01-D2 | **"Tạo mới" disabled until S02.** Rendered in the ADM5 header-button family, `disabled` + `aria-disabled`, reason "Chưa có trong phiên bản này" in `title` and the accessible name (the DEC-P0-SHELL-D2 inert pattern; the navigation matrix records it as DISABLED). No link to `/demo/programmes/new`. S02 enables it |
+| <a id="dec-wf04-s01-d3"></a>DEC-WF04-S01-D3 | **Content and presentation.** One source, `GET /api/v1/demo/programmes`, merged with the actor's session store: session drafts newest first, then the server's order; a session copy replaces its row; an id is shown once. Columns are DTO fields only: Tên, Đơn vị chủ trì (owner organization name), Loại (Chương trình / Challenge), Thời gian (dd/MM/yyyy, Asia/Ho_Chi_Minh), Bài toán (count for CHALLENGE, "—" for PROGRAMME), Trạng thái. Status pills use the ADM5 families: PUBLISHED "Đang công khai" = open-state, DRAFT "Bản nháp" = neutral. ADM5 table card and first four column tracks; the problem-count track is narrowed so the status pill is never clipped. States: loading, populated, empty ("…trong phạm vi tổ chức của bạn"), error with "Thử lại" only. Below 1160px the table scrolls inside its card and the header / notice wrap below 1024px; OpsShell stays desktop-first (P0-SHELL PO item) |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

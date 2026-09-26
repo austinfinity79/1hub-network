@@ -2,6 +2,8 @@
 
 **Status: FROZEN** ([DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1)). WF04 = DEMO. The dataset below is implemented by WF04-T00 ([DEC-WF04-T00-D1](../decisions/DECISION_LOG.md#dec-wf04-t00-d1)).
 
+**Progress:** J1 step 1 and J2's list step run today (WF04-S01: both fixtures listed, scoped, resettable). Row → S08 and "Tạo mới" → S02 open with those tasks (DEC-WF04-S01-D1/D2).
+
 ## Demo data (fixture, labelled DỮ LIỆU DEMO)
 | Record | Values | Notes |
 |---|---|---|
