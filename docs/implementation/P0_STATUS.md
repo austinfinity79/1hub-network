@@ -63,6 +63,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF02-T00 | Venture taxonomy storage decided (0 open decisions); member shell; `GET /me/network`; discovery projection helper; WF01 regression green |
 | WF02-S01 | Account Home `/me`: identity, server completion, nav cards, canonical organisations/ventures; pixel drift 0 outside text; H12 harness rule live |
 | WF02-S03 | Privacy `/me/privacy`: PROFILE_DISCOVERY (NETWORK_ONLY/PRIVATE), current legal status + re-acceptance, consent history; WF01-S07 services reused; pixel drift 0 |
+| WF02-S04 | Roles `/me/roles` + `POST /me/membership-requests` (PENDING_APPROVAL only, G1–G5 frozen); read-only canonical rows; pixel PASS |
 
 ## Not yet built (M0)
 
@@ -102,7 +103,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S04 BLOCKED at preflight: 5 open decisions (OPEN-WF02-S04 G1–G5, membership request); [report](reports/WF02-S04_roles-network.md). WF02 2 / 7 screens. Next: decide G1–G5, then WF02-S04.
+WF02-S04 done ([report](reports/WF02-S04_roles-network.md)); WF02 3 / 7 screens. Next: WF02-S02 — Profile Edit.
 
 ## Related
 

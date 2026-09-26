@@ -8,7 +8,7 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | 0 | WF02 Foundation | — | Member shell: P0 links live, the rest inert, no counters (H9). `GET /me/network`: memberships, leadership, venture relations, `activity_summary: []` (H5). PROFILE_DISCOVERY projection helper | WF01 services | **DONE** (WF02-T00) |
 | 1 | S01 Account home | `/me` | Summary, server completion + neutral missing-group copy (H13), navigation cards, "Tổ chức của tôi". "Đang chờ bạn" omitted (H10). No public link (H3) | 0 | **DONE** (WF02-S01) |
 | 2 | S03 Privacy | `/me/privacy` | PROFILE_DISCOVERY, consent history, re-acceptance (H4) | 0 | **DONE** (WF02-S03) |
-| 3 | S04 Roles & links | `/me/roles` | Memberships, leadership, venture roles with source label; membership request → PENDING_APPROVAL (H5, H11) | 0 | **BLOCKED** (OPEN-WF02-S04 G1–G5; read-only part unblocked) |
+| 3 | S04 Roles & links | `/me/roles` | Memberships, leadership, venture roles with source label; membership request → PENDING_APPROVAL (H5, H11) | 0 | **DONE** (WF02-S04) |
 | 4 | S02 Profile edit | `/me/profile/edit` | Canonical IndividualProfile fields + Experience / Development goal / Current need (H1, H2). Activity panel Future | 0 | **READY** (foundation done; no migration) |
 | 5 | S07 Settings | `/me/settings` | Sessions list, revoke one, revoke all, deletion request (H8) | 0; P13 deletion subset; revoke-all API addendum | **READY AFTER MIGRATION** (P13 subset) |
 | 6 | S05 Project/Startup | `/projects/new`, `/projects/:id/edit` | Five fields; owner-only write; review button omitted (H6, H7) | 0; venture taxonomy migration ([DEC-WF02-VENTURE-TAXONOMY-STORAGE](../decisions/DECISION_LOG.md#dec-wf02-venture-taxonomy-storage)) | **READY AFTER MIGRATION** (venture taxonomy) |
@@ -53,8 +53,8 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | HC-WF02-02 | Member edits profile incl. H1 groups, completion recalculates | After S02 |
 | HC-WF02-03 | Member changes PROFILE_DISCOVERY | **PASS** (WF02-S03) |
 | HC-WF02-04 | Network-visible profile | Owner view only; `/profiles/{id}` UI not in P0 (H3) |
-| HC-WF02-05 | Roster member sees membership/leadership | After 0/S04 |
-| HC-WF02-06 | Unmatched member requests membership → PENDING_APPROVAL | After S04 (H11) |
+| HC-WF02-05 | Roster member sees membership/leadership | **PASS** (WF02-S04) |
+| HC-WF02-06 | Unmatched member requests membership → PENDING_APPROVAL | **PASS** (WF02-S04) |
 | HC-WF02-07 | Member creates canonical Project/Startup | After S05 (taxonomy migration) |
 
 ## Related
