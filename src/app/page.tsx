@@ -1,15 +1,23 @@
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+
+import { SESSION_COOKIE_NAME } from '@/lib/auth/config'
+import { resolveSession } from '@/lib/auth/sessions'
+import { getOnboardingState, routeFor } from '@/lib/onboarding/state'
+
 /**
- * M0-T01 — bootstrap placeholder.
+ * M0-ENTRY-01 — `/` is routing infrastructure, not a screen.
  *
- * This is NOT an approved screen and has no pixel baseline in
- * design-reference/final. The real route groups and the public landing screen
- * are delivered by M0-T03 and M1.
+ * Replaces the M0-T01 bootstrap placeholder. Server-side only, so nothing
+ * renders before the redirect:
+ * - no valid session (missing, expired or revoked) → /auth;
+ * - otherwise the ONE onboarding resolver decides (DEC-WF01-RESUME-D1):
+ *   the first incomplete WF01 step, or /me once onboarding is DONE.
  */
-export default function BootstrapPage() {
-  return (
-    <main>
-      <h1>1hub.network</h1>
-      <p>Foundation bootstrap. No workflow screens are implemented yet.</p>
-    </main>
-  )
+export const dynamic = 'force-dynamic'
+
+export default async function RootEntry(): Promise<never> {
+  const session = await resolveSession((await cookies()).get(SESSION_COOKIE_NAME)?.value)
+  if (!session) redirect('/auth')
+  redirect(routeFor(await getOnboardingState(session.accountId)))
 }
