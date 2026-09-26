@@ -126,7 +126,8 @@ test.describe('WF03-T00 scope and context (leader, admin)', () => {
     expect((await page.goto('/ops/network'))?.status()).toBe(200)
     await expect(page.locator('[data-shell="ops"]')).toBeVisible()
     await expect(page.locator('[data-shell="member"]')).toHaveCount(0)
-    await expect(page.locator('[data-route-placeholder="WF03-S01"]')).toBeVisible()
+    // WF03-S01 has replaced its placeholder inside OpsShell.
+    await expect(page.locator('[data-screen="WF03-S01"]')).toBeVisible()
     await expect(page.locator('[data-nav-key="network"]')).toHaveAttribute('aria-current', 'page')
 
     expect((await page.goto(`/ops/org/${CHAPTER_01}/members`))?.status()).toBe(200)

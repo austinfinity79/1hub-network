@@ -1,0 +1,123 @@
+/*
+ * WF03-S01 — organization list. Measured from the approved ADM8 reference at
+ * 1440x900 DPR1 (px / 16 = rem), content area right of the 216px OpsShell;
+ * local to this screen. The six drawn column tracks are kept; the sixth
+ * ("Sender") stays empty.
+ */
+
+.page {
+  min-height: 100vh;
+}
+
+.header {
+  height: 4.75rem;
+  padding: 1.1875rem 2rem 0;
+  border-bottom: 1px solid #e5e0e0;
+  background: var(--hub-surface);
+}
+
+.title {
+  margin: 0;
+  line-height: 1.5rem;
+  color: #000000;
+}
+
+.subtitle {
+  margin: 0.0625rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  color: #635253;
+}
+
+.body {
+  padding: 1.4375rem 2rem 3rem;
+}
+
+.table {
+  overflow: hidden;
+  border: 1px solid #e5e1e1;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14.625rem 12.375rem 7.875rem 11.25rem 10.125rem minmax(0, 1fr);
+  align-items: center;
+  height: 2.75rem;
+  padding-left: 1.125rem;
+}
+
+.row + .row {
+  border-top: 1px solid #e6e1e1;
+}
+
+.head {
+  height: 2.1875rem;
+  background: #f7f5f5;
+}
+
+.th {
+  font-size: 0.625rem;
+  line-height: 1rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #907a7b;
+}
+
+.nameCell {
+  min-width: 0;
+}
+
+.name {
+  color: #251011;
+  text-decoration: none;
+}
+
+/* The whole row selects the organization; the link stays the accessible target. */
+.name::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.row:hover {
+  background: #fbf9f9;
+}
+
+.name:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.cell {
+  padding-right: 1rem;
+  color: #5a4748;
+}
+
+.note {
+  margin: 0;
+  padding: 0.75rem 1.125rem;
+  border-top: 1px solid #e6e1e1;
+  color: #5a4748;
+}
+
+.failed {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid #e5e1e1;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+  color: #5a4748;
+}
+
+.retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-fg-accent);
+  cursor: pointer;
+}

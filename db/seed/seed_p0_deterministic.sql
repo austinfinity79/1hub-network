@@ -220,7 +220,9 @@ INSERT INTO role_assignments(id, individual_profile_id, role_code, scope_type, s
 ON CONFLICT (id) DO UPDATE SET
   individual_profile_id = EXCLUDED.individual_profile_id, role_code = EXCLUDED.role_code,
   scope_type = EXCLUDED.scope_type, scope_id = EXCLUDED.scope_id,
-  state = EXCLUDED.state, valid_from = EXCLUDED.valid_from;
+  state = EXCLUDED.state, valid_from = EXCLUDED.valid_from,
+  -- A reseed converges: a test that expired or ended an assignment is undone.
+  valid_to = EXCLUDED.valid_to;
 
 -- --------------------------------------------------------------- WF02 ventures
 

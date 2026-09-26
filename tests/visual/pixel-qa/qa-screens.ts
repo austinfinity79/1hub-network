@@ -145,7 +145,12 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
   cfg('WF02-S07', '/me/settings', 'member', 'settings: one current session, no deletion request'),
 
   // WF03 — HUB / Chapter / CLB Operations
-  cfg('WF03-S01', '/ops/network', 'leader', 'unit selector for a Chapter 01 leader'),
+  cfg(
+    'WF03-S01',
+    '/ops/network',
+    'ops',
+    'platform admin: the seeded HUB / Chapter / CLB list plus one test-hook CLB (5 rows, as drawn)',
+  ),
   cfg('WF03-S02', '/ops/org/:orgId', 'leader', 'Chapter 01 dashboard', ORG),
   cfg('WF03-S03', '/ops/org/:orgId/members', 'leader', 'Chapter 01 member list', ORG),
   cfg('WF03-S04', '/ops/org/:orgId/members/:profileId', 'leader', 'member detail', {

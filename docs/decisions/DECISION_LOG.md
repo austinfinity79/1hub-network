@@ -821,6 +821,17 @@ Resolved by precedence (not asked):
 | <a id="dec-wf03-t00-d3"></a>DEC-WF03-T00-D3 | **Guard / API semantics.** Pages: guest → /auth; onboarding not DONE → resolver; no ops scope, or an out-of-scope / malformed / non-operational `orgId` → the same 404. Layouts check `network:read` / `org:read`; each screen still checks its own capability. `GET /ops/organizations`: 401 without a session, 403 `SCOPE_FORBIDDEN` with no ops scope; DTO = OrganizationRefDTO + `status` + canonical `parent` (shown if PUBLISHED or in the actor's scope) + `active_members`; ordered by name; keyset cursor; ≤ 50 per page. An unknown `type` matches nothing and an unusable cursor starts from page one (the `parseListQuery` convention; no error code is contracted) |
 | <a id="dec-wf03-t00-d4"></a>DEC-WF03-T00-D4 | **Migration 009 not required for T00.** No relationship is written yet; the reader reports more than one ACTIVE PARENT as DATA INCONSISTENCY and shows no parent. Enforcement is decided with the first relationship writes (S08, after C1) |
 
+## DEC-WF03-S01-D — Organization selector / list implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within DEC-WF03-G1..G15 and T00-D1..D4 (for review).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf03-s01-d1"></a>DEC-WF03-S01-D1 | **Mapping of the ADM8 bitmap.** The drawn header band and table card, with its six column tracks, are kept. The columns are canonical T00 DTO fields: Tổ chức (name, the row link), Trực thuộc (canonical parent), Thành viên (`active_members`), Loại (HUB / Chapter / CLB), Trạng thái (publication status label); the sixth track stays empty. "Trưởng chapter", "Summit đang chạy", "Sự kiện 30 ngày", "Sender", "Tạo chapter" and the summit-lock notice have no P0 source (INTENTIONAL-CONTRACT / P0-SCOPE). Title "Tổ chức & thành viên"; the subtitle counts organizations only, because a member-total would double-count people in a Chapter and its CLB. Copy pending PO review |
+| <a id="dec-wf03-s01-d2"></a>DEC-WF03-S01-D2 | **Selection = URL.** A row opens `/ops/org/:orgId`, whose layout authorizes it (T00). No client storage, no second context mechanism. The list loads every page of `GET /ops/organizations` in the browser; states: loading, list, empty ("Chưa có tổ chức nào trong phạm vi quản lý của bạn."), failed (neutral text + "Thử lại"; no status, code or scope shown) |
+| <a id="dec-wf03-s01-d3"></a>DEC-WF03-S01-D3 | **Pixel state.** The S01 QA state uses the PLATFORM_ADMIN persona (seeded HUB, Chapter 01/02, Club 01 + one test-hook CLB = the 5 drawn rows); the leader path is proven functionally. Below the 550px reference only the OpsShell sidebar continues (its colour differs from the ADM sidebar by T00-D1); the content area must be pure canvas |
+| <a id="dec-wf03-s01-d4"></a>DEC-WF03-S01-D4 | **Fixture convergence fix.** `seed_p0_deterministic.sql` now also resets `role_assignments.valid_to` on reseed. An authz test that expires the leader restores by reseeding, but the old upsert left the expiry in place, so targeted runs saw an expired leader. No product behaviour change |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 
