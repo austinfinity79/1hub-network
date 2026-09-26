@@ -8,7 +8,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: IN PROGRESS — 5 / 8 screens CLOSED (62.5%).**
+**M1 — WF01 Identity & Onboarding: IN PROGRESS — 6 / 8 screens CLOSED (75%).**
 
 | Screen | State |
 |---|---|
@@ -17,7 +17,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S03 Auth Callback | CLOSED / PASS — SUCCESS/EXPIRED/USED; INVALID → S04; decisions DEC-WF01-S03-D1..D7, D6a, ICON ([report](reports/WF01-S03_auth-callback-states.md), [mapping](WF01_S03_STATE_BOARD_MAPPING.md)) |
 | WF01-S04 Auth Errors | CLOSED / PASS (BLOCKED copy neutralised: no email promise) — BLOCKED/SESSION_EXPIRED component pixel PASS; GENERIC = DESIGN-GAP-GENERIC (PO review); DEC-WF01-S04-D1..D8 ([report](reports/WF01-S04_auth-errors.md), [mapping](WF01_S04_STATE_BOARD_MAPPING.md)) |
 | WF01-S05 Onboarding Purpose | CLOSED / PASS — P0 intent allowlist (4 codes, no investor), skip keeps intent NULL, server guard; investor option = INTENTIONAL-P0-SCOPE; DEC-WF01-S05-D1..D6 ([report](reports/WF01-S05_onboarding-purpose.md), [contract](WF01_S05_INTENT_CONTRACT_GAP.md)) |
-| WF01-S06 … S08 | Not started; routes remain M0-T03 placeholders (header shell `OnboardingShell` ready for reuse) |
+| WF01-S06 Onboarding Profile | CLOSED / PASS — six fields; DOMAIN+SKILL picker (max 5); private avatar storage; one completion service for `/session`, `/me/profile`, `/me/profile/completion`; DEC-WF01-S06-D1..D6 ([report](reports/WF01-S06_onboarding-profile.md), [contract](WF01_S06_PROFILE_FIELD_CONTRACT.md)) |
+| WF01-S07 … S08 | Not started; routes remain M0-T03 placeholders |
 
 ## Completed (committed)
 
@@ -48,13 +49,13 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S03 | Auth Callback: token consumed once, success redirect by onboarding state, expired/used states |
 | WF01-S04 | Auth Errors: allowlisted public reason, blocked / session expired / generic |
 | WF01-S05 | Onboarding Purpose: `GET /me/onboarding`, `PUT /me/onboarding/intent`, onboarding header shell |
+| WF01-S06 | Onboarding Profile: `GET/PATCH /me/profile`, `/me/profile/completion`, `/me/profile/avatar`, `/vocabularies/{type}`, `/media/assets/:id` |
 
 ## Not yet built (M0)
 
 Nothing from the M0 item list.
 
-`completion_percent` in `GET /api/v1/session` is a placeholder `0`, not a computed value. The ten-group
-calculation is Profile-domain WF01/WF02 scope and must exist before any screen displays completion.
+`completion_percent` in `GET /api/v1/session` is computed by the single profile completion service (WF01-S06), the same one behind `/me/profile` and `/me/profile/completion`.
 
 `GET /api/v1/session` resolves a real session and derives `capabilities` and `managed_scopes` server-side from the approved authorization matrix.
 
@@ -83,7 +84,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF01-S06 Onboarding Profile — awaiting explicit authorization. Not started.
+WF01-S07 Privacy & Visibility — awaiting explicit authorization. Not started.
 
 ## Related
 
