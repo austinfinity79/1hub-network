@@ -1,73 +1,86 @@
 # Claude Task Report
 
 ## Task
-WF03-T00 — OPS FOUNDATION (PRECHECK + IMPLEMENT). Process: PROCESS-P0-ACCELERATED-SAFE-V2, full preflight (new shell + security foundation).
+WF03-S01 — ORGANIZATION SELECTOR / LIST. Process: PROCESS-P0-ACCELERATED-SAFE-V2, fast path.
 
 ## Status
-**DONE — LOCAL REVIEW.** The contract-freeze precheck found every T00 input frozen (G9, G11, G15, AUTHZ-01B, API §8.1 / §11.1), so no STOP was needed.
+**DONE — LOCAL REVIEW.** Precheck against the WF03 contract, G11, G15, T00 DTO/API, the ADM8 reference, OpsShell and the capability model found no new conflict.
 
 ## Scope completed
-| Item | Where |
-|---|---|
-| OpsShell (family "Quản trị HUB tổng") + client nav | `src/components/shell/ops-shell.*`, `ops-nav.tsx`, `src/lib/ops/nav.ts` |
-| /ops page guard + organization context | `src/lib/ops/guard.ts`; layouts `(ops)/ops/network`, `(ops)/ops/org/[orgId]` |
-| Scope helper (exact RoleAssignment scope, no inheritance) | `src/lib/ops/scope.ts` |
-| Canonical hierarchy reader | `src/lib/ops/hierarchy.ts` |
-| Read model + `GET /api/v1/ops/organizations` | `src/lib/ops/organizations.ts`, `src/app/api/v1/ops/organizations/route.ts` |
-| C2 fixture | `seed_p0_deterministic.sql` row `d000…03` HUB → Chapter 02 PARENT |
+`/ops/network` renders the organization list inside OpsShell:
+- Rows come from every page of `GET /ops/organizations`.
+- Columns: Tổ chức, Trực thuộc, Thành viên, Loại, Trạng thái.
+- Selecting a row opens `/ops/org/:orgId`.
+- States: loading, empty, failed + "Thử lại".
 
-S01–S09 not implemented; placeholders now render inside OpsShell for authorized actors.
+The page repeats the `requireOps()` check.
+
+## Files changed
+- `src/app/(ops)/ops/network/{page.tsx, organization-list.tsx, network.module.css}`
+- `tests/visual/specs/wf03-s01-organization-list.spec.ts`
+- `tests/visual/specs/wf03-t00-ops-foundation.spec.ts` (asserts S01 instead of its placeholder)
+- `tests/visual/pixel-qa/qa-screens.ts` (S01 state: PLATFORM_ADMIN persona)
+- `db/seed/seed_p0_deterministic.sql` (fixture convergence fix)
+- DECISION_LOG
 
 ## Decision delta
-DEC-WF03-C2 (OPEN-WF03-C2 CLOSED); DEC-WF03-T00-D1..D4 (shell family, context/breadcrumb, guard/API semantics, migration 009 not required). C1 stays OPEN (S06/S08 only).
+DEC-WF03-S01-D1..D4:
+- **D1:** column mapping and omissions.
+- **D2:** selection is the URL; list states.
+- **D3:** pixel state and the below-reference rule.
+- **D4:** the seed now resets `role_assignments.valid_to`.
 
 ## Business / Data / API delta
-- New endpoint `GET /ops/organizations` (API §8.1).
-- DTO: `{id, slug, name, type, status, parent, active_members}`.
-- Seed gains 1 relationship row.
-- No new entity, lifecycle or capability.
+None. S01 reuses the T00 endpoint and DTO; no new endpoint, entity or capability.
+
+The fixture fix: `authz.db-test` expires the seeded leader and restores it by reseeding, but the old upsert never reset `valid_to`. Targeted runs therefore saw an expired leader. A full DB run hid this, because it ends with a schema reset.
 
 ## Migration
-None. Migration 009 is not required for T00 (D4).
+None.
 
 ## Security
-Scope comes only from ACTIVE RoleAssignments:
-- A leader sees exactly Chapter 01.
-- Child, sibling, parent and malformed ids get the same 404.
-- Membership, leadership "Chủ tịch" and HUB_MEMBER grant nothing (403 from the API, 404 on pages).
-- Query/header context spoofing is ignored.
-- The DTO carries no person, role, audit or metadata data.
-- Logs contain 0 email/token/cookie lines.
+All 10 cases PASS:
+- Guest → /auth; member → 404; membership + a "Trưởng chapter" title alone → 404.
+- The leader sees exactly Chapter 01 (no child CLB).
+- Admin sees HUB / CHAPTER / CLB, never COMPANY / FUND.
+- Query / localStorage / header spoofing changes nothing.
+- Direct URLs to Chapter 02 / Club 01 / HUB return 404.
+- The UI shows no PII or scope data.
+- The error state shows no status, code or request id.
 
 ## Tests
 | Gate | Result |
 |---|---|
 | Format / lint / typecheck / build | PASS |
-| Unit | 157 passed |
-| DB | 288 passed (+7 ops) |
-| T00 Playwright | 7/7 |
-| Targeted regression | 134 passed / 24 skipped: shell-routes, console-health, auth-session, authz-session, api-contract, pixel-qa harness + screens, WF01 UAT journey, WF02-T00, WF02-S01, M0-ENTRY-01, SEC-OBS-01 |
-| Restart (app + PostgreSQL) | Leader / admin / member results identical |
+| Unit | 157 |
+| DB (authz + ops + db incl. seed / schema) | 77 passed |
+| S01 Playwright | 7/7 |
+| Targeted regression | T00 7/7; pixel-qa screens + harness, shell-routes, console-health, authz-session PASS |
 
-## Pixel
-The OpsShell sidebar was compared against the WF03-S08 reference: head, active item (dy −116), body and edge all 0 outside text. Structural 0, major 0, component 0. Glyphs are masked (typography migration). Harness baseline `shell-ops-placeholder.png` was replaced by `shell-public-placeholder.png`, because `/ops` is now guarded. `design-reference/final` is untouched.
+## Pixel (1440×900 DPR1)
+| Check | Result |
+|---|---|
+| Header band | 0 outside text |
+| Table | 0 outside text |
+| Full page (H12) | Below-reference pixels confined to the 216px OpsShell sidebar, which has its own colour (T00-D1) |
+| Structural / major / component | 0 / 0 / 0 |
+| Intentional | Sidebar family; canonical columns; "Tạo chapter" and the summit notice (P0 scope); copy; typography migration |
+
+Subtitle tuned to 12px so its glyph box (46–56) matches the reference (46–55).
 
 ## Regression
-- WF01 and WF02 (protected): targeted PASS.
-- Test updates follow frozen contracts:
-  - the M0-T05 surface test now treats `/ops/organizations` as implemented;
-  - console health expects the safe 404s for sample ops routes.
+T00 and authz PASS. WF01 / WF02 not re-run: no shared primitive or auth/session behaviour changed (the seed fix only restores fixture validity).
 
 ## Blocking gaps
-0 for T00. C1 still blocks S06/S08.
+0. C1 stays open for S06/S08 only.
 
 ## Git
-- Branch: `main`; start HEAD `f330d2a` (checked again before the commit)
-- Implementation commit: `47d506f`
+- Branch: `main`; start HEAD `5225420` (checked again before the commit)
+- Implementation commit: `204bfb1`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-WF03-S01 — ORGANIZATION SELECTOR / LIST
+WF03-S02 — ORGANIZATION DASHBOARD
