@@ -51,6 +51,8 @@ The session cookie is `Secure` because `NODE_ENV=production`, so login only work
 | Status | `docker compose ps` in `/opt/1hub-network/app` |
 | Smoke (internal) | `/opt/1hub-network/app/bin/smoke.sh` |
 | Rollback | `/opt/1hub-network/app/bin/rollback.sh [sha]` (default: `shared/state/previous`) |
+| Review login link | `ssh hub-vps /opt/1hub-network/app/bin/issue-login-link.sh <persona>@example.test` (app's own `requestMagicLink`, stdout only) |
+| Review data | `docker compose run --rm --no-deps app node scripts/db.mjs seed` (NON-production fixtures, idempotent) |
 | Backup | `/opt/1hub-network/app/bin/backup.sh`; daily by `onehub-backup.timer` 19:30 UTC (02:30 ICT), keeps newest 7 (`BACKUP_KEEP`); logs: `journalctl -u onehub-backup` |
 
 The deploy steps are: build, migrate, switch the app, wait for health, smoke, then update `current`. If the new app is unhealthy, it reverts to the previous image.
@@ -90,6 +92,7 @@ The previous VPS `103.211.207.236` is expired and is not referenced by any activ
 | Client IP | `conf.d/onehub-realip.conf` trusts `X-Real-IP` only from the 3 observed OneShield edges |
 | Origin bypass | still OPEN: anyone may reach the origin with `Host: 1hubnetwork.io.vn`; restrict 80/443 to OneShield once its egress list is known |
 | Upgrades | security updates stay on, at 20:30 UTC (03:30 ICT); `needrestart` lists, never auto-restarts |
+| Access log | `conf.d/onehub-logging.conf` redacts `/auth/callback?…` in the request line and in the Referer |
 | Images | `release.sh` keeps only the current and previous image and source; rollback is one step deep |
 
 ## Known release blockers
