@@ -1,93 +1,93 @@
 # Claude Task Report
 
 ## Task
-WF03-S02 — ORGANIZATION DASHBOARD. Process: PROCESS-P0-ACCELERATED-SAFE-V2, fast path.
+WF03-S03 — ORGANIZATION MEMBERS. Process: PROCESS-P0-ACCELERATED-SAFE-V2, fast path.
 
 ## Status
-**DONE — LOCAL REVIEW.** Precheck against the S02 contract, G1, G11, G15, the T00 context, S01 selection, the ORG1 reference and API §8.2 found no new conflict.
+**DONE — LOCAL REVIEW.** Precheck against the S03 contract, G3/G4/G5/G6, T00 scope, the membership and leadership models, the PROFILE_DISCOVERY projection, API §8.3 and the ADM17 reference found no new conflict.
 
 ## Scope completed
-- **API:** `GET /api/v1/ops/organizations/{orgId}/dashboard`.
-- **Page:** `/ops/org/:orgId` renders the dashboard inside OpsShell with 4 KPI cards and one canonical work item.
-- **States:** loading, ready, zero, and failed + "Thử lại".
+- **API:** `GET /api/v1/ops/organizations/{orgId}/members`.
+- **Page:** `/ops/org/:orgId/members`, a read-only relationship list inside OpsShell with name search, two filter chips and "Mở →" to S04.
+- **States:** loading, empty / no match, failed + "Thử lại".
 
 ## Files changed
-- `src/lib/ops/dashboard.ts`, `src/lib/ops/dashboard.db-test.ts`
-- `src/app/api/v1/ops/organizations/[orgId]/dashboard/route.ts`
-- `src/app/(ops)/ops/org/[orgId]/{page.tsx, organization-dashboard.tsx, dashboard.module.css}`
-- `tests/visual/specs/wf03-s02-organization-dashboard.spec.ts`
-- `tests/visual/specs/api-contract.spec.ts` (dashboard now implemented)
+- `src/lib/ops/members.ts`, `src/lib/ops/members.db-test.ts`
+- `src/lib/profile/visibility.ts` (+ `discoveryLevelsOf`, additive)
+- `src/app/api/v1/ops/organizations/[orgId]/members/route.ts`
+- `src/app/(ops)/ops/org/[orgId]/members/{page.tsx, member-list.tsx, members.module.css}`
+- `tests/visual/specs/wf03-s03-organization-members.spec.ts`
+- `tests/visual/pixel-qa/qa-screens.ts` (S03 state: admin + test-hook CLB)
+- `tests/visual/specs/api-contract.spec.ts`
 - DECISION_LOG
 
 ## Decision delta
-DEC-WF03-S02-D1..D3:
-- **D1:** the metrics and their queries; `linked_programmes` and "upcoming" omitted.
-- **D2:** authorization (403 out of scope, 404 non-operational in scope).
-- **D3:** UI mapping and pinned chip/button sizes.
+DEC-WF03-S03-D1..D3:
+- **D1:** rows and DTO.
+- **D2:** visibility (no ops bypass, search over visible names only) and authorization.
+- **D3:** mapping of the ADM17 bitmap.
 
 ## Business / Data / API delta
-One frozen endpoint implemented (§8.2). No new entity, lifecycle or capability. Every counter is one canonical query:
-
-| Metric | Query |
-|---|---|
-| ACTIVE / PENDING_APPROVAL memberships | `community_memberships` |
-| ACTIVE leadership | `leadership_records` |
-| Standalone / published events | `events` with `programme_id IS NULL` |
-| Direct children | ACTIVE PARENT rows (hierarchy reader) |
-
-Fabricated values: none.
+One frozen endpoint implemented. No entity, lifecycle or capability change. Read-only: no transition, no promotion, no RoleAssignment read.
 
 ## Migration
 None.
 
 ## Security
-All 10 cases PASS:
+All 12 cases PASS:
 - Guest → /auth, API 401.
-- Member and membership + "Trưởng chapter" alone → page 404 / API 403 `SCOPE_FORBIDDEN`.
-- The leader sees only Chapter 01; child Club 01, sibling, parent and malformed ids are refused, including with spoofed headers or query.
-- Admin sees any operational org; COMPANY or unknown ids → 404.
-- The DTO and page carry no identities or metadata.
-- The error state shows no status or code.
+- Member and membership + leadership alone → page 404 / API 403.
+- The leader sees only Chapter 01; Club 01, Chapter 02 and malformed ids are refused, including with spoofed headers.
+- A member's profile id under a foreign org path → 404.
+- A PRIVATE profile is hidden for leader and admin, and search cannot find it.
+- The DTO has exactly 4 keys, with no email, account, bio, role or metadata.
+- Server log: 0 email / token / cookie lines.
 
 ## Tests
 | Gate | Result |
 |---|---|
 | Format / lint / typecheck / build | PASS |
 | Unit | 157 |
-| DB (authz + ops + db) | 82 passed (+5 dashboard) |
-| S02 Playwright | 6/6 |
-| Targeted regression | 88 passed / 24 skipped: T00, S01, S02, api-contract, pixel-qa screens + harness, shell-routes, console-health, authz-session |
+| DB (authz, ops, db, profile, legal) | 129 passed (+5 members) |
+| S03 Playwright | 6/6 |
+| Targeted regression | 127 passed / 24 skipped: T00, S01, S02, S03, api-contract, pixel-qa screens + harness, shell-routes, console-health, authz-session, WF02-S03 privacy, WF01-S07 privacy |
 
-## Pixel (1440×900 DPR1; the reference is drawn without a sidebar, so components are compared with offsets)
-| Component | Outside-text drift |
+## Pixel (1440×900 DPR1; same sidebar family, compared in place)
+| Segment | Outside-text drift |
 |---|---|
-| Header band | 0 |
-| KPI card | 0 |
-| Work card head | 0 |
-| Chip | 0 |
-| Button | 0 |
+| Header | 0 |
+| Filter card (left / right) | 0 / 0 |
+| Chip (vs the drawn inactive chip) | 0 |
+| Table | 948 px (0.11%, raster) |
 
-- Below the 782px reference: only the OpsShell sidebar (T00-D1).
+- Below the 893px reference: only the sidebar.
 - Structural / major / component: 0 / 0 / 0.
 - Intentional:
-  - OpsShell;
-  - capability chips, scope notice and pilot card (P0 scope);
-  - canonical KPIs and work item (contract);
+  - relationship columns instead of account columns;
+  - contracted chips; search width;
+  - "Xuất CSV" and the dropdowns omitted;
   - typography migration.
 
+Fixed during QA:
+- subtitle spacing;
+- filter card box (64px + 1px ring);
+- field colour;
+- chips drawn at 35px with a #e3dede border.
+
 ## Regression
-T00 and S01 PASS. WF01 / WF02 not re-run: no shared primitive or auth/session change.
+- T00, S01, S02: PASS.
+- WF01-S07 and WF02-S03 visibility specs PASS (the visibility module gained a function; nothing existing changed).
 
 ## Blocking gaps
 0. C1 stays open for S06/S08 only.
 
 ## Git
-- Branch: `main`; start HEAD `e43a017` (checked again before the commit)
-- Implementation commit: `e164579`
+- Branch: `main`; start HEAD `6b7a55c` (checked again before the commit)
+- Implementation commit: `99a8eb8`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-WF03-S03 — ORGANIZATION MEMBERS
+WF03-S04 — MEMBERSHIP REVIEW / LEADERSHIP OPS (PRECHECK FIRST)

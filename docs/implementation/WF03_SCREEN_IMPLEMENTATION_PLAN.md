@@ -8,8 +8,8 @@
 | 0 | WF03-T00 Ops foundation | `/ops/*` shell + guard | G9, G11, G15 (C2 fixture) | OpsShell (G15); server guard session → `require(capability, ORGANIZATION orgId)`; hierarchy service over `organization_relationships` (G9); org read model; `GET /ops/organizations` | Full preflight (new shell + security foundation) | **DONE** ([report](reports/WF03-T00_ops-foundation.md)) |
 | 1 | S01 Organization selector / list | `/ops/network` | T00, G11 | Orgs in exact scope (PLATFORM_ADMIN per contract); HUB / CHAPTER / CLB | Fast path | **DONE** ([report](reports/WF03-S01_organization-list.md)) |
 | 2 | S02 Organization dashboard | `/ops/org/:orgId` | T00, G1 | Canonical counters only, each with a named query | Fast path | **DONE** ([report](reports/WF03-S02_organization-dashboard.md)) |
-| 3 | S03 Organization members | `/ops/org/:orgId/members` | T00, G3, G4 | Safe projection + membership state/provenance + leadership facts | Full preflight (privacy DTO) | **NEXT** |
-| 4 | S04 Membership review / leadership ops | `/ops/org/:orgId/members/:profileId` | S03, G5, G6, G14 | PENDING → ACTIVE / REJECTED; leadership create/end per API; audit | Full preflight (mutations + audit) | after S03 |
+| 3 | S03 Organization members | `/ops/org/:orgId/members` | T00, G3, G4 | Safe projection + membership state/provenance + leadership facts | Full preflight (privacy DTO) | **DONE** ([report](reports/WF03-S03_organization-members.md)) |
+| 4 | S04 Membership review / leadership ops | `/ops/org/:orgId/members/:profileId` | S03, G5, G6, G14 | PENDING → ACTIVE / REJECTED; leadership create/end per API; audit | Full preflight (mutations + audit) | **NEXT** (precheck first) |
 | 5 | S06 Organization profile | `/ops/org/:orgId/profile` | G8, G14, **C1** | Canonical + design-approved fields only | per C1 | **BLOCKED (C1)** |
 | 6 | S08 Organization relationships / settings | `/ops/org/:orgId/settings` | G9, **C1** (+ optional 009) | Per C1 outcome | per C1 | **BLOCKED (C1)** |
 | 7 | S07 Event management | `/ops/org/:orgId/events` | T00, G2, G10, G14 | Standalone list / detail / create / edit / publish / cancel; S07 screen-contract addendum | Full preflight (addendum + lifecycle) | after T00 |
@@ -24,7 +24,7 @@
 |---|---|---|---|
 | S01 | Header band, table frame, org name, ACTIVE members | Trực thuộc / Loại / Trạng thái columns in the drawn tracks (S01-D1) | "Tạo chapter", summit, SENDER, CSV, ADM sidebar items |
 | S02 | Header band, KPI-card and work-card frames, chip + "Làm ngay" | Canonical KPIs + pending-request work item (S02-D3) | Enterprise problem / pilot / data-access content (G1) |
-| S03 | Table frame, name, org, membership state, search | Provenance column | Email, verification, lock, last login, CSV, account totals (G3) |
+| S03 | Title, filter card, table frame, status chips, "Mở →" | Relationship columns + contracted filter chips (S03-D3) | Email, verification, lock, last login, CSV, account totals (G3) |
 | S04 | Name header, membership / leadership history, review actions | Consent summary per G4 | Resend link, lock, fund / problem-owner consents, account log, ADM15 proposal |
 | S06 | Header, canonical profile fields | Field list per G8 | Representatives (G7), visibility matrix, verification, archive request, programme links |
 | S07 | — (no drawn CRUD) | Event table + form addendum (G2) | Qualifying round, registrants, campaign mail, funnel (WF04 / Future) |
