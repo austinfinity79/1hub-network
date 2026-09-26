@@ -7,7 +7,7 @@ Automated in `tests/visual/specs/wf01-uat-journey.spec.ts` (Playwright, 1440×90
 | UAT-01 New member happy path | New email | S01 request → S02 (resend visible) → open link → S05 choose → S06 required fields → S07 acknowledge → S08 → "Vào 1hub.network" | Session via HttpOnly cookie; token stripped from URL; 1 profile; DRAFT until S08, then ACTIVE with timestamp; 2 consent records, 2 `CONSENT_ACCEPTED`, 1 `PROFILE_ACTIVATED`, 1 `onboarding_completed`; `/session` = completion service; no raw token stored; lands on `/me` | Auto | PASS |
 | UAT-02 Skip intent | New email | S05 "Bỏ qua, làm sau" → S06 → S07 → S08 | Completes; `primary_intent` NULL; ACTIVE | Auto | PASS |
 | UAT-03a Resume partial | S05 + S06 done, logged out | Sign in again, continue to S07/S08 | Guest blocked meanwhile; answers kept; completes with one profile | Auto | PASS |
-| UAT-03b Resume at first incomplete step | Same | Sign in again | Lands on `/onboarding/privacy` (WF01 state rule) | Auto (expected-fail) | **FAIL — DEFECT-RESUME (P2)**: lands on `/onboarding/purpose`; fix blocked on the S05-skip data-model decision (WF01-REMEDIATION-03) |
+| UAT-03b Resume at first incomplete step | Account at each onboarding state | Skip S05 → sign in again; finish S06 → sign in; finish S07 with S08 failing once → sign in; complete → sign in | `/onboarding/profile`, `/onboarding/privacy`, `/onboarding/complete`, `/me`; one profile; intent stays NULL | Auto | **PASS** (DEFECT-RESUME closed, marker removed) |
 | UAT-04 Expired / used / invalid link | Link minted | Open expired; open valid; reopen used; open garbage | Expired and used states without a session; valid signs in once; invalid → `/auth/error` | Auto | PASS |
 | UAT-05 Required profile validation | At S06 | Continue with empty fields | Field errors; stays on S06; nothing saved | Auto | PASS |
 | UAT-06 Legal version race | At S07; a new Privacy version published | Acknowledge, continue; re-acknowledge | 409 → documents reload and ask again; consent for the new version; completes | Auto | PASS |
@@ -23,12 +23,12 @@ Automated in `tests/visual/specs/wf01-uat-journey.spec.ts` (Playwright, 1440×90
 | UAT-M3 Real mailbox | Email delivery configured | Receive and open the link | Link arrives and works | **Manual** | NOT AVAILABLE in P0 local (no email delivery) |
 
 **Totals:**
-- Automated: 14 (13 PASS; 1 expected-fail marker confirming DEFECT-RESUME).
+- Automated: 14 (14 PASS; no expected-fail markers remain).
 - Manual: 3.
-- Passed: 13.
-- Failed (known, tracked): 1.
+- Passed: 14.
+- Failed: 0.
 
-**Expected-fail tests:** `test.fail()` marks UAT-03b only (UAT-11 and UAT-12 markers were removed when GAP-ROSTER and GAP-ANALYTICS-REG closed). They start failing when the gap is fixed, so the marker must then be removed.
+**Expected-fail tests:** none. The UAT-11, UAT-12 and UAT-03b markers were removed as GAP-ROSTER, GAP-ANALYTICS-REG and DEFECT-RESUME closed. They start failing when the gap is fixed, so the marker must then be removed.
 
 ## Related
 

@@ -8,7 +8,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: 8 / 8 screens implemented (100%). WF01 completion audit: YELLOW — UAT BLOCKED** ([audit](WF01_COMPLETION_AUDIT.md), [UAT matrix](WF01_UAT_MATRIX.md)). GAP-ROSTER **CLOSED** (WF01-REMEDIATION-01); GAP-ANALYTICS-REG **CLOSED** (WF01-REMEDIATION-02); remaining: DEFECT-RESUME (P2, **blocked on the S05-skip data-model decision**). ANALYTICS-EXT deferred (DEC-WF01-ANALYTICS-EXT-DEFER). Release/UAT blocker: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
+**M1 — WF01 Identity & Onboarding: 8 / 8 screens implemented (100%). WF01 completion audit: YELLOW — UAT BLOCKED** ([audit](WF01_COMPLETION_AUDIT.md), [UAT matrix](WF01_UAT_MATRIX.md)). GAP-ROSTER **CLOSED** (WF01-REMEDIATION-01); GAP-ANALYTICS-REG **CLOSED** (WF01-REMEDIATION-02); DEFECT-RESUME **CLOSED** (DEC-WF01-RESUME-D1); ANALYTICS-EXT deferred (DEC-WF01-ANALYTICS-EXT-DEFER). **No open WF01 defect**; final re-audit / UAT gate pending. Release/UAT blocker: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
 
 | Screen | State |
 |---|---|
@@ -55,6 +55,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S08 | Onboarding Complete: `POST /me/onboarding/complete`, analytics writer (`onboarding_completed`, `profile_completion_changed`) |
 | WF01-REMEDIATION-01 | GAP-ROSTER: roster importer CLI, migration 004 (`uq_active_leadership`, `roster_reconcile_account`), sign-in reconcile |
 | WF01-REMEDIATION-02 | GAP-ANALYTICS-REG: `account_created` in the account-insert transaction; race-safe first sign-in |
+| WF01-REMEDIATION-03A/03 | DEFECT-RESUME: migration 005, S05 SKIP action, one onboarding resolver for sign-in, `/session`, guards |
 
 ## Not yet built (M0)
 
@@ -88,13 +89,13 @@ No product pixel pass has been claimed for any screen.
 | ~~GAP-ROSTER (P1)~~ **CLOSED** by WF01-REMEDIATION-01 (`pnpm roster:import`, migration 004); real roster data is a go-live input | [report](reports/WF01-REMEDIATION-01_gap-roster.md) |
 | ~~GAP-ANALYTICS-REG (P1)~~ **CLOSED** by WF01-REMEDIATION-02 (`account_created`) | [report](reports/WF01-REMEDIATION-02_gap-analytics-registration.md) |
 | ANALYTICS-EXT **DEFERRED** by DEC-WF01-ANALYTICS-EXT-DEFER (added later through the same writer) | [DECISION_LOG.md](../decisions/DECISION_LOG.md#dec-wf01-analytics-ext-defer) |
-| **DEFECT-RESUME (P2)**: sign-in resumes incomplete onboarding at S05; **blocked**: S05 skip persists nothing (DEC-WF01-S05-D3), so a skip cannot be told from "never visited" — decision needed | [report](reports/WF01-REMEDIATION-03_defect-resume.md) |
+| ~~DEFECT-RESUME (P2)~~ **CLOSED** by DEC-WF01-RESUME-D1 (migration 005 `purpose_step_completed_at`, one resolver) | [report](reports/WF01-REMEDIATION-03_defect-resume.md) |
 | **Release blocker** `PRODUCTION_LEGAL_CONTENT_REQUIRED`: real Terms/Privacy text and versions (local uses marked fixtures) | [WF01_S07_PRIVACY_CONSENT_CONTRACT.md](WF01_S07_PRIVACY_CONSENT_CONTRACT.md) |
 | Pixel QA reference configuration gaps (11 screens) | [M0-T11 report](reports/M0-T11_manifest-pixel-qa-foundation.md) |
 
 ## Next task
 
-Human decision on the S05-skip signal (options A/B/C in [WF01-REMEDIATION-03](reports/WF01-REMEDIATION-03_defect-resume.md)), then WF01-REMEDIATION-03 resume. WF02 not started.
+WF01 FINAL RE-AUDIT / UAT GATE — awaiting explicit authorization. WF02 not started.
 
 ## Related
 

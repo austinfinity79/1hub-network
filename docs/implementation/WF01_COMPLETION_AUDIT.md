@@ -1,6 +1,6 @@
 # WF01 Completion Audit
 
-**Verdict: YELLOW — UAT BLOCKED.** _Update 2026-09-26 (WF01-REMEDIATION-01): **GAP-ROSTER CLOSED** — see [report](reports/WF01-REMEDIATION-01_gap-roster.md). _Update (WF01-REMEDIATION-02): **GAP-ANALYTICS-REG CLOSED** — see [report](reports/WF01-REMEDIATION-02_gap-analytics-registration.md). Remaining: DEFECT-RESUME (P2), ANALYTICS-EXT (P2, other API §10 events), release inputs._ _Update (WF01-REMEDIATION-03): ANALYTICS-EXT **DEFERRED** by DEC-WF01-ANALYTICS-EXT-DEFER; DEFECT-RESUME **BLOCKED** on the S05-skip data-model decision ([report](reports/WF01-REMEDIATION-03_defect-resume.md))._ All 8 approved WF01 screens and their contracts are implemented and pass in a fresh environment. A **frozen P0 business path is missing**: launch-roster matching (Freeze D2 "PRESEED + PENDING FALLBACK"). The P0 registration metric is also missing.
+**Verdict: YELLOW — UAT BLOCKED.** _Update 2026-09-26 (WF01-REMEDIATION-01): **GAP-ROSTER CLOSED** — see [report](reports/WF01-REMEDIATION-01_gap-roster.md). _Update (WF01-REMEDIATION-02): **GAP-ANALYTICS-REG CLOSED** — see [report](reports/WF01-REMEDIATION-02_gap-analytics-registration.md). Remaining: DEFECT-RESUME (P2), ANALYTICS-EXT (P2, other API §10 events), release inputs._ _Update (WF01-REMEDIATION-03): ANALYTICS-EXT **DEFERRED** by DEC-WF01-ANALYTICS-EXT-DEFER; DEFECT-RESUME **BLOCKED** on the S05-skip data-model decision ([report](reports/WF01-REMEDIATION-03_defect-resume.md))._ _Update (WF01-REMEDIATION-03A/03): **DEFECT-RESUME CLOSED** by DEC-WF01-RESUME-D1 (purpose-step persistence + one resolver); **no open WF01 defect**. Final re-audit pending._ All 8 approved WF01 screens and their contracts are implemented and pass in a fresh environment. A **frozen P0 business path is missing**: launch-roster matching (Freeze D2 "PRESEED + PENDING FALLBACK"). The P0 registration metric is also missing.
 
 - Audit date: 2026-09-26. HEAD at audit: `c74e7fc`.
 - Mode: LOCAL REVIEW. No push, no SOT or baseline change, no feature code.
@@ -74,7 +74,7 @@ Every other difference is a documented intentional class. Baselines are untouche
 | GAP-ROSTER | ~~P1~~ | **CLOSED** (WF01-REMEDIATION-01): importer, email match at sign-in, ACTIVE membership, leadership only with evidence, duplicate- and concurrency-safe | — (real roster data remains an operational input) |
 | GAP-ANALYTICS-REG | ~~P1~~ | **CLOSED** (WF01-REMEDIATION-02): `account_created` once per new account, same transaction as the insert | — |
 | ANALYTICS-EXT | — | **DEFERRED** by DEC-WF01-ANALYTICS-EXT-DEFER (added later through the same writer) | not blocking WF01 |
-| DEFECT-RESUME | P2 | Returning incomplete user is resumed at S05, not the first incomplete step | **BLOCKED**: S05 skip leaves no persisted signal; decision needed (option A: persist the skip) |
+| DEFECT-RESUME | ~~P2~~ | **CLOSED** (DEC-WF01-RESUME-D1, migration 005, one resolver) | — |
 | COPY-REVIEW | P3 | Unapproved runtime copy (see §7) | Non-blocking polish, except legal |
 
 ## 7. Copy / content review
@@ -95,7 +95,7 @@ Every other difference is a documented intentional class. Baselines are untouche
 | PRODUCTION_LEGAL_CONTENT_REQUIRED | UAT BLOCKER (real documents) and GO-LIVE BLOCKER |
 | Production REGION/DOMAIN/SKILL taxonomy data | GO-LIVE BLOCKER (config data; UAT may use fixtures) |
 | ANALYTICS-EXT (remaining API §10 events) | GO-LIVE decision (P2) |
-| DEFECT-RESUME | Recommended before UAT (P2) |
+| DEFECT-RESUME | CLOSED |
 | `/me` placeholder (WF02-S01); Project CTA (WF02-S05); Chapter (WF02-S04 / network); Challenge (WF04 demo) | DEFERRED / WF02+; WF01 completes safely without them |
 | Copy review (A, D) | NON-BLOCKING POLISH |
 | Copy review (B) | Before UAT sign-off |
