@@ -140,20 +140,27 @@ test.describe('WF01-S05 functional', () => {
     ])
   })
 
-  test('D3: skip writes nothing, keeps the intent NULL and moves to S06', async ({ page }) => {
+  test('D3 (amended by DEC-WF01-RESUME-D1): skip records the step, never an intent, and moves to S06', async ({
+    page,
+  }) => {
     const accountId = await signInFresh(page)
-    let writes = 0
+    const bodies: unknown[] = []
     page.on('request', (r) => {
-      if (r.url().includes(INTENT_API)) writes++
+      if (r.url().includes(INTENT_API)) bodies.push(r.postDataJSON())
     })
     await openPurpose(page)
-    await page.getByRole('link', { name: 'Bỏ qua, làm sau' }).click()
+    await page.getByRole('button', { name: 'Bỏ qua, làm sau' }).click()
     await expect(page).toHaveURL('/onboarding/profile')
-    expect(writes).toBe(0)
-    expect(await storedIntent(accountId)).toBeUndefined()
-    // Skipping does not complete onboarding: the step is still open.
+    expect(bodies).toEqual([{ action: 'SKIP' }])
+    expect(await storedIntent(accountId)).toBeNull()
+    const [row] = await query<{ recorded: boolean }>(
+      'SELECT purpose_step_completed_at IS NOT NULL AS recorded FROM individual_profiles WHERE account_id = $1',
+      [accountId],
+    )
+    expect(row!.recorded).toBe(true)
+    // The Purpose step is done; onboarding is not.
     const state = await page.request.get('/api/v1/me/onboarding')
-    expect(await state.json()).toEqual({ completed: false, current_step: 'PURPOSE', intent: null })
+    expect(await state.json()).toEqual({ completed: false, current_step: 'PROFILE', intent: null })
   })
 
   test('D1: the server rejects INVESTOR and unknown values with 422, writing nothing', async ({
@@ -261,7 +268,7 @@ test.describe('WF01-S05 functional', () => {
     const accountId = await signInFresh(page)
     await page.request.put(INTENT_API, { data: { primary_intent: 'EXPLORE_NETWORK' } })
     await query(
-      'UPDATE individual_profiles SET onboarding_completed_at = now() WHERE account_id = $1',
+      `UPDATE individual_profiles SET status = 'ACTIVE', onboarding_completed_at = now() WHERE account_id = $1`,
       [accountId],
     )
     await page.goto('/onboarding/purpose')
@@ -272,7 +279,7 @@ test.describe('WF01-S05 functional', () => {
     const accountId = await signInFresh(page)
     await openPurpose(page)
     await page.keyboard.press('Tab')
-    await expect(page.getByRole('link', { name: 'Bỏ qua, làm sau' })).toBeFocused()
+    await expect(page.getByRole('button', { name: 'Bỏ qua, làm sau' })).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(radio(page, 'SUBMIT_SOLUTION')).toBeFocused()
     expect(

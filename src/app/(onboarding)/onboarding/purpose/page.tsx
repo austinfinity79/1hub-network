@@ -1,5 +1,4 @@
 import { cookies } from 'next/headers'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { OnboardingShell } from '@/components/shell/onboarding-shell'
@@ -8,7 +7,7 @@ import { resolveSession } from '@/lib/auth/sessions'
 import { getOnboardingState } from '@/lib/onboarding/state'
 
 import { PurposeForm } from './purpose-form'
-import styles from './purpose.module.css'
+import { SkipPurpose } from './skip-purpose'
 
 /**
  * WF01-S05 — /onboarding/purpose. Next: WF01-S06 /onboarding/profile.
@@ -31,12 +30,9 @@ export default async function Page() {
   return (
     <OnboardingShell
       currentStep={1}
-      action={
-        // DEC-WF01-S05-D3: skip THIS step only; nothing is written, intent stays NULL.
-        <Link href="/onboarding/profile" className={`type-meta-xs weight-medium ${styles.skip}`}>
-          Bỏ qua, làm sau
-        </Link>
-      }
+      // DEC-WF01-S05-D3 / DEC-WF01-RESUME-D1: skip THIS step only; no intent,
+      // but the server records the step so resume lands on S06.
+      action={<SkipPurpose />}
     >
       <PurposeForm initialIntent={state.intent} />
     </OnboardingShell>

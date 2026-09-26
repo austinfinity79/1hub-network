@@ -117,7 +117,10 @@ ON CONFLICT (id) DO UPDATE SET
   region_vocab_id = EXCLUDED.region_vocab_id, bio = EXCLUDED.bio,
   development_goal = EXCLUDED.development_goal, current_need = EXCLUDED.current_need,
   no_experience_yet = EXCLUDED.no_experience_yet, primary_intent = EXCLUDED.primary_intent,
-  onboarding_completed_at = EXCLUDED.onboarding_completed_at, updated_at = EXCLUDED.updated_at;
+  onboarding_completed_at = EXCLUDED.onboarding_completed_at, updated_at = EXCLUDED.updated_at,
+  -- Migration 005: fixture personas start with the Purpose step not recorded
+  -- (completed personas resolve as DONE through onboarding_completed_at).
+  purpose_step_completed_at = NULL;
 
 INSERT INTO profile_domains(profile_id, vocab_id) VALUES
   ('40000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000011'),

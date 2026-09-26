@@ -38,11 +38,12 @@ type ConsumeResponse = {
   onboarding: { completed: boolean; next_step: string | null }
 }
 
-/** WF01 onboarding steps (WF01-S05..S07) as the consume response names them. */
+/** WF01 onboarding steps (WF01-S05..S08) as the consume response names them (DEC-WF01-RESUME-D1). */
 const ONBOARDING_ROUTES: Record<string, string> = {
   PURPOSE: '/onboarding/purpose',
   PROFILE: '/onboarding/profile',
   PRIVACY: '/onboarding/privacy',
+  COMPLETE: '/onboarding/complete',
 }
 
 function nextRoute(onboarding: ConsumeResponse['onboarding']): string {

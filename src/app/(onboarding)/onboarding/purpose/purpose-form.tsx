@@ -18,7 +18,8 @@ import styles from './purpose.module.css'
  * - Continue persists via PUT /api/v1/me/onboarding/intent (D2) and moves on
  *   only after the server confirms.
  * - Nothing is selected unless an intent was saved before (D4, D6).
- * - Skip lives in the header and writes nothing (D3); see page.tsx.
+ * - Skip lives in the header: no intent, but the step is recorded (D3 as
+ *   amended by DEC-WF01-RESUME-D1); see skip-purpose.tsx.
  */
 
 /** Approved copy, verbatim from the reference, mapped to P0 codes. */
@@ -68,7 +69,7 @@ export function PurposeForm({ initialIntent }: { initialIntent: PrimaryIntent | 
     try {
       await apiRequest('/me/onboarding/intent', {
         method: 'PUT',
-        body: { primary_intent: intent },
+        body: { action: 'SAVE', primary_intent: intent },
       })
       router.push('/onboarding/profile')
       // Stay busy while navigating, so the mutation cannot repeat.

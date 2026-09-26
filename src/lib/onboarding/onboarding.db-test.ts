@@ -103,11 +103,11 @@ describe('onboarding state', () => {
     expect((await getOnboardingState(accountId)).intent).toBeNull()
   })
 
-  it('completed onboarding reports no current step', async () => {
+  it('completed onboarding (ACTIVE + timestamp) reports no current step', async () => {
     const accountId = await newAccount()
     await query(
-      `INSERT INTO individual_profiles (account_id, primary_intent, onboarding_completed_at)
-       VALUES ($1, 'EXPLORE_NETWORK', now())`,
+      `INSERT INTO individual_profiles (account_id, status, primary_intent, onboarding_completed_at)
+       VALUES ($1, 'ACTIVE', 'EXPLORE_NETWORK', now())`,
       [accountId],
     )
     expect(await getOnboardingState(accountId)).toEqual({

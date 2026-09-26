@@ -131,6 +131,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '003_p0_idempotency_store.sql',
       // WF01-REMEDIATION-01 (GAP-ROSTER): leadership uniqueness + roster reconcile routine.
       '004_p0_roster_bootstrap.sql',
+      // WF01-REMEDIATION-03A (DEC-WF01-RESUME-D1): purpose_step_completed_at.
+      '005_p0_purpose_step_completion.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)

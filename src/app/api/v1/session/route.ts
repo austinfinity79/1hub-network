@@ -5,6 +5,7 @@ import { resolveSession } from '@/lib/auth/sessions'
 import { resolveActor } from '@/lib/authz/actor'
 import { deriveCapabilities, deriveManagedScopes } from '@/lib/authz/session-authz'
 import { query } from '@/lib/db/client'
+import { getOnboardingState } from '@/lib/onboarding/state'
 import { getProfileCompletion } from '@/lib/profile/completion'
 
 /**
@@ -35,7 +36,6 @@ type AccountRow = {
   status: string
   profile_id: string | null
   profile_status: string | null
-  onboarding_completed_at: Date | null
 }
 
 export const GET = withApi<SessionDTO>(async ({ request }) => {
@@ -45,8 +45,7 @@ export const GET = withApi<SessionDTO>(async ({ request }) => {
 
   const rows = await query<AccountRow>(
     `SELECT a.id::text, a.email, a.status::text AS status,
-            p.id::text AS profile_id, p.status::text AS profile_status,
-            p.onboarding_completed_at
+            p.id::text AS profile_id, p.status::text AS profile_status
      FROM user_accounts a
      LEFT JOIN individual_profiles p ON p.account_id = a.id
      WHERE a.id = $1`,
@@ -73,7 +72,8 @@ export const GET = withApi<SessionDTO>(async ({ request }) => {
     profile: {
       id: row.profile_id ?? '',
       status: row.profile_status ?? 'NOT_CREATED',
-      onboarding_completed: Boolean(row.onboarding_completed_at),
+      // The one onboarding resolver (DEC-WF01-RESUME-D1): done = ACTIVE + completed.
+      onboarding_completed: (await getOnboardingState(row.id)).completed,
       // The single completion service (WF01-S06), shared with /me/profile and
       // /me/profile/completion; never accepted from the client.
       completion_percent: (await getProfileCompletion(row.id)).percent,

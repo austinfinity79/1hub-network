@@ -20,11 +20,10 @@ import { REPO_ROOT } from '../pixel-qa/paths'
  * link the way the inbox would receive it: requestMagicLink() returns the raw
  * token only to its caller, never to storage.
  *
- * test.fail() marks a frozen requirement the audit found NOT implemented
- * (DEFECT-RESUME). Such a test passes while the gap exists and fails once it
- * is closed, so the marker must then be removed — as done for UAT-11
- * (GAP-ROSTER, WF01-REMEDIATION-01) and UAT-12 (GAP-ANALYTICS-REG,
- * WF01-REMEDIATION-02).
+ * The audit's expected-fail markers (test.fail) have all been removed as their
+ * gaps closed: UAT-11 (GAP-ROSTER, WF01-REMEDIATION-01), UAT-12
+ * (GAP-ANALYTICS-REG, WF01-REMEDIATION-02) and UAT-03b (DEFECT-RESUME,
+ * WF01-REMEDIATION-03).
  */
 
 const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-s06-qa-vocabulary.sql')
@@ -39,8 +38,9 @@ test.beforeAll(async () => {
 test.beforeEach(async ({ page }) => {
   consoleErrors = []
   page.on('console', (m) => {
-    // Spent/expired links (400/409) and the stale-version race (409) are scenarios.
-    if (m.type() === 'error' && !/status of (400|409|422)/.test(m.text()))
+    // Spent/expired links (400/409), the stale-version race (409) and a
+    // simulated completion failure (500) are scenarios.
+    if (m.type() === 'error' && !/status of (400|409|422|500)/.test(m.text()))
       consoleErrors.push(m.text())
   })
   page.on('pageerror', (e) => consoleErrors.push(e.message))
@@ -106,7 +106,7 @@ async function state(id: string) {
 async function s05(page: Page, choice: 'SUBMIT_SOLUTION' | 'skip') {
   await expect(page).toHaveURL('/onboarding/purpose')
   if (choice === 'skip') {
-    await page.getByRole('link', { name: 'Bỏ qua, làm sau' }).click()
+    await page.getByRole('button', { name: 'Bỏ qua, làm sau' }).click()
   } else {
     await page.locator(`[data-intent="${choice}"]`).click()
     await page.getByRole('button', { name: 'Tiếp tục' }).click()
@@ -237,20 +237,41 @@ test.describe('WF01 UAT journeys', () => {
     expect(await state(await accountId(email))).toMatchObject({ profiles: 1, status: 'ACTIVE' })
   })
 
-  test('UAT-03b DEFECT-RESUME: sign-in resumes at the first incomplete step', async ({
+  test('UAT-03b sign-in resumes at the first incomplete step (DEFECT-RESUME closed)', async ({
     page,
     context,
   }) => {
     // WF01 state rule: "Existing account + incomplete onboarding resumes at first
-    // incomplete onboarding step". consume always answers next_step PURPOSE.
-    test.fail(true, 'DEFECT-RESUME (P2): consume next_step is always PURPOSE')
+    // incomplete onboarding step" — one server resolver (DEC-WF01-RESUME-D1).
     const email = newEmail('03b')
+    const relogin = async (expected: string) => {
+      await logout(context)
+      await signInThroughUi(page, email)
+      await expect(page).toHaveURL(expected)
+    }
     await signInThroughUi(page, email)
-    await s05(page, 'SUBMIT_SOLUTION')
+    await expect(page).toHaveURL('/onboarding/purpose')
+    await s05(page, 'skip')
+    await relogin('/onboarding/profile') // skipped S05 → S06
     await s06(page)
-    await logout(context)
-    await signInThroughUi(page, email)
-    await expect(page).toHaveURL('/onboarding/privacy', { timeout: 5_000 })
+    await relogin('/onboarding/privacy') // S06 done → S07
+    // S08 completes on entry: fail that call once so the account stays
+    // "S07 done, not finalised" — a real state, not a database edit.
+    await page.route('**/api/v1/me/onboarding/complete', (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: { code: 'INTERNAL', message: 'x', request_id: 'r' } }),
+      }),
+    )
+    await s07(page)
+    await expect(page.getByText('Chưa hoàn tất được. Vui lòng thử lại.')).toBeVisible()
+    await page.unroute('**/api/v1/me/onboarding/complete')
+    const id = await accountId(email)
+    await relogin('/onboarding/complete') // S07 done, not finalised → S08
+    await s08(page)
+    await relogin('/me') // completed → /me
+    expect(await state(id)).toMatchObject({ profiles: 1, status: 'ACTIVE', intent: null })
   })
 
   test('UAT-04 expired and used links never sign in; invalid goes to S04', async ({ page }) => {

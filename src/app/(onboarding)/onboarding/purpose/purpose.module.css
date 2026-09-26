@@ -127,8 +127,17 @@
 }
 
 .skip {
+  padding: 0;
+  border: 0;
+  background: none;
   color: #b91610;
-  text-decoration: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.skipError {
+  margin-right: 0.75rem;
+  color: var(--color-fg-accent);
 }
 
 .skip:focus-visible {

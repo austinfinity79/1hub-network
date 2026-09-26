@@ -353,7 +353,8 @@ describe('onboarding step after S06', () => {
   it('moves to PRIVACY only when name, headline, region and one expertise are saved', async () => {
     const accountId = await newAccount()
     await query(
-      `INSERT INTO individual_profiles (account_id, primary_intent) VALUES ($1, 'EXPLORE_NETWORK')`,
+      `INSERT INTO individual_profiles (account_id, primary_intent, purpose_step_completed_at)
+       VALUES ($1, 'EXPLORE_NETWORK', now())`,
       [accountId],
     )
     const step = async () => (await getOnboardingState(accountId)).current_step

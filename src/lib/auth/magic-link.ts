@@ -2,6 +2,7 @@ import { trackEvent } from '@/lib/analytics/analytics'
 import { ApiError } from '@/lib/api/errors'
 import type { Executor } from '@/lib/db/client'
 import { query, withTransaction } from '@/lib/db/client'
+import { getOnboardingState } from '@/lib/onboarding/state'
 import { reconcileRoster } from '@/lib/roster/reconcile'
 
 import {
@@ -224,22 +225,15 @@ export async function consumeMagicLink(token: unknown): Promise<ConsumeResult> {
   // A fresh session token every time: this is the session-fixation defence.
   const { token: sessionToken, expiresAt } = await createSession(accountId)
 
-  const profile = await query<{ onboarding_completed_at: Date | null }>(
-    `SELECT onboarding_completed_at FROM individual_profiles WHERE account_id = $1`,
-    [accountId],
-  )
-
-  const completed = Boolean(profile[0]?.onboarding_completed_at)
+  // The one onboarding resolver decides where a returning user resumes
+  // (DEC-WF01-RESUME-D1): the first incomplete step, or null when done.
+  const onboarding = await getOnboardingState(accountId)
 
   return {
     response: {
       result: 'SUCCESS',
       account_created: accountCreated,
-      onboarding: {
-        completed,
-        // WF01 orders onboarding Purpose -> Profile -> Privacy -> Complete.
-        next_step: completed ? null : 'PURPOSE',
-      },
+      onboarding: { completed: onboarding.completed, next_step: onboarding.current_step },
     },
     sessionToken,
     sessionExpiresAt: expiresAt,
