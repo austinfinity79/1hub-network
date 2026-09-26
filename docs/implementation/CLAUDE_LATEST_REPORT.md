@@ -1,73 +1,75 @@
 # Claude Task Report
 
 ## Task
-WF04-S03 — STRUCTURE / JOURNEY (INTERNAL ALPHA, DEMO). Process: PROCESS-P0-ACCELERATED-SAFE-V2.
+WF04-S04 — PROGRAMME EVENTS (INTERNAL ALPHA, DEMO). Process: PROCESS-P0-ACCELERATED-SAFE-V2.
 
 ## Status
-**DONE — LOCAL REVIEW.** Decisions: [DEC-WF04-S03-D1..D3](../decisions/DECISION_LOG.md#dec-wf04-s03-d1) (implementation only; H3 / H4 / H5 not reopened).
+**DONE — LOCAL REVIEW.** Decisions: [DEC-WF04-S04-D1..D3](../decisions/DECISION_LOG.md#dec-wf04-s04-d1) (implementation only; H1–H5 and the WF03 Event contract not reopened).
 
 ## Precheck
 | Item | Result |
 |---|---|
-| Stage contract | DEC-WF04-H3 + T00 `ProgrammeStageDTO`: position, name, summary, starts_at, ends_at — used as is |
-| Problem contract | DEC-WF04-H4 + `ProblemStatementDTO`: title, summary; CHALLENGE only |
-| Design | No WF04 bitmap; primitives: ADM5 card / header, WF01 stepper, WF01-S08 index, WF03 text actions, WF02 inputs |
-| Store | T00 session store (`save` result from S02); no second store |
-| S02 destination | Temporary list destination (S02-D3) replaced by `setup/journey` |
-| Auth | `requireProgrammeDemo` + new `requireDemoProgrammeRoute` (fixture scope on the server) |
-| Conflicts | None |
+| EventDTO | id, organization_id, slug, name, summary, starts_at, ends_at, location_text, status, created_at, updated_at (+ `programme_id` in WF04) |
+| Lifecycle | `event_status` DRAFT / PUBLISHED / LIVE / ENDED / CANCELLED / ARCHIVED; S07: create → DRAFT, edit DRAFT / PUBLISHED, publish, cancel; LIVE / ENDED no operation |
+| programme_id | Nullable; WF03 = NULL only (S07 refuses it); WF04 = the current programme |
+| Field rules | name required ≤ 200, summary ≤ 2000, location ≤ 200, end not before start (server rule `ends < starts` refused), Asia/Ho_Chi_Minh |
+| Order | S07 list: starts_at DESC NULLS FIRST, created_at DESC, id |
+| Fixture | P1: 2 PUBLISHED events; C1: 1 DRAFT event; all with `programme_id` |
+| Navigation | S03 "Tiếp theo" disabled until S04 → now activated |
+| Store / design | T00 session store; S03 card chrome, ADM5 pills, WF02 inputs |
+| Conflicts | None. Classification in S04-D1 |
 
 ## Scope
 | Item | Result |
 |---|---|
-| Stages | Render by stored position; add (appended), edit (fields only), remove (inline confirm, renumbered), ↑ / ↓ (boundaries disabled); empty state |
-| Problems | CHALLENGE only: add / edit / remove, empty state, hint restating H5; never on a PROGRAMME |
-| Atomicity | Pure edits (`journey.ts`); blank name / title, reversed or impossible dates, unknown ids change nothing |
-| Navigation | S02 save → S03 with confirmation; "← Danh sách" → list; "Tiếp theo" disabled with its reason until S04; stepper information only |
-| Route | Malformed → 404; fixture out of scope / unknown → 404; other UUID = own session draft or "Không tìm thấy…" |
-| Responsive | 768 / 390: no overflow; rows stack; buttons wrap |
+| List | This programme's events only, S07 order; name, S07 time line, location, status pill |
+| Create | DRAFT, `programme_id` / `organization_id` from the context (a hidden `programme_id` in the form is ignored) |
+| Edit | DRAFT and PUBLISHED; state and links unchanged |
+| Remove | DRAFT only, inline confirmation; published events have no remove |
+| Validation | Required name, limits, end ≥ start, real date-times; atomic |
+| States | Loading (server render), populated, empty, editing, validation error, save error + "Thử lại", reset |
+| Navigation | S03 → S04; "← Hành trình"; "Tiếp theo" disabled until S05 |
+| Shared | `SetupScreen` + `Confirm` extracted; S03 now uses them |
 
 ## Files changed
-- New: `src/app/(demo)/demo/programmes/[id]/setup/journey/page.tsx`; `src/components/programme-demo/{programme-journey.tsx, journey.module.css, setup-stepper.tsx, setup-stepper.module.css}`; `src/lib/programme-demo/{journey.ts, journey.test.ts}`; `tests/visual/specs/wf04-s03-programme-journey.spec.ts`
-- Changed: `src/lib/programme-demo/{guard.ts (+ route resolution), basic-info.ts (shared day check)}`; `src/components/programme-demo/{demo-store.tsx (ready), demo-page.tsx / .module.css (one-off confirmation), programme-create.tsx (→ S03), programme-list.tsx / .module.css (confirmation moved), demo-buttons.module.css (narrow wrap)}`; specs `wf04-s02` (→ S03), `p0-shell-navigation` (crawl both journeys)
+- New: `src/app/(demo)/demo/programmes/[id]/setup/events/page.tsx`; `src/components/programme-demo/{programme-events.tsx, setup-screen.tsx}`; `src/lib/programme-demo/{event-time.ts, programme-events.ts, programme-events.test.ts}`; `tests/visual/specs/wf04-s04-programme-events.spec.ts`
+- Changed: `src/components/programme-demo/{programme-journey.tsx (on SetupScreen; next → S04), journey.module.css, status-pill.tsx / .module.css (generic lifecycle pill)}`; specs `wf04-s03` (shared states, next link), `p0-shell-navigation` (crawl both events steps)
 - Docs: DECISION_LOG, WF04 plan / happy path, P0_STATUS, CLAUDE_LATEST_REPORT, this report
 
 ## Migrations / data
-None. No DB, audit, analytics, profile, membership, organization or event write.
+None. No programme, event, audit, analytics, profile, membership or organization write; WF03 events API output identical before / after.
 
 ## Tests
 | Gate | Result |
 |---|---|
 | Format / lint / typecheck / build | PASS |
-| Unit | 206 passed (10 new: stage order, add, edit, remove, move, boundaries, atomicity, empty, problems, H5 unchanged) |
-| DB | 343 passed |
-| WF04 Playwright | 44 / 44 (S03: 10) |
-| Targeted regression | 184 passed: WF04, P0-SHELL, shell-routes, WF03-T00 / S07 / S08, auth / authz session, console health, API contract, M0 root, WF01-S01, WF02-S01 / S05 |
-| Navigation matrix | 309 rows, 0 dead; both fixture journeys crawled: "← Danh sách" WORKING, "Tiếp theo" DISABLED with reason |
+| Unit | 213 passed (7 new: S07 time semantics, order / boundary, create link, validation, edit, remove, atomicity) |
+| DB | 343 passed (includes the WF03 events suite) |
+| WF04 Playwright | 54 / 54 (S04: 10) |
+| Targeted regression | 201 passed: WF04, P0-SHELL, shell-routes, WF03-T00 / S07 / S08 / S09, auth / authz session, console health, API contract, M0 root, WF01-S01, WF02-S01 / S05 |
+| Navigation matrix | 333 rows, 0 dead: S03 "Tiếp theo" → events WORKING, S04 "← Hành trình" WORKING, S04 "Tiếp theo" DISABLED with reason |
 | Server log | 0 email / token / cookie lines |
 
 ## Visual QA
 | Check | Result |
 |---|---|
-| Captures | `wf04-s03-programme-1440x900.png`, `-challenge-`, `-editing-`, `-empty-`, `-programme-full`, `-challenge-full`, `-768.png`, `-390.png` |
-| vs ADM5 | header band + rule, card top edge, card left edge (Programme and Challenge): 0 drift |
-| vs WF02-S02 | stage name input left / top edges (editing): 0 drift |
-| Typography | 0 violations on Programme, Challenge and editing states |
+| Captures | `wf04-s04-programme-1440x900.png`, `-programme-empty-`, `-challenge-`, `-768.png`, `-390.png` |
+| vs ADM5 | header band + rule, card top / left edges, open-state pill (Programme) and neutral pill (Challenge) caps: 0 drift |
+| Typography | 71 text elements, 0 violations |
 | Structural / Major / Component | 0 / 0 / 0 |
-| Raster | none |
-| Intentional-Demo | No WF04 bitmap; composed primitives listed in S03-D1 |
-| Fixed during QA | card titles rendered regular (type class overrode the weight); 390 px: header buttons overflowed (85 px), rows too narrow — buttons now wrap and rows stack |
+| Raster | ADM5 pill corners on half pixels, masked (as S01) |
+| Intentional-Demo | No WF04 bitmap; S03 card chrome with S07 wording and ADM5 pills |
 
 ## Blocking gaps
-0. Known PO item unchanged: OpsShell is desktop-first (216 px sidebar at 390 px).
+0. Known PO item unchanged: OpsShell desktop-first (390 px usable but narrow).
 
 ## Git
-- Branch: `main`; start HEAD `f185598` (checked again before each commit)
-- Implementation commit: `7cef8e4`
+- Branch: `main`; start HEAD `ba8b098` (checked again before each commit)
+- Implementation commit: `395d997`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-WF04-S04 — Programme Events. Do not start WF05.
+WF04-S05 — Registration Configuration. Do not start WF05.
