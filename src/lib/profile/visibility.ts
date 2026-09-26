@@ -73,6 +73,26 @@ export async function discoveryLevelOf(ownerAccountId: string): Promise<Visibili
   return effective(profile ? await readSettings(query, profile.id) : undefined).PROFILE_DISCOVERY
 }
 
+/**
+ * Effective PROFILE_DISCOVERY of many profiles in one read (WF03-S03 ops lists).
+ * Same rule as `discoveryLevelOf`: override, then default level, then
+ * NETWORK_ONLY when no settings row exists.
+ */
+export async function discoveryLevelsOf(
+  exec: Executor,
+  profileIds: readonly string[],
+): Promise<Map<string, VisibilityLevel>> {
+  const rows = profileIds.length
+    ? await exec<SettingsRow & { profile_id: string }>(
+        `SELECT profile_id::text, default_level::text AS default_level, group_overrides
+           FROM profile_visibility_settings WHERE profile_id = ANY($1::uuid[])`,
+        [profileIds],
+      )
+    : []
+  const byId = new Map(rows.map((r) => [r.profile_id, r]))
+  return new Map(profileIds.map((id) => [id, effective(byId.get(id)).PROFILE_DISCOVERY]))
+}
+
 const invalid = (reason: string) =>
   new ApiError('VISIBILITY_VALIDATION_FAILED', 422, 'Unsupported visibility setting.', {
     groups: reason,

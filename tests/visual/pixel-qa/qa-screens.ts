@@ -152,7 +152,13 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
     'platform admin: the seeded HUB / Chapter / CLB list plus one test-hook CLB (5 rows, as drawn)',
   ),
   cfg('WF03-S02', '/ops/org/:orgId', 'leader', 'Chapter 01 dashboard', ORG),
-  cfg('WF03-S03', '/ops/org/:orgId/members', 'leader', 'Chapter 01 member list', ORG),
+  cfg(
+    'WF03-S03',
+    '/ops/org/:orgId/members',
+    'ops',
+    'platform admin: a test-hook CLB with five relationships (two pending, one leader), as drawn',
+    { orgId: 'e8000000-0000-0000-0000-000000000001' },
+  ),
   cfg('WF03-S04', '/ops/org/:orgId/members/:profileId', 'leader', 'member detail', {
     ...ORG,
     profileId: FIXTURES.memberProfileId,

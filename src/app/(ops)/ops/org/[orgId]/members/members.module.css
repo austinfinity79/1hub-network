@@ -1,0 +1,232 @@
+/*
+ * WF03-S03 — organization members. Measured from the approved ADM17 reference
+ * at 1440x900 DPR1 (px / 16 = rem), content area right of the 216px OpsShell
+ * (the reference draws the same sidebar family); local to this screen. The
+ * reference's 113px table header block and its 15px cell offset in columns 3–5
+ * are reproduced as drawn.
+ */
+
+.page {
+  min-height: 100vh;
+  padding: 1.5rem 1.6875rem 3rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.375rem;
+  line-height: 1.875rem;
+  font-weight: var(--weight-semibold);
+  color: #140002;
+}
+
+.subtitle {
+  margin: 0.1875rem 0 0;
+  color: #4f3d3e;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 4rem;
+  margin-top: 1.0625rem;
+  padding: 0 0.875rem;
+  border: 1px solid #e3dede;
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+  box-shadow: 0 0 0 1px rgb(20 0 2 / 0.025);
+}
+
+.search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.3125rem;
+  margin-right: 0.5rem;
+  padding: 0 0.875rem;
+  border-radius: 0.5rem;
+  background: #f7f4f4;
+}
+
+.searchIcon {
+  color: #5a4748;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #140002;
+}
+
+.searchInput:focus {
+  outline: none;
+}
+
+.search:focus-within {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.chip {
+  height: 2.1875rem;
+  padding: 0 0.8125rem;
+  font-size: 0.8125rem;
+  border: 1px solid #e3dede;
+  border-radius: 1.09375rem;
+  background: var(--hub-surface);
+  color: #251011;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: #fd715f;
+  color: #bb1c16;
+}
+
+.chip:focus-visible,
+.open:focus-visible,
+.retry:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.table {
+  overflow: hidden;
+  margin-top: 1rem;
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+  box-shadow: 0 1px 6px color-mix(in srgb, var(--hub-burgundy) 8%, transparent);
+}
+
+.head,
+.row {
+  display: grid;
+  grid-template-columns: 18.9375rem 9.3125rem 15.5rem 9.375rem minmax(0, 1fr) 4.5rem;
+  padding-left: 1.125rem;
+}
+
+.head {
+  height: 7.1875rem;
+  padding-top: 0.75rem;
+  border-bottom: 1px solid #f0eaea;
+  background: #f7f4f4;
+}
+
+.th {
+  font-size: 0.625rem;
+  line-height: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5a4748;
+}
+
+.row {
+  align-items: center;
+  height: 7.25rem;
+}
+
+.row + .row {
+  border-top: 1px solid #f1ecec;
+}
+
+.attention {
+  background: #fff9f7;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.avatar {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #e2dcdc;
+  object-fit: cover;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  line-height: 1.375rem;
+  color: #140002;
+}
+
+.headline {
+  color: #5a4748;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  height: 1.625rem;
+  padding: 0 0.625rem;
+  border: 1px solid #e3dede;
+  border-radius: 0.8125rem;
+  font-size: 0.6875rem;
+  color: #402b2c;
+}
+
+.statusAttention {
+  border-color: #fd715f;
+  color: #bb1c16;
+}
+
+.cell {
+  min-width: 0;
+  padding-right: 1rem;
+  color: #402b2c;
+}
+
+.shifted {
+  padding-left: 0.9375rem;
+}
+
+.action {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 1.25rem;
+}
+
+.open {
+  color: #bb1c16;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.note {
+  margin: 0;
+  padding: 0.875rem 1.125rem;
+  color: #402b2c;
+}
+
+.failed {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem 1.125rem;
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+  color: #402b2c;
+}
+
+.retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-fg-accent);
+  cursor: pointer;
+}
