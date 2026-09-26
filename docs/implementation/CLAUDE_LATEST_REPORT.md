@@ -1,70 +1,87 @@
 # Claude Task Report
 
 ## Task
-WF03 COMPLETION AUDIT + HAPPY PATH UAT + FRESH DB / MIGRATION / RESTART + FULL WF03 PIXEL / SECURITY / REGRESSION. Process: PROCESS-P0-ACCELERATED-SAFE-V2, workflow closure.
+P0-LANDING — PUBLIC HOMEPAGE (INTERNAL ALPHA). Process: PROCESS-P0-ACCELERATED-SAFE-V2.
 
-## Verdict
-**GREEN — WF03 PROTECTED / CLOSED / GREEN.** Details: [WF03_COMPLETION_AUDIT.md](../WF03_COMPLETION_AUDIT.md) and [WF03_UAT_MATRIX.md](../WF03_UAT_MATRIX.md).
+## Status
+**DONE — LOCAL REVIEW.** Decisions: [DEC-P0-LANDING-D1..D3](../decisions/DECISION_LOG.md#dec-p0-landing-d1).
+
+## Precheck
+| Item | Result |
+|---|---|
+| SOT | Master Spec §1 (shared ecosystem identity / data and operating layer; activity → records → enriched profiles → future Discovery / Matching); Data SOT principles 1, 4, 7; WF04 = Demo, WF06 = Future, CCCD verification = Future. The Overview DOCX is not in the repository: the four pain points come from the task |
+| Design | No approved landing bitmap; approved public primitives exist (WF03-S09 public page, WF01-S01 display headline) |
+| Primitives | S09 top bar / hero gradient / red-dash eyebrow / card / join band / footer; `.type-display` (Archivo 700) |
+| CTA routes | `/auth`, the resolver's route (`/me` or a WF01 step), `/organizations/:slug` of a PUBLISHED HUB, `/legal/:kind/:version` |
+| Conflicts | None between Business SOT and design. M0-ENTRY-01 (`/` redirects) is superseded for `/` by this task (D1) |
 
 ## Scope
-- New UAT spec `tests/visual/specs/wf03-uat-journey.spec.ts`:
-  - UAT-WF03-J1: the 20-step happy path with DB checks;
-  - SEC-WF03-01: 4 actors × 18 protected calls incl. IDOR;
-  - NEG-WF03: workflow invariants.
-- Fresh DB, upgrade (006 → 009), rerun, restart and full regression proofs.
-- Closure docs.
-- No product code changed; no defect needed a fix.
+`/` renders six sections plus a footer. The header shows only real links.
+
+| Section | Content |
+|---|---|
+| Top bar | Brand, three in-page anchors, "Mạng lưới" (S09 of the HUB), primary CTA |
+| 01 Hero | Positioning, primary CTA, "Khám phá mạng lưới" |
+| 02 Problem | 4 pain points |
+| 03 Product | Programs × Verified Identity × Ecosystem Profiles × Discovery & Matching, each with a status chip |
+| 04 Flywheel | 5 steps, labelled as product vision |
+| 05 Surfaces | 5 surfaces with status; only "Tổ chức & mạng lưới" links, to the S09 page |
+| 06 Join | Final CTA |
+| Footer | Current legal documents |
 
 ## Files changed
-- `tests/visual/specs/wf03-uat-journey.spec.ts` (new)
-- `docs/implementation/WF03_COMPLETION_AUDIT.md`, `WF03_UAT_MATRIX.md` (new)
-- `docs/implementation/WF03_SCREEN_IMPLEMENTATION_PLAN.md`, `P0_STATUS.md`, `CLAUDE_LATEST_REPORT.md`
-- This report
+- `src/app/page.tsx`
+- `src/components/landing/{landing.tsx, landing.module.css}`
+- `src/lib/landing/{entry.ts, entry.test.ts}`
+- `src/app/page.test.tsx` (removed; replaced by `entry.test.ts`)
+- `tests/visual/specs/p0-landing.spec.ts` (new), `tests/visual/specs/m0-entry-01-root.spec.ts` (amended)
+- Docs: DECISION_LOG, P0_STATUS, CLAUDE_LATEST_REPORT, this report
 
 ## Migrations / data
-No new migration.
-
-| Proof | Result |
-|---|---|
-| Fresh DB | 001→009 in order; rerun skipped 9/9; checksums match; seed deterministic (12 tables) |
-| Upgrade 006 → 009 | 10 canonical tables identical |
-| Restart (app + PostgreSQL) | 14 tables identical; session and public page identical |
-| Throwaway databases | Dropped afterwards |
-| Dev fixtures | Intact (see WF03-P3-01) |
+None.
 
 ## Tests
 | Gate | Result |
 |---|---|
 | Format / lint / typecheck / build | PASS |
-| Unit | 157 passed |
-| DB (full) | 334 passed |
-| WF03 UAT spec | 3/3 on the dev DB; 3/3 on the fresh DB; 3/3 ×2 after restart |
-| WF03 screen specs on the fresh DB | 66 passed |
-| Full visual suite (WF01 + WF02 + WF03 + shell / contract / console) | 431 passed, 24 skipped (pre-existing), 0 failed |
-| Server log (full run) | 0 email / token / cookie / session lines |
+| Unit | 158 passed |
+| DB | 334 passed |
+| Landing + root specs | 12 / 12 |
+| Targeted regression (WF01 ×8, M0, shell-routes, console-health, api-contract, WF02-T00, WF03-T00, WF03-S09, landing) | 255 passed, 0 failed |
+| Server log | 0 email / token / cookie lines |
+
+The landing spec covers:
+- guest page and CTAs;
+- member / incomplete / leader CTAs;
+- no `#` or dead links (every internal href requested);
+- no personal / internal data and no unsupported claims;
+- explicit Demo / Future status;
+- protected-route guards and resolver unchanged;
+- 768 / 390 without overflow;
+- keyboard focus;
+- no console or hydration errors.
 
 ## Visual QA
-- P0 structural / P1 major / P2 component: 0.
-- P3 raster: S03, S04, S07, S08, S09 (≤ 0.17% outside text).
-- Intentional classes are per screen.
-- Approved baselines untouched.
+| Check | Result |
+|---|---|
+| Captures | `tests/visual/actual/p0-landing-1440x900.png`, `-full.png` (2750px), `-768.png`, `-390.png` |
+| Primitives vs S09 | Bar, card top / left edges, hero primary cap, join button cap: 0 drift. Eyebrow dash core: 0 drift; its anti-aliased edge rows are P3 raster |
+| Structural / Major / Component | 0 / 0 / 0 |
+| Intentional | No approved landing bitmap: the layout awaits PO review (D2) |
 
-## Defects
-- P0 / P1 / P2: 0.
-- P3: 5 (WF03-P3-01..05 in the audit), including one closure-harness incident: dev fixtures were changed by the first matrix draft, then restored and the spec fixed. Not a product defect.
-
-## External / release inputs
-1. Real roster data and organization tree.
-2. Production legal content, production vocabulary, email provider.
-3. PO copy review.
+## Blocking gaps
+0. Release notes:
+- PO review of layout and copy;
+- the Overview DOCX should be added to the repository for traceability;
+- the "Mạng lưới" link appears only when a PUBLISHED HUB exists in production data.
 
 ## Git
-- Branch: `main`; start HEAD `5780870` (checked again before each commit)
-- Implementation commit: `4bfc637` (UAT spec; no product code changed)
+- Branch: `main`; start HEAD `0a2df09` (checked again before each commit)
+- Implementation commit: `71d6154`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PHASE 0 INTEGRATED RELEASE / PO REVIEW BUILD. Do not start WF04 automatically.
+P0-SHELL — Integrated Product Shell + Navigation Audit. Do not start WF04.

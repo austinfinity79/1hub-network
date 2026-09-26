@@ -25,6 +25,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S07 Privacy & Visibility | CLOSED / PASS — one acknowledgement → two versioned ConsentRecords; PROFILE_DISCOVERY (NETWORK_ONLY/PRIVATE); avatar visibility enforced at `/media/assets/:id`; Future purposes and skip omitted; DEC-WF01-S07-D1..D8 ([report](reports/WF01-S07_privacy-visibility.md), [contract](WF01_S07_PRIVACY_CONSENT_CONTRACT.md)) |
 | WF01-S08 Onboarding Complete | CLOSED / PASS — completion on entry (idempotent, atomic DRAFT → ACTIVE); activation minimum only; `PROFILE_ACTIVATED` audit and `onboarding_completed` analytics once; Challenge/Project/Chapter cards deferred; exit → `/me`; DEC-WF01-S08-D1..D8 ([report](reports/WF01-S08_onboarding-complete.md), [contract](WF01_S08_COMPLETION_CONTRACT.md)) |
 
+**INTERNAL ALPHA — P0-LANDING: DONE** — `/` is the public homepage (DEC-P0-LANDING-D1..D3; [report](P0_LANDING_IMPLEMENTATION_REPORT.md)). WF01–WF03 remain PROTECTED / CLOSED / GREEN.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -113,7 +115,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-PHASE 0 INTEGRATED RELEASE / PO REVIEW BUILD (WF01, WF02, WF03 all PROTECTED / CLOSED / GREEN). WF04 is not started automatically.
+INTERNAL ALPHA — P0-SHELL Integrated Product Shell + Navigation Audit. WF04 is not started automatically.
 
 ## Related
 
