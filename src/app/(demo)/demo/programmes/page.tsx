@@ -1,14 +1,12 @@
-import { DemoHome } from '@/components/programme-demo/demo-home'
-import { requireProgrammeDemo } from '@/lib/programme-demo/guard'
-import { listDemoProgrammes } from '@/lib/programme-demo/read-model'
+import { ProgrammeList } from '@/components/programme-demo/programme-list'
 
 /**
- * WF04 — /demo/programmes. T00 renders the demo frame with the in-scope totals;
- * WF04-S01 adds the list inside the same frame.
+ * WF04-S01 — /demo/programmes, the Programme / Challenge list. The layout has
+ * already applied the demo guard; the list reads `GET /api/v1/demo/programmes`,
+ * which re-authorizes on its own.
  */
 export const dynamic = 'force-dynamic'
 
-export default async function ProgrammeDemoPage() {
-  const { accountId } = await requireProgrammeDemo()
-  return <DemoHome server={await listDemoProgrammes(accountId)} />
+export default function ProgrammeDemoPage() {
+  return <ProgrammeList />
 }

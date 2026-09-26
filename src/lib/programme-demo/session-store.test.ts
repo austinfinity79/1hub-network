@@ -142,6 +142,17 @@ describe('WF04-T00 session store', () => {
     ])
   })
 
+  it('never shows an id twice, even if a stored draft reuses a listed id (the copy wins)', () => {
+    const copy = structuredClone(server[1]!)
+    copy.programme.name = 'Bản sửa'
+    const state = withProgramme(emptyDemoState(), copy, true)
+    const listed = mergedSummaries(server.map(toSummary), state, 'ALL')
+    expect(listed.map((s) => [s.id, s.name])).toEqual([
+      [DEMO_PROGRAMME_ID, 'Chương trình ươm tạo (demo)'],
+      [DEMO_CHALLENGE_ID, 'Bản sửa'],
+    ])
+  })
+
   it('stores copies, never references', () => {
     const d = structuredClone(server[0]!)
     const state = withProgramme(emptyDemoState(), d)

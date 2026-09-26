@@ -1,0 +1,129 @@
+/*
+ * WF04-S01 — Programme / Challenge list (DEC-WF04-H1, DEC-WF04-S01-D1..D3).
+ * The approved ADM5 table card measured at 1440x900 DPR1: #e5dfdf border,
+ * 8px radius, 35px #f8f6f6 head with a #e5e0e0 rule, 48px rows split by
+ * #e7e2e2, 19px inset, and ADM5's first four column tracks (324 / 216 / 126
+ * / 198). The drawn "Chapter hưởng ứng" track carries the canonical dates
+ * instead, and the problem-count track is narrowed (179 → 150) so the status
+ * pill ("Đang công khai" is longer than any drawn label) is never clipped as
+ * ADM5's own last pill is (INTENTIONAL-DEMO). Local to this screen.
+ */
+
+.scroller {
+  overflow-x: auto;
+}
+
+.table {
+  min-width: 72.5rem;
+  overflow: hidden;
+  border: 1px solid #e5dfdf;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 20.25rem 13.5rem 7.875rem 12.375rem 9.375rem minmax(0, 1fr);
+  align-items: center;
+  height: 3rem;
+  padding-left: 1.1875rem;
+}
+
+.row + .row {
+  border-top: 1px solid #e7e2e2;
+}
+
+/* 35px fill + the 1px rule, as drawn. */
+.head {
+  height: 2.25rem;
+  border-bottom: 1px solid #e5e0e0;
+  background: #f8f6f6;
+}
+
+.head + .row {
+  border-top: 0;
+}
+
+.th {
+  font-size: 0.625rem;
+  line-height: 1rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #907a7b;
+}
+
+.name {
+  min-width: 0;
+  padding-right: 1rem;
+  overflow: hidden;
+  color: #251011;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell {
+  min-width: 0;
+  padding-right: 1rem;
+  overflow: hidden;
+  color: #5a4748;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The pill is centred in its row, as drawn (not on the text baseline), and
+   never clipped. */
+.statusCell {
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+
+.note {
+  margin: 0;
+  padding: 0.75rem 1.125rem;
+  color: #5a4748;
+}
+
+.failed {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid #e5e1e1;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+  color: #5a4748;
+}
+
+.retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-fg-accent);
+  cursor: pointer;
+}
+
+.retry:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+/* The ADM5 header button family (#fc523c, 7px radius, 35px), shown disabled
+   until WF04-S02 (DEC-WF04-S01-D2). */
+.create {
+  flex: none;
+  height: 2.1875rem;
+  margin-top: 0.0625rem;
+  padding: 0 1.125rem;
+  border: 0;
+  border-radius: 0.4375rem;
+  background: #fc523c;
+  font-size: 0.8125rem;
+  color: #160002;
+  white-space: nowrap;
+}
+
+.create:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

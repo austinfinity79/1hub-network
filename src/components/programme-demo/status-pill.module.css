@@ -1,0 +1,32 @@
+/*
+ * WF04 — Programme lifecycle pill. The two ADM5 pill families measured at
+ * 1440x900 DPR1: the open-state pill ("Đang mở nộp": #fef3f1 fill, #f9cec6
+ * border, #bd241f text) and the neutral pill ("Đang chấm" / "Sắp diễn ra":
+ * #f7f5f5 fill, #e9e4e4 border, #625253 text); 22px tall, 10px inset, full
+ * radius. Only the demo lifecycle is shown (DEC-WF04-H5): PUBLISHED uses the
+ * open-state family, DRAFT the neutral one.
+ */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 1.375rem;
+  padding: 0 0.625rem;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+}
+
+.pill[data-status='PUBLISHED'] {
+  border-color: #f9cec6;
+  background: #fef3f1;
+  color: #bd241f;
+}
+
+.pill[data-status='DRAFT'] {
+  border-color: #e9e4e4;
+  background: #f7f5f5;
+  color: #625253;
+}

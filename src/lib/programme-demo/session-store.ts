@@ -164,21 +164,24 @@ export function toSummary(detail: ProgrammeDemoDetailDTO): ProgrammeDemoSummaryD
 
 /**
  * The list the demo shows: session-created drafts in the actor's allowance
- * (newest first), then the server list with session copies applied. A session
- * copy never adds a programme the server did not list.
+ * (newest first), then the server list, in the server's order, with session
+ * copies applied. A session copy never adds a programme the server did not
+ * list, and an id is never shown twice.
  */
 export function mergedSummaries(
   server: readonly ProgrammeDemoSummaryDTO[],
   state: DemoSessionState,
   allowance: OrganizationAllowance,
 ): ProgrammeDemoSummaryDTO[] {
+  const listedIds = new Set(server.map((s) => s.id))
   const drafts = state.created
+    .filter((id) => !listedIds.has(id))
     .map((id) => state.programmes[id])
     .filter((d): d is ProgrammeDemoDetailDTO => Boolean(d) && inAllowance(d!, allowance))
     .map(toSummary)
   const listed = server.map((s) => {
     const copy = state.programmes[s.id]
-    return copy && !state.created.includes(s.id) ? toSummary(copy) : s
+    return copy ? toSummary(copy) : s
   })
   return [...drafts, ...listed]
 }
