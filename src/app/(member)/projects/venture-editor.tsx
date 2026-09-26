@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, type FormEvent } from 'react'
 
@@ -46,6 +47,7 @@ const COPY = {
   newTitle: 'Dự án / startup mới',
   newStatus: 'Chưa lưu',
   save: 'Lưu',
+  team: 'Đội ngũ',
   savedAt: 'đã lưu lúc',
   typeHint: 'Chọn một lần khi tạo, không đổi được sau đó.',
   summaryHint: 'Vài câu về việc dự án đang làm.',
@@ -163,11 +165,24 @@ export function VentureEditor({
         title={creating ? COPY.newTitle : savedName}
         status={status}
         actions={
-          editable ? (
-            <Button type="submit" loading={saving}>
-              {COPY.save}
-            </Button>
-          ) : null
+          <>
+            {venture ? (
+              // P0-SHELL (DEC-P0-SHELL-D5): the team page of this venture.
+              <Link
+                href={`/projects/${venture.id}/team`}
+                className="ui-button"
+                data-variant="secondary"
+                data-nav="venture-team"
+              >
+                {COPY.team}
+              </Link>
+            ) : null}
+            {editable ? (
+              <Button type="submit" loading={saving}>
+                {COPY.save}
+              </Button>
+            ) : null}
+          </>
         }
       />
       <div className={styles.body}>

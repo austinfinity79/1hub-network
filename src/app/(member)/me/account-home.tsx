@@ -208,7 +208,17 @@ export function AccountHome() {
       <div className={styles.lowerGrid}>
         <div className={styles.orgCard} aria-busy={network.kind === 'loading'}>
           <Surface as="section">
-            <h2 className={`weight-semibold ${styles.eyebrow}`}>TỔ CHỨC CỦA TÔI</h2>
+            <div className={styles.orgHead}>
+              <h2 className={`weight-semibold ${styles.eyebrow}`}>TỔ CHỨC CỦA TÔI</h2>
+              {/* P0-SHELL (DEC-P0-SHELL-D6): the lasting entry to WF02-S05. */}
+              <Link
+                href="/projects/new"
+                className={`weight-medium ${styles.createLink}`}
+                data-nav="create-project"
+              >
+                + Tạo dự án / startup
+              </Link>
+            </div>
             {network.kind === 'failed' ? (
               <div className={styles.failed} role="alert" data-state="network-failed">
                 <p className="type-body-sm">{COPY.networkFailed}</p>

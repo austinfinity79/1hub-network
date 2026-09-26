@@ -511,7 +511,9 @@ test.describe('WF01-S07 functional and security', () => {
     await signInFresh(page.request)
     await openPrivacy(page)
     await expect(page.getByText('Bỏ qua, làm sau')).toHaveCount(0)
-    await expect(page.locator('header').getByRole('link')).toHaveCount(0)
+    // Only the P0-SHELL wordmark → / link (DEC-P0-SHELL-D1); no skip or step link.
+    await expect(page.locator('header').getByRole('link')).toHaveCount(1)
+    await expect(page.locator('header [data-nav="home"]')).toHaveAttribute('href', '/')
     await expect(page.getByRole('switch')).toHaveCount(1)
     const text = (await page.locator('main').innerText()).toLowerCase()
     for (const future of ['quỹ đầu tư', 'đặt bài toán liên hệ', 'tuyển dụng', 'google']) {
@@ -530,6 +532,9 @@ test.describe('WF01-S07 functional and security', () => {
     await signInFresh(page.request)
     await openPrivacy(page)
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+    // P0-SHELL (DEC-P0-SHELL-D1): the wordmark → / is the first Tab stop.
+    await page.keyboard.press('Tab')
+    await expect(page.locator('[data-nav="home"]')).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(discoverySwitch(page)).toBeFocused()
     expect(

@@ -22,6 +22,21 @@
   box-shadow: 1px 0 0 #ececec;
 }
 
+/* P0-SHELL (DEC-P0-SHELL-D3): the member-area entry, pinned to the sidebar foot
+   (absolute, so the measured sidebar layout above does not move). */
+.accountEntry {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.125rem;
+  color: #b29899;
+  text-decoration: none;
+}
+
+.accountEntry:focus-visible {
+  outline: 0.125em solid #fc523c;
+  outline-offset: 0.125em;
+}
+
 .wordmark {
   margin: 0 1.125rem;
   font-size: 0.875rem;

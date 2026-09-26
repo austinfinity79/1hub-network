@@ -264,7 +264,7 @@ test.describe('WF01-S08 functional and security', () => {
     expect(await profile(accountId)).toMatchObject([{ status: 'ACTIVE' }])
   })
 
-  test('D2–D4/D6: only the /me exit; no Challenge, Project or Chapter action; no skip', async ({
+  test('D2–D4/D6: /me exit + card 02 project action (DEC-P0-SHELL-D6); no Challenge or Chapter action; no skip', async ({
     page,
   }) => {
     await signInFresh(page.request)
@@ -274,9 +274,12 @@ test.describe('WF01-S08 functional and security', () => {
     const links = await page
       .locator('main a, header a')
       .evaluateAll((els) => els.map((el) => el.getAttribute('href')))
-    expect(links).toEqual(['/me'])
+    expect(links).toEqual(['/', '/projects/new', '/me'])
+    // Only card 02 of the reference is rendered (card 01 Challenge / card 03 Chapter stay omitted).
+    await expect(page.locator('[data-action-card]')).toHaveCount(1)
+    await expect(page.locator('[data-action-card="project"]')).toContainText('Lập hồ sơ đội')
     const text = (await page.locator('body').innerText()).toLowerCase()
-    for (const absent of ['bài toán', 'hồ sơ đội', 'chapter', 'bỏ qua, làm sau', 'dự sự kiện']) {
+    for (const absent of ['bài toán', 'chapter', 'bỏ qua, làm sau', 'dự sự kiện']) {
       expect(text, absent).not.toContain(absent)
     }
     // The stepper is finished and not interactive.
@@ -291,6 +294,11 @@ test.describe('WF01-S08 functional and security', () => {
     await makeReady(page.request)
     await openComplete(page)
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+    // P0-SHELL (DEC-P0-SHELL-D1): the wordmark → / is the first Tab stop.
+    await page.keyboard.press('Tab')
+    await expect(page.locator('[data-nav="home"]')).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(page.locator('[data-nav="create-project"]')).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(cta(page)).toBeFocused()
     expect(await cta(page).evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none')
@@ -346,6 +354,8 @@ test.describe('WF01-S08 pixel QA', () => {
     cardBottom: 767,
     skip: { x: 1290, y: 0, width: 150, height: 62 },
     cards: { x: 340, y: 316, width: 760, height: 322 },
+    /** Card 02 "Lập hồ sơ đội" of the reference (rendered since DEC-P0-SHELL-D6). */
+    projectCard: { x: 377, y: 423, width: 686, height: 89 },
     discs: [544, 661],
     connectors: [625, 762],
     /** Baseline copy replaced by D5/D7 (text regions of the old wording). */
@@ -385,6 +395,7 @@ test.describe('WF01-S08 pixel QA', () => {
 
     const card = (await page.locator('[data-ui="surface"]').boundingBox())!
     const panel = (await page.locator('[data-completion]').boundingBox())!
+    const projectCard = (await page.locator('[data-action-card="project"]').boundingBox())!
     const upperDy = Math.round(card.y) - REF.cardTop
     const panelDy = Math.round(panel.y) - REF.panelTop
     const bottomDy = Math.round(card.y + card.height) - REF.cardBottom
@@ -453,6 +464,18 @@ test.describe('WF01-S08 pixel QA', () => {
         },
         dy: upperDy,
       },
+      // DEC-P0-SHELL-D6: the rendered card 02 against the reference card 02 (text masked).
+      {
+        name: 'project-card',
+        reference: {
+          x: REF.projectCard.x - 4,
+          y: REF.projectCard.y - 4,
+          width: REF.projectCard.width + 8,
+          height: REF.projectCard.height + 8,
+        },
+        dx: Math.round(projectCard.x) - REF.projectCard.x,
+        dy: Math.round(projectCard.y) - REF.projectCard.y,
+      },
       {
         name: 'info-panel-top',
         reference: { x: 377, y: REF.panelTop, width: 686, height: 40 },
@@ -495,9 +518,9 @@ test.describe('WF01-S08 pixel QA', () => {
         },
         {
           class: 'TEMPORARY-PRODUCTION-DEPENDENCY',
-          reference_region: { ...REF.cards, y: 418, height: 220 },
+          reference_region: { ...REF.cards, y: 520, height: 118 },
           reason:
-            'DEC-WF01-S08-D3/D4: Create Project (02) and Chapter (03) cards not rendered until WF02 dependencies exist',
+            'DEC-WF01-S08-D4: Chapter (03) card not rendered (no region→chapter mapping). Card 02 is rendered since DEC-P0-SHELL-D6 and compared as segment project-card',
         },
         {
           class: 'INTENTIONAL-CONTRACT',

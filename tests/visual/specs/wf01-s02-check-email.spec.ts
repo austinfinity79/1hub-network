@@ -254,6 +254,9 @@ test.describe('WF01-S02 functional', () => {
     await openAt(page, 60)
     // The countdown re-evaluates on its next one-second tick.
     await expect(resendButton(page)).toBeEnabled()
+    // P0-SHELL (DEC-P0-SHELL-D1): the wordmark → / is the first Tab stop.
+    await page.keyboard.press('Tab')
+    await expect(page.locator('[data-nav="home"]')).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(resendButton(page)).toBeFocused()
     expect(await resendButton(page).evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe(

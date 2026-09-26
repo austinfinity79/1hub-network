@@ -222,6 +222,9 @@ test.describe('WF01-S01 functional', () => {
     page,
   }) => {
     await open(page)
+    // P0-SHELL (DEC-P0-SHELL-D1): the wordmark → / is the first Tab stop.
+    await page.keyboard.press('Tab')
+    await expect(page.locator('[data-nav="home"]')).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(emailField(page)).toBeFocused()
     await page.keyboard.type('member@example.test')

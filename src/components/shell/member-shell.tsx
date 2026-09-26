@@ -2,21 +2,37 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import type { MemberIdentity } from '@/lib/member/guard'
-import { HEADER_NAV, SIDEBAR_NAV, type NavItem, type SidebarKey } from '@/lib/member/nav'
+import {
+  HEADER_NAV,
+  INERT_REASONS,
+  OPS_ENTRY,
+  SIDEBAR_NAV,
+  type NavItem,
+  type SidebarKey,
+} from '@/lib/member/nav'
 
 import styles from './member-shell.module.css'
+import { HomeLink } from '@/components/shell/home-link'
 
 type Props = {
   /** The sidebar entry of the current screen. */
   active: SidebarKey
-  member: Pick<MemberIdentity, 'displayName' | 'avatarUrl'>
+  member: Pick<MemberIdentity, 'displayName' | 'avatarUrl'> & { opsAccess?: boolean }
   children: ReactNode
 }
 
 function Inert({ item, className }: { item: NavItem; className?: string }) {
   // Visible for Pixel fidelity only; not focusable, never navigates (DEC-WF02-H9).
+  // It states why on hover and to assistive technology (DEC-P0-SHELL-D2).
+  const reason = item.kind === 'INERT' ? INERT_REASONS[item.reason] : undefined
   return (
-    <span className={className} aria-disabled="true" data-nav-kind="INERT">
+    <span
+      className={className}
+      aria-disabled="true"
+      data-nav-kind="INERT"
+      title={reason}
+      aria-label={reason ? `${item.label} — ${reason}` : undefined}
+    >
       {item.label}
     </span>
   )
@@ -34,7 +50,9 @@ export function MemberShell({ active, member, children }: Props) {
   return (
     <div className={styles.root} data-shell="member">
       <header className={styles.header}>
-        <p className={`type-section-sm ${styles.wordmark}`}>HUB NETWORK</p>
+        <p className={`type-section-sm ${styles.wordmark}`}>
+          <HomeLink>HUB NETWORK</HomeLink>
+        </p>
         <nav aria-label="Khám phá" className={`type-body-sm ${styles.productNav}`}>
           {HEADER_NAV.map((item) =>
             item.kind === 'LINK' ? (
@@ -47,11 +65,20 @@ export function MemberShell({ active, member, children }: Props) {
           )}
         </nav>
         <div className={styles.account}>
+          {member.opsAccess ? (
+            <Link
+              href={OPS_ENTRY.href}
+              className={`type-body-sm ${styles.productItem} ${styles.opsEntry}`}
+              data-nav="ops-entry"
+            >
+              {OPS_ENTRY.label}
+            </Link>
+          ) : null}
           <span
             className={styles.bell}
             aria-disabled="true"
             data-nav-kind="INERT"
-            title="Thông báo"
+            title={`Thông báo — ${INERT_REASONS.NO_P0_SCREEN}`}
           >
             {/* Deterministic glyph, not an OS emoji (as DEC-WF01-S08-D7); no counter. */}
             <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">

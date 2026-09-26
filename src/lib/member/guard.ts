@@ -3,9 +3,11 @@ import { redirect } from 'next/navigation'
 
 import { SESSION_COOKIE_NAME } from '@/lib/auth/config'
 import { resolveSession } from '@/lib/auth/sessions'
+import { resolveActor } from '@/lib/authz/actor'
 import { query } from '@/lib/db/client'
 import { assetUrl, isAssetId, readAssetMeta } from '@/lib/media/avatar-storage'
 import { getOnboardingState, routeFor } from '@/lib/onboarding/state'
+import { hasOpsAccess } from '@/lib/ops/scope'
 
 /**
  * WF02-T00 — server-side entry check for member-shell pages (DEC-WF02-T00-D1).
@@ -15,13 +17,19 @@ import { getOnboardingState, routeFor } from '@/lib/onboarding/state'
  * `/me` is the DONE destination), so the member area never renders for a
  * half-onboarded account. This is page routing only; every API re-authorizes.
  *
- * Returns only what the shell header shows about the signed-in member.
+ * Returns only what the shell header shows about the signed-in member, plus
+ * whether the account holds an ops scope (P0-SHELL, DEC-P0-SHELL-D3): read from
+ * ACTIVE RoleAssignments on the server, never from membership, leadership or
+ * titles. It only decides whether the shell shows the "Vận hành tổ chức" entry;
+ * /ops re-authorizes on every request.
  */
 export type MemberIdentity = {
   accountId: string
   displayName: string
   /** Set only when the owner's avatar file is actually stored. */
   avatarUrl: string | null
+  /** Display only: the account may enter /ops (an ops RoleAssignment scope). */
+  opsAccess: boolean
 }
 
 export async function requireMember(): Promise<MemberIdentity> {
@@ -44,5 +52,11 @@ export async function requireMember(): Promise<MemberIdentity> {
     if (meta?.owner_account_id === session.accountId) avatarUrl = assetUrl(assetId)
   }
 
-  return { accountId: session.accountId, displayName: row?.display_name ?? '', avatarUrl }
+  const opsAccess = hasOpsAccess(await resolveActor(session.accountId))
+  return {
+    accountId: session.accountId,
+    displayName: row?.display_name ?? '',
+    avatarUrl,
+    opsAccess,
+  }
 }

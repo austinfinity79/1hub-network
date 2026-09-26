@@ -16,3 +16,10 @@
     color-mix(in srgb, var(--hub-burgundy) 7%, transparent);
   --unresolved-space-surface: 2.25rem;
 }
+
+/* P0-SHELL — never wider than a narrow viewport (1440 is untouched). */
+@media (max-width: 1023px) {
+  .card {
+    width: min(27.5rem, 100%);
+  }
+}

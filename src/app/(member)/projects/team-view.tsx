@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, type FormEvent } from 'react'
 
@@ -28,6 +29,7 @@ const COPY = {
   members: 'thành viên',
   pending: 'lời mời chưa nhận',
   invite: 'Mời thành viên',
+  profile: 'Hồ sơ dự án',
   ownerCategory: 'Chủ sở hữu',
   memberCategory: 'Thành viên',
   notRemovable: 'Không gỡ được',
@@ -297,11 +299,22 @@ export function TeamView({ team }: { team: TeamDTO }) {
         title={`${team.venture.name} · ${COPY.title}`}
         status={status}
         actions={
-          manage ? (
-            <Button onClick={() => setInviting((open) => !open)} aria-expanded={inviting}>
-              {COPY.invite}
-            </Button>
-          ) : null
+          <>
+            {/* P0-SHELL (DEC-P0-SHELL-D5): back to this venture's profile. */}
+            <Link
+              href={`/projects/${team.venture.id}/edit`}
+              className="ui-button"
+              data-variant="secondary"
+              data-nav="venture-profile"
+            >
+              {COPY.profile}
+            </Link>
+            {manage ? (
+              <Button onClick={() => setInviting((open) => !open)} aria-expanded={inviting}>
+                {COPY.invite}
+              </Button>
+            ) : null}
+          </>
         }
       />
       <div className={styles.body}>

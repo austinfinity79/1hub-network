@@ -45,6 +45,9 @@ export function organizationNav(orgId: string): OpsNavItem[] {
   ]
 }
 
+/** P0-SHELL (DEC-P0-SHELL-D3): the way back to the member area (and its sign-out). */
+export const ACCOUNT_ENTRY = { label: 'Tài khoản của tôi', href: '/me' } as const
+
 export const OPS_COPY = {
   product: 'Vận hành tổ chức',
   networkGroup: 'Tổ chức',

@@ -72,3 +72,25 @@
   align-items: center;
   justify-content: center;
 }
+
+/*
+ * P0-SHELL — below desktop the brand panel stacks above the form instead of
+ * forcing a horizontal scroll (Design SOT: responsiveness may adapt below 1440
+ * without changing the hierarchy). 1440 is untouched.
+ */
+@media (max-width: 1023px) {
+  .root {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .brand {
+    grid-template-rows: auto;
+    gap: 1.5rem;
+    padding: 1.5rem 1rem;
+  }
+
+  .main {
+    padding: 2rem 1rem;
+  }
+}

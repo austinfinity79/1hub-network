@@ -5,6 +5,7 @@ import { isApiError } from '@/lib/api/errors'
 import { getPublicOrganization, type PublicOrganizationDTO } from '@/lib/public/organization'
 
 import styles from './public-organization.module.css'
+import { HomeLink } from '@/components/shell/home-link'
 
 /**
  * WF03-S09 — /organizations/:slug, the public organization page. Public:
@@ -71,7 +72,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       <div className={styles.page}>
         <nav className={styles.bar} aria-label="HUB NETWORK">
           <p className={styles.brand}>
-            <span>HUB NETWORK</span>
+            <HomeLink>HUB NETWORK</HomeLink>
             <span className={styles.slash} aria-hidden="true">
               /
             </span>

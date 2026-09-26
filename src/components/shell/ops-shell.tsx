@@ -2,11 +2,12 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import type { Capability } from '@/lib/authz/matrix'
-import { NETWORK_NAV, OPS_COPY, organizationNav } from '@/lib/ops/nav'
+import { ACCOUNT_ENTRY, NETWORK_NAV, OPS_COPY, organizationNav } from '@/lib/ops/nav'
 import type { OrganizationRefDTO } from '@/lib/ops/organizations'
 
 import { OpsNav } from './ops-nav'
 import styles from './ops-shell.module.css'
+import { HomeLink } from '@/components/shell/home-link'
 
 type Props = {
   /** The organization in context, already authorized on the server; none on /ops/network. */
@@ -39,7 +40,9 @@ export function OpsShell({ organization, capabilities = [], children }: Props) {
   return (
     <div className={styles.root} data-shell="ops">
       <aside className={styles.sidebar}>
-        <p className={`weight-semibold ${styles.wordmark}`}>HUB NETWORK</p>
+        <p className={`weight-semibold ${styles.wordmark}`}>
+          <HomeLink>HUB NETWORK</HomeLink>
+        </p>
         {organization ? (
           <nav
             aria-label="Breadcrumb"
@@ -68,6 +71,13 @@ export function OpsShell({ organization, capabilities = [], children }: Props) {
             </>
           ) : null}
         </nav>
+        <Link
+          href={ACCOUNT_ENTRY.href}
+          className={`type-body-sm ${styles.accountEntry}`}
+          data-nav="account-entry"
+        >
+          ← {ACCOUNT_ENTRY.label}
+        </Link>
       </aside>
       <main className={styles.main}>{children}</main>
     </div>

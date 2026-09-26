@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import styles from './onboarding-shell.module.css'
+import { HomeLink } from '@/components/shell/home-link'
 
 /** WF01 onboarding steps shown in the header (S05 Purpose, S06 Profile, S07 Privacy). */
 const STEPS = ['Vai trò', 'Thông tin', 'Quyền riêng tư'] as const
@@ -23,7 +24,9 @@ export function OnboardingShell({ currentStep, action, children }: Props) {
   return (
     <div className={styles.root} data-shell="onboarding">
       <header className={styles.header}>
-        <p className={`type-section-sm ${styles.wordmark}`}>HUB NETWORK</p>
+        <p className={`type-section-sm ${styles.wordmark}`}>
+          <HomeLink>HUB NETWORK</HomeLink>
+        </p>
         <ol className={`type-meta-xs ${styles.steps}`} aria-label="Các bước khởi tạo">
           {STEPS.map((label, i) => {
             const current = i + 1 === currentStep

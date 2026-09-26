@@ -278,6 +278,9 @@ test.describe('WF01-S05 functional', () => {
   test('keyboard: radios by arrow keys, visible focus, Enter submits', async ({ page }) => {
     const accountId = await signInFresh(page)
     await openPurpose(page)
+    // P0-SHELL (DEC-P0-SHELL-D1): the wordmark → / is the first Tab stop.
+    await page.keyboard.press('Tab')
+    await expect(page.locator('[data-nav="home"]')).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(page.getByRole('button', { name: 'Bỏ qua, làm sau' })).toBeFocused()
     await page.keyboard.press('Tab')

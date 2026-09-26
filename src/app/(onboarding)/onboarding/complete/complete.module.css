@@ -31,6 +31,64 @@
   color: var(--unresolved-fg-muted);
 }
 
+/* P0-SHELL (DEC-P0-SHELL-D6): the action card, measured from the baseline's
+   card 02 (686x89 at 377, 423; 20px inset; index column 33px; 133x44 button). */
+.cards {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cards + .info {
+  margin-top: 1.5rem;
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  min-height: 5.5625rem;
+  padding: 0 1.25rem;
+  border: 1px solid #dcd6d6;
+  border-radius: 0.5rem;
+  background: #fbfafa;
+}
+
+.index {
+  flex: none;
+  width: 2.0625rem;
+  color: #b91610;
+}
+
+.actionText {
+  flex: 1;
+  min-width: 0;
+}
+
+.actionTitle {
+  margin: 0;
+  line-height: 1.5rem;
+  color: #170002;
+}
+
+.actionBody {
+  margin: 0.125rem 0 0;
+  color: #534041;
+}
+
+.action :global(.ui-button) {
+  flex: none;
+  width: 8.3125rem;
+  height: 2.75rem;
+  padding: 0;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.action :global(.ui-button:focus-visible) {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
 .info {
   display: flex;
   align-items: flex-start;

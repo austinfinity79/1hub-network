@@ -180,6 +180,27 @@
   color: var(--unresolved-fg-muted);
 }
 
+/* P0-SHELL: the eyebrow row keeps the drawn 14px height; the create link sits right. */
+.orgHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 0.875rem;
+}
+
+.createLink {
+  font-size: 0.75rem;
+  line-height: 0.875rem;
+  color: #b91610;
+  text-decoration: none;
+}
+
+.createLink:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
 .orgList {
   margin: 0.5625rem 0 0;
   padding: 0;

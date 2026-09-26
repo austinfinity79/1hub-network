@@ -14,6 +14,11 @@ import styles from './complete.module.css'
  * Pending → POST /me/onboarding/complete (idempotent) → done. Success copy
  * appears only after the server confirms; a refusal names what is missing
  * and links back to the step that collects it. The percent is the server's.
+ *
+ * P0-SHELL: card 02 "Lập hồ sơ đội" is rendered now that WF02-S05 is
+ * Production (DEC-WF01-S08-D3's dependency, resolved; DEC-P0-SHELL-D6). It is
+ * numbered 01 because the drawn card 01 (WF04 challenges) stays omitted (D2);
+ * card 03 stays omitted (D4: no region → chapter mapping).
  */
 
 type View =
@@ -31,6 +36,10 @@ const MESSAGES = {
   legal: 'Đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư',
   failed: 'Chưa hoàn tất được. Vui lòng thử lại.',
   retry: 'Thử lại',
+  /** DEC-P0-SHELL-D6: the drawn title and button; the body drops the WF04 claim. */
+  projectTitle: 'Lập hồ sơ đội',
+  projectBody: 'Hồ sơ dự án hoặc startup, dùng lại cho mọi chương trình.',
+  projectAction: 'Lập hồ sơ đội',
 } as const
 
 export function CompleteView({
@@ -78,6 +87,25 @@ export function CompleteView({
               <p className={`type-body-md ${styles.lede}`}>
                 Không làm gì cũng được — mọi thứ vẫn ở đó.
               </p>
+              <ol className={styles.cards}>
+                <li className={styles.action} data-action-card="project">
+                  <span className={`type-meta-xs weight-semibold ${styles.index}`}>01</span>
+                  <div className={styles.actionText}>
+                    <p className={`type-body-md weight-medium ${styles.actionTitle}`}>
+                      {MESSAGES.projectTitle}
+                    </p>
+                    <p className={`type-meta-xs ${styles.actionBody}`}>{MESSAGES.projectBody}</p>
+                  </div>
+                  <Link
+                    href="/projects/new"
+                    className="ui-button"
+                    data-variant="secondary"
+                    data-nav="create-project"
+                  >
+                    <span>{MESSAGES.projectAction}</span>
+                  </Link>
+                </li>
+              </ol>
               <div className={styles.info} data-completion>
                 <svg
                   viewBox="0 0 16 16"

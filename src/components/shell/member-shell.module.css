@@ -42,6 +42,12 @@
   cursor: default;
 }
 
+/* P0-SHELL: the ops entry, only for accounts with an ops scope (not on the
+   approved member references, whose persona has none). */
+.opsEntry {
+  margin-right: 1.5rem;
+}
+
 .account {
   display: flex;
   align-items: center;

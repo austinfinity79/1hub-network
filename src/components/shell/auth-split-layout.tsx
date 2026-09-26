@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import styles from './auth-split-layout.module.css'
+import { HomeLink } from '@/components/shell/home-link'
 
 /**
  * WF01-S01 — brand panel plus content column for the auth screens.
@@ -14,7 +15,9 @@ export function AuthSplitLayout({ children }: { children: ReactNode }) {
   return (
     <div className={styles.root} data-shell="auth-split">
       <aside className={styles.brand} aria-label="HUB NETWORK">
-        <p className={`type-subtitle ${styles.wordmark}`}>HUB NETWORK</p>
+        <p className={`type-subtitle ${styles.wordmark}`}>
+          <HomeLink>HUB NETWORK</HomeLink>
+        </p>
 
         <div className={styles.pitch}>
           <p className={`type-display ${styles.headline}`}>

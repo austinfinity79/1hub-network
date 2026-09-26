@@ -20,6 +20,18 @@ export type NavItem =
   | { label: string; kind: 'LINK'; href: string }
   | { label: string; kind: 'INERT'; reason: 'FUTURE' | 'NO_P0_SCREEN' }
 
+/**
+ * P0-SHELL (DEC-P0-SHELL-D2): the user-facing reason an INERT item gives on
+ * hover and to assistive technology. Pending PO copy review.
+ */
+export const INERT_REASONS: Record<'FUTURE' | 'NO_P0_SCREEN', string> = {
+  FUTURE: 'Tính năng giai đoạn sau — chưa có trong phiên bản này',
+  NO_P0_SCREEN: 'Chưa có trong phiên bản này',
+}
+
+/** P0-SHELL (DEC-P0-SHELL-D3): the member → ops entry, shown only with an ops scope. */
+export const OPS_ENTRY = { label: 'Vận hành tổ chức', href: '/ops/network' } as const
+
 /** Header product nav: Library, Challenge and Events have no P0 Production screen. */
 export const HEADER_NAV: readonly NavItem[] = [
   { label: 'Thư viện', kind: 'INERT', reason: 'NO_P0_SCREEN' },

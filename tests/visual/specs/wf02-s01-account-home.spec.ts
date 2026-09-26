@@ -205,7 +205,14 @@ test.describe('WF02-S01 functional', () => {
       [member.profileId, FIXTURES.chapter01Id],
     )
     await openHome(page)
-    const rows = orgCard(page).getByRole('link')
+    // The P0-SHELL create link (DEC-P0-SHELL-D6) sits in the card head, not among the rows.
+    await expect(orgCard(page).locator('[data-nav="create-project"]')).toHaveAttribute(
+      'href',
+      '/projects/new',
+    )
+    const rows = orgCard(page)
+      .getByRole('link')
+      .and(page.locator(':not([data-nav="create-project"])'))
     await expect(rows).toHaveCount(4)
     expect(
       await rows.evaluateAll((els) => els.map((el) => [el.textContent, el.getAttribute('href')])),
