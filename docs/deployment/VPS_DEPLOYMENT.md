@@ -82,6 +82,16 @@ docker compose exec -T db pg_restore -U "$POSTGRES_USER" -d restore_check < FILE
 
 The previous VPS `103.211.207.236` is expired and is not referenced by any active config.
 
+## Host hardening
+
+| Item | State |
+|---|---|
+| Other hosts / bare IP | `00-default-deny` closes the connection (444); TLS without a matching SNI is refused |
+| Client IP | `conf.d/onehub-realip.conf` trusts `X-Real-IP` only from the 3 observed OneShield edges |
+| Origin bypass | still OPEN: anyone may reach the origin with `Host: 1hubnetwork.io.vn`; restrict 80/443 to OneShield once its egress list is known |
+| Upgrades | security updates stay on, at 20:30 UTC (03:30 ICT); `needrestart` lists, never auto-restarts |
+| Images | `release.sh` keeps only the current and previous image and source; rollback is one step deep |
+
 ## Known release blockers
 
 - No email delivery. The magic-link token is never sent, so nobody can sign in on this server.

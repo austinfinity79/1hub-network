@@ -36,4 +36,17 @@ docker compose up -d --wait --wait-timeout 120 app || {
 ln -sfn "$ROOT/releases/$SHA" "$ROOT/current"
 [[ -n "$PREV" && "$PREV" != "$SHA" ]] && echo "$PREV" > "$STATE/previous"
 echo "$SHA" > "$STATE/current"
+
+# Keep only the current and previous release (images and sources).
+KEEP="$SHA $(cat "$STATE/previous" 2>/dev/null || true)"
+for tag in $(docker image ls onehub-app --format '{{.Tag}}'); do
+  [[ " $KEEP " == *" $tag "* ]] || docker image rm -f "onehub-app:$tag" >/dev/null
+done
+for dir in "$ROOT"/releases/*/; do
+  name=$(basename "$dir")
+  [[ " $KEEP " == *" $name "* ]] || rm -rf "$dir"
+done
+docker image prune -f >/dev/null
+docker builder prune -f --filter until=168h >/dev/null
+
 echo "DEPLOYED_SHA=$SHA"
