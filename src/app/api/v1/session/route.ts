@@ -5,6 +5,7 @@ import { resolveSession } from '@/lib/auth/sessions'
 import { resolveActor } from '@/lib/authz/actor'
 import { deriveCapabilities, deriveManagedScopes } from '@/lib/authz/session-authz'
 import { query } from '@/lib/db/client'
+import { getProfileCompletion } from '@/lib/profile/completion'
 
 /**
  * GET /api/v1/session — 05:113-149. App bootstrap.
@@ -73,12 +74,9 @@ export const GET = withApi<SessionDTO>(async ({ request }) => {
       id: row.profile_id ?? '',
       status: row.profile_status ?? 'NOT_CREATED',
       onboarding_completed: Boolean(row.onboarding_completed_at),
-      // PLACEHOLDER, not a computed value. The contract requires this to be
-      // derived server-side from the frozen ten groups (CLAUDE.md section 3),
-      // but that Profile-domain calculation is WF01/WF02 scope and is not built
-      // yet. Until it is, every session reports 0; no screen may treat this as
-      // a real completion figure. It is never accepted from the client.
-      completion_percent: 0,
+      // The single completion service (WF01-S06), shared with /me/profile and
+      // /me/profile/completion; never accepted from the client.
+      completion_percent: (await getProfileCompletion(row.id)).percent,
     },
     capabilities,
     managed_scopes: deriveManagedScopes(actor),

@@ -1,5 +1,7 @@
 import { ApiError } from '@/lib/api/errors'
 import { query } from '@/lib/db/client'
+import { loadCompletionFacts } from '@/lib/profile/completion'
+import { profileStepComplete } from '@/lib/profile/profile'
 
 import { isPrimaryIntent, type PrimaryIntent } from './intent'
 
@@ -14,7 +16,7 @@ import { isPrimaryIntent, type PrimaryIntent } from './intent'
  */
 
 /** WF01 order: Purpose → Profile → Privacy → Complete. */
-export type OnboardingStep = 'PURPOSE' | 'PROFILE'
+export type OnboardingStep = 'PURPOSE' | 'PROFILE' | 'PRIVACY'
 
 export type OnboardingState = {
   completed: boolean
@@ -25,15 +27,23 @@ export type OnboardingState = {
 
 type Row = { primary_intent: string | null; onboarding_completed_at: Date | null }
 
-function toState(row: Row | undefined): OnboardingState {
+/**
+ * The first incomplete step. PROFILE is done once the S06 progression fields
+ * are saved (DEC-WF01-S06-D2); that never completes onboarding by itself.
+ */
+function toState(row: Row | undefined, profileDone = false): OnboardingState {
   const completed = Boolean(row?.onboarding_completed_at)
   // A stored value outside the P0 allowlist is not surfaced as a selection.
   const intent = isPrimaryIntent(row?.primary_intent) ? row!.primary_intent : null
   return {
     completed,
-    current_step: completed ? null : intent ? 'PROFILE' : 'PURPOSE',
+    current_step: completed ? null : !intent ? 'PURPOSE' : profileDone ? 'PRIVACY' : 'PROFILE',
     intent: intent as PrimaryIntent | null,
   }
+}
+
+async function profileDone(accountId: string): Promise<boolean> {
+  return profileStepComplete(await loadCompletionFacts(accountId))
 }
 
 export async function getOnboardingState(accountId: string): Promise<OnboardingState> {
@@ -41,7 +51,7 @@ export async function getOnboardingState(accountId: string): Promise<OnboardingS
     `SELECT primary_intent, onboarding_completed_at FROM individual_profiles WHERE account_id = $1`,
     [accountId],
   )
-  return toState(rows[0])
+  return toState(rows[0], await profileDone(accountId))
 }
 
 /**
@@ -65,5 +75,5 @@ export async function setPrimaryIntent(
      RETURNING primary_intent, onboarding_completed_at`,
     [accountId, value],
   )
-  return toState(rows[0])
+  return toState(rows[0], await profileDone(accountId))
 }

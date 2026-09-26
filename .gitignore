@@ -38,3 +38,6 @@ tests/visual/reports/
 # Cowork orchestration artifacts (external tool, regenerated per task)
 .cowork_write_test
 docs/implementation/NEXT_TASK_PROMPT.md
+
+# Local private media storage (MEDIA_STORAGE_DIR default, WF01-S06)
+.data/

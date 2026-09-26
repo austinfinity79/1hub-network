@@ -50,13 +50,15 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     [REQUEST_ID_HEADER]: requestId ?? newRequestId(),
   }
 
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  // FormData (multipart uploads, 05:36) sets its own boundary content type.
+  const multipart = body instanceof FormData
+  if (body !== undefined && !multipart) headers['Content-Type'] = 'application/json'
   if (idempotencyKey) headers[IDEMPOTENCY_HEADER] = idempotencyKey
 
   const response = await fetch(buildUrl(path, baseUrl), {
     method,
     headers,
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    ...(body !== undefined ? { body: multipart ? body : JSON.stringify(body) } : {}),
     // The session is an HTTP-only cookie, so it must ride along.
     credentials: 'same-origin',
     ...(signal ? { signal } : {}),

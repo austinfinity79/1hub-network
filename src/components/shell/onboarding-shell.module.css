@@ -59,6 +59,30 @@
   background: var(--unresolved-border-surface);
 }
 
+/* Done step: the S03 success ink (#2a3b24) as the disc, white check. */
+.stepDone .stepNumber {
+  background: #2a3b24;
+}
+
+.stepNumber svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--hub-surface);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .stepCurrent {
   color: var(--color-fg-default);
 }
@@ -66,6 +90,15 @@
 .stepCurrent .stepNumber {
   background: var(--color-bg-accent);
   color: var(--color-fg-on-accent);
+}
+
+.action {
+  /* The action column keeps its width even when a screen has no action
+     (WF01-S06, DEC-WF01-S06-D5), so the stepper sits where every baseline
+     puts it: centred between wordmark and a 99px action column. */
+  display: flex;
+  justify-content: flex-end;
+  min-width: 6.1875rem;
 }
 
 .main {

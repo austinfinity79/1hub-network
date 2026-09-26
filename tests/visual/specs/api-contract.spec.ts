@@ -62,16 +62,12 @@ test.describe('M0-T05 GET /session', () => {
 })
 
 test.describe('M0-T05 API surface discipline', () => {
-  test('exposes no business endpoint yet', async ({ request }) => {
+  test('exposes no business endpoint beyond the implemented screens', async ({ request }) => {
     // M0-T08 implemented the auth endpoints, so they are no longer absent; they
-    // are covered by auth-session.spec.ts. Business endpoints still belong to
-    // M1 onward, and anything answering here now would be scope leakage.
-    for (const path of [
-      '/me/profile',
-      '/me/network',
-      '/ops/organizations',
-      '/vocabularies/REGION',
-    ]) {
+    // are covered by auth-session.spec.ts. WF01-S06 implemented /me/profile and
+    // /vocabularies/{type} (wf01-s06-onboarding-profile.spec.ts). Other business
+    // endpoints still belong to later screens; answering now would be scope leakage.
+    for (const path of ['/me/network', '/ops/organizations', '/vocabularies/STARTUP_STAGE']) {
       const response = await request.get(`${BASE}${path}`)
       expect(response.status(), `${path} should not be implemented yet`).toBe(404)
     }
