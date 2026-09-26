@@ -1,4 +1,4 @@
-import type { Comparison } from './compare'
+import type { Comparison, ContinuationCheck } from './compare'
 import { resolveOutputPath, toRepoPath } from './paths'
 import { writeBuffer } from './png'
 
@@ -46,6 +46,9 @@ export type ScreenReport = {
   conditions: { viewport: { width: number; height: number }; dpr: number; fonts: string }
   comparison: Comparison
   typography: TypographyResult | null
+  /** DEC-WF02-H12: set on full-page reports compared by cropping. */
+  full_page_rule?: 'CROP_TO_REFERENCE_HEIGHT'
+  below_reference?: ContinuationCheck
   classification: {
     status: 'PENDING_REVIEW' | 'NOT_APPLICABLE'
     taxonomy: typeof MISMATCH_TAXONOMY

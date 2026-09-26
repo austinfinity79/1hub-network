@@ -96,10 +96,13 @@ test.describe('M0-T11 deterministic state hooks', () => {
   })
 
   test('refuses to run a screen whose reference configuration has a gap', async ({ page }) => {
+    // Short full-page references are no longer gaps (DEC-WF02-H12), so the
+    // refusal is proven with a declared mapping gap.
     const { screens } = loadManifest()
-    await expect(
-      runScreenQa(page, findScreen(screens, 'WF03-S01'), qaConfigFor('WF03-S01')!),
-    ).rejects.toThrow(/shorter than the 900px viewport/)
+    const config = { ...qaConfigFor('WF03-S01')!, gap: 'fixture not configured (test)' }
+    await expect(runScreenQa(page, findScreen(screens, 'WF03-S01'), config)).rejects.toThrow(
+      /fixture not configured \(test\)/,
+    )
   })
 })
 

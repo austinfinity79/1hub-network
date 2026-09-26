@@ -57,13 +57,24 @@ export type QaScreenConfig = {
 }
 
 /**
- * Pixel QA section 9 makes full-page capture mandatory where a full_page
- * reference exists, but a browser full-page capture is never shorter than the
- * 900px viewport. No SOT defines how to compare a shorter reference, so this is
- * reported as a gap rather than resolved with an invented crop rule.
+ * DEC-WF02-H12 — approved QA rule for full-page references shorter than the
+ * 900px viewport (a browser full-page capture is never shorter than 900px):
+ * 1. the 1440x900 DPR1 viewport comparison is authoritative;
+ * 2. the reference is never scaled;
+ * 3. the full-page capture is still produced;
+ * 4. it is cropped to the reference height for the pixel comparison;
+ * 5. everything below that height must be page/background continuation only.
+ * Until WF02 this case was reported as a configuration gap.
  */
-export const SHORT_FULL_PAGE_GAP =
-  'full_page_baseline is shorter than the 900px viewport, so a full-page capture (never under 900px) cannot match its dimensions; the comparison rule for this case is undefined in the SOT'
+export const SHORT_FULL_PAGE_RULE = 'DEC-WF02-H12' as const
+
+export type FullPageRule = 'EXACT' | 'CROP_TO_REFERENCE_HEIGHT'
+
+/** How a screen's full-page reference is compared; null when it has none. */
+export function fullPageRuleFor(screen: ResolvedScreen): FullPageRule | null {
+  if (!screen.fullPageSize) return null
+  return screen.fullPageSize.height < FROZEN_VIEWPORT.height ? 'CROP_TO_REFERENCE_HEIGHT' : 'EXACT'
+}
 
 const cfg = (
   screen_id: string,
@@ -100,7 +111,12 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
   cfg('WF01-S08', '/onboarding/complete', 'newcomer', 'reached by completing WF01-S05..S07'),
 
   // WF02 — Member Profile & Network Management
-  cfg('WF02-S01', '/me', 'member', 'account home, complete profile'),
+  cfg(
+    'WF02-S01',
+    '/me',
+    'member',
+    'account home: 60% profile, owned startup, ACTIVE Chapter 01 (test hook)',
+  ),
   cfg('WF02-S02', '/me/profile/edit', 'member', 'edit own profile'),
   cfg('WF02-S03', '/me/privacy', 'member', 'privacy and visibility'),
   cfg('WF02-S04', '/me/roles', 'member', 'roles and network links, ACTIVE Chapter 01'),
@@ -153,6 +169,7 @@ export type DryRunEntry = {
   actor: Persona | null
   viewport_reference: string
   full_page_reference: string | null
+  full_page_rule: FullPageRule | null
   reasons: string[]
 }
 
@@ -189,9 +206,6 @@ export function dryRun(screens: ResolvedScreen[]): DryRunEntry[] {
     if (screen.full_page_baseline && !screen.fullPageSize) {
       reasons.push('full-page reference not resolved')
     }
-    if (screen.fullPageSize && screen.fullPageSize.height < FROZEN_VIEWPORT.height) {
-      reasons.push(`${SHORT_FULL_PAGE_GAP} (reference is 1440x${screen.fullPageSize.height})`)
-    }
 
     return {
       screen_id: screen.screen_id,
@@ -202,6 +216,7 @@ export function dryRun(screens: ResolvedScreen[]): DryRunEntry[] {
       actor: config?.actor ?? null,
       viewport_reference: screen.viewport_baseline,
       full_page_reference: screen.full_page_baseline,
+      full_page_rule: fullPageRuleFor(screen),
       reasons,
     }
   })

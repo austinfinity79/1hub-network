@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
 import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
@@ -186,12 +186,12 @@ test.describe('WF02-T00 member-shell page guard', () => {
 test.describe('WF02-T00 member shell', () => {
   test('navigation: frozen routes are links, the rest inert, no counters', async ({ page }) => {
     await completedMember(page.request)
-    await page.goto('/me')
+    await page.goto('/me/roles')
 
     const shell = page.locator('[data-shell="member"]')
     await expect(shell).toBeVisible()
-    // The placeholder body is still the screen's own (S01 not implemented).
-    await expect(page.locator('[data-route-placeholder="WF02-S01"]')).toBeVisible()
+    // The placeholder body is still the screen's own (S04 not implemented).
+    await expect(page.locator('[data-route-placeholder="WF02-S04"]')).toBeVisible()
 
     const sidebar = shell.getByRole('navigation', { name: 'Tài khoản của tôi' })
     const links = await sidebar

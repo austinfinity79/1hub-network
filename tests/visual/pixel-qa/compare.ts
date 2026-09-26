@@ -107,3 +107,61 @@ function boundingBoxOfDiff(diff: PNG): BoundingBox | null {
   if (maxX < 0) return null
   return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 }
 }
+
+/** Top `height` rows of `png` (DEC-WF02-H12 step 4: crop, never scale). */
+export function cropToHeight(png: PNG, height: number): PNG {
+  const out = new PNG({ width: png.width, height })
+  PNG.bitblt(png, out, 0, 0, png.width, height, 0, 0)
+  return out
+}
+
+export type ContinuationCheck = {
+  /** First capture row below the reference height. */
+  from_y: number
+  rows: number
+  /** Pixels that differ from the reference's last row in the same column. */
+  unexpected_pixels: number
+  unexpected_ratio: number
+  unexpected_bbox: BoundingBox | null
+}
+
+/**
+ * DEC-WF02-H12 step 5: below the reference height the capture may only
+ * continue the page background. Each pixel there is compared with the
+ * reference's LAST row in the same column; any channel differing by more than
+ * `tolerance` is unexpected UI.
+ */
+export function checkContinuation(reference: PNG, actual: PNG, tolerance = 3): ContinuationCheck {
+  const from = reference.height
+  const rows = Math.max(0, actual.height - from)
+  let unexpected = 0
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -1
+  let maxY = -1
+  for (let y = from; y < actual.height; y++) {
+    for (let x = 0; x < actual.width; x++) {
+      const a = (y * actual.width + x) * 4
+      const r = ((from - 1) * reference.width + x) * 4
+      let off = false
+      for (let c = 0; c < 3; c++) {
+        if (Math.abs(actual.data[a + c]! - reference.data[r + c]!) > tolerance) off = true
+      }
+      if (off) {
+        unexpected++
+        minX = Math.min(minX, x)
+        minY = Math.min(minY, y)
+        maxX = Math.max(maxX, x)
+        maxY = Math.max(maxY, y)
+      }
+    }
+  }
+  return {
+    from_y: from,
+    rows,
+    unexpected_pixels: unexpected,
+    unexpected_ratio: rows === 0 ? 0 : unexpected / (rows * actual.width),
+    unexpected_bbox:
+      maxX < 0 ? null : { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 },
+  }
+}

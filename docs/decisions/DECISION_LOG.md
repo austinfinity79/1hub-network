@@ -353,6 +353,22 @@ These records are addenda to the WF02 screen contracts and the API contract. The
 | <a id="dec-wf02-t00-d5"></a>DEC-WF02-T00-D5 | Shell and layout | The member route group no longer imposes PageContainer (as the onboarding group); placeholder pages wrap it themselves. The M0-T03 harness shell evidence moves from `/me` (now guarded) to `/projects/new`: `tests/visual/baseline/shell-member.png` is removed and `shell-member-placeholder.png` added. It is a harness baseline, not a design reference | M0-T03; CLAUDE.md §6 |
 | <a id="dec-wf02-t00-d6"></a>DEC-WF02-T00-D6 | Bell | Inert deterministic SVG bell with no counter, in place of the OS emoji and "2" | DEC-WF02-H9/H10; precedent DEC-WF01-S08-D7 |
 
+## DEC-WF02-S01 — Account Home
+
+**Status:** IMPLEMENTATION DECISIONS within approved scope.
+**Date:** 2026-09-26.
+**Task:** [WF02-S01](../implementation/reports/WF02-S01_account-home.md).
+**Builds on:** DEC-WF02-H3/H9/H10/H13, DEC-WF02-T00-D1..D6.
+
+| ID | Topic | Decision | Source anchors |
+|---|---|---|---|
+| <a id="dec-wf02-s01-d1"></a>DEC-WF02-S01-D1 | Lower row composition | "Đang chờ bạn" is omitted (H10, TEMPORARY-PRODUCTION-DEPENDENCY). "Tổ chức của tôi" keeps the approved card geometry but takes the FIRST slot of the two-column row, so no empty card-sized hole leads the row. Pixel: compared with dx −527 (INTENTIONAL-COMPOSITION) | DEC-WF02-H10; ME0 |
+| <a id="dec-wf02-s01-d2"></a>DEC-WF02-S01-D2 | Copy | Lede drops "Cộng hai thứ đang chờ bạn". Completion line = "Hồ sơ hoàn thiện {server %}" + "· còn thiếu {labels of the server's incomplete groups}" (labels: họ và tên, ảnh đại diện, chức danh, tỉnh / thành phố, giới thiệu, lĩnh vực, kỹ năng, kinh nghiệm, mục tiêu phát triển, nhu cầu hiện tại). Event/solution claims → "Bạn có thể cập nhật hồ sơ bất cứ lúc nào." Card descriptions drop education, viewer history, email change and notifications (Future per H4/H8). Pending PO copy review | DEC-WF02-H13, H4, H8; DEC-WF01-S08-D7 |
+| <a id="dec-wf02-s01-d3"></a>DEC-WF02-S01-D3 | Organisation rows | Only from `GET /me/network`, in order: ventures (OWNER "Chủ sở hữu · startup/dự án"; MEMBER `role_label` or "Thành viên"), ACTIVE ("Thành viên · {type}") and PENDING_APPROVAL ("Đang chờ duyệt") memberships, ACTIVE leadership ("{title} · {type}"). Ended states are left to S04. Links follow SCR S01 actions: owner venture → `/projects/:id/edit` (open_project), all others → `/me/roles` (open_roles). No PROSPECT label: no such canonical value exists | SCR WF02-S01; DEC-WF02-H5/H7; DEC-WF02-T00-D3 |
+| <a id="dec-wf02-s01-d4"></a>DEC-WF02-S01-D4 | Data loading and failure | The body reads `/session` (own email), `/me/profile`, `/me/profile/completion` and `/me/network` from the client. Profile and network sections fail independently with "Thử lại". The avatar image renders only when the completion service counts AVATAR complete (a stored, valid asset) | CLAUDE.md §3/§4; DEC-WF01-S06-D3 |
+| <a id="dec-wf02-s01-d5"></a>DEC-WF02-S01-D5 | "Điền nốt" | Shown only below 100%; links to `/me/profile/edit` (frozen route; body lands with S02). 80% is not presented as a gate | Freeze §D3; DEC-WF02-H1 |
+| <a id="dec-wf02-s01-d6"></a>DEC-WF02-S01-D6 | Pixel fixture and H12 harness | The QA state (60%, owned startup, ACTIVE Chapter 01) is set by a test-only hook on the seeded member, then the seed is restored. The first application of DEC-WF02-H12 lands in the harness: short full-page references are no longer dry-run gaps; the full-page capture is cropped to the reference height and rows below are checked against the reference's last row | DEC-WF02-H12; Pixel QA §4/§9 |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

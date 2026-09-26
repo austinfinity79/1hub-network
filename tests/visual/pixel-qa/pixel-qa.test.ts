@@ -6,7 +6,7 @@ import { PNG } from 'pngjs'
 import { describe, expect, it } from 'vitest'
 import { stringify } from 'yaml'
 
-import { compareImages } from './compare'
+import { checkContinuation, compareImages, cropToHeight } from './compare'
 import {
   findScreen,
   loadManifest,
@@ -346,19 +346,26 @@ describe('dry run', () => {
     expect(entries.map((e) => e.screen_id)).toEqual(QA_SCREENS.map((c) => c.screen_id))
   })
 
-  it('marks state-board and short full-page references as configuration gaps, nothing else', () => {
+  it('marks unmapped state boards as configuration gaps, nothing else', () => {
     const { screens } = realManifest()
     const expected = screens
       .filter(
         (s) =>
           // Both WF01 state boards (S03, S04) now have approved mappings.
-          (s.reference_mode === 'state-board' && !['WF01-S03', 'WF01-S04'].includes(s.screen_id)) ||
-          (s.fullPageSize && s.fullPageSize.height < 900),
+          s.reference_mode === 'state-board' && !['WF01-S03', 'WF01-S04'].includes(s.screen_id),
       )
       .map((s) => s.screen_id)
     const gaps = entries.filter((e) => e.status === 'REFERENCE_CONFIGURATION_GAP')
     expect(gaps.map((e) => e.screen_id)).toEqual(expected)
-    expect(expected).toEqual([
+    expect(expected).toEqual([])
+    expect(entries.filter((e) => e.status === 'READY_FOR_SCREEN_IMPLEMENTATION')).toHaveLength(24)
+  })
+
+  it('short full-page references follow DEC-WF02-H12 instead of being gaps', () => {
+    const cropped = entries
+      .filter((e) => e.full_page_rule === 'CROP_TO_REFERENCE_HEIGHT')
+      .map((e) => e.screen_id)
+    expect(cropped).toEqual([
       'WF02-S01',
       'WF02-S02',
       'WF02-S05',
@@ -369,11 +376,11 @@ describe('dry run', () => {
       'WF03-S05',
       'WF03-S08',
     ])
-    for (const gap of gaps) {
-      expect(gap.reasons.length, gap.screen_id).toBeGreaterThan(0)
-      expect(gap.reasons.join(' '), gap.screen_id).toMatch(/shorter than the 900px/)
+    for (const e of entries) {
+      if (e.full_page_reference && !cropped.includes(e.screen_id)) {
+        expect(e.full_page_rule, e.screen_id).toBe('EXACT')
+      }
     }
-    expect(entries.filter((e) => e.status === 'READY_FOR_SCREEN_IMPLEMENTATION')).toHaveLength(15)
   })
 
   it('resolves every route to concrete fixture values', () => {
@@ -454,5 +461,38 @@ describe('segment comparison (WF01-S01)', () => {
         [],
       ),
     ).toThrow(/outside an image/)
+  })
+})
+
+describe('DEC-WF02-H12 crop and continuation', () => {
+  const solid = (width: number, height: number, rgb: [number, number, number]) => {
+    const png = new PNG({ width, height })
+    for (let i = 0; i < width * height; i++) png.data.set([...rgb, 255], i * 4)
+    return png
+  }
+
+  it('crops to the reference height without scaling', () => {
+    const tall = solid(4, 10, [239, 239, 239])
+    const out = cropToHeight(tall, 6)
+    expect([out.width, out.height]).toEqual([4, 6])
+  })
+
+  it('accepts plain background continuation below the reference', () => {
+    const reference = solid(4, 6, [239, 239, 239])
+    const actual = solid(4, 10, [239, 239, 239])
+    expect(checkContinuation(reference, actual)).toMatchObject({
+      from_y: 6,
+      rows: 4,
+      unexpected_pixels: 0,
+    })
+  })
+
+  it('flags UI below the reference height', () => {
+    const reference = solid(4, 6, [239, 239, 239])
+    const actual = solid(4, 10, [239, 239, 239])
+    actual.data.set([22, 0, 2, 255], (8 * 4 + 1) * 4)
+    const check = checkContinuation(reference, actual)
+    expect(check.unexpected_pixels).toBe(1)
+    expect(check.unexpected_bbox).toEqual({ x: 1, y: 8, width: 1, height: 1 })
   })
 })

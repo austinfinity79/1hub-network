@@ -2,11 +2,11 @@ import { execFileSync } from 'node:child_process'
 
 import type { Page } from '@playwright/test'
 
-import { compareImages, type CompareOptions } from './compare'
+import { checkContinuation, compareImages, cropToHeight, type CompareOptions } from './compare'
 import { FROZEN_DPR, FROZEN_VIEWPORT, type ResolvedScreen } from './manifest'
 import { REPO_ROOT, resolveOutputPath } from './paths'
 import { decodePng, readPng, writeBuffer } from './png'
-import { dryRun, PERSONAS, resolveRoute, type QaScreenConfig } from './qa-screens'
+import { dryRun, fullPageRuleFor, PERSONAS, resolveRoute, type QaScreenConfig } from './qa-screens'
 import {
   buildReport,
   reportFileName,
@@ -182,16 +182,23 @@ export type CompareRun = {
   conditions: CaptureConditions
   typography: TypographyResult | null
   compare?: CompareOptions
+  /** DEC-WF02-H12: compare the top of a full-page capture against a shorter reference. */
+  cropToReferenceHeight?: boolean
 }
 
 /** Captures, compares against a reference, writes the diff and the report. */
 export async function captureAndCompare(page: Page, run: CompareRun): Promise<ScreenReport> {
   const actual = await captureActual(page, run.name, run.capture)
   const diffPath = resolveOutputPath('diff', `${run.name}.${run.capture}.diff.png`)
-  const comparison = compareImages(readPng(run.referencePath), decodePng(actual.buffer), {
-    ...run.compare,
-    diffPath,
-  })
+  const reference = readPng(run.referencePath)
+  const captured = decodePng(actual.buffer)
+  // H12: crop (never scale) to the reference height; check what lies below.
+  const crop = run.cropToReferenceHeight === true && captured.height >= reference.height
+  const comparison = compareImages(
+    reference,
+    crop ? cropToHeight(captured, reference.height) : captured,
+    { ...run.compare, diffPath },
+  )
   const report = buildReport({
     screen_id: run.name,
     capture: run.capture,
@@ -205,6 +212,10 @@ export async function captureAndCompare(page: Page, run: CompareRun): Promise<Sc
     actualPath: actual.path,
     diffPath: comparison.status === 'DIMENSION_MISMATCH' ? null : diffPath,
   })
+  if (crop) {
+    report.full_page_rule = 'CROP_TO_REFERENCE_HEIGHT'
+    report.below_reference = checkContinuation(reference, captured)
+  }
   writeJsonReport(reportFileName(run.name, run.capture), report)
   return report
 }
@@ -247,6 +258,8 @@ export async function runScreenQa(
   if (status!.status !== 'READY_FOR_SCREEN_IMPLEMENTATION') {
     throw new Error(`${screen.screen_id}: ${status!.reasons.join('; ')}`)
   }
+  // The dry run reads the shared mapping; a gap declared on the passed config counts too.
+  if (config.gap) throw new Error(`${screen.screen_id}: ${config.gap}`)
   resetSeed()
   await authenticate(page, config)
   await hooks.beforeNavigate?.(page)
@@ -279,6 +292,7 @@ export async function runScreenQa(
         ...common,
         capture: 'full_page',
         referencePath: screen.fullPagePath,
+        cropToReferenceHeight: fullPageRuleFor(screen) === 'CROP_TO_REFERENCE_HEIGHT',
       }),
     )
   }
