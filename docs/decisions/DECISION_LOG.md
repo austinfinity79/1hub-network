@@ -523,7 +523,7 @@ Not a gap: `membership_requested` analytics stays deferred (DEC-WF01-ANALYTICS-E
 | <a id="open-wf02-s07-g5"></a>S07-G5 | Revoke-all endpoint shape (H8 delegated it to this task contract, which does not state it) | DEC-WF02-H8; API §5.5 | (a) `DELETE /me/sessions` → 204, clears the cookie. (b) `POST /auth/logout-all` | (a) |
 | <a id="open-wf02-s07-g6"></a>S07-G6 | Outcomes: foreign vs unknown vs already-revoked session; repeat deletion request | API §2.5; §13 | Foreign or unknown id → 404 (no probing); own revoked/expired → 204 (idempotent); own current → 204 + cookie cleared; repeat deletion request → 200 with the existing request | as stated |
 
-**Security observation SEC-OBS-01 (not part of S07 scope; not fixed):**
+**Security observation SEC-OBS-01 — CLOSED 2026-09-26** by the SEC-OBS-01 remediation ([report](../implementation/reports/SEC-OBS-01_magic-link-referrer-policy.md)): `next.config.ts` sends `Referrer-Policy: no-referrer` on `/auth/callback` only; 0 token-bearing Referers across valid, used, expired and invalid links (regression spec `sec-obs-01-referrer.spec.ts`). Original record:
 - `/auth/callback?token=…` loads its same-origin CSS/JS with the full callback URL, including the token, in the `Referer` header. 10 requests were observed.
 - The `<meta name="referrer" content="no-referrer">` comes after those links, and no `Referrer-Policy` header is sent.
 - The application log does not contain the token.
