@@ -68,6 +68,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF02-S07 | Settings `/me/settings`: sessions list/revoke/revoke-all, account deletion REQUEST; migration 006 (P13 subset); G1–G6 frozen; pixel PASS; SEC-OBS-01 still open |
 | SEC-OBS-01 | Magic-link callback: `Referrer-Policy: no-referrer` header (callback only); asset Referers carry no token; auth behaviour unchanged — CLOSED |
 | M0-ENTRY-01 | Root `/`: bootstrap placeholder removed; server-side redirect through the canonical onboarding resolver |
+| WF02-S06 | Venture team `/projects/:id/team`; `/ventures/{id}/team*` incl. explicit accept/decline; migration 008 (P12 team lifecycle + pending email invitations); fixture remediated (G9); G1–G9 frozen; pixel PASS |
 | WF02-S05 | Project/Startup `/projects/new`, `/projects/:id/edit`; `POST/GET/PATCH /ventures*`; migration 007 (region + domains); G1–G5 frozen; shared EditorHeader; pixel PASS |
 
 ## Not yet built (M0)
@@ -108,7 +109,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S06: BLOCKED before migration 008 — [OPEN-WF02-S06-G9](../decisions/DECISION_LOG.md#open-wf02-s06-g9): the deterministic seed has a profile-targeted `PENDING_APPROVAL` member row that cannot map to the frozen G1 shape. DEC-WF02-S06-G1..G8 recorded. WF02 6 / 7 screens.
+WF02 COMPLETION AUDIT + HAPPY PATH UAT. WF02 7 / 7 screens.
 
 ## Related
 
