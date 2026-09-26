@@ -16,7 +16,7 @@
 
 | UI control | Group code | Fields | Allowed levels | Default | Storage |
 |---|---|---|---|---|---|
-| "Hiện thẻ của tôi trong Thư viện" ([D2](../decisions/DECISION_LOG.md#dec-wf01-s07-d2)) | `PROFILE_DISCOVERY` | display_name, avatar, headline, bio, domain | ON = NETWORK_ONLY, OFF = PRIVATE | NETWORK_ONLY ([D4](../decisions/DECISION_LOG.md#dec-wf01-s07-d4)) | `profile_visibility_settings`: `default_level` + `group_overrides {"PROFILE_DISCOVERY":"PRIVATE"}` only when OFF |
+| "Hiện thẻ của tôi trong Thư viện" ([D2](../decisions/DECISION_LOG.md#dec-wf01-s07-d2)) | `PROFILE_DISCOVERY` | display_name, avatar, headline, bio, domain, region ([D2A](../decisions/DECISION_LOG.md#dec-wf01-s07-d2a)) | ON = NETWORK_ONLY, OFF = PRIVATE | NETWORK_ONLY ([D4](../decisions/DECISION_LOG.md#dec-wf01-s07-d4)) | `profile_visibility_settings`: `default_level` + `group_overrides {"PROFILE_DISCOVERY":"PRIVATE"}` only when OFF |
 | Investor, challenge-owner and recruitment toggles | — | — | — | — | not rendered ([D3](../decisions/DECISION_LOG.md#dec-wf01-s07-d3)) |
 | Card preview | read-only | avatar, name, headline · region, domain chips | — | — | read model |
 
@@ -75,7 +75,7 @@ S07 writes consent and visibility only; the profile stays DRAFT and `onboarding_
 
 ## 8. Open notes (not blocking)
 
-1. **Region vs D2.** The approved card copy and preview include region ("tỉnh"), but D2's field list does not. The preview is owner-only and no projection exists yet; confirm before `/profiles/{id}`.
+1. **Region vs D2.** Resolved by [DEC-WF01-S07-D2A](../decisions/DECISION_LOG.md#dec-wf01-s07-d2a): region belongs to PROFILE_DISCOVERY.
 2. **Invented copy.** The acknowledgement, error and stale messages have no approved bitmap and need copy review.
 3. **Re-accept after withdrawal.** UNIQUE (account, type, document) blocks re-accepting the same version after a withdrawal (P7). This is WF02-S03 scope.
 
