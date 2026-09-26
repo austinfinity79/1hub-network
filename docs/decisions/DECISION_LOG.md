@@ -387,7 +387,7 @@ These records are addenda to the WF02 screen contracts and the API contract. The
 
 ## OPEN-WF02-S04 — Membership request preflight gaps (human decision required)
 
-**Status:** OPEN — found by the WF02-S04 preflight on 2026-09-26; nothing implemented.
+**Status:** CLOSED 2026-09-26 by [DEC-WF02-S04-G1..G5](#dec-wf02-s04-g1) (history kept). Found by the WF02-S04 preflight.
 **Report:** [WF02-S04 preflight](../implementation/reports/WF02-S04_roles-network.md).
 
 **Supported without a decision:**
@@ -406,6 +406,81 @@ These records are addenda to the WF02 screen contracts and the API contract. The
 | <a id="open-wf02-s04-g5"></a>S04-G5 | The H11 design / screen-contract addendum for the request UI was never produced; SCR S04 still has `writes: []` | DEC-WF02-H11 ("Add a design/screen-contract addendum") | (a) Reuse the S04 card/row pattern: one card with an organisation select + "Gửi yêu cầu" (INTENTIONAL-CONTRACT, not pixel-compared), as S03 did for H4 content. (b) Wait for a design addendum | (a) |
 
 Not a gap: `membership_requested` analytics stays deferred (DEC-WF01-ANALYTICS-EXT-DEFER). RoleAssignment is listed in SCR S04 reads, but H5 fixes the S04 content without it.
+
+## DEC-WF02-S04 — Membership request (G1–G5, human approved)
+
+**Status:** HUMAN APPROVED — P0.
+**Date:** 2026-09-26.
+**Closes:** [OPEN-WF02-S04 G1–G5](#open-wf02-s04-g1).
+**Remaining S04 human decisions:** 0.
+
+<a id="dec-wf02-s04-g1"></a>**DEC-WF02-S04-G1 — Requestable organisations**
+
+| Field | Record |
+|---|---|
+| Context | No member-facing source for the organisations a member may request; status rule not frozen (G1) |
+| Decision | No generic organisation-directory API. The `/me/roles` server flow reads requestable organisations from the canonical organisations table: type ∈ {HUB, CHAPTER, CLB} and the existing `publication_status` value `PUBLISHED`. `POST /me/membership-requests` re-checks the same predicate; the UI list is convenience only |
+| Rationale | Data SOT:168/566 name HUB/Chapter/CLB; PUBLISHED is the existing live state of `publication_status` |
+| Consequence | Only `organization_id` is read from the client; an unknown, unpublished or other-type organisation is 404 (hidden) |
+| Affected | API `POST /me/membership-requests`; UI `/me/roles` selector; data read only |
+| Anchor | S04-G1; Data SOT:168, 566; `001_p0_init.sql` `publication_status` |
+
+<a id="dec-wf02-s04-g2"></a>**DEC-WF02-S04-G2 — Audit action**
+
+| Field | Record |
+|---|---|
+| Context | Data SOT:93 and Auth arch:208 require an audit record for membership changes |
+| Decision | `MEMBERSHIP_REQUESTED`, written in the request's transaction only when a record is created: resource `community_membership` / new id, after `{organization_id, state: PENDING_APPROVAL}`, request id |
+| Rationale | Minimum identifiers and state transition; the existing audit writer |
+| Consequence | Nothing for refused or failed requests; no email, profile copy, roster data or metadata |
+| Affected | `audit_events`; `AuditAction` type |
+| Anchor | S04-G2 |
+
+<a id="dec-wf02-s04-g3"></a>**DEC-WF02-S04-G3 — Conflict error**
+
+| Field | Record |
+|---|---|
+| Context | 409 "duplicate relation" had no code for this endpoint |
+| Decision | Reuse the frozen `MEMBERSHIP_INVALID_TRANSITION` (409) in the standard error envelope; no new code |
+| Rationale | The refusal is a membership lifecycle conflict (API §13) |
+| Consequence | Also used when the database uniqueness rejects a concurrent duplicate |
+| Affected | API error mapping |
+| Anchor | S04-G3; API §2.5, §13 |
+
+<a id="dec-wf02-s04-g4"></a>**DEC-WF02-S04-G4 — Re-request lifecycle**
+
+| Field | Record |
+|---|---|
+| Context | The database blocks only open (PENDING_APPROVAL, ACTIVE) duplicates |
+| Decision | Existing membership in the same organisation: ACTIVE, PENDING_APPROVAL, SUSPENDED or ALUMNI → 409 `MEMBERSHIP_INVALID_TRANSITION`. REJECTED or WITHDRAWN → a new PENDING_APPROVAL record is allowed. Old records are never changed or reactivated |
+| Rationale | API §13: a rejected membership needs a new process, never a silent reopen |
+| Consequence | History is preserved; ALUMNI is not converted in P0 |
+| Affected | `community_memberships` inserts only |
+| Anchor | S04-G4 |
+
+<a id="dec-wf02-s04-g5"></a>**DEC-WF02-S04-G5 — S04 screen-contract addendum (fulfils DEC-WF02-H11)**
+
+| Field | Record |
+|---|---|
+| Context | H11 required an addendum; SCR S04 had `writes: []` |
+| Decision | Addendum: WF02-S04 also `writes: CommunityMembership (request → PENDING_APPROVAL)` with action `request_membership`. UI: one card in the S04 card/row language with one organisation selector and one "Gửi yêu cầu" action. Nothing else in S04 changes |
+| Rationale | The business requirement was frozen after the bitmap |
+| Consequence | The added region is INTENTIONAL-CONTRACT and not pixel-compared; unchanged regions keep the approved bitmap as reference; `design-reference/final` untouched |
+| Affected | UI `/me/roles`; SCR WF02-S04 (addendum recorded here, SOT file unchanged) |
+| Anchor | S04-G5; DEC-WF02-H11 |
+
+## DEC-WF02-S04-D — Roles & Network implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within approved scope (G1–G5, H5, H11).
+**Date:** 2026-09-26.
+**Task:** [WF02-S04](../implementation/reports/WF02-S04_roles-network.md).
+
+| ID | Topic | Decision | Source anchors |
+|---|---|---|---|
+| <a id="dec-wf02-s04-d1"></a>DEC-WF02-S04-D1 | Rows | One row per canonical record from `GET /me/network`, in order: ventures, memberships (every stored state, labelled: Thành viên, Đang chờ duyệt, Không được duyệt, Đã rút yêu cầu, Tạm ngưng, Cựu thành viên), leadership (title; "đã kết thúc"/"đã thu hồi" for ALUMNI/REVOKED). Rows are read-only (no navigation), per SCR "system-recorded history is read-only". Chip = organisation or venture type | SCR WF02-S04; DEC-WF02-H5 |
+| <a id="dec-wf02-s04-d2"></a>DEC-WF02-S04-D2 | Right-hand provenance | Stored source only: SELF_DECLARED → "Tự khai báo", ORGANIZATION_VERIFIED → "Tổ chức xác nhận", SYSTEM_RECORDED → "Hệ thống ghi nhận", plus "từ {start date}" when stored. Venture owner/team relations are server-recorded → "Hệ thống ghi nhận". Leadership has no source column → date only. Never an approver name (bitmap "Trần Quốc Huy duyệt", "HUB tổng gán" = INTENTIONAL-CONTRACT) | Data SOT §7; DEC-WF02-T00-D2; DEC-WF02-H5 |
+| <a id="dec-wf02-s04-d3"></a>DEC-WF02-S04-D3 | Request card copy and behaviour | Eyebrow "YÊU CẦU THAM GIA TỔ CHỨC", label "Tổ chức", placeholder "Chọn tổ chức", action "Gửi yêu cầu", hint "Yêu cầu sẽ ở trạng thái chờ duyệt cho đến khi tổ chức xác nhận." The selector hides organisations where a blocking state exists (G4). After any attempt the view reloads `GET /me/network`; 409/404 get their own messages. Idempotency-Key per organisation. The lede is kept verbatim. Pending PO copy review | DEC-WF02-S04-G1/G3/G4/G5 |
+| <a id="dec-wf02-s04-d4"></a>DEC-WF02-S04-D4 | Pixel fixture | The reference's third row (a Chapter leadership) is added to the seeded member by a test-only hook with a fixed id, deleted after the run | Pixel QA §4 |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

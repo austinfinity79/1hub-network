@@ -186,12 +186,12 @@ test.describe('WF02-T00 member-shell page guard', () => {
 test.describe('WF02-T00 member shell', () => {
   test('navigation: frozen routes are links, the rest inert, no counters', async ({ page }) => {
     await completedMember(page.request)
-    await page.goto('/me/roles')
+    await page.goto('/me/settings')
 
     const shell = page.locator('[data-shell="member"]')
     await expect(shell).toBeVisible()
-    // The placeholder body is still the screen's own (S04 not implemented).
-    await expect(page.locator('[data-route-placeholder="WF02-S04"]')).toBeVisible()
+    // The placeholder body is still the screen's own (S07 not implemented).
+    await expect(page.locator('[data-route-placeholder="WF02-S07"]')).toBeVisible()
 
     const sidebar = shell.getByRole('navigation', { name: 'Tài khoản của tôi' })
     const links = await sidebar

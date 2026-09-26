@@ -124,7 +124,12 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
     'member',
     'privacy: discovery NETWORK_ONLY, both current documents accepted',
   ),
-  cfg('WF02-S04', '/me/roles', 'member', 'roles and network links, ACTIVE Chapter 01'),
+  cfg(
+    'WF02-S04',
+    '/me/roles',
+    'member',
+    'roles: owned startup, ACTIVE Chapter 01, Chapter 01 leadership (test hook)',
+  ),
   cfg('WF02-S05', '/projects/:id/edit', 'member', 'edit own startup profile', {
     id: FIXTURES.demoStartupId,
   }),

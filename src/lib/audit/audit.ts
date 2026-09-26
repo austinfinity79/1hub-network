@@ -6,7 +6,8 @@ import type { Executor } from '@/lib/db/client'
  * Written in the caller's transaction so the event commits with the change.
  * Callers pass only what review needs; no free text, no contact data.
  */
-export type AuditAction = 'CONSENT_ACCEPTED' | 'PROFILE_VISIBILITY_CHANGED' | 'PROFILE_ACTIVATED'
+export type AuditAction =
+  'CONSENT_ACCEPTED' | 'PROFILE_VISIBILITY_CHANGED' | 'PROFILE_ACTIVATED' | 'MEMBERSHIP_REQUESTED'
 
 export async function writeAudit(
   exec: Executor,
