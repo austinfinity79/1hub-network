@@ -1,71 +1,68 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF01-REMEDIATION-01 — GAP-ROSTER (launch cohort membership/leadership bootstrap)
-- Status: **DONE — GAP-ROSTER CLOSED**. Real production roster data remains an operational input.
-- Mode: LOCAL REVIEW. Committed locally, not pushed. GAP-ANALYTICS-REG, DEFECT-RESUME and WF02 not started.
-- Business rule: Data Decisions Freeze D2 "PRESEED + PENDING FALLBACK" (no new decision was needed).
+- Task ID / name: WF01-REMEDIATION-02 — GAP-ANALYTICS-REG (registration + WF01 funnel analytics)
+- Status: **DONE — GAP-ANALYTICS-REG CLOSED**
+- Mode: LOCAL REVIEW. Committed locally, not pushed. DEFECT-RESUME and WF02 not started.
 
-## 2. Pre-flight
+## 2. Source audit
 | Item | Finding |
 |---|---|
-| Bootstrap storage | `membership_bootstrap` (001): normalized email, organization, `membership_state`, `leadership_role_label`, `source_batch`, `consumed_by_account_id/at`, UNIQUE (email, org, batch) — sufficient; no new roster model |
-| Template | `db/seed/production_roster_template.csv`: `email,organization_slug,membership_state,leadership_role_label,source_batch` |
-| Matching key | normalized email, `trim().toLowerCase()` exactly as auth (`src/lib/auth/email.ts`) |
-| Uniqueness | memberships: `uq_open_membership` (002); leadership: **none**, so it was added |
-| Account creation | `consumeMagicLink` (sign-in); the profile is created by the first onboarding write |
-| Integration point | after the account is resolved in `consumeMagicLink`, on every sign-in |
+| Frozen event name | API 05 §10 "P0 minimum events" lists **`account_created`**. Used exactly; no alias |
+| Common properties | `event_name, occurred_at, account_id, profile_id, workflow, screen_id` (§10); no personal content |
+| Writer | `src/lib/analytics/analytics.ts` (S08), one writer on `analytics_events` |
+| Delivery policy | **Transactional**: the event is inserted in the same transaction as the change it records. A writer failure rolls the change back, so account state is never inconsistent. No new semantics were introduced |
+| Account creation | `consumeMagicLink`, previously SELECT-then-INSERT. That raced on concurrent first sign-ins, where the second one failed on the UNIQUE email (a latent defect, fixed here) |
 
 ## 3. Implementation
-| Part | Result |
-|---|---|
-| Migration `004_p0_roster_bootstrap.sql` (additive) | `uq_active_leadership` (profile, org, title WHERE ACTIVE), plus the single attach routine `roster_reconcile_account(account)`. It locks the account's pending rows `FOR UPDATE` and ensures the one profile. Per row: no membership → ACTIVE, source `ORGANIZATION_VERIFIED` (SOT provenance), `started_at`; ACTIVE → reused; any other state → `CONFLICT_<STATE>`, not overwritten, row left unconsumed; leadership only when the row has a label; marks the row consumed. One statement = one transaction |
-| Importer | `pnpm roster:import <file> [--dry-run]` (`scripts/roster.mjs` + `scripts/roster-lib.mjs`). Validates header, email, organization (exists; HUB/CHAPTER/CLB; not archived), `membership_state = ACTIVE`, label length, batch; any invalid row aborts the whole import; in-file duplicates collapse; re-import is a no-op; a changed row in the same batch is refused. Late import reconciles existing accounts in the same transaction. Output: counts plus masked references (`l***@example.org`), never file contents |
-| Sign-in | `consumeMagicLink` → `reconcileRoster`. Idempotent; a failure never blocks sign-in (logged without personal data; retried on the next sign-in or import) |
-| RBAC | no RoleAssignment is created. Leaders and members hold no capability from roster data (approved matrix rule 2) |
-| Unmatched | nothing attached, not even a profile; onboarding unchanged |
-| Pending fallback | a self-declared PENDING_APPROVAL membership stays pending (reported as a conflict). `POST /me/membership-requests` is still WF02 scope, not built here |
+- `consumeMagicLink`: `INSERT … ON CONFLICT (email_normalized) DO NOTHING RETURNING id` and `account_created` in **one transaction**. The event is written only when this call created the account.
+  - `profile_id` is null at sign-up; `workflow` WF01; `screen_id` WF01-S03.
+  - The existing account is resolved otherwise, and the blocked check is unchanged.
+- The roster reconcile still runs after the account is resolved (unchanged). The event carries no roster data.
+- `trackEvent` accepts a null `profile_id`; the event type union gains `account_created`.
 
 ## 4. QA
-- **Unit** (`roster-lib.test.ts`, 5): normalization and plausibility identical to auth; CSV quoting/CRLF/BOM; header; duplicates.
-- **DB** (`roster.db-test.ts`, 9):
-  - malformed rows rejected with nothing written and no full email in errors;
-  - dry run writes nothing; import and re-import idempotent;
-  - normalized match; member ACTIVE with no leadership; Chapter and CLB leaders get leadership; one person in two chapters;
-  - unmatched → no profile;
-  - late import reconciles an existing account;
-  - existing ACTIVE reused; PENDING and SUSPENDED not overwritten;
-  - 6 concurrent sign-ins → one attach;
-  - atomicity: a failing leadership insert leaves no membership and an unconsumed row;
-  - no RoleAssignment and no capability.
-- **UAT-11** (`wf01-uat-journey.spec.ts`), now **PASS**, expected-fail marker removed:
-  - member → one profile, ACTIVE membership, no leadership, onboarding completes, a second sign-in adds nothing;
-  - leader → membership and leadership, `capabilities` and `managed_scopes` empty.
-  - The UAT-03b and UAT-12 markers are untouched.
-- **Fresh DB proof** (clean clone of `a6a454e` plus the fix, new PostgreSQL 17.6 on 55433):
-  - migrate 001→004, then a repeat run skips;
-  - invalid fixture: exit 1, nothing written; dry run writes nothing;
-  - import: 6 new, 1 duplicate collapsed, seed `member` already ACTIVE, seed `pending` → CONFLICT_PENDING_APPROVAL;
-  - sign-in of fixture users (real magic-link consume): member 2× ACTIVE; leaders membership + leadership; unknown user nothing; roles 0; capabilities [];
-  - **app and DB restarted: relationships identical**; re-import and re-login: no duplicates;
-  - DB 190/190 and UAT + auth specs 41/41 on the fresh DB; app logs contain no email or roster content.
+**DB** (`registration.db-test.ts`, 5):
+- the first sign-in writes one event with exactly the frozen properties and no `@`;
+- returning sign-in and a retried link add nothing;
+- two valid links consumed concurrently → 1 account, 1 event (previously one request errored);
+- a failing event insert (test trigger) rolls the account back; the next link creates the account and one event;
+- a roster sign-up → one event, no roster fields, membership attached.
+
+**UAT** (`wf01-uat-journey.spec.ts`):
+- **UAT-12 PASS**, expected-fail marker removed: one event after the first sign-in, a link retry, and sign-out/sign-in.
+- **UAT-13 (new) PASS**: the full journey reads `account_created` first, only real `profile_completion_changed` in between (from ≠ to), `onboarding_completed` last; one account id; no email, token, name, headline or legal types.
+- The UAT-03b marker (DEFECT-RESUME) is untouched.
+
+**Re-proved:**
+- `onboarding_completed` once (S08 suites, concurrency);
+- `profile_completion_changed` change-only (a PATCH with no percent change writes none);
+- audit and analytics stay separate (no `audit_events` written or read for registration).
+
+**Fresh DB proof** (clean clone of `37d66b4`, new PostgreSQL 17.6):
+- migrate 001→004 and seed;
+- new account → onboarding via the real APIs gives `account_created → profile_completion_changed(0→20) → (20→30) → onboarding_completed`; a no-change PATCH and a repeated complete wrote nothing;
+- **app and DB restarted, signed in again → funnel identical**;
+- DB 195/195 and the UAT suite 14/14 on the fresh DB;
+- app logs contain no email or token.
 
 ## 5. Validation (dev)
 | Gate | Result |
 |---|---|
 | Format / Lint / Typecheck | PASS |
-| Unit / DB | 120 / 190 (schema ledger test now lists 004) |
+| Unit / DB | 120 / 195 |
 | Build | PASS |
-| Full Playwright | 263 passed, 24 skipped by design (includes the WF01 UAT suite, auth/session, RBAC, onboarding, consent, completion) |
-| Pixel | unchanged: S01 0/0/0/0/1; S02 0/0/0/14/3; S04 1, 1/3; S05 193/245; S06 6/503; S07 26/75; S08 all 0; S03 PASS |
+| Full Playwright | 264 passed (+UAT-13), 24 skipped by design. Includes auth/session, magic-link concurrency, roster, completion, S08, the WF01 journey and UAT |
+| Pixel | unchanged: S01 0/0/0/0/1; S02 0/0/0/14/3; S03 71/247/97; S04 1, 1/3; S05 193/245; S06 6/503; S07 26/75; S08 all 0 |
 
-## 6. Notes
-- **Not built here.** `POST /me/membership-requests` (the PENDING fallback endpoint) and an operator UI for conflicts are WF02/WF03 scope.
-- **Seed row.** The seed keeps its intentionally unconsumed row (`unclaimed@example.test`), which now attaches on that address's first sign-in, as it was designed to.
+## 6. Remaining
+- **ANALYTICS-EXT (P2):** API §10 also lists `account_authenticated`, `onboarding_started`, `consent_accepted`, `visibility_changed`, `membership_bootstrapped`, `membership_requested`, `profile_saved` and `feedback_submitted`, which are not emitted. The Data SOT minimum (registration, profile completion; feedback later) is met. Go-live decision: implement with the same writer, or confirm the deferral.
+- **DEFECT-RESUME (P2):** unchanged.
+- **Known edge (pre-existing):** a link is claimed before the account transaction. If that transaction fails, the link is spent and the user requests a new one.
 
 ## 7. Git
-- Branch: `main`; start HEAD `fed0b25`
-- Implementation commits: `a6a454e` feat(wf01): launch-roster bootstrap…; `d79f68f` fix(roster): dry run predicts conflicts…
+- Branch: `main`; start HEAD `71d4cd7`
+- Implementation commit: `37d66b4` feat(wf01): record account_created once per new account (GAP-ANALYTICS-REG)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `fed0b25`

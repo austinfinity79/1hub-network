@@ -8,7 +8,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: 8 / 8 screens implemented (100%). WF01 completion audit: YELLOW — UAT BLOCKED** ([audit](WF01_COMPLETION_AUDIT.md), [UAT matrix](WF01_UAT_MATRIX.md)). GAP-ROSTER **CLOSED** (WF01-REMEDIATION-01); remaining: the registration metric (GAP-ANALYTICS-REG, P1) and DEFECT-RESUME (P2). Release/UAT blocker: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
+**M1 — WF01 Identity & Onboarding: 8 / 8 screens implemented (100%). WF01 completion audit: YELLOW — UAT BLOCKED** ([audit](WF01_COMPLETION_AUDIT.md), [UAT matrix](WF01_UAT_MATRIX.md)). GAP-ROSTER **CLOSED** (WF01-REMEDIATION-01); GAP-ANALYTICS-REG **CLOSED** (WF01-REMEDIATION-02); remaining: DEFECT-RESUME (P2) and ANALYTICS-EXT (P2). Release/UAT blocker: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
 
 | Screen | State |
 |---|---|
@@ -54,6 +54,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S07 | Privacy & Visibility: `/legal/current`, `/legal/{kind}/{version}`, `/me/consents`, `/me/consents/accept`, `/me/visibility`, audit writer |
 | WF01-S08 | Onboarding Complete: `POST /me/onboarding/complete`, analytics writer (`onboarding_completed`, `profile_completion_changed`) |
 | WF01-REMEDIATION-01 | GAP-ROSTER: roster importer CLI, migration 004 (`uq_active_leadership`, `roster_reconcile_account`), sign-in reconcile |
+| WF01-REMEDIATION-02 | GAP-ANALYTICS-REG: `account_created` in the account-insert transaction; race-safe first sign-in |
 
 ## Not yet built (M0)
 
@@ -85,14 +86,15 @@ No product pixel pass has been claimed for any screen.
 | Classification of blocking gaps B1–B5 | [P0_DECISIONS_REQUIRED.md](P0_DECISIONS_REQUIRED.md) |
 | Deferred pre-UAT/deployment items, incl. rate limiting, email delivery, error logging | [M0 completion report §16](M0_FOUNDATION_COMPLETION_REPORT.md) |
 | ~~GAP-ROSTER (P1)~~ **CLOSED** by WF01-REMEDIATION-01 (`pnpm roster:import`, migration 004); real roster data is a go-live input | [report](reports/WF01-REMEDIATION-01_gap-roster.md) |
-| **GAP-ANALYTICS-REG (P1)**: `account_created` and other API §10 funnel events not written | [WF01_COMPLETION_AUDIT.md](WF01_COMPLETION_AUDIT.md) |
+| ~~GAP-ANALYTICS-REG (P1)~~ **CLOSED** by WF01-REMEDIATION-02 (`account_created`) | [report](reports/WF01-REMEDIATION-02_gap-analytics-registration.md) |
+| **ANALYTICS-EXT (P2)**: other API §10 events (`account_authenticated`, `onboarding_started`, `consent_accepted`, `visibility_changed`, `membership_*`, `profile_saved`, `feedback_submitted`) not emitted; go-live decision | [WF01_COMPLETION_AUDIT.md](WF01_COMPLETION_AUDIT.md) |
 | **DEFECT-RESUME (P2)**: sign-in resumes incomplete onboarding at S05, not the first incomplete step | [WF01_COMPLETION_AUDIT.md](WF01_COMPLETION_AUDIT.md) |
 | **Release blocker** `PRODUCTION_LEGAL_CONTENT_REQUIRED`: real Terms/Privacy text and versions (local uses marked fixtures) | [WF01_S07_PRIVACY_CONSENT_CONTRACT.md](WF01_S07_PRIVACY_CONSENT_CONTRACT.md) |
 | Pixel QA reference configuration gaps (11 screens) | [M0-T11 report](reports/M0-T11_manifest-pixel-qa-foundation.md) |
 
 ## Next task
 
-WF01-REMEDIATION-02 — GAP-ANALYTICS-REG — awaiting explicit authorization. WF02 not started.
+WF01-REMEDIATION-03 — DEFECT-RESUME — awaiting explicit authorization. WF02 not started.
 
 ## Related
 

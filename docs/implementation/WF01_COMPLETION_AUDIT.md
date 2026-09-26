@@ -1,6 +1,6 @@
 # WF01 Completion Audit
 
-**Verdict: YELLOW — UAT BLOCKED.** _Update 2026-09-26 (WF01-REMEDIATION-01): **GAP-ROSTER CLOSED** — see [report](reports/WF01-REMEDIATION-01_gap-roster.md). Remaining: GAP-ANALYTICS-REG (P1), DEFECT-RESUME (P2), release inputs._ All 8 approved WF01 screens and their contracts are implemented and pass in a fresh environment. A **frozen P0 business path is missing**: launch-roster matching (Freeze D2 "PRESEED + PENDING FALLBACK"). The P0 registration metric is also missing.
+**Verdict: YELLOW — UAT BLOCKED.** _Update 2026-09-26 (WF01-REMEDIATION-01): **GAP-ROSTER CLOSED** — see [report](reports/WF01-REMEDIATION-01_gap-roster.md). _Update (WF01-REMEDIATION-02): **GAP-ANALYTICS-REG CLOSED** — see [report](reports/WF01-REMEDIATION-02_gap-analytics-registration.md). Remaining: DEFECT-RESUME (P2), ANALYTICS-EXT (P2, other API §10 events), release inputs._ All 8 approved WF01 screens and their contracts are implemented and pass in a fresh environment. A **frozen P0 business path is missing**: launch-roster matching (Freeze D2 "PRESEED + PENDING FALLBACK"). The P0 registration metric is also missing.
 
 - Audit date: 2026-09-26. HEAD at audit: `c74e7fc`.
 - Mode: LOCAL REVIEW. No push, no SOT or baseline change, no feature code.
@@ -47,7 +47,7 @@ UI-driven S01 → S02 → S03 → S05 → S06 → S07 → S08 → `/me`, one jou
 | Lifecycle | PASS: DRAFT through S05–S07; ACTIVE plus timestamp once at S08; failure atomic; repeat 200 with no new rows (UAT-09, restart proof) |
 | Audit | PASS: `CONSENT_ACCEPTED` ×2, `PROFILE_VISIBILITY_CHANGED`, `PROFILE_ACTIVATED` ×1; actor, resource and request_id present; no token or content. Insert-only by code (no update/delete path) |
 | **Launch roster (Freeze D2)** | **CLOSED by WF01-REMEDIATION-01** (`pnpm roster:import`, sign-in reconcile, migration 004). Original finding: GAP-ROSTER. `membership_bootstrap` is never read: no importer (template CSV only), no matching at account creation, no ACTIVE membership or leadership attached. Unmatched users stay safe (nothing is auto-activated) |
-| **P0 funnel analytics** | **PARTIAL — GAP-ANALYTICS-REG.** `onboarding_completed` (once) and `profile_completion_changed` (real changes only) PASS through the single writer. `account_created`, `account_authenticated`, `onboarding_started`, `consent_accepted`, `visibility_changed`, `membership_*` are not written; registration is a Data SOT minimum |
+| **P0 funnel analytics** | **Registration CLOSED by WF01-REMEDIATION-02** (`account_created` once per new account). Still not emitted (ANALYTICS-EXT, P2): `account_authenticated`, `onboarding_started`, `consent_accepted`, `visibility_changed`, `membership_bootstrapped`, `membership_requested`, `profile_saved`, `feedback_submitted`. Original finding: GAP-ANALYTICS-REG. `onboarding_completed` (once) and `profile_completion_changed` (real changes only) PASS through the single writer. `account_created`, `account_authenticated`, `onboarding_started`, `consent_accepted`, `visibility_changed`, `membership_*` are not written; registration is a Data SOT minimum |
 | Resume rule (WF01 state rules) | **DEFECT-RESUME:** sign-in for an incomplete account always lands on S05 (`consume` answers `next_step: PURPOSE`), not the first incomplete step. Data is kept and continuing completes (UAT-03a) |
 
 ## 5. Pixel regression (1440×900 DPR1, fresh clone) — PASS
@@ -72,7 +72,8 @@ Every other difference is a documented intentional class. Baselines are untouche
 | ID | Sev | Finding | Class |
 |---|---|---|---|
 | GAP-ROSTER | ~~P1~~ | **CLOSED** (WF01-REMEDIATION-01): importer, email match at sign-in, ACTIVE membership, leadership only with evidence, duplicate- and concurrency-safe | — (real roster data remains an operational input) |
-| GAP-ANALYTICS-REG | **P1** | Registration and other P0 funnel events not recorded | GO-LIVE BLOCKER |
+| GAP-ANALYTICS-REG | ~~P1~~ | **CLOSED** (WF01-REMEDIATION-02): `account_created` once per new account, same transaction as the insert | — |
+| ANALYTICS-EXT | P2 | Other API §10 "P0 minimum" events not emitted (see above); Data SOT minimum (registration, profile completion) is met | GO-LIVE decision: implement or confirm deferral |
 | DEFECT-RESUME | P2 | Returning incomplete user is resumed at S05, not the first incomplete step | Fix before UAT recommended; workaround exists |
 | COPY-REVIEW | P3 | Unapproved runtime copy (see §7) | Non-blocking polish, except legal |
 
@@ -93,7 +94,7 @@ Every other difference is a documented intentional class. Baselines are untouche
 | Real production roster data (importer done) | GO-LIVE BLOCKER (operational input) |
 | PRODUCTION_LEGAL_CONTENT_REQUIRED | UAT BLOCKER (real documents) and GO-LIVE BLOCKER |
 | Production REGION/DOMAIN/SKILL taxonomy data | GO-LIVE BLOCKER (config data; UAT may use fixtures) |
-| GAP-ANALYTICS-REG | GO-LIVE BLOCKER |
+| ANALYTICS-EXT (remaining API §10 events) | GO-LIVE decision (P2) |
 | DEFECT-RESUME | Recommended before UAT (P2) |
 | `/me` placeholder (WF02-S01); Project CTA (WF02-S05); Chapter (WF02-S04 / network); Challenge (WF04 demo) | DEFERRED / WF02+; WF01 completes safely without them |
 | Copy review (A, D) | NON-BLOCKING POLISH |
