@@ -45,6 +45,17 @@ export function organizationNav(orgId: string): OpsNavItem[] {
   ]
 }
 
+/**
+ * WF04-T00 (DEC-WF04-H2): the one entry into the Programme / Challenge DEMO.
+ * Shown inside OpsShell only, i.e. to actors who already passed the ops guard;
+ * the demo guard and API re-authorize (`programme:read`). Never WF03-S05.
+ */
+export const PROGRAMME_DEMO_ENTRY = {
+  label: 'Chương trình & Challenge',
+  group: 'Demo · Internal Alpha',
+  href: '/demo/programmes',
+} as const
+
 /** P0-SHELL (DEC-P0-SHELL-D3): the way back to the member area (and its sign-out). */
 export const ACCOUNT_ENTRY = { label: 'Tài khoản của tôi', href: '/me' } as const
 

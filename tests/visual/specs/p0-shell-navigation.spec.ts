@@ -185,13 +185,20 @@ test.describe('P0-SHELL navigation matrix', () => {
       `/ops/org/${CHAPTER_01}/profile`,
       `/ops/org/${CHAPTER_01}/events`,
       `/ops/org/${CHAPTER_01}/settings`,
+      // WF04-T00 (DEC-WF04-H2): the Programme demo entry and its frame.
+      '/demo/programmes',
     ])
       await crawl(page, 'operator', source)
   })
 
   test('platform admin: network and HUB context', async ({ page }) => {
     await login(page, 'ops@example.test')
-    for (const source of ['/ops/network', `/ops/org/${HUB}`, `/ops/org/${HUB}/settings`])
+    for (const source of [
+      '/ops/network',
+      `/ops/org/${HUB}`,
+      `/ops/org/${HUB}/settings`,
+      '/demo/programmes',
+    ])
       await crawl(page, 'admin', source)
   })
 })
@@ -307,8 +314,15 @@ test.describe('P0-SHELL journeys', () => {
       await page.reload()
       await expect(page.locator(`[data-org-context="${CHAPTER_01}"]`)).toBeVisible()
     }
-    // FUTURE / WF04 programmes are not an ops menu item.
-    await expect(page.locator('[data-shell="ops"] a[href$="/programmes"]')).toHaveCount(0)
+    // WF03-S05 unit programmes (FUTURE) are not an ops menu item; the only programmes
+    // link is the WF04 demo entry (DEC-WF04-H2).
+    await expect(
+      page.locator('[data-shell="ops"] a[href$="/programmes"]:not([href="/demo/programmes"])'),
+    ).toHaveCount(0)
+    await expect(page.locator('[data-nav="programme-demo"]')).toHaveAttribute(
+      'href',
+      '/demo/programmes',
+    )
     await page.locator('nav[aria-label="Breadcrumb"] a').click()
     await expect(page).toHaveURL('/ops/network')
     await page.locator('[data-nav="account-entry"]').click()

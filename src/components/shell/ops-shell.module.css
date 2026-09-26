@@ -22,6 +22,36 @@
   box-shadow: 1px 0 0 #ececec;
 }
 
+/* WF04-T00 (DEC-WF04-H2): the Programme demo entry, pinned above the account
+   entry; its label uses the drawn group-label style so the destination reads
+   as demo. */
+.demoEntry {
+  position: absolute;
+  right: 1.125rem;
+  bottom: 3.5rem;
+  left: 1.125rem;
+}
+
+.demoGroup {
+  margin: 0 0 0.25rem;
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #b39999;
+}
+
+.demoLink {
+  color: #c5abab;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.demoLink:hover,
+.demoLink[aria-current='page'] {
+  color: #f9f8f8;
+}
+
 /* P0-SHELL (DEC-P0-SHELL-D3): the member-area entry, pinned to the sidebar foot
    (absolute, so the measured sidebar layout above does not move). */
 .accountEntry {
@@ -32,7 +62,8 @@
   text-decoration: none;
 }
 
-.accountEntry:focus-visible {
+.accountEntry:focus-visible,
+.demoLink:focus-visible {
   outline: 0.125em solid #fc523c;
   outline-offset: 0.125em;
 }

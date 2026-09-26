@@ -5,7 +5,7 @@ import type { Capability } from '@/lib/authz/matrix'
 import { ACCOUNT_ENTRY, NETWORK_NAV, OPS_COPY, organizationNav } from '@/lib/ops/nav'
 import type { OrganizationRefDTO } from '@/lib/ops/organizations'
 
-import { OpsNav } from './ops-nav'
+import { OpsDemoEntry, OpsNav } from './ops-nav'
 import styles from './ops-shell.module.css'
 import { HomeLink } from '@/components/shell/home-link'
 
@@ -71,6 +71,7 @@ export function OpsShell({ organization, capabilities = [], children }: Props) {
             </>
           ) : null}
         </nav>
+        <OpsDemoEntry />
         <Link
           href={ACCOUNT_ENTRY.href}
           className={`type-body-sm ${styles.accountEntry}`}
