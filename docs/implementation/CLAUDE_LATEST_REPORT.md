@@ -1,28 +1,24 @@
 # Claude Task Report
 
 ## 1. Task
-- Task ID / name: WF02-S01 — Account Home (`/me`)
+- Task ID / name: WF02-S03 — Privacy / Visibility (`/me/privacy`)
 - Status: **DONE**
-- Mode: LOCAL REVIEW. No migration, no venture write API, no push.
+- Mode: LOCAL REVIEW. No migration, no API change, no push.
 
-## 2. Scope implemented
+## 2. Scope implemented (DEC-WF02-H4)
 | Part | Result |
 |---|---|
-| Shell | T00 `MemberShell` reused, "Tổng quan" active |
-| Identity | Own display name, own email "· đăng nhập bằng email", avatar only when the completion service counts it |
-| Completion | Server percent and bar; missing list built from the server's incomplete groups (no "học vấn"); "Điền nốt →" `/me/profile/edit` below 100%; neutral info line |
-| Navigation cards | Hồ sơ cá nhân `/me/profile/edit`, Quyền riêng tư `/me/privacy`, Cài đặt `/me/settings`; descriptions without Future features |
-| Tổ chức của tôi | `GET /me/network`: ventures, ACTIVE/PENDING memberships, ACTIVE leadership; owner venture → `/projects/:id/edit`, others → `/me/roles`; real empty state |
-| Omitted | "Đang chờ bạn" (H10, TEMPORARY-PRODUCTION-DEPENDENCY), "Xem hồ sơ công khai" (H3), bell counter (H9) |
-| Failure states | Profile and network sections fail independently with "Thử lại" |
+| PROFILE_DISCOVERY | One switch: ON = NETWORK_ONLY, OFF = PRIVATE; saves via `PUT /me/visibility`, shows the server's answer; PUBLIC never offered |
+| Current legal | "Điều khoản đang áp dụng": each current document (from `/legal/current`) with version and acceptance date, or "chưa đồng ý phiên bản này"; "Đọc" link to its content |
+| Re-acceptance | Acknowledgement + "Đồng ý phiên bản mới" posts only the missing current documents (Idempotency-Key per version); 409 reloads the new version |
+| Consent history | Every record from `/me/consents`, marked current / stale / revoked |
+| Not rendered | Future purpose toggles, viewer history, "view as others", data export, consent revocation |
 
-Decisions: [DEC-WF02-S01-D1..D6](../decisions/DECISION_LOG.md#dec-wf02-s01-d1). No PROSPECT label exists in canonical data, so none is rendered. No analytics added.
+Decisions: [DEC-WF02-S03-D1..D6](../decisions/DECISION_LOG.md#dec-wf02-s03-d1). Audit events are the existing ones only: PROFILE_VISIBILITY_CHANGED and CONSENT_ACCEPTED. No analytics added.
 
 ## 3. Files changed
-- New: `src/app/(member)/me/{account-home.tsx,account-home.module.css,home-model.ts,home-model.test.ts}`, `tests/visual/specs/wf02-s01-account-home.spec.ts`
-- Changed: `src/app/(member)/me/page.tsx`
-- Pixel harness (DEC-WF02-H12): `qa-screens.ts` (short full page = rule, not gap), `compare.ts` (`cropToHeight`, `checkContinuation`), `capture.ts` (crop + continuation; declared config gap refused), `report.ts`, `pixel-qa.test.ts`, `pixel-qa-screens.spec.ts`
-- `wf02-t00-member-foundation.spec.ts`: placeholder check moved to `/me/roles`
+- New: `src/app/(member)/me/privacy/{privacy-view.tsx,privacy.module.css,privacy-model.ts,privacy-model.test.ts}`, `tests/visual/specs/wf02-s03-privacy-visibility.spec.ts`
+- Changed: `src/app/(member)/me/privacy/page.tsx`, `tests/visual/pixel-qa/qa-screens.ts` (S03 state text)
 
 ## 4. Migrations / data
 None.
@@ -31,34 +27,50 @@ None.
 | Gate | Result |
 |---|---|
 | Format / lint / typecheck / build | PASS |
-| Unit | 140/140 |
+| Unit | 147/147 |
 | DB | 217/217 |
-| Playwright (full) | 289 passed, 24 skipped by design |
-| S01 spec | 14/14: guards 1–3; A–J, L, M; security 4–10 |
-| Restart (K) | `/session`, `/me/profile`, completion and `/me/network` identical after app + PostgreSQL restart; `/me` 200; no email/token in logs |
+| Playwright (full) | 301 passed, 24 skipped by design |
+| S03 spec | 12/12 |
+| State matrix | 1–14 and 16 automated; 15 restart: visibility, consents and legal current identical after app + PostgreSQL restart; no email/token in logs |
 | WF01 pixel runs | 8 screens PASS |
 
-The first full run hit two timeouts on HTTP calls while the machine load was 10–15; the run took 25.7 min. Re-runs pass: the three specs (33/33), then the full suite (289/289).
+State matrix coverage:
+- 1: NETWORK_ONLY
+- 2/10/14: PRIVATE, update, refresh
+- 3/4/5: stale Terms, stale Privacy, both stale
+- 6/7: one type accepted
+- 8/9: re-accept and repeat
+- 11: invalid levels and groups
+- 12: guest
+- 13: avatar projection
+- 16: failures
+- Also covered: a 409 race.
 
-## 6. Visual QA
-| Class | Count / note |
+## 6. Security
+| Check | Result |
+|---|---|
+| Owner mutation | Session-derived; body `profile_id`/`account_id` ignored; the other member's level unchanged |
+| Forged level/group | PUBLIC, PROGRAMME_ACCESS, GRANTED_ACCESS, unknown group → 422 VISIBILITY_VALIDATION_FAILED |
+| History isolation | Page shows exactly the owner's records |
+| Leakage | No other member email, no `legal_document_id`, metadata, request or device data |
+| Media | Owner 200; other member 200 → 404 after PRIVATE; guest 404 |
+| Re-acceptance | Profile status, `onboarding_completed_at` and visibility unchanged; one record per document |
+
+## 7. Visual QA
+| Class | Result |
 |---|---|
 | Structural / Major / Component | 0 |
-| Raster | 0 outside text in all segments (shell+upper, org card, below) |
-| Intentional | COMPOSITION (org card first slot, dx −527), COPY, TYPOGRAPHY-MIGRATION, ICON-RENDERING (bell) |
-| P0 scope | public-profile button, bell counter |
-| Dependency | "Đang chờ bạn" (TEMPORARY-PRODUCTION-DEPENDENCY) |
-| Full page (H12) | reference 837 px; capture cropped; 63 rows below: 0 unexpected pixels |
-| Verdict | **PASS** (viewport authoritative) |
+| Raster | 0 outside text (shell + header + discovery card; sidebar) |
+| Intentional-P0-Scope | rows 2–4 + footnote, viewer history card, "Dữ liệu của bạn" card, bell counter |
+| Intentional-Contract | legal and history cards (no approved geometry), eyebrow/hint/lede copy |
+| Verdict | **PASS** (viewport authoritative; full page 1125 > 900, H12 not applicable) |
 
-Card frame values (radius 14, border, shadow) stay local to S01. No global token added.
+## 8. Deviations / blockers
+None blocking. Copy awaits PO review. PRODUCTION_LEGAL_CONTENT_REQUIRED remains a release dependency.
 
-## 7. Deviations / blockers
-None blocking. Copy changes await PO copy review (DEC-WF02-S01-D2).
-
-## 8. Git
-- Branch: `main`; start HEAD `b6f8ede`
-- Implementation commit: `808ac28`
+## 9. Git
+- Branch: `main`; start HEAD `efaf055`
+- Implementation commit: `7c836c6`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `fed0b25`

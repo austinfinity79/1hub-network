@@ -62,6 +62,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF02 DECISION FREEZE | DEC-WF02-H1..H13 recorded; P12 + P13 deletion subset authorized (not created); new open gap: venture region/domain storage |
 | WF02-T00 | Venture taxonomy storage decided (0 open decisions); member shell; `GET /me/network`; discovery projection helper; WF01 regression green |
 | WF02-S01 | Account Home `/me`: identity, server completion, nav cards, canonical organisations/ventures; pixel drift 0 outside text; H12 harness rule live |
+| WF02-S03 | Privacy `/me/privacy`: PROFILE_DISCOVERY (NETWORK_ONLY/PRIVATE), current legal status + re-acceptance, consent history; WF01-S07 services reused; pixel drift 0 |
 
 ## Not yet built (M0)
 
@@ -101,7 +102,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF02-S01 done ([report](reports/WF02-S01_account-home.md)); WF02 1 / 7 screens. Next: WF02-S03 — Privacy / Visibility.
+WF02-S03 done ([report](reports/WF02-S03_privacy-visibility.md)); WF02 2 / 7 screens. Next: WF02-S04 — Roles / Network.
 
 ## Related
 
