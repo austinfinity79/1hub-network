@@ -175,7 +175,13 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
     ORG,
   ),
   cfg('WF03-S07', '/ops/org/:orgId/events', 'leader', 'Chapter 01 events', ORG),
-  cfg('WF03-S08', '/ops/org/:orgId/settings', 'leader', 'Chapter 01 settings/relationships', ORG),
+  cfg(
+    'WF03-S08',
+    '/ops/org/:orgId/settings',
+    'ops',
+    'platform admin on Chapter 01: parent HUB, child Club 01, one closed test-hook relationship and one parentless test-hook CLB candidate',
+    ORG,
+  ),
   cfg('WF03-S09', '/organizations/:slug', 'guest', 'public Chapter 01 page', {
     slug: FIXTURES.chapter01Slug,
   }),

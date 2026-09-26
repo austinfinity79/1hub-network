@@ -133,17 +133,19 @@ describe('WF03-T00 canonical hierarchy (organization_relationships only)', () =>
     expect(await childrenOf(query, HUB)).toEqual([CHAPTER_01, CHAPTER_02].sort())
   })
 
-  it('never reads parent_id, and reports two ACTIVE parents as an inconsistency', async () => {
+  it('never reads parent_id; a second ACTIVE parent is refused by the database (009)', async () => {
     const legacyOnly = await org('CLB', CHAPTER_01) // parent_id set, no relationship row
     const twoParents = await org('CLB')
     await parentRel(CHAPTER_01, twoParents)
-    await parentRel(CHAPTER_02, twoParents)
+    // Since WF03-S08 migration 009 the invariant is a unique index; the reader's
+    // INCONSISTENT branch stays as a defence for data that bypasses it.
+    await expect(parentRel(CHAPTER_02, twoParents)).rejects.toMatchObject({ code: '23505' })
     const parents = await parentsOf(query, [legacyOnly, twoParents])
     expect(parents.get(legacyOnly)).toEqual({ kind: 'NONE' })
-    expect(parents.get(twoParents)).toMatchObject({ kind: 'INCONSISTENT' })
+    expect(parents.get(twoParents)).toEqual({ kind: 'PARENT', parentId: CHAPTER_01 })
     const { items } = await listManagedOrganizations(ADMIN, { q: 'T00 t00-', limit: 50 })
     const row = items.find((i) => i.id === twoParents)!
-    expect(row.parent).toBeNull()
+    expect(row.parent?.id).toBe(CHAPTER_01)
   })
 })
 

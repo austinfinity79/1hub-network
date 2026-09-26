@@ -790,7 +790,7 @@ Resolved by precedence (not asked):
 | Split gap | S08 relationship mutation semantics stay open in [OPEN-WF03-S08-RELATIONSHIP-CONTRACT](#open-wf03-s08-relationship-contract). It blocks S08 relationship mutation only, never S06 |
 | Source anchor | WF03:33-35; SCR WF03-S06 / S08; API §8.5, §8.7; Matrix §B; user approval 2026-09-26 |
 
-<a id="open-wf03-s08-relationship-contract"></a>**OPEN-WF03-S08-RELATIONSHIP-CONTRACT — relationship mutation semantics for S08 (OPEN; blocks S08 relationship mutation only)**
+<a id="open-wf03-s08-relationship-contract"></a>**OPEN-WF03-S08-RELATIONSHIP-CONTRACT — relationship mutation semantics for S08 — CLOSED 2026-09-26 by [DEC-WF03-S08-RELATIONSHIP-CONTRACT](#dec-wf03-s08-relationship-contract)** (history kept)
 
 | Missing item | Why it matters |
 |---|---|
@@ -801,6 +801,25 @@ Resolved by precedence (not asked):
 | Migration / unique constraint (G9 invariant: ≤ 1 ACTIVE PARENT per child; optional migration 009) | Concurrent writes could break the invariant without a DB constraint |
 
 Resolution: a focused S08 preflight / decision freeze before any S08 relationship mutation. Nothing in this list is decided by S06.
+
+<a id="dec-wf03-s08-relationship-contract"></a>**DEC-WF03-S08-RELATIONSHIP-CONTRACT — P0 organization relationship contract (APPROVED 2026-09-26; closes OPEN-WF03-S08-RELATIONSHIP-CONTRACT)**
+
+| Item | Decision |
+|---|---|
+| Relationship | Only `PARENT`, stored in `organization_relationships` as source = parent → target = child. `organizations.parent_id` is never read or written (no dual write). Other types (partner, co-organizer, programme) are not P0 → 422 `not_supported` |
+| Organization types | HUB, CHAPTER, CLB only; COMPANY / FUND / PARTNER → 404 through S08 |
+| Valid pairs | **HUB → CHAPTER, CHAPTER → CLB.** Delta vs the task list: HUB → CLB is **excluded**, because the higher-precedence Design SOT (ADM21 "Cặp cha-con hợp lệ", BR-FS03-09: "CLB: cha = đúng 1 HUB Chapter"; "Chỉ CLB có cha là Chapter") is narrower. Every other pair, self-parenting and any cycle → 422 (`type_not_allowed` / `self` / `cycle`) |
+| One ACTIVE parent | ≤ 1 ACTIVE PARENT per child, enforced by migration 009 (`uq_active_parent_per_child`) and checked in the transaction. A duplicate or second parent → 409, never a silent replace |
+| Create | `POST /ops/organizations/{orgId}/relationships {target_organization_id, relationship_type: "PARENT"}`: the path organization is the parent of the target (as stored). Both must exist, be operational and not ARCHIVED (409); valid pair; the child has no ACTIVE parent; no cycle |
+| Change parent | The same POST plus `replaces_relationship_id` (the child's current ACTIVE PARENT, else 409 stale). The old row is closed (CLOSED + `ended_at`) and the new ACTIVE row is created in one transaction; history is kept. It is never an in-place overwrite |
+| End | `POST …/relationships/{id}/close {ended_at?, reason?}` sets `state = CLOSED` and `ended_at` (default now; not future, not before `started_at`). The optional reason (≤ 500) is stored as `metadata.close_reason`. There is no DELETE; a closed row → 409 |
+| Lifecycle | No new relationship involving an ARCHIVED organization; closing is always allowed. S08 never changes organization lifecycle |
+| Cycles | Server-side ancestor walk over ACTIVE PARENT rows inside a hierarchy-wide advisory lock (`pg_advisory_xact_lock`), so concurrent writes cannot form a cycle |
+| Authority | `org:manage_relationship` on **both** organizations of the relationship (and on the previous parent for a change), exact scope, no inheritance. `org:manage`, membership, leadership, titles and `role_label` grant nothing. PLATFORM_ADMIN holds it for every organization; HUB_COMMUNITY_LEADER only for its exact scoped organization — so in P0 a leader scoped to one organization can read S08 but cannot mutate a relationship that reaches another organization |
+| Audit | Minimum new codes (none existed): `ORGANIZATION_RELATIONSHIP_CREATED`, `ORGANIZATION_RELATIONSHIP_ENDED`. A parent change writes ENDED + CREATED (the CREATED carries `replaces_relationship_id`) in the same transaction and request. Payload: `relationship_id`, `parent_organization_id`, `child_organization_id`, `relationship_type`, `state` (+ replaces id). Never the reason text, names, email, tokens or metadata. Refused calls write nothing |
+| Migration | 009: one guard (aborts with DATA INCONSISTENCY if any child already has more than one ACTIVE PARENT; no repair) + one partial unique index. Additive, fresh / upgrade / rerun safe |
+| Not P0 | Change-parent request / approval queue, notifications, partner / co-organizer / programme relationships, audit-log card (INTENTIONAL-P0-SCOPE) |
+| Human decisions remaining | 0 |
 
 <a id="open-wf03-c2"></a>**OPEN-WF03-C2 — Hierarchy fixture disagreement (reported per DEC-WF03-G9) — CLOSED by [DEC-WF03-C2](#dec-wf03-c2)**
 
@@ -895,6 +914,17 @@ Resolution: a focused S08 preflight / decision freeze before any S08 relationshi
 | <a id="dec-wf03-s06-d2"></a>DEC-WF03-S06-D2 | **Authorization, lifecycle and audit.** The page and PATCH both require `org:manage` for exactly this org (screen contract scope). Out of scope → 403 `SCOPE_FORBIDDEN` (page 404), non-operational type → 404. All validation completes before the write, and the row is locked. An ARCHIVED organization is read-only (G8): 409, reusing `MEMBERSHIP_INVALID_TRANSITION` (the only frozen lifecycle-conflict code, as in DEC-WF03-S04-D2 — contract gap noted, not blocking). A real change writes one `ORGANIZATION_UPDATED` (G14) with `organization_id`, `changed_fields` and the public name delta; the description text is never copied. A no-op writes nothing and does not touch `updated_at`. No Idempotency-Key (not on the API §2.3 list) |
 | <a id="dec-wf03-s06-d3"></a>DEC-WF03-S06-D3 | **Read model and hierarchy.** The detail is read on the server: `id`, `slug`, `name`, `type`, `status`, `description`, canonical `parent` and `children` from the one hierarchy reader (G9; `parent_id` ignored; an inconsistent parent shows as none), plus display `permissions`. No email, account, member, RoleAssignment or metadata. Hierarchy is read-only; S06 has no relationship control (DEC-WF03-C1) |
 | <a id="dec-wf03-s06-d4"></a>DEC-WF03-S06-D4 | **UI mapping of ORGP2.** OpsShell replaces the drawn top bar and section menu; the header band has the logo tile (placeholder), name, type chip, status chip and "· thuộc {parent}". Card 1 "Thông tin hồ sơ" has a VIEW state (name, type, status, description) and an explicit EDIT state (name, description; "Lưu thay đổi" / "Huỷ") opened by "Chỉnh sửa" in the drawn secondary-button style. Card 2 "Quan hệ tổ chức" shows "Thuộc" / "Trực thuộc" rows, read-only. Not rendered: publication checklist, representatives, visibility groups, verification, programmes, change history, the actor badge, "Chưa xác thực thông tin", "Yêu cầu đổi chapter cha" (S08) and "Yêu cầu lưu trữ" (no lifecycle rule, G8). Status labels reuse S01. Copy pending PO review |
+
+## DEC-WF03-S08-D — Organization settings / relationships implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within DEC-WF03-S08-RELATIONSHIP-CONTRACT / C1 / G9 / G15 (for review).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf03-s08-d1"></a>DEC-WF03-S08-D1 | **Read model.** `GET /ops/organizations/{orgId}/relationships` (`org:manage_relationship`, exact scope) returns `organization`, the ACTIVE `parent`, ACTIVE `children`, closed `history` (both directions, with dates and close reason), server-filtered `candidates` (`children`: parentless, non-archived, valid-pair organizations in the actor's scope that are not ancestors; `parents`: valid-pair organizations in scope that are not the current parent and not descendants) and display `permissions`. Each ACTIVE row carries a display-only `manageable` flag (the counterpart is also in scope). No member, account or profile data |
+| <a id="dec-wf03-s08-d2"></a>DEC-WF03-S08-D2 | **Errors.** Validation, type, self and cycle → 422 `PROFILE_VALIDATION_FAILED` with field reasons. Duplicate, second parent, stale change, archived and re-close → 409 `MEMBERSHIP_INVALID_TRANSITION` (the only frozen conflict code, as in DEC-WF03-S04-D2 / S06-D2; contract gap noted). Out of scope → 403 `SCOPE_FORBIDDEN`. Unknown / non-operational organization or a relationship of another organization → 404. **Idempotency (API §2.3):** create and close honour `Idempotency-Key` through the durable store (operation `organization.relationship-create-or-close`, keyed per actor; a replay returns the first response, a different body with the same key → 409 `UNCONTRACTED_IDEMPOTENCY_CONFLICT`). A request without a key is still processed — the same PROVISIONAL leniency as the other listed operations (IDEMPOTENCY_STORE_P0.md); the UI always sends a key |
+| <a id="dec-wf03-s08-d3"></a>DEC-WF03-S08-D3 | **Tests.** Mutations use test-only organizations; the seeded tree is only read. The T00 test that inserted two ACTIVE parents now asserts that the database refuses the second one (the reader's INCONSISTENT branch stays as a defence) |
+| <a id="dec-wf03-s08-d4"></a>DEC-WF03-S08-D4 | **UI mapping of ADM21.** Title "{org} · quan hệ tổ chức" + counts; "+ Thêm quan hệ" (pinned 122×33) focuses the add form. Cards: tree position (parent → current → n trực thuộc); "Đang hiệu lực" table (Thuộc / Đơn vị cha của, organization, since, type, "Kết thúc" when manageable, with an inline reason); "Đã kết thúc · giữ lịch sử"; the add form (Đơn vị cha của / Thuộc — or "Đổi đơn vị cha" when a parent exists, with the history note); and the frozen valid-pair rules. Not rendered: change-parent request card, partner / co-organizer / programme rows, audit-log card. Copy pending PO review |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

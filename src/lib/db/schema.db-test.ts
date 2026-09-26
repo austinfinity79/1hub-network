@@ -139,6 +139,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '007_p0_venture_taxonomy.sql',
       // WF02-S06 (DEC-WF02-S06-G1, P12): team lifecycle + pending email invitations.
       '008_p0_venture_team.sql',
+      // WF03-S08 (DEC-WF03-S08-RELATIONSHIP-CONTRACT): one ACTIVE PARENT per child.
+      '009_p0_one_active_parent.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)

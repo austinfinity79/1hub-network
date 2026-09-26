@@ -25,6 +25,9 @@ export type AuditAction =
   | 'LEADERSHIP_ENDED'
   // WF03-S06 organization profile (DEC-WF03-G14): ids, field names, public name delta.
   | 'ORGANIZATION_UPDATED'
+  // WF03-S08 relationships (DEC-WF03-S08-RELATIONSHIP-CONTRACT): ids, type, state only.
+  | 'ORGANIZATION_RELATIONSHIP_CREATED'
+  | 'ORGANIZATION_RELATIONSHIP_ENDED'
 
 export async function writeAudit(
   exec: Executor,
