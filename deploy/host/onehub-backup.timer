@@ -1,0 +1,13 @@
+# /etc/systemd/system/onehub-backup.timer — daily at 19:30 UTC = 02:30 ICT,
+# one hour before the unattended security upgrades. Persistent: a run missed
+# while the VPS was down happens at next boot.
+[Unit]
+Description=Daily 1hub.network PostgreSQL backup
+
+[Timer]
+OnCalendar=*-*-* 19:30
+Persistent=true
+RandomizedDelaySec=5m
+
+[Install]
+WantedBy=timers.target

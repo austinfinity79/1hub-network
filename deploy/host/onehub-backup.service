@@ -1,0 +1,10 @@
+# /etc/systemd/system/onehub-backup.service — one PostgreSQL backup run.
+[Unit]
+Description=1hub.network PostgreSQL backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+Environment=BACKUP_KEEP=7
+ExecStart=/opt/1hub-network/app/bin/backup.sh

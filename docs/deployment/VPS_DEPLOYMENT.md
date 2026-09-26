@@ -51,7 +51,7 @@ The session cookie is `Secure` because `NODE_ENV=production`, so login only work
 | Status | `docker compose ps` in `/opt/1hub-network/app` |
 | Smoke (internal) | `/opt/1hub-network/app/bin/smoke.sh` |
 | Rollback | `/opt/1hub-network/app/bin/rollback.sh [sha]` (default: `shared/state/previous`) |
-| Backup | `/opt/1hub-network/app/bin/backup.sh` |
+| Backup | `/opt/1hub-network/app/bin/backup.sh`; daily by `onehub-backup.timer` 19:30 UTC (02:30 ICT), keeps newest 7 (`BACKUP_KEEP`); logs: `journalctl -u onehub-backup` |
 
 The deploy steps are: build, migrate, switch the app, wait for health, smoke, then update `current`. If the new app is unhealthy, it reverts to the previous image.
 
