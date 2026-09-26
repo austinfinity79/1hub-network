@@ -23,6 +23,8 @@ export type AuditAction =
   | 'MEMBERSHIP_REJECTED'
   | 'LEADERSHIP_CREATED'
   | 'LEADERSHIP_ENDED'
+  // WF03-S06 organization profile (DEC-WF03-G14): ids, field names, public name delta.
+  | 'ORGANIZATION_UPDATED'
 
 export async function writeAudit(
   exec: Executor,

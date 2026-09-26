@@ -723,7 +723,7 @@ Resolved by precedence (not asked):
 
 ## OPEN-WF03 — WF03 pre-implementation gaps (human decision required)
 
-**Status:** CLOSED 2026-09-26 by [DEC-WF03-G1..G15](#dec-wf03-g1) (history kept). Found by the WF03 pre-implementation audit. New conflicts found during the freeze: [OPEN-WF03-C1](#open-wf03-c1) (open), [OPEN-WF03-C2](#open-wf03-c2) (closed by DEC-WF03-C2).
+**Status:** CLOSED 2026-09-26 by [DEC-WF03-G1..G15](#dec-wf03-g1) (history kept). Found by the WF03 pre-implementation audit. New conflicts found during the freeze: [OPEN-WF03-C1](#open-wf03-c1) (closed by DEC-WF03-C1), [OPEN-WF03-C2](#open-wf03-c2) (closed by DEC-WF03-C2).
 **Audit:** [WF03_PRE_IMPLEMENTATION_AUDIT.md](../implementation/WF03_PRE_IMPLEMENTATION_AUDIT.md).
 **Already frozen:** 9 screens and routes (WF03 contract); 9 capabilities, exact org scope, no inheritance (Matrix, DECISION-AUTHZ-01B); Membership / Leadership / RoleAssignment separation; Event standalone-or-child (SOT §11); Freeze D2 (preseed + pending fallback).
 
@@ -758,7 +758,7 @@ Resolved by precedence (not asked):
 | <a id="dec-wf03-g5"></a>DEC-WF03-G5 | Review path PENDING_APPROVAL → ACTIVE (provenance `ORGANIZATION_VERIFIED`, the existing identifier) or → REJECTED. SUSPENDED / ALUMNI / WITHDRAWN stay valid states, implemented only where the WF03/API contract explicitly supports the transition. Approver identity not stored/displayed (schema has no field) | API §8.3 grants ACTIVE → SUSPENDED / ALUMNI / WITHDRAWN only "where policy allows" and no policy is frozen, so P0 implements the **two review transitions only**; others need a policy decision first |
 | <a id="dec-wf03-g6"></a>DEC-WF03-G6 | LeadershipRecord is a business fact: it creates no RoleAssignment, capability or managed scope; the title has zero authority | No inference from Chapter Leader / President / Chairman / Head |
 | <a id="dec-wf03-g7"></a>DEC-WF03-G7 | OrganizationRepresentation runtime DEFERRED; no table/migration for P0. Authorization = existing scoped RoleAssignment / capabilities; RoleAssignment is not presented as representation | Representation UI = INTENTIONAL-P0-SCOPE |
-| <a id="dec-wf03-g8"></a>DEC-WF03-G8 | Existing organizations only; operational types HUB, CHAPTER, CLB. No create, delete or lifecycle-transition controls unless a frozen contract defines them; archived/inactive records are read per the canonical lifecycle and never mutated through unsupported operations. The profile-edit screen edits only fields present in the canonical Organization model/API **and** approved by the screen contract/design mapping; no design-only DB fields; verification/trust display-only | Which screen hosts profile editing: see [OPEN-WF03-C1](#open-wf03-c1) (the freeze text says S08; the frozen contract says S06) |
+| <a id="dec-wf03-g8"></a>DEC-WF03-G8 | Existing organizations only; operational types HUB, CHAPTER, CLB. No create, delete or lifecycle-transition controls unless a frozen contract defines them; archived/inactive records are read per the canonical lifecycle and never mutated through unsupported operations. The profile-edit screen edits only fields present in the canonical Organization model/API **and** approved by the screen contract/design mapping; no design-only DB fields; verification/trust display-only | Profile editing is hosted by S06 ([DEC-WF03-C1](#dec-wf03-c1)) |
 | <a id="dec-wf03-g9"></a>DEC-WF03-G9 | Canonical hierarchy for new WF03 logic = `organization_relationships` with the frozen PARENT type; never inferred from name, slug, region or type. No new writes to `parent_id` (legacy / read-compatibility only). One hierarchy service. P0 invariant: at most one ACTIVE PARENT per child (migration 009 may enforce later; none now). Disagreement is reported, never silently reconciled | Current fixture disagreement: [OPEN-WF03-C2](#open-wf03-c2) |
 | <a id="dec-wf03-g10"></a>DEC-WF03-G10 | Standalone Events: list, detail, create, edit, publish, cancel per the frozen lifecycle/API; WF03-created events have `programme_id` NULL (existing canonical links are left as they are). No registration, participant application, Programme/Challenge journey, eligibility or operating team (WF04+). Programme never mandatory | Registration fields / `registration_enabled` / capacity not implemented |
 | <a id="dec-wf03-g11"></a>DEC-WF03-G11 | S01 = OPS ORGANIZATION SELECTOR / LIST (not the dashboard). HUB_COMMUNITY_LEADER: exact assigned scope only, no inheritance; PLATFORM_ADMIN: per the existing platform-admin contract; types HUB / CHAPTER / CLB. Selection = UI context only | Every API re-authorizes |
@@ -767,7 +767,7 @@ Resolved by precedence (not asked):
 | <a id="dec-wf03-g14"></a>DEC-WF03-G14 | Frozen audit actions, emitted only when the mutation is implemented: `ORGANIZATION_UPDATED`, `MEMBERSHIP_APPROVED`, `MEMBERSHIP_REJECTED`, `MEMBERSHIP_STATUS_CHANGED`, `LEADERSHIP_CREATED`, `LEADERSHIP_UPDATED`, `LEADERSHIP_ENDED`, `EVENT_CREATED`, `EVENT_UPDATED`, `EVENT_PUBLISHED`, `EVENT_CANCELLED`. No read events; payload = canonical ids + state deltas only | Reuse mapping: **none**. No existing code means the same action (`MEMBERSHIP_REQUESTED` = a member's own request, WF02-S04). No relationship code is frozen (see C1) |
 | <a id="dec-wf03-g15"></a>DEC-WF03-G15 | Dedicated **OpsShell** for `/ops/*` (not MemberShell), reusing approved fonts, colours, typography, buttons, cards, tables and spacing. Responsibilities: ops navigation, organization context, breadcrumb, actor-safe menu visibility. Not a security boundary | Leader: exact scope; PLATFORM_ADMIN: per frozen capability/scope; no shared organization login |
 
-<a id="open-wf03-c1"></a>**OPEN-WF03-C1 — S06/S08 naming vs the frozen WF03 contract (new conflict found during the freeze; blocks S06 and S08 only)**
+<a id="open-wf03-c1"></a>**OPEN-WF03-C1 — S06/S08 naming vs the frozen WF03 contract — CLOSED 2026-09-26 by [DEC-WF03-C1](#dec-wf03-c1)** (history kept)
 
 | Field | Record |
 |---|---|
@@ -779,6 +779,28 @@ Resolved by precedence (not asked):
 | Impact | Screen/route/capability mapping; audit catalogue |
 | Blocks | S06, S08 (not T00–S04, S07, S09) |
 | Source anchor | WF03:33-35; SCR WF03; API §8.5, §8.7 |
+
+<a id="dec-wf03-c1"></a>**DEC-WF03-C1 — S06 / S08 responsibility boundary (APPROVED 2026-09-26; closes OPEN-WF03-C1)**
+
+| Field | Record |
+|---|---|
+| Decision | The frozen WF03 screen contract takes precedence over earlier task labels. **S06 = Organization Profile / Detail** at `/ops/org/:orgId/profile`: canonical profile display and edit of identity / display fields supported by the model and API (`PATCH /ops/organizations/{orgId}/profile`, `org:manage`). **S08 = Organization Settings / Relationships** at `/ops/org/:orgId/settings`: relationship and hierarchy settings over canonical `organization_relationships` (`org:manage_relationship` where mutation is eventually supported). S08 never edits the general profile |
+| S06 does not own | Hierarchy mutation, parent / child administration, RoleAssignment, membership approval, leadership administration, platform account administration. Hierarchy is **read-only** in S06 (DEC-WF03-G9 reader) |
+| G8 | The G8 profile-edit field rule applies to S06 |
+| Split gap | S08 relationship mutation semantics stay open in [OPEN-WF03-S08-RELATIONSHIP-CONTRACT](#open-wf03-s08-relationship-contract). It blocks S08 relationship mutation only, never S06 |
+| Source anchor | WF03:33-35; SCR WF03-S06 / S08; API §8.5, §8.7; Matrix §B; user approval 2026-09-26 |
+
+<a id="open-wf03-s08-relationship-contract"></a>**OPEN-WF03-S08-RELATIONSHIP-CONTRACT — relationship mutation semantics for S08 (OPEN; blocks S08 relationship mutation only)**
+
+| Missing item | Why it matters |
+|---|---|
+| Who may create or change a PARENT (HUB leader of the parent? PLATFORM_ADMIN only? request + approval as drawn in ADM21 / ORGP2 "Yêu cầu đổi chapter cha"?) | Capability `org:manage_relationship` is granted per exact org; a PARENT row touches two organizations |
+| Allowed relationship types beyond PARENT (partner, co-organizer…) and their vocabulary | `relationship_type` is free text in the schema |
+| Transition / end semantics (close vs revoke, effective dates, request state) | `record_state` today has no request state; "Đổi chapter cha là yêu cầu gửi HUB Tổng duyệt" implies one |
+| Audit identifiers (e.g. `ORGANIZATION_RELATIONSHIP_CREATED` / `_CLOSED`) | DEC-WF03-G14 freezes none for relationships |
+| Migration / unique constraint (G9 invariant: ≤ 1 ACTIVE PARENT per child; optional migration 009) | Concurrent writes could break the invariant without a DB constraint |
+
+Resolution: a focused S08 preflight / decision freeze before any S08 relationship mutation. Nothing in this list is decided by S06.
 
 <a id="open-wf03-c2"></a>**OPEN-WF03-C2 — Hierarchy fixture disagreement (reported per DEC-WF03-G9) — CLOSED by [DEC-WF03-C2](#dec-wf03-c2)**
 
@@ -862,6 +884,17 @@ Resolved by precedence (not asked):
 | <a id="dec-wf03-s04-d2"></a>DEC-WF03-S04-D2 | **Leadership (G6).** `POST /ops/organizations/{orgId}/leadership` `{profile_id, title, valid_from?, valid_to?}` needs `leadership:manage`. The target must hold a CommunityMembership (any state) in this org (member-ops predicate, 03 Example B), else 404. Title is trimmed, 1–100 characters. `valid_from` is an optional past-or-today date (00:00 Asia/Ho_Chi_Minh) → `started_at`. `valid_to` must be null (422 `not_supported`): there is no planned-end column, and ending is an explicit PATCH. An ACTIVE duplicate (`uq_active_leadership`) → 409. `PATCH …/leadership/{id}` `{status: ALUMNI \| REVOKED}` closes an ACTIVE record (`ended_at` = now); a closed record → 409. There is no title edit, since it is not in the contract. No RoleAssignment, capability or scope is created, read or ended |
 | <a id="dec-wf03-s04-d3"></a>DEC-WF03-S04-D3 | **Audit (G14) and detail read.** Four codes were added: MEMBERSHIP_APPROVED, MEMBERSHIP_REJECTED, LEADERSHIP_CREATED, LEADERSHIP_ENDED. They are written in the mutation's transaction with ids and states only (no title, name or email); a refused call writes nothing. `GET …/members/{profileId}` needs `member:read` and returns: `organization`, `profile_id`, the PROFILE_DISCOVERY projection (`null` when hidden — no ops bypass, G4), the current membership, every membership and leadership record with its own dates, `consent_summary {discovery_visible}` (read-only) and the actor's `permissions` for display. A person with no record in the org → 404, and the page renders that same 404 |
 | <a id="dec-wf03-s04-d4"></a>DEC-WF03-S04-D4 | **UI mapping of ADM18.** Header: name (or "Hồ sơ không công khai") + "{org} · {state} · gửi {date}". The two drawn buttons become "Duyệt thành viên" / "Từ chối", shown only for PENDING_APPROVAL with `membership:confirm`. The alert explains the pending request. "Tổ chức & vai trò" gives the membership + leadership facts, the ACTIVE titles with "Kết thúc" (ALUMNI) / "Thu hồi" (REVOKED), and "Thêm vai trò lãnh đạo →", which opens an inline title + start-date form. "Đồng ý hiện tại" has one row, "Hiện thẻ trong Thư viện", plus a read-only note. "Lịch sử quan hệ" lists the record dates (dd/MM/yyyy HH:mm — the drawn dd/MM plus the year) with the record kind, never an actor. Not rendered (G3): email, resend link, lock account, fund / problem-owner consents, account log, ADM15 proposal. Because the consent card is shorter, the history card sits higher and is compared as a component. Copy pending PO review |
+
+## DEC-WF03-S06-D — Organization profile / detail implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within DEC-WF03-C1/G8/G9/G14/G15 (for review). The precheck after the C1 freeze found no new conflict; no migration.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf03-s06-d1"></a>DEC-WF03-S06-D1 | **Editable fields.** `PATCH /ops/organizations/{orgId}/profile` accepts only `name` (trimmed, 1–200) and `description` (trimmed, ≤ 2000; empty → null). These are the only fields that are both canonical `organizations` columns and in the ORGP2 design ("Tên tổ chức", "Mô tả ngắn"). Refused by name with 422 `PROFILE_VALIDATION_FAILED` `not_accepted`: `id`, `slug` (roster import key), `type`, `status`, `parent_id` / `parent` / `children` / relationship fields, `logo_asset_id` (no organization logo upload contract), `metadata`, timestamps, and any other key. Region, links, website and founding year have no column and are neither rendered nor added. The limits mirror the WF02 venture limits (200 / 2000); there is no earlier organization rule |
+| <a id="dec-wf03-s06-d2"></a>DEC-WF03-S06-D2 | **Authorization, lifecycle and audit.** The page and PATCH both require `org:manage` for exactly this org (screen contract scope). Out of scope → 403 `SCOPE_FORBIDDEN` (page 404), non-operational type → 404. All validation completes before the write, and the row is locked. An ARCHIVED organization is read-only (G8): 409, reusing `MEMBERSHIP_INVALID_TRANSITION` (the only frozen lifecycle-conflict code, as in DEC-WF03-S04-D2 — contract gap noted, not blocking). A real change writes one `ORGANIZATION_UPDATED` (G14) with `organization_id`, `changed_fields` and the public name delta; the description text is never copied. A no-op writes nothing and does not touch `updated_at`. No Idempotency-Key (not on the API §2.3 list) |
+| <a id="dec-wf03-s06-d3"></a>DEC-WF03-S06-D3 | **Read model and hierarchy.** The detail is read on the server: `id`, `slug`, `name`, `type`, `status`, `description`, canonical `parent` and `children` from the one hierarchy reader (G9; `parent_id` ignored; an inconsistent parent shows as none), plus display `permissions`. No email, account, member, RoleAssignment or metadata. Hierarchy is read-only; S06 has no relationship control (DEC-WF03-C1) |
+| <a id="dec-wf03-s06-d4"></a>DEC-WF03-S06-D4 | **UI mapping of ORGP2.** OpsShell replaces the drawn top bar and section menu; the header band has the logo tile (placeholder), name, type chip, status chip and "· thuộc {parent}". Card 1 "Thông tin hồ sơ" has a VIEW state (name, type, status, description) and an explicit EDIT state (name, description; "Lưu thay đổi" / "Huỷ") opened by "Chỉnh sửa" in the drawn secondary-button style. Card 2 "Quan hệ tổ chức" shows "Thuộc" / "Trực thuộc" rows, read-only. Not rendered: publication checklist, representatives, visibility groups, verification, programmes, change history, the actor badge, "Chưa xác thực thông tin", "Yêu cầu đổi chapter cha" (S08) and "Yêu cầu lưu trữ" (no lifecycle rule, G8). Status labels reuse S01. Copy pending PO review |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

@@ -167,7 +167,13 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
     { ...ORG, profileId: '40000000-0000-0000-0000-000000000005' },
   ),
   cfg('WF03-S05', '/ops/org/:orgId/programmes', 'leader', 'Chapter 01 programmes', ORG),
-  cfg('WF03-S06', '/ops/org/:orgId/profile', 'leader', 'Chapter 01 content/profile', ORG),
+  cfg(
+    'WF03-S06',
+    '/ops/org/:orgId/profile',
+    'leader',
+    'Chapter 01 leader: canonical profile (view state), parent HUB, child Club 01, read-only hierarchy',
+    ORG,
+  ),
   cfg('WF03-S07', '/ops/org/:orgId/events', 'leader', 'Chapter 01 events', ORG),
   cfg('WF03-S08', '/ops/org/:orgId/settings', 'leader', 'Chapter 01 settings/relationships', ORG),
   cfg('WF03-S09', '/organizations/:slug', 'guest', 'public Chapter 01 page', {

@@ -71,7 +71,8 @@ test.describe('M0-T05 API surface discipline', () => {
     // GET /ops/organizations/{id}/dashboard (wf03-s02-organization-dashboard.spec.ts),
     // WF03-S03 GET /ops/organizations/{id}/members (wf03-s03-organization-members.spec.ts),
     // WF03-S04 member detail, membership review and leadership
-    // (wf03-s04-membership-review.spec.ts). Other
+    // (wf03-s04-membership-review.spec.ts), WF03-S06 PATCH …/profile
+    // (wf03-s06-organization-profile.spec.ts). Other
     // business endpoints still belong to later screens; answering now would be
     // scope leakage.
     for (const path of [
