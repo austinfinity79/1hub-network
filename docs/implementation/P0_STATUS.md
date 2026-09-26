@@ -8,7 +8,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: 8 / 8 screens CLOSED (100%)** — pending the WF01 completion audit and happy-path UAT. Release/UAT blocker: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
+**M1 — WF01 Identity & Onboarding: 8 / 8 screens implemented (100%). WF01 completion audit: YELLOW — UAT BLOCKED** ([audit](WF01_COMPLETION_AUDIT.md), [UAT matrix](WF01_UAT_MATRIX.md)). The frozen P0 launch-roster path (GAP-ROSTER, P1) and the registration metric (GAP-ANALYTICS-REG, P1) are missing; DEFECT-RESUME (P2). Release/UAT blocker: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
 
 | Screen | State |
 |---|---|
@@ -83,12 +83,15 @@ No product pixel pass has been claimed for any screen.
 | Provisional idempotency policy, incl. lenient missing header | [IDEMPOTENCY_STORE_P0.md](IDEMPOTENCY_STORE_P0.md) |
 | Classification of blocking gaps B1–B5 | [P0_DECISIONS_REQUIRED.md](P0_DECISIONS_REQUIRED.md) |
 | Deferred pre-UAT/deployment items, incl. rate limiting, email delivery, error logging | [M0 completion report §16](M0_FOUNDATION_COMPLETION_REPORT.md) |
+| **GAP-ROSTER (P1)**: launch roster import + email match + membership/leadership attach not implemented (Freeze D2) | [WF01_COMPLETION_AUDIT.md](WF01_COMPLETION_AUDIT.md) |
+| **GAP-ANALYTICS-REG (P1)**: `account_created` and other API §10 funnel events not written | [WF01_COMPLETION_AUDIT.md](WF01_COMPLETION_AUDIT.md) |
+| **DEFECT-RESUME (P2)**: sign-in resumes incomplete onboarding at S05, not the first incomplete step | [WF01_COMPLETION_AUDIT.md](WF01_COMPLETION_AUDIT.md) |
 | **Release blocker** `PRODUCTION_LEGAL_CONTENT_REQUIRED`: real Terms/Privacy text and versions (local uses marked fixtures) | [WF01_S07_PRIVACY_CONSENT_CONTRACT.md](WF01_S07_PRIVACY_CONSENT_CONTRACT.md) |
 | Pixel QA reference configuration gaps (11 screens) | [M0-T11 report](reports/M0-T11_manifest-pixel-qa-foundation.md) |
 
 ## Next task
 
-WF01 completion audit + happy-path UAT — awaiting explicit authorization. WF02 not started.
+WF01 launch-cohort remediation (GAP-ROSTER, GAP-ANALYTICS-REG, DEFECT-RESUME) — awaiting explicit authorization. WF02 not started.
 
 ## Related
 
