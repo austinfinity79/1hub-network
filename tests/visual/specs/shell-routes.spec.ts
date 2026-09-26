@@ -34,6 +34,7 @@ const IMPLEMENTED_SCREENS = new Set([
   // WF02-T00: the member shell wraps these routes and guards them; their
   // placeholder body is proven by wf02-t00-member-foundation.spec.ts.
   'WF02-S01',
+  'WF02-S02',
   'WF02-S03',
   'WF02-S04',
   'WF02-S07',
@@ -46,6 +47,7 @@ const GUARDED_SCREENS = new Set([
   'WF01-S07',
   'WF01-S08',
   'WF02-S01',
+  'WF02-S02',
   'WF02-S03',
   'WF02-S04',
   'WF02-S07',

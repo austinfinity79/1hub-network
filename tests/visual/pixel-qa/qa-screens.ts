@@ -117,7 +117,7 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
     'member',
     'account home: 60% profile, owned startup, ACTIVE Chapter 01 (test hook)',
   ),
-  cfg('WF02-S02', '/me/profile/edit', 'member', 'edit own profile'),
+  cfg('WF02-S02', '/me/profile/edit', 'member', 'edit own seeded profile (discovery NETWORK_ONLY)'),
   cfg(
     'WF02-S03',
     '/me/privacy',

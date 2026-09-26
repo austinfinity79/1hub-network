@@ -7,14 +7,16 @@ import { assertSelectable, type VocabularyStatus } from '@/lib/vocabulary/vocabu
 import { computeCompletion, loadCompletionFacts, type CompletionFacts } from './completion'
 
 /**
- * Own profile — GET/PATCH /me/profile (05 §4.3). Maps WF01-S06 (and later
- * WF02-S02). Returns a DTO, never the row. The account comes from the session
- * only, so a caller can read or change nothing but its own profile.
+ * Own profile — GET/PATCH /me/profile (05 §4.3). Maps WF01-S06 and WF02-S02.
+ * Returns a DTO, never the row. The account comes from the session only, so a
+ * caller can read or change nothing but its own profile.
  *
- * PATCH is partial. For S06 it accepts exactly display_name, headline,
- * region_id, bio, domain_ids and skill_ids; anything else, completion_percent
- * included, is refused rather than ignored, so no client can write status,
- * avatar or completion through it.
+ * PATCH is partial. WF01-S06 uses display_name, headline, region_id, bio,
+ * domain_ids and skill_ids; WF02-S02 also sends development_goal,
+ * current_need (05 §4.3 example), experience, no_experience_yet (DEC-WF02-H1)
+ * and links (DEC-WF02-H2), shaped by DEC-WF02-S02-D1..D3. Anything else,
+ * completion_percent and status included, is refused rather than ignored, so
+ * no client can write status, avatar or completion through it.
  */
 
 export const PATCH_FIELDS = [
@@ -24,6 +26,11 @@ export const PATCH_FIELDS = [
   'bio',
   'domain_ids',
   'skill_ids',
+  'development_goal',
+  'current_need',
+  'experience',
+  'no_experience_yet',
+  'links',
 ] as const
 
 /** DEC-WF01-S06-D4: "Chọn tối đa 5" over DOMAIN + SKILL together. */
@@ -33,7 +40,22 @@ export const MAX_EXPERTISE = 5
  * Provisional TECHNICAL bounds against oversized payloads; not business
  * policy (no length is frozen in the Data SOT or API contract).
  */
-export const TEXT_LIMITS = { display_name: 200, headline: 200, bio: 2000 } as const
+export const TEXT_LIMITS = {
+  display_name: 200,
+  headline: 200,
+  bio: 2000,
+  development_goal: 2000,
+  current_need: 2000,
+} as const
+
+/** Provisional TECHNICAL bounds for the list fields (DEC-WF02-S02-D1/D3). */
+export const LIST_LIMITS = {
+  experience: 20,
+  experience_text: 200,
+  links: 5,
+  link_url: 500,
+  link_label: 100,
+} as const
 
 type Ref = { id: string; label: string; status: VocabularyStatus }
 
@@ -49,6 +71,8 @@ export type OwnProfileDTO = {
   skills: Ref[]
   education: { id: string; institution: string; programme: string | null }[]
   experience: { id: string; title: string; organization_name: string | null }[]
+  /** Explicit NO_EXPERIENCE_YET (Freeze §D3 group 8), additive for WF02-S02. */
+  no_experience_yet: boolean
   development_goal: string | null
   current_need: string | null
   links: { id: string; label: string | null; url: string }[]
@@ -65,6 +89,7 @@ type ProfileRow = {
   bio: string | null
   development_goal: string | null
   current_need: string | null
+  no_experience_yet: boolean
 }
 
 async function refs(exec: Executor, table: string, profileId: string): Promise<Ref[]> {
@@ -86,7 +111,7 @@ export async function getOwnProfile(
 
   const [row] = await exec<ProfileRow>(
     `SELECT id::text, status::text AS status, display_name, headline, avatar_asset_id,
-            region_vocab_id::text, bio, development_goal, current_need
+            region_vocab_id::text, bio, development_goal, current_need, no_experience_yet
        FROM individual_profiles WHERE account_id = $1`,
     [accountId],
   )
@@ -103,6 +128,7 @@ export async function getOwnProfile(
       skills: [],
       education: [],
       experience: [],
+      no_experience_yet: false,
       development_goal: null,
       current_need: null,
       links: [],
@@ -140,6 +166,7 @@ export async function getOwnProfile(
         WHERE profile_id = $1 ORDER BY sort_order, created_at`,
       [row.id],
     ),
+    no_experience_yet: row.no_experience_yet,
     development_goal: row.development_goal,
     current_need: row.current_need,
     links: await exec(
@@ -158,9 +185,38 @@ type Patch = {
   display_name?: string | null
   headline?: string | null
   bio?: string | null
+  development_goal?: string | null
+  current_need?: string | null
   region_id?: string | null
   domain_ids?: string[]
   skill_ids?: string[]
+  experience?: { title: string; organization_name: string | null }[]
+  no_experience_yet?: boolean
+  links?: { url: string; label: string | null }[]
+}
+
+/** Optional text inside a list item: trimmed, blank → null, bounded. */
+function itemText(field: string, value: unknown, max: number): string | null {
+  if (value === undefined || value === null) return null
+  if (typeof value !== 'string') throw invalid(field, 'invalid')
+  const text = value.trim()
+  if (text.length > max) throw invalid(field, 'too_long')
+  return text || null
+}
+
+/** Only absolute http(s) URLs are stored (DEC-WF02-S02-D3). */
+function linkUrl(value: unknown): string {
+  if (typeof value !== 'string') throw invalid('links', 'invalid')
+  const text = value.trim()
+  if (!text || text.length > LIST_LIMITS.link_url) throw invalid('links', 'invalid_url')
+  let url: URL
+  try {
+    url = new URL(text)
+  } catch {
+    throw invalid('links', 'invalid_url')
+  }
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') throw invalid('links', 'invalid_url')
+  return text
 }
 
 /** Shape validation; no database access, so nothing can be half-written. */
@@ -175,7 +231,13 @@ export function parsePatch(body: unknown): Patch {
   }
 
   const patch: Patch = {}
-  for (const key of ['display_name', 'headline', 'bio'] as const) {
+  for (const key of [
+    'display_name',
+    'headline',
+    'bio',
+    'development_goal',
+    'current_need',
+  ] as const) {
     if (!(key in input)) continue
     const value = input[key]
     if (value !== null && typeof value !== 'string') throw invalid(key, 'invalid')
@@ -196,6 +258,52 @@ export function parsePatch(body: unknown): Patch {
     }
     patch[key] = [...new Set(value.map((id) => id.toLowerCase()))]
   }
+  if ('experience' in input) {
+    const value = input.experience
+    if (!Array.isArray(value)) throw invalid('experience', 'invalid')
+    if (value.length > LIST_LIMITS.experience) throw invalid('experience', 'too_many')
+    patch.experience = value.map((item) => {
+      if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+        throw invalid('experience', 'invalid')
+      }
+      const entry = item as Record<string, unknown>
+      for (const k of Object.keys(entry)) {
+        if (k !== 'title' && k !== 'organization_name') throw invalid('experience', 'invalid')
+      }
+      const title = itemText('experience', entry.title, LIST_LIMITS.experience_text)
+      if (!title) throw invalid('experience', 'title_required')
+      return {
+        title,
+        organization_name: itemText(
+          'experience',
+          entry.organization_name,
+          LIST_LIMITS.experience_text,
+        ),
+      }
+    })
+  }
+  if ('no_experience_yet' in input) {
+    if (typeof input.no_experience_yet !== 'boolean') throw invalid('no_experience_yet', 'invalid')
+    patch.no_experience_yet = input.no_experience_yet
+  }
+  if ('links' in input) {
+    const value = input.links
+    if (!Array.isArray(value)) throw invalid('links', 'invalid')
+    if (value.length > LIST_LIMITS.links) throw invalid('links', 'too_many')
+    patch.links = value.map((item) => {
+      if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+        throw invalid('links', 'invalid')
+      }
+      const entry = item as Record<string, unknown>
+      for (const k of Object.keys(entry)) {
+        if (k !== 'url' && k !== 'label') throw invalid('links', 'invalid')
+      }
+      return {
+        url: linkUrl(entry.url),
+        label: itemText('links', entry.label, LIST_LIMITS.link_label),
+      }
+    })
+  }
   return patch
 }
 
@@ -213,15 +321,23 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
       status: string
       region_vocab_id: string | null
       onboarded: boolean
+      no_experience_yet: boolean
+      experience_count: number
     }>(
       `SELECT id::text, status::text AS status, region_vocab_id::text,
-              onboarding_completed_at IS NOT NULL AS onboarded
-         FROM individual_profiles WHERE account_id = $1 FOR UPDATE`,
+              onboarding_completed_at IS NOT NULL AS onboarded, no_experience_yet,
+              (SELECT count(*)::int FROM profile_experience e WHERE e.profile_id = p.id) AS experience_count
+         FROM individual_profiles p WHERE account_id = $1 FOR UPDATE`,
       [accountId],
     )
     const before = computeCompletion(await loadCompletionFacts(accountId, exec)).percent
     if (current?.status === 'DEACTIVATED') {
       throw new ApiError('PROFILE_DEACTIVATED', 409, 'Profile is deactivated.')
+    }
+    // DEC-WF02-S02-D4: an ACTIVE profile keeps its activation minimum (Freeze §D3).
+    if (current?.status === 'ACTIVE') {
+      if ('display_name' in patch && !patch.display_name) throw invalid('display_name', 'required')
+      if ('region_id' in patch && !patch.region_id) throw invalid('region_id', 'required')
     }
     const linked = async (table: string) =>
       current
@@ -253,6 +369,13 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
       })
     }
 
+    // DEC-WF02-S02-D1: experience records and NO_EXPERIENCE_YET never coexist.
+    const experienceAfter = patch.experience?.length ?? current?.experience_count ?? 0
+    const noneAfter = patch.no_experience_yet ?? current?.no_experience_yet ?? false
+    if (experienceAfter > 0 && noneAfter) {
+      throw invalid('no_experience_yet', 'conflicts_with_experience')
+    }
+
     // All checks passed: write. A new account gets its DRAFT profile here.
     const [profile] = current
       ? [current]
@@ -271,6 +394,9 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
     if ('display_name' in patch) set('display_name', patch.display_name)
     if ('headline' in patch) set('headline', patch.headline)
     if ('bio' in patch) set('bio', patch.bio)
+    if ('development_goal' in patch) set('development_goal', patch.development_goal)
+    if ('current_need' in patch) set('current_need', patch.current_need)
+    if ('no_experience_yet' in patch) set('no_experience_yet', patch.no_experience_yet)
     if ('region_id' in patch) set('region_vocab_id', patch.region_id?.toLowerCase() ?? null)
     await exec(
       `UPDATE individual_profiles SET ${[...columns, 'updated_at = now()'].join(', ')}
@@ -291,6 +417,26 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
          SELECT $1, unnest($2::uuid[]) ON CONFLICT DO NOTHING`,
         [profile!.id, ids],
       )
+    }
+    // Lists are replaced as a whole, in the given order.
+    if (patch.experience) {
+      await exec('DELETE FROM profile_experience WHERE profile_id = $1', [profile!.id])
+      for (const [i, item] of patch.experience.entries()) {
+        await exec(
+          `INSERT INTO profile_experience (profile_id, title, organization_name, sort_order)
+           VALUES ($1, $2, $3, $4)`,
+          [profile!.id, item.title, item.organization_name, i],
+        )
+      }
+    }
+    if (patch.links) {
+      await exec('DELETE FROM profile_links WHERE profile_id = $1', [profile!.id])
+      for (const [i, item] of patch.links.entries()) {
+        await exec(
+          `INSERT INTO profile_links (profile_id, label, url, sort_order) VALUES ($1, $2, $3, $4)`,
+          [profile!.id, item.label, item.url, i],
+        )
+      }
     }
     const dto = await getOwnProfile(accountId, exec)
     await trackCompletionChange(exec, {

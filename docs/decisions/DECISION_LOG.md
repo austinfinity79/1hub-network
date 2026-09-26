@@ -482,6 +482,23 @@ Not a gap: `membership_requested` analytics stays deferred (DEC-WF01-ANALYTICS-E
 | <a id="dec-wf02-s04-d3"></a>DEC-WF02-S04-D3 | Request card copy and behaviour | Eyebrow "YÊU CẦU THAM GIA TỔ CHỨC", label "Tổ chức", placeholder "Chọn tổ chức", action "Gửi yêu cầu", hint "Yêu cầu sẽ ở trạng thái chờ duyệt cho đến khi tổ chức xác nhận." The selector hides organisations where a blocking state exists (G4). After any attempt the view reloads `GET /me/network`; 409/404 get their own messages. Idempotency-Key per organisation. The lede is kept verbatim. Pending PO copy review | DEC-WF02-S04-G1/G3/G4/G5 |
 | <a id="dec-wf02-s04-d4"></a>DEC-WF02-S04-D4 | Pixel fixture | The reference's third row (a Chapter leadership) is added to the seeded member by a test-only hook with a fixed id, deleted after the run | Pixel QA §4 |
 
+## DEC-WF02-S02 — Profile Edit implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS within approved scope (DEC-WF02-H1/H2/H3; API 05 §4.3).
+**Date:** 2026-09-26.
+**Task:** [WF02-S02](../implementation/reports/WF02-S02_profile-edit.md).
+**Migration:** none; every field uses existing storage.
+
+| ID | Topic | Decision | Source anchors |
+|---|---|---|---|
+| <a id="dec-wf02-s02-d1"></a>DEC-WF02-S02-D1 | Experience write shape | `PATCH /me/profile` accepts `experience: [{title, organization_name?}]`, the fields the GET DTO already returns. The list replaces the stored one, in order. `title` is required; unknown item keys are refused; technical bounds are 20 items and 200 characters. `no_experience_yet: boolean` sets the explicit flag. Records and the flag never coexist: a PATCH whose result would hold both is 422 `no_experience_yet: conflicts_with_experience` (the UI clears the list when the box is ticked) | Freeze §D3 group 8; DEC-WF02-H1; `profile_experience`, `no_experience_yet` |
+| <a id="dec-wf02-s02-d2"></a>DEC-WF02-S02-D2 | Goal and need | `development_goal` and `current_need` (API §4.3 example) are trimmed; blank → null (the group becomes incomplete). Technical bound 2000, as bio | API 05 §4.3; DEC-WF02-H1 |
+| <a id="dec-wf02-s02-d3"></a>DEC-WF02-S02-D3 | Links | The approved "Liên kết ngoài" field writes `links: [{url, label?}]` to `profile_links`, replacing the list in order. Only absolute http(s) URLs are stored (no `javascript:` or other schemes); technical bounds are 5 links and 500 characters. The client prefixes `https://` to a bare host. Not a completion group | DEC-WF02-H2; `profile_links` |
+| <a id="dec-wf02-s02-d4"></a>DEC-WF02-S02-D4 | Activation minimum | An ACTIVE profile cannot clear `display_name` (including whitespace) or `region_id`: 422 `required`. DRAFT onboarding (WF01-S06) is unchanged | Freeze §D3 activation minimum |
+| <a id="dec-wf02-s02-d5"></a>DEC-WF02-S02-D5 | Layout | Editor header (no member shell), as the bitmap. Approved fields unchanged. The H1 sections (Kinh nghiệm, Mục tiêu phát triển, Nhu cầu hiện tại) sit below them, and are the only content below the 620px full-page reference height. The freed activity-panel slot holds "THÔNG TIN CƠ BẢN" (avatar, Họ và tên, Tỉnh / thành phố) so every completion group is editable on S02. All of these are INTENTIONAL-CONTRACT | DEC-WF02-H1/H2; DEC-WF02-H12 |
+| <a id="dec-wf02-s02-d6"></a>DEC-WF02-S02-D6 | Copy | Status reads "Hiển thị trong mạng lưới" / "Đang ẩn khỏi mạng lưới" from PROFILE_DISCOVERY, plus "đã lưu lúc HH:MM" after a save. "Xem bản public" is omitted (H3). The note body becomes "Email đăng nhập thuộc tài khoản, không phải một ô trong hồ sơ, và không hiển thị cho người khác." (the bitmap's contact-consent claim is not P0). "≤ 60 từ" stays guidance only: no frozen limit exists and WF01-S06 accepts longer text. Pending PO copy review | DEC-WF02-H3/H4; DEC-WF01-S07-D2 |
+| <a id="dec-wf02-s02-d7"></a>DEC-WF02-S02-D7 | Save semantics | "Lưu" sends one PATCH with only the fields changed since the last successful save (an unchanged save sends `{}`); the server validates everything before the first write and recomputes completion. The avatar uses the existing upload route immediately. `GET /me/profile` gains the additive `no_experience_yet` | API 05 §4.3; DEC-WF01-S06-D3 |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

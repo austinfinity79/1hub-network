@@ -1,0 +1,267 @@
+/*
+ * WF02-S02 — profile editor. LOCAL values measured from the approved WF02-S02
+ * baseline at 1440x900 DPR1 (px / 16 = rem). Editor header, 860px form
+ * column, 420px side column. The H1 sections (experience, goal, need) and the
+ * basic-info card have no approved geometry; they reuse this screen's label,
+ * hint, input and card language (DEC-WF02-S02-D5).
+ */
+
+.page {
+  min-height: 100vh;
+  background: var(--hub-canvas);
+  --unresolved-radius-control: 0.375rem;
+  --unresolved-border-control: #e3dddd;
+  --unresolved-space-input-y: 0.6875rem;
+  --unresolved-space-control-x: 1.1875rem;
+  --unresolved-space-control-y: 0.75rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: 5.3125rem;
+  padding: 1.25rem 4rem 0;
+  border-bottom: 1px solid #e3dddd;
+  background: var(--hub-surface);
+}
+
+.name {
+  margin: 0;
+  line-height: 1.5rem;
+  color: var(--hub-burgundy);
+}
+
+.status {
+  margin: 0.125rem 0 0;
+  color: var(--unresolved-fg-muted);
+}
+
+.header :global(.ui-button) {
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.375rem;
+}
+
+.columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.0625rem;
+  padding: 1.6875rem 4rem 4rem;
+}
+
+.form {
+  flex: 0 0 53.75rem;
+  min-width: 0;
+}
+
+.side {
+  flex: 0 0 26.25rem;
+  min-width: 0;
+}
+
+.formError {
+  margin-bottom: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field + .field {
+  margin-top: 1.0625rem;
+}
+
+.label {
+  margin: 0 0 0.25rem;
+  color: var(--hub-burgundy);
+}
+
+.hint {
+  margin: 0.0625rem 0 0.5rem;
+  color: #8e7677;
+}
+
+.field > :global(.ui-input) + :global(.ui-input) {
+  margin-top: 0.5rem;
+}
+
+.error {
+  margin: 0.375rem 0 0;
+  color: #b91610;
+}
+
+.pickerBox {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0 1.1875rem;
+  border: 1px solid #e3dddd;
+  border-radius: 0.375rem;
+  background: var(--hub-surface);
+  color: var(--hub-burgundy);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pickerBox:focus-visible,
+.chip:focus-visible,
+.textButton:focus-visible,
+.select:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.placeholder {
+  color: var(--unresolved-fg-placeholder);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.625rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #dcd6d6;
+  border-radius: 1rem;
+  background: var(--hub-surface);
+  color: var(--unresolved-fg-muted);
+  cursor: pointer;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--hub-primary);
+  background: var(--hub-primary-soft);
+  color: #b91610;
+}
+
+.chip:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.textButton {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #b91610;
+  cursor: pointer;
+}
+
+.experienceRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.experienceRow + .experienceRow {
+  margin-top: 0.5rem;
+}
+
+.experienceRow .textButton {
+  margin-top: 0;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  color: var(--hub-burgundy);
+}
+
+.check input {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  accent-color: var(--color-bg-accent);
+}
+
+.basic {
+  display: flex;
+  flex-direction: column;
+  padding: 1.375rem 1.375rem 1.5rem;
+  border: 1px solid #e3dddd;
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+}
+
+.basic .label {
+  margin-top: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.625rem;
+  line-height: 0.875rem;
+  color: #8e7677;
+}
+
+.avatarRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.avatar {
+  flex: none;
+  width: 4rem;
+  height: 4rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #e4dede;
+}
+
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.select {
+  height: 3.25rem;
+  padding: 0 1.1875rem;
+  border: 1px solid #e3dddd;
+  border-radius: 0.375rem;
+  background: var(--hub-surface);
+  color: var(--hub-burgundy);
+}
+
+.note {
+  margin-top: 1rem;
+  padding: 1.1875rem 1.375rem 1.25rem;
+  border-radius: 0.625rem;
+  background: #fef3f1;
+}
+
+.noteTitle {
+  margin: 0;
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  color: #b91610;
+}
+
+.noteBody {
+  margin: 0.5rem 0 0;
+  line-height: 1.25rem;
+  color: var(--hub-burgundy);
+}
