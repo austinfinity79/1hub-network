@@ -33,8 +33,22 @@ Every row carries these shared fields. **Status:** APPROVED (human review). **Da
 | <a id="dec-wf01-s04-d7"></a>DEC-WF01-S04-D7 | Mail blocked by domain | R4 needs a provider/bounce signal that does not exist | R4 is OUT_OF_P0 / UNSUPPORTED; not implemented or inferred | No frozen signal can detect it | `?reason=mail_blocked` → GENERIC; no "chặn thư" text | R4 excluded | — |
 | <a id="dec-wf01-s04-d8"></a>DEC-WF01-S04-D8 | Session expired | R3 exists; no protected route detects expiry yet | S04 supports `reason=session_expired` with the R3 presentation; no new global redirect is invented; deterministic test setup via the URL | Future protected flows may route here per the auth contract | Playwright: R3 state, lifetime from `SESSION_TTL_SECONDS`, relogin to `/auth` | The lifetime in the copy follows the provisional TTL (pre-UAT) | — |
 
+## DEC-WF01-S05 — Onboarding purpose (intent contract)
+
+Every row carries these shared fields. **Status:** HUMAN APPROVED — P0. **Date:** 2026-09-26. **Scope:** WF01-S05 `/onboarding/purpose`, `GET /api/v1/me/onboarding`, `PUT /api/v1/me/onboarding/intent`. **Evidence (shared):** [WF01_S05_INTENT_CONTRACT_GAP.md](../implementation/WF01_S05_INTENT_CONTRACT_GAP.md), [WF01-S05 report](../implementation/reports/WF01-S05_onboarding-purpose.md).
+
+| ID | Topic | Context | Decision | Rationale | Evidence | Impact | Supersedes |
+|---|---|---|---|---|---|---|---|
+| <a id="dec-wf01-s05-d1"></a>DEC-WF01-S05-D1 | Intent allowlist | API 05 §4.2 leaves `primary_intent` to launch configuration; none existed | P0 server-side allowlist `SUBMIT_SOLUTION`, `POST_CHALLENGE`, `ORGANIZE_COMMUNITY`, `EXPLORE_NETWORK`; no `INVESTOR`; unknown values rejected (422 `PROFILE_VALIDATION_FAILED`), never coerced (no trim, no case folding) | Investor/VC/Dataroom is Future scope; exact match keeps stored data clean | `src/lib/onboarding/intent.ts`; DB tests reject 9 values and write nothing; Playwright 422 for `INVESTOR`, `UNKNOWN`, lowercase, empty, null | Bitmap investor option not rendered: INTENTIONAL-P0-SCOPE in pixel QA | — |
+| <a id="dec-wf01-s05-d2"></a>DEC-WF01-S05-D2 | Endpoint and payload | Contract freezes `PUT /me/onboarding/intent` | Use the frozen endpoint; persist only `individual_profiles.primary_intent`; the first write creates the DRAFT profile | No schema change; nothing beyond the intent is captured | `setPrimaryIntent` upsert; Playwright checks the DB row (intent, DRAFT, not completed) | No migration | — |
+| <a id="dec-wf01-s05-d3"></a>DEC-WF01-S05-D3 | "Bỏ qua, làm sau" | The action was named, its persistence was not | Skips THIS step only: no write, `primary_intent` stays NULL, goes to S06; no fake intent; onboarding not marked complete | A skip must not fabricate data | Playwright: 0 intent requests, no profile row, state `current_step: PURPOSE` | S06 is reached with intent NULL | — |
+| <a id="dec-wf01-s05-d4"></a>DEC-WF01-S05-D4 | Default selection | The bitmap shows option 1 selected | Nothing selected by default; a saved value is preselected | The runtime must not fabricate an intent | Playwright: 0 checked, CTA disabled; saved value checked | Pixel QA selects option 1 in-page (no submit) to match the reference | — |
+| <a id="dec-wf01-s05-d5"></a>DEC-WF01-S05-D5 | Unauthenticated access | No page guard existed | Server-authoritative guard: no valid session → redirect `/auth` | Access control must not depend on the client | Playwright: guest → `/auth`; API 401 for guests | `shell-routes.spec.ts` treats S05 as a guarded screen | — |
+| <a id="dec-wf01-s05-d6"></a>DEC-WF01-S05-D6 | Revisit | WF01: resume at the first incomplete step | Before completion the intent can be edited; once onboarding is completed the page follows the existing rule and redirects to `/me` | Keeps choices reversible until onboarding closes | Playwright: preselected, edited, DB updated; completed → `/me` | — | — |
+
 ## Related
 
 - [p0-status.md](../implementation/P0_STATUS.md) — overall P0 state
 - [wf01-s03-state-board-mapping.md](../implementation/WF01_S03_STATE_BOARD_MAPPING.md) — S03 mapping
 - [wf01-s04-state-board-mapping.md](../implementation/WF01_S04_STATE_BOARD_MAPPING.md) — S04 mapping (frozen)
+- [wf01-s05-intent-contract-gap.md](../implementation/WF01_S05_INTENT_CONTRACT_GAP.md) — S05 intent contract (approved)

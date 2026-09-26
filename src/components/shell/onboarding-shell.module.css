@@ -1,0 +1,75 @@
+/*
+ * Onboarding shell: the white header with wordmark, three-step stepper and a
+ * right-hand action, over the canvas. Evidence: the approved WF01-S05..S08
+ * references share this header band (differences are the active step and
+ * the right action only). Values measured at 1440x900 DPR1 (px / 16 = rem)
+ * and local to this shell.
+ */
+
+.root {
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  height: 3.9375rem;
+  padding: 0 2.8125rem;
+  background: var(--hub-surface);
+  border-bottom: 1px solid color-mix(in srgb, var(--hub-burgundy) 15%, var(--hub-surface));
+}
+
+.wordmark {
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  /* Centred in the space between wordmark and action, as on the baseline. */
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.5625rem;
+  color: var(--unresolved-fg-muted);
+}
+
+.step + .step::before {
+  content: '';
+  width: 1.625rem;
+  height: 1px;
+  /* The step gap (9px) follows, so the connector ends 11px before the disc. */
+  margin: 0 0.125rem 0 0.75rem;
+  background: var(--unresolved-border-surface);
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  background: var(--unresolved-border-surface);
+}
+
+.stepCurrent {
+  color: var(--color-fg-default);
+}
+
+.stepCurrent .stepNumber {
+  background: var(--color-bg-accent);
+  color: var(--color-fg-on-accent);
+}
+
+.main {
+  display: flex;
+  justify-content: center;
+  padding: 2.8125rem 0;
+}

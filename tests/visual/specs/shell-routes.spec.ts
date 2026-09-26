@@ -22,7 +22,10 @@ async function waitForFonts(page: Page) {
 }
 
 /** Screens whose production implementation has replaced the M0-T03 placeholder. */
-const IMPLEMENTED_SCREENS = new Set(['WF01-S01', 'WF01-S02', 'WF01-S03', 'WF01-S04'])
+const IMPLEMENTED_SCREENS = new Set(['WF01-S01', 'WF01-S02', 'WF01-S03', 'WF01-S04', 'WF01-S05'])
+
+/** Implemented screens that send a guest to /auth (DEC-WF01-S05-D5). */
+const GUARDED_SCREENS = new Set(['WF01-S05'])
 
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {
@@ -42,6 +45,10 @@ test.describe('M0-T03 frozen routes', () => {
       // An implemented screen replaces its placeholder and brings its own shell;
       // its behaviour is proven by that screen's own spec.
       if (IMPLEMENTED_SCREENS.has(route.screenId)) {
+        if (GUARDED_SCREENS.has(route.screenId)) {
+          await expect(page).toHaveURL('/auth')
+          return
+        }
         await expect(page.locator(`[data-route-group="${route.group}"]`).first()).toBeVisible()
         // Its own placeholder is gone. (WF01-S03 without a token redirects to
         // /auth/error, which is still WF01-S04's placeholder.)
