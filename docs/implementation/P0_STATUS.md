@@ -8,7 +8,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 **M0 — Foundation: DONE** (completion audit GREEN WITH DOCUMENTED LIMITATIONS, accepted;
 [report](M0_FOUNDATION_COMPLETION_REPORT.md)).
 
-**M1 — WF01 Identity & Onboarding: 8 / 8 screens implemented (100%). WF01 completion audit: YELLOW — UAT BLOCKED** ([audit](WF01_COMPLETION_AUDIT.md), [UAT matrix](WF01_UAT_MATRIX.md)). GAP-ROSTER **CLOSED** (WF01-REMEDIATION-01); GAP-ANALYTICS-REG **CLOSED** (WF01-REMEDIATION-02); DEFECT-RESUME **CLOSED** (DEC-WF01-RESUME-D1); ANALYTICS-EXT deferred (DEC-WF01-ANALYTICS-EXT-DEFER). **No open WF01 defect**; final re-audit / UAT gate pending. Release/UAT blocker: `PRODUCTION_LEGAL_CONTENT_REQUIRED`.
+**M1 — WF01 Identity & Onboarding: CLOSED** — 8/8 screens; final re-audit **GREEN WITH DOCUMENTED LIMITATIONS** ([report](reports/WF01_FINAL_REAUDIT.md), [audit](WF01_COMPLETION_AUDIT.md), [UAT matrix](WF01_UAT_MATRIX.md)). P0/P1/P2 = 0; UAT 14/14, 0 expected-fail. External release inputs: `PRODUCTION_LEGAL_CONTENT_REQUIRED`, real production roster data, production REGION/DOMAIN/SKILL taxonomy.
 
 | Screen | State |
 |---|---|
@@ -56,6 +56,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-REMEDIATION-01 | GAP-ROSTER: roster importer CLI, migration 004 (`uq_active_leadership`, `roster_reconcile_account`), sign-in reconcile |
 | WF01-REMEDIATION-02 | GAP-ANALYTICS-REG: `account_created` in the account-insert transaction; race-safe first sign-in |
 | WF01-REMEDIATION-03A/03 | DEFECT-RESUME: migration 005, S05 SKIP action, one onboarding resolver for sign-in, `/session`, guards |
+| WF01 FINAL RE-AUDIT | Fresh install/DB/restart, full suite, UAT gate: GREEN WITH DOCUMENTED LIMITATIONS — WF01 CLOSED |
 
 ## Not yet built (M0)
 
@@ -95,7 +96,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-WF01 FINAL RE-AUDIT / UAT GATE — awaiting explicit authorization. WF02 not started.
+WF02 — Member Profile & Network Core — awaiting explicit authorization.
 
 ## Related
 

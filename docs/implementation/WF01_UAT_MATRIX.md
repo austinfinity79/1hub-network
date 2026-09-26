@@ -22,6 +22,8 @@ Automated in `tests/visual/specs/wf01-uat-journey.spec.ts` (Playwright, 1440×90
 | UAT-M2 Copy sign-off | — | PO reviews the strings in the audit's copy review (§7) | Approved wording | **Manual** | OPEN |
 | UAT-M3 Real mailbox | Email delivery configured | Receive and open the link | Link arrives and works | **Manual** | NOT AVAILABLE in P0 local (no email delivery) |
 
+**Final re-audit run (2026-09-26, fresh clone + fresh PostgreSQL, HEAD `215fca8`):** all 14 automated scenarios PASS, 0 expected-fail markers ([report](reports/WF01_FINAL_REAUDIT.md)).
+
 **Totals:**
 - Automated: 14 (14 PASS; no expected-fail markers remain).
 - Manual: 3.
