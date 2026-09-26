@@ -6,7 +6,7 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 | Order | Screen | Route | Frozen P0 scope | Dependencies | Readiness |
 |---|---|---|---|---|---|
 | 0 | WF02 Foundation | — | Member shell: P0 links live, the rest inert, no counters (H9). `GET /me/network`: memberships, leadership, venture relations, `activity_summary: []` (H5). PROFILE_DISCOVERY projection helper | WF01 services | **DONE** (WF02-T00) |
-| 1 | S01 Account home | `/me` | Summary, server completion + neutral missing-group copy (H13), navigation cards, "Tổ chức của tôi". "Đang chờ bạn" omitted (H10). No public link (H3) | 0 | **READY** (foundation done) |
+| 1 | S01 Account home | `/me` | Summary, server completion + neutral missing-group copy (H13), navigation cards, "Tổ chức của tôi". "Đang chờ bạn" omitted (H10). No public link (H3) | 0 | **DONE** (WF02-S01) |
 | 2 | S03 Privacy | `/me/privacy` | PROFILE_DISCOVERY, consent history, re-acceptance (H4) | 0 | **READY** (foundation done) |
 | 3 | S04 Roles & links | `/me/roles` | Memberships, leadership, venture roles with source label; membership request → PENDING_APPROVAL (H5, H11) | 0 | **READY** (foundation done) |
 | 4 | S02 Profile edit | `/me/profile/edit` | Canonical IndividualProfile fields + Experience / Development goal / Current need (H1, H2). Activity panel Future | 0 | **READY** (foundation done; no migration) |
@@ -49,7 +49,7 @@ Derived from [WF02_PRE_IMPLEMENTATION_AUDIT.md](WF02_PRE_IMPLEMENTATION_AUDIT.md
 ## Happy paths
 | ID | Path | Status |
 |---|---|---|
-| HC-WF02-01 | Completed member opens `/me` | After 0/1 |
+| HC-WF02-01 | Completed member opens `/me` | **PASS** (WF02-S01) |
 | HC-WF02-02 | Member edits profile incl. H1 groups, completion recalculates | After S02 |
 | HC-WF02-03 | Member changes PROFILE_DISCOVERY | After S03 |
 | HC-WF02-04 | Network-visible profile | Owner view only; `/profiles/{id}` UI not in P0 (H3) |
