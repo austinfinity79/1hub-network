@@ -108,7 +108,220 @@ Every row carries these shared fields. **Status:** HUMAN APPROVED — P0. **Date
 |---|---|---|---|---|
 | `primary_intent = NULL` means either "S05 never completed" or "S05 skipped" (D3 wrote nothing), so resume could not tell them apart | WF01 Purpose completion is **persisted explicitly**: `individual_profiles.purpose_step_completed_at` (migration 005, additive, existing rows NULL, no backfill). Set once by the server when an intent is saved **or** S05 is skipped; skip still creates no intent and never clears one. **API amendment (05 §4.2):** `PUT /me/onboarding/intent` takes `{ "action": "SKIP" }` or `{ "action": "SAVE", "primary_intent": … }`; `action` may be omitted for the frozen SAVE shape; any other field, including a client timestamp, is 422 `PROFILE_VALIDATION_FAILED`. **One resolver** (`src/lib/onboarding/state.ts`): DONE (ACTIVE + `onboarding_completed_at`) → `/me`; else PURPOSE (no step timestamp) → PROFILE (S06 progression rule) → PRIVACY (current Terms and Privacy, by document) → COMPLETE → `/onboarding/complete`. Used by sign-in `next_step`, `/session`, `GET /me/onboarding` and the page guards | Resume must be derived from persisted facts, never inferred | `resume.db-test.ts` (matrix), UAT-03b, fresh-DB restart proof | S05 skip is now a server write (DRAFT profile created). Page guards keep the existing convention: revisits before completion allowed, DONE → `/me` (S08 stays viewable) |
 
+## DEC-WF02 — WF02 decision freeze (H1–H13)
+
+**Status:** HUMAN APPROVED — P0.
+**Date:** 2026-09-26.
+**Source packet:** [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md), audit [WF02_PRE_IMPLEMENTATION_AUDIT.md](../implementation/WF02_PRE_IMPLEMENTATION_AUDIT.md).
+
+These records are addenda to the WF02 screen contracts and the API contract. The frozen SOT files themselves are unchanged. No runtime code and no migration are created by this freeze.
+
+**Source abbreviations used below:**
+
+| Short name | Source |
+|---|---|
+| Freeze | `00_DATA_DECISIONS_FREEZE_v1.1` |
+| SOT | Data SOT v1.1 |
+| WF02 | WF02 workflow contract |
+| SCR | Screen contracts |
+| API | `05_API_CONTRACT_P0` |
+| GAPS | `DB_SCHEMA_GAPS_P0` |
+| Matrix | `AUTHORIZATION_CAPABILITY_MATRIX_P0` |
+
+<a id="dec-wf02-h1"></a>**DEC-WF02-H1 — Profile completion UI (addendum to SCR WF02-S02)**
+
+| Field | Record |
+|---|---|
+| Context | P0 completion has 10 groups, but no approved UI edits EXPERIENCE, DEVELOPMENT_GOAL or CURRENT_NEED. Approved UI tops out at 70%, so the ≥80% KPI cannot be reached |
+| Decision | WF02-S02 gains Experience, Development goal and Current need sections. Experience = ≥1 `profile_experience` item OR `no_experience_yet` |
+| Unchanged | The 10 groups × 10% algorithm; 80% stays a KPI, not an access gate; Education is never a completion group |
+| Rationale | Makes the frozen roadmap metric reachable without changing the metric |
+| Consequences | S02 renders sections that are not in the PRO2 bitmap; they carry a pixel intentional class (P0-SCOPE/CONTRACT per the existing convention) |
+| Affected screens | WF02-S02 |
+| API/data impact | `PATCH /me/profile` allowlist extended (see H2). Storage already exists: `profile_experience`, `individual_profiles.development_goal`, `current_need`, `no_experience_yet`. **No migration** |
+| Supersedes/amends | Amends SCR WF02-S02 (sections); extends the WF01 PATCH allowlist of DEC-WF01-S06 (history kept) |
+| Source anchors | Freeze §D3; Master Spec v1.3:172; `db/migrations/001_p0_init.sql:58-60,98` |
+
+<a id="dec-wf02-h2"></a>**DEC-WF02-H2 — WF02-S02 write scope**
+
+| Field | Record |
+|---|---|
+| Context | The field set fixes the S02 write API. The "Ẩn mục trong tiến trình" panel needs ActivityRecord, which P0 does not produce |
+| Decision | S02 edits canonical IndividualProfile data only: the fields drawn for S02, the WF01 canonical fields where appropriate, and the H1 groups. The activity-hide panel is **FUTURE / INTENTIONAL-P0-SCOPE**. No empty or fake activity subsystem |
+| Rationale | Production ActivityRecord is owned by WF04–WF06, which are demo-only in P0 |
+| Consequences | The panel region is masked and classified |
+| Affected screens | WF02-S02 |
+| API/data impact | One `PATCH /me/profile` allowlist covering IndividualProfile fields only; no activity API |
+| Supersedes/amends | Extends DEC-WF01-S06 field set |
+| Source anchors | SOT:116; CLAUDE.md §2; SCR WF02-S02; WF02 "Profile trust rule" |
+
+<a id="dec-wf02-h3"></a>**DEC-WF02-H3 — No public profile; preview links**
+
+| Field | Record |
+|---|---|
+| Context | The bitmaps promise public/guest visibility and link to a public profile that has no route |
+| Decision | No guest/public profile in P0. PROFILE_DISCOVERY stays NETWORK_ONLY or PRIVATE, never PUBLIC. No `/profiles/{id}` UI route in current WF02 P0. Preview/public links without a destination are **omitted**. A status label that must remain uses network wording, e.g. "Hiển thị trong mạng lưới". Never imply Google or Internet visibility |
+| Rationale | Keeps DEC-WF01-S07-D2/D2A; no invented routes |
+| Consequences | Omitted links → INTENTIONAL-P0-SCOPE; reworded status → INTENTIONAL-CONTRACT |
+| Affected screens | S01, S02, S03, S05 |
+| API/data impact | None now; `GET /profiles/{id}` stays unimplemented |
+| Supersedes/amends | Narrows the SCR actions `preview_public` (S02, S05) and `preview_as_other` (S03) to not rendered in P0 |
+| Source anchors | DEC-WF01-S07-D2/D2A; API §5.2; CLAUDE.md §7 |
+
+<a id="dec-wf02-h4"></a>**DEC-WF02-H4 — WF02-S03 privacy scope**
+
+| Field | Record |
+|---|---|
+| Context | The S03 contract lists viewer history and export, but neither has a model |
+| Decision | P0 S03 = PROFILE_DISCOVERY management, consent history, and re-acceptance when the current Terms/Privacy version changes. Uses the WF01 visibility and consent services |
+| Not in P0 | Viewer history, export-my-data, Future purpose groups, consent revocation UI. Consent ≠ Visibility |
+| Rationale | Closes the DEC-WF01-S07-D8 deferral with existing services |
+| Consequences | The excluded regions are INTENTIONAL-P0-SCOPE. PRODUCTION_LEGAL_CONTENT_REQUIRED stays a release dependency |
+| Affected screens | WF02-S03 |
+| API/data impact | Existing `/me/consents`, `/me/consents/accept` (409 stale), `/me/visibility`, `/legal/current`. `POST /me/consents/revoke` is not used by P0 UI |
+| Supersedes/amends | Narrows SCR WF02-S03 (`ProfileViewerLog`, `export_my_data` → Future); fulfils DEC-WF01-S07-D8 |
+| Source anchors | WF02 S03; SCR S03; Freeze §D4; DEC-WF01-S07-D3/D8 |
+
+<a id="dec-wf02-h5"></a>**DEC-WF02-H5 — WF02-S04 network / role scope**
+
+| Field | Record |
+|---|---|
+| Context | The bitmap shows an activity journal and person-level approver names; neither is stored |
+| Decision | S04 shows CommunityMembership, LeadershipRecord, and canonical Project/Startup role/relation when available, with the source/trust classification that canonical data supports. No invented approver names ("Trần Quốc Huy duyệt" or similar) unless stored canonically. Activity Journal is **FUTURE / INTENTIONAL-P0-SCOPE** |
+| Rationale | Honours the WF02 trust rule without fabricated history |
+| Consequences | Provenance label comes from `community_memberships.source` only (P11 stays open) |
+| Affected screens | WF02-S04 |
+| API/data impact | `GET /me/network`: `memberships`, `leadership`, `roles` (venture relations); `activity_summary` is always `[]` |
+| Supersedes/amends | Narrows SCR WF02-S04 `ActivityRecord` |
+| Source anchors | WF02 S04 and "Profile trust rule"; SOT:116; GAPS P11; API §5.1 |
+
+<a id="dec-wf02-h6"></a>**DEC-WF02-H6 — Minimal P0 venture write model**
+
+| Field | Record |
+|---|---|
+| Context | The PRO1 bitmap draws groups A–J; the contracts define only five fields |
+| Decision | Client-written fields: `type`, `name`, `summary`, `domain_ids`, `region_id`. Server-derived: `owner_profile_id`. Server-managed: lifecycle/status |
+| Not in P0 | Fundraising, Data Room, investor fields, `STARTUP_STAGE`, the other A–J fields, unfrozen conditional rules. `metadata` is not a store for unfrozen fields. "Gửi HUB duyệt" appears only if a frozen launch configuration enables review; none exists, so it is omitted |
+| Rationale | No invented business fields; one canonical entity that WF05 reuses |
+| Consequences | Omitted groups and the review button → INTENTIONAL-P0-SCOPE |
+| Affected screens | WF02-S05 |
+| API/data impact | `POST/GET/PATCH /ventures*` limited to the five fields |
+| Open item | `projects` has **no region column and no domain link** (`001_p0_init.sql:244-255`), and neither P12 nor P13 covers it. See [OPEN-WF02-VENTURE-TAXONOMY-STORAGE](#open-wf02-venture-taxonomy-storage) |
+| Supersedes/amends | Freezes API §5.3 body as the full P0 write model |
+| Source anchors | API §5.3; WF02 non-goals; Freeze §D4; `db/migrations/001_p0_init.sql:244` |
+
+<a id="dec-wf02-h7"></a>**DEC-WF02-H7 — Venture ownership, team and capabilities**
+
+| Field | Record |
+|---|---|
+| Context | No authorization rule, team state or invitation storage existed for ventures |
+| Ownership | One owner (`owner_profile_id`), the only writer/manager. Members are read-only participants |
+| Not in P0 | Editor/Viewer tiers, custom permissions, ownership transfer |
+| Team lifecycle | `PENDING_CONFIRMATION → ACTIVE`; terminal `LEFT`, `REMOVED`, `REJECTED`. An email invitation never creates an ACTIVE member |
+| Capabilities (`resource:action`) | `venture:read` = owner + confirmed ACTIVE members. `venture:manage` = owner only. `venture:team_manage` = owner only. Never derived from `role_label`. Checks are server-side: actor + capability + resource scope + lifecycle |
+| Rationale | The smallest model that lets S05/S06 be authorized |
+| Consequences | The S06 permission column shows `role_label` only; the S07 "Chuyển giao" control is omitted (INTENTIONAL-P0-SCOPE). These three identifiers are added to the Matrix when WF02-S05 is implemented (Matrix §E) |
+| Affected screens | S05, S06, S07, S01 (H10), S04 |
+| DB authorized | **P12 additive migration:** invitation persistence; invitation email / normalised identity target; team lifecycle state (per-entity enum, not `record_state`); uniqueness/integrity |
+| API | `/ventures/{id}/team*` per API §5.4 |
+| Supersedes/amends | Closes GAPS P12 scope; amends API §5.3 "authorized management relation" |
+| Source anchors | API §5.3–5.4; SOT team lifecycle; GAPS P12; Matrix:7, :70 |
+
+<a id="dec-wf02-h8"></a>**DEC-WF02-H8 — WF02-S07 settings scope**
+
+| Field | Record |
+|---|---|
+| Context | Several S07 sections need providers or storage that P0 does not have |
+| Decision | P0 S07 = active sessions list, revoke one session, revoke all sessions, account deletion **request** (a request lifecycle, never direct deletion) |
+| Not in P0 | Email change, Google/external identity linking, notification categories, ownership transfer |
+| Session data | Only stored data is shown (`user_sessions`: created, expires, revoked). No invented browser/OS/city |
+| Rationale | Account lifecycle controls without unsupported auth flows |
+| Consequences | Device rows and excluded sections → INTENTIONAL-P0-SCOPE |
+| Affected screens | WF02-S07 |
+| DB authorized | **Minimal P13 subset:** deletion-request storage only |
+| API | `GET /me/sessions`, `DELETE /me/sessions/{id}`, `POST /me/account-deletion-request`. Revoke-all has no endpoint in API §5.5; its shape is frozen in the WF02-S07 task contract as an API addendum |
+| Supersedes/amends | Narrows SCR WF02-S07; notification-preference endpoints not used in P0 |
+| Source anchors | SCR S07; API §5.5; Auth arch §1; GAPS P13; `001_p0_init.sql:39` |
+
+<a id="dec-wf02-h9"></a>**DEC-WF02-H9 — Member shell**
+
+| Field | Record |
+|---|---|
+| Context | The shared shell shows nav items, a bell counter and sidebar entries with no P0 Production route |
+| Decision | Build the approved shell structure. Only items backed by real P0 Production routes are links. Demo/Future/missing items do not navigate, show no fabricated counter, and claim nothing. They keep their visual presence where Pixel QA needs it but render inert/disabled with accessible semantics. No authorization logic in navigation |
+| Rationale | Resolves the CLAUDE.md §5 vs §7 tension |
+| Consequences | The bell count "2" is not rendered (INTENTIONAL-P0-SCOPE) |
+| Affected screens | Foundation shell: S01, S03, S04, S07 |
+| API/data impact | None |
+| Supersedes/amends | — |
+| Source anchors | CLAUDE.md §2/§5/§7; ME0, ME2, ME6, ME4 |
+
+<a id="dec-wf02-h10"></a>**DEC-WF02-H10 — "Đang chờ bạn"**
+
+| Field | Record |
+|---|---|
+| Context | No invitation or notification read model exists |
+| Decision | The first WF02-S01 build omits the block, classified **TEMPORARY-PRODUCTION-DEPENDENCY**. After H7/P12 lands, it MAY show confirmed canonical venture team invitations only. Never Chapter approval items, generic or Challenge notifications without a canonical source |
+| Rationale | No fabricated pending items |
+| Consequences | Re-enabling the block is a later, separate task |
+| Affected screens | WF02-S01 |
+| API/data impact | None now |
+| Supersedes/amends | Narrows SCR WF02-S01 `Invitations` |
+| Source anchors | SCR S01; API §5.4; GAPS P12/P13 |
+
+<a id="dec-wf02-h11"></a>**DEC-WF02-H11 — Membership request owner (addendum to SCR WF02-S04)**
+
+| Field | Record |
+|---|---|
+| Context | Freeze §D2 requires a P0 request/pending UI; no screen owned it |
+| Decision | WF02-S04 owns the request. Flow: authenticated unmatched member → selects a valid organization → `POST /me/membership-requests` → `PENDING_APPROVAL`. Never self-selection → ACTIVE |
+| Display | ACTIVE and PENDING_APPROVAL from canonical membership data |
+| Rationale | Fulfils Freeze §D2 |
+| Consequences | Approval administration stays WF03. S04 contract `writes` gains CommunityMembership (request only) |
+| Affected screens | WF02-S04 |
+| API/data impact | `POST /me/membership-requests`. Existing `community_memberships` (`PENDING_APPROVAL`, unique open membership). No migration |
+| Supersedes/amends | Amends SCR WF02-S04 `writes: []` |
+| Source anchors | Freeze §D2 "P0 UI rule"; API §5.1; `002_p0_schema_alignment.sql:150-167` |
+
+<a id="dec-wf02-h12"></a>**DEC-WF02-H12 — Short full-page pixel references (QA rule)**
+
+| Field | Record |
+|---|---|
+| Context | A full-page capture is never under 900 px, but four WF02 references are shorter (S01 837, S02 620, S05 883, S06 719) |
+| Decision | For references shorter than 900 px: (1) the 1440×900 DPR1 viewport comparison is authoritative; (2) never scale the reference; (3) still produce the full-page capture; (4) crop it to the reference height for comparison; (5) content below that height must be only page/background continuation, with no unexpected UI |
+| Scope | Applies to WF03's short references later. `design-reference/final` is not modified |
+| Rationale | Closes `SHORT_FULL_PAGE_GAP` ("undefined in the SOT") |
+| Consequences | This record is the single documented rule. The harness change (`tests/visual/pixel-qa/qa-screens.ts`, test code) lands with the first WF02 pixel task |
+| Affected screens | S01, S02, S05, S06 (WF03 later) |
+| API/data impact | None |
+| Supersedes/amends | Supplements QA v1.1 §9 |
+| Source anchors | `design-reference/final/README.md:4`; QA v1.1 §9; `qa-screens.ts:65` |
+
+<a id="dec-wf02-h13"></a>**DEC-WF02-H13 — S01 copy: RESOLVED_BY_PRECEDENCE**
+
+| Field | Record |
+|---|---|
+| Context | The S01 bitmap says "còn thiếu ảnh và học vấn" and makes event/solution claims |
+| Decision | **RESOLVED_BY_PRECEDENCE**; no new business decision. S01 messaging uses the authoritative completion service and names only actual missing groups, in neutral copy. No "học vấn" unless Education becomes a frozen group. No event/solution eligibility claims |
+| Rationale | Freeze §D3 outranks the design bitmap; CLAUDE.md §3 and §7 |
+| Consequences | Replaced copy → COPY class, as in [DEC-WF01-S08-D7](#dec-wf01-s08-d7) |
+| Affected screens | WF02-S01 |
+| API/data impact | `GET /me/profile/completion` |
+| Supersedes/amends | — |
+| Source anchors | Freeze §D3; CLAUDE.md §3/§7; DEC-WF01-S08-D7 |
+
+<a id="open-wf02-venture-taxonomy-storage"></a>**OPEN-WF02-VENTURE-TAXONOMY-STORAGE — Human decision required (found during this freeze)**
+
+| Field | Record |
+|---|---|
+| Context | DEC-WF02-H6 freezes `domain_ids` and `region_id` as venture write fields |
+| Problem | `projects` has no region column and there is no project↔DOMAIN link table (`001_p0_init.sql:244-255`; no later migration adds them). H6 forbids storing them in `metadata`. The only authorized migrations are P12 (team) and the P13 deletion subset. Storing them would therefore need a migration nobody has authorized |
+| Options found | (a) Authorize an additive migration for venture region + domain storage (vocabulary-backed IDs, like `profile_domains` / `region_vocab_id`). (b) Drop `domain_ids` / `region_id` from the P0 venture write model |
+| Blocks | WF02-S05 (and so S06) |
+| Status | OPEN — not decided here |
+
 ## Related
+- [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 
 - [p0-status.md](../implementation/P0_STATUS.md) — overall P0 state
 - [wf01-s03-state-board-mapping.md](../implementation/WF01_S03_STATE_BOARD_MAPPING.md) — S03 mapping
