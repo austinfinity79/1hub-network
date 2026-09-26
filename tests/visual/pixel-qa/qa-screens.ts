@@ -188,9 +188,15 @@ export const QA_SCREENS: readonly QaScreenConfig[] = [
     'platform admin on Chapter 01: parent HUB, child Club 01, one closed test-hook relationship and one parentless test-hook CLB candidate',
     ORG,
   ),
-  cfg('WF03-S09', '/organizations/:slug', 'guest', 'public Chapter 01 page', {
-    slug: FIXTURES.chapter01Slug,
-  }),
+  cfg(
+    'WF03-S09',
+    '/organizations/:slug',
+    'guest',
+    'guest on the public Chapter 01 page (seeded published event, child Club 01)',
+    {
+      slug: FIXTURES.chapter01Slug,
+    },
+  ),
 ]
 
 export function qaConfigFor(screenId: string): QaScreenConfig | undefined {

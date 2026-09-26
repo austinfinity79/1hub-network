@@ -40,7 +40,8 @@ const SAMPLE_PARAMS: Record<string, string> = {
   id: 'sample-project',
   orgId: 'sample-org',
   profileId: 'sample-profile',
-  slug: 'sample-org',
+  // WF03-S09 resolves a real PUBLISHED organization; an unknown slug is the public 404.
+  slug: 'chapter-01',
 }
 
 export const FROZEN_ROUTES: readonly FrozenRoute[] = [

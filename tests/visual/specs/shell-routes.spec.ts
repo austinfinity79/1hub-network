@@ -40,6 +40,8 @@ const IMPLEMENTED_SCREENS = new Set([
   'WF02-S05',
   'WF02-S06',
   'WF02-S07',
+  // WF03-S09: the public organization page (wf03-s09-public-organization.spec.ts).
+  'WF03-S09',
 ])
 
 /** Screens that send a guest to /auth (DEC-WF01-S05-D5, WF01-S06..S08, WF02-T00 shell). */
@@ -68,12 +70,18 @@ const GUARDED_SCREENS = new Set([
 ])
 
 /**
- * An unguarded placeholder route. The member group has none left since
- * WF02-S06, and WF03-T00 guarded the ops group, so the shell evidence moves to
- * the public WF03-S09 placeholder.
+ * The last placeholder route. WF03-S09 replaced the public one, so the shell
+ * evidence moves to WF03-S05 (FUTURE / WF04, DEC-WF03-G12), which stays a
+ * placeholder inside OpsShell for the Chapter 01 leader.
  */
-const PLACEHOLDER_ROUTE = '/organizations/sample-org'
-const PLACEHOLDER_GROUP = 'public'
+const PLACEHOLDER_ROUTE = '/ops/org/10000000-0000-0000-0000-000000000101/programmes'
+const PLACEHOLDER_GROUP = 'ops'
+
+async function openPlaceholder(page: Page) {
+  const login = await page.request.post('/dev/login', { data: { email: 'leader@example.test' } })
+  expect(login.ok()).toBe(true)
+  await page.goto(PLACEHOLDER_ROUTE)
+}
 
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 25 routes across all five groups', () => {
@@ -121,7 +129,7 @@ test.describe('M0-T03 frozen routes', () => {
 
 test.describe('M0-T03 shared shell', () => {
   test('declares exactly one route-group boundary and one container', async ({ page }) => {
-    await page.goto(PLACEHOLDER_ROUTE)
+    await openPlaceholder(page)
 
     const groups = await page
       .locator('[data-route-group]')
@@ -132,7 +140,7 @@ test.describe('M0-T03 shared shell', () => {
   })
 
   test('keeps Be Vietnam Pro as the default UI font on a shell page', async ({ page }) => {
-    await page.goto(PLACEHOLDER_ROUTE)
+    await openPlaceholder(page)
     await waitForFonts(page)
 
     const typography = await page.evaluate(() => {
@@ -161,7 +169,7 @@ test.describe('M0-T03 shared shell', () => {
   })
 
   test('captures under the frozen conditions: 1440x900 at DPR 1', async ({ page }) => {
-    await page.goto(PLACEHOLDER_ROUTE)
+    await openPlaceholder(page)
 
     const conditions = await page.evaluate(() => ({
       width: window.innerWidth,
@@ -205,16 +213,16 @@ test.describe('M0-T03 route boundaries', () => {
 
 test.describe('M0-T03 shell evidence', () => {
   test('renders identically to the shell baseline', async ({ page }) => {
-    await page.goto(PLACEHOLDER_ROUTE)
+    await openPlaceholder(page)
     await waitForFonts(page)
 
     await page.screenshot({
-      path: path.join(ACTUAL_DIR, 'shell-public-placeholder-1440x900.png'),
+      path: path.join(ACTUAL_DIR, 'shell-ops-placeholder-1440x900.png'),
       fullPage: true,
       animations: 'disabled',
     })
 
-    await expect(page).toHaveScreenshot('shell-public-placeholder.png', {
+    await expect(page).toHaveScreenshot('shell-ops-placeholder.png', {
       fullPage: true,
       animations: 'disabled',
       maxDiffPixelRatio: 0.01,
