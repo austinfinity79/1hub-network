@@ -22,6 +22,7 @@
 }
 
 .row {
+  position: relative;
   display: grid;
   grid-template-columns: 20.25rem 13.5rem 7.875rem 12.375rem 9.375rem minmax(0, 1fr);
   align-items: center;
@@ -104,6 +105,27 @@
 }
 
 .retry:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+/* WF04-S08: the whole row opens the detail; the name stays the accessible link. */
+.nameLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nameLink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.row:not(.head):hover {
+  background: #fbf9f9;
+}
+
+.nameLink:focus-visible {
   outline: 0.125em solid var(--color-fg-accent);
   outline-offset: 0.125em;
 }

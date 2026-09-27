@@ -338,7 +338,7 @@ test.describe('WF04-S03 problem statements', () => {
       await page.locator('[data-demo-save]').click()
       await expect(page).toHaveURL(/\/demo\/programmes\/[0-9a-f-]{36}\/setup\/journey$/)
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(name)
-      await expect(page.locator('[data-state="created"]')).toHaveText(`Đã tạo bản nháp “${name}”.`)
+      await expect(page.locator('[data-state="flash"]')).toHaveText(`Đã tạo bản nháp “${name}”.`)
       await expect(page.locator('[data-state="stages-empty"]')).toBeVisible()
       await expect(page.locator('[data-journey-problems]')).toHaveCount(
         type === 'Challenge' ? 1 : 0,
@@ -349,7 +349,7 @@ test.describe('WF04-S03 problem statements', () => {
       await page.getByLabel('Tên giai đoạn').fill('Giai đoạn đầu')
       await page.locator('[data-action="save-stage"]').click()
       await page.reload({ waitUntil: 'networkidle' })
-      await expect(page.locator('[data-state="created"]')).toHaveCount(0)
+      await expect(page.locator('[data-state="flash"]')).toHaveCount(0)
       expect(await stageNames(page)).toEqual([['1', 'Giai đoạn đầu']])
     }
   })

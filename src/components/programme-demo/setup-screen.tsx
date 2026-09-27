@@ -49,15 +49,19 @@ export function SetupScreen({
   screen,
   back,
   next,
+  actions,
   children,
 }: {
   id: string
   server: ProgrammeDemoDetailDTO | null
-  step: SetupStep
+  /** The setup step; none on the detail page (no stepper). */
+  step?: SetupStep
   screen: string
-  back: { href: string; label: string; nav: string }
+  back?: { href: string; label: string; nav: string }
   /** The next step's route, or null while it is not built (disabled with its reason). */
-  next: string | null
+  next?: string | null
+  /** Replaces the back / next pair (the detail page's own actions). */
+  actions?: (detail: ProgrammeDemoDetailDTO) => ReactNode
   children: (context: {
     detail: ProgrammeDemoDetailDTO
     apply: Apply
@@ -146,38 +150,46 @@ export function SetupScreen({
         title={programme.name}
         meta={`${TYPE_LABEL[programme.type]} · ${STATUS_LABEL[programme.status]} · ${organization.name}`}
         actions={
-          <div className={buttons.group}>
-            <Link
-              href={back.href}
-              className={`weight-medium ${buttons.secondary}`}
-              data-nav={back.nav}
-            >
-              {back.label}
-            </Link>
-            {next ? (
-              <Link href={next} className={`weight-medium ${buttons.primary}`} data-setup-next>
-                {COPY.next}
-              </Link>
-            ) : (
-              <button
-                type="button"
-                className={`weight-medium ${buttons.primary}`}
-                disabled
-                aria-disabled="true"
-                title={INERT_REASONS.NO_P0_SCREEN}
-                aria-label={`${COPY.next} — ${INERT_REASONS.NO_P0_SCREEN}`}
-                data-nav-kind="INERT"
-                data-setup-next
-              >
-                {COPY.next}
-              </button>
-            )}
-          </div>
+          actions ? (
+            actions(detail)
+          ) : (
+            <div className={buttons.group}>
+              {back ? (
+                <Link
+                  href={back.href}
+                  className={`weight-medium ${buttons.secondary}`}
+                  data-nav={back.nav}
+                >
+                  {back.label}
+                </Link>
+              ) : null}
+              {next ? (
+                <Link href={next} className={`weight-medium ${buttons.primary}`} data-setup-next>
+                  {COPY.next}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  className={`weight-medium ${buttons.primary}`}
+                  disabled
+                  aria-disabled="true"
+                  title={INERT_REASONS.NO_P0_SCREEN}
+                  aria-label={`${COPY.next} — ${INERT_REASONS.NO_P0_SCREEN}`}
+                  data-nav-kind="INERT"
+                  data-setup-next
+                >
+                  {COPY.next}
+                </button>
+              )}
+            </div>
+          )
         }
       >
-        <div className={styles.stepper}>
-          <SetupStepper current={step} />
-        </div>
+        {step ? (
+          <div className={styles.stepper}>
+            <SetupStepper current={step} />
+          </div>
+        ) : null}
         {retry ? (
           <div
             className={`${styles.notice} ${styles.failed}`}

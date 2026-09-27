@@ -15,7 +15,7 @@ import { compareSegments, type Rect, type SegmentResult } from '../pixel-qa/segm
 /**
  * WF04-S07 — review + publish (DEC-WF04-H5, DEC-WF04-S07-D1..D3): read-only
  * summary, the exact H5 checklist, DRAFT → PUBLISHED only in the session
- * store (atomic, idempotent), no unpublish, S06 → S07, no S08 exposure,
+ * store (atomic, idempotent), no unpublish, S06 → S07 → S08 (DEC-WF04-S08-D3),
  * IDOR / auth, no database or audit write, responsive and primitives.
  */
 
@@ -148,20 +148,27 @@ test.describe('WF04-S07 review + publish', () => {
     )
     await expect(summary.locator('[data-review="team"]')).toContainText('2 thành viên')
     await expect(summary.locator('[data-review="problems"]')).toHaveCount(0)
-    // Edit links only to built steps; no basic-info link (S08), no S08 route.
+    // Edit links to built steps only (basic information since S08).
     expect(
       await page
         .locator('[data-edit]')
         .evaluateAll((els) => els.map((e) => e.getAttribute('href'))),
     ).toEqual([
+      `/demo/programmes/${PROGRAMME}/setup/basic`,
       `/demo/programmes/${PROGRAMME}/setup/journey`,
       `/demo/programmes/${PROGRAMME}/setup/events`,
       `/demo/programmes/${PROGRAMME}/setup/registration`,
       `/demo/programmes/${PROGRAMME}/setup/team`,
     ])
-    await expect(
-      page.locator(`a[href="/demo/programmes/${PROGRAMME}"], a[href*="/setup/basic"]`),
-    ).toHaveCount(0)
+    // DEC-WF04-S08-D3: "Tiếp theo" and the published panel open the detail page.
+    await expect(page.locator('[data-setup-next]')).toHaveAttribute(
+      'href',
+      `/demo/programmes/${PROGRAMME}`,
+    )
+    await expect(page.locator('[data-nav="review-detail"]')).toHaveAttribute(
+      'href',
+      `/demo/programmes/${PROGRAMME}`,
+    )
     expect(await checks(page)).toEqual([
       ['name', 'true'],
       ['type', 'true'],
@@ -177,7 +184,6 @@ test.describe('WF04-S07 review + publish', () => {
     await expect(
       page.getByRole('button', { name: /huỷ xuất bản|chuyển về nháp|đóng|lưu trữ/i }),
     ).toHaveCount(0)
-    await expect(page.locator('[data-setup-next]')).toBeDisabled()
     await page.reload({ waitUntil: 'networkidle' })
     await expect(page.locator('[data-publish-state]')).toHaveAttribute(
       'data-publish-state',
@@ -207,12 +213,14 @@ test.describe('WF04-S07 review + publish', () => {
     )
     await expect(publishButton(page)).toBeEnabled()
     await publishButton(page).dblclick()
-    await expect(page.locator('[data-state="published-now"]')).toHaveText(
-      'Đã xuất bản. Chương trình đang công khai trong bản demo.',
+    // DEC-WF04-S08-D3: a publish continues to the detail page with a one-off confirmation.
+    await expect(page).toHaveURL(`/demo/programmes/${CHALLENGE}`)
+    await expect(page.locator('[data-state="flash"]')).toHaveText(
+      'Đã xuất bản “Thử thách đổi mới (demo)”.',
     )
-    await expect(page.locator('[data-publish-state]')).toHaveAttribute(
-      'data-publish-state',
-      'published',
+    await expect(page.locator('[data-detail-status]')).toHaveAttribute(
+      'data-detail-status',
+      'PUBLISHED',
     )
     await expect(page.locator('[data-demo-meta]')).toContainText('Đang công khai')
     const state = (await stored(page))!
@@ -230,15 +238,14 @@ test.describe('WF04-S07 review + publish', () => {
       'application_counts',
     ])
       expect(copy[key], key).toEqual(fixture[key])
-    await page.reload({ waitUntil: 'networkidle' })
+    await open(page, CHALLENGE)
     await expect(page.locator('[data-publish-state]')).toHaveAttribute(
       'data-publish-state',
       'published',
     )
     await expect(publishButton(page)).toHaveCount(0)
-    // S01 shows it published; the list is the post-publish destination (S08 not built).
-    await page.locator('[data-nav="review-list"]').click()
-    await expect(page).toHaveURL('/demo/programmes')
+    // S01 shows it published.
+    await page.goto('/demo/programmes', { waitUntil: 'networkidle' })
     await expect(page.locator(`[data-programme-row="${CHALLENGE}"] [data-status]`)).toHaveText(
       'Đang công khai',
     )
@@ -290,9 +297,10 @@ test.describe('WF04-S07 review + publish', () => {
     await page.goto(url(draftId), { waitUntil: 'networkidle' })
     await expect(page.locator('[data-readiness]')).toHaveText('Sẵn sàng xuất bản')
     await publishButton(page).click()
-    await expect(page.locator('[data-publish-state]')).toHaveAttribute(
-      'data-publish-state',
-      'published',
+    await expect(page).toHaveURL(`/demo/programmes/${draftId}`)
+    await expect(page.locator('[data-detail-status]')).toHaveAttribute(
+      'data-detail-status',
+      'PUBLISHED',
     )
 
     // A Programme DRAFT with reversed dates (tampered session copy) is blocked on "dates".
@@ -312,7 +320,12 @@ test.describe('WF04-S07 review + publish', () => {
       ['dates', 'false'],
     ])
     await expect(publishButton(page)).toBeDisabled()
-    await expect(page.locator('[data-fix]')).toHaveCount(0)
+    // Dates are fixed in the basic-information step (built with S08).
+    await expect(page.locator('[data-fix]')).toHaveCount(1)
+    await expect(page.locator('[data-fix="dates"]')).toHaveAttribute(
+      'href',
+      `/demo/programmes/${programme.programme.id}/setup/basic`,
+    )
     expect((await stored(page))!.programmes[programme.programme.id]!.programme.status).toBe('DRAFT')
   })
 
@@ -354,9 +367,9 @@ test.describe('WF04-S07 authorization and IDOR', () => {
     await login(page.request, 'ops@example.test')
     expect((await page.goto(`${url(CHALLENGE)}?orgId=${CHAPTER_02}`))?.status()).toBe(200)
     await publishButton(page).click()
-    await expect(page.locator('[data-publish-state]')).toHaveAttribute(
-      'data-publish-state',
-      'published',
+    await expect(page.locator('[data-detail-status]')).toHaveAttribute(
+      'data-detail-status',
+      'PUBLISHED',
     )
     for (const id of ['abc', 'd4000000-0000-0000-0000-000000000099'])
       expect((await page.goto(url(id)))?.status(), id).toBe(404)
@@ -543,6 +556,8 @@ test.describe('WF04-S07 visual QA (approved primitives; no WF04 bitmap)', () => 
     )
     await capture('ready')
     await publishButton(page).click()
+    await expect(page).toHaveURL(`/demo/programmes/${CHALLENGE}`)
+    await open(page, CHALLENGE)
     await expect(page.locator('[data-publish-state]')).toHaveAttribute(
       'data-publish-state',
       'published',
@@ -558,7 +573,7 @@ test.describe('WF04-S07 visual QA (approved primitives; no WF04 bitmap)', () => 
         {
           class: 'INTENTIONAL-DEMO',
           reason:
-            'DEC-WF04-H1 / S07-D1: S03 card chrome, WF01-S03 success ink for passed items, ADM5 pills and header buttons; the screen stays on S07 after publishing (S08 not built); no WF04 pixel parity claimed',
+            'DEC-WF04-H1 / S07-D1: S03 card chrome, WF01-S03 success ink for passed items, ADM5 pills and header buttons; a successful publish continues to WF04-S08 (DEC-WF04-S08-D3); no WF04 pixel parity claimed',
         },
       ],
       segments: results,

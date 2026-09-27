@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildDraft, dayToInstant, validateBasicInfo, type BasicInfoInput } from './basic-info'
+import {
+  basicInfoOf,
+  buildDraft,
+  dayToInstant,
+  updateBasicInfo,
+  validateBasicInfo,
+  type BasicInfoInput,
+} from './basic-info'
 import { formatDemoDateRange } from './format'
 import { publishReadiness } from './readiness'
-import { isDemoFixtureId } from './fixtures'
+import { DEMO_CHALLENGE_ID, demoFixture, isDemoFixtureId } from './fixtures'
+import type { ProgrammeDemoDetail } from './types'
 
 const CHAPTER_01 = {
   id: '10000000-0000-0000-0000-000000000101',
@@ -125,5 +133,62 @@ describe('WF04-S02 new draft', () => {
     ).toEqual(['problems'])
     const programme = buildDraft({ ...valid, type: 'PROGRAMME' }, CHAPTER_01, { id, now })
     expect(publishReadiness(programme, [CHAPTER_01.id]).every((c) => c.ok)).toBe(true)
+  })
+})
+
+describe('WF04-S08 basic information edit', () => {
+  const now = new Date('2026-09-28T01:00:00.000Z')
+  const fixture = () => structuredClone(demoFixture(DEMO_CHALLENGE_ID)!) as ProgrammeDemoDetail
+
+  it('round-trips the stored values into the form', () => {
+    expect(basicInfoOf(fixture())).toEqual({
+      type: 'CHALLENGE',
+      name: 'Thử thách đổi mới (demo)',
+      summary:
+        'Challenge mẫu cho Internal Alpha: các đội đề xuất giải pháp cho bài toán của đơn vị.',
+      starts_on: '2026-11-01',
+      ends_on: '2027-01-31',
+      organization_id: '10000000-0000-0000-0000-000000000101',
+    })
+  })
+
+  it('updates name, summary and dates only; status, type, owner and setup untouched', () => {
+    const d = fixture()
+    const result = updateBasicInfo(
+      d,
+      { ...basicInfoOf(d), name: '  Tên mới  ', summary: '', starts_on: '', ends_on: '2027-02-01' },
+      now,
+    )
+    if (!result.ok) throw new Error('expected ok')
+    expect(result.detail.programme).toMatchObject({
+      name: 'Tên mới',
+      summary: null,
+      starts_at: null,
+      ends_at: '2027-02-01T16:59:00.000Z',
+      type: 'CHALLENGE',
+      status: 'DRAFT',
+      organization_id: d.programme.organization_id,
+      updated_at: now.toISOString(),
+    })
+    expect({ ...result.detail, programme: null }).toEqual({ ...d, programme: null })
+  })
+
+  it('refuses a type change, another owner, a blank name or reversed dates, changing nothing', () => {
+    const d = fixture()
+    const before = JSON.stringify(d)
+    const base = basicInfoOf(d)
+    expect(updateBasicInfo(d, { ...base, type: 'PROGRAMME' }, now)).toMatchObject({
+      errors: { type: 'immutable' },
+    })
+    expect(
+      updateBasicInfo(d, { ...base, organization_id: '10000000-0000-0000-0000-000000000102' }, now),
+    ).toMatchObject({ errors: { organization_id: 'invalid' } })
+    expect(updateBasicInfo(d, { ...base, name: ' ' }, now)).toMatchObject({
+      errors: { name: 'required' },
+    })
+    expect(updateBasicInfo(d, { ...base, ends_on: '2026-10-01' }, now)).toMatchObject({
+      errors: { dates: 'order' },
+    })
+    expect(JSON.stringify(d)).toBe(before)
   })
 })

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { Notice } from '@/components/ui'
@@ -18,6 +19,7 @@ import { demoRoutes, type SetupStep } from '@/lib/programme-demo/routes'
 import type { ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
 
 import buttons from './demo-buttons.module.css'
+import { useProgrammeDemo } from './demo-store'
 import styles from './journey.module.css'
 import { SetupScreen, type Apply } from './setup-screen'
 import { ProgrammeStatusPill } from './status-pill'
@@ -28,8 +30,8 @@ import { ProgrammeStatusPill } from './status-pill'
  * A read-only summary of the programme's setup, the frozen H5 checklist
  * (`publishReadiness`, nothing added) and the one demo transition DRAFT →
  * PUBLISHED, applied atomically to the actor's session copy. No unpublish,
- * close or archive. After publishing the screen stays here in the PUBLISHED
- * state (the detail page is WF04-S08). Edit links point only at built steps.
+ * close or archive. A successful publish continues to the detail page
+ * (WF04-S08, DEC-WF04-S08-D3). Edit links point only at built steps.
  */
 
 const COPY = {
@@ -65,7 +67,8 @@ const COPY = {
   publishHint: 'Chương trình sẽ ở trạng thái đang công khai trong bản demo.',
   blocked: 'Hoàn thành các mục còn thiếu để xuất bản.',
   published: 'Đã xuất bản. Chương trình đang công khai trong bản demo.',
-  toList: 'Về danh sách',
+  toDetail: 'Xem chi tiết',
+  publishedFlash: (name: string) => `Đã xuất bản “${name}”.`,
 } as const
 
 const ITEM_LABEL: Record<ReadinessItem, string> = {
@@ -76,8 +79,12 @@ const ITEM_LABEL: Record<ReadinessItem, string> = {
   problems: 'Challenge có ít nhất một bài toán',
 }
 
-/** Where a missing item is fixed; basic information has no built edit step yet (S08). */
-const ITEM_STEP: Partial<Record<ReadinessItem, SetupStep>> = { problems: 'journey' }
+/** Where a missing item is fixed (type and owner cannot change after creation). */
+const ITEM_STEP: Partial<Record<ReadinessItem, SetupStep>> = {
+  name: 'basic',
+  dates: 'basic',
+  problems: 'journey',
+}
 
 export function ProgrammeReview({
   id,
@@ -93,7 +100,7 @@ export function ProgrammeReview({
       step="review"
       screen="WF04-S07"
       back={{ href: demoRoutes.setup(id, 'team'), label: COPY.back, nav: 'review-back' }}
-      next={null}
+      next={demoRoutes.detail(id)}
     >
       {({ detail, apply, allowance }) => (
         <ReviewBody detail={detail} apply={apply} allowance={allowance} />
@@ -111,6 +118,8 @@ function ReviewBody({
   apply: Apply
   allowance: OrganizationAllowance
 }) {
+  const router = useRouter()
+  const { setFlash } = useProgrammeDemo()
   const [publishing, setPublishing] = useState(false)
   const [justPublished, setJustPublished] = useState(false)
   const inFlight = useRef(false)
@@ -130,8 +139,12 @@ function ReviewBody({
     setPublishing(true)
     const outcome = apply(publishProgramme(detail, allowance, new Date()))
     setPublishing(false)
-    if (outcome.ok) setJustPublished(true)
-    else inFlight.current = false
+    if (outcome.ok) {
+      setJustPublished(true)
+      // DEC-WF04-S08-D3: the detail page is the post-publish destination.
+      setFlash(COPY.publishedFlash(programme.name))
+      router.push(demoRoutes.detail(id))
+    } else inFlight.current = false
   }
 
   const row = (key: string, label: string, value: ReactNode, step?: SetupStep) => (
@@ -188,6 +201,7 @@ function ReviewBody({
               <ProgrammeStatusPill status={programme.status} />
             </p>
           </>,
+          'basic',
         )}
         {row(
           'journey',
@@ -340,11 +354,11 @@ function ReviewBody({
                 <ProgrammeStatusPill status={programme.status} />
               </p>
               <Link
-                href={demoRoutes.list()}
+                href={demoRoutes.detail(id)}
                 className={`weight-medium ${buttons.secondary}`}
-                data-nav="review-list"
+                data-nav="review-detail"
               >
-                {COPY.toList}
+                {COPY.toDetail}
               </Link>
             </>
           )}

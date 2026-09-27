@@ -179,7 +179,7 @@ test.describe('WF04-S02 create', () => {
       'data-programme-type',
       'PROGRAMME',
     )
-    await expect(page.locator('[data-state="created"]')).toHaveText(
+    await expect(page.locator('[data-state="flash"]')).toHaveText(
       'Đã tạo bản nháp “Chương trình kết nối (demo)”.',
     )
     await page.locator('[data-nav="journey-back"]').click()
@@ -211,7 +211,7 @@ test.describe('WF04-S02 create', () => {
     // Refresh keeps it; the one-off confirmation is gone.
     await page.reload({ waitUntil: 'networkidle' })
     await expect(rows(page)).toHaveCount(3)
-    await expect(page.locator('[data-state="created"]')).toHaveCount(0)
+    await expect(page.locator('[data-state="flash"]')).toHaveCount(0)
     // Reset removes it and restores the two fixtures.
     await page.locator('[data-demo-reset="start"]').click()
     await page.locator('[data-demo-reset="confirm"]').click()

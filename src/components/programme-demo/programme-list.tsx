@@ -26,9 +26,8 @@ import { ProgrammeStatusPill } from './status-pill'
  * are DTO fields only: name, owning organization, type, dates, problem count
  * (CHALLENGE only) and lifecycle status.
  *
- * Rows do not navigate until WF04-S08 builds the detail (S01-D1). "Tạo mới"
- * opens WF04-S02 (S02-D3 supersedes S01-D2); a draft saved there is confirmed
- * here once.
+ * A row opens the detail page (WF04-S08; DEC-WF04-S08-D3 supersedes S01-D1).
+ * "Tạo mới" opens WF04-S02 (S02-D3 supersedes S01-D2).
  */
 
 const COPY = {
@@ -126,7 +125,13 @@ export function ProgrammeList() {
                     data-type={p.type}
                   >
                     <span role="cell" className={`type-body-sm weight-semibold ${styles.name}`}>
-                      {p.name}
+                      <Link
+                        href={demoRoutes.detail(p.id)}
+                        className={styles.nameLink}
+                        data-nav="programme-detail"
+                      >
+                        {p.name}
+                      </Link>
                     </span>
                     <span role="cell" className={`type-body-sm ${styles.cell}`}>
                       {p.organization.name}

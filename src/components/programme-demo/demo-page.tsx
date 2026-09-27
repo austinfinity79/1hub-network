@@ -105,7 +105,7 @@ function DemoFlash() {
     if (shown) setFlash(null)
   }, [shown, setFlash])
   return shown ? (
-    <div className={styles.flash} data-state="created">
+    <div className={styles.flash} data-state="flash">
       <Notice>{shown}</Notice>
     </div>
   ) : null

@@ -15,7 +15,7 @@ import { compareSegments, type Rect } from '../pixel-qa/segments'
 /**
  * WF04-S01 — Programme / Challenge list (DEC-WF04-H1/H2, DEC-WF04-S01-D1..D3):
  * rows from `GET /api/v1/demo/programmes` + the session store, states,
- * scope, spoofing, no writes, disabled create, non-navigable rows, responsive
+ * scope, spoofing, no writes, create, rows linking to the detail (S08), responsive
  * basics and the ADM5 primitives.
  */
 
@@ -154,21 +154,32 @@ test.describe('WF04-S01 list content', () => {
     await expect(rows(page)).toHaveCount(2)
   })
 
-  test('rows do not navigate (S08 not built); "Tạo mới" opens S02 (DEC-WF04-S02-D3)', async ({
+  test('rows open the detail page (DEC-WF04-S08-D3); "Tạo mới" opens S02 (DEC-WF04-S02-D3)', async ({
     page,
   }) => {
     await login(page.request, 'leader@example.test')
     await open(page)
-    await expect(page.locator('[data-programme-table] a')).toHaveCount(0)
+    expect(
+      await page
+        .locator('[data-programme-table] a')
+        .evaluateAll((els) => els.map((e) => e.getAttribute('href'))),
+    ).toEqual([`/demo/programmes/${PROGRAMME}`, `/demo/programmes/${CHALLENGE}`])
     expect(
       await page
         .locator('a[href^="/demo/programmes/"]')
         .evaluateAll((els) => els.map((e) => e.getAttribute('href'))),
-    ).toEqual(['/demo/programmes/new'])
+    ).toEqual([
+      '/demo/programmes/new',
+      `/demo/programmes/${PROGRAMME}`,
+      `/demo/programmes/${CHALLENGE}`,
+    ])
     const create = page.locator('[data-demo-create]')
     await expect(create).toHaveText('Tạo mới')
     await expect(create).not.toHaveAttribute('aria-disabled', 'true')
     await rows(page).first().click()
+    await expect(page).toHaveURL(`/demo/programmes/${PROGRAMME}`)
+    await expect(page.locator('[data-screen="WF04-S08"]')).toBeVisible()
+    await page.goBack({ waitUntil: 'networkidle' })
     await expect(page).toHaveURL('/demo/programmes')
     // OpsShell: the demo entry is current; WF03 nav unchanged; no WF03-S05 link.
     await expect(page.locator('[data-nav="programme-demo"]')).toHaveAttribute(
