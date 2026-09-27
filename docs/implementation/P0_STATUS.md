@@ -49,6 +49,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 21 v2 — DESIGN REVISION AUDIT (corrected Homepage + L1–L6): DONE — HUMAN DECISION REQUIRED** ([audit](../design-revision/00_CORRECTED_SOURCE_MANIFEST.md), [report](reports/TASK-21v2_design-revision-audit.md)). 64 assets verified; root `/` already public. Buckets A 15 / B 26 / C 21; 11 decisions (HD-01…HD-11). The first, withdrawn audit is in `docs/design-revision/superseded/` (DO NOT IMPLEMENT). No runtime change; Task 22 not started.
 
+**TASK 22.1 — PUBLIC HOMEPAGE (Bucket A): BLOCKED at precheck — typography conflict HD-12** ([report](reports/TASK-22.1_homepage-typography-stop.md)). The corrected revision is set in Space Grotesk (glyph-mask test, H1 + AUTH1, 6 / 6 samples); the Design SOT allows Be Vietnam Pro / Archivo 700 / IBM Plex Mono 500. HD-12 blocks every Bucket A batch. The TASK 21 v2 typography line is corrected. Nothing implemented; no runtime change.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -137,7 +139,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-PO / BA freeze the TASK 21 v2 decisions (HD-01…HD-11) and approve Bucket A → TASK 22 (design revision, Bucket A only). The PO self-review with the test pack can run in parallel on the current release. Not started automatically.
+PO / Design decide HD-12 (typography) → re-run TASK 22.1 (Public Homepage); then TASK 22.2 (L1 auth / onboarding, Bucket A). The PO self-review with the test pack can run in parallel on the current release. Not started automatically.
 
 ## Related
 

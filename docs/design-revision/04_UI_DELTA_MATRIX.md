@@ -4,7 +4,7 @@ Current deployed UI vs the corrected design, for every screen that has a current
 
 **Across all screens:**
 - **Colour / tokens:** the palette equals `DESIGN_TOKENS_v1.0` (`--hub-primary #fc523c`, `--hub-burgundy #160002`, `--hub-canvas #efefef`), so no token change.
-- **Typography:** looks consistent with Be Vietnam Pro / Archivo / IBM Plex Mono but cannot be proven from PNGs; Task 22 typography assertions confirm.
+- **Typography (corrected by the TASK 22.1 precheck):** the revision is set in **Space Grotesk**, not Be Vietnam Pro / Archivo. The glyph-mask test on H1 and AUTH1 samples matches Space Grotesk in all 6 samples; mono labels are monospace, family unproven. This conflicts with the Design SOT faces → **HD-12**. The earlier line ("looks consistent with Be Vietnam Pro / Archivo / IBM Plex Mono") was wrong ([report](../implementation/reports/TASK-22.1_homepage-typography-stop.md)).
 - **Icons:** outline icons plus the floating "Góp ý" button on every frame; the button has no flow (HD-11).
 - **States:** only ideal states are drawn, except AI states (L06c), SYS1 (404 / 500 / maintenance) and AUTH3 / AUTH4 variants. Current empty / loading / error states are kept.
 - **Responsive:** only 1440 (L26, L27, L46, L52, L53 at 1600) is drawn. Basic responsive safety (IA-P2-03 rules) is kept.
