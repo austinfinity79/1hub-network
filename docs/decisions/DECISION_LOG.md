@@ -1154,6 +1154,27 @@ Resolution: a human decision on E1–E5, recorded as DEC-WF03-S07-EVENT-LIFECYCL
 | <a id="dec-wf05-t00-d2"></a>DEC-WF05-T00-D2 | **Read model + API.** `GET /api/v1/demo/projects` → `{ventures, programmes}`: the member's own relations (WF02 `getOwnNetwork`: id, type, name, status, relation, role label, derived applicant type) and the PUBLISHED WF04 fixtures (id, status, type, name, summary, dates, owning organization name, applicant types, questions — no counts, team, stages or drafts). `GET /api/v1/demo/projects/{id}` → the venture through WF02 `getVenture` / `getTeam` (owner or ACTIVE member; team = owner + ACTIVE rows with name and role label only), plus the programmes with this actor's eligibility (order: NOT_PUBLISHED, NOT_OWNER, ARCHIVED, TYPE_NOT_ACCEPTED). No session → 401; onboarding not DONE → 403 `SCOPE_FORBIDDEN`; malformed, unknown or unreadable → the same 404 (no admin or leader read). GET only (405). No email, slug, metadata, profile or account id |
 | <a id="dec-wf05-t00-d3"></a>DEC-WF05-T00-D3 | **Frame, entry, harness.** The shared `DemoPage` frame takes its reset, one-off message and notice copy from `DemoFrameContext`; the WF04 provider supplies its store and copy unchanged, the WF05 provider its own ("Dự án và startup là hồ sơ thật của bạn…"). The MemberShell entry is registered as `PROJECT_DEMO_ENTRY` with `visible: false` and is not rendered; `/demo/projects*` has no page (404) until WF05-S01, which renders the entry in the sidebar footer and turns it on. A dev-only harness `/dev/project-demo` (ENABLE_DEV_ROUTES, never linked, 404 in production) mounts the real guard, read model, provider and store to prove the browser-session semantics before S01 |
 
+
+## DEC-WF06 — Ecosystem Data Flywheel / Discovery & Matching: Internal Alpha scope
+
+**Status:** HUMAN APPROVED 2026-09-27 (INTERNAL ALPHA — WF06 SCOPE DECISION). **Sources verified:** Master Spec v1.3 §4 ("WF06 — Ecosystem Data & Matching — Future: data/read-model vision, not a P0 transactional workflow") and M6 ("architecture/read-model only unless explicitly promoted"); CLAUDE.md §2 ("WF06 is future/read-model architecture only"); 01 System Architecture "Future: WF06 discovery/matching/intelligence, investor/dataroom flows"; 02 Domain Architecture (WF06 Data Flywheel = discovery / read models); Data SOT v1.1 §C (future entities out of P0); CLAUDE_MASTER_PROMPT M6; README roadmap (Future). No source requires WF06 runtime before Internal Alpha completion: **no conflict**.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf06-internal-alpha-scope"></a>DEC-WF06-INTERNAL-ALPHA-SCOPE | **WF06 runtime implementation is SKIPPED for Internal Alpha; WF06 stays FUTURE / VISION** (not promoted under M6). No WF06 screen, route, API, read-model service, matching engine, recommendation / ranking logic, discovery index, investor discovery or data-flywheel automation; no migration; no Data SOT §C entity. The Internal Alpha product is P0-LANDING, P0-SHELL, WF01, WF02, WF03, WF04 DEMO and WF05 DEMO. Next gate: INTERNAL ALPHA COMPLETION AUDIT |
+
+**FUTURE boundary** — no Internal Alpha task implements any of these:
+
+| Capability | Status |
+|---|---|
+| Ecosystem discovery; cross-network opportunity matching | FUTURE |
+| Matching; recommendation / ranking | FUTURE |
+| Mentor / advisor matching | FUTURE |
+| Investor discovery; investor / VC / dataroom workflows (`InvestmentFundProfile`, `InvestorInterestRecord`, `AccessRequest`, `AccessGrant`, `DataRoom`, `DataRoomDocument`, `ConnectionRequest`) | FUTURE |
+| Automated data flywheel; advanced ecosystem analytics | FUTURE |
+
+**Existing references — kept, future-only, not executable:** P0-LANDING "Khám phá & kết nối" surface and "Tầm nhìn" flywheel, labelled "Tương lai" with "chưa phải tính năng đang vận hành", no link ([DEC-P0-LANDING-D2](#dec-p0-landing-d2)); the README roadmap row "Future"; code notes keeping investor intent / toggles and a profile directory out of P0 (onboarding intent and privacy forms, profile projection). No "coming soon" element, inert control or link is added.
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 
