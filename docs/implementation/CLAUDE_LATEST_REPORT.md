@@ -1,71 +1,69 @@
 # Claude Task Report
 
 ## Task
-WF04-S07 — REVIEW + PUBLISH (INTERNAL ALPHA, DEMO). Process: PROCESS-P0-ACCELERATED-SAFE-V2.
+WF04-S08 — PROGRAMME DETAIL / MANAGE (INTERNAL ALPHA, DEMO). Process: PROCESS-P0-ACCELERATED-SAFE-V2.
 
 ## Status
-**DONE — LOCAL REVIEW.** Decisions: [DEC-WF04-S07-D1..D3](../decisions/DECISION_LOG.md#dec-wf04-s07-d1) (implementation only; H5 not reopened or strengthened).
+**DONE — LOCAL REVIEW.** Decisions: [DEC-WF04-S08-D1..D3](../decisions/DECISION_LOG.md#dec-wf04-s08-d1) (implementation only; H1–H5 not reopened). Supersedes S01-D1 and the S07-D3 post-publish destination; builds the `setup/basic` edit promised by S02-D3.
 
 ## Precheck
 | Item | Result |
 |---|---|
-| Lifecycle | SOT §6 DRAFT → PUBLISHED → CLOSED → ARCHIVED; demo: DRAFT → PUBLISHED only (H5); no unpublish |
-| H5 | `publishReadiness`: name, type, owner in the actor's allowance, date order, CHALLENGE ≥ 1 problem statement; stages / events / registration / team never required |
-| Store | Session copy via `SetupScreen.apply`; allowance now passed to setup steps |
-| Sections | S02 basic info, S03 stages + problem statements, S04 events, S05 registration, S06 team — all in the demo DTO |
-| Edit routes | journey, events, registration, team built; `setup/basic` not built (S08) |
-| Design | S03 card chrome, ADM5 pills and header buttons, WF01-S03 success ink |
-| Conflicts | None |
+| Detail contract | Plan row 3 + route table (`/demo/programmes/:id`, `setup/basic` with type locked); S03-D2 `:id` resolution; same guard as S03–S07 |
+| Lifecycle | Demo DRAFT → PUBLISHED only, on S07; the detail shows the state, changes nothing |
+| Data | Demo DTO + session copy (`effectiveDetail`); no second store or read model |
+| S01 / S07 | S01 rows had no link (S01-D1); S07 stayed on S07 after publishing (S07-D3) |
+| Design | ADM5 header / card chrome, S07 summary rows, ADM5 pills, WF03 text actions, S02 form primitives |
+| Conflicts | None blocking. Plan row 3 / happy path J2 list "application counts" and a "current stage"; the S08 task forbids an application funnel and H3 defines no date rule for a current stage — both left off the detail (D1), flagged for the completion audit |
 
 ## Scope
 | Item | Result |
 |---|---|
-| Summary | Read-only rows with "Sửa" to built steps |
-| Checklist | 4 items (PROGRAMME) / 5 (CHALLENGE), "✓ Đạt" / "✗ Còn thiếu", header "Sẵn sàng xuất bản" / "Còn thiếu N mục"; the problems item links to the journey |
-| Publish | Ready → "Xuất bản" (disabled otherwise, with the reason); atomic; idempotent; double click publishes once; setup data kept |
-| States | Loading, draft ready, draft incomplete, publishing (button busy), published (stays on S07 + "Về danh sách"), error (save error + "Thử lại"; read error) |
-| Navigation | S06 → S07; "← Đội vận hành"; "Tiếp theo" disabled until S08; no S08 route exposed |
+| Detail | Status band, overview (type, owner, time, summary), cards: journey (stages + dates), CHALLENGE Bài toán, events (time, status), registration (applicant types, question count), team (name, label) |
+| Actions | "← Danh sách"; "Rà soát & xuất bản" (DRAFT, primary) / "Rà soát" (PUBLISHED); "Sửa" → `setup/basic`; "Quản lý" → journey / events / registration / team; reset. No publish, unpublish, close, archive, public link |
+| Basic edit | `setup/basic`: name, summary, dates editable (S02 validation, atomic); type and owner read-only; planted fields ignored; save error + "Thử lại" |
+| Navigation | S01 row → S08; S07 "Tiếp theo" / publish → S08 + one-off "Đã xuất bản “…”."; S07 basic / dates "Sửa" → `setup/basic` |
+| States | Loading (server render), DRAFT, PUBLISHED, not found (random id: "Không tìm thấy…"; malformed / unknown fixture id: 404), read error + "Thử lại", reset-safe (a created draft → not found; fixtures restored) |
 
 ## Files changed
-- New: `src/app/(demo)/demo/programmes/[id]/setup/review/page.tsx`; `src/components/programme-demo/programme-review.tsx`; `tests/visual/specs/wf04-s07-programme-review.spec.ts`
-- Changed: `src/lib/programme-demo/readiness.{ts,test.ts}` (+ `publishProgramme`); `src/components/programme-demo/{setup-screen.tsx (allowance), programme-team.tsx (next → S07), journey.module.css}`; specs `wf04-s06` (next link), `p0-shell-navigation` (crawl both review steps)
+- New: `src/app/(demo)/demo/programmes/[id]/page.tsx`, `…/[id]/setup/basic/page.tsx`; `src/components/programme-demo/{programme-detail,programme-basic-edit}.tsx`; `tests/visual/specs/wf04-s08-programme-detail.spec.ts`
+- Changed: `src/lib/programme-demo/basic-info.{ts,test.ts}` (`basicInfoOf`, `updateBasicInfo`); `src/components/programme-demo/{setup-screen.tsx (optional step, header actions), programme-review.tsx (→ S08, basic edit links), programme-list.tsx + .module.css (row link), demo-page.tsx (flash state), journey.module.css}`; specs T00, S01, S02, S03, S07, P0-SHELL
 - Docs: DECISION_LOG, WF04 plan / happy path, P0_STATUS, CLAUDE_LATEST_REPORT, this report
 
 ## Migrations / data
-None. Row-exact fingerprints unchanged: programmes, events, role_assignments, community_memberships, leadership_records, individual_profiles, project_members; no `applications` table; audit / analytics counts unchanged.
+None. Row-exact fingerprints unchanged across view, basic edit, publish and reset: programmes, events, role_assignments, community_memberships, leadership_records, individual_profiles, user_accounts, project_members; no `applications` table; audit / analytics counts unchanged.
 
 ## Tests
 | Gate | Result |
 |---|---|
 | Format / lint / typecheck / build | PASS |
-| Unit | 220 passed (3 new: publish, refusal with missing items, idempotence) |
+| Unit | 223 passed (3 new: basic info read, update, type / owner / status kept) |
 | DB | 343 passed |
-| WF04 Playwright | 80 / 80 (S07: 9) |
-| Targeted regression | 234 passed: WF04, P0-SHELL, shell-routes, WF03-T00 / S04 / S07 / S08, WF02-S06, auth / authz session, console health, API contract, M0 root, WF01-S01, WF02-S01 / S05 |
-| Navigation matrix | 425 rows, 0 dead: S06 "Tiếp theo" → review WORKING; S07 "Sửa" links WORKING; S07 "Tiếp theo" DISABLED with reason |
+| WF04 Playwright | 100 / 100 (S08: 20) |
+| Targeted regression | 154 passed: P0-SHELL, shell-routes, WF03-T00 / S04 / S07 / S08, WF02-S01 / S05 / S06, auth / authz session, console health, API contract, M0 root, WF01-S01 |
+| Navigation matrix | 503 rows, 0 dead; 70 rows from the S08 / basic pages, all WORKING |
 | Server log | 0 email / token / cookie lines |
 
 ## Visual QA
 | Check | Result |
 |---|---|
-| Captures | `wf04-s07-incomplete-1440x900.png` / `-full`, `-ready-`, `-published-`, `-768.png`, `-390.png` |
-| vs ADM5 | header band + rule, card top / left edges in all three states: 0 drift |
-| Typography | 197 text elements, 0 violations |
+| Captures | `wf04-s08-{programme-published,programme-draft,challenge-draft,challenge-published}-1440x900.png` / `-full`, `wf04-s08-768.png`, `wf04-s08-390.png` |
+| vs ADM5 | header band + rule, card top / left edges in all four states: 0 drift (16 segments) |
+| Typography | 212 text elements, 0 violations |
 | Structural / Major / Component | 0 / 0 / 0 |
 | Raster | none |
-| Intentional-Demo | No WF04 bitmap; stays on S07 after publishing until S08 |
-| Fixed during QA | 390 px: checklist labels squeezed beside the state column overflowed 31 px — labels now take their own line |
+| Intentional-Demo | No WF04 bitmap; two-column card grid (one column below 1024 px); "Sửa" instead of the plan's "Chỉnh sửa"; missing-draft copy is the S03–S07 frame's |
 
 ## Blocking gaps
-0. Known PO item unchanged: OpsShell desktop-first.
+0. Known PO item unchanged: OpsShell desktop-first (at 390 px the sidebar stays beside the content; no overflow).
 
 ## Git
-- Branch: `main`; start HEAD `464a542` (checked again before each commit)
-- Implementation commit: `1df5b9f`
+- Branch: `main`; start HEAD `2417fb7` (checked again before each commit)
+- Implementation commit: `8fd8c70`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-WF04-S08 — Programme Detail / Manage. Do not start WF05.
+WF04 COMPLETION AUDIT + HAPPY PATH UAT. Do not start WF05 automatically.
