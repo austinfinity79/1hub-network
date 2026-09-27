@@ -38,6 +38,8 @@ export const PINNED_FONTS = [
   { family: 'Be Vietnam Pro', pkg: 'be-vietnam-pro', weights: [400, 500, 600] },
   { family: 'Archivo', pkg: 'archivo', weights: [700] },
   { family: 'IBM Plex Mono', pkg: 'ibm-plex-mono', weights: [500] },
+  // DEC-HD-12: Corrected Design Revision screens only, never the legacy product UI.
+  { family: 'Space Grotesk', pkg: 'space-grotesk', weights: [400, 500, 600, 700] },
 ]
 
 /** Vietnamese is required: the product locale is vi-VN. Cyrillic is not shipped. */
@@ -93,6 +95,7 @@ export function buildFontCss() {
     ' *   Be Vietnam Pro 400 / 500 / 600   default product UI',
     ' *   Archivo 700                       approved display usage only',
     ' *   IBM Plex Mono 500                 approved technical/meta usage only',
+    ' *   Space Grotesk 400 / 500 / 600 / 700   Corrected Design Revision screens only (DEC-HD-12)',
     ' *',
     ' * Files are self-hosted under /fonts. No runtime CDN request is made.',
     ' */',

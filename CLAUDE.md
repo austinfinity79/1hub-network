@@ -59,6 +59,7 @@ WF04/WF05 are demo-only unless explicitly promoted. WF06 is future/read-model ar
 ## 5. Design rules
 - Default UI font: Be Vietnam Pro.
 - Archivo Bold / IBM Plex Mono only where explicitly approved by Design SOT.
+- Space Grotesk only on Corrected Design Revision screens, where the approved corrected reference uses it (DEC-HD-12); other screens keep the faces above.
 - Keep 1hub red/burgundy identity; do not import APEC blue.
 - Pixel baseline is `design-reference/final` only.
 - Target desktop viewport: 1440×900, DPR1.

@@ -45,6 +45,14 @@ export type SegmentResult = {
   diff_in_text: number
   diff_outside_text: number
   outside_ratio: number
+  /**
+   * Set when `shiftTolerance` is given: pixels that still differ after allowing
+   * each side to match any pixel within that many pixels. Anti-aliasing and
+   * sub-pixel placement disappear; a wrong face, size, weight, colour or a
+   * displaced block does not (TASK 22.1).
+   */
+  diff_beyond_shift?: number
+  beyond_shift_ratio?: number
 }
 
 const crop = (png: PNG, r: Rect): PNG => {
@@ -56,6 +64,49 @@ const crop = (png: PNG, r: Rect): PNG => {
 const inside = (x: number, y: number, rects: Rect[]) =>
   rects.some((r) => x >= r.x && x < r.x + r.width && y >= r.y && y < r.y + r.height)
 
+/** Channel distance under which two pixels count as the same colour for the shift check. */
+const SAME_COLOUR = 48
+
+function sameColour(a: Buffer | Uint8Array, i: number, b: Buffer | Uint8Array, j: number): boolean {
+  return (
+    Math.abs(a[i]! - b[j]!) <= SAME_COLOUR &&
+    Math.abs(a[i + 1]! - b[j + 1]!) <= SAME_COLOUR &&
+    Math.abs(a[i + 2]! - b[j + 2]!) <= SAME_COLOUR
+  )
+}
+
+/** A pixel of `from` is matched when `to` has the same colour within `radius` pixels. */
+function matchedWithin(from: PNG, to: PNG, x: number, y: number, radius: number): boolean {
+  const i = (y * from.width + x) * 4
+  for (let dy = -radius; dy <= radius; dy++) {
+    const yy = Math.min(to.height - 1, Math.max(0, y + dy))
+    for (let dx = -radius; dx <= radius; dx++) {
+      const xx = Math.min(to.width - 1, Math.max(0, x + dx))
+      if (sameColour(from.data, i, to.data, (yy * to.width + xx) * 4)) return true
+    }
+  }
+  return false
+}
+
+/** Pixels that differ even when each image may match the other within `radius` pixels. */
+function beyondShift(
+  ref: PNG,
+  act: PNG,
+  radius: number,
+  skip: (x: number, y: number) => boolean,
+): number {
+  let count = 0
+  for (let y = 0; y < ref.height; y++) {
+    for (let x = 0; x < ref.width; x++) {
+      if (skip(x, y)) continue
+      const i = (y * ref.width + x) * 4
+      if (sameColour(ref.data, i, act.data, i)) continue
+      if (!matchedWithin(ref, act, x, y, radius) || !matchedWithin(act, ref, x, y, radius)) count++
+    }
+  }
+  return count
+}
+
 /**
  * @param textMask rectangles in CAPTURE coordinates that contain text.
  * @param diffPath optional composite written as the segments stacked vertically.
@@ -65,8 +116,14 @@ export function compareSegments(
   actual: PNG,
   segments: Segment[],
   textMask: Rect[],
-  { threshold = 0.1, diffPath }: { threshold?: number; diffPath?: string } = {},
+  {
+    threshold = 0.1,
+    diffPath,
+    shiftTolerance,
+    exclude = [],
+  }: { threshold?: number; diffPath?: string; shiftTolerance?: number; exclude?: Rect[] } = {},
 ): SegmentResult[] {
+  const excluded = exclude
   const results: SegmentResult[] = []
   const diffs: PNG[] = []
 
@@ -103,7 +160,7 @@ export function compareSegments(
       }
     }
     const outside = total - inText
-    results.push({
+    const result: SegmentResult = {
       name: seg.name,
       reference: r,
       dy: seg.dy,
@@ -113,7 +170,15 @@ export function compareSegments(
       diff_in_text: inText,
       diff_outside_text: outside,
       outside_ratio: outside / (r.width * r.height),
-    })
+    }
+    if (shiftTolerance !== undefined) {
+      const beyond = beyondShift(ref, act, shiftTolerance, (x, y) =>
+        inside(a.x + x, a.y + y, excluded),
+      )
+      result.diff_beyond_shift = beyond
+      result.beyond_shift_ratio = beyond / (r.width * r.height)
+    }
+    results.push(result)
     diffs.push(diff)
   }
 

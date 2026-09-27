@@ -147,7 +147,10 @@ test.describe('M0-T02 typography foundation', () => {
     }
   })
 
-  test('loads all five pinned faces and registers all fifteen declarations', async ({ page }) => {
+  // DEC-HD-12 adds 12 Space Grotesk declarations (4 weights × 3 subsets) for Corrected
+  // Design Revision screens only. They are declared here but must never load on this
+  // legacy-typography page, so the loaded set stays the five product faces.
+  test('loads all five pinned faces and registers all 27 declarations', async ({ page }) => {
     const report = await page.evaluate((faces) => {
       const loaded = [...document.fonts]
         .filter((f) => f.status === 'loaded')
@@ -163,7 +166,7 @@ test.describe('M0-T02 typography foundation', () => {
     }, PINNED_FACES)
 
     expect(report.missing).toEqual([])
-    expect(report.declaredRules).toBe(15)
+    expect(report.declaredRules).toBe(27)
     expect(report.distinctLoaded).toEqual([
       'Archivo 700',
       'Be Vietnam Pro 400',

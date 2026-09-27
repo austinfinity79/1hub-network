@@ -1,0 +1,78 @@
+import Link from 'next/link'
+import type { ReactNode } from 'react'
+
+import { INERT_REASONS } from '@/lib/member/nav'
+
+import styles from './landing.module.css'
+
+/**
+ * TASK 22.1 — shared pieces of the corrected public homepage (H1).
+ *
+ * A call to action is either a real destination (a route that exists, an
+ * in-page section, or the visitor's own entry point) or INERT: it keeps its
+ * place in the approved layout, never navigates and says why on hover and to
+ * assistive technology (DEC-P0-SHELL-D2 reasons). No `href="#"`, no script URL.
+ */
+
+export type InertReason = keyof typeof INERT_REASONS
+
+export type Action = { href: string } | { inert: InertReason }
+
+export function Arrow({ className }: { className?: string }) {
+  return (
+    <svg
+      className={`${styles.arrow} ${className ?? ''}`}
+      viewBox="0 0 12 10"
+      width="12"
+      height="10"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M0.5 5h10M6.5 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+
+/** A link, or the same visual as an inert element when the destination does not exist yet. */
+export function Cta({
+  action,
+  className,
+  children,
+  label,
+  cta,
+}: {
+  action: Action
+  className?: string
+  children: ReactNode
+  /** Accessible name when `children` is not plain text. */
+  label: string
+  cta?: string
+}) {
+  if ('href' in action) {
+    return action.href.startsWith('#') ? (
+      <a href={action.href} className={className} data-cta={cta}>
+        {children}
+      </a>
+    ) : (
+      <Link href={action.href} className={className} data-cta={cta}>
+        {children}
+      </Link>
+    )
+  }
+  const reason = INERT_REASONS[action.inert]
+  return (
+    <span
+      className={`${className ?? ''} ${styles.inert}`}
+      aria-disabled="true"
+      data-cta-kind="INERT"
+      title={reason}
+      aria-label={`${label} — ${reason}`}
+    >
+      {children}
+    </span>
+  )
+}
+
+export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
+  return <p className={`${styles.eyebrow} ${className ?? ''}`}>{children}</p>
+}

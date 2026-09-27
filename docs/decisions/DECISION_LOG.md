@@ -1175,6 +1175,27 @@ Resolution: a human decision on E1–E5, recorded as DEC-WF03-S07-EVENT-LIFECYCL
 
 **Existing references — kept, future-only, not executable:** P0-LANDING "Khám phá & kết nối" surface and "Tầm nhìn" flywheel, labelled "Tương lai" with "chưa phải tính năng đang vận hành", no link ([DEC-P0-LANDING-D2](#dec-p0-landing-d2)); the README roadmap row "Future"; code notes keeping investor intent / toggles and a profile directory out of P0 (onboarding intent and privacy forms, profile projection). No "coming soon" element, inert control or link is added.
 
+## DEC-HD-12 — Corrected Design Revision typography
+
+**Status:** CLOSED — PO / DESIGN APPROVED 2026-09-28 (Option A, scoped). **Reason:** the corrected design is authoritative for presentation and clearly uses Space Grotesk (glyph-mask evidence in [TASK-22.1_homepage-typography-stop.md](../implementation/reports/TASK-22.1_homepage-typography-stop.md)).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-hd-12"></a>DEC-HD-12 | **Corrected Design Revision screens may use Space Grotesk where present in the approved corrected reference.** Scope: Homepage and L1–L6, each from the task that implements its revised screen. Not global: legacy / protected screens keep Be Vietnam Pro / Archivo / IBM Plex Mono until their revised screen is implemented. The existing faces stay valid. Delivery: self-hosted from `@fontsource/space-grotesk` via `pnpm fonts:sync`; no Google Fonts, CDN or remote fetch. A typography mismatch against a corrected reference is a real defect, not Intentional. Recorded in the Design SOT §2.2 / §2.3 and CLAUDE.md §5 |
+
+## DEC-H1 — Corrected public homepage implementation decisions (TASK 22.1)
+
+**Status:** IMPLEMENTED 2026-09-28 under the TASK 22 Bucket A authorisation, the Task 21 v2 audit defaults (HD-01, [03 route matrix](../design-revision/03_ROUTE_DELTA_MATRIX.md)) and [DEC-HD-12](#dec-hd-12). Reference: `design-reference/final/revision/H1` ([report](../implementation/reports/TASK-22.1_public-homepage.md)).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-h1-d1"></a>DEC-H1-D1 | **Route and entry unchanged.** `/` stays public for every visitor with no redirect ([DEC-P0-LANDING-D1](#dec-p0-landing-d1)). The header pill and the all-in-one button are the entry CTA: guest "Tạo tài khoản" → `/auth`; signed-in "Vào tài khoản của tôi" / "Tiếp tục thiết lập tài khoản" → `routeFor`. "Đăng nhập" shows for guests only. No role, scope or ops shortcut |
+| <a id="dec-h1-d2"></a>DEC-H1-D2 | **Content.** The approved revision copy is kept verbatim. Omitted as placeholder or unverified (HD-01): the problem catalogue (tabs, chips, cards, QĐ 1193 note), programme cards, iHUB Ventures / deck / data-room cards, event rows and "Xem tất cả sự kiện", the unfinished quote, community metrics and the "13 chapter" line, the partner wall and the "200+" line. For `/`, this supersedes the self-composed copy rule of [DEC-P0-LANDING-D2](#dec-p0-landing-d2); its no-metric / no-placeholder intent is kept by the omissions. The revision copy that names investment and recruitment is PO-approved presentation, flagged for PO review |
+| <a id="dec-h1-d3"></a>DEC-H1-D3 | **Calls to action.** Active: "Tạo tài khoản", "Đăng nhập", "Tham gia mạng lưới" → entry; "Tạo hồ sơ startup của bạn" → `/projects/new` (guard → `/auth`); "Mạng lưới đổi mới sáng tạo", "Khám phá mạng lưới" (03/03, closing, footer), "Tìm hiểu về HUB Network" → the published HUB page; "Về HUB Network" → `#cong-dong`; "Khám phá cơ hội" → `#co-hoi`; legal links. Inert with the DEC-P0-SHELL-D2 reason: every other item, including search, VI \| EN, programmes, events, post a problem, create programme / event, door "Khám phá mạng lưới", "Kết nối nguồn lực", partnership, consultation, FAQ, social links and the contact email. No `href="#"`, no script URL |
+| <a id="dec-h1-d4"></a>DEC-H1-D4 | **Typography.** Space Grotesk 400 / 500 / 600 / 700 per DEC-HD-12, calibrated per style against the reference. Mono labels use the approved IBM Plex Mono 500; the reference mono family is not provable from the PNG, and no further face is added without a decision |
+| <a id="dec-h1-d5"></a>DEC-H1-D5 | **Pixel QA rule for H1.** Each of 22 kept blocks is compared at its own anchor, so omitted blocks do not shift the rest. Pass: diff outside text < 1.5 % and diff beyond a ±2 px shift < 2 % per block; anti-aliasing, 1.5 px strokes and dash phase are P3. Reference quirks are reproduced: first solution card and first door offset 4 px, shorter third progress rule. Intentional: the fourth pain item wraps instead of being clipped at 1362 px |
+| <a id="dec-h1-d6"></a>DEC-H1-D6 | **Responsive.** The reference is 1440 only. Below 1280 px the hero, grids, cards and doors stack and the nav and journey strip wrap; below 768 px the inert language switch is hidden. No horizontal overflow and no covered control at 1024 / 768 / 390 |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

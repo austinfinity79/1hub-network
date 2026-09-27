@@ -2,92 +2,47 @@ import Link from 'next/link'
 
 import type { LandingEntry } from '@/lib/landing/entry'
 
+import { INERT_REASONS } from '@/lib/member/nav'
+
+import { Arrow, Cta, type Action } from './landing-parts'
+import {
+  AllInOne,
+  Closing,
+  Community,
+  ForOrganisers,
+  Loop,
+  Network,
+  Partners,
+} from './landing-network'
+import { Events, Opportunities, Pain, Solution } from './landing-story'
 import styles from './landing.module.css'
 
 /**
- * P0-LANDING — the public homepage (DEC-P0-LANDING-D1..D3).
+ * TASK 22.1 — the corrected public homepage (H1), `/` for every visitor
+ * (DEC-P0-LANDING-D1, reference `design-reference/final/revision/H1`).
  *
- * Built from the approved public 1hub visual language (WF03-S09 public page:
- * dark top bar, burgundy hero, red-dash eyebrows, bordered cards, join band;
- * WF01-S01: Archivo display headline). No approved landing bitmap exists, so no
- * pixel equivalence is claimed.
+ * Typography is Space Grotesk where the corrected reference uses it
+ * (DEC-HD-12); mono labels keep the approved IBM Plex Mono.
  *
- * Every claim traces to the Master Spec §1 architecture statement and the Data
- * SOT principles. Status is explicit per surface: "Đang vận hành" = a P0
- * production workflow (WF01–WF03), "Demo" = WF04 / WF05, "Tương lai" = WF06
- * and 1Hub / CCCD identity verification. No metric, AI, investor or
- * marketplace claim. Every link goes to a real route or an in-page section.
+ * Content follows the Task 21 v2 audit (HD-01 default): the approved copy is
+ * kept; placeholder and mock blocks are omitted (problem, programme, iHUB and
+ * event carousels, metrics, partner wall, unfinished quote). Every call to
+ * action goes to a real destination or is inert with a reason (see
+ * `landing-parts.tsx`). Nothing here reads member, count or private data.
  */
 
-type Status = 'LIVE' | 'DEMO' | 'FUTURE'
-const STATUS_LABELS: Record<Status, string> = {
-  LIVE: 'Đang vận hành',
-  DEMO: 'Demo',
-  FUTURE: 'Tương lai',
+const FUTURE = INERT_REASONS.FUTURE
+
+export type LandingLinks = {
+  /** The visitor's own entry point: /auth for a guest, the onboarding resolver's route otherwise. */
+  entry: string
+  /** The PUBLISHED HUB's public page, or null when none exists. */
+  network: string | null
 }
 
-const PROBLEMS = [
-  {
-    title: 'Biểu mẫu, sheet, drive rời rạc',
-    text: 'Mỗi chương trình, mỗi sự kiện tự thu thập dữ liệu theo cách riêng.',
-  },
-  {
-    title: 'Khai lại hồ sơ nhiều lần',
-    text: 'Cùng một người, một dự án phải nhập lại thông tin cho từng nơi.',
-  },
-  {
-    title: 'Dữ liệu tổ chức phân tán',
-    text: 'Quan hệ thành viên, ban điều hành và cấu trúc HUB – Chapter – CLB nằm ở nhiều nơi.',
-  },
-  {
-    title: 'Kết quả không được tích luỹ',
-    text: 'Hoạt động và kết quả tham gia không quay về một hồ sơ chung.',
-  },
-]
-
-const PILLARS: Array<{ name: string; title: string; text: string; status: Status }> = [
-  {
-    name: 'Programs',
-    title: 'Chương trình & sự kiện',
-    text: 'Sự kiện độc lập của tổ chức đang vận hành; vận hành Chương trình / Thử thách đang ở dạng demo.',
-    status: 'DEMO',
-  },
-  {
-    name: 'Verified Identity',
-    title: 'Định danh có nguồn gốc',
-    text: 'Mỗi dữ kiện ghi rõ nguồn: tự khai, hệ thống ghi nhận hay tổ chức xác nhận. Xác thực danh tính (CCCD) là giai đoạn sau.',
-    status: 'FUTURE',
-  },
-  {
-    name: 'Ecosystem Profiles',
-    title: 'Hồ sơ hệ sinh thái',
-    text: 'Một hồ sơ gốc cho mỗi người; hồ sơ dự án / startup dùng lại được, không nhân bản theo chương trình.',
-    status: 'LIVE',
-  },
-  {
-    name: 'Discovery & Matching',
-    title: 'Khám phá & kết nối',
-    text: 'Tầm nhìn dữ liệu của hệ sinh thái; chưa phải tính năng đang vận hành.',
-    status: 'FUTURE',
-  },
-]
-
-const FLYWHEEL = [
-  'Chương trình · Sự kiện',
-  'Hoạt động & kết quả có nguồn gốc',
-  'Hồ sơ được làm giàu',
-  'Dữ liệu hệ sinh thái',
-  'Khám phá & kết nối tốt hơn',
-]
-
-type Surface = { title: string; text: string; status: Status; href?: string; linkLabel?: string }
-
-function Chip({ status }: { status: Status }) {
-  return (
-    <span className={`${styles.chip} ${styles[`chip${status}`]}`} data-status={status}>
-      {STATUS_LABELS[status]}
-    </span>
-  )
+function entryLabel(entry: LandingEntry): string | null {
+  if (entry.kind === 'GUEST') return null
+  return entry.onboarded ? 'Vào tài khoản của tôi' : 'Tiếp tục thiết lập tài khoản'
 }
 
 export function Landing({
@@ -99,202 +54,234 @@ export function Landing({
   hubSlug: string | null
   legal: Array<{ href: string; label: string }>
 }) {
-  const primary =
-    entry.kind === 'GUEST'
-      ? { href: entry.href, label: 'Đăng nhập / Tham gia' }
-      : entry.onboarded
-        ? { href: entry.href, label: 'Vào tài khoản của tôi' }
-        : { href: entry.href, label: 'Tiếp tục thiết lập tài khoản' }
-  const network = hubSlug ? `/organizations/${hubSlug}` : null
-  const surfaces: Surface[] = [
-    {
-      title: 'Hồ sơ thành viên',
-      text: 'Đăng nhập bằng email, thiết lập hồ sơ, quyền riêng tư và quan hệ với tổ chức.',
-      status: 'LIVE',
-    },
-    {
-      title: 'Tổ chức & mạng lưới',
-      text: 'HUB, Chapter, CLB: thành viên, ban điều hành, hồ sơ, sự kiện và trang công khai.',
-      status: 'LIVE',
-      ...(network ? { href: network, linkLabel: 'Xem trang mạng lưới →' } : {}),
-    },
-    {
-      title: 'Chương trình / Thử thách',
-      text: 'Tạo, cấu hình hành trình tham gia và theo dõi chương trình.',
-      status: 'DEMO',
-    },
-    {
-      title: 'Dự án / Startup',
-      text: 'Một hồ sơ dự án hoặc startup với đội ngũ, dùng lại cho mọi chương trình.',
-      status: 'LIVE',
-    },
-    {
-      title: 'Khám phá & kết nối',
-      text: 'Tìm đúng người, đúng dự án từ dữ liệu có nguồn gốc của hệ sinh thái.',
-      status: 'FUTURE',
-    },
-  ]
+  const links: LandingLinks = {
+    entry: entry.href,
+    network: hubSlug ? `/organizations/${hubSlug}` : null,
+  }
+  const member = entryLabel(entry)
+  const network: Action = links.network ? { href: links.network } : { inert: 'NO_P0_SCREEN' }
 
   return (
-    <div className={styles.page} data-screen="P0-LANDING" data-entry={entry.kind}>
-      <header className={styles.bar}>
-        <Link href="/" className={styles.brand} aria-label="1hub.network — trang chủ">
-          1HUB.NETWORK
-        </Link>
-        <nav className={styles.nav} aria-label="Trang chủ">
-          <a href="#van-de">Vấn đề</a>
-          <a href="#san-pham">Sản phẩm</a>
-          <a href="#tam-nhin">Tầm nhìn</a>
-          {network ? <Link href={network}>Mạng lưới</Link> : null}
-          <Link href={primary.href} className={styles.barCta} data-cta="primary-bar">
-            {primary.label}
+    <div
+      className={styles.page}
+      data-screen="P0-LANDING"
+      data-revision="H1"
+      data-entry={entry.kind}
+    >
+      <div className={styles.hero} data-section="hero">
+        <header className={styles.bar}>
+          <Link href="/" className={styles.brand} aria-label="HUB NETWORK — trang chủ">
+            HUB NETWORK
           </Link>
-        </nav>
-      </header>
-
-      <main>
-        <section className={styles.hero} aria-labelledby="hero-title">
-          <div className={styles.inner}>
-            <p className={styles.heroEyebrow}>Hạ tầng chung cho hệ sinh thái đổi mới sáng tạo</p>
-            <h1 id="hero-title" className={`type-display ${styles.heroTitle}`}>
-              Một hồ sơ gốc cho mỗi người, mỗi dự án, mỗi tổ chức
-            </h1>
-            <p className={styles.heroLede}>
-              1hub.network là lớp dữ liệu và vận hành dùng chung: hoạt động trong cộng đồng, chương
-              trình và sự kiện được ghi thành dữ liệu có cấu trúc, rồi làm giàu dần hồ sơ của người
-              tham gia, dự án và tổ chức.
-            </p>
-            <div className={styles.heroActions}>
-              <Link href={primary.href} className={styles.primary} data-cta="primary">
-                {primary.label}
+          <nav className={styles.nav} aria-label="Trang chủ">
+            <Cta action={{ href: '#cong-dong' }} label="Về HUB Network">
+              Về HUB Network
+            </Cta>
+            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Chương trình">
+              Chương trình
+            </Cta>
+            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Sự kiện">
+              Sự kiện
+            </Cta>
+            <Cta action={network} label="Mạng lưới đổi mới sáng tạo" cta="network-bar">
+              Mạng lưới đổi mới sáng tạo
+            </Cta>
+          </nav>
+          <div className={styles.barRight}>
+            <Cta action={{ inert: 'FUTURE' }} label="VI | EN" className={styles.lang}>
+              VI | EN
+            </Cta>
+            {member ? null : (
+              <Link href={links.entry} className={styles.login} data-cta="login">
+                Đăng nhập
               </Link>
-              {network ? (
-                <Link href={network} className={styles.ghost} data-cta="network">
-                  Khám phá mạng lưới
-                </Link>
-              ) : null}
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.section} id="van-de" aria-labelledby="problem-title">
-          <div className={styles.inner}>
-            <p className={styles.eyebrow}>Vấn đề hiện tại</p>
-            <h2 id="problem-title" className={styles.title}>
-              Dữ liệu hệ sinh thái đang bị chia nhỏ
-            </h2>
-            <ul className={styles.grid4}>
-              {PROBLEMS.map((p) => (
-                <li key={p.title} className={styles.card}>
-                  <h3 className={styles.cardTitle}>{p.title}</h3>
-                  <p className={styles.cardText}>{p.text}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section
-          className={`${styles.section} ${styles.grey}`}
-          id="san-pham"
-          aria-labelledby="what-title"
-        >
-          <div className={styles.inner}>
-            <p className={styles.eyebrow}>1hub.network là gì</p>
-            <h2 id="what-title" className={styles.title}>
-              Programs × Verified Identity × Ecosystem Profiles × Discovery &amp; Matching
-            </h2>
-            <ul className={styles.grid4}>
-              {PILLARS.map((p) => (
-                <li key={p.name} className={styles.card} data-pillar={p.name}>
-                  <div className={styles.cardHead}>
-                    <p className={styles.cardKicker}>{p.name}</p>
-                    <Chip status={p.status} />
-                  </div>
-                  <h3 className={styles.cardTitle}>{p.title}</h3>
-                  <p className={styles.cardText}>{p.text}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section className={styles.section} id="tam-nhin" aria-labelledby="flywheel-title">
-          <div className={styles.inner}>
-            <p className={styles.eyebrow}>Vòng dữ liệu hệ sinh thái</p>
-            <h2 id="flywheel-title" className={styles.title}>
-              Mỗi hoạt động làm giàu thêm hồ sơ chung
-            </h2>
-            <ol className={styles.flywheel}>
-              {FLYWHEEL.map((step, i) => (
-                <li key={step} className={styles.step}>
-                  <span className={styles.stepIndex} aria-hidden="true">
-                    {i + 1}
-                  </span>
-                  <span className={styles.stepText}>{step}</span>
-                </li>
-              ))}
-            </ol>
-            <p className={styles.note}>
-              Đây là tầm nhìn sản phẩm. Ghi nhận hồ sơ và tổ chức đang vận hành; khám phá &amp; kết
-              nối dựa trên dữ liệu là giai đoạn sau, chưa vận hành.
-            </p>
-          </div>
-        </section>
-
-        <section className={`${styles.section} ${styles.grey}`} aria-labelledby="surfaces-title">
-          <div className={styles.inner}>
-            <p className={styles.eyebrow}>Các phân hệ</p>
-            <h2 id="surfaces-title" className={styles.title}>
-              Trạng thái từng phần của sản phẩm
-            </h2>
-            <ul className={styles.grid5}>
-              {surfaces.map((s) => (
-                <li key={s.title} className={styles.card} data-surface={s.title}>
-                  <Chip status={s.status} />
-                  <h3 className={styles.cardTitle}>{s.title}</h3>
-                  <p className={styles.cardText}>{s.text}</p>
-                  {s.href ? (
-                    <Link href={s.href} className={styles.cardLink}>
-                      {s.linkLabel}
-                    </Link>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section className={styles.join} aria-labelledby="join-title">
-          <div className={styles.inner}>
-            <h2 id="join-title" className={styles.joinTitle}>
-              {entry.kind === 'GUEST' ? 'Tham gia 1hub.network' : 'Tiếp tục với 1hub.network'}
-            </h2>
-            <p className={styles.joinText}>
-              Đăng nhập bằng email — chưa có tài khoản thì hệ thống tự tạo. Hồ sơ của bạn chỉ hiển
-              thị theo lựa chọn quyền riêng tư của bạn.
-            </p>
-            <Link href={primary.href} className={styles.joinButton} data-cta="primary-final">
-              {primary.label} →
+            )}
+            <Link href={links.entry} className={styles.barPill} data-cta="primary-bar">
+              {member ?? 'Tạo tài khoản'}
             </Link>
           </div>
-        </section>
-      </main>
+        </header>
 
-      <footer className={styles.footer}>
-        <div className={`${styles.inner} ${styles.footerInner}`}>
-          <p className={styles.footerBrand}>1HUB.NETWORK</p>
-          {legal.length ? (
-            <nav className={styles.footerLinks} aria-label="Pháp lý">
-              {legal.map((l) => (
-                <Link key={l.href} href={l.href}>
-                  {l.label}
-                </Link>
-              ))}
-            </nav>
-          ) : null}
+        <main className={styles.heroMain}>
+          <p className={styles.heroEyebrow}>1HUB.NETWORK — ĐƯỢC PHÁT TRIỂN BỞI HUB NETWORK</p>
+          <h1 className={styles.heroTitle}>
+            Nền tảng kết nối
+            <br />
+            những hành trình đổi mới sáng tạo
+          </h1>
+          <div className={styles.heroSide}>
+            <p className={styles.heroLede}>
+              Nơi những nhà sáng lập và giải pháp đổi mới sáng tạo tiềm năng được tìm thấy và kết
+              nối với đúng cơ hội.
+            </p>
+            <div className={`${styles.search} ${styles.inert}`} role="search" title={FUTURE}>
+              <span className={styles.searchLabel} aria-hidden="true">
+                TÌM
+              </span>
+              <input
+                className={styles.searchInput}
+                type="search"
+                disabled
+                aria-disabled="true"
+                title={FUTURE}
+                data-cta-kind="INERT"
+                aria-label={`Tìm kiếm chương trình, sự kiện — ${FUTURE}`}
+                placeholder="Tìm kiếm chương trình, sự kiện"
+              />
+              <button
+                className={styles.searchButton}
+                type="button"
+                disabled
+                aria-disabled="true"
+                title={FUTURE}
+                data-cta-kind="INERT"
+                aria-label={`Tìm kiếm — ${FUTURE}`}
+              >
+                <Arrow />
+              </button>
+            </div>
+            <div className={styles.heroActions}>
+              <Link href="/projects/new" className={styles.heroPrimary} data-cta="startup">
+                Tạo hồ sơ startup của bạn <Arrow />
+              </Link>
+              <a href="#co-hoi" className={styles.heroGhost} data-cta="opportunities">
+                Khám phá cơ hội
+              </a>
+            </div>
+            <p className={styles.heroHelp}>
+              <span>Bạn đang tìm kiếm giải pháp cho bài toán của doanh nghiệp, tổ chức mình?</span>
+              <Cta
+                action={{ inert: 'FUTURE' }}
+                label="Đăng bài toán"
+                className={styles.heroHelpLink}
+              >
+                Đăng bài toán <Arrow />
+              </Cta>
+            </p>
+          </div>
+          <p className={styles.wordmark}>1hub.network</p>
+        </main>
+      </div>
+
+      <div className={styles.strip} data-section="strip" aria-label="Hành trình">
+        {['Đăng ký', 'Xác thực', 'Đánh giá', 'Cố vấn', 'Thử nghiệm'].map((step) => (
+          <span key={step} className={styles.stripItem}>
+            {step}
+            <svg
+              className={styles.stripArrow}
+              viewBox="0 0 25 18"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M0 9h23.5M16 1l7.5 8-7.5 8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              />
+            </svg>
+          </span>
+        ))}
+      </div>
+
+      <Pain />
+      <Solution />
+      <Opportunities links={links} network={network} />
+      <Events />
+      <AllInOne links={links} memberLabel={member} />
+      <Network />
+      <ForOrganisers />
+      <Loop />
+      <Community network={network} />
+      <Partners />
+      <Closing network={network} />
+
+      <footer className={styles.footer} data-section="footer">
+        <div className={styles.footerTop}>
+          <div className={styles.footerAbout}>
+            <p className={styles.footerBrand}>1hub.network</p>
+            <p className={styles.footerText}>
+              Nền tảng vận hành chương trình đổi mới sáng tạo và kết nối dữ liệu nhà sáng lập,
+              startup.
+            </p>
+          </div>
+          <FooterColumn title="KHÁM PHÁ">
+            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Chương trình">
+              Chương trình
+            </Cta>
+            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Sự kiện">
+              Sự kiện
+            </Cta>
+          </FooterColumn>
+          <FooterColumn title="MẠNG LƯỚI ĐMST">
+            <Cta action={{ inert: 'FUTURE' }} label="Giải pháp & Startup">
+              Giải pháp &amp; Startup
+            </Cta>
+            <Cta action={{ inert: 'FUTURE' }} label="Nhà sáng lập & Nhà đổi mới sáng tạo">
+              Nhà sáng lập &amp; Nhà đổi mới sáng tạo
+            </Cta>
+          </FooterColumn>
+          <FooterColumn title="GIẢI PHÁP CHO TỔ CHỨC">
+            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Triển khai chương trình">
+              Triển khai chương trình
+            </Cta>
+            <Cta action={{ inert: 'FUTURE' }} label="Đăng bài toán">
+              Đăng bài toán
+            </Cta>
+            <Cta action={network} label="Khám phá mạng lưới" cta="network-footer">
+              Khám phá mạng lưới
+            </Cta>
+            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Kết nối hợp tác">
+              Kết nối hợp tác
+            </Cta>
+          </FooterColumn>
+          <FooterColumn title="THÔNG TIN" wide>
+            <Cta action={{ href: '#cong-dong' }} label="Về HUB Network">
+              Về HUB Network
+            </Cta>
+            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Câu hỏi thường gặp">
+              Câu hỏi thường gặp
+            </Cta>
+            {legal.map((l) => (
+              <Link key={l.href} href={l.href} data-cta="legal">
+                {l.label}
+              </Link>
+            ))}
+          </FooterColumn>
+          <FooterColumn title="LIÊN HỆ">
+            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="global@1hub.network">
+              global@1hub.network
+            </Cta>
+            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Mạng xã hội">
+              Mạng xã hội
+            </Cta>
+          </FooterColumn>
+        </div>
+        <p className={styles.footerWordmark} aria-hidden="true">
+          HUB NETWORK
+        </p>
+        <div className={styles.footerBottom}>
+          <span>© 2026 HUB Network</span>
+          <span>1hub.network</span>
         </div>
       </footer>
     </div>
+  )
+}
+
+function FooterColumn({
+  title,
+  wide,
+  children,
+}: {
+  title: string
+  wide?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <nav className={`${styles.footerCol} ${wide ? styles.footerColWide : ''}`} aria-label={title}>
+      <p className={styles.footerLabel}>{title}</p>
+      {children}
+    </nav>
   )
 }

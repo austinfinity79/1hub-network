@@ -39,6 +39,16 @@ export const APPROVED_FACES: Record<string, readonly number[]> = {
   'IBM Plex Mono': [500],
 }
 
+/**
+ * DEC-HD-12: a Corrected Design Revision screen may also use Space Grotesk.
+ * Only revision screens pass this set; every other screen keeps APPROVED_FACES,
+ * so Space Grotesk on a legacy screen is still a violation.
+ */
+export const REVISION_FACES: Record<string, readonly number[]> = {
+  ...APPROVED_FACES,
+  'Space Grotesk': [400, 500, 600, 700],
+}
+
 export type CaptureConditions = {
   viewport: { width: number; height: number }
   dpr: number
@@ -93,7 +103,10 @@ export function assertConditions(conditions: CaptureConditions): void {
  * every element that renders its own text: first family, weight pairing, the
  * face is loaded, and the browser did not fall back to another font.
  */
-export async function assertTypography(page: Page): Promise<TypographyResult> {
+export async function assertTypography(
+  page: Page,
+  faces: Record<string, readonly number[]> = APPROVED_FACES,
+): Promise<TypographyResult> {
   const readings = await page.evaluate(() => {
     const firstFamily = (stack: string) =>
       stack
@@ -138,7 +151,7 @@ export async function assertTypography(page: Page): Promise<TypographyResult> {
     violations.push(`body font-family is ${readings.bodyFamily}, expected Be Vietnam Pro`)
   }
   for (const s of readings.samples) {
-    const weights = APPROVED_FACES[s.family]
+    const weights = faces[s.family]
     if (!weights) violations.push(`<${s.tag}> uses unapproved family ${s.family}`)
     else if (!weights.includes(s.weight)) {
       violations.push(`<${s.tag}> uses ${s.family} ${s.weight}, not an approved weight`)

@@ -54,6 +54,8 @@ Technical/meta:      IBM Plex Mono Medium (only for IDs, compact metadata, numbe
 
 **Default rule for 1hub.network:** use **Be Vietnam Pro** for normal product UI. Do not introduce Archivo/IBM Plex Mono unless the approved pattern explicitly calls for a display or technical/meta treatment.
 
+**Corrected Design Revision (DEC-HD-12, 2026-09-28):** Corrected Design Revision screens may use Space Grotesk where present in the approved corrected reference. Scope: the corrected Homepage and L1–L6 screens, each from the task that implements its revised screen. Legacy / protected screens not yet migrated keep the faces above. Space Grotesk is self-hosted like the other faces; no runtime font CDN.
+
 ### 2.3 Font weights
 
 ```text
@@ -62,6 +64,7 @@ Be Vietnam Pro Medium    = 500
 Be Vietnam Pro SemiBold  = 600
 Archivo Bold             = 700
 IBM Plex Mono Medium     = 500
+Space Grotesk 400 / 500 / 600 / 700   (Corrected Design Revision screens only, DEC-HD-12)
 ```
 
 ### 2.4 Typography scale — APEC-aligned base tokens
