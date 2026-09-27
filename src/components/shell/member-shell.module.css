@@ -138,3 +138,58 @@
   flex: 1 1 auto;
   min-width: 0;
 }
+
+/* WF05 (DEC-WF05-G2): the Project / Startup demo entry below the account list;
+   text only on the WF02 screens (no box unless current). */
+.demoEntry {
+  margin-top: 1.75rem;
+}
+
+/* WF05-S01: opt-in adaptation below desktop (the WF05 demo only; the WF02
+   member screens keep the desktop frame). 1440 is unchanged. */
+@media (max-width: 1023px) {
+  .responsive .header {
+    padding: 0 1.5rem;
+  }
+
+  .responsive .body {
+    padding: 1.5rem 1.5rem 3rem;
+  }
+
+  .responsive .sidebar {
+    flex-basis: 13rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .responsive .header {
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    height: auto;
+    min-height: 3.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .responsive .productNav {
+    order: 3;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .responsive .memberName {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .responsive .body {
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem 1rem 3rem;
+  }
+
+  .responsive .sidebar {
+    flex: none;
+  }
+}

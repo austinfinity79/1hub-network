@@ -231,13 +231,15 @@ test.describe('WF05-T00 demo read API (security matrix)', () => {
 })
 
 test.describe('WF05-T00 route and entry contract', () => {
-  test('the MemberShell entry is registered but hidden; /demo/projects is not a screen yet; the harness is guarded', async ({
+  test('the MemberShell entry contract (shown since WF05-S01); S02+ routes are not screens yet; the harness is guarded', async ({
     page,
   }) => {
     expect(PROJECT_DEMO_ENTRY).toEqual({
+      key: 'project-demo',
+      group: 'Demo · Internal Alpha',
       label: 'Dự án & Startup · Demo',
       href: '/demo/projects',
-      visible: false,
+      visible: true,
     })
     // Guest → /auth on the harness; onboarding incomplete → its resolver step.
     await page.goto(HARNESS)
@@ -248,12 +250,16 @@ test.describe('WF05-T00 route and entry contract', () => {
 
     await page.context().clearCookies()
     await login(page.request, 'member@example.test')
-    for (const url of ['/demo/projects', `/demo/projects/${SEED_VENTURE}`])
-      expect((await page.request.get(url)).status(), url).toBe(404)
-    for (const url of ['/me', '/me/roles', '/me/profile/edit', `/projects/${SEED_VENTURE}/edit`]) {
+    // WF05-S01 made /demo/projects a real screen; its sub-routes still have no page.
+    expect((await page.request.get('/demo/projects')).status()).toBe(200)
+    expect((await page.request.get(`/demo/projects/${SEED_VENTURE}`)).status()).toBe(404)
+    for (const url of ['/me', '/me/roles', '/me/privacy', '/me/settings']) {
       await page.goto(url, { waitUntil: 'networkidle' })
-      await expect(page.locator('a[href^="/demo/projects"]'), url).toHaveCount(0)
-      await expect(page.getByText('Dự án & Startup · Demo'), url).toHaveCount(0)
+      await expect(page.locator('a[href^="/demo/projects"]'), url).toHaveCount(1)
+      await expect(page.locator('[data-nav="project-demo"]'), url).toHaveAttribute(
+        'href',
+        '/demo/projects',
+      )
     }
     // The resource guard: another member's venture is the same 404 on the harness.
     await login(page.request, 'leader@example.test')

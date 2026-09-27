@@ -355,7 +355,9 @@ test.describe('WF04-T00 OpsShell entry', () => {
     for (const source of ['/', '/me', '/me/settings']) {
       await page.goto(source)
       await expect(page.locator('[data-nav="programme-demo"]'), source).toHaveCount(0)
-      await expect(page.locator('a[href^="/demo"]'), source).toHaveCount(0)
+      // The Programme demo is never linked for members (DEC-WF04-H2). The member-side
+      // WF05 Project / Startup demo entry (DEC-WF05-G2) is a different demo.
+      await expect(page.locator('a[href^="/demo/programmes"]'), source).toHaveCount(0)
     }
   })
 

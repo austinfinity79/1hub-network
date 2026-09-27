@@ -19,3 +19,33 @@ export const PROJECT_DEMO_COPY = {
   resetNo: DEMO_COPY.resetNo,
   resetDone: DEMO_COPY.resetDone,
 } as const
+
+/** The WF02 venture wording (WF02-S05 editor, WF02-S01 rows), unchanged. */
+export const VENTURE_TYPE_LABEL: Record<string, string> = { PROJECT: 'Dự án', STARTUP: 'Startup' }
+export const VENTURE_STATUS_LABEL: Record<string, string> = {
+  DRAFT: 'Bản nháp',
+  ACTIVE: 'Đang hoạt động',
+  ARCHIVED: 'Đã lưu trữ',
+}
+/** Owner, or the member's display role label (never a permission, DEC-WF02-H7). */
+export const relationLabel = (relation: 'OWNER' | 'MEMBER', roleLabel: string | null) =>
+  relation === 'OWNER' ? 'Chủ sở hữu' : (roleLabel ?? 'Thành viên')
+
+/** WF05-S01 — my projects / startups and open programmes. */
+export const S01_COPY = {
+  title: 'Dự án & Startup',
+  meta: 'Hồ sơ dự án, startup của bạn và các chương trình đang mở',
+  loading: 'Đang tải…',
+  failed: 'Chưa tải được dữ liệu. Vui lòng thử lại.',
+  retry: 'Thử lại',
+  venturesTitle: 'Dự án / Startup của tôi',
+  venturesHint: 'Hồ sơ bạn sở hữu hoặc đang là thành viên đội.',
+  create: '+ Tạo dự án / startup',
+  venturesEmpty: 'Bạn chưa có dự án hay startup nào.',
+  programmesTitle: 'Chương trình đang mở',
+  programmesHint: 'Chương trình và challenge đang công khai trong bản demo.',
+  programmesEmpty: 'Hiện chưa có chương trình nào đang mở.',
+  applicantTypes: 'Dành cho',
+  applications: 'Đơn đăng ký demo',
+  applicationsUnreadable: 'Chưa đọc được đơn đăng ký demo của phiên này.',
+} as const

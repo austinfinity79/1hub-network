@@ -36,14 +36,17 @@ export const OPS_ENTRY = { label: 'Vận hành tổ chức', href: '/ops/network
 
 /**
  * WF05 (DEC-WF05-G2): the MemberShell demo entry for the Founder / Project /
- * Startup demo, in the sidebar-footer demo area. Registered by WF05-T00 and
- * **not shown** (`visible: false`) until WF05-S01 makes its destination a real
- * screen: no dead link, no placeholder. It grants no capability.
+ * Startup demo, in the sidebar-footer demo area under a "Demo · Internal
+ * Alpha" group label (the WF04 OpsShell convention). Registered hidden by
+ * WF05-T00; shown since WF05-S01 made `/demo/projects` a real screen. It grants
+ * no capability: every venture read is authorized on the server.
  */
 export const PROJECT_DEMO_ENTRY = {
+  key: 'project-demo',
+  group: 'Demo · Internal Alpha',
   label: PROJECT_DEMO_COPY.entry,
   href: PROJECT_DEMO_PATH,
-  visible: false,
+  visible: true,
 } as const
 
 /** Header product nav: Library, Challenge and Events have no P0 Production screen. */

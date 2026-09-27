@@ -170,6 +170,8 @@ test.describe('P0-SHELL navigation matrix', () => {
       '/projects/new',
       `/projects/${venture}/edit`,
       `/projects/${venture}/team`,
+      // WF05 (DEC-WF05-G2): the Project / Startup demo list.
+      '/demo/projects',
     ])
       await crawl(page, 'member', source)
   })

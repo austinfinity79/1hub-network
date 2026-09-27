@@ -1,0 +1,62 @@
+/*
+ * WF05-S01 (DEC-WF05-G1, INTENTIONAL-DEMO): rows inside the WF04 card chrome
+ * (journey.module.css); the WF03 text action (13px, #b91610) for the create
+ * link and retry. No approved WF05 geometry: nothing here claims pixel parity.
+ */
+
+.row {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  color: #251011;
+  overflow-wrap: anywhere;
+}
+
+.summary {
+  margin: 0.25rem 0 0;
+  color: #251011;
+  overflow-wrap: anywhere;
+}
+
+.applications {
+  margin: 0.375rem 0 0;
+  color: #b91610;
+  overflow-wrap: anywhere;
+}
+
+.textAction {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: #b91610;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.textAction:hover {
+  text-decoration: underline;
+}
+
+.textAction:focus-visible {
+  outline: 0.125em solid #fc523c;
+  outline-offset: 0.125em;
+}
+
+@media (max-width: 767px) {
+  .row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
