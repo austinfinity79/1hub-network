@@ -1,48 +1,59 @@
 # Claude Task Report
 
 ## Task
-INTERNAL ALPHA — WF06 SCOPE DECISION. Process: PROCESS-P0-ACCELERATED-SAFE-V2 (scope decision only).
+INTERNAL ALPHA — COMPLETION AUDIT + RELEASE READINESS. Process: PROCESS-P0-ACCELERATED-SAFE-V2.
 
-## Status
-**DONE — LOCAL REVIEW.** Decision: **SKIP IMPLEMENTATION**; WF06 = **FUTURE / VISION** ([DEC-WF06-INTERNAL-ALPHA-SCOPE](../decisions/DECISION_LOG.md#dec-wf06-internal-alpha-scope)). Docs only.
+## Verdict
+**NOT GREEN — NOT READY.** Audit: [INTERNAL_ALPHA_COMPLETION_AUDIT.md](INTERNAL_ALPHA_COMPLETION_AUDIT.md). UAT: [INTERNAL_ALPHA_UAT_MATRIX.md](INTERNAL_ALPHA_UAT_MATRIX.md). Draft manifest (no release SHA frozen): [INTERNAL_ALPHA_RELEASE_MANIFEST.md](INTERNAL_ALPHA_RELEASE_MANIFEST.md). Open: **IA-P2-02** React hydration #418 (1 occurrence in the fresh-DB full run). Fixed: **IA-P2-01**. No decision added; nothing deployed.
 
-## Source verification
-| Source | What it says | Conflict |
-|---|---|---|
-| Master Spec v1.3 §4, M6 | "WF06 — Ecosystem Data & Matching — Future: data/read-model vision, not a P0 transactional workflow"; "architecture/read-model only unless explicitly promoted" | None |
-| CLAUDE.md §2 | "WF06 is future/read-model architecture only" | None |
-| Architecture 01 / 02 | Future: WF06 discovery / matching / intelligence, investor / dataroom flows; WF06 Data Flywheel = discovery / read models | None |
-| Data SOT v1.1 §C | Investor / dataroom / connection entities are future, out of P0 scope | None |
-| Roadmap (CLAUDE_MASTER_PROMPT M6, README) | M6 architecture / read-model only; README row "Future" | None |
-| Existing WF06 docs | No WF06 workflow contract, plan or status doc exists | None |
-| Runtime | No WF06 route, API or matching / ranking code; "discovery" in code is the WF01 / WF02 visibility vocabulary; investor intent / toggles are deliberately not rendered | None |
-
-No source requires WF06 runtime before Internal Alpha completion.
-
-## Decision recorded
+## Scope audited
 | Item | Result |
 |---|---|
-| Runtime implementation | SKIPPED for Internal Alpha (not promoted under M6) |
-| FUTURE boundary | Ecosystem discovery, matching, recommendation / ranking, cross-network opportunity matching, investor discovery, mentor / advisor matching, automated data flywheel, advanced ecosystem analytics, investor / VC / dataroom workflows |
-| Existing references | Kept as future-only: P0-LANDING "Khám phá & kết nối" + "Tầm nhìn" ("Tương lai", no link; DEC-P0-LANDING-D2), README roadmap row; no "coming soon", inert control or link added |
-| Internal Alpha scope | P0-LANDING, P0-SHELL, WF01, WF02, WF03, WF04 DEMO, WF05 DEMO |
+| Scope / SOT | 0 conflict; 0 missing screen; WF06 runtime absent (DEC-WF06-INTERNAL-ALPHA-SCOPE); no OPEN decision; no duplicate model |
+| Inventory | 44 page routes: 39 executable (Landing 1, WF01 8 + legal, WF02 8, WF03 8, WF04 9, WF05 4), 1 approved placeholder, 4 dev-only; 51 route files / 58 API handlers |
+| Navigation | REL-NAV 108 visits, 35 routes, 102 links, 0 dead / `#` / dev / future / placeholder; P0-SHELL matrix 536 rows, 0 dead |
+| Security | REL-SEC 270 cells (9 identities, 10 roles), spoofed = plain; IDOR, cross-org, cross-project, lifecycle, duplicate / concurrent cases per UAT matrix |
+| Auth / session | Magic link one-time / invalid / expired, `Referrer-Policy: no-referrer`, no token in HTML, sessions, revoke, logout, revoked-cookie replay 401; `1hub_session` HttpOnly, Secure, SameSite=Lax |
+| DB | 001→009 on a clean DB, rerun 9 / 9 skipped, ledger consistent, no schema drift; seed ×2 identical; REL-DATA invariants |
+| Fresh DB | Full suite: 639 passed, 24 skipped, 1 failed (IA-P2-02) |
+| Restart | App + PostgreSQL: sessions, WF04 / WF05 demo state, 31 tables, routes: PASS |
+| Production mode | Dev routes 404, guest redirects, health `/api/v1/session` 200 |
+| Deployment readiness | Checklist and dependencies in the audit and the draft manifest; rollback target `0a2df09` |
+
+## Defects
+| ID | Class | State |
+|---|---|---|
+| IA-P2-01 | `POST /api/v1/auth/magic-link` answered 500 when the first `X-Forwarded-For` token was not a plain IP (`inet` column) | **Fixed** (`src/app/api/v1/auth/magic-link/route.ts`); REL-AUTH regression test |
+| IA-P2-02 | React hydration error #418, intermittent, full-suite runs only; landing page (no app client component) and WF05-S04 | **Open** — remediation task |
+| IA-P3-01..06, IA-L1 | Copy (incl. auth brand panel figures — PO decision), seed "Fixture" text, placeholder route, no `error.tsx`, stale docs, desktop-first app shells | Recorded |
 
 ## Files changed
-- `docs/decisions/DECISION_LOG.md` (DEC-WF06 section), `docs/implementation/P0_STATUS.md` (WF06 line, next task), `CLAUDE_LATEST_REPORT.md`, this report
+- Fix: `src/app/api/v1/auth/magic-link/route.ts`
+- Test: `tests/visual/specs/internal-alpha-release.spec.ts` (new; 6 tests)
+- Docs: `INTERNAL_ALPHA_COMPLETION_AUDIT.md`, `INTERNAL_ALPHA_UAT_MATRIX.md`, `INTERNAL_ALPHA_RELEASE_MANIFEST.md` (new, draft), `P0_STATUS.md`, `CLAUDE_LATEST_REPORT.md`, this report
 
-## Runtime / data
-Runtime code changes 0; migrations none; API additions none; design / `design-reference/final` untouched; protected WF01–WF05 unchanged. No test run is required for a docs-only change; `pnpm format:check` PASS.
+## Migrations / data
+None. Throwaway fresh database dropped.
 
-## Blocking gaps
-0.
+## Tests
+| Gate | Result |
+|---|---|
+| Format / lint / typecheck / build | PASS (clean `.next`, 0 build warnings) |
+| Unit / DB | 237 / 349 passed |
+| Full suite, dev DB, before the fix | 658: 634 passed, 24 skipped, 0 failed |
+| Full suite, fresh DB, after the fix | 664: 639 passed, 24 skipped, 1 failed (IA-P2-02) |
+| Full suite, dev DB, after the fix | 664: 640 passed, 24 skipped, 0 failed, 0 #418 |
+| Release spec + affected auth specs | 44 passed (fix run), release spec 6 / 6 |
+| Skipped | 24 = `pixel-qa-screens` opt-in (`PIXEL_QA_SCREENS`), no security case |
+| Server logs | Every run: 0 email / token / cookie / session / error lines |
 
 ## Git
-- Branch: `main`; start HEAD `914b90c` (checked again before the commit)
-- Implementation commit: none (docs only)
+- Branch: `main`; start HEAD `9e01fc8` (checked again before each commit)
+- Implementation commit: `4847ec3` (IA-P2-01 fix + release spec; audited candidate, not frozen)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-INTERNAL ALPHA COMPLETION AUDIT. Do not start it automatically.
+INTERNAL ALPHA — CLOSURE DEFECT IA-P2-02 (React hydration #418): reproduce with non-minified React under the full-suite sequence, fix narrowly, re-run the release gates, freeze the release SHA. Do not deploy. Not started automatically.

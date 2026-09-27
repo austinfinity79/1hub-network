@@ -35,6 +35,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **INTERNAL ALPHA — M6 WF06 Ecosystem Data Flywheel / Discovery & Matching: FUTURE / VISION — runtime implementation SKIPPED for Internal Alpha** ([DEC-WF06-INTERNAL-ALPHA-SCOPE](../decisions/DECISION_LOG.md#dec-wf06-internal-alpha-scope); [report](reports/WF06-SCOPE_internal-alpha-decision.md)). Not promoted under Master Spec M6: no WF06 screen, route, API, read model, matching, recommendation / ranking, investor discovery or data-flywheel automation, and no migration. Existing landing / README references stay future-only. The Internal Alpha scope is complete for the audit: P0-LANDING, P0-SHELL, WF01, WF02, WF03, WF04 DEMO, WF05 DEMO.
 
+**INTERNAL ALPHA — COMPLETION AUDIT + RELEASE READINESS: NOT GREEN — NOT READY** ([audit](INTERNAL_ALPHA_COMPLETION_AUDIT.md), [UAT matrix](INTERNAL_ALPHA_UAT_MATRIX.md), [draft manifest](INTERNAL_ALPHA_RELEASE_MANIFEST.md), [report](reports/INTERNAL-ALPHA_completion-audit.md)). All gates pass (scope, 39 executable screens, navigation, 270-cell actor matrix, auth / session, WF01–WF05, data, migrations 001→009, seed, fresh DB, restart, production mode, build) except one: the React hydration error #418 reproduced once in the fresh-DB full run (**IA-P2-02**, open; was OBS-WF05-01). IA-P2-01 (`POST /auth/magic-link` 500 on a malformed `X-Forwarded-For`) found and fixed. No release SHA frozen; nothing deployed.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -123,7 +125,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-INTERNAL ALPHA COMPLETION AUDIT. Not started automatically.
+INTERNAL ALPHA — CLOSURE DEFECT IA-P2-02 (React hydration #418): root cause + narrow fix, then re-run the release gates and freeze the release SHA. Not started automatically.
 
 ## Related
 
