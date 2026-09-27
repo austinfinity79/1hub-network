@@ -1,6 +1,6 @@
 # WF05 Happy Path Plan
 
-**Status: DRAFT — waits for [OPEN-WF05-G1..G5](../decisions/DECISION_LOG.md#open-wf05-g1)** (recommended options assumed below). WF05 = DEMO. Screens: [WF05_SCREEN_IMPLEMENTATION_PLAN.md](WF05_SCREEN_IMPLEMENTATION_PLAN.md).
+**Status: FROZEN** by [DEC-WF05-G1..G5](../decisions/DECISION_LOG.md#dec-wf05-g1) (the recommended options were approved). The store, read model and API behind these journeys are built by WF05-T00 ([DEC-WF05-T00-D1..D3](../decisions/DECISION_LOG.md#dec-wf05-t00-d1)); the screens come with S01–S04. WF05 = DEMO. Screens: [WF05_SCREEN_IMPLEMENTATION_PLAN.md](WF05_SCREEN_IMPLEMENTATION_PLAN.md).
 
 ## Demo data
 | Record | Source | Notes |

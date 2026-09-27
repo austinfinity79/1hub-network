@@ -1,6 +1,6 @@
 # WF05 Screen Implementation Plan
 
-**Status: DRAFT — waits for [OPEN-WF05-G1..G5](../decisions/DECISION_LOG.md#open-wf05-g1).** WF05 = DEMO. Audit: [WF05_PREIMPLEMENTATION_AUDIT.md](WF05_PREIMPLEMENTATION_AUDIT.md). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). Estimate: **4 executable screens, 6 tasks** (T00, S01–S04, closure), if G1–G5 are approved as recommended.
+**Status: FROZEN** by [DEC-WF05-G1..G5](../decisions/DECISION_LOG.md#dec-wf05-g1); **T00 DONE** ([DEC-WF05-T00-D1..D3](../decisions/DECISION_LOG.md#dec-wf05-t00-d1), [report](reports/WF05-T00_demo-foundation.md)). Next: S01. WF05 = DEMO. Audit: [WF05_PREIMPLEMENTATION_AUDIT.md](WF05_PREIMPLEMENTATION_AUDIT.md). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). Estimate: **4 executable screens, 6 tasks** (T00, S01–S04, closure).
 
 ## Journey classification
 | Step | Class | Where |
@@ -9,18 +9,18 @@
 | Owner manages the team | SUPPORTING | WF02-S06 as is |
 | Founder sees their ventures and open programmes | EXECUTABLE (DEMO) | WF05-S01 |
 | Venture profile / participation detail | EXECUTABLE (DEMO) | WF05-S02 |
-| Apply to a programme reusing the canonical venture | EXECUTABLE (DEMO) — BLOCKED until G3–G5 | WF05-S03, S04 |
+| Apply to a programme reusing the canonical venture | EXECUTABLE (DEMO) (DEC-WF05-G3..G5) | WF05-S03, S04 |
 | Review, selection, participation, outcome, achievements, timeline | FUTURE | — |
 | Solution profile / "nộp giải pháp" | FUTURE | — |
 | Investor, data room, fundraising, mentor, judge | OUT OF SCOPE (SOT §14) | — |
 
 ## Screen inventory
-| ID | Purpose | Actor | Route | Design | Entities | Read model / API | Class | Blocked by |
+| ID | Purpose | Actor | Route | Design | Entities | Read model / API | Class | Decisions (frozen) |
 |---|---|---|---|---|---|---|---|---|
-| WF05-S01 | My ventures (owner / member), open programmes, my demo applications | Onboarded member | `/demo/projects` | none → G1 (WF02-S01 cards, WF04 DemoPage) | Venture, team relation, Programme, Application | `GET /api/v1/demo/projects` + session | DEMO | G1–G3 |
-| WF05-S02 | Venture participation detail: canonical summary, team summary, eligible programmes, applications | Owner, ACTIVE member | `/demo/projects/:id` | none → G1 (PRO1 header, PRO3 table) | Venture, `project_members`, Programme, Application | `GET /api/v1/demo/projects/{id}` + session | DEMO | G1–G4 |
-| WF05-S03 | Application draft: applicant = the venture (reference), programme-specific answers | Owner | `/demo/projects/:id/applications/:programmeId` | none → G1 (WF04-S05 question form) | Application, Venture ref, Programme | same + session | DEMO | G1, G4, G5 |
-| WF05-S04 | Review checklist + submit (DRAFT → SUBMITTED), then read-only | Owner | `…/applications/:programmeId/review` | none → G1 (WF04-S07 checklist) | Application | session | DEMO | G1, G5 |
+| WF05-S01 | My ventures (owner / member), open programmes, my demo applications | Onboarded member | `/demo/projects` | G1 composed (WF02-S01 cards, WF04 DemoPage) | Venture, team relation, Programme, Application | `GET /api/v1/demo/projects` + session | DEMO | G1–G3 |
+| WF05-S02 | Venture participation detail: canonical summary, team summary, eligible programmes, applications | Owner, ACTIVE member | `/demo/projects/:id` | G1 composed (PRO1 header, PRO3 table) | Venture, `project_members`, Programme, Application | `GET /api/v1/demo/projects/{id}` + session | DEMO | G1–G4 |
+| WF05-S03 | Application draft: applicant = the venture (reference), programme-specific answers | Owner | `/demo/projects/:id/applications/:programmeId` | G1 composed (WF04-S05 question form) | Application, Venture ref, Programme | same + session | DEMO | G1, G4, G5 |
+| WF05-S04 | Review checklist + submit (DRAFT → SUBMITTED), then read-only | Owner | `…/applications/:programmeId/review` | G1 composed (WF04-S07 checklist) | Application | session | DEMO | G1, G5 |
 | — | Create / edit venture; team | Owner / member | `/projects/new`, `/projects/:id/edit`, `/projects/:id/team` | WF02-S05 PRO1, WF02-S06 PRO3 (approved) | Venture, team | `/ventures*` | SUPPORTING (protected WF02) | — |
 | — | Public venture page, discovery | — | — | PRO1 "Xem bản public" | Venture | — | FUTURE (WF06) | — |
 | — | Organizer application review, participation, outcome | — | — | ORG1 KPIs | Application, Participation, Outcome | — | FUTURE (API §15) | — |
@@ -47,8 +47,8 @@ Reusable: `projects`, `project_members`, `project_domains`, `vocabulary_items`, 
 ## Tasks
 | # | Task | Scope | Depends | Security cases | Visual source | Targeted regression | DONE gate |
 |---|---|---|---|---|---|---|---|
-| 0 | WF05-T00 Demo foundation | `/demo/projects*` guard (auth + onboarding resolver), MemberShell entry (G2), frame + "Dữ liệu demo" + reset, WF05 session store, read models (my ventures via WF02 services; PUBLISHED fixture programmes), demo GET API | G1–G5 | guest, onboarding, member without venture, spoofed headers, no PII, 0 writes | MemberShell, WF04 DemoPage / notice | P0-SHELL, shell-routes, WF02-S01/S04/S05/S06 + UAT, WF04-T00 | functional + primitives + regression |
-| 1 | WF05-S01 My ventures + programmes | `/demo/projects` | T00 | foreign ventures never listed; DRAFT / ops-session programmes never listed | G1 primitives | T00, WF02-S01 | same |
+| 0 | WF05-T00 Demo foundation — **DONE** ([report](reports/WF05-T00_demo-foundation.md)) | `/demo/projects*` guard (auth + onboarding resolver), MemberShell entry (G2), frame + "Dữ liệu demo" + reset, WF05 session store, read models (my ventures via WF02 services; PUBLISHED fixture programmes), demo GET API | G1–G5 | guest, onboarding, member without venture, spoofed headers, no PII, 0 writes | MemberShell, WF04 DemoPage / notice | P0-SHELL, shell-routes, WF02-S01/S04/S05/S06 + UAT, WF04-T00 | functional + primitives + regression |
+| 1 | WF05-S01 My ventures + programmes — NEXT; turns on the MemberShell entry (T00-D3) | `/demo/projects` | T00 | foreign ventures never listed; DRAFT / ops-session programmes never listed | G1 primitives | T00, WF02-S01 | same |
 | 2 | WF05-S02 Venture detail | `/demo/projects/:id`; links to WF02 edit / team | S01 | non-member / pending invitee / random / malformed → 404; member read-only | PRO1 header, PRO3 table | S01, WF02-S05/S06 | same |
 | 3 | WF05-S03 Application draft | answers, save DRAFT, refresh, reset | S02, G4, G5 | owner only; ineligible type; ARCHIVED; duplicate; spoofed applicant id | WF04-S05 form | S02 | same |
 | 4 | WF05-S04 Review + submit | checklist, DRAFT → SUBMITTED, read-only after | S03 | double submit once; no other transition | WF04-S07 checklist | S03, WF04-S07 | same |

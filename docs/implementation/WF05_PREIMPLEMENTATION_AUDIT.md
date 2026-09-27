@@ -1,5 +1,7 @@
 # WF05 Pre-Implementation Audit
 
+**Update 2026-09-27: G1–G5 FROZEN** as [DEC-WF05-G1..G5](../decisions/DECISION_LOG.md#dec-wf05-g1) (OPEN-WF05 closed, history kept). **WF05-T00 Demo Foundation DONE** ([DEC-WF05-T00-D1..D3](../decisions/DECISION_LOG.md#dec-wf05-t00-d1), [report](reports/WF05-T00_demo-foundation.md)). Human decisions remaining: 0. The findings below are the original audit, kept as history.
+
 **Verdict: HUMAN DECISION REQUIRED (5 — [OPEN-WF05-G1..G5](../decisions/DECISION_LOG.md#open-wf05-g1)).** Audit only: no runtime code, migration, seed or design change. HEAD `f395d2b`, 2026-09-27. WF05 Founder / Project / Startup journey = **DEMO** for INTERNAL ALPHA (CLAUDE.md §2; Master Spec §4, M5). WF01–WF04 stay PROTECTED.
 
 **Sources** (precedence order): CLAUDE.md §2–§3; Master Spec v1.3 §1, §3 (WF02 "reuses it in WF05"), §4 WF05, §5 rule 6, M5; WF02 workflow (WF05 consumes the venture); Data SOT v1.1 §1, §2B–C, §3, §6, §8, §12–§15; Data Freeze v1.1; architecture 01 §7, 02 (Venture / Engagement), 03 §4, 04 A2 / "Demo later" / D4, 05 §5.3 + §15, 06; capability matrix §E; migrations 001–009; `seed_p0_deterministic.sql`; DEC-WF02-H6/H7, DEC-WF02-S05-G1..G5, DEC-WF02-S06-G1..G9, DEC-WF04-H1..H5 / T00-D3, DEC-P0-SHELL-D2/D3/D6; `design-reference/final` manifest, Pixel SOT §9; `1hub_architecture_v1.3.1.zip` (byte-identical mirror of the repo sources).
