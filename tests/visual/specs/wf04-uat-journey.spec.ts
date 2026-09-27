@@ -79,7 +79,7 @@ async function login(request: APIRequestContext, email: string) {
 async function signIn(page: Page, email: string) {
   await page.goto('/auth', { waitUntil: 'networkidle' })
   await page.getByLabel('Email', { exact: true }).fill(email)
-  await page.getByRole('button', { name: 'Gửi link đăng nhập' }).click()
+  await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
   await expect(page).toHaveURL('/auth/check-email')
   const { token } = await requestMagicLink(email, null)
   await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)

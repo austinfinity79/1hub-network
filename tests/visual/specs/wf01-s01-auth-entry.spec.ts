@@ -1,22 +1,14 @@
-import path from 'node:path'
-
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { readPng } from '../pixel-qa/png'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect, type Segment } from '../pixel-qa/segments'
+import { auditRevision, topOf } from '../pixel-qa/revision'
 
 /**
- * WF01-S01 — Auth Entry (/auth). Production screen, strict reference.
+ * WF01-S01 — Auth Entry (/auth), presented as the corrected AUTH1 (TASK 22.2).
  *
  * Functional QA drives the real POST /api/v1/auth/magic-link; only the failure
- * cases are simulated with page.route. The pixel run uses the M0-T11 manifest
- * runner, then compares the screen in segments so the approved omission of the
- * unconfigured provider block cannot hide drift anywhere else.
+ * cases are simulated with page.route. The pixel run compares the screen with
+ * design-reference/final/revision/L1 in segments, so the omitted provider block
+ * and the kept terms notice (DEC-L1-D2/D3) cannot hide drift anywhere else.
  */
 
 const ROUTE = '/auth'
@@ -45,12 +37,12 @@ async function open(page: Page) {
 }
 
 const emailField = (page: Page) => page.getByLabel('Email', { exact: true })
-const submit = (page: Page) => page.getByRole('button', { name: 'Gửi link đăng nhập' })
+const submit = (page: Page) => page.getByRole('button', { name: 'Gửi liên kết đăng nhập' })
 
 test.describe('WF01-S01 functional', () => {
   test('/auth resolves the implemented screen, not the placeholder', async ({ page }) => {
     await open(page)
-    await expect(page.getByRole('heading', { level: 1, name: 'Vào HUB NETWORK' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Đăng nhập' })).toBeVisible()
     await expect(page.locator('[data-route-group="auth"]')).toHaveCount(1)
     await expect(page.locator('[data-route-placeholder]')).toHaveCount(0)
     await expect(page.getByText('HUB NETWORK', { exact: true })).toBeVisible()
@@ -65,7 +57,7 @@ test.describe('WF01-S01 functional', () => {
 
     await open(page)
     await expect(page.getByText(/Google/i)).toHaveCount(0)
-    await expect(page.getByText('hoặc dùng email')).toHaveCount(0)
+    await expect(page.getByText('hoặc tiếp tục bằng email')).toHaveCount(0)
     await expect(page.getByRole('button')).toHaveCount(1)
     await expect(submit(page)).toBeVisible()
   })
@@ -189,7 +181,7 @@ test.describe('WF01-S01 functional', () => {
     await submit(page).click()
 
     await expect(page.locator('form').getByRole('alert')).toHaveText(
-      'Chưa gửi được link. Vui lòng thử lại.',
+      'Chưa gửi được liên kết. Vui lòng thử lại.',
     )
     await expect(submit(page)).toBeEnabled()
     await expect(emailField(page)).toHaveValue('member@example.test')
@@ -213,7 +205,7 @@ test.describe('WF01-S01 functional', () => {
     await emailField(page).fill('member@example.test')
     await submit(page).click()
     await expect(page.locator('form').getByRole('alert')).toHaveText(
-      'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ít phút.',
+      'Bạn đã yêu cầu liên kết quá nhiều lần. Vui lòng thử lại sau ít phút.',
     )
     await expect(submit(page)).toBeEnabled()
   })
@@ -239,122 +231,54 @@ test.describe('WF01-S01 functional', () => {
   })
 })
 
-test.describe('WF01-S01 pixel QA', () => {
-  /** Measured once from the frozen reference, not from the implementation. */
-  const REF = { cardTop: 146, inputTop: 426 } as const
-
-  test('manifest-driven capture, typography contract and segment comparison', async ({ page }) => {
-    const { screens } = loadManifest()
-    const reports = await runScreenQa(
-      page,
-      findScreen(screens, 'WF01-S01'),
-      qaConfigFor('WF01-S01')!,
-    )
-    const viewport = reports.find((r) => r.capture === 'viewport')!
-
-    // V0 conditions and the DOM typography contract are hard gates.
-    expect(viewport.conditions).toEqual({
-      viewport: { width: 1440, height: 900 },
-      dpr: 1,
-      fonts: 'loaded',
-    })
-    expect(viewport.comparison.status).not.toBe('DIMENSION_MISMATCH')
-    expect(viewport.typography!.violations).toEqual([])
-    expect(viewport.typography!.checked).toBeGreaterThan(10)
-
-    // The text mask absorbs glyph differences, so line structure is asserted on
-    // its own: blocks the approved reference breaks deliberately must render the
-    // same number of lines (measured from the reference raster).
-    const lines = (selector: string) =>
-      page.locator(selector).evaluate((el) => {
-        const cs = getComputedStyle(el)
-        return Math.round(el.getBoundingClientRect().height / parseFloat(cs.lineHeight))
-      })
-    expect(await lines('[data-shell="auth-split"] aside > p')).toBe(1) // wordmark
-    expect(await lines('[data-shell="auth-split"] aside .type-display')).toBe(3) // headline
-    expect(await lines('[data-shell="auth-split"] aside .type-body-sm')).toBe(2) // pitch note
-    for (const p of await page.locator('[data-shell="auth-split"] aside .type-meta-xs p').all()) {
-      expect(await p.evaluate((el) => el.getBoundingClientRect().height)).toBe(18) // footnotes
-    }
-    expect(await lines('h1')).toBe(1)
+test.describe('WF01-S01 pixel QA (corrected AUTH1)', () => {
+  test('the terms notice stays under the button until HD-03 is decided', async ({ page }) => {
+    await open(page)
     await expect(
-      page.locator('[data-shell="auth-split"] aside .type-body-sm span').first(),
-    ).toHaveText('12 bài toán đang mở · 9 doanh nghiệp và 3 sở ngành ·')
+      page.getByText(
+        'Tiếp tục nghĩa là bạn đồng ý Điều khoản sử dụng và Chính sách quyền riêng tư.',
+      ),
+    ).toBeVisible()
+    // The previous panel's figures are gone with the revision.
+    await expect(page.locator('[data-shell="auth-split"] aside')).not.toContainText('bài toán')
+  })
 
-    // Geometry from the live DOM, to align the segments.
-    const box = async (selector: string) => (await page.locator(selector).first().boundingBox())!
-    const card = await box('[data-ui="surface"]')
-    const input = await box('input[type="email"]')
-    const upperDy = Math.round(card.y) - REF.cardTop
-    const lowerDy = Math.round(input.y) - REF.inputTop
-
-    // Every element that renders text, as capture-space rectangles.
-    const textMask: Rect[] = await page.evaluate(() => {
-      const rects: { x: number; y: number; width: number; height: number }[] = []
-      const push = (r: DOMRect, pad = 2) =>
-        rects.push({
-          x: r.x - pad,
-          y: r.y - pad,
-          width: r.width + pad * 2,
-          height: r.height + pad * 2,
-        })
-      for (const el of document.querySelectorAll(
-        'h1, p, label, .ui-button > span, .ui-notice span span, [role="alert"]',
-      )) {
-        push(el.getBoundingClientRect())
-      }
-      // Placeholder glyphs sit inside the field's padding box, not on its border.
-      const field = document.querySelector('input[type="email"]')!.getBoundingClientRect()
-      rects.push({
-        x: field.x + 8,
-        y: field.y + 6,
-        width: field.width - 16,
-        height: field.height - 12,
-      })
-      return rects
-    })
-
-    const segments: Segment[] = [
-      { name: 'brand-panel', reference: { x: 0, y: 0, width: 560, height: 900 }, dy: 0 },
-      { name: 'canvas-left', reference: { x: 560, y: 0, width: 200, height: 900 }, dy: 0 },
-      { name: 'canvas-right', reference: { x: 1240, y: 0, width: 200, height: 900 }, dy: 0 },
-      { name: 'card-upper', reference: { x: 760, y: 120, width: 480, height: 165 }, dy: upperDy },
-      { name: 'card-lower', reference: { x: 760, y: 395, width: 480, height: 405 }, dy: lowerDy },
-    ]
-    const reference = readPng(path.join(REPO_ROOT, viewport.images.REFERENCE))
-    const actual = readPng(path.join(REPO_ROOT, viewport.images.ACTUAL))
-    const diffPath = resolveOutputPath('diff', 'WF01-S01.segments.diff.png')
-    const results = compareSegments(reference, actual, segments, textMask, { diffPath })
-
-    writeJsonReport('WF01-S01.segments.json', {
-      screen_id: 'WF01-S01',
-      images: {
-        REFERENCE: viewport.images.REFERENCE,
-        ACTUAL: viewport.images.ACTUAL,
-        DIFF_FULL: viewport.images.DIFF,
-        DIFF_SEGMENTS: path.relative(REPO_ROOT, diffPath),
-      },
+  test('1440×900: panel, card title and form match AUTH1', async ({ page }) => {
+    await open(page)
+    // Reference geometry, measured once from the frozen AUTH1 raster.
+    const REF = { cardTop: 260, inputTop: 485 } as const
+    const card = await topOf(page, '[data-ui="surface"]')
+    const input = await topOf(page, 'input[type="email"]')
+    await auditRevision(page, {
+      name: 'WF01-S01.AUTH1',
+      reference: 'design-reference/final/revision/L1/AUTH1__auth-entry__SOURCE.png',
+      segments: [
+        { name: 'brand-panel', reference: { x: 0, y: 0, width: 560, height: 900 }, dy: 0 },
+        { name: 'canvas-left', reference: { x: 560, y: 0, width: 200, height: 900 }, dy: 0 },
+        { name: 'canvas-right', reference: { x: 1240, y: 0, width: 200, height: 900 }, dy: 0 },
+        {
+          name: 'card-top-title',
+          reference: { x: 770, y: 252, width: 460, height: 84 },
+          dy: card - REF.cardTop,
+        },
+        {
+          name: 'card-form',
+          reference: { x: 770, y: 454, width: 460, height: 155 },
+          dy: input - REF.inputTop,
+        },
+      ],
       intentional: [
         {
           class: 'INTENTIONAL-BUSINESS-CONFIG',
-          reference_region: { x: 760, y: 285, width: 480, height: 110 },
           reason:
-            'Provider CTA and "hoặc dùng email" divider omitted: WF01 contract renders a provider entry only if configured, and GET /api/v1/auth/providers returns []',
-          vertical_effect_px: { card_upper_dy: upperDy, card_lower_dy: lowerDy },
+            'DEC-L1-D2: no provider is configured (GET /api/v1/auth/providers = []), so the Google button and the "hoặc tiếp tục bằng email" divider are not rendered; the card is shorter and centred',
         },
         {
-          class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
+          class: 'INTENTIONAL-BUSINESS',
           reason:
-            'Reference raster predates the frozen APEC font stack; DOM typography contract passed',
+            'DEC-L1-D3: the terms notice the revision drops stays under the button until HD-03 decides where consent notice lives',
         },
       ],
-      segments: results,
-      product_pixel_pass_claimed: false,
     })
-
-    // Outside text, every compared region must be at raster-noise level.
-    for (const r of results) {
-      expect(r.outside_ratio, `${r.name} geometry/surface drift`).toBeLessThan(0.002)
-    }
   })
 })

@@ -1,8 +1,8 @@
 /*
- * WF01-S03 — auth callback states. Runtime composition (decision D5): ONE
- * state in ONE centred AuthCard on the 1440x900 canvas. Every value below is
- * LOCAL and measured from the approved AUTH3 state-board panels at 1440x900
- * DPR1 (px / 16 = rem); nothing is promoted to a shared token.
+ * WF01-S03 / AUTH3 — auth callback states. Runtime composition (decision D5):
+ * ONE state in ONE centred AuthCard on the 1440x900 canvas. Every value below
+ * is LOCAL and measured from the corrected AUTH3 board panels (TASK 22.2) at
+ * 1440x900 DPR1; nothing is promoted to a shared token.
  */
 
 .canvas {
@@ -50,25 +50,40 @@
 }
 
 .title {
-  margin: 1.375rem 0 0;
+  margin: 1.0625rem 0 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.75rem;
+  letter-spacing: -0.01em;
 }
 
 .body {
-  max-width: 18.25rem;
-  margin: 0.75rem 0 0;
+  margin: 1.0625rem 0 0;
+  font-size: 0.875rem;
   line-height: 1.4375rem;
-  color: var(--unresolved-fg-muted);
+  color: #534041;
+}
+
+/* The board breaks the two-sentence bodies after each sentence. */
+.body span {
+  display: block;
+}
+
+.bodyWrap {
+  max-width: 18.5rem;
 }
 
 .action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* The board draws each pill at a fixed width for its static label. */
-  width: 7.875rem;
-  margin-top: 1.125rem;
-  padding: 0.65625rem 0;
+  height: 2.75rem;
+  margin-top: 1.25rem;
+  padding: 0 1.5rem;
   border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
   text-decoration: none;
 }
 
@@ -79,16 +94,12 @@
 
 .actionPrimary {
   background: var(--color-bg-accent);
-  color: var(--color-fg-on-accent);
-}
-
-.actionWide {
-  width: 9.25rem;
+  color: var(--hub-burgundy);
 }
 
 .actionMuted {
   background: var(--action-muted-fill);
-  color: var(--unresolved-fg-muted);
+  color: #534041;
 }
 
 /* Muted pill fill sampled from the board: burgundy 6% over surface. */

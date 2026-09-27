@@ -27,10 +27,14 @@ import styles from './callback.module.css'
  *   owned by WF01-S04 (D3). A blocked account goes to ?reason=blocked, an
  *   allowlisted public code (DEC-WF01-S04-D1, superseding D3 in that part).
  * - While consuming, only a screen-reader status is rendered (D4).
+ * - TASK 22.2 (DEC-L1-D5): copy and look follow the corrected AUTH3 board.
+ *   The success body names the real destination: the board's "bước hoàn thiện
+ *   hồ sơ" only for an unfinished account, "Tài khoản của tôi" otherwise.
  */
 
 export type TerminalStatus = 'expired' | 'used'
 type State = 'processing' | 'success' | TerminalStatus
+type Destination = 'onboarding' | 'account'
 
 type ConsumeResponse = {
   result: 'SUCCESS'
@@ -65,6 +69,7 @@ function terminalStatus(params: URLSearchParams): TerminalStatus | null {
 export function CallbackScreen({ expiresInMinutes }: Props) {
   const router = useRouter()
   const [state, setState] = useState<State>('processing')
+  const [destination, setDestination] = useState<Destination>('onboarding')
   // Guards against a second consume, e.g. React re-running the effect.
   const started = useRef(false)
 
@@ -94,6 +99,7 @@ export function CallbackScreen({ expiresInMinutes }: Props) {
 
     apiRequest<ConsumeResponse>('/auth/magic-link/consume', { method: 'POST', body: { token } })
       .then((res) => {
+        setDestination(res.onboarding.completed ? 'account' : 'onboarding')
         setState('success')
         router.replace(nextRoute(res.onboarding))
       })
@@ -127,7 +133,7 @@ export function CallbackScreen({ expiresInMinutes }: Props) {
         </p>
       ) : (
         <AuthCard>
-          {state === 'success' ? <Success /> : null}
+          {state === 'success' ? <Success destination={destination} /> : null}
           {state === 'expired' ? <Expired minutes={expiresInMinutes} /> : null}
           {state === 'used' ? <Used /> : null}
         </AuthCard>
@@ -136,7 +142,7 @@ export function CallbackScreen({ expiresInMinutes }: Props) {
   )
 }
 
-function Success() {
+function Success({ destination }: { destination: Destination }) {
   return (
     <div className={styles.state} data-callback-state="success">
       <div className={`${styles.disc} ${styles.discSuccess}`} aria-hidden="true">
@@ -144,15 +150,14 @@ function Success() {
           <path d="M6 15.5 11.5 21 22.5 7" fill="none" stroke="currentColor" strokeWidth="2.5" />
         </svg>
       </div>
-      <h1 className={`type-subtitle ${styles.title}`}>Đăng nhập được</h1>
-      <p className={`type-body-sm ${styles.body}`}>
-        Chuyển thẳng tới Onboarding nếu hồ sơ chưa xong, tới Tài khoản của tôi nếu đã xong.
+      <h1 className={styles.title}>Đăng nhập thành công</h1>
+      <p className={`${styles.body} ${styles.bodyWrap}`}>
+        {destination === 'onboarding'
+          ? 'Bạn sẽ được chuyển đến bước hoàn thiện hồ sơ cá nhân'
+          : 'Bạn sẽ được chuyển đến Tài khoản của tôi'}
       </p>
-      <span
-        role="status"
-        className={`type-body-sm weight-semibold ${styles.action} ${styles.actionWide} ${styles.actionMuted}`}
-      >
-        Đang chuyển…
+      <span role="status" className={`${styles.action} ${styles.actionMuted}`}>
+        Đang chuyển hướng...
       </span>
     </div>
   )
@@ -172,18 +177,14 @@ function Expired({ minutes }: { minutes: number }) {
           />
         </svg>
       </div>
-      <h1 className={`type-subtitle ${styles.title}`}>Link đã hết hạn</h1>
-      <p className={`type-body-sm ${styles.body}`}>
-        {/* DEC-WF01-S03-D6a: the board's second sentence promised an in-place resend,
-            which DEC-WF01-S03-D1 rules out; only that sentence is reworded. */}
-        Link chỉ sống {minutes} phút. Đây không phải lỗi của bạn — hãy quay lại nhập email để nhận
-        link đăng nhập mới.
+      <h1 className={styles.title}>Liên kết đã hết hạn</h1>
+      <p className={styles.body}>
+        <span>Liên kết đăng nhập chỉ có hiệu lực trong {minutes} phút.</span>
+        <span>Vui lòng yêu cầu liên kết mới để tiếp tục.</span>
       </p>
-      <Link
-        href="/auth"
-        className={`type-body-sm weight-semibold ${styles.action} ${styles.actionPrimary}`}
-      >
-        Gửi link mới
+      {/* DEC-WF01-S03-D1: a fresh request starts on /auth; no resend from a spent link. */}
+      <Link href="/auth" className={`${styles.action} ${styles.actionPrimary}`}>
+        Gửi liên kết mới
       </Link>
     </div>
   )
@@ -203,16 +204,13 @@ function Used() {
           <path d="M18 5.5 25.5 5 24.5 12.5z" fill="currentColor" />
         </svg>
       </div>
-      <h1 className={`type-subtitle ${styles.title}`}>Link đã dùng rồi</h1>
-      <p className={`type-body-sm ${styles.body}`}>
-        Mỗi link dùng một lần. Thường gặp khi người dùng bấm lại link cũ trong mail hoặc mở trên máy
-        khác.
+      <h1 className={styles.title}>Liên kết không còn hiệu lực</h1>
+      <p className={styles.body}>
+        <span>Mỗi liên kết chỉ được sử dụng một lần.</span>
+        <span>Vui lòng yêu cầu liên kết mới để đăng nhập.</span>
       </p>
-      <Link
-        href="/auth"
-        className={`type-body-sm weight-semibold ${styles.action} ${styles.actionMuted}`}
-      >
-        Gửi link mới
+      <Link href="/auth" className={`${styles.action} ${styles.actionMuted}`}>
+        Gửi liên kết mới
       </Link>
     </div>
   )

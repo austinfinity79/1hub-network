@@ -1,19 +1,12 @@
-import path from 'node:path'
-
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { decodePng, readPng, writeBuffer } from '../pixel-qa/png'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect, type Segment } from '../pixel-qa/segments'
+import { auditRevision } from '../pixel-qa/revision'
 
 /**
  * WF01-S08 — Onboarding Complete (/onboarding/complete). Production.
- * Decisions DEC-WF01-S08-D1..D8 (docs/decisions/DECISION_LOG.md).
+ * Decisions DEC-WF01-S08-D1..D8 (docs/decisions/DECISION_LOG.md); the card
+ * follows the corrected ACC-10 subset (TASK 22.2, DEC-L1-D7).
  */
 
 const COMPLETE_API = '/api/v1/me/onboarding/complete'
@@ -82,7 +75,7 @@ const countFor = async (table: string, column: string, value: string, accountId:
     )
   )[0]!.n
 
-const cta = (page: Page) => page.getByRole('link', { name: 'Vào 1hub.network' })
+const cta = (page: Page) => page.getByRole('link', { name: 'Vào Tài khoản của tôi' })
 
 async function openComplete(page: Page) {
   await page.goto('/onboarding/complete', { waitUntil: 'networkidle' })
@@ -103,7 +96,7 @@ test.describe('WF01-S08 functional and security', () => {
     const completion = page.waitForResponse((r) => r.url().endsWith(COMPLETE_API))
     await openComplete(page)
     expect((await completion).status()).toBe(200)
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Xong. Giờ làm gì?')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hồ sơ của bạn đã sẵn sàng')
     expect(await profile(accountId)).toMatchObject([{ status: 'ACTIVE' }])
     expect((await profile(accountId))[0]!.completed_at).toBeInstanceOf(Date)
   })
@@ -132,7 +125,7 @@ test.describe('WF01-S08 functional and security', () => {
     })
     await openComplete(page)
     await expect(page.getByRole('heading', { name: 'Chưa hoàn tất được' })).toBeVisible()
-    await expect(page.getByText('Xong. Giờ làm gì?')).toHaveCount(0)
+    await expect(page.getByText('Hồ sơ của bạn đã sẵn sàng')).toHaveCount(0)
     await expect(cta(page)).toHaveCount(0)
     await expect(page.getByRole('link', { name: /Đồng ý với Điều khoản/ })).toHaveAttribute(
       'href',
@@ -274,7 +267,8 @@ test.describe('WF01-S08 functional and security', () => {
     const links = await page
       .locator('main a, header a')
       .evaluateAll((els) => els.map((el) => el.getAttribute('href')))
-    expect(links).toEqual(['/', '/projects/new', '/me'])
+    // The /me exit sits in the header, as ACC-10 draws it.
+    expect(links).toEqual(['/', '/me', '/projects/new'])
     // Only card 02 of the reference is rendered (card 01 Challenge / card 03 Chapter stay omitted).
     await expect(page.locator('[data-action-card]')).toHaveCount(1)
     await expect(page.locator('[data-action-card="project"]')).toContainText('Lập hồ sơ đội')
@@ -297,8 +291,6 @@ test.describe('WF01-S08 functional and security', () => {
     // P0-SHELL (DEC-P0-SHELL-D1): the wordmark → / is the first Tab stop.
     await page.keyboard.press('Tab')
     await expect(page.locator('[data-nav="home"]')).toBeFocused()
-    await page.keyboard.press('Tab')
-    await expect(page.locator('[data-nav="create-project"]')).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(cta(page)).toBeFocused()
     expect(await cta(page).evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none')
@@ -323,15 +315,15 @@ test.describe('WF01-S08 functional and security', () => {
         title: rgb(document.querySelector('h1')),
         lede: rgb(document.querySelector('h1 + p')),
         info: rgb(document.querySelector('[data-completion] p')),
-        cta: rgb(document.querySelector('a.ui-button')),
+        cta: rgb(document.querySelector('[data-nav="exit-me"]')),
       }
     })
-    // Inks read from the approved WF01-S08 bitmap; +-3 per channel for raster rounding.
+    // Inks read from the corrected ACC-10 raster; +-3 per channel for raster rounding.
     const APPROVED: Record<keyof typeof colours, [number, number, number]> = {
       title: [0x17, 0x00, 0x02],
       lede: [0x53, 0x40, 0x41],
       info: [0x53, 0x40, 0x41],
-      cta: [0x16, 0x00, 0x02],
+      cta: [0xb9, 0x16, 0x10],
     }
     for (const key of Object.keys(APPROVED) as (keyof typeof colours)[]) {
       colours[key].forEach((channel, i) => {
@@ -341,217 +333,83 @@ test.describe('WF01-S08 functional and security', () => {
   })
 })
 
-test.describe('WF01-S08 pixel QA', () => {
+test.describe('WF01-S08 pixel QA (corrected ACC-10 subset)', () => {
   /**
-   * Measured once from the frozen reference: card 195–767, vertically centred
-   * in the canvas; cards 01–03 at y 321–633 (not rendered, D2–D4); info panel
-   * at 657. The runtime card is shorter (no cards; the /me CTA is added, D6),
-   * so each region is compared at its own offset.
+   * Corrected ACC-10, measured once: card top, card 02 "Lập hồ sơ đội" (the one
+   * rendered), the info panel and the header exit's text box. Cards 01 and 03
+   * are not rendered (D2, D4, HD-02), so each region is compared at its own
+   * offset; the legacy onboarding header is not part of the revision (HD-02).
    */
-  const REF = {
-    cardTop: 195,
-    panelTop: 657,
-    cardBottom: 767,
-    skip: { x: 1290, y: 0, width: 150, height: 62 },
-    cards: { x: 340, y: 316, width: 760, height: 322 },
-    /** Card 02 "Lập hồ sơ đội" of the reference (rendered since DEC-P0-SHELL-D6). */
-    projectCard: { x: 377, y: 423, width: 686, height: 89 },
-    discs: [544, 661],
-    connectors: [625, 762],
-    /** Baseline copy replaced by D5/D7 (text regions of the old wording). */
-    replacedCopy: {
-      lede: { x: 375, y: 274, width: 570, height: 22 },
-      info: { x: 415, y: 670, width: 625, height: 46 },
-    },
-  } as const
+  const REF = { cardTop: 121, projectTop: 450, infoTop: 688, exit: { x: 1262, y: 22 } } as const
 
-  test('manifest-driven capture, typography contract and segment comparison', async ({ page }) => {
-    const { screens } = loadManifest()
-    const reports = await runScreenQa(
-      page,
-      findScreen(screens, 'WF01-S08'),
-      qaConfigFor('WF01-S08')!,
-      {
-        beforeNavigate: async (p) => {
-          await makeReady(p.request)
-        },
-        afterLoad: async (p) => {
-          await expect(cta(p)).toBeVisible()
-        },
-      },
-    )
-    const viewport = reports.find((r) => r.capture === 'viewport')!
-    expect(viewport.conditions).toEqual({
-      viewport: { width: 1440, height: 900 },
-      dpr: 1,
-      fonts: 'loaded',
+  test('1440×900: card head, project card, info corner and exit match ACC-10', async ({ page }) => {
+    await signInFresh(page.request)
+    await makeReady(page.request)
+    await openComplete(page)
+    await expect(cta(page)).toBeVisible()
+
+    const top = async (selector: string) =>
+      Math.round((await page.locator(selector).first().boundingBox())!.y)
+    const card = await top('[data-ui="surface"]')
+    const project = await top('[data-action-card="project"]')
+    const info = await top('[data-completion]')
+    const exit = await page.locator('[data-nav="exit-me"]').evaluate((el) => {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      const r = range.getBoundingClientRect()
+      return { x: Math.round(r.x), y: Math.round(r.y) }
     })
-    expect(viewport.typography!.violations).toEqual([])
-
-    const fullBuffer = await page.screenshot({ fullPage: true, animations: 'disabled' })
-    const fullPath = resolveOutputPath('actual', 'WF01-S08.full_page.png')
-    writeBuffer(fullPath, fullBuffer)
-    const actual = decodePng(fullBuffer)
-
-    const card = (await page.locator('[data-ui="surface"]').boundingBox())!
-    const panel = (await page.locator('[data-completion]').boundingBox())!
-    const projectCard = (await page.locator('[data-action-card="project"]').boundingBox())!
-    const upperDy = Math.round(card.y) - REF.cardTop
-    const panelDy = Math.round(panel.y) - REF.panelTop
-    const bottomDy = Math.round(card.y + card.height) - REF.cardBottom
-    const discs = await page
-      .locator('ol li > span:first-child')
-      .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().x)))
-    const steps = await page
-      .locator('ol li')
-      .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().x)))
-
-    const textMask: Rect[] = await page.evaluate(() => {
-      const rects: { x: number; y: number; width: number; height: number }[] = []
-      const add = (r: DOMRect, pad = 2) =>
-        rects.push({
-          x: r.x - pad,
-          y: r.y - pad,
-          width: r.width + pad * 2,
-          height: r.height + pad * 2,
-        })
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-      while (walker.nextNode()) {
-        const node = walker.currentNode
-        if (!node.textContent!.trim()) continue
-        const range = document.createRange()
-        range.selectNodeContents(node)
-        for (const r of range.getClientRects()) add(r)
-      }
-      for (const svg of document.querySelectorAll('svg')) add(svg.getBoundingClientRect(), 1)
-      return rects
-    })
-    // RASTER-NOISE: the baseline card edges sit on half pixels.
-    const rasterRows: Rect[] = [
-      { x: card.x, y: Math.round(card.y) - 2, width: card.width, height: 4 },
-      { x: card.x, y: Math.round(card.y + card.height) - 2, width: card.width, height: 4 },
-    ]
-
-    const replaced: Rect[] = [
-      { ...REF.replacedCopy.lede, y: REF.replacedCopy.lede.y + upperDy },
-      { ...REF.replacedCopy.info, y: REF.replacedCopy.info.y + panelDy },
-    ]
-
-    const segments: Segment[] = [
-      { name: 'header-left', reference: { x: 0, y: 0, width: 300, height: 64 }, dy: 0 },
-      { name: 'header-right', reference: { x: 1140, y: 0, width: 150, height: 64 }, dy: 0 },
-      ...REF.discs.map((x, i) => ({
-        name: `step-${i + 1}-disc`,
-        reference: { x: x - 4, y: 16, width: 30, height: 30 },
-        dy: 0,
-        dx: discs[i]! - x,
-      })),
-      ...REF.connectors.map((x, i) => ({
-        name: `connector-${i + 1}`,
-        reference: { x: x - 2, y: 27, width: 30, height: 8 },
-        dy: 0,
-        dx: steps[i + 1]! + 12 - x,
-      })),
-      { name: 'canvas-left', reference: { x: 0, y: 64, width: 300, height: 836 }, dy: 0 },
-      { name: 'canvas-right', reference: { x: 1140, y: 64, width: 300, height: 836 }, dy: 0 },
-      {
-        name: 'card-upper',
-        reference: {
-          x: 340,
-          y: REF.cardTop - 12,
-          width: 760,
-          height: REF.cards.y - REF.cardTop + 12,
-        },
-        dy: upperDy,
-      },
-      // DEC-P0-SHELL-D6: the rendered card 02 against the reference card 02 (text masked).
-      {
-        name: 'project-card',
-        reference: {
-          x: REF.projectCard.x - 4,
-          y: REF.projectCard.y - 4,
-          width: REF.projectCard.width + 8,
-          height: REF.projectCard.height + 8,
-        },
-        dx: Math.round(projectCard.x) - REF.projectCard.x,
-        dy: Math.round(projectCard.y) - REF.projectCard.y,
-      },
-      {
-        name: 'info-panel-top',
-        reference: { x: 377, y: REF.panelTop, width: 686, height: 40 },
-        dy: panelDy,
-      },
-      {
-        name: 'card-bottom',
-        reference: { x: 340, y: REF.cardBottom - 26, width: 760, height: 60 },
-        dy: bottomDy,
-      },
-    ]
-
-    const reference = readPng(path.join(REPO_ROOT, viewport.images.REFERENCE))
-    const diffPath = resolveOutputPath('diff', 'WF01-S08.segments.diff.png')
-    const results = compareSegments(
-      reference,
-      actual,
-      segments,
-      [...textMask, ...rasterRows, ...replaced],
-      {
-        diffPath,
-      },
+    // Copy that differs from the reference by decision, in capture coordinates.
+    const exclude = await page.evaluate(() =>
+      ['[data-action-card] > span', '[data-action-card] p + p'].map((sel) => {
+        const r = document.querySelector(sel)!.getBoundingClientRect()
+        return { x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 }
+      }),
     )
 
-    writeJsonReport('WF01-S08.segments.json', {
-      screen_id: 'WF01-S08',
-      state: 'activation minimum met; completed on entry; percent from the server',
-      images: {
-        REFERENCE: viewport.images.REFERENCE,
-        ACTUAL: viewport.images.ACTUAL,
-        ACTUAL_FULL_PAGE: path.relative(REPO_ROOT, fullPath),
-        DIFF_FULL: viewport.images.DIFF,
-        DIFF_SEGMENTS: path.relative(REPO_ROOT, diffPath),
-      },
+    await auditRevision(page, {
+      name: 'WF01-S08.ACC-10',
+      reference: 'design-reference/final/revision/L1/ACC-10__onboarding-complete__SOURCE.png',
+      segments: [
+        {
+          name: 'card-head',
+          reference: { x: 300, y: 114, width: 840, height: 206 },
+          dy: card - REF.cardTop,
+        },
+        {
+          name: 'project-card',
+          reference: { x: 350, y: 445, width: 740, height: 93 },
+          dy: project - REF.projectTop,
+        },
+        {
+          name: 'info-corner',
+          reference: { x: 352, y: 684, width: 36, height: 34 },
+          dy: info - REF.infoTop,
+        },
+        {
+          name: 'exit',
+          reference: { x: REF.exit.x - 4, y: REF.exit.y - 4, width: 142, height: 28 },
+          dx: exit.x - REF.exit.x,
+          dy: exit.y - REF.exit.y,
+        },
+      ],
+      exclude,
       intentional: [
         {
-          class: 'INTENTIONAL-DEMO-SCOPE',
-          reference_region: { ...REF.cards, height: 90 },
-          reason: 'DEC-WF01-S08-D2: Challenge Library card 01 not rendered',
-        },
-        {
-          class: 'TEMPORARY-PRODUCTION-DEPENDENCY',
-          reference_region: { ...REF.cards, y: 520, height: 118 },
+          class: 'INTENTIONAL-BUSINESS',
           reason:
-            'DEC-WF01-S08-D4: Chapter (03) card not rendered (no region→chapter mapping). Card 02 is rendered since DEC-P0-SHELL-D6 and compared as segment project-card',
+            'HD-02 / DEC-L1-D7: the onboarding shell and stepper stay (the 4-step header belongs to the Bucket B flow); cards 01 (Challenge, D2) and 03 (HUB position, HD-02) are not rendered, so the one card is numbered 01',
         },
         {
-          class: 'INTENTIONAL-CONTRACT',
-          reference_region: REF.skip,
+          class: 'INTENTIONAL-BUSINESS',
           reason:
-            'DEC-WF01-S08-D6: no "Bỏ qua, làm sau"; stepper step 3 shown done (disc 3 not compared); "Vào 1hub.network" → /me added; card is shorter and re-centred',
-          vertical_effect_px: {
-            card_upper_dy: upperDy,
-            panel_dy: panelDy,
-            card_bottom_dy: bottomDy,
-          },
+            'DEC-WF01-S08-D5/D7 and DEC-P0-SHELL-D6: intent-neutral lede, neutral info copy and the project card body without the WF04 claim',
         },
         {
-          class: 'INTENTIONAL-COPY',
-          reason:
-            'DEC-WF01-S08-D5/D7: lede keeps only "Không làm gì cũng được — mọi thứ vẫn ở đó."; unsupported info-panel claims replaced by neutral copy (text masked)',
-          reference_regions: REF.replacedCopy,
+          class: 'INTENTIONAL-SCOPE',
+          reason: 'HD-11: no floating "Góp ý" button until a feedback flow is approved',
         },
-        {
-          class: 'INTENTIONAL-ICON-RENDERING',
-          reason: 'DEC-WF01-S08-D7: SVG info mark in place of the OS emoji',
-        },
-        { class: 'RASTER-NOISE', rows: rasterRows },
       ],
-      segments: results,
-      text_mask: textMask,
-      product_pixel_pass_claimed: false,
     })
-
-    for (const r of results) {
-      expect(r.outside_ratio, `${r.name} drift`).toBeLessThan(0.002)
-    }
   })
 })

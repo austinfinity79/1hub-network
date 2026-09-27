@@ -1,17 +1,10 @@
-import path from 'node:path'
-
 import { expect, test, type APIRequestContext, type Page, type Route } from '@playwright/test'
 
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { readPng } from '../pixel-qa/png'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect, type Segment } from '../pixel-qa/segments'
+import { auditRevision, topOf } from '../pixel-qa/revision'
 
 /**
- * WF01-S02 — Check Email (/auth/check-email). Production screen, strict.
+ * WF01-S02 — Check Email (/auth/check-email), presented as the corrected AUTH2
+ * (TASK 22.2, DEC-L1-D4).
  *
  * State comes from a REAL POST /api/v1/auth/magic-link; the 202 DTO is placed
  * where WF01-S01 puts it. Time is pinned with page.clock.setFixedTime so the
@@ -82,10 +75,12 @@ test.describe('WF01-S02 functional', () => {
   }) => {
     await page.goto('/auth', { waitUntil: 'networkidle' })
     await page.getByLabel('Email', { exact: true }).fill('newcomer@example.test')
-    await page.getByRole('button', { name: 'Gửi link đăng nhập' }).click()
+    await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
 
     await expect(page).toHaveURL(ROUTE)
-    await expect(page.getByRole('heading', { level: 1, name: 'Mở hộp thư của bạn' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Kiểm tra hòm thư của bạn' }),
+    ).toBeVisible()
     await expect(page.getByTestId('email-masked')).toHaveText('n***@example.test')
     await expect(page.getByText('newcomer@example.test')).toHaveCount(0)
   })
@@ -146,7 +141,7 @@ test.describe('WF01-S02 functional', () => {
     await page.clock.setFixedTime(T0 + 15_000)
     await expect(resendButton(page)).toHaveText('Gửi lại sau 0:45')
     await page.clock.setFixedTime(T0 + 60_000)
-    await expect(resendButton(page)).toHaveText('Gửi lại link')
+    await expect(resendButton(page)).toHaveText('Gửi lại liên kết')
     await expect(resendButton(page)).toBeEnabled()
   })
 
@@ -163,7 +158,7 @@ test.describe('WF01-S02 functional', () => {
     expect((await req.response())!.status()).toBe(202)
 
     await expect(page.getByRole('status')).toHaveText(
-      'Đã gửi lại link. Hãy kiểm tra hộp thư của bạn.',
+      'Đã gửi lại liên kết. Hãy kiểm tra hộp thư của bạn.',
     )
     await expect(resendButton(page)).toHaveText('Gửi lại sau 1:00')
     const stored = JSON.parse(
@@ -200,13 +195,13 @@ test.describe('WF01-S02 functional', () => {
       'a failure is recoverable',
       500,
       'UNCONTRACTED_INTERNAL',
-      'Chưa gửi lại được link. Vui lòng thử lại.',
+      'Chưa gửi lại được liên kết. Vui lòng thử lại.',
     ],
     [
       'rate limiting has its own message',
       429,
       'AUTH_RATE_LIMITED',
-      'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ít phút.',
+      'Bạn đã yêu cầu liên kết quá nhiều lần. Vui lòng thử lại sau ít phút.',
     ],
     [
       'a stale request asks for the email again',
@@ -232,18 +227,18 @@ test.describe('WF01-S02 functional', () => {
     })
   }
 
-  test('"Đổi email khác" returns to /auth', async ({ page, request }) => {
+  test('"Dùng email khác" returns to /auth', async ({ page, request }) => {
     await withPending(page, await requestLink(request, 'member@example.test'))
     await openAt(page)
-    await page.getByRole('link', { name: 'Đổi email khác' }).click()
+    await page.getByRole('link', { name: 'Dùng email khác' }).click()
     await expect(page).toHaveURL('/auth')
-    await expect(page.getByRole('heading', { level: 1, name: 'Vào HUB NETWORK' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Đăng nhập' })).toBeVisible()
   })
 
   test('direct entry without a pending request returns to /auth', async ({ page }) => {
     await page.goto(ROUTE)
     await expect(page).toHaveURL('/auth')
-    await expect(page.getByRole('heading', { level: 1, name: 'Vào HUB NETWORK' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Đăng nhập' })).toBeVisible()
   })
 
   test('keyboard: Tab reaches resend then the change-email link, both visibly focused', async ({
@@ -263,7 +258,7 @@ test.describe('WF01-S02 functional', () => {
       'none',
     )
     await page.keyboard.press('Tab')
-    const link = page.getByRole('link', { name: 'Đổi email khác' })
+    const link = page.getByRole('link', { name: 'Dùng email khác' })
     await expect(link).toBeFocused()
     expect(await link.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none')
     await page.keyboard.press('Enter')
@@ -281,101 +276,53 @@ test.describe('WF01-S02 functional', () => {
   })
 })
 
-test.describe('WF01-S02 pixel QA', () => {
-  /** Measured once from the frozen reference, not from the implementation. */
-  const REF = { cardTop: 160, dividerTop: 452 } as const
-
-  test('manifest-driven capture, typography contract and segment comparison', async ({
-    page,
-    request,
-  }) => {
-    const { screens } = loadManifest()
+test.describe('WF01-S02 pixel QA (corrected AUTH2)', () => {
+  test('1440×900: panel, card head and resend block match AUTH2', async ({ page, request }) => {
     // The reference address, as QA data only; a request creates no account.
-    const accepted = await requestLink(request, 'chi.dang@tracely.vn')
-    const reports = await runScreenQa(
-      page,
-      findScreen(screens, 'WF01-S02'),
-      qaConfigFor('WF01-S02')!,
-      {
-        beforeNavigate: async (p) => {
-          await withPending(p, accepted)
-          await p.clock.setFixedTime(T0)
+    await withPending(page, await requestLink(request, 'chi.dang@tracely.vn'))
+    await openAt(page, 15)
+    await expect(resendButton(page)).toHaveText('Gửi lại sau 0:45')
+    // Reference geometry, measured once from the frozen AUTH2 raster.
+    const REF = { cardTop: 237, dividerTop: 554 } as const
+    const card = await topOf(page, '[data-ui="surface"]')
+    const divider = await topOf(page, 'hr')
+    const address = (await page.getByTestId('email-masked').boundingBox())!
+    await auditRevision(page, {
+      name: 'WF01-S02.AUTH2',
+      reference: 'design-reference/final/revision/L1/AUTH2__check-email__SOURCE.png',
+      segments: [
+        { name: 'brand-panel', reference: { x: 0, y: 0, width: 560, height: 900 }, dy: 0 },
+        { name: 'canvas-left', reference: { x: 560, y: 0, width: 200, height: 900 }, dy: 0 },
+        { name: 'canvas-right', reference: { x: 1240, y: 0, width: 200, height: 900 }, dy: 0 },
+        {
+          name: 'card-head',
+          reference: { x: 770, y: 229, width: 460, height: 243 },
+          dy: card - REF.cardTop,
         },
-        afterLoad: async (p) => {
-          await p.clock.setFixedTime(T0 + 15_000)
-          await expect(resendButton(p)).toHaveText('Gửi lại sau 0:45')
+        {
+          name: 'card-resend',
+          reference: { x: 770, y: 548, width: 460, height: 125 },
+          dy: divider - REF.dividerTop,
         },
-      },
-    )
-    const viewport = reports.find((r) => r.capture === 'viewport')!
-
-    expect(viewport.conditions).toEqual({
-      viewport: { width: 1440, height: 900 },
-      dpr: 1,
-      fonts: 'loaded',
-    })
-    expect(viewport.comparison.status).not.toBe('DIMENSION_MISMATCH')
-    expect(viewport.typography!.violations).toEqual([])
-    expect(viewport.typography!.checked).toBeGreaterThan(10)
-
-    const box = async (selector: string) => (await page.locator(selector).first().boundingBox())!
-    const card = await box('[data-ui="surface"]')
-    const divider = await box('hr')
-    const upperDy = Math.round(card.y) - REF.cardTop
-    const lowerDy = Math.round(divider.y) - REF.dividerTop
-
-    const textMask: Rect[] = await page.evaluate(() =>
-      [...document.querySelectorAll('h1, h2, p, li, a, button')].map((el) => {
-        const r = el.getBoundingClientRect()
-        return { x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 }
-      }),
-    )
-
-    const segments: Segment[] = [
-      { name: 'brand-panel', reference: { x: 0, y: 0, width: 560, height: 900 }, dy: 0 },
-      { name: 'canvas-left', reference: { x: 560, y: 0, width: 200, height: 900 }, dy: 0 },
-      { name: 'canvas-right', reference: { x: 1240, y: 0, width: 200, height: 900 }, dy: 0 },
-      { name: 'card-upper', reference: { x: 760, y: 130, width: 480, height: 240 }, dy: upperDy },
-      { name: 'card-lower', reference: { x: 760, y: 440, width: 480, height: 345 }, dy: lowerDy },
-    ]
-    const reference = readPng(path.join(REPO_ROOT, viewport.images.REFERENCE))
-    const actual = readPng(path.join(REPO_ROOT, viewport.images.ACTUAL))
-    const diffPath = resolveOutputPath('diff', 'WF01-S02.segments.diff.png')
-    const results = compareSegments(reference, actual, segments, textMask, { diffPath })
-
-    writeJsonReport('WF01-S02.segments.json', {
-      screen_id: 'WF01-S02',
-      images: {
-        REFERENCE: viewport.images.REFERENCE,
-        ACTUAL: viewport.images.ACTUAL,
-        DIFF_FULL: viewport.images.DIFF,
-        DIFF_SEGMENTS: path.relative(REPO_ROOT, diffPath),
-      },
+      ],
+      // The masked address differs from the reference's full address by contract.
+      exclude: [{ x: address.x - 2, y: address.y - 2, width: 400, height: address.height + 4 }],
       intentional: [
         {
           class: 'INTENTIONAL-BUSINESS-CONTRACT',
-          reference_region: { x: 760, y: 370, width: 480, height: 70 },
           reason:
-            '"Mở Gmail" button omitted: WF01-S02 Screen Contract actions are resend and change_email only',
-          vertical_effect_px: { card_upper_dy: upperDy, card_lower_dy: lowerDy },
+            '"Mở Gmail" is not rendered: WF01-S02 contract actions are resend and change_email only; the card is shorter and centred',
         },
         {
           class: 'INTENTIONAL-BUSINESS-CONTRACT',
-          reason:
-            'Address shown as the API email_masked field (c***@tracely.vn), not the full address in the bitmap',
+          reason: 'The address is the API email_masked field, not the full address in the bitmap',
         },
         {
-          class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
+          class: 'INTENTIONAL-A11Y',
           reason:
-            'Reference raster predates the frozen APEC font stack; DOM typography contract passed',
+            'DEC-L1-D4: the spam reminder is plain text; the reference underlines it but it leads nowhere',
         },
       ],
-      segments: results,
-      product_pixel_pass_claimed: false,
     })
-
-    for (const r of results) {
-      expect(r.outside_ratio, `${r.name} geometry/surface drift`).toBeLessThan(0.002)
-    }
   })
 })

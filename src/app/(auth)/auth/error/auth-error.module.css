@@ -1,5 +1,5 @@
 /*
- * WF01-S04 — auth error states. Runtime composition (DEC-WF01-S04-D6): ONE
+ * WF01-S04 / AUTH4 — auth error states (corrected board, TASK 22.2). Runtime composition (DEC-WF01-S04-D6): ONE
  * state in ONE centred AuthCard on the 1440x900 canvas. The board's R2/R3
  * rows are horizontal; in the card the same components stack vertically.
  * Component values are LOCAL and measured from the AUTH4 board at 1440x900
@@ -39,11 +39,16 @@
 
 .title {
   margin: 1.125rem 0 0;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.5rem;
 }
 
 .body {
   max-width: 22rem;
   margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
   /* Board R2/R3 body ink is burgundy (#170002), unlike the S03 panels. */
   color: var(--color-fg-default);
 }
@@ -51,7 +56,9 @@
 .support {
   max-width: 22rem;
   margin: 1.125rem 0 0;
-  color: var(--unresolved-fg-muted);
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  color: #534041;
 }
 
 /* Board: 128x41 outline action, 1px burgundy border, white fill, 8px corners. */
@@ -66,6 +73,9 @@
   border-radius: 0.5rem;
   background: var(--hub-surface);
   color: var(--hub-burgundy);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
   text-decoration: none;
 }
 

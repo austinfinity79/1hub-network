@@ -62,7 +62,7 @@ const newEmail = (tag: string) =>
 async function signInThroughUi(page: Page, email: string): Promise<string> {
   await page.goto('/auth', { waitUntil: 'networkidle' })
   await page.getByLabel('Email', { exact: true }).fill(email)
-  await page.getByRole('button', { name: 'Gửi link đăng nhập' }).click()
+  await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
   await expect(page).toHaveURL('/auth/check-email')
   await expect(page.getByRole('button', { name: /Gửi lại/ })).toBeVisible()
   // The inbox: the newest link for this address (a resend retires older ones).
@@ -130,8 +130,8 @@ async function s07(page: Page) {
 }
 
 async function s08(page: Page) {
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Xong. Giờ làm gì?')
-  await expect(page.getByRole('link', { name: 'Vào 1hub.network' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hồ sơ của bạn đã sẵn sàng')
+  await expect(page.getByRole('link', { name: 'Vào Tài khoản của tôi' })).toBeVisible()
 }
 
 async function sessionOf(request: APIRequestContext) {
@@ -200,7 +200,7 @@ test.describe('WF01 UAT journeys', () => {
     ])
     expect(hashed).toHaveLength(1)
 
-    await page.getByRole('link', { name: 'Vào 1hub.network' }).click()
+    await page.getByRole('link', { name: 'Vào Tài khoản của tôi' }).click()
     await expect(page).toHaveURL('/me')
   })
 

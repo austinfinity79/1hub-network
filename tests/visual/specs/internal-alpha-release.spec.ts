@@ -112,7 +112,7 @@ test.describe('REL-AUTH magic link and session', () => {
     const email = newEmail('auth')
     await page.goto('/auth', { waitUntil: 'networkidle' })
     await page.getByLabel('Email', { exact: true }).fill(email)
-    await page.getByRole('button', { name: 'Gửi link đăng nhập' }).click()
+    await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
     await expect(page).toHaveURL('/auth/check-email')
     const { token } = await requestMagicLink(email, null)
     const callback = `/auth/callback?token=${encodeURIComponent(token)}`

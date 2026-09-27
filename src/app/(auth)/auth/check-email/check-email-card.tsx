@@ -16,7 +16,8 @@ import {
 import styles from './check-email.module.css'
 
 /**
- * WF01-S02 — check email. Reads the AuthRequest handed over by WF01-S01 and
+ * WF01-S02 / AUTH2 — check email, presented per the corrected L1 reference
+ * (TASK 22.2, DEC-L1-D4). Reads the AuthRequest handed over by WF01-S01 and
  * offers the two contract actions: resend and change_email.
  *
  * - The address shown is the server's `email_masked`; the raw address and the
@@ -25,17 +26,17 @@ import styles from './check-email.module.css'
  *   is invented here.
  * - Without a pending request (direct entry, other tab) the screen returns to
  *   WF01-S01, since there is nothing to confirm or resend.
- * - The approved bitmap's "Mở Gmail" button is NOT rendered: it is not a
- *   WF01-S02 contract action (resend, change_email). Recorded for review.
+ * - The reference's "Mở Gmail" button is NOT rendered: it is not a WF01-S02
+ *   contract action (resend, change_email).
  */
 
-/** Copy for states the approved bitmap does not show; pending design copy review. */
+/** Copy for states the reference does not show. */
 const MESSAGES = {
-  resend: 'Gửi lại link',
-  sent: 'Đã gửi lại link. Hãy kiểm tra hộp thư của bạn.',
+  resend: 'Gửi lại liên kết',
+  sent: 'Đã gửi lại liên kết. Hãy kiểm tra hộp thư của bạn.',
   stale: 'Yêu cầu này không còn hiệu lực. Hãy nhập lại email.',
-  rateLimited: 'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ít phút.',
-  failed: 'Chưa gửi lại được link. Vui lòng thử lại.',
+  rateLimited: 'Bạn đã yêu cầu liên kết quá nhiều lần. Vui lòng thử lại sau ít phút.',
+  failed: 'Chưa gửi lại được liên kết. Vui lòng thử lại.',
 } as const
 
 /** Seconds as m:ss, the format the approved baseline shows ("0:45"). */
@@ -142,19 +143,20 @@ export function CheckEmailCard() {
             </svg>
           </div>
 
-          <h1 className={`type-heading-2 ${styles.title}`}>Mở hộp thư của bạn</h1>
-          <p className={`type-body-sm ${styles.lede}`}>Link đăng nhập vừa gửi tới</p>
-          <p className={`type-body-md weight-medium ${styles.address}`} data-testid="email-masked">
+          <h1 className={styles.title}>Kiểm tra hòm thư của bạn</h1>
+          <p className={styles.lede}>Chúng tôi đã gửi liên kết đăng nhập đến:</p>
+          <p className={styles.address} data-testid="email-masked">
             {pending.email_masked}
           </p>
+          <p className={styles.spam}>Vui lòng kiểm tra cả thư mục Spam hoặc Thư rác.</p>
 
           <hr className={styles.divider} />
 
           <div className={styles.resendRow}>
-            <p className={`type-body-sm ${styles.resendPrompt}`}>Chưa thấy thư?</p>
+            <p className={styles.resendPrompt}>Chưa nhận được email?</p>
             <button
               type="button"
-              className={`type-body-sm ${styles.resend}`}
+              className={styles.resend}
               onClick={resend}
               disabled={coolingDown || sending}
               aria-busy={sending || undefined}
@@ -166,28 +168,14 @@ export function CheckEmailCard() {
           {/* Always mounted, so screen readers announce the message when it appears. */}
           <div aria-live="polite">
             {status ? (
-              <p
-                className={`type-meta-xs ${styles.status}`}
-                role={status.tone === 'error' ? 'alert' : 'status'}
-              >
+              <p className={styles.status} role={status.tone === 'error' ? 'alert' : 'status'}>
                 {status.text}
               </p>
             ) : null}
           </div>
 
-          <section className={styles.help} aria-labelledby="check-email-help">
-            <h2 id="check-email-help" className={`weight-semibold ${styles.helpTitle}`}>
-              Ba chỗ hay thất lạc
-            </h2>
-            <ul className={`type-body-sm ${styles.tips}`}>
-              <li>Thư mục Spam hoặc Quảng cáo</li>
-              <li>Email cơ quan có lọc thư ngoài — hỏi IT về hub@1hub.network</li>
-              <li>Gõ nhầm tên miền: .vn và .com.vn</li>
-            </ul>
-          </section>
-
-          <Link href="/auth" className={`type-meta-xs weight-medium ${styles.changeEmail}`}>
-            Đổi email khác
+          <Link href="/auth" className={styles.changeEmail}>
+            Dùng email khác
           </Link>
         </div>
       </AuthCard>

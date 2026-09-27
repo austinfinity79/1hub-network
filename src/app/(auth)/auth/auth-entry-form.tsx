@@ -13,31 +13,29 @@ import { savePendingRequest, type MagicLinkRequestAccepted } from '@/lib/auth/pe
 import styles from './auth-entry.module.css'
 
 /**
- * WF01-S01 — auth entry card: the P0 email magic-link path.
+ * WF01-S01 / AUTH1 — auth entry card: the P0 email magic-link path, presented
+ * per the corrected L1 reference (TASK 22.2, DEC-L1-D2).
  *
  * Provider sign-in is config-driven (WF01 contract: "provider entry if
  * configured") and GET /api/v1/auth/providers returns an empty list in P0, so no
- * provider button or "or use email" divider is rendered. The approved bitmap's
- * Google block is recorded as an INTENTIONAL-BUSINESS-CONFIG difference.
+ * provider button or "hoặc tiếp tục bằng email" divider is rendered
+ * (INTENTIONAL-BUSINESS-CONFIG, as before). The terms notice stays under the
+ * button: the revision drops it, but consent placement is HD-03 (DEC-L1-D3).
  *
  * The response is identical whether or not an account exists (05:181), and
  * this screen shows the same outcome either way, so nothing is enumerable.
  */
 
-/** Copy for states the approved bitmap does not show; pending design copy review. */
+/** Copy for states the reference does not show. The rate-limit line is AUTH4's R1 row,
+ * kept inline (DEC-WF01-S04-D3) and without a window or provider the server does not have. */
 const MESSAGES = {
   empty: 'Vui lòng nhập email.',
   invalid: 'Email chưa đúng định dạng.',
-  rateLimited: 'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ít phút.',
-  failed: 'Chưa gửi được link. Vui lòng thử lại.',
+  rateLimited: 'Bạn đã yêu cầu liên kết quá nhiều lần. Vui lòng thử lại sau ít phút.',
+  failed: 'Chưa gửi được liên kết. Vui lòng thử lại.',
 } as const
 
-type Props = {
-  /** From the frozen magic-link expiry, so the copy cannot drift from the server. */
-  expiresInMinutes: number
-}
-
-export function AuthEntryForm({ expiresInMinutes }: Props) {
+export function AuthEntryForm() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [fieldError, setFieldError] = useState<string>()
@@ -100,12 +98,7 @@ export function AuthEntryForm({ expiresInMinutes }: Props) {
   return (
     <AuthCard>
       <div className={styles.stack}>
-        <div className={styles.intro}>
-          <h1 className={`type-heading-2 ${styles.title}`}>Vào HUB NETWORK</h1>
-          <p className={`type-body-sm ${styles.lede}`}>
-            Chưa có tài khoản thì hệ thống tự tạo. Bạn không phải chọn giữa đăng nhập và đăng ký.
-          </p>
-        </div>
+        <h1 className={styles.title}>Đăng nhập</h1>
 
         <form
           className={styles.form}
@@ -132,25 +125,12 @@ export function AuthEntryForm({ expiresInMinutes }: Props) {
             )}
           </Field>
           <Button type="submit" fullWidth loading={submitting}>
-            Gửi link đăng nhập
+            Gửi liên kết đăng nhập
           </Button>
           {formError ? <Notice tone="error">{formError}</Notice> : null}
         </form>
 
-        <Notice>
-          <span className={styles.noticeBody}>
-            <svg className={styles.noticeIcon} viewBox="0 0 14 10" aria-hidden="true">
-              <path fill="currentColor" d="M0 0h14v10H0z" />
-              <path className={styles.noticeIconFold} d="M.5.5 7 7 13.5.5" />
-            </svg>
-            <span className={`type-meta-xs ${styles.noticeText}`}>
-              Chúng tôi gửi một link dùng một lần, hết hạn sau {expiresInMinutes} phút. Không có mật
-              khẩu nào để nhớ hay để mất.
-            </span>
-          </span>
-        </Notice>
-
-        <p className={`type-meta-xs ${styles.legal}`}>
+        <p className={styles.legal}>
           Tiếp tục nghĩa là bạn đồng ý Điều khoản sử dụng và Chính sách quyền riêng tư.
         </p>
       </div>

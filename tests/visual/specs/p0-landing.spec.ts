@@ -451,7 +451,11 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
   })
 
   test('legacy screens keep the approved faces (DEC-HD-12 is scoped)', async ({ page }) => {
-    await page.goto('/auth', { waitUntil: 'networkidle' })
+    // /auth is a revision screen since TASK 22.2 (DEC-L1-D1); WF01-S05 next to
+    // it stays legacy until HD-02, so it proves the scope still holds.
+    const email = `landing-scope-${Date.now()}@example.test`
+    expect((await page.request.post('/dev/login', { data: { email } })).ok()).toBe(true)
+    await page.goto('/onboarding/purpose', { waitUntil: 'networkidle' })
     await settle(page)
     const result = await assertTypography(page, APPROVED_FACES)
     expect(result.violations).toEqual([])

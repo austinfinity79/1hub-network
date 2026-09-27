@@ -17,6 +17,10 @@ import styles from './auth-error.module.css'
  *   stays inline on WF01-S01/S02 (D3); mail blocked by domain is out of P0 (D7).
  * - The page is static and reads the query only in the browser, so no query
  *   value (a token pasted by mistake included) reaches server-rendered HTML.
+ * - TASK 22.2 (DEC-L1-D6): titles and look follow the corrected AUTH4 board.
+ *   Its bodies are kept only where true in P0: no email about a block is sent
+ *   and no support contact exists (D4, D5), and nothing saves unsent work, so
+ *   those sentences are not shown.
  */
 
 export type PublicReason = 'blocked' | 'session_expired' | 'generic'
@@ -32,12 +36,7 @@ export function publicReason(raw: string | null): PublicReason {
   return (raw !== null && Object.hasOwn(PUBLIC_REASONS, raw) && PUBLIC_REASONS[raw]) || 'generic'
 }
 
-type Props = {
-  /** From the session lifetime setting, so the copy cannot drift from it. */
-  sessionDays: number
-}
-
-export function AuthErrorScreen({ sessionDays }: Props) {
+export function AuthErrorScreen() {
   // Null until the query is read, so no state flashes before the right one.
   const [reason, setReason] = useState<PublicReason | null>(null)
 
@@ -50,7 +49,7 @@ export function AuthErrorScreen({ sessionDays }: Props) {
       {reason ? (
         <AuthCard>
           {reason === 'blocked' ? <Blocked /> : null}
-          {reason === 'session_expired' ? <SessionExpired days={sessionDays} /> : null}
+          {reason === 'session_expired' ? <SessionExpired /> : null}
           {reason === 'generic' ? <Generic /> : null}
         </AuthCard>
       ) : null}
@@ -77,25 +76,21 @@ function Blocked() {
   return (
     <div className={styles.state} data-auth-error="blocked" role="alert">
       <Disc />
-      <h1 className={`type-section-sm ${styles.title}`}>Tài khoản đang bị khoá</h1>
-      <p className={`type-body-sm ${styles.body}`}>
-        Tài khoản này đang bị tạm khoá, nên hiện chưa thể đăng nhập.
-      </p>
-      <p className={`type-meta-xs ${styles.support}`}>Liên hệ ban điều hành HUB để được hỗ trợ.</p>
+      <h1 className={styles.title}>Tài khoản tạm thời bị khóa</h1>
+      <p className={styles.body}>Tài khoản này đang bị tạm khoá, nên hiện chưa thể đăng nhập.</p>
+      <p className={styles.support}>Liên hệ ban điều hành HUB để được hỗ trợ.</p>
     </div>
   )
 }
 
-/** R3. "30 ngày" comes from the session lifetime setting (provisional, pre-UAT). */
-function SessionExpired({ days }: { days: number }) {
+/** R3. The board's "Nội dung … đã được lưu" is not shown: nothing saves unsent work. */
+function SessionExpired() {
   return (
     <div className={styles.state} data-auth-error="session_expired" role="alert">
       <Disc />
-      <h1 className={`type-section-sm ${styles.title}`}>Phiên đăng nhập đã hết</h1>
-      <p className={`type-body-sm ${styles.body}`}>
-        Bạn đã đăng nhập ở đây {days} ngày trước. Vì an toàn, cần xác thực lại.
-      </p>
-      <Link href="/auth" className={`type-body-sm weight-medium ${styles.action}`}>
+      <h1 className={styles.title}>Phiên đăng nhập đã hết hạn</h1>
+      <p className={styles.body}>Vui lòng đăng nhập lại để tiếp tục.</p>
+      <Link href="/auth" className={styles.action}>
         Đăng nhập lại
       </Link>
     </div>
@@ -110,11 +105,9 @@ function Generic() {
   return (
     <div className={styles.state} data-auth-error="generic" role="alert">
       <Disc />
-      <h1 className={`type-section-sm ${styles.title}`}>Chưa đăng nhập được</h1>
-      <p className={`type-body-sm ${styles.body}`}>
-        Đã có lỗi trong lúc đăng nhập. Hãy thử lại từ đầu.
-      </p>
-      <Link href="/auth" className={`type-body-sm weight-medium ${styles.action}`}>
+      <h1 className={styles.title}>Chưa đăng nhập được</h1>
+      <p className={styles.body}>Đã có lỗi trong lúc đăng nhập. Hãy thử lại từ đầu.</p>
+      <Link href="/auth" className={styles.action}>
         Đăng nhập lại
       </Link>
     </div>

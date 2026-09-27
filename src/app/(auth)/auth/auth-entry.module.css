@@ -1,49 +1,33 @@
 /*
- * WF01-S01 — auth card composition. Every length is measured from the approved
- * baseline at 1440x900 DPR1 (px / 16 = rem); the card surface is AuthCard.
+ * AUTH1 — auth card composition, measured from the corrected L1 reference at
+ * 1440x900 DPR1. The card surface is AuthCard; the controls keep the shared
+ * primitives with this card's local geometry (50 px input, 47 px button, 8 px
+ * corners, a coral button with a burgundy label).
  */
 
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 1.375rem;
+  gap: 1.5rem;
 
-  /*
-   * WF01-S01 LOCAL control values, measured from its approved baseline. They
-   * override the shared primitive parameters inside this card only; other
-   * approved screens use different control geometry (e.g. 44px inputs on
-   * WF02-S02/S05, 42-46px buttons). The card surface itself is AuthCard's.
-   */
   --unresolved-radius-control: 0.5rem;
   --unresolved-radius-notice: 0.5rem;
-  --unresolved-space-control-y: 0.78125rem;
-  --unresolved-space-input-y: 0.59375rem;
+  --unresolved-space-control-x: 0.875rem;
+  --unresolved-space-control-y: 0.8125rem;
+  --unresolved-space-input-y: 0.875rem;
   --unresolved-space-notice-x: 0.8125rem;
-  --unresolved-space-stack: 0.3125rem;
-  --unresolved-border-control: color-mix(in srgb, var(--hub-burgundy) 23%, var(--hub-surface));
-  --unresolved-fill-control: color-mix(in srgb, var(--hub-burgundy) 2%, var(--hub-surface));
+  --unresolved-space-stack: 0.4375rem;
+  --unresolved-border-control: #e2dcdc;
+  --unresolved-fill-control: #fbfafa;
+  --unresolved-fg-placeholder: #a79b9b;
 }
 
-.intro {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.title,
-.lede,
-.legal {
+.title {
   margin: 0;
-}
-
-/* The approved baseline leaves 24px, not the 22px rhythm, above the legal line. */
-.legal {
-  margin-top: 0.125rem;
-}
-
-.lede,
-.legal {
-  color: var(--unresolved-fg-muted);
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.875rem;
+  letter-spacing: -0.02em;
 }
 
 .form {
@@ -52,27 +36,33 @@
   gap: 1.375rem;
 }
 
-.noticeBody {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
+.form :global(.ui-label) {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
 }
 
-.noticeIcon {
-  flex: none;
-  width: 0.875rem;
-  height: 0.625rem;
-  margin-top: 0.25rem;
-  color: color-mix(in srgb, var(--hub-burgundy) 12%, var(--hub-surface));
+.form :global(.ui-input) {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
-.noticeText {
-  /* Design SOT 2.4 permits a local size variation where the approved visual
-     clearly requires it: the notice runs meta-xs at a 21.5px line pitch. */
-  line-height: 1.34375rem;
+.form :global(.ui-button) {
+  font-size: 0.9375rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  padding-top: 0.78125rem;
+  padding-bottom: 0.78125rem;
 }
 
-.noticeIconFold {
-  fill: none;
-  stroke: color-mix(in srgb, var(--hub-burgundy) 30%, var(--hub-surface));
+.form :global(.ui-button[data-variant='primary']) {
+  color: var(--hub-burgundy);
+}
+
+/* DEC-L1-D3: the terms notice the revision drops stays until HD-03 is decided. */
+.legal {
+  margin: -0.5rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  color: #534041;
 }

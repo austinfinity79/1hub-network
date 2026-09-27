@@ -1,0 +1,12 @@
+/*
+ * TASK 22.2 — the auth screens (AUTH1–AUTH4) are Corrected Design Revision
+ * screens, so their text is Space Grotesk (DEC-HD-12). The face is scoped to
+ * this route group: --font-ui is re-pointed on the subtree, so the shared
+ * primitives inside (button, input, label, notice) follow without change,
+ * while <body> and every other route keep Be Vietnam Pro.
+ */
+.root {
+  --font-ui: 'Space Grotesk', 'Be Vietnam Pro', system-ui, sans-serif;
+
+  font-family: var(--font-ui);
+}

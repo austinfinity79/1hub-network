@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { Button, Surface } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
@@ -19,7 +20,15 @@ import styles from './complete.module.css'
  * Production (DEC-WF01-S08-D3's dependency, resolved; DEC-P0-SHELL-D6). It is
  * numbered 01 because the drawn card 01 (WF04 challenges) stays omitted (D2);
  * card 03 stays omitted (D4: no region → chapter mapping).
+ *
+ * TASK 22.2 (DEC-L1-D7): the card follows the corrected ACC-10 reference in
+ * Space Grotesk. Kept from D5–D7: intent-neutral lede, the one project card,
+ * the server's percent with neutral info copy. The exit to /me is the header
+ * action the reference draws (see page.tsx), so the card has no footer button.
  */
+
+/** The header slot the page leaves for the exit; filled only in the done state. */
+export const EXIT_SLOT_ID = 'onboarding-exit'
 
 type View =
   | { kind: 'pending' }
@@ -48,7 +57,10 @@ export function CompleteView({
   initial: { kind: 'pending' } | { kind: 'done'; percent: number }
 }) {
   const [view, setView] = useState<View>(initial)
+  const [exitSlot, setExitSlot] = useState<HTMLElement | null>(null)
   const inFlight = useRef(false)
+
+  useEffect(() => setExitSlot(document.getElementById(EXIT_SLOT_ID)), [])
 
   async function complete() {
     if (inFlight.current) return
@@ -79,22 +91,31 @@ export function CompleteView({
 
   return (
     <div className={styles.frame}>
+      {view.kind === 'done' && exitSlot
+        ? createPortal(
+            <Link href="/me" className={styles.exit} data-nav="exit-me">
+              Vào Tài khoản của tôi
+            </Link>,
+            exitSlot,
+          )
+        : null}
       <div className={styles.card}>
         <Surface as="section" aria-live="polite">
           {view.kind === 'done' ? (
             <>
-              <h1 className={`type-heading-2 ${styles.title}`}>Xong. Giờ làm gì?</h1>
-              <p className={`type-body-md ${styles.lede}`}>
-                Không làm gì cũng được — mọi thứ vẫn ở đó.
-              </p>
+              <div className={styles.done} aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M6 12.5 10.5 17 18.5 7" />
+                </svg>
+              </div>
+              <h1 className={styles.title}>Hồ sơ của bạn đã sẵn sàng</h1>
+              <p className={styles.lede}>Không làm gì cũng được — mọi thứ vẫn ở đó.</p>
               <ol className={styles.cards}>
                 <li className={styles.action} data-action-card="project">
-                  <span className={`type-meta-xs weight-semibold ${styles.index}`}>01</span>
+                  <span className={styles.index}>01</span>
                   <div className={styles.actionText}>
-                    <p className={`type-body-md weight-medium ${styles.actionTitle}`}>
-                      {MESSAGES.projectTitle}
-                    </p>
-                    <p className={`type-meta-xs ${styles.actionBody}`}>{MESSAGES.projectBody}</p>
+                    <p className={styles.actionTitle}>{MESSAGES.projectTitle}</p>
+                    <p className={styles.actionBody}>{MESSAGES.projectBody}</p>
                   </div>
                   <Link
                     href="/projects/new"
@@ -107,35 +128,24 @@ export function CompleteView({
                 </li>
               </ol>
               <div className={styles.info} data-completion>
-                <svg
-                  viewBox="0 0 16 16"
-                  className={styles.icon}
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <circle cx="8" cy="8" r="7.25" />
-                  <path d="M8 7v4.5M8 4.6v.1" />
-                </svg>
-                <p className={`type-meta-xs ${styles.infoText}`}>
+                <span className={styles.icon} aria-hidden="true">
+                  i
+                </span>
+                <p className={styles.infoText}>
                   Hồ sơ của bạn đang ở mức {view.percent}%. Bạn có thể cập nhật hồ sơ bất cứ lúc
                   nào.
                 </p>
               </div>
-              <div className={styles.footer}>
-                <Link href="/me" className="ui-button" data-variant="primary">
-                  <span>Vào 1hub.network</span>
-                </Link>
-              </div>
             </>
           ) : view.kind === 'pending' ? (
-            <p role="status" className={`type-body-md ${styles.lede}`}>
+            <p role="status" className={styles.lede}>
               {MESSAGES.pending}
             </p>
           ) : view.kind === 'missing' ? (
             <div role="alert">
-              <h1 className={`type-heading-2 ${styles.title}`}>{MESSAGES.missingTitle}</h1>
-              <p className={`type-body-md ${styles.lede}`}>{MESSAGES.missingLede}</p>
-              <ul className={`type-body-md ${styles.missing}`}>
+              <h1 className={styles.title}>{MESSAGES.missingTitle}</h1>
+              <p className={styles.lede}>{MESSAGES.missingLede}</p>
+              <ul className={styles.missing}>
                 {view.fields.some((f) => f === 'display_name' || f === 'region_id') ? (
                   <li>
                     <Link href="/onboarding/profile">{MESSAGES.profile}</Link>
@@ -152,7 +162,7 @@ export function CompleteView({
             </div>
           ) : (
             <div role="alert">
-              <p className={`type-body-md ${styles.lede}`}>{MESSAGES.failed}</p>
+              <p className={styles.lede}>{MESSAGES.failed}</p>
               <div className={styles.footer}>
                 <Button onClick={() => void complete()}>{MESSAGES.retry}</Button>
               </div>

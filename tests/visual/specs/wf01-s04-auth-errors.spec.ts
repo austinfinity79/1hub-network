@@ -1,17 +1,11 @@
-import path from 'node:path'
-
 import { expect, test, type Page } from '@playwright/test'
 
-import { SESSION_TTL_SECONDS } from '../../../src/lib/auth/config'
 import { consumeMagicLink, requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { readPng } from '../pixel-qa/png'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
+import { REVISION_FACES, assertTypography, settle } from '../pixel-qa/capture'
 import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect, type Segment } from '../pixel-qa/segments'
+import { auditRevision } from '../pixel-qa/revision'
+import type { Segment } from '../pixel-qa/segments'
 
 /**
  * WF01-S04 — Auth Errors (/auth/error?reason=<public-code>). Production.
@@ -19,9 +13,9 @@ import { compareSegments, type Rect, type Segment } from '../pixel-qa/segments'
  *
  * Runtime states: BLOCKED (board R2), SESSION_EXPIRED (board R3) and GENERIC
  * (no board panel: DESIGN-GAP-GENERIC). The board's horizontal rows become a
- * centred AuthCard (D6), so pixel QA compares the approved COMPONENTS (disc,
- * action) at their own positions; text is masked and checked by the DOM
- * typography contract.
+ * centred AuthCard (D6), so pixel QA compares the corrected AUTH4 board's
+ * COMPONENTS (disc, title, body, action) at their own positions (TASK 22.2,
+ * DEC-L1-D6). Text is compared for real: the revision is Space Grotesk.
  */
 
 let consoleErrors: string[] = []
@@ -87,7 +81,7 @@ test.describe('WF01-S04 functional', () => {
     page,
   }) => {
     await openError(page, '?reason=blocked')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tài khoản đang bị khoá')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tài khoản tạm thời bị khóa')
     const text = await page.locator('body').innerText()
     expect(text).not.toMatch(/\d{1,2}\/\d{1,2}/)
     expect(text).not.toMatch(/@/)
@@ -99,14 +93,12 @@ test.describe('WF01-S04 functional', () => {
     await expect(page.getByRole('button')).toHaveCount(0)
   })
 
-  test('SESSION_EXPIRED: approved meaning, lifetime from config, relogin to /auth', async ({
-    page,
-  }) => {
+  test('SESSION_EXPIRED: board copy, no unsaved-work claim, relogin to /auth', async ({ page }) => {
     await openError(page, '?reason=session_expired')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Phiên đăng nhập đã hết')
-    await expect(
-      page.getByText(`${Math.round(SESSION_TTL_SECONDS / 86400)} ngày trước`),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Phiên đăng nhập đã hết hạn')
+    await expect(page.getByText('Vui lòng đăng nhập lại để tiếp tục.')).toBeVisible()
+    // DEC-L1-D6: nothing saves unsent work, so the board's second sentence is not shown.
+    await expect(page.getByText(/đã được lưu/)).toHaveCount(0)
     await page.getByRole('link', { name: 'Đăng nhập lại' }).click()
     await expect(page).toHaveURL('/auth')
   })
@@ -166,7 +158,7 @@ test.describe('WF01-S04 functional', () => {
     )
     await page.goto('/auth', { waitUntil: 'networkidle' })
     await page.getByLabel('Email', { exact: true }).fill('member@example.test')
-    await page.getByRole('button', { name: 'Gửi link đăng nhập' }).click()
+    await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
     await expect(page.locator('form').getByRole('alert')).toBeVisible()
     await expect(page).toHaveURL('/auth')
   })
@@ -195,134 +187,116 @@ test.describe('WF01-S04 functional', () => {
   })
 })
 
-test.describe('WF01-S04 pixel QA', () => {
-  /** Board component positions (AUTH4, 1440x900): the "!" disc and R3's action. */
+test.describe('WF01-S04 pixel QA (corrected AUTH4 components)', () => {
+  /**
+   * Corrected AUTH4 board, measured once: the "!" disc, the title and body line
+   * origins (text box left / top, fixed from each line's glyph ink) and R3's
+   * action, for rows R2 and R3.
+   */
   const BOARD = {
-    blocked: { disc: { x: 67, y: 257 } },
-    session_expired: { disc: { x: 67, y: 399 }, action: { x: 1245, y: 399 } },
+    blocked: { disc: { x: 67, y: 229 }, title: { x: 121, y: 229 } },
+    session_expired: {
+      disc: { x: 67, y: 343 },
+      title: { x: 121, y: 343 },
+      body: { x: 121, y: 374 },
+      action: { x: 1245, y: 343 },
+    },
   } as const
-  const DISC_PAD = 6
+  const REFERENCE = 'design-reference/final/revision/L1/AUTH4__auth-errors__SOURCE.png'
 
-  async function capture(page: Page, reason: string) {
-    const { screens } = loadManifest()
-    const [viewport] = await runScreenQa(
-      page,
-      findScreen(screens, 'WF01-S04'),
-      qaConfigFor('WF01-S04')!,
-      {
-        query: `?reason=${reason}`,
-        name: `WF01-S04.${reason}`,
-        afterLoad: async (p) => {
-          await expect(p.locator(`[data-auth-error="${reason}"]`)).toBeVisible()
-        },
-      },
-    )
-    expect(viewport!.conditions).toEqual({
-      viewport: { width: 1440, height: 900 },
-      dpr: 1,
-      fonts: 'loaded',
+  /** Page-space box of an element's text (its line box), not of the element. */
+  const textBox = (page: Page, selector: string) =>
+    page.locator(selector).evaluate((el) => {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      const r = range.getBoundingClientRect()
+      return { x: Math.round(r.x), y: Math.round(r.y), width: Math.ceil(r.width) }
     })
-    expect(viewport!.typography!.violations).toEqual([])
-    return viewport!
-  }
 
-  for (const reason of ['blocked', 'session_expired'] as const) {
-    test(`${reason}: typography contract and approved component comparison`, async ({ page }) => {
-      const viewport = await capture(page, reason)
+  for (const reason of Object.keys(BOARD) as (keyof typeof BOARD)[]) {
+    test(`${reason}: typography and component comparison`, async ({ page }) => {
+      await openError(page, `?reason=${reason}`)
       const board = BOARD[reason]
       const disc = (await page.locator('[data-auth-error] > div').first().boundingBox())!
-
+      const title = await textBox(page, '[data-auth-error] h1')
       const segments: Segment[] = [
         {
           name: 'disc',
-          reference: {
-            x: board.disc.x - DISC_PAD,
-            y: board.disc.y - DISC_PAD,
-            width: 34 + DISC_PAD * 2,
-            height: 34 + DISC_PAD * 2,
-          },
+          reference: { x: board.disc.x - 6, y: board.disc.y - 6, width: 46, height: 46 },
           dx: Math.round(disc.x) - board.disc.x,
           dy: Math.round(disc.y) - board.disc.y,
         },
-      ]
-      if ('action' in board) {
-        const action = (await page.getByRole('link', { name: 'Đăng nhập lại' }).boundingBox())!
-        segments.push({
-          name: 'action',
+        {
+          name: 'title',
           reference: {
-            x: board.action.x - 5,
-            y: board.action.y - 5,
-            width: 128 + 10,
-            height: 41 + 10,
+            x: board.title.x - 2,
+            y: board.title.y - 2,
+            width: title.width + 4,
+            height: 28,
           },
-          dx: Math.round(action.x) - board.action.x,
-          dy: Math.round(action.y) - board.action.y,
-        })
-      }
-      // Only the action LABEL glyphs are masked; its border and fill are compared.
-      const mask: Rect[] = await page.evaluate(() =>
-        [...document.querySelectorAll('[data-auth-error] a')].map((el) => {
-          const range = document.createRange()
-          range.selectNodeContents(el)
-          const r = range.getBoundingClientRect()
-          return { x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 }
-        }),
-      )
-
-      const reference = readPng(path.join(REPO_ROOT, viewport.images.REFERENCE))
-      const actual = readPng(path.join(REPO_ROOT, viewport.images.ACTUAL))
-      const diffPath = resolveOutputPath('diff', `WF01-S04.${reason}.components.diff.png`)
-      const results = compareSegments(reference, actual, segments, mask, { diffPath })
-
-      writeJsonReport(`WF01-S04.${reason}.components.json`, {
-        screen_id: 'WF01-S04',
-        state: reason,
-        images: {
-          REFERENCE: viewport.images.REFERENCE,
-          ACTUAL: viewport.images.ACTUAL,
-          DIFF: path.relative(REPO_ROOT, diffPath),
+          dx: title.x - board.title.x,
+          dy: title.y - board.title.y,
         },
-        excluded_annotations: [
-          'board title',
-          '"Vì sao viết thế này" rationale lines',
-          'rows R1 and R4',
-        ],
+      ]
+      if ('body' in board) {
+        const body = await textBox(page, '[data-auth-error] h1 + p')
+        const action = (await page.getByRole('link', { name: 'Đăng nhập lại' }).boundingBox())!
+        segments.push(
+          {
+            // The board's body continues after this sentence; only the kept part is compared.
+            name: 'body',
+            reference: {
+              x: board.body.x - 2,
+              y: board.body.y - 2,
+              width: body.width + 3,
+              height: 26,
+            },
+            dx: body.x - board.body.x,
+            dy: body.y - board.body.y,
+          },
+          {
+            name: 'action',
+            reference: { x: board.action.x - 5, y: board.action.y - 5, width: 138, height: 51 },
+            dx: Math.round(action.x) - board.action.x,
+            dy: Math.round(action.y) - board.action.y,
+          },
+        )
+      }
+      await auditRevision(page, {
+        name: `WF01-S04.AUTH4.${reason}`,
+        reference: REFERENCE,
+        segments,
         intentional: [
           {
             class: 'INTENTIONAL-COMPOSITION',
             reason:
               'DEC-WF01-S04-D6: board rows become one centred AuthCard; components compared at their own positions',
           },
-          {
-            class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
-            reason: 'board raster predates the frozen font stack; DOM typography contract passed',
-          },
           ...(reason === 'blocked'
             ? [
                 {
                   class: 'INTENTIONAL-DATA-ABSENCE',
-                  reason: 'DEC-WF01-S04-D4: board date "20/09" has no data source and is dropped',
+                  reason:
+                    'DEC-WF01-S04-D4/D5 + DEC-L1-D6: no email about a block and no support contact exist, so the board body and its "Liên hệ hỗ trợ" action are replaced by the kept truthful copy',
                 },
+              ]
+            : [
                 {
                   class: 'INTENTIONAL-DATA-ABSENCE',
                   reason:
-                    'DEC-WF01-S04-D5: no configured support contact; generic support copy instead of the board email button',
+                    'DEC-L1-D6: "Nội dung bạn đang thực hiện đã được lưu." is not shown; nothing saves unsent work',
                 },
-              ]
-            : []),
+              ]),
         ],
-        segments: results,
-        product_pixel_pass_claimed: false,
       })
-
-      for (const r of results) {
-        expect(r.outside_ratio, `${reason} ${r.name} drift`).toBeLessThan(0.002)
-      }
     })
   }
 
   test('generic: DESIGN-GAP-GENERIC, typography and geometry sanity only', async ({ page }) => {
-    const viewport = await capture(page, 'generic')
+    await openError(page, '?reason=generic')
+    await settle(page)
+    const typography = await assertTypography(page, REVISION_FACES)
+    expect(typography.violations).toEqual([])
     const card = (await page.locator('[data-ui="surface"]').boundingBox())!
     // Same centred AuthCard as the other states: fully inside the viewport, centred.
     expect(Math.round(card.width)).toBe(440)
@@ -337,8 +311,7 @@ test.describe('WF01-S04 pixel QA', () => {
       state: 'generic',
       pixel_mode: 'DESIGN-GAP-GENERIC',
       reason:
-        'DEC-WF01-S04-D2: no approved board panel; functional fallback reusing the S04 components. Manual PO review required.',
-      images: { ACTUAL: viewport.images.ACTUAL },
+        'DEC-WF01-S04-D2: no board panel; functional fallback reusing the AUTH4 components. Manual PO review required.',
       product_pixel_pass_claimed: false,
     })
   })

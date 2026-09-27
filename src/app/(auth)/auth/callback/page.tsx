@@ -8,7 +8,7 @@ import { CallbackScreen } from './callback-screen'
  * WF01-S03 — /auth/callback?token=<opaque> (decision D7). Next: WF01-S05
  * onboarding, WF02-S01 when onboarding is complete, or WF01-S04 on error.
  * Approved evidence: the AUTH3 state board,
- * design-reference/final/WF01/WF01-S03__auth-callback-states__1440x900.png
+ * design-reference/final/revision/L1/AUTH3__auth-callback-states__SOURCE.png (TASK 22.2)
  *
  * STATIC ON PURPOSE. The page must not read searchParams on the server: a
  * dynamic render embeds the request URL, token included, in the inline RSC

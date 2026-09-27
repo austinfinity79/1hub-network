@@ -1,25 +1,17 @@
-import path from 'node:path'
-
 import { expect, test, type Page } from '@playwright/test'
 
 import { consumeMagicLink, requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { hashToken } from '../../../src/lib/auth/tokens'
 import { closePool, query } from '../../../src/lib/db/client'
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { readPng } from '../pixel-qa/png'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect } from '../pixel-qa/segments'
+import { auditRevision } from '../pixel-qa/revision'
 
 /**
  * WF01-S03 — Auth Callback (/auth/callback?token=…). Production, state-board.
  *
  * Tokens are minted server-side with the real M0-T08 functions (the API never
  * returns a raw token), then expired or spent directly, so every state is
- * deterministic. Pixel QA compares each runtime state with ITS OWN approved
- * board panel (WF01_S03_STATE_BOARD_MAPPING.md), never with the whole board.
+ * deterministic. Pixel QA compares each runtime state with ITS OWN panel of
+ * the corrected AUTH3 board (TASK 22.2, DEC-L1-D5), never with the whole board.
  */
 
 const MEMBER = 'member@example.test' // onboarding complete
@@ -100,8 +92,10 @@ test.describe('WF01-S03 functional', () => {
     await page.goto(callback(await mint(NEWCOMER)))
     const state = page.locator('[data-callback-state="success"]')
     await expect(state).toBeVisible()
-    await expect(state.getByRole('heading', { level: 1 })).toHaveText('Đăng nhập được')
-    await expect(state.getByRole('status')).toHaveText('Đang chuyển…')
+    await expect(state.getByRole('heading', { level: 1 })).toHaveText('Đăng nhập thành công')
+    // DEC-L1-D5: the body names the real destination of an unfinished account.
+    await expect(state).toContainText('Bạn sẽ được chuyển đến bước hoàn thiện hồ sơ cá nhân')
+    await expect(state.getByRole('status')).toHaveText('Đang chuyển hướng...')
   })
 
   test('EXPIRED: no session, the approved state, and a way back to /auth', async ({ page }) => {
@@ -111,15 +105,18 @@ test.describe('WF01-S03 functional', () => {
     await page.goto(callback(token))
 
     await expect(page).toHaveURL('/auth/callback?status=expired')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Link đã hết hạn')
-    await expect(page.getByText('Link chỉ sống 15 phút.', { exact: false })).toBeVisible()
-    // DEC-WF01-S03-D6a: the copy sends the user back for a new link and no
-    // longer promises an in-place resend (DEC-WF01-S03-D1).
-    await expect(page.getByText('hãy quay lại nhập email để nhận', { exact: false })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Liên kết đã hết hạn')
+    await expect(
+      page.getByText('Liên kết đăng nhập chỉ có hiệu lực trong 15 phút.', { exact: false }),
+    ).toBeVisible()
+    // The copy asks for a new link and promises no in-place resend (DEC-WF01-S03-D1).
+    await expect(
+      page.getByText('Vui lòng yêu cầu liên kết mới để tiếp tục.', { exact: false }),
+    ).toBeVisible()
     await expect(page.getByText('nút gửi lại phải ở ngay', { exact: false })).toHaveCount(0)
     expect(await sessionsFor(MEMBER)).toBe(before)
 
-    await page.getByRole('link', { name: 'Gửi link mới' }).click()
+    await page.getByRole('link', { name: 'Gửi liên kết mới' }).click()
     await expect(page).toHaveURL('/auth')
   })
 
@@ -132,9 +129,9 @@ test.describe('WF01-S03 functional', () => {
     await page.goto(callback(token))
 
     await expect(page).toHaveURL('/auth/callback?status=used')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Link đã dùng rồi')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Liên kết không còn hiệu lực')
     expect(await sessionsFor(MEMBER)).toBe(before)
-    await page.getByRole('link', { name: 'Gửi link mới' }).click()
+    await page.getByRole('link', { name: 'Gửi liên kết mới' }).click()
     await expect(page).toHaveURL('/auth')
   })
 
@@ -147,7 +144,7 @@ test.describe('WF01-S03 functional', () => {
     const token = await mint(MEMBER)
     await expire(token)
     await page.goto(callback(token))
-    await page.getByRole('link', { name: 'Gửi link mới' }).click()
+    await page.getByRole('link', { name: 'Gửi liên kết mới' }).click()
     await expect(page).toHaveURL('/auth')
     expect(resends).toBe(0)
   })
@@ -166,9 +163,9 @@ test.describe('WF01-S03 functional', () => {
 
   test('a refreshed terminal state stays, with no token needed', async ({ page }) => {
     await page.goto('/auth/callback?status=used')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Link đã dùng rồi')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Liên kết không còn hiệu lực')
     await page.reload()
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Link đã dùng rồi')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Liên kết không còn hiệu lực')
   })
 
   test('two tabs opening the same link: exactly one session, the other sees USED', async ({
@@ -230,7 +227,7 @@ test.describe('WF01-S03 functional', () => {
   }) => {
     await page.goto('/auth/callback?status=expired')
     await page.keyboard.press('Tab')
-    const link = page.getByRole('link', { name: 'Gửi link mới' })
+    const link = page.getByRole('link', { name: 'Gửi liên kết mới' })
     await expect(link).toBeFocused()
     expect(await link.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none')
     await page.keyboard.press('Enter')
@@ -238,49 +235,28 @@ test.describe('WF01-S03 functional', () => {
   })
 })
 
-test.describe('WF01-S03 pixel QA (per-state panel)', () => {
+test.describe('WF01-S03 pixel QA (corrected AUTH3, per-state panel)', () => {
   /**
-   * Approved panel content regions on the AUTH3 board (mapping D5), and the
-   * board y of each panel's icon disc top, used to align the runtime card.
+   * Corrected AUTH3 board: each panel's content column (inside its frame and
+   * the EXPIRED panel's annotation outline, D2) and its icon disc's top-left.
    */
   const PANELS = {
-    success: { x: 46, discTop: 344 },
-    expired: { x: 504, discTop: 344 },
-    used: { x: 961, discTop: 344 },
+    success: { x: 52, discX: 231 },
+    expired: { x: 509, discX: 688 },
+    used: { x: 966, discX: 1145 },
   } as const
-  const CROP = { y: 330, width: 433, height: 290 }
+  const CROP = { y: 346, width: 422, height: 254 }
+  const DISC_TOP = 356
 
   for (const state of Object.keys(PANELS) as (keyof typeof PANELS)[]) {
-    test(`${state}: typography contract and panel comparison`, async ({ page }) => {
-      let query: string
+    test(`${state}: typography and panel comparison`, async ({ page }) => {
       if (state === 'success') {
         await page.route('**/onboarding/purpose**', () => new Promise(() => {}))
-        query = `?token=${encodeURIComponent(await mint(NEWCOMER))}`
+        await page.goto(callback(await mint(NEWCOMER)), { waitUntil: 'load' })
       } else {
-        query = `?status=${state}`
+        await page.goto(`/auth/callback?status=${state}`, { waitUntil: 'networkidle' })
       }
-
-      const { screens } = loadManifest()
-      const [viewport] = await runScreenQa(
-        page,
-        findScreen(screens, 'WF01-S03'),
-        qaConfigFor('WF01-S03')!,
-        {
-          query,
-          name: `WF01-S03.${state}`,
-          waitUntil: state === 'success' ? 'load' : 'networkidle',
-          afterLoad: async (p) => {
-            await expect(p.locator(`[data-callback-state="${state}"]`)).toBeVisible()
-          },
-        },
-      )
-
-      expect(viewport!.conditions).toEqual({
-        viewport: { width: 1440, height: 900 },
-        dpr: 1,
-        fonts: 'loaded',
-      })
-      expect(viewport!.typography!.violations).toEqual([])
+      await expect(page.locator(`[data-callback-state="${state}"]`)).toBeVisible()
 
       // Align the board panel to the runtime card by the disc's top-left.
       const disc = (await page
@@ -288,68 +264,25 @@ test.describe('WF01-S03 pixel QA (per-state panel)', () => {
         .first()
         .boundingBox())!
       const panel = PANELS[state]
-      const boardDiscX = panel.x + (CROP.width - 64) / 2
-      const dx = Math.round(disc.x) - Math.round(boardDiscX)
-      const dy = Math.round(disc.y) - panel.discTop
-
-      // Text boxes are masked; for the action pill only its label glyphs are,
-      // so the pill's fill and corners are still compared strictly.
-      const mask: Rect[] = await page.evaluate(() => {
-        const pad = (r: DOMRect) => ({
-          x: r.x - 2,
-          y: r.y - 2,
-          width: r.width + 4,
-          height: r.height + 4,
-        })
-        const rects = [...document.querySelectorAll('h1, p')].map((el) =>
-          pad(el.getBoundingClientRect()),
-        )
-        for (const el of document.querySelectorAll(
-          '[data-callback-state] a, [data-callback-state] [role="status"]',
-        )) {
-          const range = document.createRange()
-          range.selectNodeContents(el)
-          rects.push(pad(range.getBoundingClientRect()))
-        }
-        return rects
-      })
-
-      const reference = readPng(path.join(REPO_ROOT, viewport!.images.REFERENCE))
-      const actual = readPng(path.join(REPO_ROOT, viewport!.images.ACTUAL))
-      const diffPath = resolveOutputPath('diff', `WF01-S03.${state}.panel.diff.png`)
-      const [result] = compareSegments(
-        reference,
-        actual,
-        [{ name: `panel-${state}`, reference: { x: panel.x, ...CROP }, dy, dx }],
-        mask,
-        { diffPath },
-      )
-
-      writeJsonReport(`WF01-S03.${state}.panel.json`, {
-        screen_id: 'WF01-S03',
-        state,
-        images: {
-          REFERENCE: `${viewport!.images.REFERENCE} @ x${panel.x} y${CROP.y} ${CROP.width}x${CROP.height}`,
-          ACTUAL: viewport!.images.ACTUAL,
-          DIFF: path.relative(REPO_ROOT, diffPath),
-        },
-        excluded_annotations: [
-          'board title (44,48)',
-          'red outline on the EXPIRED panel (D2)',
-          'other panels',
+      await auditRevision(page, {
+        name: `WF01-S03.AUTH3.${state}`,
+        reference: 'design-reference/final/revision/L1/AUTH3__auth-callback-states__SOURCE.png',
+        segments: [
+          {
+            name: `panel-${state}`,
+            reference: { x: panel.x, ...CROP },
+            dx: Math.round(disc.x) - panel.discX,
+            dy: Math.round(disc.y) - DISC_TOP,
+          },
         ],
         intentional: [
           {
-            class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
+            class: 'INTENTIONAL-COMPOSITION',
             reason:
-              'Board raster predates the frozen APEC font stack; DOM typography contract passed',
+              'DEC-WF01-S03-D5: one state in one centred AuthCard; the board, its title, the other panels and the EXPIRED outline (D2) are not compared',
           },
         ],
-        segment: result,
-        product_pixel_pass_claimed: false,
       })
-
-      expect(result!.outside_ratio, `${state} geometry/surface drift`).toBeLessThan(0.002)
     })
   }
 })

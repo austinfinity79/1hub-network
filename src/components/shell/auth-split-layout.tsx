@@ -4,38 +4,24 @@ import styles from './auth-split-layout.module.css'
 import { HomeLink } from '@/components/shell/home-link'
 
 /**
- * WF01-S01 — brand panel plus content column for the auth screens.
- *
- * Built for WF01-S01; WF01-S02's approved baseline shows the identical panel,
- * so it is shared rather than screen-local. Copy is the approved baseline text,
- * verbatim. It is static by contract: WF01-S01 reads no data (Screen Contract
- * `reads: []`), so the figures are presentation copy, not live counts.
+ * Brand panel plus content column for the auth screens AUTH1 (/auth) and
+ * AUTH2 (/auth/check-email). TASK 22.2 follows the corrected L1 reference
+ * (design-reference/final/revision/L1): wordmark and one headline; the
+ * previous panel's figures and footnotes are gone with the revision. Static by
+ * contract (WF01-S01 reads no data).
  */
 export function AuthSplitLayout({ children }: { children: ReactNode }) {
   return (
     <div className={styles.root} data-shell="auth-split">
       <aside className={styles.brand} aria-label="HUB NETWORK">
-        <p className={`type-subtitle ${styles.wordmark}`}>
+        <p className={styles.wordmark}>
           <HomeLink>HUB NETWORK</HomeLink>
         </p>
-
-        <div className={styles.pitch}>
-          <p className={`type-display ${styles.headline}`}>
-            <span>Bài toán thật</span>
-            <span>từ đơn vị đang trả tiền</span>
-            <span>để giải nó</span>
-          </p>
-          {/* Line breaks are part of the approved composition, as in the headline. */}
-          <p className={`type-body-sm ${styles.muted} ${styles.pitchNote}`}>
-            <span>12 bài toán đang mở · 9 doanh nghiệp và 3 sở ngành ·</span>
-            <span>1,4 tỷ ngân sách thử nghiệm</span>
-          </p>
-        </div>
-
-        <div className={`type-meta-xs ${styles.muted} ${styles.footnote}`}>
-          <p>Không đăng nhập vẫn đọc được toàn bộ đề bài.</p>
-          <p>Đăng nhập để nộp giải pháp, xem hồ sơ startup và dự sự kiện.</p>
-        </div>
+        <p className={styles.headline}>
+          <span>Đồng hành cùng</span>
+          <span>cộng đồng đổi mới sáng</span>
+          <span>tạo Việt Nam</span>
+        </p>
       </aside>
 
       <main className={styles.main}>{children}</main>

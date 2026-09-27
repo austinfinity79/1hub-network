@@ -92,7 +92,7 @@ const newEmail = (tag: string) =>
 async function signIn(page: Page, email: string) {
   await page.goto('/auth', { waitUntil: 'networkidle' })
   await page.getByLabel('Email', { exact: true }).fill(email)
-  await page.getByRole('button', { name: 'Gửi link đăng nhập' }).click()
+  await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
   await expect(page).toHaveURL('/auth/check-email')
   const { token } = await requestMagicLink(email, null)
   await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
@@ -113,7 +113,7 @@ async function onboard(page: Page, name: string) {
   await page.getByRole('checkbox').check()
   await page.getByRole('button', { name: 'Xong, vào HUB' }).click()
   await expect(page).toHaveURL('/onboarding/complete')
-  await page.getByRole('link', { name: 'Vào 1hub.network' }).click()
+  await page.getByRole('link', { name: 'Vào Tài khoản của tôi' }).click()
   await expect(page).toHaveURL('/me')
 }
 

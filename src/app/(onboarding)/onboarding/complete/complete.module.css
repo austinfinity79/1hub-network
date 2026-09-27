@@ -1,61 +1,102 @@
 /*
- * WF01-S08 — completion card. LOCAL values measured from the approved WF01-S08
- * baseline at 1440x900 DPR1 (px / 16 = rem). The card frame matches
- * WF01-S05..S07; the baseline centres the card vertically in the canvas.
+ * WF01-S08 / ACC-10 subset — completion card, measured from the corrected L1
+ * reference at 1440x900 DPR1 (TASK 22.2). The card is set in Space Grotesk
+ * (DEC-HD-12) by re-pointing --font-ui on its subtree; the onboarding shell
+ * around it keeps the legacy typography (DEC-L1-D7).
  */
 
-/* The shell main has 45px vertical padding under a 63px header. */
+.revision {
+  --font-ui: 'Space Grotesk', 'Be Vietnam Pro', system-ui, sans-serif;
+
+  font-family: var(--font-ui);
+}
+
+/* The reference places the card 56px under the header, top-aligned. */
 .frame {
+  composes: revision;
   display: flex;
-  align-items: center;
-  min-height: calc(100vh - 3.9375rem - 5.625rem);
+  align-items: flex-start;
+  padding-top: 0.6875rem;
 }
 
 .card {
-  width: 47.5rem;
+  width: 51.25rem;
+  --unresolved-border-surface: #e4dede;
   --unresolved-radius-surface: 0.875rem;
   --unresolved-shadow-surface: 0 0.5rem 1.875rem
     color-mix(in srgb, var(--hub-burgundy) 7%, transparent);
-  --unresolved-space-surface: 2.25rem;
+  --unresolved-space-surface: 2.75rem;
   --unresolved-radius-control: 0.5rem;
-  --unresolved-space-control-y: 0.8125rem;
+  --unresolved-space-control-y: 0.75rem;
   --unresolved-space-control-x: 1.5rem;
 }
 
+.done {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: var(--hub-primary);
+}
+
+.done svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: var(--hub-burgundy);
+  stroke-width: 2.5;
+}
+
 .title {
-  margin: 0;
+  margin: 1.625rem 0 0;
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 2.25rem;
 }
 
 .lede {
-  margin: 0.375rem 0 0;
-  color: var(--unresolved-fg-muted);
+  margin: 0.625rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: #534041;
 }
 
-/* P0-SHELL (DEC-P0-SHELL-D6): the action card, measured from the baseline's
-   card 02 (686x89 at 377, 423; 20px inset; index column 33px; 133x44 button). */
+/* In the pending, missing and failed states the lede is the first line. */
+.card section > .lede:first-child,
+.card [role='alert'] > .lede:first-child {
+  margin-top: 0;
+}
+
 .cards {
-  margin: 1.5rem 0 0;
+  margin: 1.8125rem 0 0;
   padding: 0;
   list-style: none;
 }
 
 .cards + .info {
-  margin-top: 1.5rem;
+  margin-top: 1.6875rem;
 }
 
+/* P0-SHELL (DEC-P0-SHELL-D6): the project card, drawn as ACC-10's card 02. */
 .action {
   display: flex;
   align-items: center;
-  min-height: 5.5625rem;
-  padding: 0 1.25rem;
-  border: 1px solid #dcd6d6;
+  min-height: 5.1875rem;
+  padding: 0 1.25rem 0 1rem;
+  border: 1px solid #e4dede;
   border-radius: 0.5rem;
-  background: #fbfafa;
+  background: var(--hub-surface);
 }
 
 .index {
   flex: none;
-  width: 2.0625rem;
+  width: 2.3125rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
   color: #b91610;
 }
 
@@ -66,12 +107,16 @@
 
 .actionTitle {
   margin: 0;
-  line-height: 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.375rem;
   color: #170002;
 }
 
 .actionBody {
   margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
   color: #534041;
 }
 
@@ -81,6 +126,8 @@
   height: 2.75rem;
   padding: 0;
   justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -91,40 +138,40 @@
 
 .info {
   display: flex;
-  align-items: flex-start;
-  gap: 0.8125rem;
-  margin-top: 1.3125rem;
-  padding: 1rem 1rem 0.9375rem;
-  border-radius: 0.625rem;
-  background: var(--unresolved-fill-notice);
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  background: #f7f3f3;
 }
 
-/* Deterministic info mark in place of the baseline's OS emoji (D7). */
+/* The reference's "i" mark is a mono glyph (IBM Plex Mono 500, approved). */
 .icon {
   flex: none;
-  width: 0.875rem;
-  height: 0.875rem;
-  fill: none;
-  stroke: var(--unresolved-fg-muted);
-  stroke-width: 1.5;
-  stroke-linecap: round;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: #b91610;
 }
 
 .infoText {
   margin: 0;
-  /* The baseline sets the panel text at a 22px pitch. */
-  line-height: 1.375rem;
-  color: var(--unresolved-fg-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: #534041;
 }
 
 .missing {
   margin: 1rem 0 0;
   padding-left: 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
 }
 
 .missing a {
   color: var(--color-fg-default);
-  font-weight: var(--weight-medium);
+  font-weight: 500;
 }
 
 .footer {
@@ -133,12 +180,55 @@
   margin-top: 1.5rem;
 }
 
-.footer :global(.ui-button) {
+.footer :global(.ui-button:focus-visible),
+.missing a:focus-visible,
+.exit:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+/* The reference's header exit to /me (D6), in the revision's type. */
+.exit {
+  composes: revision;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: #b91610;
+  text-decoration: none;
   white-space: nowrap;
 }
 
-.footer :global(.ui-button:focus-visible),
-.missing a:focus-visible {
-  outline: 0.125em solid var(--color-fg-accent);
-  outline-offset: 0.125em;
+/* Below desktop the card follows the viewport with a 16px gutter; below 768px
+   the project action wraps its button under the text. 1440 is untouched. */
+@media (max-width: 1023px) {
+  .frame {
+    box-sizing: border-box;
+    justify-content: center;
+    width: 100%;
+    padding-inline: 1rem;
+  }
+
+  .card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .card {
+    --unresolved-space-surface: 1.5rem;
+  }
+
+  .action {
+    flex-wrap: wrap;
+    row-gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .actionText {
+    min-width: 10rem;
+  }
+
+  .action :global(.ui-button) {
+    margin-left: 2.3125rem;
+  }
 }
