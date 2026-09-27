@@ -41,6 +41,8 @@ type DemoStore = {
   save: (detail: ProgrammeDemoDetailDTO, created?: boolean) => boolean
   remove: (id: string) => boolean
   reset: () => void
+  /** Counts resets in this page, so screens can drop editor state that predates one. */
+  generation: number
   /** A one-off confirmation for the next screen (kept in memory, gone on reload). */
   flash: string | null
   /** False during the server render and hydration: the session state is not read yet. */
@@ -74,6 +76,7 @@ export function ProgrammeDemoProvider({
   const key = demoStoreKey(actorKey)
   const memory = useRef<string | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
+  const [generation, setGeneration] = useState(0)
 
   const subscribe = useCallback((notify: () => void) => {
     window.addEventListener(CHANGE_EVENT, notify)
@@ -133,15 +136,17 @@ export function ProgrammeDemoProvider({
         commit(null)
         memory.current = null
         setFlash(null)
+        setGeneration((g) => g + 1)
         window.dispatchEvent(new Event(CHANGE_EVENT))
       },
+      generation,
       flash,
       setFlash,
       ready,
       readFailed,
       reread: () => window.dispatchEvent(new Event(CHANGE_EVENT)),
     }),
-    [state, allowance, commit, read, flash, ready, readFailed],
+    [state, allowance, commit, read, generation, flash, ready, readFailed],
   )
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>

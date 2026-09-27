@@ -24,7 +24,9 @@ import { SetupStepper } from './setup-stepper'
  * inside the actor's allowance), shows loading / not-found / a read error with
  * "Thử lại" (DEC-WF04-S06-D2), the header with back / next, the stepper, and a
  * save error with "Thử lại". `apply` stores
- * one atomic edit of the session copy; nothing reaches the server.
+ * one atomic edit of the session copy; nothing reaches the server. "Đặt lại
+ * demo" re-mounts the step body and drops a pending retry, so no open editor
+ * or failed save outlives the reset.
  */
 
 export type Applied<E> = { ok: boolean; errors?: E }
@@ -68,8 +70,13 @@ export function SetupScreen({
     allowance: OrganizationAllowance
   }) => ReactNode
 }) {
-  const { state, allowance, ready, save, readFailed, reread } = useProgrammeDemo()
-  const [retry, setRetry] = useState<ProgrammeDemoDetailDTO | null>(null)
+  const { state, allowance, ready, save, readFailed, reread, generation } = useProgrammeDemo()
+  const [failedSave, setFailedSave] = useState<{
+    copy: ProgrammeDemoDetailDTO
+    generation: number
+  } | null>(null)
+  // A save that failed before a reset is not retried over the reset state.
+  const retry = failedSave?.generation === generation ? failedSave.copy : null
   // A successful retry re-mounts the step body, so the editor that failed closes.
   const [epoch, setEpoch] = useState(0)
 
@@ -124,10 +131,10 @@ export function SetupScreen({
   const { programme, organization } = detail
   const store = (copy: ProgrammeDemoDetailDTO) => {
     if (save(copy)) {
-      setRetry(null)
+      setFailedSave(null)
       return true
     }
-    setRetry(copy)
+    setFailedSave({ copy, generation })
     return false
   }
   const apply: Apply = (result) => {
@@ -209,7 +216,7 @@ export function SetupScreen({
             </button>
           </div>
         ) : null}
-        <Fragment key={epoch}>{children({ detail, apply, allowance })}</Fragment>
+        <Fragment key={`${generation}.${epoch}`}>{children({ detail, apply, allowance })}</Fragment>
       </DemoPage>
     </div>
   )
