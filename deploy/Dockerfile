@@ -5,6 +5,9 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+# pnpm applies patches/ (patchedDependencies) during the install; the frozen
+# install fails without it, so it is copied before the install.
+COPY patches ./patches
 RUN pnpm install --frozen-lockfile
 COPY . .
 RUN NODE_ENV=production pnpm build
