@@ -41,6 +41,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **INTERNAL ALPHA COMPLETION AUDIT — FINAL RECHECK (`dcbde62`): NOT GREEN — release SHA NOT frozen** ([report](reports/INTERNAL-ALPHA_final-recheck.md)). Clean `git archive` install + fresh DB: patch reproducible (frozen install, patched bundle), IA-P2-02 0 #418, format / lint / typecheck / build, unit 237, DB 349, full suite 640 passed / 24 opt-in skipped / 0 failed, migrations, seed, security, navigation, privacy PASS. **Open: IA-P2-03 (P2)** — below 1280 px the WF03 members "Mở →", WF02 team "Huỷ lời mời" and WF03 events actions are unreachable by pointer / touch (clipped tables, overlaid side panel). Watch: IA-OBS-01. Deploy requirement: copy `patches/` before `pnpm install`. Manifest stays DRAFT — NOT READY; nothing deployed.
 
+**INTERNAL ALPHA — CLOSURE DEFECT IA-P2-03 BASIC RESPONSIVE SAFETY: CLOSED — READY FOR FINAL RELEASE RECHECK** ([report](reports/IA-P2-03_basic-responsive-safety.md)). CSS only (`9c61458`): the WF03 members / network and WF02 team tables scroll sideways inside their frame instead of clipping; the WF03 events list scrolls in its card below 1280 px and the side column stacks below 1024 px. 0 unreachable, covered or clipped controls on 28 routes at 1440 / 1024 / 768 / 390; 1440 unchanged; new REL-RESP pointer-reachability test; protected WF02 / WF03 / P0-SHELL 218 passed, WF01 / WF04 / WF05 smoke 39 passed. P0 / P1 / P2 = 0. Release SHA not frozen; nothing deployed.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -129,7 +131,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-INTERNAL ALPHA — CLOSURE DEFECT IA-P2-03 BASIC RESPONSIVE SAFETY (needs explicit authorization: protected WF02 / WF03 screens): let the WF03 members and WF02 team table wrappers scroll sideways, stop the WF03 events side panel overlaying the list below its breakpoint, add a REL-RESP pointer / touch reachability assertion at 1024 / 768 / 390; then INTERNAL ALPHA COMPLETION AUDIT — FINAL RECHECK + FREEZE RELEASE SHA. Do not deploy. Not started automatically.
+INTERNAL ALPHA — FINAL RELEASE RECHECK + FREEZE EXACT SHA (the deploy build must copy `patches/` before `pnpm install --frozen-lockfile`). Do not deploy. Not started automatically.
 
 ## Related
 

@@ -1,6 +1,6 @@
 # Internal Alpha Release Manifest
 
-**Status: DRAFT — NOT READY. Do not deploy.** The final recheck of `dcbde62` (clean install, fresh DB; [report](reports/INTERNAL-ALPHA_final-recheck.md)) is **NOT GREEN**: every gate passes except basic responsive safety — **IA-P2-03** (P2, open). IA-P2-02 is closed and its patch reproduces from tracked files. No release SHA is frozen; the recheck after IA-P2-03 freezes it here. When frozen: deploy EXACTLY that SHA, never a branch name or "latest main" (CLAUDE.md §14). Audit: [INTERNAL_ALPHA_COMPLETION_AUDIT.md](INTERNAL_ALPHA_COMPLETION_AUDIT.md).
+**Status: DRAFT — NOT READY. Do not deploy.** The final recheck of `dcbde62` (clean install, fresh DB; [report](reports/INTERNAL-ALPHA_final-recheck.md)) was **NOT GREEN** on basic responsive safety — **IA-P2-03**, since **CLOSED** by `9c61458` ([report](reports/IA-P2-03_basic-responsive-safety.md)). IA-P2-02 is closed and its patch reproduces from tracked files. No release SHA is frozen: the final release recheck freezes it here. When frozen: deploy EXACTLY that SHA, never a branch name or "latest main" (CLAUDE.md §14). Audit: [INTERNAL_ALPHA_COMPLETION_AUDIT.md](INTERNAL_ALPHA_COMPLETION_AUDIT.md).
 
 ## Release
 | Field | Value |
@@ -48,7 +48,7 @@
 | Sessions / idempotency | in PostgreSQL; an app or DB restart keeps users signed in (audited) |
 | Database | PostgreSQL 17 reachable through `DATABASE_URL`; migrations 001→009 (9, in order, rerun-safe); seeded once; `backup.sh` before each deploy |
 | Domain / TLS | review domain `1hubnetwork.io.vn` (nginx on the deploy branch: 80 + 443 ssl http2); a valid certificate must be in place before sign-in testing |
-| Supported width | member / ops screens: ≥ 1280 px until IA-P2-03 is fixed; landing, auth, WF04, WF05 also at 768 / 390 |
+| Supported width | every screen usable at 1440 / 1024 / 768 / 390 (IA-P2-03 closed); member / ops shells stay desktop-first with page-level sideways scroll at 390 (IA-P3-08) |
 
 ## Health / smoke (after deploy)
 | Check | Expect |
@@ -61,7 +61,7 @@
 | `GET /me` as guest | 307 → `/auth` |
 
 ## Known defects
-Open P2: **IA-P2-03** (release blocker). Accepted P3 (documented, none blocking): IA-P3-01..07, IA-L1, WF04-P3-01..06, WF05-P3-01..05 — see the audit's Defects table. Watch: IA-OBS-01.
+Open P0 / P1 / P2: none (IA-P2-02, IA-P2-03 closed). Accepted P3 (documented, none blocking): IA-P3-01..08, IA-L1, WF04-P3-01..06, WF05-P3-01..05 — see the audit's Defects table. Watch: IA-OBS-01.
 
 ## External dependencies (not product-code defects)
 | Item | Class |

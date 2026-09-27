@@ -6,6 +6,8 @@
 
 **Final recheck (2026-09-27, `dcbde62`, clean `git archive` install + fresh DB): NOT GREEN — no release SHA frozen** ([report](reports/INTERNAL-ALPHA_final-recheck.md)). IA-P2-02 fix reproducible from tracked files, 0 #418; format / lint / typecheck / build, unit 237, DB 349, full suite 640 passed / 24 opt-in skipped / 0 failed, fresh DB, security, navigation, privacy: PASS. **Open: IA-P2-03** (P2) — below 1280 px three row / list actions in WF02 / WF03 cannot be reached by pointer or touch (basic responsive gate). Watch: IA-OBS-01 (one unexplained DB-test stall). Deploy requirement: the image must copy `patches/` before `pnpm install --frozen-lockfile`.
 
+**Update (IA-P2-03 remediation, `9c61458`): IA-P2-03 CLOSED** ([report](reports/IA-P2-03_basic-responsive-safety.md)). CSS only: the WF03 members, WF03 network and WF02 team tables scroll sideways inside their frame instead of clipping; the WF03 events list scrolls in its card below 1280 px and its side column stacks below 1024 px. Pointer / touch probe of 28 routes at 1440 / 1024 / 768 / 390: 0 unreachable or covered controls, 0 clipping containers; 1440 identical (1 raster px). New REL-RESP pointer-reachability test (fails on the old CSS). Protected WF02 / WF03 / P0-SHELL regression 218 passed; WF01 / WF04 / WF05 smoke 39 passed. P0 / P1 / P2 = 0. Status: **READY FOR FINAL RELEASE RECHECK** (release SHA still to be frozen).
+
 Answer to the gate question: **not yet.** The React hydration error #418 (OBS-WF05-01) reproduced once in this audit, on the public landing page, so by the task's closure rule Internal Alpha is not GREEN (**IA-P2-02**, open). Every other gate passed: scope, inventory, navigation, authorization, auth / session, WF01–WF05 journeys, data, migrations, seed, fresh DB, restart, production mode, build. One more P2 was found and fixed (**IA-P2-01**, sign-in request 500 on a malformed `X-Forwarded-For`). Once IA-P2-02 is closed, the deployment conditions below (HTTPS, dev routes off, seeded DB, operator-issued sign-in links) are what remains for internal team testing.
 
 ## Gates
@@ -20,7 +22,7 @@ Answer to the gate question: **not yet.** The React hydration error #418 (OBS-WF
 | — | Hydration #418 | **FAIL → CLOSED** | 1 occurrence (fresh-DB full run, `p0-shell-navigation` landing test) — IA-P2-02 below, closed by the remediation task; recheck pending |
 | 11 | Landing | PASS | `p0-landing` 1–10; guest / member CTAs; footer legal links resolve with legal content (see Dependencies); "Tương lai" surfaces are copy only, no link |
 | 12 | Shell / global UX | PASS | `p0-shell-navigation`; terminology consistent (Dự án / Startup, Chương trình / Challenge, Chapter / CLB, Sự kiện); P3 copy notes below |
-| 13 | Responsive | PASS (certified scope) → **FAIL at final recheck (IA-P2-03)** | REL-RESP 27 checks: all clean at 1440; landing, auth, WF05 clean at 768 / 390. Member, ops and onboarding shells are desktop-first (P0-SHELL audit; CLAUDE.md §5 1440 target): overflow at 768 (WF02 profile 609 px, venture 156) and 390 (onboarding 139, member home 205, WF02 profile 987, venture 534, WF03 dashboard 158) — IA-L1 |
+| 13 | Responsive | PASS (certified scope) → FAIL at final recheck (IA-P2-03) → **CLOSED** (`9c61458`) | REL-RESP 27 checks: all clean at 1440; landing, auth, WF05 clean at 768 / 390. Member, ops and onboarding shells are desktop-first (P0-SHELL audit; CLAUDE.md §5 1440 target): overflow at 768 (WF02 profile 609 px, venture 156) and 390 (onboarding 139, member home 205, WF02 profile 987, venture 534, WF03 dashboard 158) — IA-L1 |
 | 14 | Visual | PASS | Pixel QA and primitive specs in the full suite: Structural 0, Major 0, Component 0; Be Vietnam Pro default; no APEC blue; `design-reference/final` untouched |
 | 15 | Copy | PASS | Crawl: 0 placeholder, 0 technical term; P3 copy items below |
 | 16 | Data invariants | PASS | REL-DATA; full-run table deltas come only from WF01–WF03 production workflows under test; `programmes`, `events`, `role_assignments` untouched by WF04 / WF05 demo activity |
@@ -58,10 +60,11 @@ Facts: the landing page has **no app client component** (only Next `Link` / rout
 | IA-P3-04 | `/ops/org/:id/programmes` placeholder reachable by direct URL (English "Route reserved…", no data; DEC-WF03-G12) | P3 |
 | IA-P3-05 | No `error.tsx`: a server error shows Next's default English page; the 404 page has no link home | P3 |
 | IA-P3-06 | Stale comments / docs (P0_STATUS older "Next" lines, DECISION_LOG SEC-OBS-01 "OPEN" line, P0-SHELL audit header, `programme-demo/fixtures.ts` seed reference, `profile/projection.ts`) | P3 doc |
-| IA-P2-03 | **Open (P2, final recheck).** Unreachable by pointer / touch: WF03 members "Mở →" and WF02 team "Huỷ lời mời" at 1024 / 768 / 390 (`overflow: hidden` table wrappers), WF03 events row "Mở" at 1024 and "+ Tạo sự kiện" at 390 (side panel overlays; no breakpoint) | P2 — remediation task |
+| IA-P2-03 | **Closed (`9c61458`).** Was: unreachable by pointer / touch below 1280 px (WF03 members "Mở →", WF02 team "Huỷ lời mời", WF03 events "Mở" / "+ Tạo sự kiện"), WF03 network columns hidden. Fixed with local table scroll and an event-panel breakpoint | Closed |
 | IA-OBS-01 | One 5 s stall of the WF02-S04 concurrent-request DB test in the first clean-tree run; not reproduced (3 × 349 / 349 with lock-wait logging, isolation runs, connection bursts); mechanism unknown | Watch |
 | IA-P3-07 | Chrome "preloaded but not used" warnings (2 fonts, 2 CSS) on `/ops/org/:id` | P3 |
-| IA-L1 | App shells (member, ops, onboarding) desktop-first; verified usable at ≥ 1280 px (the earlier "≥ 1024 px" was wrong, see IA-P2-03); page-level sideways scroll at 768 / 390 | Documented limitation |
+| IA-P3-08 | Page-level sideways scroll with every control reachable: WF02 profile editor at 1024 (+353 px) and 768 (+609), roles (+37) and venture create / edit (+156) at 768; desktop-first member / ops / onboarding shells at 390 | P3 — mobile polish later |
+| IA-L1 | App shells (member, ops, onboarding) desktop-first (DEC-P0-SHELL-D7); after IA-P2-03 every control is reachable at 1440 / 1024 / 768 / 390, with page-level sideways scroll where IA-P3-08 lists it | Documented limitation |
 | — | Carried: WF04-P3-01..06, WF05-P3-01..05 | P3 |
 
 ## Deployment dependencies
