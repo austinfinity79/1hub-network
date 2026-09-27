@@ -1,55 +1,47 @@
 # Claude Task Report
 
 ## Task
-WF04 — COMPLETION AUDIT + HAPPY PATH UAT (INTERNAL ALPHA, DEMO). Process: PROCESS-P0-ACCELERATED-SAFE-V2 §I (workflow closing gate).
+WF05 — PRE-IMPLEMENTATION BUSINESS / DATA / DESIGN AUDIT (INTERNAL ALPHA). Mode: AUDIT ONLY. Process: PROCESS-P0-ACCELERATED-SAFE-V2.
 
-## Verdict
-**GREEN — WF04 PROTECTED / CLOSED / GREEN.** Audit: [WF04_COMPLETION_AUDIT.md](reports/WF04_COMPLETION_AUDIT.md). UAT: [WF04_UAT_MATRIX.md](WF04_UAT_MATRIX.md). No new product scope; no decision added.
+## Status
+**HUMAN DECISION REQUIRED** — 5 open decisions [OPEN-WF05-G1..G5](../decisions/DECISION_LOG.md#open-wf05-g1). No runtime code, migration, seed or design change. WF01–WF04 untouched (PROTECTED).
 
-## Scope
-| Item | Result |
+## Scope implemented
+| Deliverable | Content |
 |---|---|
-| Implementation | 9/9 plan tasks; 8 screens on 9 routes |
-| Happy path | J1 Programme 23 steps, J2 Challenge 16 steps (Bài toán gate), J3 keep a draft 5 steps: PASS |
-| Negative / security | NEG-WF04 1–20; SEC-WF04-01 (6 actors × 19 calls, spoofed); membership / leadership / label grant nothing: PASS |
-| Invariants | 16 canonical tables row-exact; production DB and audit writes 0; Event boundary (EVT-WF04) PASS |
-| Navigation | NAV-WF04 + P0-SHELL matrix (502 rows, 0 dead); back / next; direct refresh on every route |
-| Restart / fresh DB | App + PostgreSQL restart PASS; fresh 001→009 + seed ×2 identical; all 115 WF04 tests pass on the fresh DB |
-| Chapter 01 | Guaranteed by the deterministic seed used by the Internal Alpha review environment; without it the demo is empty, never invented |
+| [WF05_PREIMPLEMENTATION_AUDIT.md](WF05_PREIMPLEMENTATION_AUDIT.md) | Sources, findings F1–F13, canonical entity map, WF02 reuse map, conflicts C1–C5, items resolved by precedence |
+| [WF05_SCREEN_IMPLEMENTATION_PLAN.md](WF05_SCREEN_IMPLEMENTATION_PLAN.md) | Journey classification, screen inventory, routes, API, DB, task order T00 → S04 → closure |
+| [WF05_HAPPY_PATH_PLAN.md](WF05_HAPPY_PATH_PLAN.md) | Demo data, HC-WF05-01..12, NEG-WF05-01..17, INV-WF05 1–10, WF01–WF04 protection |
+| DECISION_LOG | OPEN-WF05 G1–G5 |
+| P0_STATUS | WF05 audit state; next task |
 
-## Defect fixed
-**WF04-P2-01** — "Đặt lại demo" left open editors and a pending "Thử lại" in place (a retry could write the pre-reset copy back). The demo store now counts resets; `SetupScreen` re-mounts the step body on a reset and ignores a retry from before it. Proof: NEG-19.
-
-## Files changed
-- Fix: `src/components/programme-demo/{demo-store.tsx, setup-screen.tsx}`
-- Test: `tests/visual/specs/wf04-uat-journey.spec.ts` (new; 15 tests)
-- Docs: `reports/WF04_COMPLETION_AUDIT.md`, `WF04_UAT_MATRIX.md` (new); WF04 plan / happy path / demo scope; P0_STATUS; PROCESS §J (WF01–WF04 protected); this report; `reports/WF04-S08_programme-detail.md` (invalid server-log line corrected, WF04-P3-01)
+## Key findings
+- No WF05 workflow contract, design, manifest entry or external reference; the zip is a byte-identical mirror.
+- WF05 reuses the one WF02 venture (`projects` + `project_members`, owner field, fixed type, DRAFT / ACTIVE / ARCHIVED with no P0 transition); read is relation-only.
+- The SOT's Team / Startup / Solution split is not in the P0 schema: TEAM mapping → G4; Solution, Participation, Outcome → FUTURE.
+- Application shape and lifecycle are frozen (SOT §12, §6) but there is no table and no P0 application API: the demo keeps applications in the actor's session (G5).
+- WF04 programmes are ops-only fixtures: founder visibility → G3.
+- Founder = the owner relation; no Founder entity or role code.
 
 ## Migrations / data
-None. Throwaway databases for the fresh / no-seed proofs were dropped.
+None. **Migration required: NO.** Seed unchanged.
 
-## Tests
-| Gate | Result |
-|---|---|
-| Format / lint / typecheck / build | PASS |
-| Unit / DB | 223 / 343 passed |
-| Full visual suite | 567 passed, 24 skipped (pre-existing opt-in), 0 failed |
-| WF04 closure spec | 15 tests: 14 in the full run + J3 (dev DB); after the restart 14 + J3 3/3 (after the J3 race fix); 115 / 115 WF04 tests on the fresh DB |
-| Server log (full run) | 0 email / token / cookie / session / error lines |
+## Tests / build
+Not applicable (documentation only). `pnpm format:check` PASS.
 
 ## Visual QA
-Structural 0 · Major 0 · Component 0. VIS-WF04: 11 screens, 519 text elements, 0 typography violations, header band / rule 0 drift; 768 / 390: 0 overflow on 20 checks. Raster: masked half-pixel pill corners. Intentional-Demo: approved primitives, no WF04 bitmap claimed. `design-reference/final` untouched.
+Not applicable. Design: no approved WF05 reference (G1).
 
-## Deviations / blockers
-Blocking gaps 0. P3: WF04-P3-01..06 (harness, stale deploy-doc line, S08 current stage / counts, S02 form across reset, PO copy review, J3 test race). OpsShell desktop-first unchanged. Go-live input: a real-roster environment has no Chapter 01, so the demo fixtures stay hidden there.
+## Blockers
+G1–G5 (human decisions). No source conflict blocks the audit.
 
 ## Git
-- Branch: `main`; start HEAD `40a2a2e` (checked again before each commit)
-- Implementation commit: `e08dde2`
+- Branch: `main`; start HEAD `f395d2b` (checked again before the commit)
+- Implementation commit: none (audit only)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-WF05 PRE-IMPLEMENTATION BUSINESS / DATA / DESIGN AUDIT. Not started.
+DECIDE OPEN-WF05-G1..G5, then WF05-T00 — Demo foundation. Do not start WF06.
