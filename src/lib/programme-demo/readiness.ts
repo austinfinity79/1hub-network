@@ -1,3 +1,4 @@
+import type { EditResult } from './journey'
 import { PROGRAMME_TYPES, type ProgrammeDemoDetail } from './types'
 
 /**
@@ -54,4 +55,26 @@ export function canPublish(
     detail.programme.status === 'DRAFT' &&
     publishReadiness(detail, allowedOrganizations).every((c) => c.ok)
   )
+}
+
+/**
+ * WF04-S07 — the one demo transition, DRAFT → PUBLISHED (DEC-WF04-H5,
+ * DEC-WF04-S07-D1). Atomic: a failing checklist item or a programme that is
+ * not a DRAFT changes nothing, so publishing twice is a no-op. Setup data is
+ * kept as is; only `status` and `updated_at` change.
+ */
+export function publishProgramme(
+  detail: ProgrammeDemoDetail,
+  allowedOrganizations: OrganizationAllowance,
+  now: Date,
+): EditResult<{ missing: ReadinessItem[] }> | { ok: false; reason: 'not_draft' } {
+  if (detail.programme.status !== 'DRAFT') return { ok: false, reason: 'not_draft' }
+  const missing = publishReadiness(detail, allowedOrganizations)
+    .filter((c) => !c.ok)
+    .map((c) => c.item)
+  if (missing.length > 0) return { ok: false, reason: 'invalid', errors: { missing } }
+  const next = structuredClone(detail)
+  next.programme.status = 'PUBLISHED'
+  next.programme.updated_at = now.toISOString()
+  return { ok: true, detail: next }
 }

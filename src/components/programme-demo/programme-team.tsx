@@ -14,7 +14,7 @@ import pill from './status-pill.module.css'
  * and the PROGRAMME_ORGANIZER display label, nothing else. No invite, add,
  * remove, role or permission control: this page changes no RoleAssignment,
  * membership, leadership or profile, and a label grants nothing. Back →
- * registration; "Tiếp theo" waits for WF04-S07.
+ * registration; "Tiếp theo" opens WF04-S07 (DEC-WF04-S07-D3).
  */
 
 const COPY = {
@@ -40,7 +40,7 @@ export function ProgrammeTeam({
       step="team"
       screen="WF04-S06"
       back={{ href: demoRoutes.setup(id, 'registration'), label: COPY.back, nav: 'team-back' }}
-      next={null}
+      next={demoRoutes.setup(id, 'review')}
     >
       {({ detail }) => <TeamBody detail={detail} />}
     </SetupScreen>

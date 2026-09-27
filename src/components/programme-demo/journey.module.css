@@ -369,3 +369,106 @@
   margin: 0.125rem 0 0;
   color: #5a4748;
 }
+
+/* WF04-S07 — review summary rows and the publish checklist. */
+.reviewRow {
+  display: grid;
+  grid-template-columns: 12.5rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem 1rem;
+  padding: 0.875rem 1.1875rem;
+}
+
+.reviewRow + .reviewRow {
+  border-top: 1px solid #e7e2e2;
+}
+
+.reviewLabel {
+  margin: 0;
+  color: #5a4748;
+}
+
+.reviewValue {
+  margin: 0;
+  color: #251011;
+  overflow-wrap: anywhere;
+}
+
+.reviewValue ul,
+.reviewValue ol {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.editLink {
+  font-size: 0.8125rem;
+  color: #b91610;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.editLink:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.1875rem;
+}
+
+.checkItem + .checkItem {
+  border-top: 1px solid #e7e2e2;
+}
+
+.checkState {
+  flex: none;
+  width: 5.5rem;
+}
+
+.checkPass {
+  color: #2a3b24;
+}
+
+.checkMissing {
+  color: #b91610;
+}
+
+.checkLabel {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: #251011;
+}
+
+.publish {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1.1875rem;
+  border-top: 1px solid #e5e0e0;
+}
+
+.publishText {
+  margin: 0;
+  color: #251011;
+}
+
+@media (max-width: 767px) {
+  .reviewRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checkItem {
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+  }
+
+  .checkLabel {
+    flex: 1 1 100%;
+  }
+}

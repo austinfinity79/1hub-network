@@ -7,6 +7,7 @@ import { Notice } from '@/components/ui'
 import { INERT_REASONS } from '@/lib/member/nav'
 import { STATUS_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
 import type { EditResult } from '@/lib/programme-demo/journey'
+import type { OrganizationAllowance } from '@/lib/programme-demo/readiness'
 import { demoRoutes, type SetupStep } from '@/lib/programme-demo/routes'
 import { effectiveDetail, inAllowance } from '@/lib/programme-demo/session-store'
 import type { ProgrammeDemoDetail, ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
@@ -57,7 +58,11 @@ export function SetupScreen({
   back: { href: string; label: string; nav: string }
   /** The next step's route, or null while it is not built (disabled with its reason). */
   next: string | null
-  children: (context: { detail: ProgrammeDemoDetailDTO; apply: Apply }) => ReactNode
+  children: (context: {
+    detail: ProgrammeDemoDetailDTO
+    apply: Apply
+    allowance: OrganizationAllowance
+  }) => ReactNode
 }) {
   const { state, allowance, ready, save, readFailed, reread } = useProgrammeDemo()
   const [retry, setRetry] = useState<ProgrammeDemoDetailDTO | null>(null)
@@ -192,7 +197,7 @@ export function SetupScreen({
             </button>
           </div>
         ) : null}
-        <Fragment key={epoch}>{children({ detail, apply })}</Fragment>
+        <Fragment key={epoch}>{children({ detail, apply, allowance })}</Fragment>
       </DemoPage>
     </div>
   )

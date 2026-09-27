@@ -134,10 +134,9 @@ test.describe('WF04-S06 operating team', () => {
     expect(await page.locator('main').innerText()).not.toMatch(
       /mời|thêm thành viên|xoá|gỡ|phân quyền|quyền hạn|phạm vi quản lý|đăng nhập lần cuối|email|chuyển giao/i,
     )
+    // DEC-WF04-S07-D3: next opens the review step.
     const next = page.locator('[data-setup-next]')
-    await expect(next).toBeDisabled()
-    await expect(next).toHaveAttribute('title', 'Chưa có trong phiên bản này')
-    await expect(page.locator('a[href*="/setup/review"]')).toHaveCount(0)
+    await expect(next).toHaveAttribute('href', `/demo/programmes/${PROGRAMME}/setup/review`)
     await page.reload({ waitUntil: 'networkidle' })
     expect(await members(page)).toHaveLength(2)
     await page.locator('[data-nav="team-back"]').click()

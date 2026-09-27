@@ -196,6 +196,8 @@ test.describe('P0-SHELL navigation matrix', () => {
       '/demo/programmes/d4000000-0000-0000-0000-000000000002/setup/registration',
       '/demo/programmes/d4000000-0000-0000-0000-000000000001/setup/team',
       '/demo/programmes/d4000000-0000-0000-0000-000000000002/setup/team',
+      '/demo/programmes/d4000000-0000-0000-0000-000000000001/setup/review',
+      '/demo/programmes/d4000000-0000-0000-0000-000000000002/setup/review',
     ])
       await crawl(page, 'operator', source)
   })
@@ -216,6 +218,8 @@ test.describe('P0-SHELL navigation matrix', () => {
       '/demo/programmes/d4000000-0000-0000-0000-000000000002/setup/registration',
       '/demo/programmes/d4000000-0000-0000-0000-000000000001/setup/team',
       '/demo/programmes/d4000000-0000-0000-0000-000000000002/setup/team',
+      '/demo/programmes/d4000000-0000-0000-0000-000000000001/setup/review',
+      '/demo/programmes/d4000000-0000-0000-0000-000000000002/setup/review',
     ])
       await crawl(page, 'admin', source)
   })

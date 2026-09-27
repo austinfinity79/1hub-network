@@ -6,7 +6,7 @@ import {
   DEMO_PROGRAMME_ID,
   demoFixture,
 } from './fixtures'
-import { canPublish, publishReadiness } from './readiness'
+import { canPublish, publishProgramme, publishReadiness } from './readiness'
 import type { ProgrammeDemoDetail } from './types'
 
 const copy = (id: string) => structuredClone(demoFixture(id)!) as ProgrammeDemoDetail
@@ -65,5 +65,48 @@ describe('WF04 demo publish checklist (DEC-WF04-H5)', () => {
     const d = copy(DEMO_PROGRAMME_ID)
     ;(d.programme as { type: string }).type = 'SUMMIT'
     expect(failing(d)).toEqual(['type'])
+  })
+})
+
+describe('WF04-S07 publish (DRAFT → PUBLISHED only)', () => {
+  const now = new Date('2026-09-27T05:00:00.000Z')
+
+  it('publishes a ready DRAFT, keeping every setup value', () => {
+    const d = copy(DEMO_CHALLENGE_ID)
+    const result = publishProgramme(d, [DEMO_OWNER_ORGANIZATION_ID], now)
+    if (!result.ok) throw new Error('expected ok')
+    expect(result.detail.programme.status).toBe('PUBLISHED')
+    expect(result.detail.programme.updated_at).toBe(now.toISOString())
+    expect({ ...result.detail, programme: null }).toEqual({ ...d, programme: null })
+    expect({
+      ...result.detail.programme,
+      status: 'DRAFT',
+      updated_at: d.programme.updated_at,
+    }).toEqual(d.programme)
+    expect(d.programme.status).toBe('DRAFT')
+  })
+
+  it('refuses an incomplete DRAFT with the missing items, changing nothing', () => {
+    const d = copy(DEMO_CHALLENGE_ID)
+    d.problem_statements = []
+    d.programme.ends_at = '2026-01-01T00:00:00.000Z'
+    const before = JSON.stringify(d)
+    expect(publishProgramme(d, 'ALL', now)).toEqual({
+      ok: false,
+      reason: 'invalid',
+      errors: { missing: ['dates', 'problems'] },
+    })
+    expect(publishProgramme(d, ['10000000-0000-0000-0000-000000000102'], now)).toMatchObject({
+      errors: { missing: ['owner', 'dates', 'problems'] },
+    })
+    expect(JSON.stringify(d)).toBe(before)
+  })
+
+  it('is idempotent: an already PUBLISHED programme is never changed (no unpublish either)', () => {
+    const p = copy(DEMO_PROGRAMME_ID)
+    expect(publishProgramme(p, 'ALL', now)).toEqual({ ok: false, reason: 'not_draft' })
+    const once = publishProgramme(copy(DEMO_CHALLENGE_ID), 'ALL', now)
+    if (!once.ok) throw new Error('expected ok')
+    expect(publishProgramme(once.detail, 'ALL', now)).toEqual({ ok: false, reason: 'not_draft' })
   })
 })
