@@ -341,3 +341,20 @@
   padding-top: 0.875rem;
   border-top: 1px solid #f1ebeb;
 }
+
+/*
+ * IA-P2-03 basic responsive safety. When the main column is narrower than
+ * the event rows, the list scrolls inside its card instead of running under
+ * the side column; below 1024px the side column stacks under the list.
+ */
+@media (max-width: 1279px) {
+  .table {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 1023px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

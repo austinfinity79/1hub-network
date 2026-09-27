@@ -95,7 +95,9 @@
 }
 
 .table {
-  overflow: hidden;
+  /* Narrower than its columns, the table scrolls sideways instead of clipping them (IA-P2-03). */
+  overflow-x: auto;
+  overflow-y: hidden;
   margin-top: 1rem;
   border-radius: 0.625rem;
   background: var(--hub-surface);

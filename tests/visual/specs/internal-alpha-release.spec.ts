@@ -4,6 +4,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
+import { inviteMember } from '../../../src/lib/venture/team'
 import { createVenture } from '../../../src/lib/venture/venture'
 import { REPO_ROOT } from '../pixel-qa/paths'
 import { writeJsonReport } from '../pixel-qa/report'
@@ -552,7 +553,191 @@ test.describe('REL-RESP responsive sweep', () => {
     }
     writeJsonReport('IA-REL.RESP.json', { results })
   })
+
+  test('IA-P2-03 pointer reachability: WF02 / WF03 row, table and form actions at 1440 / 1024 / 768 / 390; nothing clipped, covered or hidden', async ({
+    page,
+  }) => {
+    test.setTimeout(420_000)
+    // A venture with a pending invitation, so the team table shows its row action.
+    const owner = await person('Chủ Đội IA')
+    const invitee = await person('Khách Mời IA')
+    const venture = await createVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án đội IA' })
+    await inviteMember(owner.accountId, venture.id, { email: invitee.email }, 'ia-resp')
+    await login(page.request, 'leader@example.test')
+    await page.goto(`/ops/org/${CHAPTER_01}/members`)
+    const memberDetail = await page.locator('a', { hasText: 'Mở' }).first().getAttribute('href')
+    const M = 'member@example.test'
+    const L = 'leader@example.test'
+    const screens: { who: string; url: string; must?: string }[] = [
+      { who: M, url: '/me' },
+      { who: M, url: '/me/profile/edit' },
+      { who: M, url: '/me/privacy' },
+      { who: M, url: '/me/roles' },
+      { who: M, url: '/me/settings' },
+      { who: M, url: '/projects/new' },
+      { who: M, url: `/projects/${SEED_VENTURE}/edit` },
+      {
+        who: owner.email,
+        url: `/projects/${venture.id}/team`,
+        must: 'button:has-text("Huỷ lời mời")',
+      },
+      { who: 'ops@example.test', url: '/ops/network' },
+      { who: L, url: `/ops/org/${CHAPTER_01}` },
+      { who: L, url: `/ops/org/${CHAPTER_01}/members`, must: 'a:has-text("Mở →")' },
+      { who: L, url: memberDetail! },
+      { who: L, url: `/ops/org/${CHAPTER_01}/events`, must: '[data-action="open"]' },
+      { who: L, url: `/ops/org/${CHAPTER_01}/profile` },
+      { who: L, url: `/ops/org/${CHAPTER_01}/settings` },
+    ]
+    const results: Record<string, unknown>[] = []
+    for (const [width, height] of [
+      [1440, 900],
+      [1024, 768],
+      [768, 1024],
+      [390, 844],
+    ] as const) {
+      await page.setViewportSize({ width, height })
+      for (const s of screens) {
+        await page.context().clearCookies()
+        await login(page.request, s.who)
+        await page.goto(s.url, { waitUntil: 'networkidle' })
+        if (s.must)
+          expect(await page.locator(s.must).count(), `${s.url} ${width}`).toBeGreaterThan(0)
+        const found = await page.evaluate(pointerProblems)
+        expect(found.problems, `${s.url} ${width}`).toEqual([])
+        results.push({ url: s.url.replace(UUID, ':id'), width, ...found })
+        // A direct refresh keeps the screen.
+        expect(
+          (await page.reload({ waitUntil: 'networkidle' }))?.status(),
+          `${s.url} refresh`,
+        ).toBe(200)
+      }
+      // Real pointer clicks (no force): the event row opens its form beside or under the list, and the
+      // create action stays clickable; the first member row opens by keyboard.
+      await page.context().clearCookies()
+      await login(page.request, L)
+      await page.goto(`/ops/org/${CHAPTER_01}/events`, { waitUntil: 'networkidle' })
+      await page.locator('[data-action="open"]').first().click()
+      expect((await page.evaluate(pointerProblems)).problems, `events form ${width}`).toEqual([])
+      await page.locator('[data-action="new-event"]').click({ trial: true })
+      await page.goto(`/ops/org/${CHAPTER_01}/members`, { waitUntil: 'networkidle' })
+      await page.locator('a', { hasText: 'Mở →' }).first().focus()
+      await page.keyboard.press('Enter')
+      await expect(page).toHaveURL(/\/members\/[0-9a-f-]{36}$/)
+    }
+    writeJsonReport('IA-REL.RESP-POINTER.json', { results })
+  })
 })
+
+/**
+ * What a mouse or touch user can reach: page scroll and user-scrollable (auto / scroll) containers only,
+ * never an overflow:hidden one; each visible control's first line box must then be hit by the pointer.
+ * Also reports overflow:hidden / clip containers that hide part of their content (not text ellipsis).
+ * Playwright's own click scrolls hidden containers programmatically, so it cannot see this class (IA-P2-03).
+ */
+function pointerProblems() {
+  const name = (el: Element) =>
+    `${el.tagName.toLowerCase()}:${((el as HTMLElement).innerText || el.getAttribute('aria-label') || el.getAttribute('name') || '').trim().slice(0, 24)}`
+  const clips = (value: string) => value === 'hidden' || value === 'clip'
+  const scrolls = (value: string) => value === 'auto' || value === 'scroll'
+  const problems: string[] = []
+  let controls = 0
+  let scrollers = 0
+  for (const box of document.querySelectorAll<HTMLElement>('body *')) {
+    const style = getComputedStyle(box)
+    const wider = box.scrollWidth > box.clientWidth + 1
+    if (scrolls(style.overflowX) && wider) scrollers++
+    if (
+      clips(style.overflowX) &&
+      wider &&
+      box.children.length > 1 &&
+      style.textOverflow !== 'ellipsis'
+    )
+      problems.push(
+        `${box.tagName.toLowerCase()}.${String(box.className).split(' ')[0]} hides ${box.scrollWidth - box.clientWidth}px`,
+      )
+  }
+  const selector =
+    'a[href], button, input:not([type=hidden]), select, textarea, [role=button], summary'
+  for (const el of document.querySelectorAll<HTMLElement>(selector)) {
+    window.scrollTo(0, 0)
+    const style = getComputedStyle(el)
+    let rect = el.getBoundingClientRect()
+    if (
+      rect.width < 4 ||
+      rect.height < 4 ||
+      style.visibility === 'hidden' ||
+      Number(style.opacity) === 0
+    )
+      continue
+    if (
+      el.closest('[hidden],[aria-hidden="true"],[inert]') ||
+      (rect.right <= 0 && rect.bottom <= 0)
+    )
+      continue
+    controls++
+    for (let box = el.parentElement; box && box !== document.body; box = box.parentElement) {
+      const s = getComputedStyle(box)
+      rect = el.getBoundingClientRect()
+      const outer = box.getBoundingClientRect()
+      if (scrolls(s.overflowX) && rect.right > outer.right)
+        box.scrollLeft += rect.right - outer.right + 8
+      if (scrolls(s.overflowX) && rect.left < outer.left)
+        box.scrollLeft -= outer.left - rect.left + 8
+      if (scrolls(s.overflowY) && rect.bottom > outer.bottom)
+        box.scrollTop += rect.bottom - outer.bottom + 8
+      if (scrolls(s.overflowY) && rect.top < outer.top) box.scrollTop -= outer.top - rect.top + 8
+    }
+    rect = el.getBoundingClientRect()
+    const x = rect.left + rect.width / 2
+    const y = rect.top + rect.height / 2
+    let problem = ''
+    for (
+      let box = el.parentElement;
+      box && box !== document.body && !problem;
+      box = box.parentElement
+    ) {
+      const s = getComputedStyle(box)
+      const outer = box.getBoundingClientRect()
+      if (
+        (clips(s.overflowX) && (x < outer.left || x > outer.right)) ||
+        (clips(s.overflowY) && (y < outer.top || y > outer.bottom))
+      )
+        problem = `clipped by ${box.tagName.toLowerCase()}.${String(box.className).split(' ')[0]}`
+    }
+    const page = document.documentElement
+    if (
+      !problem &&
+      (x + scrollX < 0 || x + scrollX > page.scrollWidth || y + scrollY > page.scrollHeight)
+    )
+      problem = 'outside the page'
+    if (!problem) {
+      if (x < 0 || x >= innerWidth || y < 0 || y >= innerHeight)
+        window.scrollTo(
+          Math.max(0, x + scrollX - innerWidth / 2),
+          Math.max(0, y + scrollY - innerHeight / 2),
+        )
+      const line = el.getClientRects()[0] ?? el.getBoundingClientRect()
+      const hit = document.elementFromPoint(line.left + line.width / 2, line.top + line.height / 2)
+      const label = el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null
+      const reached =
+        !!hit &&
+        (hit === el ||
+          el.contains(hit) ||
+          (hit.contains(el) && !!hit.closest('label')) ||
+          !!label?.contains(hit))
+      if (!reached) problem = `covered by ${hit ? name(hit) : 'nothing'}`
+    }
+    if (problem) problems.push(`${name(el)} ${problem}`)
+  }
+  window.scrollTo(0, 0)
+  return {
+    overflow: document.documentElement.scrollWidth - innerWidth,
+    controls,
+    scrollers,
+    problems,
+  }
+}
 
 // ---------------------------------------------------------------- REL-DATA
 

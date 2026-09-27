@@ -37,7 +37,9 @@
 /* ------------------------------------------------------------------- table */
 
 .table {
-  overflow: hidden;
+  /* Narrower than its columns, the table scrolls sideways instead of clipping them (IA-P2-03). */
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid #e3dddd;
   border-radius: 0.375rem;
   background: var(--hub-surface);
