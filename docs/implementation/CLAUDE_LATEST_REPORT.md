@@ -1,78 +1,52 @@
 # Claude Task Report
 
 ## Task
-WF05-S04 — REVIEW + SUBMIT (INTERNAL ALPHA, DEMO). Process: PROCESS-P0-ACCELERATED-SAFE-V2.
+WF05 — COMPLETION AUDIT + HAPPY PATH UAT (INTERNAL ALPHA, DEMO). Process: PROCESS-P0-ACCELERATED-SAFE-V2 §I (workflow closing gate).
 
-## Status
-**DONE — LOCAL REVIEW.** Inside [DEC-WF05-G1..G5](../decisions/DECISION_LOG.md#dec-wf05-g1) and [DEC-WF05-T00-D1..D3](../decisions/DECISION_LOG.md#dec-wf05-t00-d1); no new decision.
+## Verdict
+**GREEN — WF05 PROTECTED / CLOSED / GREEN.** Audit: [WF05_COMPLETION_AUDIT.md](reports/WF05_COMPLETION_AUDIT.md). UAT: [WF05_UAT_MATRIX.md](WF05_UAT_MATRIX.md). No product change; no decision added; G1–G5 not reopened.
 
-## Precheck
-| # | Item | Result (source) |
-|---|---|---|
-| 1 | Route | `/demo/projects/:id/applications/:programmeId/review` (plan S04 row; `projectDemoRoutes.review`) |
-| 2 | Review contract | HC-WF05-08 / 09: the live venture (WF02), the PUBLISHED programme (WF04 fixture), the applicant type (G4), every configured question with its answer (T00-D1 store) |
-| 3 | Validation | G5-5: every question answered; the S03 technical bound (2000, DEC-WF02-S05-D1) also holds at submit — a stored value is not trusted |
-| 4 | Transition | T00 `submitApplication`: DRAFT → SUBMITTED only, same record, `created_at` and answers kept; SUBMITTED final (G5) |
-| 5 | Post-submit | HC-WF05-08: read-only SUBMITTED on the same page; S01 / S02 "Đã nộp"; no second "Đăng ký" |
-| 6 | Design | G1 composed: WF04 frame, card chrome, review rows and the WF04-S07 checklist + primary action |
-| 7 | Authorization | Server guard `requireDemoVentureRoute` (WF02 relation rule; 404 otherwise); the store rule allows only the owner of an active venture whose type the PUBLISHED programme takes |
-| 8 | S03 → S04 | S03 "Rà soát & nộp" becomes the form's second submit: it saves the draft, then opens S04 (only while editable: owner, eligible, DRAFT) |
-| 9 | Stale state | The prompt's "do not silently submit stale state": "Nộp đơn" re-reads the venture and programme and applies the rules to them, not to the page as loaded |
-| — | No application | A client state ("Chưa có đơn…" + "Mở đơn đăng ký" for the eligible owner); the session store is invisible to the server, and S04 never creates one |
-| — | Config drift | S03's accepted rule: a draft whose answers do not match the questions is never repaired; on S04 the checklist blocks it |
-
-## Scope implemented
+## Scope
 | Item | Result |
 |---|---|
-| Route | Server guard as S03; programme must be PUBLISHED (else 404); data read live from `GET /api/v1/demo/projects/{id}` |
-| Review | Three blocks: Dự án / Startup (live name, type, "Đăng ký với tư cách: Đội / Startup"), Chương trình (kind · organization · dates), Câu trả lời (each question, its answer or "Chưa trả lời"); no ids |
-| Checklist | Owner, not archived, type taken, every answer valid; "Sẵn sàng nộp" / "Còn thiếu n mục"; "Nộp đơn" disabled with "Hoàn thành các mục còn thiếu để nộp." |
-| Submit | Re-read, then one atomic store step; guarded against double / repeated clicks; "Đang nộp…" while the re-read runs; a refusal shows "Chưa nộp được đơn: kiểm tra lại các mục bên dưới." and the stored state; a refused browser write "Chưa nộp được đơn. Vui lòng thử lại." |
-| SUBMITTED | "Đã nộp đơn. Đơn chỉ xem được, không sửa được.", pill "Đã nộp", "Nộp ngày dd/mm/yyyy"; no form, checklist or edit link; "← Hồ sơ dự án" only |
-| Navigation | DRAFT: "← Sửa đơn" to S03 (eligible owner only); S02 SUBMITTED row "Xem đơn"; S03 SUBMITTED "Xem đơn đã nộp" |
-| States | Loading, draft ready, draft incomplete, submitting, validation / refused, submitted, no application, not found, error + "Thử lại", unreadable store + "Thử lại" |
-| Store | `submitApplication` also refuses an answer over the technical bound (unit-tested) |
+| Implementation | 5/5 plan tasks (T00 `9484614`, S01 `e5aaa28`, S02 `ad7f764`, S03 `1d1d7da`, S04 `26d67c5`); 4 screens on 4 routes + the read-only demo API |
+| Happy path | HC-WF05-01 PROJECT → TEAM and HC-02 STARTUP → STARTUP (13 steps each, real magic link + WF01 onboarding, MemberShell entry, WF02 create); HC-03 WF02 rename seen on S01–S04; HC-04 reset after DRAFT and SUBMITTED: PASS |
+| Negative / security | NEG-WF05 1–29; SEC-WF05-01 (8 actors × 4 routes + 2 APIs, spoofed headers + query); membership, leadership, admin, invite and the "Founder" label grant nothing: PASS |
+| Invariants | Business 1–18 PASS; all 31 tables row-exact around every WF05 phase (0 written; sign-in tables only where the test signs in); no `applications` table; audit writes 0; no migration (ledger 001→009) |
+| Store | Refresh, resume, clean new session, one entry per pair, ids + answers only, no PII / secret, atomic save and submit: PASS |
+| Navigation | NAV-WF05: 14 visits, 18 links, 0 dead; P0-SHELL matrix 536 rows, 0 dead; back and refresh everywhere |
+| Restart / fresh DB | App + PostgreSQL restart: 31 tables identical, session and SUBMITTED store survive, WF05 66 / 66 after; fresh 001→009 + seed ×2 identical, WF05 66 / 66 on it (twice) |
+| Hydration #418 | 50 dedicated repeats (25 clean / fresh, 25 under load) + every later run: **0**. OBS-WF05-01 recorded (root cause of the single S04 event unknown; watched) |
 
 ## Files changed
-- New: `src/app/(demo)/demo/projects/[id]/applications/[programmeId]/review/page.tsx`; `src/components/project-demo/project-review.tsx`; `tests/visual/specs/wf05-s04-review-submit.spec.ts`
-- Changed: `src/lib/project-demo/{application-store.ts, application-store.test.ts, copy.ts}`; `src/components/project-demo/{project-application.tsx, project-detail.tsx}`; specs `wf05-s03` (review saves and opens S04; locked link), `wf05-s02` / `wf05-s01` / `wf05-t00` (review is a screen; unknown sub-route 404)
-- Docs: WF05 plan / happy path, P0_STATUS, CLAUDE_LATEST_REPORT, this report
+- Test: `tests/visual/specs/wf05-uat-journey.spec.ts` (new; 10 tests)
+- Docs: `reports/WF05_COMPLETION_AUDIT.md`, `WF05_UAT_MATRIX.md` (new); WF05 plan / happy path; P0_STATUS; PROCESS §J (WF05 protected); this report
 
 ## Migrations / data
-None. Row-exact fingerprints (projects, members, domains, programmes, events, roles, memberships, leadership, profiles, audit, analytics; no `applications` table) unchanged through every review, submit, refusal, spoof and reset; the WF02 rename goes through WF02, and the archive-after-load case is a test fixture change. Only the WF05 browser-session key changes.
+None. The throwaway fresh databases were dropped.
 
 ## Tests
 | Gate | Result |
 |---|---|
-| Format / lint / typecheck / build | PASS |
-| Unit / DB | 237 (1 new: submit bound) / 349 passed |
-| WF05 Playwright | 56 / 56 (S04: 15 — functional 1–30, atomicity, submitting, archived / programme drift, reset, dead links, error; IDOR / spoof / privacy; responsive; visual) |
-| Targeted + broader regression | 334 tests: all WF05 (T00, S01–S04) and all WF04 (incl. UAT), P0-SHELL, shell-routes, WF02-T00 / S01 / S05 / S06 / UAT, WF01-S01 / UAT, auth / authz session, WF03-T00, API contract, console health, M0 root. Run 1: 333 passed, 1 failed; run 2 (fresh server): **334 / 334 passed** |
-| Run-1 failure | The S04 authorization test caught one React hydration error (#418) on the team member's first review load, right after the onboarding redirect. Not reproduced: the same test passed 10 / 10 alone, and the full rerun passed. No S04 render input is time-, storage- or viewport-dependent (session store and readiness use server snapshots). Recorded as an observed, non-reproducible flake for the completion audit to watch; not hidden, not retried away |
-| Navigation matrix | 531 rows (the new S02 / S03 / S04 links), 0 dead |
-| Server log | Both runs: 0 email / token / cookie / session / error lines |
+| Format / lint / typecheck / build | PASS (clean `.next` build) |
+| Unit / DB | 237 / 349 passed |
+| Full visual suite | B1 (clean build, fresh server): 658 tests — 632 passed, 24 skipped, 2 failed (HC-01 / 02 on WF05-P3-01, a closure-spec harness issue); B2 after the fix (fresh server): **634 passed, 24 skipped (the pre-existing `PIXEL_QA_SCREENS` opt-in), 0 failed**; 0 #418; server logs 0 lines |
+| WF05 (T00, S01–S04 + closure spec) | 66 / 66 on the dev DB, the restarted stack and the fresh DB |
+| Server logs | Every run: 0 email / token / cookie / session / error lines |
 
 ## Visual QA
-| Check | Result |
-|---|---|
-| Captures | `wf05-s04-{ready,incomplete,validation,submitting,submitted,no-application,error}-1440x900.png` / `-full`, `wf05-s04-{768,390}.png`, `wf05-s04-submitted-{768,390}.png` |
-| Shell vs WF02-S01; primitives vs ADM5 | 26 segments, 0 drift (answers and dates masked as content) |
-| Typography | 256 text elements, 0 violations |
-| Structural / Major / Component | 0 / 0 / 0 |
-| Raster | 0 |
-| Intentional-Demo | Composed screen (G1); SUBMITTING captured deterministically (the re-read held open) |
-| Responsive | 768 / 390: no overflow, long answers wrap, checklist and "Nộp đơn" reachable, header actions do not overlap |
+Structural 0 · Major 0 · Component 0. VIS-WF05: 11 states × 1440 / 768 / 390 — 0 overflow, key action reachable; 1440: 442 text elements, 0 typography violations, 33 shell / header-rule segments ≤ 0.00025. Raster 2 (WF05-P3-03, the shell bell beside the member name; ≤ 22 px, under the gate). Intentional-Demo: approved primitives (G1), no WF05 bitmap claimed. COPY-WF05: 0 findings. `design-reference/final` untouched.
 
-## Blocking gaps
-0.
+## Deviations / blockers
+Blocking gaps 0. P3: WF05-P3-01..05 (closure-spec vocabulary dependency, fixed in the spec; empty title on load-failed states; bell raster; 390 demo-notice layout of the protected WF04 frame; PO copy review). OBS-WF05-01 (#418) watched. The task prompt quoted the S04 implementation SHA as `2d067c5`; the actual commit is `26d67c5`.
 
 ## Git
-- Branch: `main`; start HEAD `5194247` (checked again before each commit). The task prompt quoted the S03 docs SHA as `519c247`; the actual commit is `5194247`
-- Implementation commit: `26d67c5`
+- Branch: `main`; start HEAD `9223071` (checked again before each commit)
+- Implementation commit: `eefdfd7` (closure spec)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-WF05 COMPLETION AUDIT + HAPPY PATH UAT. Do not start it automatically.
+INTERNAL ALPHA — WF06 SCOPE DECISION (optional: implement read-only vision, or skip), then the Internal Alpha completion audit. Not started.

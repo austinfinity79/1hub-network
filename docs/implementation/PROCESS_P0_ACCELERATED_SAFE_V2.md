@@ -48,7 +48,7 @@ STOP only for business, data, migration, security/privacy or RBAC ambiguity, or 
 After the final executable screen, do not start the next workflow. Mandatory: completion audit → happy-path UAT → cross-screen data → business invariants → security → pixel regression → fresh DB / migration / restart → verdict. Only GREEN closes a workflow.
 
 ## J. Protected green workflows
-WF01, WF02, WF03 and WF04 (DEMO) are **PROTECTED / CLOSED / GREEN**. Later work must not casually alter their frozen behaviour; WF04 changes need an explicit task authorization. A shared change that affects them → targeted regression (WF04: `pnpm visual wf04`, which includes the closure spec `wf04-uat-journey`); a change to their business contract → STOP.
+WF01, WF02, WF03, WF04 (DEMO) and WF05 (DEMO) are **PROTECTED / CLOSED / GREEN**. Later work must not casually alter their frozen behaviour; WF04 and WF05 changes need an explicit task authorization. A shared change that affects them → targeted regression (WF04: `pnpm visual wf04`, which includes the closure spec `wf04-uat-journey`; WF05: `pnpm visual wf05`, which includes `wf05-uat-journey`); a change to their business contract → STOP.
 
 ## K. Deploy handoff
 Claude A implements; Claude B deploys **only the exact approved SHA, never HEAD**. Record approved SHA, deployed SHA, previous SHA, rollback SHA, migration range and smoke result.
