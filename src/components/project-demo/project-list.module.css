@@ -5,8 +5,34 @@
  */
 
 .row {
+  position: relative;
   align-items: flex-start;
   justify-content: space-between;
+}
+
+/* WF05-S02: the venture name links to its detail; the whole row is the hit area. */
+.rowLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.rowLink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.rowLink:hover {
+  text-decoration: underline;
+}
+
+.rowLink:focus-visible {
+  outline: none;
+}
+
+.rowLink:focus-visible::after {
+  outline: 0.125em solid #fc523c;
+  outline-offset: -0.125em;
 }
 
 .text {

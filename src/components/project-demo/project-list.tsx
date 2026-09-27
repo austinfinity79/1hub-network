@@ -23,6 +23,8 @@ import type {
   OpenProgrammeDTO,
 } from '@/lib/project-demo/types'
 
+import { projectDemoRoutes } from '@/lib/project-demo/routes'
+
 import { useProjectDemo } from './demo-store'
 import styles from './project-list.module.css'
 
@@ -31,7 +33,7 @@ import styles from './project-list.module.css'
  * INTENTIONAL-DEMO composition: the WF04 demo frame and card chrome, the WF02
  * venture wording). One read, `GET /api/v1/demo/projects`: the member's own
  * relations (owner or ACTIVE member) and the PUBLISHED programmes. Read only —
- * no edit, apply or programme action; S02 is not linked until it exists. The
+ * no edit, apply or programme action; each venture row opens its detail (S02). The
  * member's demo applications show only when this browser session holds one.
  */
 
@@ -168,7 +170,16 @@ function VentureRow({
       data-relation={venture.relation}
     >
       <div className={styles.text}>
-        <p className={`type-body-md weight-medium ${styles.name}`}>{venture.name}</p>
+        <p className={`type-body-md weight-medium ${styles.name}`}>
+          {/* WF05-S02: the row opens the venture's detail (the name is the link, the row its hit area). */}
+          <Link
+            href={projectDemoRoutes.detail(venture.id)}
+            className={styles.rowLink}
+            data-nav="venture-detail"
+          >
+            {venture.name}
+          </Link>
+        </p>
         <p className={`type-meta-xs ${cards.meta}`} data-venture-meta>
           {VENTURE_TYPE_LABEL[venture.type] ?? venture.type} ·{' '}
           {relationLabel(venture.relation, venture.role_label)}

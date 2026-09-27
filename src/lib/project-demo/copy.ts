@@ -49,3 +49,35 @@ export const S01_COPY = {
   applications: 'Đơn đăng ký demo',
   applicationsUnreadable: 'Chưa đọc được đơn đăng ký demo của phiên này.',
 } as const
+
+/** WF05-S02 — one Project / Startup and its participation. */
+export const S02_COPY = {
+  back: '← Dự án & Startup',
+  edit: 'Sửa hồ sơ',
+  loading: 'Đang tải…',
+  failed: 'Chưa tải được hồ sơ. Vui lòng thử lại.',
+  retry: 'Thử lại',
+  missing: 'Không tìm thấy dự án hay startup này.',
+  archived: 'Hồ sơ đã lưu trữ: chỉ xem, không đăng ký chương trình mới.',
+  overview: 'Thông tin',
+  type: 'Loại',
+  status: 'Trạng thái',
+  summary: 'Tóm tắt',
+  region: 'Tỉnh / Thành phố',
+  domains: 'Lĩnh vực',
+  none: '—',
+  team: 'Đội',
+  teamLink: 'Xem đội',
+  members: (n: number) => `${n} thành viên`,
+  programmesTitle: 'Chương trình đang mở',
+  programmesHint: 'Chương trình và challenge đang công khai trong bản demo.',
+  programmesEmpty: 'Hiện chưa có chương trình nào đang mở.',
+  applicantTypes: 'Dành cho',
+  apply: 'Đăng ký',
+  ineligible: {
+    NOT_OWNER: 'Chỉ chủ sở hữu đăng ký được.',
+    ARCHIVED: 'Hồ sơ đã lưu trữ.',
+    TYPE_NOT_ACCEPTED: 'Chương trình không nhận loại hồ sơ này.',
+    NOT_PUBLISHED: 'Chương trình chưa mở.',
+  },
+} as const

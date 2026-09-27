@@ -22,10 +22,16 @@
   background: var(--hub-surface);
 }
 
+/* WF05-S02: a long title (a member's venture name) wraps inside the band. */
+.header > div:first-child {
+  min-width: 0;
+}
+
 .title {
   margin: 0;
   line-height: 1.5rem;
   color: #000000;
+  overflow-wrap: anywhere;
 }
 
 .meta {

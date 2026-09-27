@@ -175,7 +175,13 @@ test.describe('WF05-S01 my projects / startups', () => {
     await expect(ventureRow(page, w.archived.id).locator('[data-venture-status]')).toHaveText(
       'Đã lưu trữ',
     )
-    await expect(page.locator('[data-venture] a, [data-venture] button')).toHaveCount(0)
+    // Each row's only control is its link to the detail (S02); no button.
+    await expect(page.locator('[data-venture] button')).toHaveCount(0)
+    for (const id of [w.archived.id, w.project.id, w.startup.id])
+      await expect(ventureRow(page, id).locator('a')).toHaveAttribute(
+        'href',
+        `/demo/projects/${id}`,
+      )
     // No enum names, applicant types or internal terms on the page.
     const text = await page.locator('[data-screen="WF05-S01"]').innerText()
     expect(text).not.toMatch(
@@ -377,14 +383,21 @@ test.describe('WF05-S01 states, entry and boundaries', () => {
     await expect(page.locator('[aria-current="page"]')).toHaveCount(1)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(page.locator('[data-venture]')).toHaveCount(1)
-    // The only link of the screen is WF02 creation; no S02 route exists yet.
+    // WF02 creation and, since S02, the row's detail; nothing else (no S03 route).
     const links = await page
       .locator('[data-screen="WF05-S01"] a')
       .evaluateAll((els) => els.map((e) => e.getAttribute('href')))
-    expect(links).toEqual(['/projects/new'])
-    await expect(page.locator('a[href^="/demo/projects/"]')).toHaveCount(0)
-    for (const id of [solo.ventureId, '50000000-0000-0000-0000-000000000001'])
-      expect((await page.request.get(`/demo/projects/${id}`)).status(), id).toBe(404)
+    expect(links).toEqual(['/projects/new', `/demo/projects/${solo.ventureId}`])
+    await page.locator('[data-nav="venture-detail"]').click()
+    await expect(page).toHaveURL(`/demo/projects/${solo.ventureId}`)
+    expect(
+      (await page.request.get('/demo/projects/50000000-0000-0000-0000-000000000001')).status(),
+    ).toBe(404)
+    expect(
+      (
+        await page.request.get(`/demo/projects/${solo.ventureId}/applications/${PROGRAMME}`)
+      ).status(),
+    ).toBe(404)
   })
 
   test('19/20. viewing creates no application; a session application shows; reset clears it only', async ({

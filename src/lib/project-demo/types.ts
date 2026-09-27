@@ -82,6 +82,8 @@ export type DemoVentureDetailDTO = {
     domains: { id: string; label: string }[]
     relation: VentureRelation
     applicant_type: Wf05ApplicantType
+    /** WF02's own rule (owner of a non-archived venture); drives the WF02 edit link only. */
+    can_edit: boolean
   }
   /** The owner and ACTIVE members only; never invitations or emails. */
   team: { members: number; rows: DemoTeamMemberDTO[] }

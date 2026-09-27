@@ -130,6 +130,7 @@ export async function getDemoVenture(
       domains: venture.domains.map((d) => ({ id: d.id, label: d.label })),
       relation: venture.relation,
       applicant_type: applicantTypeFor(venture.type),
+      can_edit: venture.can_edit,
     },
     team: { members: rows.length, rows },
     programmes: (await listOpenProgrammes()).map((p) => ({
