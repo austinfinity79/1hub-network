@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 
+import { DEMO_COPY } from '@/lib/programme-demo/copy'
 import type { OrganizationAllowance } from '@/lib/programme-demo/readiness'
 import {
   demoStoreKey,
@@ -20,6 +21,8 @@ import {
   type DemoSessionState,
 } from '@/lib/programme-demo/session-store'
 import type { ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
+
+import { DemoFrameContext, type DemoFrame } from './demo-frame'
 
 /**
  * WF04-T00 — browser side of the Programme demo session store
@@ -149,7 +152,17 @@ export function ProgrammeDemoProvider({
     [state, allowance, commit, read, generation, flash, ready, readFailed],
   )
 
-  return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>
+  // The shared demo frame (DemoPage) resets and messages through this demo's store.
+  const frame = useMemo<DemoFrame>(
+    () => ({ reset: store.reset, flash, setFlash, copy: DEMO_COPY }),
+    [store.reset, flash],
+  )
+
+  return (
+    <StoreContext.Provider value={store}>
+      <DemoFrameContext.Provider value={frame}>{children}</DemoFrameContext.Provider>
+    </StoreContext.Provider>
+  )
 }
 
 export function useProgrammeDemo(): DemoStore {

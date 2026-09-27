@@ -1,4 +1,6 @@
 import { routeByPattern } from '@/lib/routes'
+import { PROJECT_DEMO_COPY } from '@/lib/project-demo/copy'
+import { PROJECT_DEMO_PATH } from '@/lib/project-demo/routes'
 
 /**
  * WF02-T00 — member shell navigation model (DEC-WF02-H9).
@@ -31,6 +33,18 @@ export const INERT_REASONS: Record<'FUTURE' | 'NO_P0_SCREEN', string> = {
 
 /** P0-SHELL (DEC-P0-SHELL-D3): the member → ops entry, shown only with an ops scope. */
 export const OPS_ENTRY = { label: 'Vận hành tổ chức', href: '/ops/network' } as const
+
+/**
+ * WF05 (DEC-WF05-G2): the MemberShell demo entry for the Founder / Project /
+ * Startup demo, in the sidebar-footer demo area. Registered by WF05-T00 and
+ * **not shown** (`visible: false`) until WF05-S01 makes its destination a real
+ * screen: no dead link, no placeholder. It grants no capability.
+ */
+export const PROJECT_DEMO_ENTRY = {
+  label: PROJECT_DEMO_COPY.entry,
+  href: PROJECT_DEMO_PATH,
+  visible: false,
+} as const
 
 /** Header product nav: Library, Challenge and Events have no P0 Production screen. */
 export const HEADER_NAV: readonly NavItem[] = [

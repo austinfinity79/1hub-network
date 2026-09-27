@@ -3,16 +3,16 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
 import { Button, Notice } from '@/components/ui'
-import { DEMO_COPY } from '@/lib/programme-demo/copy'
 
-import { useProgrammeDemo } from './demo-store'
+import { useDemoFrame } from './demo-frame'
 import styles from './demo-page.module.css'
 
 /**
  * WF04-T00 — the frame every Programme demo screen renders in: the header band,
  * then the "Dữ liệu demo" notice with "Đặt lại demo", then the screen. The
  * notice is part of the frame so no demo screen can omit it; no WF01–WF03
- * screen uses this frame.
+ * screen uses this frame. WF05-T00: the reset, message and notice copy come
+ * from the framing demo (`DemoFrameContext`), so WF04 and WF05 share it.
  */
 export function DemoPage({
   title,
@@ -49,22 +49,22 @@ export function DemoPage({
 
 /** "Dữ liệu demo" + reset with an inline confirmation (the WF02 settings pattern). */
 export function DemoNotice() {
-  const { reset } = useProgrammeDemo()
+  const { reset, copy } = useDemoFrame()
   const [confirming, setConfirming] = useState(false)
   const [done, setDone] = useState(false)
   return (
-    <section className={styles.notice} aria-label={DEMO_COPY.noticeEyebrow} data-demo-notice>
+    <section className={styles.notice} aria-label={copy.noticeEyebrow} data-demo-notice>
       <div className={styles.noticeText}>
-        <p className={`weight-semibold ${styles.eyebrow}`}>{DEMO_COPY.noticeEyebrow}</p>
+        <p className={`weight-semibold ${styles.eyebrow}`}>{copy.noticeEyebrow}</p>
         <p className={`type-body-sm ${styles.noticeBody}`} aria-live="polite">
-          {done ? DEMO_COPY.resetDone : DEMO_COPY.noticeBody}
+          {done ? copy.resetDone : copy.noticeBody}
         </p>
       </div>
       <div className={styles.noticeAction}>
         {confirming ? (
-          <div className={styles.noticeAction} role="group" aria-label={DEMO_COPY.resetConfirm}>
+          <div className={styles.noticeAction} role="group" aria-label={copy.resetConfirm}>
             <p className={`type-body-sm weight-medium ${styles.confirmText}`}>
-              {DEMO_COPY.resetConfirm}
+              {copy.resetConfirm}
             </p>
             <Button
               onClick={() => {
@@ -74,10 +74,10 @@ export function DemoNotice() {
               }}
               data-demo-reset="confirm"
             >
-              {DEMO_COPY.resetYes}
+              {copy.resetYes}
             </Button>
             <Button variant="secondary" onClick={() => setConfirming(false)}>
-              {DEMO_COPY.resetNo}
+              {copy.resetNo}
             </Button>
           </div>
         ) : (
@@ -89,7 +89,7 @@ export function DemoNotice() {
             }}
             data-demo-reset="start"
           >
-            {DEMO_COPY.reset}
+            {copy.reset}
           </Button>
         )}
       </div>
@@ -99,7 +99,7 @@ export function DemoNotice() {
 
 /** A one-off confirmation handed over by the previous screen (e.g. a created draft). */
 function DemoFlash() {
-  const { flash, setFlash } = useProgrammeDemo()
+  const { flash, setFlash } = useDemoFrame()
   const [shown] = useState(flash)
   useEffect(() => {
     if (shown) setFlash(null)
