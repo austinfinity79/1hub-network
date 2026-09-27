@@ -1,59 +1,69 @@
 # Claude Task Report
 
 ## Task
-TASK 22.1 — CORRECTED PUBLIC HOMEPAGE (Bucket A). Full report: [reports/TASK-22.1_public-homepage.md](reports/TASK-22.1_public-homepage.md).
+TASK 22.2 — CORRECTED L1 AUTH / ONBOARDING (Bucket A). Full report: [reports/TASK-22.2_l1-auth-onboarding.md](reports/TASK-22.2_l1-auth-onboarding.md).
 
 ## Verdict
-**DONE.** HD-12 is CLOSED as [DEC-HD-12](../decisions/DECISION_LOG.md#dec-hd-12). Batch 22.2 is not started.
+**DONE.** Decisions: [DEC-L1-D1…D8](../decisions/DECISION_LOG.md#dec-l1-d1). Batch 22.3 is not started.
 
 ## Scope implemented
-- **Design rule update:**
-  - Design SOT §2.2 / §2.3 scoped Space Grotesk rule;
-  - one CLAUDE.md §5 line;
-  - DEC-HD-12 and DEC-H1 in the decision log.
-- **Font setup:** `@fontsource/space-grotesk` 5.3.0 synced into `public/fonts` (12 files); no CDN.
-- **Harness:** `REVISION_FACES` for revision screens only.
-- **Homepage:**
-  - `/` rebuilt to the corrected reference (`design-reference/final/revision/H1`);
-  - approved copy kept; HD-01 placeholder and unverified blocks omitted;
-  - 17 active links and 26 inert items for a guest; 0 `href="#"`.
+- **Screens:** AUTH1 `/auth`, AUTH2 `/auth/check-email`, AUTH3 `/auth/callback`, AUTH4 `/auth/error`, ACC-10 subset `/onboarding/complete`.
+- **References:** `design-reference/final/revision/L1`; 5 byte-identical copies from `L1.zip`, README updated.
+- **Typography:** Space Grotesk (self-hosted) scoped to the `(auth)` group and the S08 card and exit; 0 violations.
+- **Skipped:** 8 Bucket B frames (ACC-05, ACC-06, L06b, L06c, ACC-07, ACC-08, ACC-09, FP1-OWN). No AI UI and no functional AI.
+- **Behaviour frozen:**
+  - magic link only;
+  - account ≠ profile;
+  - server-derived completion;
+  - consent step and visibility default unchanged;
+  - routes and guards unchanged.
 
 ## Files changed
-- `CLAUDE.md`, `docs/design/00_DESIGN_PIXEL_SOT_FINAL_v1.0.md`, `docs/decisions/DECISION_LOG.md`
-- `package.json`, `pnpm-lock.yaml`, `scripts/sync-fonts.mjs`, `src/styles/fonts.css`, `src/styles/fonts.test.ts`, `public/fonts/space-grotesk-*` (12)
-- `design-reference/final/revision/` (H1 reference + README)
-- `src/components/landing/` (`landing`, `landing-story`, `landing-network`, `landing-parts`; `landing` / `story` / `network` CSS modules)
-- `tests/visual/pixel-qa/capture.ts`, `segments.ts`, `tests/visual/specs/p0-landing.spec.ts`, `typography-foundation.spec.ts`
-- Docs: `docs/design-revision/04`, `05`, `07`; this report; the task report; `P0_STATUS.md`
+- Auth:
+  - `src/app/(auth)/layout.tsx`, `auth-group.module.css`;
+  - `auth/` (`page`, `auth-entry-form`, CSS);
+  - `check-email/`, `callback/`, `error/` (page, screen, CSS).
+- Completion: `src/app/(onboarding)/onboarding/complete/` (`page`, `complete-view`, CSS).
+- Shared: `src/components/shell/auth-split-layout.tsx` + CSS, `onboarding-shell.module.css` (< 768 px only).
+- Tests:
+  - `tests/visual/pixel-qa/revision.ts` (new);
+  - WF01 S01–S04 and S08 specs;
+  - `p0-landing.spec.ts` (the scope test samples WF01-S05);
+  - label updates in the WF01–WF05 UAT journeys, `internal-alpha-release` and `p0-shell-navigation`.
+- Docs:
+  - `design-reference/final/revision/README.md`;
+  - `DECISION_LOG.md` (DEC-L1);
+  - `docs/design-revision/07`;
+  - `P0_STATUS.md`;
+  - this report and the task report.
 
 ## Migrations / data
-None. Business, API, DB and RBAC changes: 0. The WF01–WF03 baselines and `manifest.yaml` are untouched.
+None. Business, API, DB, RBAC and audit changes: 0. The WF01–WF03 baselines and `manifest.yaml` are untouched.
 
 ## Tests
 - Format, lint, typecheck, unit 237, DB 349, build: PASS.
-- Full visual suite: 643 passed / 24 opt-in skipped / 0 failed (after the typography-foundation count update, 27 declarations).
+- Full visual suite: 644 passed / 24 opt-in skipped / 0 failed. WF01 153, P0-LANDING 10, P0-SHELL 14, WF02 94, WF03 66, WF04 115, WF05 66, release 7.
+- First run: 1 failure. The P0-LANDING scope test used `/auth` as its legacy sample, which is now a revision screen. It now uses WF01-S05, and the rerun is green.
 
 ## Visual QA
-- 1440×900 DPR1 against H1, 22 kept blocks.
-- Diff outside text max 0.99 %; diff beyond ±2 px max 1.40 %.
-- Structural 0 · Major 0 · Component 0 · P3 raster residual · typography violations 0.
-- Responsive 1024 / 768 / 390: 0 overflow, 0 covered or off-screen CTA.
+- **Rule:** 1440×900 DPR1 against L1; per segment, outside text < 1.5 % and beyond ±2 px < 2 %.
+- **Worst segment:** AUTH1 form, 1.10 % outside text / 1.12 % beyond ±2 px.
+- **Classes:** Structural 0 · Major 0 · Component 0 · P3 raster residual · Intentional 8 · typography violations 0.
+- **Responsive:** 1440 / 1024 / 768 / 390: 0 overflow and 0 off-screen controls on all five routes.
 
 ## Deviations / blockers
-- **Intentional:**
-  - HD-01 omissions;
-  - the fourth pain item wraps instead of being clipped;
-  - mono labels use IBM Plex Mono (the reference mono family is unproven).
-- **PO review:** the revision copy names investment and recruitment (DEC-H1-D2).
+- **Intentional:** D2 Google / divider, D3 terms notice, D4 "Mở Gmail", D6 untrue board claims, D7 shell / stepper / single card / "Góp ý".
+- **Test Pack:** label changes are listed in `docs/design-revision/07`; update them after the redeploy.
+- **Pre-existing:** S07 privacy card overflows 13 px at 390 px (outside this batch).
 - No blocker.
 
 ## Git
-- Branch: `main`; start HEAD `d460914`, checked again before each commit
-- Implementation commit: `a05917a47c362712b770a63f78d4640f358b6710`
+- Branch: `main`; start HEAD `5827ac2`, checked again before each commit
+- Implementation commit: `5735d789680ebd3f0558b076d65f646278e52cd4`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-TASK 22.2 — L1 AUTH / ONBOARDING BUCKET A. Not started automatically.
+TASK 22.3 — L2 MEMBER / PROFILE / PROJECT BUCKET A. Not started automatically.

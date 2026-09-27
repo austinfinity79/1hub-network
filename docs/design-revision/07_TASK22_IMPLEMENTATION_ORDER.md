@@ -15,6 +15,7 @@
 | **22.8** Consolidation | Shared primitives touched by 22.1–22.7; the shell model decided under HD-11 | — | Tokens unchanged (already `#fc523c` / `#160002` / `#efefef`); typography assertions | — | All above | **Full suite** + pixel audit + protected regression → release freeze → redeploy | — |
 
 **HD-12 CLOSED** ([DEC-HD-12](../decisions/DECISION_LOG.md#dec-hd-12)): Space Grotesk on revision screens. **22.1 DONE** ([report](../implementation/reports/TASK-22.1_public-homepage.md)); its baseline is `design-reference/final/revision/H1`.
+**22.2 DONE** ([report](../implementation/reports/TASK-22.2_l1-auth-onboarding.md), [DEC-L1](../decisions/DECISION_LOG.md#dec-l1-d1)); its baseline is `design-reference/final/revision/L1`. The rate-limit / support blocker was a no-op: P0 never showed rate-limit numbers or a support email (DEC-L1-D6).
 
 Order: 22.1 → 22.2 → 22.3 → 22.4 → 22.7 → 22.8. Batches 22.5 and 22.6 stay empty until B decisions are made. Each batch stops for review, per protected-workflow practice.
 
@@ -22,8 +23,8 @@ Order: 22.1 → 22.2 → 22.3 → 22.4 → 22.7 → 22.8. Batches 22.5 and 22.6 
 | Test Pack item | Change | Status |
 |---|---|---|
 | Test actors, accounts, reset rules | Unchanged by Bucket A | NO CHANGE |
-| WF-TEST-01 guest-auth | Homepage labels and CTAs ("Đăng nhập", "Tạo tài khoản", header items); auth copy ("Đăng nhập", "Gửi liên kết đăng nhập", "Kiểm tra hòm thư của bạn", "Liên kết không còn hiệu lực") | UPDATE AFTER TASK 22 (labels, CTA, expected results) |
-| WF-TEST-02 onboarding | Completion copy ("Hồ sơ của bạn đã sẵn sàng"); steps unchanged unless HD-02 | UPDATE AFTER TASK 22 (label, expected result) |
+| WF-TEST-01 guest-auth | Homepage labels and CTAs ("Đăng nhập", "Tạo tài khoản", header items); auth copy ("Đăng nhập", "Gửi liên kết đăng nhập", "Kiểm tra hòm thư của bạn", "Liên kết không còn hiệu lực"). After 22.2: `guest-auth.md` steps 4 ("Vào HUB NETWORK", "Gửi link đăng nhập"), 5 ("Mở hộp thư của bạn") and 8 ("Link đã dùng rồi", "Gửi link mới") | UPDATE AFTER TASK 22 (labels, CTA, expected results) |
+| WF-TEST-02 onboarding | Completion copy ("Hồ sơ của bạn đã sẵn sàng"); steps unchanged unless HD-02. After 22.2: `new-member-onboarding.md` steps 8 ("Xong. Giờ làm gì?") and 9 ("Vào 1hub.network" → header link "Vào Tài khoản của tôi") | UPDATE AFTER TASK 22 (label, expected result) |
 | WF-TEST-03 member / ventures | Settings layout; project creation becomes a 3-step wizard (invite inside step 2) | UPDATE AFTER TASK 22 (screen order, labels) |
 | WF-TEST-04 leader operations | Dashboard, events chips, members tabs with inline approve | UPDATE AFTER TASK 22 (labels, steps) |
 | WF-TEST-05 / 06 demos | Unchanged unless HD-06 / HD-07 / HD-10 | NO CHANGE |

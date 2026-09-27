@@ -51,6 +51,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22.1 — CORRECTED PUBLIC HOMEPAGE (Bucket A): DONE** ([report](reports/TASK-22.1_public-homepage.md); precheck stop [report](reports/TASK-22.1_homepage-typography-stop.md)). HD-12 CLOSED as DEC-HD-12: Space Grotesk self-hosted, scoped to revision screens. `/` is rebuilt to `design-reference/final/revision/H1` and stays public with the same entry CTA; HD-01 placeholder blocks are omitted; 0 `href="#"`. Pixel: 22 blocks, max 0.99 % outside text, max 1.40 % beyond ±2 px; P0 / P1 / P2 = 0. Responsive 1024 / 768 / 390 PASS. Full suite 643 passed / 24 skipped / 0 failed. Implementation `a05917a`; nothing deployed.
 
+**TASK 22.2 — CORRECTED L1 AUTH / ONBOARDING (Bucket A): DONE** ([report](reports/TASK-22.2_l1-auth-onboarding.md)). AUTH1–AUTH4 and the ACC-10 subset are rebuilt to `design-reference/final/revision/L1` under DEC-L1-D1…D8. The 8 Bucket B frames (onboarding restructure, AI, roles, consent removal, FP1-OWN) are not built. Auth model, consent step, routes, APIs and DB are unchanged. Space Grotesk is scoped to the auth group and the S08 card; 0 typography violations; P0 / P1 / P2 = 0. Responsive 1440 / 1024 / 768 / 390: 0 overflow. Full suite 644 passed / 24 skipped / 0 failed. Implementation `5735d78`; nothing deployed.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -139,7 +141,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-TASK 22.2 — L1 AUTH / ONBOARDING BUCKET A. The PO self-review with the test pack can run in parallel on the current release. Not started automatically.
+TASK 22.3 — L2 MEMBER / PROFILE / PROJECT BUCKET A. The PO self-review with the test pack can run in parallel on the current release. Not started automatically.
 
 ## Related
 

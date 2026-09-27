@@ -10,8 +10,8 @@ One primary bucket per screen (62 screens; the 2 annotations are not implemented
 | Screen | Route | Subset omissions |
 |---|---|---|
 | H1 Homepage | `/` | No-destination CTAs rendered as non-links; placeholder blocks omitted (HD-01) |
-| AUTH1, AUTH2, AUTH3, AUTH4 | `/auth`, `/auth/check-email`, `/auth/callback`, `/auth/error` | — (copy per design; PO confirms the dropped rate-limit and support text) |
-| ACC-10 Hoàn tất | `/onboarding/complete` | The "Theo dõi xác minh chức vụ HUB" card (HD-02); current next actions kept |
+| AUTH1, AUTH2, AUTH3, AUTH4 | `/auth`, `/auth/check-email`, `/auth/callback`, `/auth/error` | — (copy per design; the dropped rate-limit and support text is a no-op, [DEC-L1-D6](../decisions/DECISION_LOG.md#dec-l1-d6)) · **22.2 DONE** |
+| ACC-10 Hoàn tất | `/onboarding/complete` | The "Theo dõi xác minh chức vụ HUB" card (HD-02); current next actions kept · **22.2 DONE** ([DEC-L1-D7](../decisions/DECISION_LOG.md#dec-l1-d7)) |
 | L11 ME0 Cài đặt | `/me/settings` (+ `/me/privacy`) | Change email, Google link, 4-purpose consent, "view as", view statistics, personal log, export, email preferences |
 | L13a PRJ1, L13b PRJ2, L13c PRJ3 | `/projects/new` | Stage, deck, AI, Owner / Editor / Viewer, link invitations |
 | L19 CHP0 | `/organizations/[slug]` | KPIs and public leadership (HD-08), partner strip, "Bài toán" nav, summit |
