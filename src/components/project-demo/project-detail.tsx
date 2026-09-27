@@ -267,6 +267,14 @@ function ParticipationRow({
             >
               {COPY.resume}
             </Link>
+          ) : application.status === 'SUBMITTED' ? (
+            <Link
+              href={projectDemoRoutes.review(ventureId, programme.id)}
+              className={`weight-medium ${styles.textAction}`}
+              data-nav="application-view"
+            >
+              {COPY.view}
+            </Link>
           ) : null}
         </div>
       ) : eligibility.eligible ? (

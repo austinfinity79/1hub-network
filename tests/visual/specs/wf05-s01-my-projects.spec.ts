@@ -395,7 +395,7 @@ test.describe('WF05-S01 states, entry and boundaries', () => {
     ).toBe(404)
     expect(
       (
-        await page.request.get(`/demo/projects/${solo.ventureId}/applications/${PROGRAMME}/review`)
+        await page.request.get(`/demo/projects/${solo.ventureId}/applications/${PROGRAMME}/unknown`)
       ).status(),
     ).toBe(404)
   })

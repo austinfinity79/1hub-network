@@ -447,7 +447,7 @@ test.describe('WF05-S02 navigation', () => {
       `/projects/${w.startup.id}/team`,
       `/demo/projects/${w.startup.id}/applications/${PROGRAMME}`,
     ])
-    // S03 exists; the review (S04) route does not yet.
+    // S03 and S04 exist; S02 links the review only for a SUBMITTED application.
     expect(
       (await page.request.get(`${detailUrl(w.startup.id)}/applications/${PROGRAMME}`)).status(),
     ).toBe(200)
@@ -455,7 +455,7 @@ test.describe('WF05-S02 navigation', () => {
       (
         await page.request.get(`${detailUrl(w.startup.id)}/applications/${PROGRAMME}/review`)
       ).status(),
-    ).toBe(404)
+    ).toBe(200)
     await expect(page.locator('a[href$="/review"]')).toHaveCount(0)
   })
 })

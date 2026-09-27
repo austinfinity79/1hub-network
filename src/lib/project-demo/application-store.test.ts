@@ -296,3 +296,25 @@ describe('WF05-S03 saveDraft (DEC-WF05-G5)', () => {
     })
   })
 })
+
+describe('WF05-S04 submit (DEC-WF05-G5)', () => {
+  it('a stored answer over the technical bound cannot be submitted; the DRAFT is unchanged', () => {
+    const key = applicationKey(V, P)
+    const state = started()
+    const tampered: ProjectDemoState = {
+      ...state,
+      applications: {
+        [key]: {
+          ...state.applications[key]!,
+          programme_specific_answers: ['A', 'x'.repeat(DEMO_ANSWER_MAX + 1)],
+        },
+      },
+    }
+    const before = JSON.stringify(tampered)
+    expect(submitApplication(tampered, startup, programme, LATER)).toEqual({
+      ok: false,
+      reason: 'INVALID_ANSWERS',
+    })
+    expect(JSON.stringify(tampered)).toBe(before)
+  })
+})

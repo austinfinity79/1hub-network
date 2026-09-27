@@ -231,7 +231,7 @@ test.describe('WF05-T00 demo read API (security matrix)', () => {
 })
 
 test.describe('WF05-T00 route and entry contract', () => {
-  test('the MemberShell entry contract (shown since WF05-S01); S04 routes are not screens yet; the harness is guarded', async ({
+  test('the MemberShell entry contract (shown since WF05-S01); the application and review routes are screens (S03 / S04); the harness is guarded', async ({
     page,
   }) => {
     expect(PROJECT_DEMO_ENTRY).toEqual({
@@ -251,16 +251,21 @@ test.describe('WF05-T00 route and entry contract', () => {
     await page.context().clearCookies()
     await login(page.request, 'member@example.test')
     // WF05-S01 / S02 made /demo/projects and the owner's venture detail real screens;
-    // the application routes (S03 / S04) still have no page.
+    // S03 / S04 made the application and its review real screens.
     expect((await page.request.get('/demo/projects')).status()).toBe(200)
     expect((await page.request.get(`/demo/projects/${SEED_VENTURE}`)).status()).toBe(200)
-    // WF05-S03: the owner's application draft is a screen; the review (S04) is not.
+    // WF05-S03 / S04: the owner's application draft and its review are screens; nothing else.
     expect(
       (await page.request.get(`/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}`)).status(),
     ).toBe(200)
     expect(
       (
         await page.request.get(`/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}/review`)
+      ).status(),
+    ).toBe(200)
+    expect(
+      (
+        await page.request.get(`/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}/unknown`)
       ).status(),
     ).toBe(404)
     for (const url of ['/me', '/me/roles', '/me/privacy', '/me/settings']) {

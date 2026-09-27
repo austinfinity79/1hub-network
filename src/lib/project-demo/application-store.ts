@@ -236,6 +236,8 @@ export function submitApplication(
   if (answers.length !== programme.questions.length || answers.some((a) => a.trim().length === 0)) {
     return { ok: false, reason: 'INCOMPLETE' }
   }
+  // WF05-S04: the technical bound holds at submit too (a stored value is not trusted).
+  if (answersTooLong(answers).length > 0) return { ok: false, reason: 'INVALID_ANSWERS' }
   const at = now.toISOString()
   const application: DemoApplication = {
     ...found.draft,

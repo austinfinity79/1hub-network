@@ -17,7 +17,7 @@ import { compareSegments, type Rect, type SegmentResult } from '../pixel-qa/segm
  * S02 → S03 for the eligible owner; the draft is created by the first "Lưu
  * nháp" and updated after (answers may be incomplete); one per venture ×
  * programme; refresh / back / reset; atomic refusals; SUBMITTED read only;
- * members, archived and foreign actors cannot edit; no S04 route; no writes;
+ * members, archived and foreign actors cannot edit; "Rà soát & nộp" saves then opens S04; no writes;
  * IDOR / spoofing; responsive and primitives.
  */
 
@@ -354,7 +354,7 @@ test.describe('WF05-S03 application draft', () => {
     await expect(page.locator('[data-action="apply"]')).toHaveCount(1)
   })
 
-  test('21. a SUBMITTED application is read only: no form, no review; S02 has no "Tiếp tục"', async ({
+  test('21. a SUBMITTED application is read only: no form, no review button; S02 has "Xem đơn" only', async ({
     page,
   }) => {
     const w = await world()
@@ -378,14 +378,23 @@ test.describe('WF05-S03 application draft', () => {
     await expect(
       page.locator('textarea, [data-action="review"], [data-action="save-draft"]'),
     ).toHaveCount(0)
+    // WF05-S04: the locked view links the read-only review.
+    await expect(page.locator('[data-nav="application-view-submitted"]')).toHaveAttribute(
+      'href',
+      `${appUrl(w.startup.id)}/review`,
+    )
     expect(await rawStore(page, w.owner.accountId)).toBe(raw)
     await page.goto(detailUrl(w.startup.id), { waitUntil: 'networkidle' })
     const row = page.locator(`[data-programme="${PROGRAMME}"]`)
     await expect(row.locator('[data-application]')).toHaveText('Đã nộp')
-    await expect(row.locator('a, button')).toHaveCount(0)
+    await expect(row.locator('a, button')).toHaveCount(1)
+    await expect(row.locator('[data-nav="application-view"]')).toHaveAttribute(
+      'href',
+      `${appUrl(w.startup.id)}/review`,
+    )
   })
 
-  test('5/6/7/23. archived and team member: locked, nothing stored; DRAFT / unknown programmes 404; no S04 route', async ({
+  test('5/6/7/23. archived and team member: locked, nothing stored; DRAFT / unknown programmes 404; S04 reached by saving', async ({
     page,
   }) => {
     const w = await world()
@@ -401,13 +410,13 @@ test.describe('WF05-S03 application draft', () => {
       expect((await page.request.get(appUrl(w.startup.id, programme))).status(), programme).toBe(
         404,
       )
-    // 23. S04: disabled with its reason; no link; its route is 404.
+    // 23. WF05-S04: "Rà soát & nộp" is the form's second submit (saves, then opens S04), not a link.
     await open(page, w.startup.id)
     const review = page.locator('[data-action="review"]')
-    await expect(review).toBeDisabled()
-    await expect(review).toHaveAttribute('title', 'Chưa có trong phiên bản này')
+    await expect(review).toBeEnabled()
+    await expect(review).toHaveAttribute('form', 'application-form')
     await expect(page.locator('a[href$="/review"]')).toHaveCount(0)
-    expect((await page.request.get(`${appUrl(w.startup.id)}/review`)).status()).toBe(404)
+    expect((await page.request.get(`${appUrl(w.startup.id)}/review`)).status()).toBe(200)
     expect(
       await page
         .locator('[data-screen="WF05-S03"] a')
@@ -718,7 +727,7 @@ test.describe('WF05-S03 visual QA (approved primitives; no WF05 bitmap)', () => 
         {
           class: 'INTENTIONAL-DEMO',
           reason:
-            'DEC-WF05-G1: WF04 demo frame, card chrome and question form inside MemberShell; "Rà soát & nộp" disabled with its reason until S04; typed answers masked as content; no WF05 pixel parity claimed',
+            'DEC-WF05-G1: WF04 demo frame, card chrome and question form inside MemberShell; "Rà soát & nộp" saves then opens S04; typed answers masked as content; no WF05 pixel parity claimed',
         },
       ],
       segments: results,

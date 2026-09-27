@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 
 import buttons from '@/components/programme-demo/demo-buttons.module.css'
@@ -8,7 +9,6 @@ import { DemoPage } from '@/components/programme-demo/demo-page'
 import cards from '@/components/programme-demo/journey.module.css'
 import form from '@/components/programme-demo/programme-form.module.css'
 import { Notice } from '@/components/ui'
-import { INERT_REASONS } from '@/lib/member/nav'
 import { APPLICANT_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
 import { formatDemoDateRange } from '@/lib/programme-demo/format'
 import {
@@ -37,8 +37,8 @@ import styles from './project-list.module.css'
  * answers and the state — never venture or programme data. Opening the page
  * stores nothing; "Lưu nháp" creates the DRAFT once and then updates it
  * (answers may be incomplete). Only the eligible owner edits; a SUBMITTED
- * application is shown read only. Review and submit belong to S04 (disabled
- * here until it exists).
+ * application is shown read only. "Rà soát & nộp" saves the draft and opens
+ * S04, which owns review and submit.
  */
 
 type Programme = DemoVentureDetailDTO['programmes'][number]
@@ -159,15 +159,12 @@ function ApplicationScreen({
           <div className={buttons.group}>
             {back}
             {editable ? (
-              // S04 (review + submit) is not built yet: the next step, disabled with its reason.
+              // WF05-S04: saves the draft (nothing typed is lost), then opens the review.
               <button
-                type="button"
+                type="submit"
+                form="application-form"
                 className={`weight-medium ${buttons.primary}`}
-                disabled
-                aria-disabled="true"
-                title={INERT_REASONS.NO_P0_SCREEN}
-                aria-label={`${COPY.review} — ${INERT_REASONS.NO_P0_SCREEN}`}
-                data-nav-kind="INERT"
+                data-intent="review"
                 data-action="review"
               >
                 {COPY.review}
@@ -297,6 +294,17 @@ function Locked({
       <p className={`type-body-sm ${cards.meta}`} data-state="application-locked">
         {reason}
       </p>
+      {application?.status === 'SUBMITTED' ? (
+        <p className="type-body-sm">
+          <Link
+            href={projectDemoRoutes.review(application.primary_applicant_id, programme.id)}
+            className={`weight-medium ${styles.textAction}`}
+            data-nav="application-view-submitted"
+          >
+            {COPY.viewSubmitted}
+          </Link>
+        </p>
+      ) : null}
       {application ? (
         <ol className={`type-body-sm ${styles.summary}`} data-answers>
           {programme.questions.map((q, i) => (
@@ -320,6 +328,7 @@ function DraftForm({
   application: DemoApplication | null
 }) {
   const { mutate } = useProjectDemo()
+  const router = useRouter()
   const [answers, setAnswers] = useState<string[]>(
     () => application?.programme_specific_answers ?? programme.questions.map(() => ''),
   )
@@ -335,6 +344,8 @@ function DraftForm({
 
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLElement | null
+    const review = submitter?.dataset.intent === 'review'
     if (inFlight.current) return
     const invalid = answersTooLong(answers)
     if (invalid.length > 0) {
@@ -347,10 +358,12 @@ function DraftForm({
     const result = mutate((s) => saveDraft(s, venture, programme, answers, new Date()))
     inFlight.current = false
     setStatus(result.ok ? 'saved' : 'failed')
+    if (result.ok && review) router.push(projectDemoRoutes.review(venture.id, programme.id))
   }
 
   return (
     <form
+      id="application-form"
       className={`${form.form} ${cards.editor}`}
       onSubmit={save}
       noValidate
