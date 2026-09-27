@@ -47,6 +47,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **INTERNAL ALPHA — DEPLOYED** to https://1hubnetwork.io.vn (Task 20, release `9c61458`, record on `deploy/vps-foundation` `81da9bd`). **TEST PACK READY** ([guide](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md), [accounts](../uat/INTERNAL_ALPHA_TEST_ACCOUNTS.md), [data / reset](../uat/INTERNAL_ALPHA_TEST_DATA_RESET.md), [checklist](../uat/INTERNAL_ALPHA_UAT_CHECKLIST.md); [report](reports/INTERNAL-ALPHA_test-pack.md)): operator sign-in links, actor matrix, reset rules, WF-TEST-01..06. Team UAT: **PENDING**.
 
+**TASK 21 v2 — DESIGN REVISION AUDIT (corrected Homepage + L1–L6): DONE — HUMAN DECISION REQUIRED** ([audit](../design-revision/00_CORRECTED_SOURCE_MANIFEST.md), [report](reports/TASK-21v2_design-revision-audit.md)). 64 assets verified; root `/` already public. Buckets A 15 / B 26 / C 21; 11 decisions (HD-01…HD-11). The first, withdrawn audit is in `docs/design-revision/superseded/` (DO NOT IMPLEMENT). No runtime change; Task 22 not started.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -135,7 +137,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-PRODUCT OWNER SELF-REVIEW on https://1hubnetwork.io.vn with the [test pack](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md), then ALPHA-AUTO-REVIEW-01 / TEAM UAT as agreed. Not started automatically.
+PO / BA freeze the TASK 21 v2 decisions (HD-01…HD-11) and approve Bucket A → TASK 22 (design revision, Bucket A only). The PO self-review with the test pack can run in parallel on the current release. Not started automatically.
 
 ## Related
 
