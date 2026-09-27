@@ -2,7 +2,7 @@
 
 **Status: FROZEN** ([DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1)). WF04 = DEMO. The dataset below is implemented by WF04-T00 ([DEC-WF04-T00-D1](../decisions/DECISION_LOG.md#dec-wf04-t00-d1)).
 
-**Progress:** J1 steps 1–6 run today: S01 lists the fixtures; "Tạo mới" → S02 creates a session DRAFT (canonical fields only, owner from scope) → S03 journey (ordered stages; CHALLENGE problem statements) → S04 events (this programme's events only) → S05 registration (applicant types, own questions; counts read-only) → S06 operating team (display only). J3 runs up to S06 (everything survives a refresh). S06 "Tiếp theo" opens with S07; row → S08 opens with S08.
+**Progress:** J1 steps 1–7 and 9–11 run today: S01 → S02 create → S03 journey (stages, problem statements) → S04 events → S05 registration → S06 team (display) → S07 review: H5 checklist, publish DRAFT → PUBLISHED; the list shows it PUBLISHED; refresh keeps it; reset restores the fixtures. Step 8 (S08 detail) is replaced by staying on S07 until S08 exists. J3 runs up to S07.
 
 ## Demo data (fixture, labelled DỮ LIỆU DEMO)
 | Record | Values | Notes |

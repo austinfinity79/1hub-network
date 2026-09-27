@@ -1096,7 +1096,18 @@ Resolution: a human decision on E1–E5, recorded as DEC-WF03-S07-EVENT-LIFECYCL
 |---|---|
 | <a id="dec-wf04-s06-d1"></a>DEC-WF04-S06-D1 | **Display only.** S06 renders the current programme's `team` rows from the fixture / session copy — `display_name` and `role_label` shown as "Người tổ chức chương trình" in a neutral pill — plus a count and an empty state; the WF02-S06 member row language (32 px avatar disc, medium name). No invite, add, remove, role, permission, scope, ownership or account column or control; no member-directory read. PROGRAMME_ORGANIZER stays a display label (H2): it grants no capability and writes no RoleAssignment. IndividualProfile, membership, leadership, RoleAssignment and the programme label stay separate and untouched |
 | <a id="dec-wf04-s06-d2"></a>DEC-WF04-S06-D2 | **Read error + retry.** S06 makes no request and no write, so its only failure is a session store the browser refuses to read. `SetupScreen` (all setup steps) then shows "Trình duyệt chưa cho đọc dữ liệu demo của phiên này." with "Thử lại" (re-read), shows no programme data, and every store write is refused until the store can be read, so session data is never overwritten |
-| <a id="dec-wf04-s06-d3"></a>DEC-WF04-S06-D3 | **Navigation.** S05 "Tiếp theo" → `setup/team`; S06 "← Đăng ký" → `setup/registration`; S06 "Tiếp theo" disabled with its reason until WF04-S07 |
+| <a id="dec-wf04-s06-d3"></a>DEC-WF04-S06-D3 | **Navigation.** S05 "Tiếp theo" → `setup/team`; S06 "← Đăng ký" → `setup/registration`; S06 "Tiếp theo" disabled with its reason until WF04-S07 (**now opens S07, [DEC-WF04-S07-D3](#dec-wf04-s07-d3)**) |
+
+
+## DEC-WF04-S07 — Review + publish implementation decisions
+
+**Status:** IMPLEMENTATION DECISIONS under WF04-S07 (2026-09-27), inside DEC-WF04-H5 and the SOT §6 lifecycle (demo: DRAFT → PUBLISHED only); no checklist item, state or route added. Report: [WF04-S07](../implementation/reports/WF04-S07_programme-review.md).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-wf04-s07-d1"></a>DEC-WF04-S07-D1 | **Publish.** The checklist is exactly `publishReadiness` (H5: name, type, owning organization in the actor's scope, date order, CHALLENGE ≥ 1 problem statement), each shown "Đạt" / "Còn thiếu", no percentage. `publishProgramme` is the only transition: DRAFT → PUBLISHED on the actor's session copy, atomic (a failing item or a non-DRAFT changes nothing, so a repeat is a no-op), keeping every setup value. No unpublish, close or archive; a fixture already PUBLISHED shows its state read-only. Authority is the server route guard (`requireDemoProgrammeRoute`) plus the scope item of the checklist; there is no server publish (T00-D3: demo changes never reach the server). A refused browser write keeps DRAFT and "Thử lại" retries the same transition |
+| <a id="dec-wf04-s07-d2"></a>DEC-WF04-S07-D2 | **Review summary.** Read-only sections from the demo DTO only: basic information (type, name, owner, time, summary, status), journey (stages), CHALLENGE problem statements, this programme's events, registration (applicant types, question count), operating team. "Sửa" links go to built steps only (journey, events, registration, team; a missing problem statement links to the journey); basic information has no edit link until S08 builds `setup/basic` |
+| <a id="dec-wf04-s07-d3"></a>DEC-WF04-S07-D3 | **Navigation.** S06 "Tiếp theo" → `setup/review`; S07 "← Đội vận hành" → `setup/team`; after publishing the screen stays on S07 in the PUBLISHED state with "Về danh sách" (INTENTIONAL-DEMO until S08); S07 "Tiếp theo" disabled with its reason; no link to `/demo/programmes/:id` or `setup/basic` |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
