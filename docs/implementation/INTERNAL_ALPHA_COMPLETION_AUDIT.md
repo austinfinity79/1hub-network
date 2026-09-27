@@ -1,5 +1,7 @@
 # Internal Alpha Completion Audit
 
+**Final verdict (release freeze, 2026-09-28): GREEN — Internal Alpha RELEASE CANDIDATE.** Release SHA `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` (app), deploy tooling `68488cfe9732b46aad297e24ab6f2811ce6d9caf` (Dockerfile copies `patches/`), rollback `0a2df094b941f6d0f0fc87cdb7767b2e92272198`; manifest **READY** ([freeze report](reports/INTERNAL-ALPHA_release-freeze.md)). Clean install of the SHA on a fresh DB: 665 tests — 641 passed / 24 opt-in skipped / 0 failed, 0 #418; release image built with the fixed Dockerfile and smoke-tested. Functional QA PASS · Pixel QA PASS · Team UAT PENDING (after Task 20). The sections below record how the audit got here.
+
 **Verdict: NOT GREEN — NOT READY** (2026-09-27, audit base `9e01fc8`; candidate `4847ec3`). Process: PROCESS-P0-ACCELERATED-SAFE-V2. Draft manifest: [INTERNAL_ALPHA_RELEASE_MANIFEST.md](INTERNAL_ALPHA_RELEASE_MANIFEST.md) (no release SHA frozen). UAT: [INTERNAL_ALPHA_UAT_MATRIX.md](INTERNAL_ALPHA_UAT_MATRIX.md). Not deployed.
 
 **Update (IA-P2-02 remediation, 2026-09-27): IA-P2-02 CLOSED** — root cause proven (React 19.3.0 hydration-cursor bug on replay, inside `next@15.5.26`), fixed by a pnpm patch backporting React's upstream fix, verified on a fresh server and a fresh DB ([report](reports/IA-P2-02_hydration-418.md)). Status: **READY FOR COMPLETION AUDIT RECHECK.** The verdict below stays NOT GREEN until the final recheck re-runs the release gates and freezes the release SHA.
@@ -61,7 +63,7 @@ Facts: the landing page has **no app client component** (only Next `Link` / rout
 | IA-P3-05 | No `error.tsx`: a server error shows Next's default English page; the 404 page has no link home | P3 |
 | IA-P3-06 | Stale comments / docs (P0_STATUS older "Next" lines, DECISION_LOG SEC-OBS-01 "OPEN" line, P0-SHELL audit header, `programme-demo/fixtures.ts` seed reference, `profile/projection.ts`) | P3 doc |
 | IA-P2-03 | **Closed (`9c61458`).** Was: unreachable by pointer / touch below 1280 px (WF03 members "Mở →", WF02 team "Huỷ lời mời", WF03 events "Mở" / "+ Tạo sự kiện"), WF03 network columns hidden. Fixed with local table scroll and an event-panel breakpoint | Closed |
-| IA-OBS-01 | One 5 s stall of the WF02-S04 concurrent-request DB test in the first clean-tree run; not reproduced (3 × 349 / 349 with lock-wait logging, isolation runs, connection bursts); mechanism unknown | Watch |
+| IA-OBS-01 | One 5 s stall of the WF02-S04 concurrent-request DB test in the first clean-tree run of `dcbde62`; not reproduced since (3 × 349 / 349 with lock-wait logging, then 349 / 349 in the IA-P2-03 and release-freeze runs); mechanism unknown | Watch |
 | IA-P3-07 | Chrome "preloaded but not used" warnings (2 fonts, 2 CSS) on `/ops/org/:id` | P3 |
 | IA-P3-08 | Page-level sideways scroll with every control reachable: WF02 profile editor at 1024 (+353 px) and 768 (+609), roles (+37) and venture create / edit (+156) at 768; desktop-first member / ops / onboarding shells at 390 | P3 — mobile polish later |
 | IA-L1 | App shells (member, ops, onboarding) desktop-first (DEC-P0-SHELL-D7); after IA-P2-03 every control is reachable at 1440 / 1024 / 768 / 390, with page-level sideways scroll where IA-P3-08 lists it | Documented limitation |
@@ -79,7 +81,7 @@ Facts: the landing page has **no app client component** (only Next `Link` / rout
 | `X-Forwarded-For` first hop is client-controllable (`request_ip` audit value) | None | Hardening |
 | Security headers (CSP, HSTS, X-Frame-Options) not set by the app; CDN overrides `Referrer-Policy` and injects scripts (deploy docs) | TEAM-UAT: rely on proxy / CDN | EXTERNAL / hardening |
 | Avatar files outside `pg_dump` backups; `MEDIA_STORAGE_DIR` must be a volume | TEAM-UAT note | Backup plan |
-| `patches/` must be in the image before `pnpm install --frozen-lockfile` (IA-P2-02 patch); `deploy/Dockerfile` copies only the manifests today | Required (deploy task) | Until the Next upgrade drops the patch |
+| `patches/` in the image before `pnpm install --frozen-lockfile` (IA-P2-02 patch) | **Resolved** — `deploy/Dockerfile` `68488cf`, verified by a local docker build of the release SHA | Until the Next upgrade drops the patch |
 | Deploy-branch docs stale (not seeded / nobody can sign in / WF01 open / `/` → `/auth`; PO checklist lacks landing, shell, WF04, WF05) | Update in the deploy task | — |
 
 ## Related
