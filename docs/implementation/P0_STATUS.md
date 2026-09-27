@@ -45,6 +45,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **INTERNAL ALPHA — FINAL RELEASE RECHECK + FREEZE: GREEN — RELEASE CANDIDATE** ([freeze report](reports/INTERNAL-ALPHA_release-freeze.md), [manifest](INTERNAL_ALPHA_RELEASE_MANIFEST.md) READY). **Release SHA `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0`**; deploy tooling `68488cfe9732b46aad297e24ab6f2811ce6d9caf` (`deploy/Dockerfile` copies `patches/` before `pnpm install --frozen-lockfile`); rollback `0a2df094b941f6d0f0fc87cdb7767b2e92272198`. Clean install of the SHA: patch applied, format / lint / typecheck / build, unit 237, DB 349, fresh DB (001→009, seed idempotent), full suite 665 = 641 passed / 24 opt-in skipped / 0 failed, 0 #418, responsive 0 unreachable at 1440 / 1024 / 768 / 390; release image built and smoke-tested. P0 / P1 / P2 = 0. Functional QA PASS · Pixel QA PASS · Team UAT PENDING. Nothing deployed.
 
+**INTERNAL ALPHA — DEPLOYED** to https://1hubnetwork.io.vn (Task 20, release `9c61458`, record on `deploy/vps-foundation` `81da9bd`). **TEST PACK READY** ([guide](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md), [accounts](../uat/INTERNAL_ALPHA_TEST_ACCOUNTS.md), [data / reset](../uat/INTERNAL_ALPHA_TEST_DATA_RESET.md), [checklist](../uat/INTERNAL_ALPHA_UAT_CHECKLIST.md); [report](reports/INTERNAL-ALPHA_test-pack.md)): operator sign-in links, actor matrix, reset rules, WF-TEST-01..06. Team UAT: **PENDING**.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -133,7 +135,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-TASK 20 — DEPLOY INTERNAL ALPHA EXACT RELEASE SHA `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` TO 1hubnetwork.io.vn (deploy tooling `68488cf`, per the manifest). Not started automatically; requires explicit authorization.
+PRODUCT OWNER SELF-REVIEW on https://1hubnetwork.io.vn with the [test pack](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md), then ALPHA-AUTO-REVIEW-01 / TEAM UAT as agreed. Not started automatically.
 
 ## Related
 
