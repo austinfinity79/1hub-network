@@ -49,7 +49,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 21 v2 — DESIGN REVISION AUDIT (corrected Homepage + L1–L6): DONE — HUMAN DECISION REQUIRED** ([audit](../design-revision/00_CORRECTED_SOURCE_MANIFEST.md), [report](reports/TASK-21v2_design-revision-audit.md)). 64 assets verified; root `/` already public. Buckets A 15 / B 26 / C 21; 11 decisions (HD-01…HD-11). The first, withdrawn audit is in `docs/design-revision/superseded/` (DO NOT IMPLEMENT). No runtime change; Task 22 not started.
 
-**TASK 22.1 — PUBLIC HOMEPAGE (Bucket A): BLOCKED at precheck — typography conflict HD-12** ([report](reports/TASK-22.1_homepage-typography-stop.md)). The corrected revision is set in Space Grotesk (glyph-mask test, H1 + AUTH1, 6 / 6 samples); the Design SOT allows Be Vietnam Pro / Archivo 700 / IBM Plex Mono 500. HD-12 blocks every Bucket A batch. The TASK 21 v2 typography line is corrected. Nothing implemented; no runtime change.
+**TASK 22.1 — CORRECTED PUBLIC HOMEPAGE (Bucket A): DONE** ([report](reports/TASK-22.1_public-homepage.md); precheck stop [report](reports/TASK-22.1_homepage-typography-stop.md)). HD-12 CLOSED as DEC-HD-12: Space Grotesk self-hosted, scoped to revision screens. `/` is rebuilt to `design-reference/final/revision/H1` and stays public with the same entry CTA; HD-01 placeholder blocks are omitted; 0 `href="#"`. Pixel: 22 blocks, max 0.99 % outside text, max 1.40 % beyond ±2 px; P0 / P1 / P2 = 0. Responsive 1024 / 768 / 390 PASS. Full suite 643 passed / 24 skipped / 0 failed. Implementation `a05917a`; nothing deployed.
 
 ## Completed (committed)
 
@@ -139,7 +139,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-PO / Design decide HD-12 (typography) → re-run TASK 22.1 (Public Homepage); then TASK 22.2 (L1 auth / onboarding, Bucket A). The PO self-review with the test pack can run in parallel on the current release. Not started automatically.
+TASK 22.2 — L1 AUTH / ONBOARDING BUCKET A. The PO self-review with the test pack can run in parallel on the current release. Not started automatically.
 
 ## Related
 

@@ -14,7 +14,7 @@
 | **22.7** L6 subset | L54 (404 / 500) | Next 404 + new `error.tsx` | State cards | None (UI for existing failures; closes IA-P3-05) | L54 (two states) | Console health, shell | — |
 | **22.8** Consolidation | Shared primitives touched by 22.1–22.7; the shell model decided under HD-11 | — | Tokens unchanged (already `#fc523c` / `#160002` / `#efefef`); typography assertions | — | All above | **Full suite** + pixel audit + protected regression → release freeze → redeploy | — |
 
-**HD-12 (typography) blocks every batch** until decided; 22.1 stopped at precheck ([report](../implementation/reports/TASK-22.1_homepage-typography-stop.md)).
+**HD-12 CLOSED** ([DEC-HD-12](../decisions/DECISION_LOG.md#dec-hd-12)): Space Grotesk on revision screens. **22.1 DONE** ([report](../implementation/reports/TASK-22.1_public-homepage.md)); its baseline is `design-reference/final/revision/H1`.
 
 Order: 22.1 → 22.2 → 22.3 → 22.4 → 22.7 → 22.8. Batches 22.5 and 22.6 stay empty until B decisions are made. Each batch stops for review, per protected-workflow practice.
 

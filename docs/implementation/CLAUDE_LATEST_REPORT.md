@@ -1,51 +1,59 @@
 # Claude Task Report
 
 ## Task
-TASK 22 — Bucket A, BATCH 22.1 Public Homepage. Full report: [reports/TASK-22.1_homepage-typography-stop.md](reports/TASK-22.1_homepage-typography-stop.md).
+TASK 22.1 — CORRECTED PUBLIC HOMEPAGE (Bucket A). Full report: [reports/TASK-22.1_public-homepage.md](reports/TASK-22.1_public-homepage.md).
 
 ## Verdict
-**BLOCKED at precheck — Design SOT conflict (typography, HD-12).**
-- The corrected revision is set in **Space Grotesk**, measured on H1 and AUTH1 (6 of 6 samples).
-- The Design SOT, CLAUDE.md §5 and the pixel harness allow only Be Vietnam Pro / Archivo 700 / IBM Plex Mono 500.
-- Batch 22.1 cannot close (P0 = P1 = P2 = 0) without a decision.
-- Nothing implemented; 22.2 not started.
+**DONE.** HD-12 is CLOSED as [DEC-HD-12](../decisions/DECISION_LOG.md#dec-hd-12). Batch 22.2 is not started.
 
 ## Scope implemented
-- Precheck: root `/` is already public; no Business / API / data need found.
-- Typeface verification by glyph-mask overlap.
-- Content and CTA plan prepared, to be applied once HD-12 is decided.
-- Correction of the TASK 21 v2 typography statement.
+- **Design rule update:**
+  - Design SOT §2.2 / §2.3 scoped Space Grotesk rule;
+  - one CLAUDE.md §5 line;
+  - DEC-HD-12 and DEC-H1 in the decision log.
+- **Font setup:** `@fontsource/space-grotesk` 5.3.0 synced into `public/fonts` (12 files); no CDN.
+- **Harness:** `REVISION_FACES` for revision screens only.
+- **Homepage:**
+  - `/` rebuilt to the corrected reference (`design-reference/final/revision/H1`);
+  - approved copy kept; HD-01 placeholder and unverified blocks omitted;
+  - 17 active links and 26 inert items for a guest; 0 `href="#"`.
 
 ## Files changed
-- `docs/design-revision/04_UI_DELTA_MATRIX.md`: typography line corrected.
-- `docs/design-revision/05_BUSINESS_API_DATA_CONFLICT_MATRIX.md`: HD-12 added.
-- `docs/design-revision/07_TASK22_IMPLEMENTATION_ORDER.md`: blocker note.
-- `docs/design-revision/AUDIT_METHODOLOGY.md`: typeface test method.
-- `docs/implementation/reports/TASK-22.1_homepage-typography-stop.md`, `P0_STATUS.md`, this report.
+- `CLAUDE.md`, `docs/design/00_DESIGN_PIXEL_SOT_FINAL_v1.0.md`, `docs/decisions/DECISION_LOG.md`
+- `package.json`, `pnpm-lock.yaml`, `scripts/sync-fonts.mjs`, `src/styles/fonts.css`, `src/styles/fonts.test.ts`, `public/fonts/space-grotesk-*` (12)
+- `design-reference/final/revision/` (H1 reference + README)
+- `src/components/landing/` (`landing`, `landing-story`, `landing-network`, `landing-parts`; `landing` / `story` / `network` CSS modules)
+- `tests/visual/pixel-qa/capture.ts`, `segments.ts`, `tests/visual/specs/p0-landing.spec.ts`, `typography-foundation.spec.ts`
+- Docs: `docs/design-revision/04`, `05`, `07`; this report; the task report; `P0_STATUS.md`
 
 ## Migrations / data
-None. Runtime, DB, API and RBAC changes: 0. `design-reference/final` untouched.
+None. Business, API, DB and RBAC changes: 0. The WF01–WF03 baselines and `manifest.yaml` are untouched.
 
 ## Tests
-Not run: no code changed. Evidence: IoU scores and aspect ratios per sample in the full report.
+- Format, lint, typecheck, unit 237, DB 349, build: PASS.
+- Full visual suite: 643 passed / 24 opt-in skipped / 0 failed (after the typography-foundation count update, 27 declarations).
 
 ## Visual QA
-Not reached. The pixel audit requires the HD-12 decision.
+- 1440×900 DPR1 against H1, 22 kept blocks.
+- Diff outside text max 0.99 %; diff beyond ±2 px max 1.40 %.
+- Structural 0 · Major 0 · Component 0 · P3 raster residual · typography violations 0.
+- Responsive 1024 / 768 / 390: 0 overflow, 0 covered or off-screen CTA.
 
 ## Deviations / blockers
-- **HD-12 typography.** Options:
-  - A: adopt Space Grotesk (recommended; decide revision-only or global, and the mono face);
-  - B: keep the approved faces as an intentional deviation;
-  - C: re-export the frames.
-- The mono label family (IBM Plex Mono or Space Mono) is not provable from the PNGs.
+- **Intentional:**
+  - HD-01 omissions;
+  - the fourth pain item wraps instead of being clipped;
+  - mono labels use IBM Plex Mono (the reference mono family is unproven).
+- **PO review:** the revision copy names investment and recruitment (DEC-H1-D2).
+- No blocker.
 
 ## Git
-- Branch: `main`; start HEAD `836a344`, checked again before the commit
-- Implementation commit: none
+- Branch: `main`; start HEAD `d460914`, checked again before each commit
+- Implementation commit: `a05917a47c362712b770a63f78d4640f358b6710`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO / Design decide HD-12, then re-run TASK 22.1 — Public Homepage. After 22.1 closes: TASK 22.2 — L1 AUTH / ONBOARDING BUCKET A. Not started automatically.
+TASK 22.2 — L1 AUTH / ONBOARDING BUCKET A. Not started automatically.
