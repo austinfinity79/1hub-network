@@ -6,3 +6,9 @@ allowBuilds:
   esbuild: true
   unrs-resolver: true
   sharp: true
+# IA-P2-02: backports React's hydration fix (a replayed host component rewinds
+# the hydration cursor) into the React bundled with next 15.5.26; fixed upstream
+# in React 19.3 canary / Next 16.3.6. Drop it when upgrading Next. The image
+# must contain patches/ before `pnpm install --frozen-lockfile`.
+patchedDependencies:
+  next@15.5.26: patches/next@15.5.26.patch

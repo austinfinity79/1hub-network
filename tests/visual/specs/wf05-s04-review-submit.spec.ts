@@ -365,6 +365,8 @@ test.describe('WF05-S04 review + submit', () => {
     await page.locator('[data-action="review"]').click()
     await expect(page).toHaveURL(reviewUrl(w.startup.id))
     const saved = await rawStore(page, w.owner.accountId)
+    // Wait for the review to render before reading it (a plain evaluate does not retry).
+    await expect(page.locator('[data-review-answer]')).toHaveCount(2)
     expect((await answersShown(page))[1]).toBe(`${Q2}\nChưa trả lời`)
     await expect(page.locator('[data-review-answer="1"]')).toHaveAttribute('data-answered', 'false')
     await expect(check(page, 'answers')).toHaveAttribute('data-ok', 'false')
