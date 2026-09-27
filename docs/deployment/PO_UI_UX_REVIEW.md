@@ -1,5 +1,7 @@
 # PO UI/UX Review
 
+> **Superseded:** this describes the Phase 0 build `0a2df09`. The Internal Alpha release `9c61458` is recorded in [INTERNAL_ALPHA_DEPLOYMENT.md](INTERNAL_ALPHA_DEPLOYMENT.md); its test pack is a separate task.
+
 Phase 0 integrated review build (WF01, WF02 and WF03 are all CLOSED / GREEN). This is **not** a production launch.
 
 | Item | Value |

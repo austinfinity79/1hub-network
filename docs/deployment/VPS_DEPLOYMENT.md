@@ -23,12 +23,9 @@ Browser ─HTTPS─▶ OneShield/WAF ─▶ Nginx :80/:443 (origin) ─▶ 127.0
 
 | Item | Value |
 |---|---|
-| Deployed | `0a2df094b941f6d0f0fc87cdb7767b2e92272198` (Phase 0: WF01–WF03 GREEN), 2026-09-26 16:41 UTC |
-| Previous | `95e9ee87011fc67befdc6d87f7ce4513fc78fcab`; rollback round trip verified on schema 009 |
-| Migrations | 001–009 applied; a rerun skips all 9 |
-| Pre-deploy backup | `onehub-20260926T164120Z.dump` (81,932 B, 185 `pg_restore --list` entries) |
-| Data fix | DEC-WF02-S06-G9: before 008, the legacy fixture row `project_members 11000000-…-0002` (PENDING_APPROVAL) was deleted; the reseed recreated it as a canonical PENDING_CONFIRMATION invitation |
-| Review guide | [PO_UI_UX_REVIEW.md](PO_UI_UX_REVIEW.md), [PO_REVIEW_CHECKLIST.md](PO_REVIEW_CHECKLIST.md) |
+| Deployed | `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` (Internal Alpha release) with tooling `68488cf`, 2026-09-27 17:37 UTC |
+| Previous | `0a2df094b941f6d0f0fc87cdb7767b2e92272198`; rollback round trip verified |
+| Record | [INTERNAL_ALPHA_DEPLOYMENT.md](INTERNAL_ALPHA_DEPLOYMENT.md) |
 
 ## Server paths
 
