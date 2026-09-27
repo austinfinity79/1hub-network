@@ -1,6 +1,6 @@
 # WF05 Screen Implementation Plan
 
-**Status: FROZEN** by [DEC-WF05-G1..G5](../decisions/DECISION_LOG.md#dec-wf05-g1); **T00 DONE** ([DEC-WF05-T00-D1..D3](../decisions/DECISION_LOG.md#dec-wf05-t00-d1), [report](reports/WF05-T00_demo-foundation.md)); **S01 DONE** ([report](reports/WF05-S01_my-projects.md)). Next: S02. WF05 = DEMO. Audit: [WF05_PREIMPLEMENTATION_AUDIT.md](WF05_PREIMPLEMENTATION_AUDIT.md). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). Estimate: **4 executable screens, 6 tasks** (T00, S01–S04, closure).
+**Status: FROZEN** by [DEC-WF05-G1..G5](../decisions/DECISION_LOG.md#dec-wf05-g1); **T00 DONE** ([DEC-WF05-T00-D1..D3](../decisions/DECISION_LOG.md#dec-wf05-t00-d1), [report](reports/WF05-T00_demo-foundation.md)); **S01 DONE** ([report](reports/WF05-S01_my-projects.md)); **S02 DONE** ([report](reports/WF05-S02_project-detail.md)). Next: S03. WF05 = DEMO. Audit: [WF05_PREIMPLEMENTATION_AUDIT.md](WF05_PREIMPLEMENTATION_AUDIT.md). Process: [PROCESS-P0-ACCELERATED-SAFE-V2](PROCESS_P0_ACCELERATED_SAFE_V2.md). Estimate: **4 executable screens, 6 tasks** (T00, S01–S04, closure).
 
 ## Journey classification
 | Step | Class | Where |
@@ -49,8 +49,8 @@ Reusable: `projects`, `project_members`, `project_domains`, `vocabulary_items`, 
 |---|---|---|---|---|---|---|---|
 | 0 | WF05-T00 Demo foundation — **DONE** ([report](reports/WF05-T00_demo-foundation.md)) | `/demo/projects*` guard (auth + onboarding resolver), MemberShell entry (G2), frame + "Dữ liệu demo" + reset, WF05 session store, read models (my ventures via WF02 services; PUBLISHED fixture programmes), demo GET API | G1–G5 | guest, onboarding, member without venture, spoofed headers, no PII, 0 writes | MemberShell, WF04 DemoPage / notice | P0-SHELL, shell-routes, WF02-S01/S04/S05/S06 + UAT, WF04-T00 | functional + primitives + regression |
 | 1 | WF05-S01 My ventures + programmes — **DONE** ([report](reports/WF05-S01_my-projects.md)); MemberShell entry shown | `/demo/projects` | T00 | foreign ventures never listed; DRAFT / ops-session programmes never listed | G1 primitives | T00, WF02-S01 | same |
-| 2 | WF05-S02 Venture detail — NEXT | `/demo/projects/:id`; links to WF02 edit / team | S01 | non-member / pending invitee / random / malformed → 404; member read-only | PRO1 header, PRO3 table | S01, WF02-S05/S06 | same |
-| 3 | WF05-S03 Application draft | answers, save DRAFT, refresh, reset | S02, G4, G5 | owner only; ineligible type; ARCHIVED; duplicate; spoofed applicant id | WF04-S05 form | S02 | same |
+| 2 | WF05-S02 Venture detail — **DONE** ([report](reports/WF05-S02_project-detail.md)); S01 rows link here; "Đăng ký" disabled until S03 | `/demo/projects/:id`; links to WF02 edit / team | S01 | non-member / pending invitee / random / malformed → 404; member read-only | PRO1 header, PRO3 table | S01, WF02-S05/S06 | same |
+| 3 | WF05-S03 Application draft — NEXT; turns on S02 "Đăng ký" | answers, save DRAFT, refresh, reset | S02, G4, G5 | owner only; ineligible type; ARCHIVED; duplicate; spoofed applicant id | WF04-S05 form | S02 | same |
 | 4 | WF05-S04 Review + submit | checklist, DRAFT → SUBMITTED, read-only after | S03 | double submit once; no other transition | WF04-S07 checklist | S03, WF04-S07 | same |
 | 5 | WF05 COMPLETION AUDIT + HAPPY PATH UAT | journeys, SEC matrix, invariants, restart, full regression | 0–4 | all | all | full suite | GREEN verdict |
 
