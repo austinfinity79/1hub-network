@@ -74,10 +74,41 @@ export const S02_COPY = {
   programmesEmpty: 'Hiện chưa có chương trình nào đang mở.',
   applicantTypes: 'Dành cho',
   apply: 'Đăng ký',
+  resume: 'Tiếp tục',
   ineligible: {
     NOT_OWNER: 'Chỉ chủ sở hữu đăng ký được.',
     ARCHIVED: 'Hồ sơ đã lưu trữ.',
     TYPE_NOT_ACCEPTED: 'Chương trình không nhận loại hồ sơ này.',
     NOT_PUBLISHED: 'Chương trình chưa mở.',
   },
+} as const
+
+/** WF05-S03 — the application draft. */
+export const S03_COPY = {
+  title: (programme: string) => `Đăng ký: ${programme}`,
+  loading: 'Đang tải…',
+  failed: 'Chưa tải được đơn đăng ký. Vui lòng thử lại.',
+  retry: 'Thử lại',
+  missing: 'Không tìm thấy đơn đăng ký này.',
+  back: '← Hồ sơ dự án',
+  save: 'Lưu nháp',
+  saving: 'Đang lưu…',
+  saved: 'Đã lưu bản nháp.',
+  saveFailed: 'Chưa lưu được bản nháp. Vui lòng thử lại.',
+  review: 'Rà soát & nộp',
+  applicant: 'Hồ sơ đăng ký',
+  applicantAs: 'Đăng ký với tư cách',
+  reuse:
+    'Hồ sơ dự án / startup được dùng lại như hiện có; chương trình chỉ hỏi thêm các câu dưới đây.',
+  programme: 'Chương trình',
+  questions: 'Câu hỏi của chương trình',
+  questionsHint: 'Có thể lưu nháp khi chưa trả lời hết. Mọi câu cần được trả lời trước khi nộp.',
+  noQuestions: 'Chương trình không có câu hỏi riêng.',
+  question: (n: number) => `Câu hỏi ${n}`,
+  tooLong: (max: number) => `Tối đa ${max} ký tự.`,
+  stateNew: 'Chưa lưu',
+  stateDraft: 'Bản nháp',
+  submitted: 'Đơn đã nộp: không sửa được.',
+  mismatch: 'Đơn nháp này không khớp câu hỏi hiện tại của chương trình, nên chỉ xem được.',
+  cannotApply: 'Không đăng ký được',
 } as const

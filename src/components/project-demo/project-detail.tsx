@@ -7,7 +7,6 @@ import buttons from '@/components/programme-demo/demo-buttons.module.css'
 import { DemoPage } from '@/components/programme-demo/demo-page'
 import cards from '@/components/programme-demo/journey.module.css'
 import pill from '@/components/programme-demo/status-pill.module.css'
-import { INERT_REASONS } from '@/lib/member/nav'
 import { APPLICANT_LABEL, APPLICATION_STATUS_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
 import { formatDemoDateRange } from '@/lib/programme-demo/format'
 import type { ApplicantType } from '@/lib/programme-demo/types'
@@ -30,9 +29,9 @@ import styles from './project-list.module.css'
  * chrome, the WF02 venture wording). One read, `GET /api/v1/demo/projects/{id}`:
  * the canonical WF02 venture (owner or ACTIVE member), its team (owner +
  * ACTIVE members), and the PUBLISHED programmes with this actor's eligibility.
- * Read only: editing stays on WF02 ("Sửa hồ sơ", "Xem đội"); "Đăng ký" is shown
- * to the eligible owner but stays disabled until the application draft (S03)
- * exists; the session's demo application status shows when there is one.
+ * Read only: editing stays on WF02 ("Sửa hồ sơ", "Xem đội"); the eligible owner
+ * opens the application draft (S03) with "Đăng ký", or resumes a DRAFT with
+ * "Tiếp tục"; the session's demo application status shows when there is one.
  */
 
 type Load =
@@ -256,23 +255,29 @@ function ParticipationRow({
         ) : null}
       </div>
       {application ? (
-        <span className={`weight-medium ${pill.pill}`} data-application={application.status}>
-          {APPLICATION_STATUS_LABEL[application.status]}
-        </span>
+        <div className={buttons.group}>
+          <span className={`weight-medium ${pill.pill}`} data-application={application.status}>
+            {APPLICATION_STATUS_LABEL[application.status]}
+          </span>
+          {application.status === 'DRAFT' && eligibility.eligible ? (
+            <Link
+              href={projectDemoRoutes.application(ventureId, programme.id)}
+              className={`weight-medium ${styles.textAction}`}
+              data-nav="application-resume"
+            >
+              {COPY.resume}
+            </Link>
+          ) : null}
+        </div>
       ) : eligibility.eligible ? (
-        // S03 (application draft) is not built yet: the frozen entry, disabled with its reason.
-        <button
-          type="button"
+        // WF05-S03: the eligible owner opens the application draft (nothing is stored yet).
+        <Link
+          href={projectDemoRoutes.application(ventureId, programme.id)}
           className={`weight-medium ${buttons.secondary}`}
-          disabled
-          aria-disabled="true"
-          title={INERT_REASONS.NO_P0_SCREEN}
-          aria-label={`${COPY.apply} — ${INERT_REASONS.NO_P0_SCREEN}`}
-          data-nav-kind="INERT"
           data-action="apply"
         >
           {COPY.apply}
-        </button>
+        </Link>
       ) : null}
     </li>
   )

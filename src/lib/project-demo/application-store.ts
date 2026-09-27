@@ -29,6 +29,13 @@ import {
  */
 
 export const PROJECT_DEMO_STORE_VERSION = 1 as const
+
+/**
+ * WF05-S03: a TECHNICAL bound on one answer (not a business rule), the same
+ * free-text bound WF02 uses for a venture summary (DEC-WF02-S05-D1). It keeps
+ * the browser session store small; completeness stays S04's rule (G5-5).
+ */
+export const DEMO_ANSWER_MAX = 2000
 const KEY_PREFIX = 'hub.wf05-demo.v1.'
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -183,6 +190,20 @@ function draftOf(
   return refusal ? { ok: false, reason: refusal } : { ok: true, draft: current }
 }
 
+/** Indexes of answers longer than the technical bound. */
+export function answersTooLong(answers: readonly string[]): number[] {
+  return answers.flatMap((a, i) => (a.length > DEMO_ANSWER_MAX ? [i] : []))
+}
+
+function validAnswers(answers: unknown, programme: ProgrammeContext): answers is string[] {
+  return (
+    Array.isArray(answers) &&
+    answers.length === programme.questions.length &&
+    answers.every((a) => typeof a === 'string') &&
+    answersTooLong(answers).length === 0
+  )
+}
+
 /** A DRAFT's answers, one per configured question; a DRAFT may be incomplete (G5-5). */
 export function saveAnswers(
   state: ProjectDemoState,
@@ -193,13 +214,7 @@ export function saveAnswers(
 ): ApplicationResult {
   const found = draftOf(state, venture, programme)
   if (!found.ok) return found
-  if (
-    !Array.isArray(answers) ||
-    answers.length !== programme.questions.length ||
-    !answers.every((a) => typeof a === 'string')
-  ) {
-    return { ok: false, reason: 'INVALID_ANSWERS' }
-  }
+  if (!validAnswers(answers, programme)) return { ok: false, reason: 'INVALID_ANSWERS' }
   const application: DemoApplication = {
     ...found.draft,
     programme_specific_answers: [...answers],
@@ -229,4 +244,27 @@ export function submitApplication(
     submitted_at: at,
   }
   return { ok: true, state: withApplication(state, application), application }
+}
+
+/**
+ * WF05-S03 "Lưu nháp": one atomic step. The first save creates the DRAFT
+ * (HC-WF05-06/07: opening the form stores nothing); later saves update the same
+ * application (one per venture × programme). Answers may be incomplete. A
+ * SUBMITTED application is never touched; any refusal changes nothing.
+ */
+export function saveDraft(
+  state: ProjectDemoState,
+  venture: VentureContext,
+  programme: ProgrammeContext,
+  answers: unknown,
+  now: Date,
+): ApplicationResult {
+  const current = applicationOf(state, venture.id, programme.id)
+  if (current?.status === 'SUBMITTED') return { ok: false, reason: 'SUBMITTED' }
+  const refusal = eligible(venture, programme)
+  if (refusal) return { ok: false, reason: refusal }
+  if (!validAnswers(answers, programme)) return { ok: false, reason: 'INVALID_ANSWERS' }
+  if (current) return saveAnswers(state, venture, programme, answers, now)
+  const started = startApplication(state, venture, programme, now)
+  return started.ok ? saveAnswers(started.state, venture, programme, answers, now) : started
 }

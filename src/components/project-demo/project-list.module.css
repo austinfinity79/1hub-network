@@ -58,6 +58,14 @@
   overflow-wrap: anywhere;
 }
 
+/* WF05-S03: the save row under the questions. */
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
 .textAction {
   flex: none;
   padding: 0;

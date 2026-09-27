@@ -184,11 +184,12 @@ test.describe('WF05-S02 project / startup detail', () => {
     await expect(overview(page, 'domains')).toHaveText('—')
     await expect(page.locator('[data-team-count]')).toHaveText('1 thành viên')
     await expect(page.locator('[data-team-row]')).toHaveText(['Chủ Dự Án · Chủ sở hữu'])
-    // Eligible (PROJECT → TEAM ∈ P1): the frozen entry, disabled until the draft screen exists.
+    // Eligible (PROJECT → TEAM ∈ P1): "Đăng ký" opens the application draft (S03).
     await expect(programmeRow(page)).toHaveAttribute('data-eligible', 'true')
-    await expect(apply(page)).toBeDisabled()
-    await expect(apply(page)).toHaveAttribute('title', 'Chưa có trong phiên bản này')
-    await expect(apply(page)).toHaveAttribute('data-nav-kind', 'INERT')
+    await expect(apply(page)).toHaveAttribute(
+      'href',
+      `/demo/projects/${w.project.id}/applications/${PROGRAMME}`,
+    )
     const api = await (await page.request.get(`${API}/${w.project.id}`)).json()
     expect(api.venture.applicant_type).toBe('TEAM')
     // No applicant-type or enum wording on the page.
@@ -303,7 +304,12 @@ test.describe('WF05-S02 participation', () => {
     await expect(programmeRow(page).locator('[data-programme-meta]')).toHaveText(
       '01/09/2026 – 15/12/2026 · Dành cho: Đội, Startup',
     )
-    await expect(page.locator('[data-programme] a')).toHaveCount(0)
+    // The row's only link is the eligible owner's "Đăng ký" (S03); no programme management.
+    await expect(page.locator('[data-programme] a:not([data-action="apply"])')).toHaveCount(0)
+    await expect(programmeRow(page).locator('[data-action="apply"]')).toHaveAttribute(
+      'href',
+      `/demo/projects/${w.startup.id}/applications/${PROGRAMME}`,
+    )
     expect(await page.locator('[data-detail="programmes"]').innerText()).not.toMatch(
       /Người vận hành|Thử thách đổi mới|Đang xem xét|Cần bổ sung/,
     )
@@ -416,7 +422,9 @@ test.describe('WF05-S02 participation', () => {
 })
 
 test.describe('WF05-S02 navigation', () => {
-  test('17/19/22. S01 → S02 → back; direct refresh; no S03 route or link', async ({ page }) => {
+  test('17/19/22. S01 → S02 → back; direct refresh; S03 linked, no S04 route or link', async ({
+    page,
+  }) => {
     const w = await world()
     await login(page.request, w.owner.email)
     await page.goto('/demo/projects', { waitUntil: 'networkidle' })
@@ -437,13 +445,18 @@ test.describe('WF05-S02 navigation', () => {
       '/demo/projects',
       `/projects/${w.startup.id}/edit`,
       `/projects/${w.startup.id}/team`,
+      `/demo/projects/${w.startup.id}/applications/${PROGRAMME}`,
     ])
-    await expect(page.locator('a[href*="/applications"]')).toHaveCount(0)
-    for (const url of [
-      `${detailUrl(w.startup.id)}/applications/${PROGRAMME}`,
-      `${detailUrl(w.startup.id)}/applications/${PROGRAMME}/review`,
-    ])
-      expect((await page.request.get(url)).status(), url).toBe(404)
+    // S03 exists; the review (S04) route does not yet.
+    expect(
+      (await page.request.get(`${detailUrl(w.startup.id)}/applications/${PROGRAMME}`)).status(),
+    ).toBe(200)
+    expect(
+      (
+        await page.request.get(`${detailUrl(w.startup.id)}/applications/${PROGRAMME}/review`)
+      ).status(),
+    ).toBe(404)
+    await expect(page.locator('a[href$="/review"]')).toHaveCount(0)
   })
 })
 

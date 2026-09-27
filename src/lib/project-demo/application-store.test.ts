@@ -3,11 +3,13 @@ import { describe, expect, it } from 'vitest'
 import {
   applicationKey,
   applicationOf,
+  DEMO_ANSWER_MAX,
   emptyProjectDemoState,
   parseProjectDemoState,
   projectDemoStoreKey,
   readProjectDemoState,
   saveAnswers,
+  saveDraft,
   startApplication,
   submitApplication,
   type ProjectDemoState,
@@ -233,5 +235,64 @@ describe('WF05 demo application store (DEC-WF05-G5, T00-D1)', () => {
       'submitted_at',
       'updated_at',
     ])
+  })
+})
+
+describe('WF05-S03 saveDraft (DEC-WF05-G5)', () => {
+  it('the first save creates the DRAFT with the answers; a later save updates the same application', () => {
+    const first = saveDraft(emptyProjectDemoState(), startup, programme, ['Một', ''], NOW)
+    expect(first.ok && first.application).toMatchObject({
+      status: 'DRAFT',
+      primary_applicant_type: 'STARTUP',
+      programme_specific_answers: ['Một', ''],
+      created_at: NOW.toISOString(),
+    })
+    const state = first.ok ? first.state : emptyProjectDemoState()
+    const second = saveDraft(state, startup, programme, ['Một', 'Hai'], LATER)
+    expect(second.ok && Object.keys(second.state.applications)).toHaveLength(1)
+    expect(second.ok && second.application).toMatchObject({
+      programme_specific_answers: ['Một', 'Hai'],
+      created_at: NOW.toISOString(),
+      updated_at: LATER.toISOString(),
+      status: 'DRAFT',
+    })
+    // PROJECT → TEAM on the first save.
+    const team = saveDraft(
+      emptyProjectDemoState(),
+      { ...startup, type: 'PROJECT' },
+      programme,
+      ['', ''],
+      NOW,
+    )
+    expect(team.ok && team.application.primary_applicant_type).toBe('TEAM')
+  })
+
+  it('refusals change nothing: bad shape, too long, member, archived, closed type, SUBMITTED', () => {
+    const saved = saveDraft(emptyProjectDemoState(), startup, programme, ['A', 'B'], NOW)
+    const state = saved.ok ? saved.state : emptyProjectDemoState()
+    const before = JSON.stringify(state)
+    const long = 'x'.repeat(DEMO_ANSWER_MAX + 1)
+    for (const [venture, answers, reason] of [
+      [startup, ['only one'], 'INVALID_ANSWERS'],
+      [startup, [long, 'B'], 'INVALID_ANSWERS'],
+      [startup, [1, 2], 'INVALID_ANSWERS'],
+      [{ ...startup, relation: 'MEMBER' as const }, ['x', 'y'], 'NOT_OWNER'],
+      [{ ...startup, status: 'ARCHIVED' }, ['x', 'y'], 'ARCHIVED'],
+    ] as const) {
+      expect(saveDraft(state, venture, programme, answers, LATER)).toEqual({ ok: false, reason })
+    }
+    expect(
+      saveDraft(state, startup, { ...programme, applicant_types: ['TEAM'] }, ['x', 'y'], LATER),
+    ).toEqual({ ok: false, reason: 'TYPE_NOT_ACCEPTED' })
+    expect(JSON.stringify(state)).toBe(before)
+    expect(saveDraft(state, startup, programme, ['A', 'x'.repeat(DEMO_ANSWER_MAX)], LATER).ok).toBe(
+      true,
+    )
+    const submitted = submitApplication(state, startup, programme, LATER)
+    const final = submitted.ok ? submitted.state : state
+    expect(saveDraft(final, startup, programme, ['changed', 'changed'], LATER)).toEqual({
+      ok: false,
+      reason: 'SUBMITTED',
+    })
   })
 })
