@@ -37,6 +37,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **INTERNAL ALPHA — COMPLETION AUDIT + RELEASE READINESS: NOT GREEN — NOT READY** ([audit](INTERNAL_ALPHA_COMPLETION_AUDIT.md), [UAT matrix](INTERNAL_ALPHA_UAT_MATRIX.md), [draft manifest](INTERNAL_ALPHA_RELEASE_MANIFEST.md), [report](reports/INTERNAL-ALPHA_completion-audit.md)). All gates pass (scope, 39 executable screens, navigation, 270-cell actor matrix, auth / session, WF01–WF05, data, migrations 001→009, seed, fresh DB, restart, production mode, build) except one: the React hydration error #418 reproduced once in the fresh-DB full run (**IA-P2-02**, open; was OBS-WF05-01). IA-P2-01 (`POST /auth/magic-link` 500 on a malformed `X-Forwarded-For`) found and fixed. No release SHA frozen; nothing deployed.
 
+**INTERNAL ALPHA — CLOSURE DEFECT IA-P2-02 (React hydration #418): CLOSED — READY FOR COMPLETION AUDIT RECHECK** ([report](reports/IA-P2-02_hydration-418.md)). Root cause: React 19.3.0 inside `next@15.5.26` replays a suspended page-root host fiber without rewinding its hydration cursor when a child RSC chunk is still streaming (markup identical on server and client). Fix: `patches/next@15.5.26.patch` (pnpm `patchedDependencies`) backports React's upstream lines; no app code changed. Deterministic repro 42 / 150 → 0 / 150; affected tests, fresh server and fresh DB 0 #418. Deploy note: the image must copy `patches/` before `pnpm install`. The draft manifest stays NOT READY; no release SHA frozen; nothing deployed.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -125,7 +127,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-INTERNAL ALPHA — CLOSURE DEFECT IA-P2-02 (React hydration #418): root cause + narrow fix, then re-run the release gates and freeze the release SHA. Not started automatically.
+INTERNAL ALPHA COMPLETION AUDIT — FINAL RECHECK + FREEZE RELEASE SHA: re-run the release gates on the IA-P2-02 fix, freeze the release SHA in the manifest. Do not deploy. Not started automatically.
 
 ## Related
 

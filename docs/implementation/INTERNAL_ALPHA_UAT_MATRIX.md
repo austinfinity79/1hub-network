@@ -35,7 +35,7 @@ Automated evidence for the Internal Alpha release gate. Cross-workflow cases: `t
 | REL-NAV | Crawl as guest, member, leader, admin: 108 page visits, 35 route patterns, 102 link targets; 0 non-200, 0 `#` / `javascript:` / empty href, 0 `/dev` link, 0 future (WF06) route, 0 placeholder, 0 technical copy; storage without email, token or cookie value. Seed text marking itself "Fixture" on 8 route patterns (data, not copy) | PASS |
 | P0-SHELL matrix | 536 rows, 0 dead | PASS |
 | REL-RESP | 9 screens × 1440 / 768 / 390: 1440 all clean; landing, auth, WF05 clean at 768 / 390; app shells desktop-first (see audit) | PASS (certified scope) |
-| Hydration #418 | **1 occurrence**: fresh-DB full run, `p0-shell-navigation` "landing and auth entry …" (second `/` load at 768 px). 0 in the dev-DB runs, 0 in 50 + 40 repeats and 750 targeted loads | **FAIL — IA-P2-02 open** |
+| Hydration #418 | Audit: **1 occurrence**, fresh-DB full run, `p0-shell-navigation` "landing and auth entry …" (second `/` load at 768 px). Remediation ([IA-P2-02](reports/IA-P2-02_hydration-418.md)): deterministic repro by pausing the landing stream after the page-root RSC chunk 42 / 150 → 0 / 150 with the React backport patch; affected tests 50 / 50 each (fresh server) and 25 / 25 each (fresh DB), 0 #418; full regression on a fresh DB 640 passed / 24 skipped / 0 failed, 0 #418 | **CLOSED — IA-P2-02 fixed**; recheck in the final audit |
 | REL-DATA | 1 profile per account (unique `account_id`), no orphan profile; membership / leadership / roles / consent / visibility separate tables; no stored completion percent; no application / founder / investor / matching table | PASS |
 
 ## Related

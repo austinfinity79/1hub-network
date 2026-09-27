@@ -1,59 +1,54 @@
 # Claude Task Report
 
 ## Task
-INTERNAL ALPHA — COMPLETION AUDIT + RELEASE READINESS. Process: PROCESS-P0-ACCELERATED-SAFE-V2.
+INTERNAL ALPHA — CLOSURE DEFECT IA-P2-02 REACT HYDRATION #418 ROOT-CAUSE + REMEDIATION. Process: PROCESS-P0-ACCELERATED-SAFE-V2. Full report: [reports/IA-P2-02_hydration-418.md](reports/IA-P2-02_hydration-418.md).
 
 ## Verdict
-**NOT GREEN — NOT READY.** Audit: [INTERNAL_ALPHA_COMPLETION_AUDIT.md](INTERNAL_ALPHA_COMPLETION_AUDIT.md). UAT: [INTERNAL_ALPHA_UAT_MATRIX.md](INTERNAL_ALPHA_UAT_MATRIX.md). Draft manifest (no release SHA frozen): [INTERNAL_ALPHA_RELEASE_MANIFEST.md](INTERNAL_ALPHA_RELEASE_MANIFEST.md). Open: **IA-P2-02** React hydration #418 (1 occurrence in the fresh-DB full run). Fixed: **IA-P2-01**. No decision added; nothing deployed.
+**IA-P2-02 CLOSED — Internal Alpha READY FOR COMPLETION AUDIT RECHECK.** The draft manifest stays NOT READY; no release SHA frozen; nothing deployed or pushed.
 
-## Scope audited
+## Scope implemented
 | Item | Result |
 |---|---|
-| Scope / SOT | 0 conflict; 0 missing screen; WF06 runtime absent (DEC-WF06-INTERNAL-ALPHA-SCOPE); no OPEN decision; no duplicate model |
-| Inventory | 44 page routes: 39 executable (Landing 1, WF01 8 + legal, WF02 8, WF03 8, WF04 9, WF05 4), 1 approved placeholder, 4 dev-only; 51 route files / 58 API handlers |
-| Navigation | REL-NAV 108 visits, 35 routes, 102 links, 0 dead / `#` / dev / future / placeholder; P0-SHELL matrix 536 rows, 0 dead |
-| Security | REL-SEC 270 cells (9 identities, 10 roles), spoofed = plain; IDOR, cross-org, cross-project, lifecycle, duplicate / concurrent cases per UAT matrix |
-| Auth / session | Magic link one-time / invalid / expired, `Referrer-Policy: no-referrer`, no token in HTML, sessions, revoke, logout, revoked-cookie replay 401; `1hub_session` HttpOnly, Secure, SameSite=Lax |
-| DB | 001→009 on a clean DB, rerun 9 / 9 skipped, ledger consistent, no schema drift; seed ×2 identical; REL-DATA invariants |
-| Fresh DB | Full suite: 639 passed, 24 skipped, 1 failed (IA-P2-02) |
-| Restart | App + PostgreSQL: sessions, WF04 / WF05 demo state, 31 tables, routes: PASS |
-| Production mode | Dev routes 404, guest redirects, health `/api/v1/session` 200 |
-| Deployment readiness | Checklist and dependencies in the audit and the draft manifest; rollback target `0a2df09` |
-
-## Defects
-| ID | Class | State |
-|---|---|---|
-| IA-P2-01 | `POST /api/v1/auth/magic-link` answered 500 when the first `X-Forwarded-For` token was not a plain IP (`inet` column) | **Fixed** (`src/app/api/v1/auth/magic-link/route.ts`); REL-AUTH regression test |
-| IA-P2-02 | React hydration error #418, intermittent, full-suite runs only; landing page (no app client component) and WF05-S04 | **Open** — remediation task |
-| IA-P3-01..06, IA-L1 | Copy (incl. auth brand panel figures — PO decision), seed "Fixture" text, placeholder route, no `error.tsx`, stale docs, desktop-first app shells | Recorded |
+| Root cause | YES. React 19.3.0 bundled in `next@15.5.26` replays a suspended page-root host `<div>` (under `InnerLayoutRouter`) without rewinding its hydration cursor when a child RSC chunk is still streaming; the replay fails to claim its own node (#418 'HTML') |
+| SSR vs client | Markup identical (380 loads: SSR = DCL = first commit); the mismatch is in React's cursor, not the HTML |
+| Trigger | Hydration reaches the page root before the page's child chunk arrives (load / network timing) |
+| Deterministic repro | Landing stream paused after the page-root chunk: 42 / 150 unpatched |
+| Fix | `patches/next@15.5.26.patch` via pnpm `patchedDependencies`: the upstream React lines (React canary `19.3.0-canary-d083ec1d-20260922`, Next 16.3.6); no app code changed |
+| Rejected | Root-layout `<Suspense>`: it broke 307 / 404 status contracts, so it was reverted |
+| Harness | WF05-S04 test `7/8/9` waits for the review rows before reading them (P3 race; assertion unchanged) |
 
 ## Files changed
-- Fix: `src/app/api/v1/auth/magic-link/route.ts`
-- Test: `tests/visual/specs/internal-alpha-release.spec.ts` (new; 6 tests)
-- Docs: `INTERNAL_ALPHA_COMPLETION_AUDIT.md`, `INTERNAL_ALPHA_UAT_MATRIX.md`, `INTERNAL_ALPHA_RELEASE_MANIFEST.md` (new, draft), `P0_STATUS.md`, `CLAUDE_LATEST_REPORT.md`, this report
+- `patches/next@15.5.26.patch` (new), `pnpm-workspace.yaml`, `pnpm-lock.yaml`
+- `tests/visual/specs/wf05-s04-review-submit.spec.ts`
+- Docs: `reports/IA-P2-02_hydration-418.md` (new), `INTERNAL_ALPHA_COMPLETION_AUDIT.md`, `INTERNAL_ALPHA_UAT_MATRIX.md`, `INTERNAL_ALPHA_RELEASE_MANIFEST.md`, `P0_STATUS.md`, this report
 
 ## Migrations / data
-None. Throwaway fresh database dropped.
+None. Throwaway databases dropped.
 
 ## Tests
 | Gate | Result |
 |---|---|
-| Format / lint / typecheck / build | PASS (clean `.next`, 0 build warnings) |
-| Unit / DB | 237 / 349 passed |
-| Full suite, dev DB, before the fix | 658: 634 passed, 24 skipped, 0 failed |
-| Full suite, fresh DB, after the fix | 664: 639 passed, 24 skipped, 1 failed (IA-P2-02) |
-| Full suite, dev DB, after the fix | 664: 640 passed, 24 skipped, 0 failed, 0 #418 |
-| Release spec + affected auth specs | 44 passed (fix run), release spec 6 / 6 |
-| Skipped | 24 = `pixel-qa-screens` opt-in (`PIXEL_QA_SCREENS`), no security case |
-| Server logs | Every run: 0 email / token / cookie / session / error lines |
+| Split harness, patched, fresh server | 0 / 150 (was 42 / 150) |
+| Affected tests, fresh server (dev DB) | landing / auth entry 50 / 50; WF05-S04 "never a submit" 50 / 50; 0 #418 |
+| Fresh DB, fresh server | split 0 / 90; the two tests 25 / 25 each; 0 #418 |
+| Full regression, fresh DB + fresh server | 664 tests: 640 passed, 24 skipped (opt-in `PIXEL_QA_SCREENS`), 0 failed, 0 #418; server log 0 lines of concern |
+| Static | `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` 237 / 237, `pnpm test:db` 349 / 349, `pnpm build` (clean `.next`, 0 warnings): PASS |
+| Server logs | 0 email / token / cookie / session / error lines |
+
+## Visual QA
+No UI change; the full suite's pixel and typography specs ran in the regression.
+
+## Deviations / blockers
+- Deploy task: `deploy/Dockerfile` (branch `deploy/vps-foundation`) must copy `patches/` before `pnpm install --frozen-lockfile`.
+- The vendored `next` patch stays until a Next upgrade that bundles the React fix.
 
 ## Git
-- Branch: `main`; start HEAD `9e01fc8` (checked again before each commit)
-- Implementation commit: `4847ec3` (IA-P2-01 fix + release spec; audited candidate, not frozen)
+- Branch: `main`; start HEAD `a251240` (checked again before each commit)
+- Implementation commit: `194b4b3` (IA-P2-02 patch + WF05-S04 harness wait; candidate for the final recheck, not frozen)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-INTERNAL ALPHA — CLOSURE DEFECT IA-P2-02 (React hydration #418): reproduce with non-minified React under the full-suite sequence, fix narrowly, re-run the release gates, freeze the release SHA. Do not deploy. Not started automatically.
+INTERNAL ALPHA COMPLETION AUDIT — FINAL RECHECK + FREEZE RELEASE SHA. Do not deploy. Not started automatically.
