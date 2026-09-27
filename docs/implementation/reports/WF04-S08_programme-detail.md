@@ -42,7 +42,7 @@ None. Row-exact fingerprints unchanged across view, basic edit, publish and rese
 | WF04 Playwright | 100 / 100 (S08: 20) |
 | Targeted regression | 154 passed: P0-SHELL, shell-routes, WF03-T00 / S04 / S07 / S08, WF02-S01 / S05 / S06, auth / authz session, console health, API contract, M0 root, WF01-S01 |
 | Navigation matrix | 503 rows, 0 dead; 70 rows from the S08 / basic pages, all WORKING |
-| Server log | 0 email / token / cookie lines |
+| Server log | **Not valid** — the logged server never bound (EADDRINUSE; the tests reused an earlier server). Superseded by the full-run scan of the [WF04 completion audit](WF04_COMPLETION_AUDIT.md) (WF04-P3-01) |
 
 ## Visual QA
 | Check | Result |

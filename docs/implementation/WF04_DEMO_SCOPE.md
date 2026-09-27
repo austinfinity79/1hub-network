@@ -1,6 +1,6 @@
 # WF04 Demo Scope
 
-**Status: FROZEN** by [DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1) (2026-09-27); foundation built by WF04-T00 ([DEC-WF04-T00-D1..D5](../decisions/DECISION_LOG.md#dec-wf04-t00-d1)). WF04 Programme / Challenge = **DEMO** for INTERNAL ALPHA. The demo explains the organizer journey; it is not the future programme platform. Audit: [WF04_PRE_IMPLEMENTATION_AUDIT.md](WF04_PRE_IMPLEMENTATION_AUDIT.md).
+**Status: FROZEN** by [DEC-WF04-H1..H5](../decisions/DECISION_LOG.md#dec-wf04-h1) (2026-09-27); foundation built by WF04-T00 ([DEC-WF04-T00-D1..D5](../decisions/DECISION_LOG.md#dec-wf04-t00-d1)). WF04 Programme / Challenge = **DEMO** for INTERNAL ALPHA. The demo explains the organizer journey; it is not the future programme platform. Audit: [WF04_PRE_IMPLEMENTATION_AUDIT.md](WF04_PRE_IMPLEMENTATION_AUDIT.md). **Closed:** WF04 PROTECTED / CLOSED / GREEN (2026-09-27, [completion audit](reports/WF04_COMPLETION_AUDIT.md)); the scope below is the protected baseline — changes need an explicit task.
 
 ## Screen inventory
 Flow steps are the frozen Master Spec §4 sequence. "Ref" = design evidence; no approved WF04 bitmap exists (F1, F2).
