@@ -39,6 +39,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **INTERNAL ALPHA — CLOSURE DEFECT IA-P2-02 (React hydration #418): CLOSED — READY FOR COMPLETION AUDIT RECHECK** ([report](reports/IA-P2-02_hydration-418.md)). Root cause: React 19.3.0 inside `next@15.5.26` replays a suspended page-root host fiber without rewinding its hydration cursor when a child RSC chunk is still streaming (markup identical on server and client). Fix: `patches/next@15.5.26.patch` (pnpm `patchedDependencies`) backports React's upstream lines; no app code changed. Deterministic repro 42 / 150 → 0 / 150; affected tests, fresh server and fresh DB 0 #418. Deploy note: the image must copy `patches/` before `pnpm install`. The draft manifest stays NOT READY; no release SHA frozen; nothing deployed.
 
+**INTERNAL ALPHA COMPLETION AUDIT — FINAL RECHECK (`dcbde62`): NOT GREEN — release SHA NOT frozen** ([report](reports/INTERNAL-ALPHA_final-recheck.md)). Clean `git archive` install + fresh DB: patch reproducible (frozen install, patched bundle), IA-P2-02 0 #418, format / lint / typecheck / build, unit 237, DB 349, full suite 640 passed / 24 opt-in skipped / 0 failed, migrations, seed, security, navigation, privacy PASS. **Open: IA-P2-03 (P2)** — below 1280 px the WF03 members "Mở →", WF02 team "Huỷ lời mời" and WF03 events actions are unreachable by pointer / touch (clipped tables, overlaid side panel). Watch: IA-OBS-01. Deploy requirement: copy `patches/` before `pnpm install`. Manifest stays DRAFT — NOT READY; nothing deployed.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -127,7 +129,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-INTERNAL ALPHA COMPLETION AUDIT — FINAL RECHECK + FREEZE RELEASE SHA: re-run the release gates on the IA-P2-02 fix, freeze the release SHA in the manifest. Do not deploy. Not started automatically.
+INTERNAL ALPHA — CLOSURE DEFECT IA-P2-03 BASIC RESPONSIVE SAFETY (needs explicit authorization: protected WF02 / WF03 screens): let the WF03 members and WF02 team table wrappers scroll sideways, stop the WF03 events side panel overlaying the list below its breakpoint, add a REL-RESP pointer / touch reachability assertion at 1024 / 768 / 390; then INTERNAL ALPHA COMPLETION AUDIT — FINAL RECHECK + FREEZE RELEASE SHA. Do not deploy. Not started automatically.
 
 ## Related
 

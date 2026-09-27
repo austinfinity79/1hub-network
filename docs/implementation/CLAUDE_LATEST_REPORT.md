@@ -1,54 +1,47 @@
 # Claude Task Report
 
 ## Task
-INTERNAL ALPHA — CLOSURE DEFECT IA-P2-02 REACT HYDRATION #418 ROOT-CAUSE + REMEDIATION. Process: PROCESS-P0-ACCELERATED-SAFE-V2. Full report: [reports/IA-P2-02_hydration-418.md](reports/IA-P2-02_hydration-418.md).
+INTERNAL ALPHA COMPLETION AUDIT — FINAL RECHECK + FREEZE RELEASE SHA. Process: PROCESS-P0-ACCELERATED-SAFE-V2. Full report: [reports/INTERNAL-ALPHA_final-recheck.md](reports/INTERNAL-ALPHA_final-recheck.md).
 
 ## Verdict
-**IA-P2-02 CLOSED — Internal Alpha READY FOR COMPLETION AUDIT RECHECK.** The draft manifest stays NOT READY; no release SHA frozen; nothing deployed or pushed.
+**NOT GREEN — release SHA NOT frozen.** The manifest stays DRAFT — NOT READY. Audited candidate: `dcbde62d94b3e6fa0fcc3cb361acf66023d6ad9f`, clean `git archive` install on a fresh DB. The only failing gate is basic responsive safety: **IA-P2-03** (P2, open). Nothing deployed or pushed.
 
-## Scope implemented
-| Item | Result |
-|---|---|
-| Root cause | YES. React 19.3.0 bundled in `next@15.5.26` replays a suspended page-root host `<div>` (under `InnerLayoutRouter`) without rewinding its hydration cursor when a child RSC chunk is still streaming; the replay fails to claim its own node (#418 'HTML') |
-| SSR vs client | Markup identical (380 loads: SSR = DCL = first commit); the mismatch is in React's cursor, not the HTML |
-| Trigger | Hydration reaches the page root before the page's child chunk arrives (load / network timing) |
-| Deterministic repro | Landing stream paused after the page-root chunk: 42 / 150 unpatched |
-| Fix | `patches/next@15.5.26.patch` via pnpm `patchedDependencies`: the upstream React lines (React canary `19.3.0-canary-d083ec1d-20260922`, Next 16.3.6); no app code changed |
-| Rejected | Root-layout `<Suspense>`: it broke 307 / 404 status contracts, so it was reverted |
-| Harness | WF05-S04 test `7/8/9` waits for the review rows before reading them (P3 race; assertion unchanged) |
-
-## Files changed
-- `patches/next@15.5.26.patch` (new), `pnpm-workspace.yaml`, `pnpm-lock.yaml`
-- `tests/visual/specs/wf05-s04-review-submit.spec.ts`
-- Docs: `reports/IA-P2-02_hydration-418.md` (new), `INTERNAL_ALPHA_COMPLETION_AUDIT.md`, `INTERNAL_ALPHA_UAT_MATRIX.md`, `INTERNAL_ALPHA_RELEASE_MANIFEST.md`, `P0_STATUS.md`, this report
-
-## Migrations / data
-None. Throwaway databases dropped.
-
-## Tests
+## Scope checked
 | Gate | Result |
 |---|---|
-| Split harness, patched, fresh server | 0 / 150 (was 42 / 150) |
-| Affected tests, fresh server (dev DB) | landing / auth entry 50 / 50; WF05-S04 "never a submit" 50 / 50; 0 #418 |
-| Fresh DB, fresh server | split 0 / 90; the two tests 25 / 25 each; 0 #418 |
-| Full regression, fresh DB + fresh server | 664 tests: 640 passed, 24 skipped (opt-in `PIXEL_QA_SCREENS`), 0 failed, 0 #418; server log 0 lines of concern |
-| Static | `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` 237 / 237, `pnpm test:db` 349 / 349, `pnpm build` (clean `.next`, 0 warnings): PASS |
-| Server logs | 0 email / token / cookie / session / error lines |
+| Patch reproducibility | PASS: tracked patch = lockfile hash; frozen install from a clean tree applies it; the served production bundle contains the rewind |
+| Deploy build context | Requirement: `deploy/Dockerfile` must copy `patches/` before `pnpm install --frozen-lockfile`; without it the install fails loudly (verified) |
+| IA-P2-02 | PASS: split harness 0 / 150, affected tests 10 / 10 each, full suite and console audit 0 #418 |
+| Clean build | format, lint, typecheck, build: PASS (0 warnings) |
+| Regression | Unit 237 / 237; DB / API 349 / 349 × 3 (first run 348, IA-OBS-01); Playwright 664 = 640 passed, 24 skipped (opt-in pixel captures), 0 failed; visual 86 passed + 24 opt-in skipped |
+| Fresh DB | 001→009 in order, rerun 9 skipped, seed × 2 identical (31 tables) |
+| Security / data | REL-SEC 270 cells, REL-DATA; WF04 / WF05 demos wrote 0 production rows |
+| Navigation | REL-NAV 108 visits / 35 routes / 51 links, 0 findings; P0-SHELL matrix 497 rows, 0 dead |
+| Visual | 1440 Pixel QA: Structural 0, Major 0, Component 0 |
+| Responsive | **FAIL — IA-P2-03**: below 1280 px WF03 members "Mở →", WF02 team "Huỷ lời mời", WF03 events "Mở" (1024) and "+ Tạo sự kiện" (390) are unreachable by pointer / touch |
+| Privacy / logs | Server log clean; 0 JS / page errors in every page of the suite; no token, cookie or PII in HTML, API or storage |
+
+## Files changed
+Docs only: `reports/INTERNAL-ALPHA_final-recheck.md` (new), `INTERNAL_ALPHA_COMPLETION_AUDIT.md`, `INTERNAL_ALPHA_UAT_MATRIX.md`, `INTERNAL_ALPHA_RELEASE_MANIFEST.md`, `P0_STATUS.md`, this report.
+
+## Migrations / data
+None. Throwaway DB dropped; PostgreSQL lock-wait logging turned on for the diagnosis and reset afterwards.
 
 ## Visual QA
-No UI change; the full suite's pixel and typography specs ran in the regression.
+No UI change. 1440 pixel / typography specs pass; responsive gate failed (IA-P2-03).
 
 ## Deviations / blockers
-- Deploy task: `deploy/Dockerfile` (branch `deploy/vps-foundation`) must copy `patches/` before `pnpm install --frozen-lockfile`.
-- The vendored `next` patch stays until a Next upgrade that bundles the React fix.
+- IA-P2-03 blocks the release. The fix touches protected WF02 / WF03 CSS, so it needs an explicit task.
+- Deploy blocker outside product code: `deploy/Dockerfile` must `COPY patches ./patches`.
+- IA-OBS-01: one unexplained DB-test stall; not reproduced; watch item.
 
 ## Git
-- Branch: `main`; start HEAD `a251240` (checked again before each commit)
-- Implementation commit: `194b4b3` (IA-P2-02 patch + WF05-S04 harness wait; candidate for the final recheck, not frozen)
+- Branch: `main`; start HEAD `dcbde62` (checked again before the commit)
+- Implementation commit: none (audit only)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-INTERNAL ALPHA COMPLETION AUDIT — FINAL RECHECK + FREEZE RELEASE SHA. Do not deploy. Not started automatically.
+INTERNAL ALPHA — CLOSURE DEFECT IA-P2-03 BASIC RESPONSIVE SAFETY (explicit authorization for WF02 / WF03 CSS), then the final recheck again to freeze the SHA. Do not deploy. Not started automatically.
