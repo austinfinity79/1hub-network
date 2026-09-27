@@ -1,3 +1,5 @@
+import { isIP } from 'node:net'
+
 import { ApiError } from '@/lib/api/errors'
 import { withApi, withStatus } from '@/lib/api/handler'
 import { readIdempotencyKey } from '@/lib/api/idempotency'
@@ -27,10 +29,15 @@ import { fingerprintRequest, runIdempotent } from '@/lib/idempotency/store'
  */
 export const dynamic = 'force-dynamic'
 
+/**
+ * `request_ip` is an `inet` column: only a plain IPv4 / IPv6 literal is kept.
+ * Anything else a proxy may forward ("unknown", "ip:port", an IPv6 zone id) is
+ * dropped rather than failing the request (the contract answers 202 / 429 only).
+ */
 function clientIp(request: Request): string | null {
   const forwarded = request.headers.get('x-forwarded-for')
   const first = forwarded?.split(',')[0]?.trim()
-  return first && first.length <= 45 ? first : null
+  return first && isIP(first) !== 0 && !first.includes('%') ? first : null
 }
 
 export const POST = withApi(async ({ request }) => {
