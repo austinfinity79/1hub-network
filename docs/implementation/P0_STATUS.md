@@ -81,6 +81,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-HOMEPAGE-FINAL-ALIGN — homepage aligned to the latest export: DONE (local)** ([report](reports/TASK-22-HOMEPAGE-FINAL-ALIGN_homepage-align.md)). `3fd00e4`: PO removals applied, new Điểm nghẽn layout, events / programmes / pipeline rails, community numbers, partner matrix; illustrative blocks labelled "Dữ liệu minh hoạ" ([DEC-H1-R2](../decisions/DECISION_LOG.md#dec-h1-r2)). Pixel P0 / P1 / P2 = 0 over 16 segments; regression 191 / 191; unit 257 / 257. Not deployed.
 
+**TASK 22-HOMEPAGE-FINAL-DEPLOY — homepage alignment: DEPLOYED GREEN** ([report](reports/TASK-22-HOMEPAGE-FINAL-DEPLOY_homepage-deploy.md)). `3fd00e4` (tag `internal-alpha-preview-07`) runs on https://1hubnetwork.io.vn since 28/09 15:23 UTC; rollback `2033264`. The domain render equals the verified local render pixel for pixel; PO removals absent; About, Library, favicon, real e-mail login, L1 and L2 preserved; restart clean. Overall release NOT READY: HTTP/3, Referrer-Policy and the health check are still open on the edge. Follow-up FU-IMAGE-CACHE.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -170,7 +172,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Release track: `2033264` is deployed (legal closed); open on the edge: HTTP/3 off (EDGE-H3-POST-RESEND), Referrer-Policy, health check path; then the auth re-test and the real inbox login. `3fd00e4` (homepage) waits for PO review and a deploy instruction.
+- Release track: `3fd00e4` is deployed (homepage aligned, legal closed); open on the edge: HTTP/3 off (EDGE-H3-POST-RESEND), Referrer-Policy, health check path; then the auth re-test and the real inbox login.
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
