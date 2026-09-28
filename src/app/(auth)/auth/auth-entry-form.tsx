@@ -13,20 +13,17 @@ import { savePendingRequest, type MagicLinkRequestAccepted } from '@/lib/auth/pe
 import styles from './auth-entry.module.css'
 
 /**
- * WF01-S01 / AUTH1 — auth entry card: the P0 email magic-link path, presented
- * per the corrected L1 reference (TASK 22.2, DEC-L1-D2).
+ * WF01-S01 / AUTH1 — auth entry card: the email magic-link path, presented per
+ * the L1 board (TASK 22-L1-L2-SOT-REALIGN, DEC-L1R-D1 / D2).
  *
- * Provider sign-in is config-driven (WF01 contract: "provider entry if
- * configured") and GET /api/v1/auth/providers returns an empty list in P0. The
- * drawn "Tiếp tục với Google" control and its divider are shown as in AUTH1,
- * but the control is a disabled button with a visible "Sắp có" and no handler:
- * it starts no provider flow (DEC-L1-D9, the 28/09 no-dead-CTA rule). The terms
- * notice stays under the button: the revision drops it, but consent placement
- * is HD-03 (DEC-L1-D3).
+ * Sign-up is open: any valid address moves on to WF01-S02 and receives the
+ * link by e-mail; the account exists only once that link is used.
  *
- * Internal Alpha is invite-only (DEC-AUTH-EMAIL-D1): an address that is not
- * provisioned gets the neutral "chưa được cấp quyền" notice and no link; a
- * provisioned one moves on to WF01-S02 and receives the link by e-mail.
+ * "Tiếp tục với Google" is drawn as in AUTH1. No OAuth client is configured
+ * (GET /api/v1/auth/providers returns an empty list), so pressing it starts no
+ * provider flow and signs nobody in: it shows why and points to the e-mail
+ * path. The terms line of the earlier build is gone, as in the board: entering
+ * an address is not acceptance, which is recorded in onboarding stage 4.
  */
 
 /** Copy for states the reference does not show. The rate-limit line is AUTH4's R1 row,
@@ -35,8 +32,8 @@ const MESSAGES = {
   empty: 'Vui lòng nhập email.',
   invalid: 'Email chưa đúng định dạng.',
   rateLimited: 'Bạn đã yêu cầu liên kết quá nhiều lần. Vui lòng thử lại sau ít phút.',
-  // DEC-AUTH-EMAIL-D1: Internal Alpha is invite-only.
-  notProvisioned: 'Email này chưa được cấp quyền truy cập Internal Alpha.',
+  // D-G1: no OAuth client; the control explains itself and signs nobody in.
+  googleUnavailable: 'Đăng nhập bằng Google chưa được bật. Vui lòng tiếp tục bằng email.',
   failed: 'Chưa gửi được liên kết. Vui lòng thử lại.',
 } as const
 
@@ -45,6 +42,7 @@ export function AuthEntryForm() {
   const [email, setEmail] = useState('')
   const [fieldError, setFieldError] = useState<string>()
   const [formError, setFormError] = useState<string>()
+  const [providerNote, setProviderNote] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   // A ref, not state: a second click can land before React re-renders.
   const inFlight = useRef(false)
@@ -94,8 +92,6 @@ export function AuthEntryForm() {
         inputRef.current?.focus()
       } else if (isApiError(error) && error.code === 'AUTH_RATE_LIMITED') {
         setFormError(MESSAGES.rateLimited)
-      } else if (isApiError(error) && error.code === 'AUTH_ACCOUNT_NOT_PROVISIONED') {
-        setFormError(MESSAGES.notProvisioned)
       } else {
         setFormError(MESSAGES.failed)
       }
@@ -111,18 +107,23 @@ export function AuthEntryForm() {
           <button
             type="button"
             className={styles.provider}
-            disabled
-            aria-label="Tiếp tục với Google (sắp có)"
             data-provider="google"
+            aria-describedby={providerNote ? 'google-unavailable' : undefined}
+            onClick={() => {
+              setProviderNote(true)
+              inputRef.current?.focus()
+            }}
           >
             <span className={styles.providerMark} aria-hidden="true">
               G
             </span>
             <span>Tiếp tục với Google</span>
-            <span className={styles.soon} aria-hidden="true">
-              Sắp có
-            </span>
           </button>
+          {providerNote ? (
+            <p id="google-unavailable" className={styles.providerNote} role="status">
+              {MESSAGES.googleUnavailable}
+            </p>
+          ) : null}
           <p className={styles.divider}>hoặc tiếp tục bằng email</p>
         </div>
 
@@ -155,10 +156,6 @@ export function AuthEntryForm() {
           </Button>
           {formError ? <Notice tone="error">{formError}</Notice> : null}
         </form>
-
-        <p className={styles.legal}>
-          Tiếp tục nghĩa là bạn đồng ý Điều khoản sử dụng và Chính sách quyền riêng tư.
-        </p>
       </div>
     </AuthCard>
   )

@@ -60,9 +60,9 @@
 }
 
 /*
- * DEC-L1-D9: the drawn Google control (50 px, 1 px #b9aeae, 15 px / 500 label,
- * 11.5 px coral "G") and the divider (12 px, #edeaea rules). No provider is
- * configured, so the control is disabled; its "Sắp có" pill is not in AUTH1.
+ * The drawn Google control (50 px, 1 px #b9aeae, 15 px / 500 label, 11.5 px
+ * coral "G") and the divider (12 px, #edeaea rules). No provider is configured:
+ * pressing the control shows the note below it and starts nothing (D-G1).
  */
 .providers {
   display: flex;
@@ -89,7 +89,7 @@
   font-weight: 500;
   line-height: 1.25rem;
   color: #170002;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
 .providerMark {
@@ -99,19 +99,11 @@
   color: #b91610;
 }
 
-.soon {
-  position: absolute;
-  top: 50%;
-  right: 0.75rem;
-  height: 1.25rem;
-  padding: 0 0.5rem;
-  border-radius: 62.5rem;
-  background: #f4f1f1;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  line-height: 1.25rem;
-  color: #6f5f60;
-  transform: translateY(-50%);
+.providerNote {
+  margin: -0.625rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  color: #534041;
 }
 
 .divider {
@@ -130,24 +122,4 @@
   flex: 1;
   height: 1px;
   background: #edeaea;
-}
-
-/* Narrow cards: the pill joins the row so it never covers the label. */
-@media (max-width: 480px) {
-  .provider {
-    gap: 0.625rem;
-  }
-
-  .soon {
-    position: static;
-    transform: none;
-  }
-}
-
-/* DEC-L1-D3: the terms notice the revision drops stays until HD-03 is decided. */
-.legal {
-  margin: -0.5rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.125rem;
-  color: #534041;
 }

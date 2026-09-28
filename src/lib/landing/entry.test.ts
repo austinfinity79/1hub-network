@@ -39,10 +39,11 @@ describe('P0-LANDING entry (the homepage primary CTA)', () => {
   })
 
   it.each([
-    ['PURPOSE', '/onboarding/purpose'],
-    ['PROFILE', '/onboarding/profile'],
-    ['PRIVACY', '/onboarding/privacy'],
-    ['COMPLETE', '/onboarding/complete'],
+    ['INTRO', '/onboarding'],
+    ['BASIC', '/onboarding/profile'],
+    ['CAPABILITY', '/onboarding/capability'],
+    ['ROLE', '/onboarding/purpose'],
+    ['REVIEW', '/onboarding/privacy'],
   ] as const)('%s → %s (the resolver’s step)', async (step, route) => {
     mocks.state = { completed: false, current_step: step, intent: null }
     expect(await landingEntry('opaque')).toEqual({ kind: 'MEMBER', href: route, onboarded: false })

@@ -71,8 +71,6 @@ export const DECISION_ERROR_CODES = [
   'LEGAL_DOCUMENT_VERSION_STALE',
   // DEC-WF01-S07-D8: 422, unsupported visibility group/level combination.
   'VISIBILITY_VALIDATION_FAILED',
-  // DEC-AUTH-EMAIL-D1: 403, the address is neither an account nor on the roster (invite-only).
-  'AUTH_ACCOUNT_NOT_PROVISIONED',
   // DEC-AUTH-EMAIL-D3: 500, the sign-in e-mail could not be sent; the link was rolled back.
   'AUTH_EMAIL_DELIVERY_FAILED',
 ] as const

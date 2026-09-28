@@ -252,7 +252,35 @@ describe('M0-T08 magic link', () => {
     expect(result.response.account_created).toBe(true)
     // No profile yet, so onboarding is not complete.
     expect(result.response.onboarding.completed).toBe(false)
-    expect(result.response.onboarding.next_step).toBe('PURPOSE')
+    expect(result.response.onboarding.next_step).toBe('INTRO')
+  })
+
+  it('open sign-up: an address on no roster gets an account only by using its link', async () => {
+    const fresh = `open-${Date.now()}@not-provisioned.example.test`
+    const accounts = () =>
+      query<{ id: string; status: string }>(
+        'SELECT id::text, status::text AS status FROM user_accounts WHERE email_normalized = $1',
+        [fresh],
+      )
+    const roster = await query('SELECT 1 FROM membership_bootstrap WHERE email_normalized = $1', [
+      fresh,
+    ])
+    expect(roster).toHaveLength(0)
+
+    // Requesting a link, even repeatedly, creates nothing.
+    const first = await requestMagicLink(fresh, null)
+    const second = await requestMagicLink(fresh.toUpperCase(), null)
+    expect(await accounts()).toHaveLength(0)
+
+    // The verified link creates the one account; a later sign-in reuses it.
+    expect((await consumeMagicLink(first.token)).response.account_created).toBe(true)
+    expect((await consumeMagicLink(second.token)).response.account_created).toBe(false)
+    const rows = await accounts()
+    expect(rows).toMatchObject([{ status: 'ACTIVE' }])
+    const profiles = await query('SELECT 1 FROM individual_profiles WHERE account_id = $1', [
+      rows[0]!.id,
+    ])
+    expect(profiles).toHaveLength(0)
   })
 
   it('retires the previous link when one is resent', async () => {

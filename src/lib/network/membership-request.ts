@@ -110,3 +110,60 @@ export async function requestMembership(
     },
   }
 }
+
+/**
+ * WF01 stage 4 — files the membership requests a member named in onboarding
+ * (DEC-L1R-D5). Called by `completeOnboarding` inside its transaction, with
+ * the profile row already locked.
+ *
+ * Each claim becomes the same record `requestMembership` writes:
+ * PENDING_APPROVAL, SELF_DECLARED, audited as MEMBERSHIP_REQUESTED. The stated
+ * position and period ride along as display text and confirm nothing. A unit
+ * that is no longer requestable, or where the profile already has a membership
+ * in a blocking state (a roster-verified one, for instance), is skipped: that
+ * record stays as it is. Never creates leadership, a RoleAssignment or a
+ * capability.
+ */
+export async function fileClaimedMemberships(
+  exec: Executor,
+  input: {
+    accountId: string
+    profileId: string
+    claims: { organization_id: string; position: string | null; period: string | null }[]
+    requestId: string
+  },
+): Promise<number> {
+  let filed = 0
+  for (const claim of input.claims) {
+    if (!UUID.test(claim.organization_id)) continue
+    const [org] = await exec<{ id: string }>(
+      `SELECT id::text FROM organizations WHERE id = $2::uuid AND ${REQUESTABLE_SQL}`,
+      [REQUESTABLE_TYPES, claim.organization_id],
+    )
+    if (!org) continue
+    const blocking = await exec<{ state: string }>(
+      `SELECT state::text AS state FROM community_memberships
+        WHERE profile_id = $1 AND organization_id = $2 AND state::text = ANY($3::text[])`,
+      [input.profileId, org.id, BLOCKING_STATES],
+    )
+    if (blocking.length > 0) continue
+
+    const [created] = await exec<{ id: string }>(
+      `INSERT INTO community_memberships
+         (profile_id, organization_id, state, source, claimed_position, claimed_period)
+       VALUES ($1, $2, 'PENDING_APPROVAL', 'SELF_DECLARED', $3, $4)
+       RETURNING id::text`,
+      [input.profileId, org.id, claim.position, claim.period],
+    )
+    await writeAudit(exec, {
+      actorAccountId: input.accountId,
+      action: 'MEMBERSHIP_REQUESTED',
+      resourceType: 'community_membership',
+      resourceId: created!.id,
+      after: { organization_id: org.id, state: 'PENDING_APPROVAL' },
+      requestId: input.requestId,
+    })
+    filed += 1
+  }
+  return filed
+}

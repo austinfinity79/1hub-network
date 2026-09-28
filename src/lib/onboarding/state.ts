@@ -1,30 +1,31 @@
 import { ApiError } from '@/lib/api/errors'
 import { query, type Executor } from '@/lib/db/client'
-import { getLegalState } from '@/lib/legal/legal'
-import { loadCompletionFacts } from '@/lib/profile/completion'
-import { profileStepComplete } from '@/lib/profile/profile'
 
 import { isPrimaryIntent, type PrimaryIntent } from './intent'
 
 /**
- * WF01 onboarding state — the ONE server-side resolver (DEC-WF01-RESUME-D1).
+ * WF01 onboarding state — the ONE server-side resolver (DEC-L1R-D3, which
+ * supersedes the step order of DEC-WF01-RESUME-D1).
  *
- * Used by GET /me/onboarding, PUT /me/onboarding/intent, the sign-in
+ * Used by GET /me/onboarding, PUT /me/onboarding/stage, the sign-in
  * `next_step` (consumeMagicLink), `/session` and the onboarding page guards.
  * Derived only from persisted canonical data; nothing the client sends can
- * move it. First incomplete step, in the frozen WF01 order:
+ * move it. First incomplete step of the four-stage flow (BA workbook row 56):
  *
- *   DONE      status ACTIVE and onboarding_completed_at set          → /me
- *   PURPOSE   purpose_step_completed_at NULL (S05 never completed)   → /onboarding/purpose
- *   PROFILE   S06 progression fields missing (DEC-WF01-S06-D2)      → /onboarding/profile
- *   PRIVACY   current Terms or Privacy not accepted (by document)   → /onboarding/privacy
- *   COMPLETE  everything above done, S08 not yet run                → /onboarding/complete
+ *   DONE        status ACTIVE and onboarding_completed_at set       → /me
+ *   INTRO       nothing of the four-stage flow saved yet (ACC-05)   → /onboarding
+ *   BASIC       a required stage 1 field is missing (ACC-06)        → /onboarding/profile
+ *   CAPABILITY  stage 2 not yet passed (ACC-07)                     → /onboarding/capability
+ *   ROLE        stage 3 not yet passed (ACC-08)                     → /onboarding/purpose
+ *   REVIEW      stage 4: review, visibility, consent (ACC-09)       → /onboarding/privacy
  *
- * `primary_intent` may stay NULL for good: skipping S05 records the step,
- * never an intent (DEC-WF01-S05-D3 as amended by DEC-WF01-RESUME-D1).
+ * Stage 1 is complete by its data. Stages 2 and 3 have no required field, so
+ * passing them is recorded (`capability_step_completed_at`,
+ * `role_step_completed_at`, server time, never reset). The three older routes
+ * are reused for the stages that replace their screens.
  */
 
-export type OnboardingStep = 'PURPOSE' | 'PROFILE' | 'PRIVACY' | 'COMPLETE'
+export type OnboardingStep = 'INTRO' | 'BASIC' | 'CAPABILITY' | 'ROLE' | 'REVIEW'
 
 export type OnboardingState = {
   completed: boolean
@@ -34,32 +35,69 @@ export type OnboardingState = {
 }
 
 export const STEP_ROUTES: Record<OnboardingStep, string> = {
-  PURPOSE: '/onboarding/purpose',
-  PROFILE: '/onboarding/profile',
-  PRIVACY: '/onboarding/privacy',
-  COMPLETE: '/onboarding/complete',
+  INTRO: '/onboarding',
+  BASIC: '/onboarding/profile',
+  CAPABILITY: '/onboarding/capability',
+  ROLE: '/onboarding/purpose',
+  REVIEW: '/onboarding/privacy',
 }
+
+/** Flow order; a stage page may be opened once every stage before it is passed. */
+export const STEP_ORDER: readonly OnboardingStep[] = [
+  'INTRO',
+  'BASIC',
+  'CAPABILITY',
+  'ROLE',
+  'REVIEW',
+]
 
 /** Where the account belongs now: its current step, or /me when done. */
 export function routeFor(state: OnboardingState): string {
   return state.current_step ? STEP_ROUTES[state.current_step] : '/me'
 }
 
+/** True when `step` is the account's current step or one it has already passed. */
+export function canOpen(state: OnboardingState, step: OnboardingStep): boolean {
+  if (!state.current_step) return false
+  // The intro is passed by pressing "Bắt đầu", so stage 1 is open from the start.
+  const reached = state.current_step === 'INTRO' ? 'BASIC' : state.current_step
+  return STEP_ORDER.indexOf(step) <= STEP_ORDER.indexOf(reached)
+}
+
 type Row = {
   status: string
   primary_intent: string | null
-  purpose_done: boolean
   onboarding_completed_at: Date | null
+  started: boolean
+  basic_done: boolean
+  capability_done: boolean
+  role_done: boolean
 }
+
+/**
+ * Stage 1 is complete when the fields ACC-06 marks required exist: full name,
+ * display name, country and province. The e-mail comes from the account.
+ */
+const BASIC_DONE_SQL = `
+  coalesce(btrim(p.full_name), '') <> '' AND coalesce(btrim(p.display_name), '') <> ''
+  AND EXISTS (SELECT 1 FROM vocabulary_items v
+               WHERE v.id = p.country_vocab_id AND v.type_code = 'COUNTRY')
+  AND EXISTS (SELECT 1 FROM vocabulary_items v
+               WHERE v.id = p.region_vocab_id AND v.type_code = 'REGION')`
 
 export async function getOnboardingState(
   accountId: string,
   exec: Executor = query,
 ): Promise<OnboardingState> {
   const [row] = await exec<Row>(
-    `SELECT status::text AS status, primary_intent,
-            purpose_step_completed_at IS NOT NULL AS purpose_done, onboarding_completed_at
-       FROM individual_profiles WHERE account_id = $1`,
+    `SELECT p.status::text AS status, p.primary_intent, p.onboarding_completed_at,
+            (p.full_name IS NOT NULL OR p.country_vocab_id IS NOT NULL OR p.phone IS NOT NULL
+              OR p.capability_step_completed_at IS NOT NULL
+              OR p.role_step_completed_at IS NOT NULL) AS started,
+            (${BASIC_DONE_SQL}) AS basic_done,
+            p.capability_step_completed_at IS NOT NULL AS capability_done,
+            p.role_step_completed_at IS NOT NULL AS role_done
+       FROM individual_profiles p WHERE p.account_id = $1`,
     [accountId],
   )
   // A stored value outside the P0 allowlist is not surfaced as a selection.
@@ -68,20 +106,70 @@ export async function getOnboardingState(
   if (done) return { completed: true, current_step: null, intent }
 
   let step: OnboardingStep
-  if (!row?.purpose_done) step = 'PURPOSE'
-  else if (!profileStepComplete(await loadCompletionFacts(accountId, exec))) step = 'PROFILE'
-  else if (!(await getLegalState(accountId, exec)).satisfied) step = 'PRIVACY'
-  else step = 'COMPLETE'
+  if (!row?.started) step = 'INTRO'
+  else if (!row.basic_done) step = 'BASIC'
+  else if (!row.capability_done) step = 'CAPABILITY'
+  else if (!row.role_done) step = 'ROLE'
+  else step = 'REVIEW'
   return { completed: false, current_step: step, intent }
 }
 
 const invalid = (field: string, reason: string) =>
-  new ApiError('PROFILE_VALIDATION_FAILED', 422, 'Purpose step request is not valid.', {
+  new ApiError('PROFILE_VALIDATION_FAILED', 422, 'Onboarding request is not valid.', {
     [field]: reason,
   })
 
+const STAGE_MARKERS = {
+  CAPABILITY: 'capability_step_completed_at',
+  ROLE: 'role_step_completed_at',
+} as const
+
 /**
- * PUT /me/onboarding/intent (05 §4.2, amended by DEC-WF01-RESUME-D1).
+ * PUT /me/onboarding/stage — `{ "completed": "CAPABILITY" | "ROLE" }`, sent by
+ * "Tiếp tục" on ACC-07 and ACC-08 after the stage's own data is saved.
+ *
+ * Records that the stage was passed, once and with the server's time. A stage
+ * can be passed only when every stage before it is: otherwise nothing is
+ * written and the answer names what is missing. After onboarding is complete
+ * the call changes nothing. Any other field, a client timestamp included, is
+ * refused.
+ */
+export async function passStage(accountId: string, body: unknown): Promise<OnboardingState> {
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    throw invalid('body', 'invalid')
+  }
+  const input = body as Record<string, unknown>
+  for (const key of Object.keys(input)) {
+    if (key !== 'completed') throw invalid(key, 'not_accepted')
+  }
+  const stage = input.completed
+  if (stage !== 'CAPABILITY' && stage !== 'ROLE') throw invalid('completed', 'unsupported')
+
+  const state = await getOnboardingState(accountId)
+  if (state.completed) return state
+  if (!canOpen(state, stage)) {
+    const missing = state.current_step === 'CAPABILITY' ? 'capability_stage' : 'basic_stage'
+    throw new ApiError(
+      'ONBOARDING_REQUIREMENTS_MISSING',
+      422,
+      'An earlier onboarding stage is not complete.',
+      { [missing]: 'missing' },
+    )
+  }
+  const column = STAGE_MARKERS[stage]
+  await query(
+    `UPDATE individual_profiles
+        SET ${column} = COALESCE(${column}, now()), updated_at = now()
+      WHERE account_id = $1`,
+    [accountId],
+  )
+  return getOnboardingState(accountId)
+}
+
+/**
+ * PUT /me/onboarding/intent (05 §4.2, amended by DEC-WF01-RESUME-D1). Kept as
+ * contracted; since DEC-L1R-D3 no onboarding screen calls it and the resolver
+ * does not read what it writes.
  *
  *   { "action": "SAVE", "primary_intent": "<P0 code>" }   (action may be omitted: frozen shape)
  *   { "action": "SKIP" }                                   "Bỏ qua, làm sau"

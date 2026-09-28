@@ -6,7 +6,8 @@ import { isPrimaryIntent, PRIMARY_INTENTS } from './intent'
 import { getOnboardingState, setPrimaryIntent } from './state'
 
 /**
- * WF01-S05 — onboarding intent against live PostgreSQL.
+ * Onboarding intent against live PostgreSQL. The endpoint is kept as
+ * contracted; since DEC-L1R-D3 it is outside the onboarding flow.
  * DEC-WF01-S05-D1 (allowlist), D3 (skip leaves NULL), D6 (revisit edits).
  */
 
@@ -57,11 +58,11 @@ describe('DEC-WF01-S05-D1 allowlist', () => {
 })
 
 describe('onboarding state', () => {
-  it('a brand-new account starts at PURPOSE with no intent and no profile', async () => {
+  it('a brand-new account starts at INTRO with no intent and no profile', async () => {
     const accountId = await newAccount()
     expect(await getOnboardingState(accountId)).toEqual({
       completed: false,
-      current_step: 'PURPOSE',
+      current_step: 'INTRO',
       intent: null,
     })
   })
@@ -69,7 +70,7 @@ describe('onboarding state', () => {
   it('the first intent write creates exactly one DRAFT profile holding only the intent', async () => {
     const accountId = await newAccount()
     const state = await setPrimaryIntent(accountId, 'SUBMIT_SOLUTION')
-    expect(state).toEqual({ completed: false, current_step: 'PROFILE', intent: 'SUBMIT_SOLUTION' })
+    expect(state).toEqual({ completed: false, current_step: 'INTRO', intent: 'SUBMIT_SOLUTION' })
     const rows = await query<{
       status: string
       primary_intent: string

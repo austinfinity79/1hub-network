@@ -1,48 +1,30 @@
 import { afterAll, describe, expect, it } from 'vitest'
 
-import { closePool, query, withTransaction } from '@/lib/db/client'
-import { acceptConsent, getCurrentDocuments } from '@/lib/legal/legal'
+import { resolveActor } from '@/lib/authz/actor'
+import { deriveCapabilities, deriveManagedScopes } from '@/lib/authz/session-authz'
+import { closePool, query } from '@/lib/db/client'
 import { getProfileCompletion } from '@/lib/profile/completion'
 import { updateOwnProfile } from '@/lib/profile/profile'
 
 import { completeOnboarding } from './complete'
+import { saveDeclaredRoles } from './roles'
+import { acceptBoth, fillBasic, passStages } from './testing'
+import * as steps from './testing'
 
 /**
- * WF01-S08 — onboarding completion against live PostgreSQL.
- * DEC-WF01-S08-D1 (trigger), D5 (NULL intent), D8 (audit + analytics once).
+ * Onboarding completion against live PostgreSQL (DEC-L1R-D6).
+ * DEC-WF01-S08-D5 (NULL intent) and D8 (audit + analytics once) still hold.
  */
 
-const REGION = '20000000-0000-0000-0000-000000000002'
+const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
+const CHAPTER_02 = '10000000-0000-0000-0000-000000000102'
 
 afterAll(async () => {
   await closePool()
 })
 
-async function newAccount(): Promise<string> {
-  const email = `cmp-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`
-  const [row] = await query<{ id: string }>(
-    `INSERT INTO user_accounts (email, email_normalized, status) VALUES ($1, $1, 'ACTIVE') RETURNING id::text`,
-    [email],
-  )
-  return row!.id
-}
-
-async function acceptBoth(accountId: string, only?: string) {
-  for (const doc of await getCurrentDocuments()) {
-    if (only && doc.type !== only) continue
-    await withTransaction((exec) =>
-      acceptConsent(exec, accountId, { consent_type: doc.type, policy_version: doc.version }, 'r'),
-    )
-  }
-}
-
-/** The activation minimum and nothing else: name + region + both acceptances. */
-async function readyAccount(): Promise<string> {
-  const accountId = await newAccount()
-  await updateOwnProfile(accountId, { display_name: 'Minimal', region_id: REGION })
-  await acceptBoth(accountId)
-  return accountId
-}
+const newAccount = () => steps.newAccount('cmp')
+const readyAccount = () => steps.readyAccount('cmp')
 
 async function profileRow(accountId: string) {
   const rows = await query<{ id: string; status: string; completed_at: Date | null }>(
@@ -69,12 +51,16 @@ const completedEvents = (accountId: string) =>
 
 describe('activation requirements', () => {
   it.each([
-    ['display_name', { region_id: REGION }, true],
-    ['region_id', { display_name: 'X' }, true],
-  ] as const)('missing %s → 422 and nothing changes', async (field, patch, legal) => {
+    ['full_name', { full_name: null }],
+    ['display_name', { display_name: null }],
+    ['country_id', { country_id: null }],
+    ['region_id', { region_id: null }],
+  ] as const)('missing %s → 422 and nothing changes', async (field, patch) => {
     const accountId = await newAccount()
+    await fillBasic(accountId)
+    await passStages(accountId)
     await updateOwnProfile(accountId, patch)
-    if (legal) await acceptBoth(accountId)
+    await acceptBoth(accountId)
     await expect(completeOnboarding(accountId, 'r')).rejects.toMatchObject({
       code: 'ONBOARDING_REQUIREMENTS_MISSING',
       status: 422,
@@ -89,7 +75,8 @@ describe('activation requirements', () => {
     'missing current %s → 422 naming it',
     async (missing) => {
       const accountId = await newAccount()
-      await updateOwnProfile(accountId, { display_name: 'X', region_id: REGION })
+      await fillBasic(accountId)
+      await passStages(accountId)
       const other = missing === 'TERMS_ACCEPTANCE' ? 'PRIVACY_DATA_PROCESSING' : 'TERMS_ACCEPTANCE'
       await acceptBoth(accountId, other)
       await expect(completeOnboarding(accountId, 'r')).rejects.toMatchObject({
@@ -104,13 +91,28 @@ describe('activation requirements', () => {
     const accountId = await newAccount()
     await expect(completeOnboarding(accountId, 'r')).rejects.toMatchObject({
       fields: {
+        full_name: 'missing',
         display_name: 'missing',
+        country_id: 'missing',
         region_id: 'missing',
+        capability_stage: 'missing',
+        role_stage: 'missing',
         TERMS_ACCEPTANCE: 'missing',
         PRIVACY_DATA_PROCESSING: 'missing',
       },
     })
     expect(await profileRow(accountId)).toEqual([])
+  })
+
+  it('stage 1 data and both acceptances are not enough: stages 2 and 3 must be passed', async () => {
+    const accountId = await newAccount()
+    await fillBasic(accountId)
+    await acceptBoth(accountId)
+    await expect(completeOnboarding(accountId, 'r')).rejects.toMatchObject({
+      code: 'ONBOARDING_REQUIREMENTS_MISSING',
+      fields: { capability_stage: 'missing', role_stage: 'missing' },
+    })
+    expect(await profileRow(accountId)).toMatchObject([{ status: 'DRAFT', completed_at: null }])
   })
 
   it('completes below 80%, with NULL intent, no headline, expertise, avatar or bio', async () => {
@@ -189,23 +191,150 @@ describe('lifecycle transition', () => {
     })
   })
 
-  it('never creates or changes memberships', async () => {
+  it('without a HUB unit named, creates no membership and changes none', async () => {
     const accountId = await readyAccount()
-    const [org] = await query<{ id: string }>(
-      `SELECT id::text FROM organizations WHERE type = 'CHAPTER' LIMIT 1`,
-    )
     await query(
       `INSERT INTO community_memberships (profile_id, organization_id, state, source)
        SELECT id, $2, 'PENDING_APPROVAL', 'SELF_DECLARED' FROM individual_profiles WHERE account_id = $1`,
-      [accountId, org!.id],
+      [accountId, CHAPTER_01],
     )
     await completeOnboarding(accountId, 'r')
-    const memberships = await query<{ state: string }>(
-      `SELECT m.state::text FROM community_memberships m
-         JOIN individual_profiles p ON p.id = m.profile_id WHERE p.account_id = $1`,
+    expect(await memberships(accountId)).toEqual([
+      {
+        organization_id: CHAPTER_01,
+        state: 'PENDING_APPROVAL',
+        source: 'SELF_DECLARED',
+        claimed_position: null,
+        claimed_period: null,
+      },
+    ])
+  })
+})
+
+const memberships = (accountId: string) =>
+  query<{
+    organization_id: string
+    state: string
+    source: string
+    claimed_position: string | null
+    claimed_period: string | null
+  }>(
+    `SELECT m.organization_id::text, m.state::text AS state, m.source, m.claimed_position,
+            m.claimed_period
+       FROM community_memberships m
+       JOIN individual_profiles p ON p.id = m.profile_id
+      WHERE p.account_id = $1 ORDER BY m.organization_id`,
+    [accountId],
+  )
+
+describe('HUB units named in stage 3', () => {
+  const declare = (accountId: string) =>
+    saveDeclaredRoles(accountId, {
+      roles: ['HUB_MEMBER', 'INNOVATOR'],
+      hub_claims: [
+        { organization_id: CHAPTER_01, position: 'Phó trưởng chapter', period: '2024 – nay' },
+        { organization_id: CHAPTER_02 },
+      ],
+    })
+
+  it('become pending, self-declared requests on completion, once, and grant nothing', async () => {
+    const accountId = await readyAccount()
+    await declare(accountId)
+    // Until completion the units are a draft: no membership exists.
+    expect(await memberships(accountId)).toEqual([])
+
+    await completeOnboarding(accountId, 'req-claims')
+    const pending = { state: 'PENDING_APPROVAL', source: 'SELF_DECLARED' }
+    const filed = [
+      {
+        ...pending,
+        organization_id: CHAPTER_01,
+        claimed_position: 'Phó trưởng chapter',
+        claimed_period: '2024 – nay',
+      },
+      { ...pending, organization_id: CHAPTER_02, claimed_position: null, claimed_period: null },
+    ]
+    expect(await memberships(accountId)).toEqual(filed)
+
+    const audit = await query<{ after_data: unknown; request_id: string }>(
+      `SELECT after_data, request_id FROM audit_events
+        WHERE actor_account_id = $1 AND action = 'MEMBERSHIP_REQUESTED'
+        ORDER BY after_data->>'organization_id'`,
       [accountId],
     )
-    expect(memberships).toEqual([{ state: 'PENDING_APPROVAL' }])
+    expect(audit).toEqual(
+      [CHAPTER_01, CHAPTER_02].map((organization_id) => ({
+        after_data: { organization_id, state: 'PENDING_APPROVAL' },
+        request_id: 'req-claims',
+      })),
+    )
+    const [draft] = await query<{ claims: unknown[] }>(
+      'SELECT onboarding_hub_claims AS claims FROM individual_profiles WHERE account_id = $1',
+      [accountId],
+    )
+    expect(draft!.claims).toEqual([])
+
+    // A repeat files nothing again.
+    await completeOnboarding(accountId, 'req-again')
+    expect(await memberships(accountId)).toEqual(filed)
+
+    // No leadership, no RoleAssignment, no capability, no managed scope.
+    const [granted] = await query<{ leadership: number; roles: number }>(
+      `SELECT (SELECT count(*)::int FROM leadership_records l WHERE l.profile_id = p.id) AS leadership,
+              (SELECT count(*)::int FROM role_assignments r
+                WHERE r.individual_profile_id = p.id) AS roles
+         FROM individual_profiles p WHERE p.account_id = $1`,
+      [accountId],
+    )
+    expect(granted).toEqual({ leadership: 0, roles: 0 })
+    const actor = await resolveActor(accountId)
+    expect(deriveCapabilities(actor)).toEqual([])
+    expect(deriveManagedScopes(actor)).toEqual([])
+  })
+
+  it('skip a unit where a membership already stands, and leave that record as it is', async () => {
+    const accountId = await readyAccount()
+    await query(
+      `INSERT INTO community_memberships (profile_id, organization_id, state, source)
+       SELECT id, $2, 'ACTIVE', 'ORGANIZATION_VERIFIED' FROM individual_profiles
+        WHERE account_id = $1`,
+      [accountId, CHAPTER_01],
+    )
+    await declare(accountId)
+    await completeOnboarding(accountId, 'r')
+    expect(await memberships(accountId)).toEqual([
+      {
+        organization_id: CHAPTER_01,
+        state: 'ACTIVE',
+        source: 'ORGANIZATION_VERIFIED',
+        claimed_position: null,
+        claimed_period: null,
+      },
+      {
+        organization_id: CHAPTER_02,
+        state: 'PENDING_APPROVAL',
+        source: 'SELF_DECLARED',
+        claimed_position: null,
+        claimed_period: null,
+      },
+    ])
+  })
+
+  it('are not filed when completion is refused', async () => {
+    const accountId = await newAccount()
+    await fillBasic(accountId)
+    await passStages(accountId)
+    await declare(accountId)
+    await expect(completeOnboarding(accountId, 'r')).rejects.toMatchObject({
+      code: 'ONBOARDING_REQUIREMENTS_MISSING',
+    })
+    expect(await memberships(accountId)).toEqual([])
+    const [draft] = await query<{ n: number }>(
+      `SELECT jsonb_array_length(onboarding_hub_claims) AS n FROM individual_profiles
+        WHERE account_id = $1`,
+      [accountId],
+    )
+    expect(draft!.n).toBe(2)
   })
 })
 

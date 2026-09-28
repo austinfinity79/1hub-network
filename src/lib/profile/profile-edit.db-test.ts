@@ -122,7 +122,8 @@ describe('WF02-S02 profile edit', () => {
     const id = await account()
     for (const [body, field, reason] of [
       [{ experience: [{ title: '  ' }] }, 'experience', 'title_required'],
-      [{ experience: [{ title: 'x', started_on: '2020-01-01' }] }, 'experience', 'invalid'],
+      [{ experience: [{ title: 'x', started_on: '2020-01-01' }] }, 'experience', 'invalid_month'],
+      [{ experience: [{ title: 'x', employer: 'y' }] }, 'experience', 'invalid'],
       [{ experience: 'PM' }, 'experience', 'invalid'],
       [
         { experience: Array.from({ length: 21 }, () => ({ title: 't' })) },

@@ -141,6 +141,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '008_p0_venture_team.sql',
       // WF03-S08 (DEC-WF03-S08-RELATIONSHIP-CONTRACT): one ACTIVE PARENT per child.
       '009_p0_one_active_parent.sql',
+      // TASK 22-L1-L2-SOT-REALIGN (DEC-L1R-D4 / D5): four-stage onboarding data.
+      '010_p0_onboarding_four_stage.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -317,8 +319,12 @@ describe('M0-T07 seed fixture quality', () => {
       // M0-T10: a runtime concurrency store. Seeding it would be meaningless,
       // and a seeded key would suppress a real request.
       'idempotency_keys',
+      // Migration 010: self-declared roles are written in onboarding stage 3.
+      'profile_declared_roles',
       'profile_education',
       'profile_links',
+      // Migration 010: specialisations are picked in onboarding stage 2.
+      'profile_specializations',
       // WF02-S05: venture domains are written at runtime; the seeded startup has none.
       'project_domains',
       'user_sessions',

@@ -5,7 +5,6 @@ import { withApi, withStatus } from '@/lib/api/handler'
 import { readIdempotencyKey } from '@/lib/api/idempotency'
 import { requestMagicLink } from '@/lib/auth/magic-link'
 import { deliverMagicLink } from '@/lib/auth/magic-link-email'
-import { isProvisioned } from '@/lib/auth/provisioning'
 import { checkEmailRate, checkIpRate } from '@/lib/auth/rate-limit'
 import { isPlausibleEmail, normalizeEmail } from '@/lib/auth/tokens'
 import { withTransaction, type Executor } from '@/lib/db/client'
@@ -16,13 +15,13 @@ import { fingerprintRequest, runIdempotent } from '@/lib/idempotency/store'
 /**
  * POST /api/v1/auth/magic-link — 05:157-185. Maps WF01-S01.
  *
- * TASK 22-PREVIEW-AUTH (DEC-AUTH-EMAIL-D1…D3): Internal Alpha is invite-only.
- * An address that is neither an account nor on the launch roster answers 403
- * AUTH_ACCOUNT_NOT_PROVISIONED and gets no token and no account; this replaces
- * the contract's "do not disclose whether an account exists" rule on this
- * endpoint. A provisioned address gets 202 and the link by e-mail. Sends are
- * rate-limited per address and per IP (AUTH_RATE_LIMITED). If the e-mail cannot
- * be sent the token is rolled back and the answer is AUTH_EMAIL_DELIVERY_FAILED.
+ * Open sign-up (DEC-L1R-D1, which supersedes the invite-only DEC-AUTH-EMAIL-D1):
+ * any plausible address gets 202 and the link by e-mail, so the answer never
+ * tells whether an account exists. The request creates no account: the account
+ * row is written only when the link is consumed, which is the e-mail
+ * verification. Sends are rate-limited per address and per IP
+ * (AUTH_RATE_LIMITED). If the e-mail cannot be sent the token is rolled back
+ * and the answer is AUTH_EMAIL_DELIVERY_FAILED.
  *
  * The raw token goes into the e-mail only, never into an HTTP response or a
  * log line.
@@ -77,13 +76,6 @@ export const POST = withApi(async ({ request }) => {
   if (!devRoutesEnabled()) checkIpRate(ip)
   if (!isPlausibleEmail(email)) {
     throw new ApiError('AUTH_EMAIL_INVALID', 400, 'A valid email address is required.')
-  }
-  if (!(await isProvisioned(email))) {
-    throw new ApiError(
-      'AUTH_ACCOUNT_NOT_PROVISIONED',
-      403,
-      'This e-mail has not been granted Internal Alpha access.',
-    )
   }
   // Servers only: local / CI dev sign-ins issue many links per persona.
   if (!devRoutesEnabled()) await checkEmailRate(normalizeEmail(email))

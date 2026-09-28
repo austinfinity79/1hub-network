@@ -42,17 +42,18 @@ type ConsumeResponse = {
   onboarding: { completed: boolean; next_step: string | null }
 }
 
-/** WF01 onboarding steps (WF01-S05..S08) as the consume response names them (DEC-WF01-RESUME-D1). */
+/** The four-stage onboarding steps as the consume response names them (DEC-L1R-D3). */
 const ONBOARDING_ROUTES: Record<string, string> = {
-  PURPOSE: '/onboarding/purpose',
-  PROFILE: '/onboarding/profile',
-  PRIVACY: '/onboarding/privacy',
-  COMPLETE: '/onboarding/complete',
+  INTRO: '/onboarding',
+  BASIC: '/onboarding/profile',
+  CAPABILITY: '/onboarding/capability',
+  ROLE: '/onboarding/purpose',
+  REVIEW: '/onboarding/privacy',
 }
 
 function nextRoute(onboarding: ConsumeResponse['onboarding']): string {
   if (onboarding.completed) return '/me'
-  return ONBOARDING_ROUTES[onboarding.next_step ?? ''] ?? '/onboarding/purpose'
+  return ONBOARDING_ROUTES[onboarding.next_step ?? ''] ?? '/onboarding'
 }
 
 type Props = {
