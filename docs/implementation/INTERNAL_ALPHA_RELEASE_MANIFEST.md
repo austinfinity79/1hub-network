@@ -39,7 +39,7 @@ Not deployed yet: deployment is Task 20, not started. Team UAT: **PENDING** (aft
 | `MEDIA_STORAGE_DIR` | yes | a mounted volume (e.g. `/data/media`) |
 | `MEDIA_AVATAR_MAX_BYTES` | no | default 2 MiB (proxy body limit must be ≥ it) |
 | `ENABLE_DEV_ROUTES` | **must be unset** | `=1` opens `/dev/login`; never copy `.env.example` to a server |
-| `LEGAL_CONTENT_DIR` | no (decision) | unset → legal links 404 (`PRODUCTION_LEGAL_CONTENT_REQUIRED`) |
+| `LEGAL_CONTENT_DIR` | yes (production) | `content/legal` — the approved v1.5 text shipped in the image ([DEC-LEGAL](../decisions/DECISION_LOG.md#dec-legal)); unset → legal links 404 |
 
 ## Deployment assumptions
 | Assumption | Detail |
@@ -71,7 +71,7 @@ P0 / P1 / P2: none (IA-P2-01, IA-P2-02 and IA-P2-03 closed). Accepted P3 (docume
 | Server secrets (`DATABASE_URL` in the server `.env`), `ENABLE_DEV_ROUTES` unset | DEPLOY BLOCKER | Provisioned for the running review build; Task 20 verifies them with `smoke.sh` and the `/dev/login` 404 check |
 | DNS + TLS for `1hubnetwork.io.vn` | DEPLOY BLOCKER | **Resolved** (checked above) |
 | Email provider (operator-issued links, `@example.test` only) | TEAM-UAT LIMITATION | Accepted |
-| Real legal content (`PRODUCTION_LEGAL_CONTENT_REQUIRED`) | TEAM-UAT LIMITATION | Accepted |
+| Real legal content (`PRODUCTION_LEGAL_CONTENT_REQUIRED`) | RELEASE BLOCKER | **Resolved** by [DEC-LEGAL](../decisions/DECISION_LOG.md#dec-legal) (approved v1.5 text in `content/legal`) |
 | Proxy security headers (CSP, HSTS, X-Frame-Options); media outside `pg_dump` | TEAM-UAT LIMITATION | Accepted |
 | Real production roster / taxonomy | POST-ALPHA ITEM | — |
 | Auth rate limiting, CSRF beyond SameSite, session TTL decision, server error logging / monitoring | POST-ALPHA ITEM (go-live blockers) | — |

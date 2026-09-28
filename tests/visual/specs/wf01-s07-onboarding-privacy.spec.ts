@@ -174,8 +174,14 @@ test.describe('WF01-S07 functional and security', () => {
       expect(content.status()).toBe(200)
       // Local content is the marked non-production fixture, never legal prose.
       expect(await content.text()).toContain('KHÔNG PHẢI VĂN BẢN PHÁP LÝ')
+      // DEC-LEGAL-D2: the address without a version opens the current document.
+      const kind = doc.content_url.split('/')[2]
+      const bare = await page.request.get(`/legal/${kind}`, { maxRedirects: 0 })
+      expect(bare.status()).toBe(307)
+      expect(bare.headers()['location']).toBe(doc.content_url)
     }
     expect((await page.request.get('/legal/terms/no-such-version')).status()).toBe(404)
+    expect((await page.request.get('/legal/no-such-kind')).status()).toBe(404)
   })
 
   test('D1: one acknowledgement creates two canonical records; S07 does not complete onboarding', async ({
