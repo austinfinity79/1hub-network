@@ -18,16 +18,13 @@ Approved pixel references from the corrected Homepage + L1–L6 revision ([audit
 | L20 CHP1 `/ops/org/:orgId` | `L3/L20__chapter-dashboard__SOURCE.png` | 1440×856 | `88f977b2374660dfb5641eb3257e6da63dd36e7469d649512bc0ed84b9754190` | `L3.zip` (`180908cd…623c`), `L20 · CHP1 · Bảng điều khiển chapter.png`, byte-identical copy | TASK 22.4 |
 | L23 CHP4 `/ops/org/:orgId/events` | `L3/L23__chapter-events__SOURCE.png` | 1440×736 | `fd425bd4eb04dbcf43accda5f674af7975580a7f10bee2800600b53a854f4238` | `L3.zip` (`180908cd…623c`), `L23 · CHP4 · Sự kiện của chapter.png`, byte-identical copy | TASK 22.4 |
 | L26 CHP7 `/ops/org/:orgId/members` | `L3/L26__chapter-members__SOURCE.png` | 1600×1530 | `382087c9354cfeb1803e472eb172851ec8971721c5bceb99008d5b31c3fcc73a` | `L3.zip` (`180908cd…623c`), `L26 · CHP7 · Thành viên & duyệt.png`, byte-identical copy (drawn 1600 wide) | TASK 22.4 |
-| L15 DIR1 `/library` hero | `L2/L15__library-hero__SOURCE.png` | 1440×810 | `4b0e31ae8d1519c7b1263fe5214e340e28079aa0a929984a67a25a6e485dfb2d` | `L2-15 Thu vien.zip` (`20017a95…f52a`), `Hero 16_9.png`, byte-identical copy | TASK 22-PREVIEW-LIBRARY |
-| L15 DIR1 `/library` tab bar | `L2/L15__library-tabs__SOURCE.png` | 1440×63 | `0a5f1444553733a3dfa8f9a6cc1b4bb7b079c3c94e3bb631ecd0eb059dff56e0` | `L2-15 Thu vien.zip` (`20017a95…f52a`), `Thanh tab.png`, byte-identical copy | TASK 22-PREVIEW-LIBRARY |
-| L15 DIR1 `/library` directory | `L2/L15__library-directory__SOURCE.png` | 1440×1597 | `3c6a6a607bfad8fc3a2d3b3723c9a24c846b1368e59ea0e5e280f397e37f1428` | `L2-15 Thu vien.zip` (`20017a95…f52a`), `Than.png`, byte-identical copy (transparent background) | TASK 22-PREVIEW-LIBRARY |
-| L15 floating feedback | `L2/L15__library-feedback__SOURCE.png` | 148×90 | `bb011ba29de55b5f2d7bf636b169ed211cce4caf7e56d5f9a1f7c22a727d5182` | `L2-15 Thu vien.zip` (`20017a95…f52a`), `Nút góp ý · nổi (T1+).png`, byte-identical copy (transparent background) | TASK 22-PREVIEW-LIBRARY |
+| L15 DIR1 `/library` | `L2/L15__library__SOURCE.png` | 1440×2470 | `8f7d6b13e4471fd2ae5c55555b2f51b3c80c0464067d3b04badbaf976fb3ae6d` | `Sprint 1_ (DL29) new 26/L15 · DIR1 · Thư viện.png` (PO, 28/09), byte-identical copy; supersedes the four `L15__library-*` fragments of `L2-15 Thu vien.zip` | TASK 22-PREVIEW-LIBRARY-FIX |
 
 Rules:
 - Typography: Space Grotesk where the reference uses it (DEC-HD-12); mono labels keep IBM Plex Mono 500.
 - Blocks omitted under HD-01 (placeholder or unverified content) are not compared; the P0-LANDING spec lists them.
 - L1: only AUTH1–AUTH4 and the ACC-10 subset are Bucket A (DEC-L1-D1). The other L1 frames stay out of the repository until their decisions (HD-02 … HD-05) are made.
-- L2: only L11 and L13a–c are Bucket A (DEC-L2-D1). L10, L12, L13, L14, L16, L18 (B) and L17 (C) stay out of the repository. L15 is in since DEC-L15 (static demo `/library`); its "Thân" and feedback frames have a transparent background and are composited over `#160002` in memory by the spec.
+- L2: only L11 and L13a–c are Bucket A (DEC-L2-D1). L10, L12, L13, L14, L16, L18 (B) and L17 (C) stay out of the repository. L15 is in since DEC-L15 (`/library`), as the full frame.
 - L3: only L19, L20, L23 and L26 are Bucket A (DEC-L3-D1). L21, L22, L24, L25 and L27 stay out of the repository. L26 is drawn 1600 wide; its spec compares components at their own anchors.
 - Never edit or re-export a file here to make a diff pass. A new source revision gets a new file and hash.
 

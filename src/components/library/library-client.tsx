@@ -1,35 +1,35 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
+import type { StartupDirectory } from '@/lib/library/startup-adapter'
+
 import { Cta } from '../landing/landing-parts'
+import { PROBLEMS, QUICK } from './library-data'
 import {
-  AREA_LABEL,
-  DOMAIN_LABEL,
-  FACETS,
-  PROBLEMS,
-  QUICK,
-  STAGE_LABEL,
+  CATEGORY_LABEL,
   facetCount,
+  founderTab,
   matches,
-  sortProblems,
-  type Area,
-  type Domain,
+  problemTab,
+  sortItems,
+  startupTab,
+  type Entity,
   type Filters,
-  type Problem,
-  type SortKey,
-  type Stage,
-} from './library-data'
+  type Item,
+  type SortOption,
+  type TabModel,
+} from './library-model'
 import styles from './library.module.css'
 
 /**
- * TASK 22-PREVIEW-LIBRARY — the interactive part of /library: the hero search,
- * the entity tabs and the "Bài toán" directory. Search, quick filters, facets,
- * chips and sorting all run in the browser on the labelled demo fixture
- * (DEC-L15-D2); nothing is sent to the server.
+ * TASK 22-PREVIEW-LIBRARY(-FIX) — the interactive part of /library: the hero
+ * search, the entity tabs and the directory (DEC-L15). "Bài toán" runs on the
+ * labelled DEMO FIXTURE; "Startup" and "Nhà sáng lập" on startup.json as read
+ * by the server (DEC-L15-D7). Search, facets, chips, sort and paging run in
+ * the browser; every remote string is rendered as text, never as HTML.
  */
-
-type Entity = 'PROBLEM' | 'STARTUP' | 'FOUNDER'
 
 const ENTITIES: Array<{ key: Entity; label: string }> = [
   { key: 'PROBLEM', label: 'Bài toán' },
@@ -39,82 +39,73 @@ const ENTITIES: Array<{ key: Entity; label: string }> = [
 
 const PLACEHOLDER: Record<Entity, string> = {
   PROBLEM: 'Tìm theo tên bài toán, lĩnh vực, doanh nghiệp đặt bài…',
-  STARTUP: 'Danh bạ Startup chưa có trong phiên bản này',
-  FOUNDER: 'Danh bạ Nhà sáng lập chưa có trong phiên bản này',
+  STARTUP: 'Tìm theo tên startup, lĩnh vực, mô tả…',
+  FOUNDER: 'Tìm theo tên nhà sáng lập, vai trò, startup…',
 }
 
 const PAGE_SIZE = 9
-const NONE: Filters = { domain: [], stage: [], area: [] }
 const OPEN_COUNT = PROBLEMS.filter((p) => p.stage === 'OPEN').length
+const EMPTY: Record<Entity, Filters> = { PROBLEM: {}, STARTUP: {}, FOUNDER: {} }
 
-const GROUPS: Array<{
-  key: keyof Filters
-  title: string
-  values: string[]
-  label: (v: string) => string
-}> = [
-  {
-    key: 'domain',
-    title: 'LĨNH VỰC',
-    values: FACETS.domain,
-    label: (v) => DOMAIN_LABEL[v as Domain],
-  },
-  {
-    key: 'stage',
-    title: 'GIAI ĐOẠN',
-    values: FACETS.stage,
-    label: (v) => STAGE_LABEL[v as Stage],
-  },
-  { key: 'area', title: 'ĐỊA BÀN', values: FACETS.area, label: (v) => AREA_LABEL[v as Area] },
-]
-
-function chipLabel(group: keyof Filters, value: string): string {
-  if (group === 'domain') return DOMAIN_LABEL[value as Domain]
-  if (group === 'stage') return STAGE_LABEL[value as Stage]
-  return AREA_LABEL[value as Area]
-}
-
-export function LibraryBrowser({ header }: { header: ReactNode }) {
+export function LibraryBrowser({
+  header,
+  directory,
+}: {
+  header: ReactNode
+  directory: StartupDirectory
+}) {
+  const tabs = useMemo<Record<Entity, TabModel>>(
+    () => ({
+      PROBLEM: problemTab(),
+      STARTUP: startupTab(directory),
+      FOUNDER: founderTab(directory),
+    }),
+    [directory],
+  )
   const [entity, setEntity] = useState<Entity>('PROBLEM')
   const [draft, setDraft] = useState('')
   const [query, setQuery] = useState('')
-  const [filters, setFilters] = useState<Filters>(NONE)
-  const [sort, setSort] = useState<SortKey>('DEADLINE')
+  const [filters, setFilters] = useState<Record<Entity, Filters>>(EMPTY)
+  const [sorts, setSorts] = useState<Record<Entity, SortOption['key']>>({
+    PROBLEM: 'DEADLINE',
+    STARTUP: 'STAGE',
+    FOUNDER: 'NAME',
+  })
   const [shown, setShown] = useState(PAGE_SIZE)
   const results = useRef<HTMLDivElement>(null)
   const tabIds = useId()
 
+  const tab = tabs[entity]
+  const current = filters[entity]
   const list = useMemo(
     () =>
-      sortProblems(
-        PROBLEMS.filter((p) => matches(p, query, filters)),
-        sort,
-      ),
-    [query, filters, sort],
+      tab.items
+        ? sortItems(
+            tab.items.filter((i) => matches(i, query, current)),
+            sorts[entity],
+          )
+        : null,
+    [tab, query, current, sorts, entity],
   )
-  const active = [
-    ...filters.domain.map((v) => ['domain', v] as const),
-    ...filters.stage.map((v) => ['stage', v] as const),
-    ...filters.area.map((v) => ['area', v] as const),
-  ]
 
-  const toggle = (group: keyof Filters, value: string) => {
+  const toggle = (group: string, value: string, target: Entity = entity) => {
     setShown(PAGE_SIZE)
-    setFilters((f) => {
-      const cur = f[group] as string[]
+    setFilters((all) => {
+      const f = all[target]
+      const cur = f[group] ?? []
       const next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value]
-      return { ...f, [group]: next }
+      return { ...all, [target]: { ...f, [group]: next } }
     })
   }
   const clearAll = () => {
-    setFilters(NONE)
+    setFilters((all) => ({ ...all, [entity]: {} }))
     setQuery('')
     setDraft('')
     setShown(PAGE_SIZE)
   }
   const pick = (next: Entity) => {
     setEntity(next)
-    if (next !== 'PROBLEM') setDraft('')
+    setShown(PAGE_SIZE)
   }
   const onTabKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
@@ -122,6 +113,7 @@ export function LibraryBrowser({ header }: { header: ReactNode }) {
     pick(ENTITIES[n]!.key)
     document.getElementById(`${tabIds}-tab-${ENTITIES[n]!.key}`)?.focus()
   }
+  const count = (e: Entity) => tabs[e].items?.length ?? '–'
 
   return (
     <>
@@ -139,7 +131,6 @@ export function LibraryBrowser({ header }: { header: ReactNode }) {
           data-anchor="search"
           onSubmit={(e) => {
             e.preventDefault()
-            if (entity !== 'PROBLEM') return
             setQuery(draft)
             setShown(PAGE_SIZE)
             results.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -168,13 +159,13 @@ export function LibraryBrowser({ header }: { header: ReactNode }) {
             aria-label="Từ khoá"
             placeholder={PLACEHOLDER[entity]}
             value={draft}
-            disabled={entity !== 'PROBLEM'}
+            maxLength={120}
             onChange={(e) => {
               setDraft(e.target.value)
               if (e.target.value === '') setQuery('')
             }}
           />
-          <button type="submit" className={styles.searchButton} disabled={entity !== 'PROBLEM'}>
+          <button type="submit" className={styles.searchButton}>
             Tìm kiếm
           </button>
         </form>
@@ -185,13 +176,10 @@ export function LibraryBrowser({ header }: { header: ReactNode }) {
               key={d}
               type="button"
               className={styles.quickChip}
-              aria-pressed={filters.domain.includes(d)}
-              onClick={() => {
-                pick('PROBLEM')
-                toggle('domain', d)
-              }}
+              aria-pressed={(current.domain ?? []).includes(d)}
+              onClick={() => toggle('domain', d)}
             >
-              {DOMAIN_LABEL[d]}
+              {CATEGORY_LABEL[d]}
             </button>
           ))}
         </div>
@@ -202,14 +190,16 @@ export function LibraryBrowser({ header }: { header: ReactNode }) {
           </div>
           <div>
             <dt>startup</dt>
-            <dd className={styles.metricSoon}>Sắp có</dd>
+            <dd>{count('STARTUP')}</dd>
           </div>
           <div>
             <dt>nhà sáng lập</dt>
-            <dd className={styles.metricSoon}>Sắp có</dd>
+            <dd>{count('FOUNDER')}</dd>
           </div>
         </dl>
-        <p className={styles.metricsNote}>Số liệu minh hoạ từ dữ liệu demo</p>
+        <p className={styles.metricsNote}>
+          Bài toán: dữ liệu minh hoạ · Startup, nhà sáng lập: startup.1hub.cloud
+        </p>
       </section>
 
       <div className={styles.tabs} role="tablist" aria-label="Loại hồ sơ" data-anchor="tabs">
@@ -227,9 +217,7 @@ export function LibraryBrowser({ header }: { header: ReactNode }) {
             onKeyDown={(e) => onTabKey(e, i)}
           >
             {x.label}
-            <span className={styles.tabCount}>
-              {x.key === 'PROBLEM' ? PROBLEMS.length : 'Sắp có'}
-            </span>
+            <span className={styles.tabCount}>{count(x.key)}</span>
           </button>
         ))}
       </div>
@@ -241,40 +229,49 @@ export function LibraryBrowser({ header }: { header: ReactNode }) {
         className={styles.body}
         ref={results}
         data-section="directory"
+        data-tab={entity}
       >
-        {entity === 'PROBLEM' ? (
+        {list ? (
           <Directory
+            tab={tab}
             list={list}
             query={query}
-            filters={filters}
-            active={active}
-            sort={sort}
+            filters={current}
+            sort={sorts[entity]}
             shown={shown}
             onToggle={toggle}
             onClear={clearAll}
-            onSort={(s) => setSort(s)}
+            onSort={(s) => setSorts((all) => ({ ...all, [entity]: s }))}
             onMore={() => setShown((n) => n + PAGE_SIZE)}
           />
         ) : (
-          <div className={styles.soon} data-anchor="coming-soon">
-            <p className={styles.soonTitle}>Sắp có</p>
-            <p className={styles.soonText}>
-              {entity === 'STARTUP'
-                ? 'Danh bạ Startup chưa có trong phiên bản này.'
-                : 'Danh bạ Nhà sáng lập chưa có trong phiên bản này.'}
-            </p>
-          </div>
+          <SourceError />
         )}
       </div>
     </>
   )
 }
 
+function SourceError() {
+  const router = useRouter()
+  return (
+    <div className={styles.soon} data-anchor="source-error" role="status">
+      <p className={styles.soonTitle}>Chưa tải được danh bạ</p>
+      <p className={styles.soonText}>
+        Nguồn startup.1hub.cloud đang không phản hồi. Vui lòng thử lại sau ít phút.
+      </p>
+      <button type="button" className={styles.more} onClick={() => router.refresh()}>
+        Thử lại
+      </button>
+    </div>
+  )
+}
+
 function Directory({
+  tab,
   list,
   query,
   filters,
-  active,
   sort,
   shown,
   onToggle,
@@ -282,38 +279,58 @@ function Directory({
   onSort,
   onMore,
 }: {
-  list: Problem[]
+  tab: TabModel
+  list: Item[]
   query: string
   filters: Filters
-  active: ReadonlyArray<readonly [keyof Filters, string]>
-  sort: SortKey
+  sort: SortOption['key']
   shown: number
-  onToggle: (group: keyof Filters, value: string) => void
+  onToggle: (group: string, value: string) => void
   onClear: () => void
-  onSort: (s: SortKey) => void
+  onSort: (s: SortOption['key']) => void
   onMore: () => void
 }) {
+  const [open, setOpen] = useState(false)
+  const all = tab.items ?? []
   const visible = list.slice(0, shown)
   const rest = list.length - visible.length
+  const labels = new Map(
+    tab.groups.flatMap((g) => g.values.map((v) => [`${g.key}:${v.value}`, v.label])),
+  )
+  const active = Object.entries(filters).flatMap(([g, vs]) => vs.map((v) => [g, v] as const))
   return (
     <div className={styles.directory}>
-      <aside className={styles.facets} aria-label="Bộ lọc" data-anchor="facets">
-        {GROUPS.map((g) => (
+      <button
+        type="button"
+        className={styles.facetToggle}
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        Bộ lọc{active.length ? ` (${active.length})` : ''}
+      </button>
+      <aside className={styles.facets} aria-label="Bộ lọc" data-anchor="facets" data-open={open}>
+        {tab.groups.map((g) => (
           <fieldset key={g.key} className={styles.facetGroup}>
             <legend className={styles.facetTitle}>{g.title}</legend>
-            {g.values.map((v) => (
-              <label key={v} className={styles.facet}>
-                <input
-                  type="checkbox"
-                  checked={(filters[g.key] as string[]).includes(v)}
-                  onChange={() => onToggle(g.key, v)}
-                />
-                <span className={styles.facetLabel}>{g.label(v)}</span>
-                <span className={styles.facetCount}>{facetCount(query, filters, g.key, v)}</span>
-              </label>
-            ))}
+            {g.values.map((v) => {
+              const n = facetCount(all, query, filters, g.key, v.value)
+              return (
+                <label key={v.value} className={styles.facet} data-empty={n === 0}>
+                  <input
+                    type="checkbox"
+                    checked={(filters[g.key] ?? []).includes(v.value)}
+                    onChange={() => onToggle(g.key, v.value)}
+                  />
+                  <span className={styles.facetLabel}>{v.label}</span>
+                  <span className={styles.facetCount}>{n}</span>
+                </label>
+              )
+            })}
           </fieldset>
         ))}
+        <p className={styles.facetNote}>
+          Bộ lọc không có kết quả vẫn hiện, kèm số 0 — để biết nó tồn tại mà đang rỗng.
+        </p>
       </aside>
 
       <div className={styles.results}>
@@ -327,10 +344,10 @@ function Directory({
                   key={`${group}-${value}`}
                   type="button"
                   className={styles.chip}
-                  aria-label={`Bỏ lọc ${chipLabel(group, value)}`}
+                  aria-label={`Bỏ lọc ${labels.get(`${group}:${value}`)}`}
                   onClick={() => onToggle(group, value)}
                 >
-                  {chipLabel(group, value)} ×
+                  {labels.get(`${group}:${value}`)} ×
                 </button>
               ))}
               <button type="button" className={styles.clear} onClick={onClear}>
@@ -338,67 +355,97 @@ function Directory({
               </button>
             </div>
           ) : (
-            <span className={styles.demoTag}>Dữ liệu minh hoạ</span>
+            <span className={styles.demoTag}>
+              {tab.source === 'DEMO' ? 'Dữ liệu minh hoạ' : 'Nguồn: startup.1hub.cloud'}
+            </span>
           )}
           <p className={styles.count} aria-live="polite">
-            {list.length} bài toán
+            {list.length} {tab.noun}
           </p>
           <label className={styles.sort}>
             Sắp xếp:
-            <select value={sort} onChange={(e) => onSort(e.target.value as SortKey)}>
-              <option value="DEADLINE">Sắp hết hạn</option>
-              <option value="PRIZE">Giải thưởng cao nhất</option>
-            </select>
+            <span className={styles.sortValue}>
+              {tab.sorts.find((s) => s.key === sort)!.label}
+              <select
+                aria-label="Sắp xếp"
+                value={sort}
+                onChange={(e) => onSort(e.target.value as SortOption['key'])}
+              >
+                {tab.sorts.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </span>
           </label>
         </div>
 
         {visible.length === 0 ? (
           <div className={styles.empty} data-anchor="empty">
-            <p className={styles.emptyTitle}>Không có bài toán nào khớp bộ lọc.</p>
+            <p className={styles.emptyTitle}>Không có {tab.noun} nào khớp bộ lọc.</p>
             <button type="button" className={styles.clearLight} onClick={onClear}>
               Xoá tất cả bộ lọc
             </button>
           </div>
         ) : (
           <ul className={styles.grid} data-anchor="grid">
-            {visible.map((p) => (
-              <li key={p.id} className={`${styles.card} ${styles[`card_${p.tone}`]}`}>
-                <article aria-labelledby={`problem-${p.id}`}>
-                  <div className={styles.cardHead}>
-                    <span className={styles.orgDot} aria-hidden="true" />
-                    <span className={styles.org}>{p.org}</span>
-                    <span className={styles.stage}>{STAGE_LABEL[p.stage]}</span>
-                  </div>
-                  <div className={styles.cardMain}>
-                    <h2 id={`problem-${p.id}`} className={styles.cardTitle}>
-                      {p.title}
-                    </h2>
-                    <span className={styles.prize}>{p.prize ?? '–'}</span>
-                  </div>
-                  <p className={styles.summary}>{p.summary}</p>
-                  <p className={styles.meta}>
-                    <span>{p.time}</span>
-                    <span>{p.teams}</span>
-                  </p>
-                  <Cta
-                    action={{ inert: 'NO_P0_SCREEN' }}
-                    label={p.stage === 'UPCOMING' ? 'Theo dõi bài toán' : 'Xem bài toán'}
-                    className={styles.cardCta}
-                  >
-                    {p.stage === 'UPCOMING' ? 'Theo dõi bài toán' : 'Xem bài toán'}
-                  </Cta>
-                </article>
-              </li>
+            {visible.map((item) => (
+              <Card key={item.id} item={item} />
             ))}
           </ul>
         )}
 
         {rest > 0 ? (
-          <button type="button" className={styles.more} onClick={onMore}>
-            Xem thêm {rest} bài toán
+          <button type="button" className={styles.more} onClick={onMore} data-anchor="more">
+            Xem thêm {rest} {tab.noun}
           </button>
         ) : null}
       </div>
     </div>
+  )
+}
+
+function Card({ item }: { item: Item }) {
+  const titleId = `card-${item.id}`
+  return (
+    <li className={`${styles.card} ${styles[`card_${item.tone}`]}`}>
+      <article aria-labelledby={titleId}>
+        <div className={styles.cardHead}>
+          <span className={styles.orgDot} aria-hidden="true">
+            {item.mark}
+          </span>
+          <span className={styles.org}>{item.head}</span>
+          {item.pill ? <span className={styles.stage}>{item.pill}</span> : null}
+        </div>
+        <div className={styles.cardMain}>
+          <h2 id={titleId} className={styles.cardTitle}>
+            {item.title}
+          </h2>
+          {item.prize ? <span className={styles.prize}>{item.prize}</span> : null}
+        </div>
+        {item.summary ? <p className={styles.summary}>{item.summary}</p> : null}
+        <p className={styles.meta}>
+          {item.meta.map((m, i) => (
+            <span key={i}>{m}</span>
+          ))}
+        </p>
+        {item.cta.href ? (
+          <a
+            href={item.cta.href}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className={styles.cardCta}
+            aria-label={`${item.cta.label} ${item.title} (mở trang ngoài)`}
+          >
+            {item.cta.label}
+          </a>
+        ) : (
+          <Cta action={{ inert: 'NO_P0_SCREEN' }} label={item.cta.label} className={styles.cardCta}>
+            {item.cta.label}
+          </Cta>
+        )}
+      </article>
+    </li>
   )
 }

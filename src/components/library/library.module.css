@@ -9,13 +9,15 @@
   --ink: var(--hub-burgundy, #160002);
   --red: #b91610;
   --muted: #8e7677;
+  --canvas: #efefef;
+  --line: #cfc5c5;
   --gutter: 64px;
   --sg: 'Space Grotesk', var(--font-ui), sans-serif;
 
   font-family: var(--sg);
   font-weight: 400;
   color: #ffffff;
-  background: var(--ink);
+  background: var(--canvas);
   overflow-x: clip;
 }
 
@@ -305,6 +307,8 @@
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
+  /* The pack's narrowest column ("142 startup"): dividers stay put whatever the counts. */
+  min-width: 165px;
   padding: 0 56px;
 }
 
@@ -381,8 +385,9 @@
 /* -------------------------------------------------------------- Directory */
 
 .body {
-  padding: 26px var(--gutter) 90px;
-  background: var(--ink);
+  padding: 26px var(--gutter) 81px;
+  background: var(--canvas);
+  color: var(--ink);
   scroll-margin-top: 12px;
 }
 
@@ -410,7 +415,7 @@
   line-height: 14px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: rgb(255 255 255 / 72%);
+  color: #9a8586;
 }
 
 .facet {
@@ -423,15 +428,18 @@
 .facet input {
   appearance: none;
   flex: none;
+  box-sizing: border-box;
   width: 14px;
   height: 15px;
   margin: 0 11px 0 0;
-  border-radius: 2px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
   background: #ffffff;
   cursor: pointer;
 }
 
 .facet input:checked {
+  border-color: var(--coral);
   background:
     center / 9px 9px no-repeat
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1 5.2 4 8l5-6.5' fill='none' stroke='%23b91610' stroke-width='2'/%3E%3C/svg%3E"),
@@ -442,13 +450,31 @@
   flex: 1;
   font-size: 14px;
   line-height: 20px;
-  color: rgb(255 255 255 / 86%);
+  color: var(--ink);
 }
 
 .facetCount {
   font-size: 12px;
   line-height: 16px;
-  color: rgb(255 255 255 / 60%);
+  color: #9a8586;
+}
+
+.facet[data-empty='true'] .facetLabel,
+.facet[data-empty='true'] .facetCount {
+  color: var(--muted);
+}
+
+.facetNote {
+  max-width: 240px;
+  margin-top: 1px !important;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--muted);
+}
+
+/* Mobile only: the facets fold behind this button. */
+.facetToggle {
+  display: none;
 }
 
 .results {
@@ -473,7 +499,7 @@
 .chipsLabel {
   font-size: 12px;
   line-height: 18px;
-  color: rgb(255 255 255 / 70%);
+  color: var(--muted);
 }
 
 .chip {
@@ -491,7 +517,7 @@
 .clearLight {
   border: 0;
   background: transparent;
-  color: rgb(255 255 255 / 55%);
+  color: #5d4b4c;
   font: 400 12px/18px var(--sg);
   cursor: pointer;
 }
@@ -499,9 +525,9 @@
 .clearLight {
   height: 40px;
   padding: 0 20px;
-  border: 1px solid rgb(255 255 255 / 35%);
+  border: 1px solid var(--line);
   border-radius: 20px;
-  color: #ffffff;
+  color: var(--ink);
 }
 
 .demoTag {
@@ -514,32 +540,53 @@
   color: var(--coral);
 }
 
+/* Result count for assistive technology; the pack shows none on screen. */
 .count {
-  margin-left: auto !important;
-  font-size: 13px;
-  line-height: 18px;
-  color: rgb(255 255 255 / 55%);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .sort {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  margin-left: auto;
   font-size: 13px;
   line-height: 18px;
-  color: rgb(255 255 255 / 70%);
+  color: var(--ink);
 }
 
-.sort select {
-  border: 0;
-  background: transparent;
-  color: #ffffff;
-  font: 500 13px/18px var(--sg);
+/* The chosen option is shown as text; the native select sits on top, invisible. */
+.sortValue {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sortValue::after {
+  content: '';
+  border-top: 4px solid var(--ink);
+  border-right: 3px solid transparent;
+  border-left: 3px solid transparent;
+}
+
+.sortValue select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  font: 400 13px/18px var(--sg);
   cursor: pointer;
 }
 
-.sort option {
-  color: var(--ink);
+.sortValue:focus-within {
+  outline: 2px solid var(--coral);
+  outline-offset: 3px;
 }
 
 .grid {
@@ -553,6 +600,7 @@
   height: 431px;
   border-radius: 17px;
   overflow: hidden;
+  color: #ffffff;
 }
 
 .card article {
@@ -658,11 +706,17 @@
 }
 
 .orgDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
   width: 26px;
   height: 26px;
   border-radius: 50%;
   background: rgb(255 255 255 / 22%);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .org {
@@ -695,11 +749,15 @@
 }
 
 .cardTitle {
+  display: -webkit-box;
   flex: 1;
+  overflow: hidden;
   font-size: 21px;
   line-height: 28px;
   font-weight: 500;
   letter-spacing: -0.01em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .prize {
@@ -713,10 +771,14 @@
 }
 
 .summary {
+  display: -webkit-box;
+  overflow: hidden;
   margin-top: 14px !important;
   font-size: 13px;
   line-height: 20px;
   color: rgb(255 255 255 / 84%);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .meta {
@@ -727,12 +789,16 @@
 }
 
 .meta span {
+  max-width: 100%;
   height: 25px;
+  overflow: hidden;
   padding: 0 11px;
   border-radius: 13px;
   background: rgb(255 255 255 / 14%);
   font-size: 11px;
   line-height: 25px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .cardCta {
@@ -750,14 +816,14 @@
 
 .more {
   display: block;
-  height: 50px;
-  margin: 40px auto 0;
+  height: 49px;
+  margin: 43px auto 0;
   padding: 0 32px;
-  border: 1px solid rgb(255 255 255 / 45%);
+  border: 1px solid var(--line);
   border-radius: 25px;
   background: transparent;
-  color: #ffffff;
-  font: 500 15px/20px var(--sg);
+  color: var(--ink);
+  font: 400 14px/20px var(--sg);
   cursor: pointer;
 }
 
@@ -768,13 +834,14 @@
   align-items: center;
   gap: 16px;
   padding: 90px 24px;
-  border: 1px dashed rgb(255 255 255 / 22%);
+  border: 1px dashed var(--line);
   border-radius: 17px;
+  color: var(--ink);
   text-align: center;
 }
 
 .empty {
-  margin-top: 25px;
+  margin-top: 24px;
 }
 
 .emptyTitle,
@@ -786,7 +853,7 @@
 .soonText {
   font-size: 14px;
   line-height: 20px;
-  color: rgb(255 255 255 / 70%);
+  color: var(--muted);
 }
 
 /* -------------------------------------------------------------- Feedback */
@@ -931,6 +998,7 @@
   }
 
   .metrics > div {
+    min-width: 0;
     padding: 0 14px;
   }
 
@@ -954,13 +1022,31 @@
 
   .directory {
     grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
+    gap: 16px;
+  }
+
+  .facetToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    height: 40px;
+    padding: 0 18px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: #ffffff;
+    color: var(--ink);
+    font: 500 14px/20px var(--sg);
+    cursor: pointer;
   }
 
   .facets {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 16px 24px;
+  }
+
+  .facets[data-open='false'] {
+    display: none;
   }
 
   .resultsBar {

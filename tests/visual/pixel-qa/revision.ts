@@ -41,24 +41,6 @@ export type RevisionAudit = {
   intentional?: Array<{ class: string; reason: string }>
   /** Capture the full page, for references taller than the viewport. */
   full?: boolean
-  /**
-   * Colour under a reference exported with a transparent background (L15
-   * "Thân", "Nút góp ý"). The reference is composited over it in memory only;
-   * the file is never edited.
-   */
-  referenceBackdrop?: [number, number, number]
-}
-
-/** Composites an RGBA reference over an opaque backdrop, in place. */
-function flatten(png: { data: Buffer }, [r, g, b]: [number, number, number]): void {
-  const d = png.data
-  for (let i = 0; i < d.length; i += 4) {
-    const a = d[i + 3]! / 255
-    d[i] = Math.round(d[i]! * a + r * (1 - a))
-    d[i + 1] = Math.round(d[i + 1]! * a + g * (1 - a))
-    d[i + 2] = Math.round(d[i + 2]! * a + b * (1 - a))
-    d[i + 3] = 255
-  }
 }
 
 /** Every visible text box on the page, in capture coordinates. */
@@ -95,7 +77,6 @@ export async function auditRevision(page: Page, audit: RevisionAudit): Promise<S
   )
   writePng(actualPath, actual)
   const reference = readPng(resolveReferencePath(audit.reference))
-  if (audit.referenceBackdrop) flatten(reference, audit.referenceBackdrop)
   const results = compareSegments(reference, actual, audit.segments, await textRects(page), {
     diffPath: resolveOutputPath('diff', `${audit.name}.segments.diff.png`),
     shiftTolerance: SHIFT_TOLERANCE,
@@ -105,7 +86,6 @@ export async function auditRevision(page: Page, audit: RevisionAudit): Promise<S
   writeJsonReport(`${audit.name}.revision.json`, {
     screen: audit.name,
     reference: audit.reference,
-    reference_backdrop: audit.referenceBackdrop ?? null,
     actual: path.relative(REPO_ROOT, actualPath),
     conditions,
     typography,
