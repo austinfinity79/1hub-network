@@ -32,7 +32,9 @@ Domain capture = local capture, 0 differing pixels (1440 × 12636); pixel P0 / P
 - Implementation commit: `3fd00e4c30103aa6ffcc36753c6b5f11324948e9`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
-- Push status: **NOT RUN**; remote HEAD `0b4095f`
+- Push status: **PASS** (2026-09-28, on PO request): `main` fast-forwarded `0b4095f` → `af1185a`, 109 commits, no force; remote SHA compared with the local SHA. This report's own commit is pushed right after
+- Remote HEAD: `af1185a39e864d6082c3b7ae34440f60c13da5b1` before this commit
+- Not pushed: branch `deploy/vps-foundation` (no remote branch exists; creating one needs authorisation) and the local tags `internal-alpha-preview-01…07`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
