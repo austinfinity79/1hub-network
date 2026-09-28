@@ -6,15 +6,16 @@
 | Field | Value |
 |---|---|
 | **APP PREVIEW SHA** (branch `main`) | **`5a195f72acf05dd6537b6c70ad185e0737acd916`** — local tag `internal-alpha-preview-03`; TASK 22-PREVIEW-AUTH (real e-mail magic link through Resend, invite-only, rate-limited, [DEC-AUTH-EMAIL](../decisions/DECISION_LOG.md#dec-auth-email)) on top of `33f8b0c` (login UI hotfix, [DEC-L1-D9](../decisions/DECISION_LOG.md#dec-l1-d9)). Later `main` commits are docs only |
+| Deployment | **Deployed** by TASK 22-PREVIEW-03 on 2026-09-28 06:55 UTC ([report](reports/TASK-22-PREVIEW-03_real-email-deploy.md)); real-inbox sign-in confirmed |
 | Previous previews | `33f8b0c2c2cb7b78ce7d6b8979def4d7660025bd` (tag `internal-alpha-preview-02`, never deployed) · `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` (tag `internal-alpha-preview-01`, deployed by TASK 22-PREVIEW-02) |
-| **ROLLBACK SHA** | `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` — the preview running on https://1hubnetwork.io.vn now (`current` → `releases/cc6ca28…`, checked 2026-09-28); before it, `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` |
-| Deploy tooling | branch `deploy/vps-foundation` (worktree `/Users/thanosvn/workspace/1hub-network-deploy`, tip `6604fd8`); `deploy/` unchanged since `68488cf` (copies `patches/` before the install) |
+| **ROLLBACK SHA** | `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` — the previous preview (image and sources kept on the server; `rollback.sh` returns to it); before it, `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` |
+| Deploy tooling | branch `deploy/vps-foundation` (worktree `/Users/thanosvn/workspace/1hub-network-deploy`, tip `958a2ae`); `deploy/` unchanged since `68488cf` (copies `patches/` before the install) |
 | Product commits since `9c61458` | `a05917a` 22.1 homepage · `5735d78` 22.2 auth / completion · `2a57fe9` 22.3 settings / project wizard · `cc6ca28` 22.4 chapter (ops, outside the demo scope) · `33f8b0c` login UI hotfix · `5a195f7` real e-mail login |
 | Schema | no migration, seed or dependency change since `9c61458` (`db/`, `package.json`, `pnpm-lock.yaml` identical): migrate expects 9 × skip; rollback is schema-safe |
 | Dependencies | unchanged since the first preview (Space Grotesk `woff2` committed in `public/fonts`; no `fonts:sync` at deploy) |
 | Environment | [INTERNAL_ALPHA_RELEASE_MANIFEST.md](INTERNAL_ALPHA_RELEASE_MANIFEST.md) plus `RESEND_API_KEY` (secret), `EMAIL_FROM`, `APP_PUBLIC_BASE_URL` — present in `/opt/1hub-network/shared/env/app.env`; the container must be recreated to read them. Missing or invalid → 500 `AUTH_EMAIL_DELIVERY_FAILED`, no token kept |
 
-## Deploy (Claude B)
+## Deploy (Claude B, done by TASK 22-PREVIEW-03)
 | Step | Command / check |
 |---|---|
 | Backup | `/opt/1hub-network/app/bin/backup.sh` |

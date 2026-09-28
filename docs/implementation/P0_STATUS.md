@@ -65,6 +65,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-PREVIEW-AUTH — real e-mail magic link, invite-only: GREEN, frozen, not deployed** ([report](reports/TASK-22-PREVIEW-AUTH_real-email.md)). Resend domain verified; a provisioned address receives the existing one-time link from `no-reply@1hubnetwork.io.vn`; unknown addresses get a notice and no account; 10 links per address / 30 requests per IP per 15 min (DEC-AUTH-EMAIL). NEW APP PREVIEW SHA `5a195f72acf05dd6537b6c70ad185e0737acd916` (tag `internal-alpha-preview-03`, includes the login UI hotfix), rollback `cc6ca28` (deployed). Regression 239 / 0 failed; unit 245; DB 354; #418 = 0; build PASS.
 
+**TASK 22-PREVIEW-03 — real-email auth preview: DEPLOYED GREEN** ([report](reports/TASK-22-PREVIEW-03_real-email-deploy.md)). `5a195f7` runs on https://1hubnetwork.io.vn (exact SHA; the prompt's 41-character SHA was corrected by the PO). Real inbox sign-in confirmed by the operator; unknown / reused / expired / malformed links refused; L1 / L2 demo PASS; #418 = 0; app 5xx 0; restart PASS; rollback `cc6ca28`.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -154,7 +156,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Preview track: deploy the NEW exact APP PREVIEW SHA `5a195f7` (login UI hotfix + real e-mail login) to 1hubnetwork.io.vn (Claude B), rollback `cc6ca28`.
+- Preview track: `5a195f7` is deployed; PO demo on 1hubnetwork.io.vn. Open follow-up: an approved operator command to provision real Internal Alpha testers.
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
