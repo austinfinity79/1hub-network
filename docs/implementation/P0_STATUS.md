@@ -63,6 +63,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-PREVIEW-LOGIN-UI — L1 login hotfix: DONE** ([report](reports/TASK-22-PREVIEW-LOGIN-UI_login-hotfix.md)). AUTH1 split layout kept (PO); the Google control is drawn disabled with "Sắp có", plus the divider (DEC-L1-D9); auth logic unchanged. NEW APP PREVIEW SHA `33f8b0c2c2cb7b78ce7d6b8979def4d7660025bd` (tag `internal-alpha-preview-02`), rollback `cc6ca28` (the deployed preview). Regression 219 / 0 failed; pixel 0 / 0 / 0; build PASS. Real e-mail login stays BLOCKED CONFIGURATION ([stop report](reports/TASK-22-PREVIEW-AUTH_email-config-stop.md)).
 
+**TASK 22-PREVIEW-AUTH — real e-mail magic link, invite-only: GREEN, frozen, not deployed** ([report](reports/TASK-22-PREVIEW-AUTH_real-email.md)). Resend domain verified; a provisioned address receives the existing one-time link from `no-reply@1hubnetwork.io.vn`; unknown addresses get a notice and no account; 10 links per address / 30 requests per IP per 15 min (DEC-AUTH-EMAIL). NEW APP PREVIEW SHA `5a195f72acf05dd6537b6c70ad185e0737acd916` (tag `internal-alpha-preview-03`, includes the login UI hotfix), rollback `cc6ca28` (deployed). Regression 239 / 0 failed; unit 245; DB 354; #418 = 0; build PASS.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -152,7 +154,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Preview track: deploy the NEW exact APP PREVIEW SHA `33f8b0c` to 1hubnetwork.io.vn (Claude B); real e-mail login waits for its configuration.
+- Preview track: deploy the NEW exact APP PREVIEW SHA `5a195f7` (login UI hotfix + real e-mail login) to 1hubnetwork.io.vn (Claude B), rollback `cc6ca28`.
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
