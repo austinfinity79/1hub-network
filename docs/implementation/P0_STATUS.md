@@ -59,6 +59,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22 — THẢO 28/09 SCOPE REFREEZE: DONE (docs only)** ([report](reports/TASK-22-2809_scope-refreeze.md), [scope-refreeze](../design-revision/scope-refreeze/overview.md)). DEC-2809-D1…D7 frozen from `Update 28_9.docx`: homepage CTAs with login return, live AI onboarding suggestion, L3 = dashboard / chapter information / member approval, L4 and L6 = Directory / Form only (0 screens each), one canonical Venture with quick-create, server-side Application (DRAFT → SUBMITTED, snapshot on submit). 62 screens: APPROVED ALPHA 24, FUTURE 38. The WF05 session-only Application (DEC-WF05-G5 / T00-D1) and 14 other records are SUPERSEDED; batches 22.5–22.8 of the old order are replaced. 19 human decisions open (HD-A1…A14, HD-02 / 03 / 05 / 08 / 11). Runtime, schema, API and RBAC: 0.
 
+**TASK 22-PREVIEW-01 — INTERNAL ALPHA PREVIEW (HOMEPAGE + L1 + L2): GREEN, frozen, not deployed** ([report](reports/TASK-22-PREVIEW-01_preview-release.md), [manifest](INTERNAL_ALPHA_PREVIEW_RELEASE.md)). APP PREVIEW SHA `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` (tag `internal-alpha-preview-01`); rollback `9c61458` (deployed now, schema-safe). No product change: targeted suite 342 / 0 failed, happy path 19 / 19, pixel 0 / 0 / 0, #418 = 0, build PASS. 12 preview limitations documented (inert homepage CTAs, no auth return, no AI, desktop-frame member pages, …).
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -148,6 +150,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
+- Preview track: TASK 22-PREVIEW-02 — deploy the exact APP PREVIEW SHA `cc6ca28` to 1hubnetwork.io.vn (Claude B).
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
