@@ -1,33 +1,50 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
-import { Button, Notice, Surface } from '@/components/ui'
+import { Button, Notice } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
 import type { SessionDTO as AppSession } from '@/lib/api/types'
 import type { DeletionRequestDTO, SessionDTO } from '@/lib/account/settings'
 
+import {
+  currentStatus,
+  missingDocuments,
+  type Consent,
+  type LegalDoc,
+} from '../privacy/privacy-model'
 import styles from './settings.module.css'
 
 /**
- * WF02-S07 — Account Settings body (/me/settings), inside the member shell.
- * Approved baseline: design-reference/final/WF02/WF02-S07__account-settings__1440x900.png
- * Decisions DEC-WF02-H8, DEC-WF02-S07-G1..G6, DEC-WF02-S07-D1..D3.
+ * WF02-S07 — /me/settings as the corrected L11 ME0 overview (TASK 22.3,
+ * DEC-L2-D1): summary rows over what P0 already does, inside the member shell.
+ * Decisions DEC-WF02-H8, DEC-WF02-S07-G1..G6, DEC-WF02-S07-D1..D3 still hold.
  *
- * P0 (H8): the login email (read-only), the session list with revoke-one and
- * revoke-all, and the account-deletion REQUEST behind a confirmation. Email
- * change, Google linking, notification preferences and ownership transfer
- * are Future and not rendered. Sessions show only stored data.
+ * Rows: the login email (read-only), the sessions (revoke one, revoke all,
+ * opened in place), the discovery visibility and the Terms / Privacy status
+ * (both changed on /me/privacy, the existing WF02-S03 screen), and the
+ * account-deletion REQUEST behind a confirmation. Not rendered (Bucket B /
+ * Future): email change, Google link, HUB tags, public URL, "view as",
+ * purpose consents, viewer statistics, personal log, export, email
+ * preferences, invitations and organisations, ownership transfer.
  */
 
-type SessionsState =
-  { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; items: SessionDTO[] }
+type Loaded<T> = { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; value: T }
+type Level = 'NETWORK_ONLY' | 'PRIVATE'
+type VisibilityDTO = { groups: { group_code: string; level: string }[] }
 
-/** Copy the approved bitmap does not carry verbatim; pending PO copy review (DEC-WF02-S07-D2). */
+/** Copy the reference does not carry verbatim; pending PO copy review (DEC-WF02-S07-D2). */
 const COPY = {
-  loginMethod: 'Email đăng nhập · đã xác thực',
-  passwordless:
-    'Không có mật khẩu nào để đổi hay để quên. Mỗi lần đăng nhập là một link dùng một lần, hết hạn sau 15 phút.',
+  title: 'Cài đặt',
+  lede: 'Mọi thứ điều chỉnh hồ sơ của bạn nằm ở đây.',
+  account: 'TÀI KHOẢN & ĐĂNG NHẬP',
+  email: 'Email đăng nhập',
+  verified: 'đã xác thực',
+  sessions: 'Phiên đăng nhập',
+  sessionCount: 'phiên đang hoạt động',
+  show: 'Xem',
+  hide: 'Thu gọn',
   logoutAll: 'Đăng xuất khỏi mọi thiết bị',
   current: 'Hiện tại',
   currentTitle: 'Phiên này',
@@ -35,12 +52,26 @@ const COPY = {
   logout: 'Đăng xuất',
   started: 'bắt đầu',
   expires: 'hết hạn',
-  loadFailed: 'Không tải được phiên đăng nhập.',
+  profile: 'HIỂN THỊ HỒ SƠ',
+  discovery: 'Thẻ của tôi trong Thư viện',
+  shown: 'đang hiện · chỉ thành viên mạng lưới thấy',
+  hidden: 'đang ẩn',
+  change: 'Đổi',
+  data: 'QUYỀN RIÊNG TƯ DỮ LIỆU',
+  consent: 'Điều khoản & lịch sử đồng ý',
+  consentOk: 'đã đồng ý phiên bản hiện hành',
+  consentNew: 'có phiên bản mới cần đồng ý',
+  view: 'Xem',
+  loading: 'Đang tải…',
+  loadFailed: 'Không tải được dữ liệu.',
+  sessionsFailed: 'Không tải được phiên đăng nhập.',
   retry: 'Thử lại',
   actionFailed: 'Chưa thực hiện được. Vui lòng thử lại.',
+  close: 'ĐÓNG TÀI KHOẢN',
+  request: 'Yêu cầu xoá tài khoản',
+  send: 'Gửi yêu cầu',
   dangerBody:
     'Bạn có thể gửi yêu cầu xoá tài khoản. Tài khoản chưa bị xoá ngay khi gửi: yêu cầu được ghi nhận để xử lý, và bạn vẫn đăng nhập, dùng hồ sơ như bình thường.',
-  request: 'Yêu cầu xoá tài khoản',
   confirm: 'Bạn chắc chắn muốn gửi yêu cầu xoá tài khoản?',
   confirmYes: 'Xác nhận gửi yêu cầu',
   confirmNo: 'Huỷ',
@@ -64,11 +95,81 @@ const DATE = new Intl.DateTimeFormat('vi-VN', {
   year: 'numeric',
 })
 
+const Arrow = () => <span aria-hidden="true"> →</span>
+
+function Card({ card, eyebrow, children }: { card: string; eyebrow: string; children: ReactNode }) {
+  return (
+    <section className={styles.card} data-card={card}>
+      <h2 className={styles.eyebrow}>{eyebrow}</h2>
+      {children}
+    </section>
+  )
+}
+
+function Row({
+  title,
+  summary,
+  action,
+  children,
+  ...rest
+}: {
+  title: string
+  summary: ReactNode
+  action?: ReactNode
+  children?: ReactNode
+} & Record<`data-${string}`, string | undefined> & { 'aria-busy'?: boolean }) {
+  return (
+    <div className={styles.row} {...rest}>
+      <div className={styles.rowHead}>
+        <div>
+          <p className={styles.rowTitle}>{title}</p>
+          <div className={styles.rowSummary}>{summary}</div>
+        </div>
+        {action}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function useLoad<T>(load: () => Promise<T>) {
+  const [state, setState] = useState<Loaded<T>>({ kind: 'loading' })
+  const run = useCallback(async () => {
+    setState({ kind: 'loading' })
+    try {
+      setState({ kind: 'ready', value: await load() })
+    } catch {
+      setState({ kind: 'failed' })
+    }
+  }, [load])
+  useEffect(() => {
+    void run()
+  }, [run])
+  return [state, run] as const
+}
+
+const loadVisibility = async (): Promise<Level> => {
+  const dto = await apiRequest<VisibilityDTO>('/me/visibility')
+  const level = dto.groups.find((g) => g.group_code === 'PROFILE_DISCOVERY')?.level
+  return level === 'PRIVATE' ? 'PRIVATE' : 'NETWORK_ONLY'
+}
+
+const loadConsent = async (): Promise<boolean> => {
+  const [current, consents] = await Promise.all([
+    apiRequest<{ documents: LegalDoc[] }>('/legal/current'),
+    apiRequest<{ items: Consent[] }>('/me/consents'),
+  ])
+  return missingDocuments(currentStatus(current.documents, consents.items)).length === 0
+}
+
 export function SettingsView({ initialRequest }: { initialRequest: DeletionRequestDTO | null }) {
   const [email, setEmail] = useState('')
-  const [sessions, setSessions] = useState<SessionsState>({ kind: 'loading' })
+  const [sessions, setSessions] = useState<Loaded<SessionDTO[]>>({ kind: 'loading' })
+  const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState<string>()
   const [sessionError, setSessionError] = useState(false)
+  const [visibility] = useLoad(loadVisibility)
+  const [consent] = useLoad(loadConsent)
   const [request, setRequest] = useState(initialRequest)
   const [confirming, setConfirming] = useState(false)
   const [sending, setSending] = useState(false)
@@ -83,7 +184,7 @@ export function SettingsView({ initialRequest }: { initialRequest: DeletionReque
         apiRequest<{ items: SessionDTO[] }>('/me/sessions'),
       ])
       if (session.authenticated) setEmail(session.account.email)
-      setSessions({ kind: 'ready', items: list.items })
+      setSessions({ kind: 'ready', value: list.items })
     } catch {
       setSessions({ kind: 'failed' })
     }
@@ -142,106 +243,170 @@ export function SettingsView({ initialRequest }: { initialRequest: DeletionReque
     }
   }
 
+  const summaryOf = <T,>(state: Loaded<T>, ready: (value: T) => string) =>
+    state.kind === 'ready'
+      ? ready(state.value)
+      : state.kind === 'failed'
+        ? COPY.loadFailed
+        : COPY.loading
+
   return (
     <div className={styles.page}>
-      <h1 className={`type-heading-2 ${styles.title}`}>Cài đặt tài khoản</h1>
+      <h1 className={styles.title}>{COPY.title}</h1>
+      <p className={styles.lede}>{COPY.lede}</p>
 
-      <div className={styles.card} data-card="login">
-        <Surface as="section">
-          <h2 className={`weight-semibold ${styles.eyebrow}`}>ĐĂNG NHẬP</h2>
-          <div className={styles.row}>
-            <div>
-              <p className={`type-body-md ${styles.rowTitle}`} data-email>
-                {email}
-              </p>
-              <p className={`type-meta-xs ${styles.muted}`}>{COPY.loginMethod}</p>
-            </div>
-          </div>
-          <p className={`type-meta-xs ${styles.note}`}>{COPY.passwordless}</p>
-        </Surface>
-      </div>
-
-      <div className={styles.card} data-card="sessions" aria-busy={sessions.kind === 'loading'}>
-        <Surface as="section">
-          <div className={styles.headRow}>
-            <h2 className={`weight-semibold ${styles.eyebrow}`}>PHIÊN ĐĂNG NHẬP</h2>
+      <Card card="account" eyebrow={COPY.account}>
+        <Row
+          data-card="login"
+          title={COPY.email}
+          summary={
+            <>
+              <span data-email>{email}</span>
+              {email ? ` · ${COPY.verified}` : null}
+            </>
+          }
+        />
+        <Row
+          data-card="sessions"
+          aria-busy={sessions.kind === 'loading'}
+          title={COPY.sessions}
+          summary={
+            sessions.kind === 'failed' ? (
+              <span className={styles.failed} role="alert" data-state="sessions-failed">
+                {COPY.sessionsFailed}{' '}
+                <button type="button" className={styles.inlineAction} onClick={loadSessions}>
+                  {COPY.retry}
+                </button>
+              </span>
+            ) : (
+              summaryOf(sessions, (items) => `${items.length} ${COPY.sessionCount}`)
+            )
+          }
+          action={
             <button
               type="button"
-              className={`type-body-sm weight-medium ${styles.link}`}
-              disabled={sessions.kind !== 'ready' || Boolean(busy)}
-              onClick={revokeAll}
+              className={styles.action}
+              aria-expanded={open}
+              aria-controls="settings-sessions"
+              disabled={sessions.kind !== 'ready'}
+              onClick={() => setOpen((o) => !o)}
             >
-              {COPY.logoutAll}
+              {open ? COPY.hide : COPY.show}
+              {open ? null : <Arrow />}
             </button>
-          </div>
-          {sessions.kind === 'failed' ? (
-            <div className={styles.failed} role="alert" data-state="sessions-failed">
-              <p className="type-body-sm">{COPY.loadFailed}</p>
+          }
+        >
+          {open && sessions.kind === 'ready' ? (
+            <div id="settings-sessions" className={styles.detail}>
+              <ul className={styles.list}>
+                {sessions.value.map((item) => (
+                  <li
+                    key={item.id}
+                    className={styles.session}
+                    data-session={item.current ? 'current' : 'other'}
+                  >
+                    <div>
+                      <p className={styles.sessionTitle}>
+                        {item.current ? COPY.currentTitle : COPY.otherTitle}
+                      </p>
+                      <p className={styles.rowSummary}>
+                        {COPY.started} {DATE_TIME.format(new Date(item.created_at))} ·{' '}
+                        {COPY.expires} {DATE.format(new Date(item.expires_at))}
+                      </p>
+                    </div>
+                    {item.current ? (
+                      <span className={styles.pill}>{COPY.current}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.outline}
+                        disabled={Boolean(busy)}
+                        onClick={() => revoke(item)}
+                      >
+                        {COPY.logout}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
               <button
                 type="button"
-                className={`type-body-sm ${styles.retry}`}
-                onClick={loadSessions}
+                className={styles.action}
+                disabled={Boolean(busy)}
+                onClick={revokeAll}
               >
-                {COPY.retry}
+                {COPY.logoutAll}
               </button>
             </div>
-          ) : (
-            <ul className={styles.list}>
-              {(sessions.kind === 'ready' ? sessions.items : []).map((item) => (
-                <li
-                  key={item.id}
-                  className={styles.row}
-                  data-session={item.current ? 'current' : 'other'}
-                >
-                  <div>
-                    <p className={`type-body-md ${styles.rowTitle}`}>
-                      {item.current ? COPY.currentTitle : COPY.otherTitle}
-                    </p>
-                    <p className={`type-meta-xs ${styles.muted}`}>
-                      {COPY.started} {DATE_TIME.format(new Date(item.created_at))} · {COPY.expires}{' '}
-                      {DATE.format(new Date(item.expires_at))}
-                    </p>
-                  </div>
-                  {item.current ? (
-                    <span className={`weight-medium ${styles.pill}`}>{COPY.current}</span>
-                  ) : (
-                    <button
-                      type="button"
-                      className={`type-body-sm weight-medium ${styles.outline}`}
-                      disabled={Boolean(busy)}
-                      onClick={() => revoke(item)}
-                    >
-                      {COPY.logout}
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+          ) : null}
           {sessionError ? (
             <div className={styles.notice}>
               <Notice tone="error">{COPY.actionFailed}</Notice>
             </div>
           ) : null}
-        </Surface>
-      </div>
+        </Row>
+      </Card>
 
-      <section className={styles.danger} data-card="danger">
-        <h2 className={`weight-semibold ${styles.eyebrow}`}>VÙNG NGUY HIỂM</h2>
+      <Card card="visibility" eyebrow={COPY.profile}>
+        <Row
+          data-visibility={visibility.kind === 'ready' ? visibility.value : undefined}
+          title={COPY.discovery}
+          summary={summaryOf(visibility, (level) =>
+            level === 'PRIVATE' ? COPY.hidden : COPY.shown,
+          )}
+          action={
+            <Link href="/me/privacy" className={styles.action} data-nav="settings-privacy">
+              {COPY.change}
+              <Arrow />
+            </Link>
+          }
+        />
+      </Card>
+
+      <Card card="consent" eyebrow={COPY.data}>
+        <Row
+          title={COPY.consent}
+          summary={summaryOf(consent, (ok) => (ok ? COPY.consentOk : COPY.consentNew))}
+          action={
+            <Link href="/me/privacy" className={styles.action} data-nav="settings-consent">
+              {COPY.view}
+              <Arrow />
+            </Link>
+          }
+        />
+      </Card>
+
+      <Card card="danger" eyebrow={COPY.close}>
         {request ? (
-          <div data-state="deletion-requested">
-            <p className={`type-body-sm weight-medium ${styles.dangerText}`}>
-              {COPY.received} {DATE_TIME.format(new Date(request.requested_at))}.
-            </p>
-            <p className={`type-body-sm ${styles.muted}`}>{COPY.receivedNote}</p>
-          </div>
+          <Row
+            data-state="deletion-requested"
+            title={COPY.request}
+            summary={
+              <>
+                <p className={styles.dangerText}>
+                  {COPY.received} {DATE_TIME.format(new Date(request.requested_at))}.
+                </p>
+                <p>{COPY.receivedNote}</p>
+              </>
+            }
+          />
         ) : (
-          <>
-            <p className={`type-body-sm ${styles.dangerText}`}>{COPY.dangerBody}</p>
+          <Row
+            title={COPY.request}
+            summary={COPY.dangerBody}
+            action={
+              confirming ? null : (
+                <button type="button" className={styles.action} onClick={() => setConfirming(true)}>
+                  {COPY.send}
+                  <Arrow />
+                </button>
+              )
+            }
+          >
             {confirming ? (
               <div className={styles.confirm} role="group" aria-label={COPY.confirm}>
-                <p className={`type-body-md weight-medium ${styles.confirmText}`}>{COPY.confirm}</p>
-                <div className={styles.actions}>
+                <p className={styles.confirmText}>{COPY.confirm}</p>
+                <div className={styles.confirmActions}>
                   <Button loading={sending} onClick={submitRequest}>
                     {COPY.confirmYes}
                   </Button>
@@ -254,21 +419,15 @@ export function SettingsView({ initialRequest }: { initialRequest: DeletionReque
                   </Button>
                 </div>
               </div>
-            ) : (
-              <div className={styles.actions}>
-                <Button variant="secondary" onClick={() => setConfirming(true)}>
-                  {COPY.request}
-                </Button>
-              </div>
-            )}
+            ) : null}
             {requestError ? (
               <div className={styles.notice}>
                 <Notice tone="error">{COPY.requestFailed}</Notice>
               </div>
             ) : null}
-          </>
+          </Row>
         )}
-      </section>
+      </Card>
     </div>
   )
 }

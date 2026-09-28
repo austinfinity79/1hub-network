@@ -39,6 +39,8 @@ export type RevisionAudit = {
   exclude?: Rect[]
   /** Intentional differences, recorded in the report. */
   intentional?: Array<{ class: string; reason: string }>
+  /** Capture the full page, for references taller than the viewport. */
+  full?: boolean
 }
 
 /** Every visible text box on the page, in capture coordinates. */
@@ -68,8 +70,11 @@ export async function auditRevision(page: Page, audit: RevisionAudit): Promise<S
   const typography = await assertTypography(page, REVISION_FACES)
   expect(typography.violations, `${audit.name} typography`).toEqual([])
 
-  const actual = decodePng(await page.screenshot())
-  const actualPath = resolveOutputPath('actual', `${audit.name}.viewport.png`)
+  const actual = decodePng(await page.screenshot({ fullPage: audit.full ?? false }))
+  const actualPath = resolveOutputPath(
+    'actual',
+    `${audit.name}.${audit.full ? 'full' : 'viewport'}.png`,
+  )
   writePng(actualPath, actual)
   const reference = readPng(resolveReferencePath(audit.reference))
   const results = compareSegments(reference, actual, audit.segments, await textRects(page), {

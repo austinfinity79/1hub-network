@@ -1,0 +1,726 @@
+/*
+ * L13a–c PRJ1–3 — the project / startup wizard (TASK 22.3), measured from
+ * the corrected L2 references at 1440x900 DPR1 (px / 16 = rem). A Corrected
+ * Design Revision screen, so its text is Space Grotesk (DEC-HD-12) through a
+ * re-pointed --font-ui; mono labels keep IBM Plex Mono 500.
+ */
+
+.page {
+  --font-ui: 'Space Grotesk', 'Be Vietnam Pro', system-ui, sans-serif;
+  --ink: #170002;
+  --muted: #534041;
+  --faint: #8e7677;
+  --accent-strong: #b91610;
+  --line: #e3dddd;
+  --control-line: #cfc5c5;
+  --control-fill: #f7f5f5;
+
+  min-height: 100vh;
+  background: var(--hub-canvas);
+  color: var(--ink);
+  font-family: var(--font-ui);
+}
+
+/* Focused wizard header: 64px band + 1px rule, progress centred on the page. */
+.header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4.0625rem;
+  padding: 0 2.75rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--hub-surface);
+}
+
+.wordmark {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.375rem;
+}
+
+.progress {
+  position: absolute;
+  top: 1.1875rem;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.stepLabel {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.bars {
+  display: flex;
+  gap: 0.375rem;
+  margin: 0.4375rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bar {
+  width: 6rem;
+  height: 0.25rem;
+  border-radius: 0.125rem;
+  background: var(--line);
+}
+
+.bar[data-state='current'] {
+  background: var(--hub-primary);
+}
+
+.bar[data-state='done'] {
+  background: var(--hub-burgundy);
+}
+
+.headerAction {
+  display: flex;
+}
+
+.headerLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--accent-strong);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.main {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem 6rem;
+}
+
+.card {
+  width: 52.5rem;
+  max-width: 100%;
+  --unresolved-border-surface: var(--line);
+  --unresolved-radius-surface: 0.875rem;
+  --unresolved-shadow-surface: 0 0.5rem 1.875rem
+    color-mix(in srgb, var(--hub-burgundy) 6%, transparent);
+  --unresolved-space-surface: 2.5rem;
+  --unresolved-radius-control: 0.5rem;
+  --unresolved-border-control: var(--control-line);
+  --unresolved-fill-control: var(--control-fill);
+  --unresolved-fg-placeholder: #a79b9b;
+  --unresolved-space-control-x: 0.875rem;
+  --unresolved-space-input-y: 0.8125rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 2.25rem;
+}
+
+.lede {
+  margin: 0.625rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+  color: var(--muted);
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.09em;
+  color: var(--faint);
+}
+
+.notice {
+  margin-top: 1rem;
+}
+
+/* Step 1 — type cards. */
+.typeGroup {
+  margin-top: 1.6875rem;
+}
+
+.types {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.625rem;
+}
+
+.typeCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 6.0625rem;
+  padding: 1.0625rem 1rem 0.8125rem 1.0625rem;
+  border: 1.5px solid var(--line);
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+  cursor: pointer;
+}
+
+.typeCard[data-checked='true'] {
+  border-color: var(--hub-primary);
+  background: #fef3f1;
+}
+
+.typeCard:has(:disabled) {
+  cursor: default;
+}
+
+.radio {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: -0.0625rem 0 0;
+  border: 1.5px solid var(--control-line);
+  border-radius: 50%;
+  background: var(--hub-surface);
+  appearance: none;
+  cursor: inherit;
+}
+
+.radio:checked {
+  border-color: var(--hub-primary);
+  background: radial-gradient(circle, var(--hub-primary) 0 0.28rem, var(--hub-surface) 0.3rem);
+}
+
+.radio:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.typeTitle {
+  display: block;
+  font-size: 1.03125rem;
+  line-height: 1.375rem;
+  letter-spacing: -0.01em;
+}
+
+.typeBody {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+
+.note {
+  margin: 0.625rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  color: var(--muted);
+}
+
+/* Step 1 — fields. */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.0625rem;
+  margin-top: 1.875rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  margin: 0 0 0.3125rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.125rem;
+}
+
+.field :global(.ui-input),
+.invite :global(.ui-input) {
+  height: 2.9375rem;
+  font-size: 0.9375rem;
+}
+
+.picker,
+.select {
+  display: flex;
+  align-items: center;
+  height: 2.9375rem;
+  padding: 0 2.25rem 0 0.9375rem;
+  border: 1px solid var(--control-line);
+  border-radius: 0.5rem;
+  background: var(--control-fill)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 5'%3E%3Cpath d='M0 0h8L4 5z' fill='%23534041'/%3E%3C/svg%3E")
+    no-repeat right 1.125rem center / 0.375rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--ink);
+  text-align: left;
+  appearance: none;
+  cursor: pointer;
+}
+
+.picker:focus-visible,
+.select:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.required {
+  margin-left: 0.1875rem;
+  color: var(--accent-strong);
+}
+
+.placeholder {
+  color: #a79b9b;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 62.5rem;
+  background: var(--hub-surface);
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--hub-primary);
+  background: var(--hub-primary);
+}
+
+.chip:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.hint {
+  margin: 0.375rem 0 0;
+  font-size: 0.71875rem;
+  line-height: 1rem;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--accent-strong);
+}
+
+/* Footer: rule, then back / cancel left and the forward actions right. */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  padding-top: 1.375rem;
+  border-top: 1px solid var(--line);
+}
+
+.footerEnd {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: auto;
+}
+
+.footer :global(.ui-button) {
+  height: 2.8125rem;
+  padding: 0 1.375rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  white-space: nowrap;
+}
+
+.footer :global(.ui-button[data-variant='primary']) {
+  color: var(--hub-burgundy);
+}
+
+.footer :global(.ui-button[data-variant='secondary']),
+.cancel {
+  height: 2.9375rem;
+  border-color: var(--control-line);
+  text-decoration: none;
+}
+
+.textAction {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--accent-strong);
+  cursor: pointer;
+}
+
+.headerLink:focus-visible,
+.textAction:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.saved {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+
+/* Step 2 — invite row and team list. */
+.invite {
+  margin-top: 1.375rem;
+}
+
+.inviteRow .label {
+  margin-bottom: 0.5rem;
+}
+
+.inviteRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6875rem;
+}
+
+.inviteEmail {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.inviteRole {
+  display: flex;
+  flex-direction: column;
+  width: 13.5rem;
+}
+
+.inviteRow :global(.ui-button) {
+  height: 2.8125rem;
+  margin-bottom: 0.0625rem;
+  padding: 0 1.375rem;
+  background: var(--hub-burgundy);
+  color: var(--hub-surface);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.inviteNote {
+  margin: 1.625rem 0 0;
+  padding: 0.875rem;
+  border-radius: 0.5rem;
+  background: var(--control-fill);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+
+.teamHead {
+  margin-top: 1.75rem;
+  padding-bottom: 0.1875rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.teamList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.teamRow {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 4.0625rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.teamRow:last-child {
+  border-bottom: 0;
+}
+
+.avatar {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: #d4cbcb;
+}
+
+.avatarOwner {
+  background: var(--hub-burgundy);
+}
+
+.person {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.375rem;
+}
+
+.rowChips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.0625rem 0.625rem;
+  border: 1px solid transparent;
+  border-radius: 62.5rem;
+  background: var(--control-fill);
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.rowChips .pill {
+  padding-block: 0.1875rem;
+}
+
+.pillDark {
+  background: var(--hub-burgundy);
+  color: var(--hub-surface);
+}
+
+.pillYou {
+  background: #fef3f1;
+  color: var(--accent-strong);
+}
+
+.pillPending {
+  border-color: var(--control-line);
+  background: var(--hub-surface);
+}
+
+.pillPending::before,
+.pillStatus::before {
+  content: '';
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: #8e7677;
+}
+
+.pillAlert {
+  background: #fef3f1;
+  color: var(--accent-strong);
+}
+
+/* Step 3 — created. */
+.doneDisc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: var(--hub-primary);
+}
+
+.doneDisc svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: var(--hub-burgundy);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.doneTitle {
+  margin-top: 1.6875rem;
+  font-size: 1.875rem;
+}
+
+.doneChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.6875rem 0 0;
+}
+
+.doneChips + .lede {
+  margin-top: 0.6875rem;
+}
+
+.nextList {
+  margin: 1.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nextCard {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-height: 6.625rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.625rem;
+}
+
+.nextIndex {
+  flex: none;
+  width: 2.0625rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--accent-strong);
+}
+
+.nextText {
+  flex: 1;
+  min-width: 0;
+}
+
+.nextTitle {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+}
+
+.nextBody {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+
+.nextCard :global(.ui-button) {
+  flex: none;
+  height: 2.75rem;
+  padding: 0 1.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--hub-burgundy);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Below desktop the header stacks its progress and the rows wrap. */
+@media (max-width: 767px) {
+  .header {
+    flex-wrap: wrap;
+    height: auto;
+    row-gap: 0.625rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .progress {
+    position: static;
+    order: 1;
+    width: 100%;
+    transform: none;
+  }
+
+  .stepLabel {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .bar {
+    width: 30%;
+  }
+
+  .bars {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .main {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .card {
+    --unresolved-space-surface: 1.5rem;
+  }
+
+  .types {
+    grid-template-columns: 1fr;
+  }
+
+  .inviteRow,
+  .teamRow,
+  .nextCard {
+    flex-wrap: wrap;
+  }
+
+  .inviteRole {
+    width: 100%;
+  }
+
+  .inviteEmail {
+    flex-basis: 100%;
+  }
+
+  .teamRow,
+  .nextCard {
+    padding-block: 0.75rem;
+    row-gap: 0.5rem;
+  }
+
+  /* Chips and the next action drop under the text instead of squeezing it. */
+  .teamRow .person {
+    flex: 1 1 calc(100% - 3.125rem);
+  }
+
+  .rowChips {
+    justify-content: flex-start;
+    margin-left: 3.125rem;
+  }
+
+  .nextText {
+    flex: 1 1 calc(100% - 2.0625rem);
+  }
+
+  .nextCard :global(.ui-button) {
+    margin-left: 2.0625rem;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+  }
+
+  .footerEnd {
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+}

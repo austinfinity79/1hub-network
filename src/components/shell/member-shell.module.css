@@ -145,8 +145,9 @@
   margin-top: 1.75rem;
 }
 
-/* WF05-S01: opt-in adaptation below desktop (the WF05 demo only; the WF02
-   member screens keep the desktop frame). 1440 is unchanged. */
+/* WF05-S01: opt-in adaptation below desktop (the WF05 demo and, since TASK
+   22.3, the L11 settings overview; the other WF02 member screens keep the
+   desktop frame). 1440 is unchanged. */
 @media (max-width: 1023px) {
   .responsive .header {
     padding: 0 1.5rem;

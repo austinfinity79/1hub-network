@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useRef, useState, type FormEvent } from 'react'
 
 import { EditorHeader } from '@/components/shell/editor-header'
@@ -11,8 +10,9 @@ import { apiRequest } from '@/lib/api/client'
 import styles from './venture.module.css'
 
 /**
- * WF02-S05 — Project/Startup editor for /projects/new and /projects/:id/edit
- * (DEC-WF02-H6/H7, DEC-WF02-S05-G1..G5, DEC-WF02-S05-D1..D3).
+ * WF02-S05 — Project/Startup editor for /projects/:id/edit (DEC-WF02-H6/H7,
+ * DEC-WF02-S05-G1..G5, DEC-WF02-S05-D1..D3). Creation is the /projects/new
+ * wizard since TASK 22.3 (DEC-L2-D2), over the same POST /ventures.
  *
  * The approved editor header plus ONE canonical form (G1 addendum): Loại,
  * Tên, Tóm tắt, Lĩnh vực (DOMAIN), Tỉnh / Thành phố (REGION), "Lưu". The
@@ -44,8 +44,6 @@ const STATUS_LABELS: Record<string, string> = {
 
 /** Copy the approved bitmap does not carry; pending PO copy review (DEC-WF02-S05-D3). */
 const COPY = {
-  newTitle: 'Dự án / startup mới',
-  newStatus: 'Chưa lưu',
   save: 'Lưu',
   team: 'Đội ngũ',
   savedAt: 'đã lưu lúc',
@@ -74,20 +72,16 @@ export function VentureEditor({
   regions,
   domains,
 }: {
-  /** Null on /projects/new. */
-  venture: VentureView | null
+  venture: VentureView
   regions: Option[]
   domains: Option[]
 }) {
-  const router = useRouter()
-  const creating = venture === null
-  const editable = creating || venture.can_edit
-  const [type, setType] = useState<'PROJECT' | 'STARTUP' | ''>(venture?.type ?? '')
-  const [name, setName] = useState(venture?.name ?? '')
-  const [summary, setSummary] = useState(venture?.summary ?? '')
-  const [regionId, setRegionId] = useState(venture?.region_id ?? '')
-  const [selected, setSelected] = useState<string[]>(venture?.domain_ids ?? [])
-  const [savedName, setSavedName] = useState(venture?.name ?? '')
+  const editable = venture.can_edit
+  const [name, setName] = useState(venture.name)
+  const [summary, setSummary] = useState(venture.summary)
+  const [regionId, setRegionId] = useState(venture.region_id)
+  const [selected, setSelected] = useState<string[]>(venture.domain_ids)
+  const [savedName, setSavedName] = useState(venture.name)
   const [savedAt, setSavedAt] = useState<string>()
   const [open, setOpen] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
@@ -104,7 +98,6 @@ export function VentureEditor({
     event.preventDefault()
     if (inFlight.current || !editable) return
     const local: Record<string, string> = {}
-    if (creating && !type) local.type = COPY.required
     if (!name.trim()) local.name = COPY.required
     if (Object.keys(local).length > 0) {
       setErrors(local)
@@ -115,14 +108,6 @@ export function VentureEditor({
     setFormError(undefined)
     const body = { name, summary, region_id: regionId || null, domain_ids: selected }
     try {
-      if (creating) {
-        const created = await apiRequest<{ id: string }>('/ventures', {
-          method: 'POST',
-          body: { type, ...body },
-        })
-        router.replace(`/projects/${created.id}/edit`)
-        return
-      }
       const updated = await apiRequest<{ name: string }>(`/ventures/${venture.id}`, {
         method: 'PATCH',
         body,
@@ -155,28 +140,24 @@ export function VentureEditor({
       </p>
     ) : null
 
-  const status = creating
-    ? COPY.newStatus
-    : `${STATUS_LABELS[venture.status] ?? venture.status}${savedAt ? ` · ${COPY.savedAt} ${savedAt}` : ''}`
+  const status = `${STATUS_LABELS[venture.status] ?? venture.status}${savedAt ? ` · ${COPY.savedAt} ${savedAt}` : ''}`
 
   return (
     <form className={styles.page} onSubmit={onSubmit} noValidate data-venture-editor>
       <EditorHeader
-        title={creating ? COPY.newTitle : savedName}
+        title={savedName}
         status={status}
         actions={
           <>
-            {venture ? (
-              // P0-SHELL (DEC-P0-SHELL-D5): the team page of this venture.
-              <Link
-                href={`/projects/${venture.id}/team`}
-                className="ui-button"
-                data-variant="secondary"
-                data-nav="venture-team"
-              >
-                {COPY.team}
-              </Link>
-            ) : null}
+            {/* P0-SHELL (DEC-P0-SHELL-D5): the team page of this venture. */}
+            <Link
+              href={`/projects/${venture.id}/team`}
+              className="ui-button"
+              data-variant="secondary"
+              data-nav="venture-team"
+            >
+              {COPY.team}
+            </Link>
             {editable ? (
               <Button type="submit" loading={saving}>
                 {COPY.save}
@@ -190,7 +171,7 @@ export function VentureEditor({
           {!editable ? (
             <div className={styles.notice} data-state="read-only">
               <Notice>
-                {venture?.status === 'ARCHIVED' ? COPY.readOnlyArchived : COPY.readOnlyMember}
+                {venture.status === 'ARCHIVED' ? COPY.readOnlyArchived : COPY.readOnlyMember}
               </Notice>
             </div>
           ) : null}
@@ -200,7 +181,7 @@ export function VentureEditor({
             </div>
           ) : null}
 
-          <fieldset className={styles.field} disabled={!creating}>
+          <fieldset className={styles.field} disabled>
             <legend className={`type-body-sm weight-semibold ${styles.label}`}>Loại</legend>
             {hint('ve-type-hint', COPY.typeHint)}
             <div className={styles.types} role="radiogroup" aria-describedby="ve-type-hint">
@@ -210,17 +191,13 @@ export function VentureEditor({
                     type="radio"
                     name="venture-type"
                     value={value}
-                    checked={type === value}
-                    onChange={() => {
-                      setType(value)
-                      setErrors((e) => ({ ...e, type: undefined }))
-                    }}
+                    checked={venture.type === value}
+                    readOnly
                   />
                   {TYPE_LABELS[value]}
                 </label>
               ))}
             </div>
-            {fieldError('type')}
           </fieldset>
 
           <section className={styles.field}>

@@ -284,7 +284,8 @@ test.describe('P0-SHELL journeys', () => {
     await expect(page.locator('[data-action-card="project"]')).toBeVisible()
     await page.locator('[data-nav="create-project"]').click()
     await expect(page).toHaveURL('/projects/new')
-    await page.locator('[data-nav="editor-back"]').click()
+    // TASK 22.3: the L13 wizard's way back without saving is its "Huỷ".
+    await page.locator('[data-nav="wizard-cancel"]').click()
     await expect(page).toHaveURL('/me')
     await expect(page.locator('[data-nav="create-project"]')).toHaveAttribute(
       'href',
@@ -382,8 +383,9 @@ test.describe('P0-SHELL session, errors and authorization', () => {
     await login(page, 'member@example.test')
     await page.goto('/me')
     await page.goto('/me/settings')
-    // The approved settings screen signs this browser out through "every device";
-    // the current session row carries a pill, not a button.
+    // The settings screen signs this browser out through "every device"; since
+    // TASK 22.3 (L11) the session list opens in place from its summary row.
+    await page.locator('[data-card="sessions"]').getByRole('button', { name: 'Xem' }).click()
     await page.getByRole('button', { name: 'Đăng xuất khỏi mọi thiết bị' }).click()
     await expect(page).toHaveURL(/\/auth$|\/$/)
     // The session endpoint answers a guest with 200 + authenticated=false (frozen contract).

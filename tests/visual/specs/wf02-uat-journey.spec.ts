@@ -236,18 +236,18 @@ test.describe('WF02 UAT — canonical member journey', () => {
     await page.goto('/me', { waitUntil: 'networkidle' })
     await expect(page.locator('main')).toContainText('Chapter 02')
 
-    // HC-WF02-05 / 06: PROJECT and STARTUP through the S05 form.
+    // HC-WF02-05 / 06: PROJECT and STARTUP through the S05 wizard (TASK 22.3).
     const created: Record<string, string> = {}
     for (const [label, name] of [
-      ['Dự án', 'Dự Án UAT'],
+      ['Dự án / ý tưởng', 'Dự Án UAT'],
       ['Startup', 'Startup UAT'],
     ] as const) {
       await page.goto('/projects/new', { waitUntil: 'networkidle' })
       await page.getByRole('radio', { name: label }).check()
       await page.locator('#ve-name').fill(name)
-      await page.getByRole('button', { name: 'Lưu', exact: true }).click()
-      await expect(page).toHaveURL(/\/projects\/[0-9a-f-]{36}\/edit$/)
-      created[name] = page.url().split('/').slice(-2)[0]!
+      await page.getByRole('button', { name: 'Tiếp tục · Mời đội ngũ' }).click()
+      await expect(page).toHaveURL(/\/projects\/new\?venture=[0-9a-f-]{36}&step=team$/)
+      created[name] = new URL(page.url()).searchParams.get('venture')!
     }
     const ventures = await query<{ type: string; status: string; members: number }>(
       `SELECT p.type::text AS type, p.status::text AS status,
@@ -262,6 +262,7 @@ test.describe('WF02 UAT — canonical member journey', () => {
     expect(await completion(page.request)).toBe(percent)
     // Canonical edit; type stays fixed.
     const startup = created['Startup UAT']!
+    await page.goto(`/projects/${startup}/edit`, { waitUntil: 'networkidle' })
     await page.locator('#ve-name').fill('Startup UAT 2')
     await page.getByRole('button', { name: 'Lưu', exact: true }).click()
     await expect(page.locator('[data-status]')).toContainText('đã lưu lúc')
@@ -355,6 +356,8 @@ test.describe('WF02 UAT — canonical member journey', () => {
     await signIn(secondPage, ownerEmail)
     await expect(secondPage).toHaveURL('/me')
     await page.goto('/me/settings', { waitUntil: 'networkidle' })
+    // L11 (TASK 22.3): the session list opens in place from its summary row.
+    await page.locator('[data-card="sessions"]').getByRole('button', { name: 'Xem' }).click()
     await expect(page.locator('[data-session="current"]')).toHaveCount(1)
     await expect(page.locator('[data-session="other"]')).toHaveCount(1)
     const listed = await (await page.request.get('/api/v1/me/sessions')).json()
@@ -368,7 +371,7 @@ test.describe('WF02 UAT — canonical member journey', () => {
     // HC-WF02-12: deletion REQUEST only; nothing else changes; duplicate is canonical.
     const before = await footprint(owner.account_id, owner.profile_id)
     const danger = page.locator('[data-card="danger"]')
-    await danger.getByRole('button', { name: 'Yêu cầu xoá tài khoản' }).click()
+    await danger.getByRole('button', { name: 'Gửi yêu cầu' }).click()
     await danger.getByRole('button', { name: 'Xác nhận gửi yêu cầu' }).click()
     await expect(page.locator('[data-state="deletion-requested"]')).toBeVisible()
     const again = await page.request.post('/api/v1/me/account-deletion-request')

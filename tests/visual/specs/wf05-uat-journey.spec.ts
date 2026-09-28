@@ -326,12 +326,14 @@ async function ownerJourney(page: Page, kind: Kind, id: string) {
   // The canonical venture is created in WF02, then WF05 is entered again from MemberShell.
   await page.locator('[data-nav="create-project"]').click()
   await expect(page).toHaveURL('/projects/new')
-  await page.getByRole('radio', { name: kind.label }).check()
+  await page
+    .getByRole('radio', { name: kind.type === 'PROJECT' ? 'Dự án / ý tưởng' : 'Startup' })
+    .check()
   await page.locator('#ve-name').fill(name)
-  await page.getByRole('button', { name: 'Lưu', exact: true }).click()
-  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]{36}\/edit$/)
-  const ventureId = page.url().split('/').slice(-2)[0]!
-  await page.locator('[data-nav="editor-back"]').click()
+  await page.getByRole('button', { name: 'Tiếp tục · Mời đội ngũ' }).click()
+  await expect(page).toHaveURL(/\/projects\/new\?venture=[0-9a-f-]{36}&step=team$/)
+  const ventureId = new URL(page.url()).searchParams.get('venture')!
+  await page.locator('[data-nav="wizard-exit"]').click()
   await expect(page).toHaveURL('/me')
   log.step(
     page,

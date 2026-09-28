@@ -1,27 +1,18 @@
-import path from 'node:path'
-
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { decodePng, readPng } from '../pixel-qa/png'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect } from '../pixel-qa/segments'
+import { auditRevision } from '../pixel-qa/revision'
 
 /**
  * WF02-S07 — Settings / Sessions / Account Deletion Request (/me/settings).
- * Decisions DEC-WF02-H8, DEC-WF02-S07-G1..G6, DEC-WF02-S07-D1..D3.
+ * Decisions DEC-WF02-H8, DEC-WF02-S07-G1..G6, DEC-WF02-S07-D1..D3; the page is
+ * the corrected L11 ME0 overview subset (TASK 22.3, DEC-L2-D1).
  */
 
 const REGION = '20000000-0000-0000-0000-000000000002'
 const DOMAIN = '20000000-0000-0000-0000-000000000011'
 const SESSIONS = '/api/v1/me/sessions'
 const DELETION = '/api/v1/me/account-deletion-request'
-/** Seeded persona member@example.test (seed_p0_deterministic.sql). */
-const MEMBER_ACCOUNT = '30000000-0000-0000-0000-000000000001'
 
 let consoleErrors: string[] = []
 
@@ -94,9 +85,11 @@ async function otherDevice(playwright: RequestFactory, email: string) {
 
 const sessionsCard = (page: Page) => page.locator('[data-card="sessions"]')
 
+/** L11 (TASK 22.3): the session list opens in place from the sessions row. */
 async function openSettings(page: Page) {
   await page.goto('/me/settings', { waitUntil: 'networkidle' })
   await expect(sessionsCard(page)).toHaveAttribute('aria-busy', 'false')
+  await sessionsCard(page).getByRole('button', { name: 'Xem' }).click()
 }
 
 test.describe('WF02-S07 guards', () => {
@@ -156,7 +149,7 @@ test.describe('WF02-S07 sessions', () => {
       baseURL: test.info().project.use.baseURL,
     })
     await completedMember(stranger, 's07-stranger')
-    await page.reload({ waitUntil: 'networkidle' })
+    await openSettings(page)
     await expect(sessionsCard(page).locator('li')).toHaveCount(3)
     await expect(sessionsCard(page).locator('li').first()).toHaveAttribute(
       'data-session',
@@ -277,6 +270,7 @@ test.describe('WF02-S07 sessions', () => {
       .locator('[data-state="sessions-failed"]')
       .getByRole('button', { name: 'Thử lại' })
       .click()
+    await sessionsCard(page).getByRole('button', { name: 'Xem' }).click()
     await expect(sessionsCard(page).locator('li')).toHaveCount(1)
   })
 })
@@ -288,14 +282,14 @@ test.describe('WF02-S07 deletion request', () => {
     const m = await completedMember(page.request)
     await openSettings(page)
     const danger = page.locator('[data-card="danger"]')
-    await danger.getByRole('button', { name: 'Yêu cầu xoá tài khoản' }).click()
+    await danger.getByRole('button', { name: 'Gửi yêu cầu' }).click()
     // Cancel sends nothing.
     await danger.getByRole('button', { name: 'Huỷ' }).click()
     expect(
       await query('SELECT 1 FROM account_deletion_requests WHERE account_id = $1', [m.accountId]),
     ).toHaveLength(0)
 
-    await danger.getByRole('button', { name: 'Yêu cầu xoá tài khoản' }).click()
+    await danger.getByRole('button', { name: 'Gửi yêu cầu' }).click()
     const res = page.waitForResponse((r) => r.url().endsWith(DELETION))
     await danger.getByRole('button', { name: 'Xác nhận gửi yêu cầu' }).click()
     const first = await res
@@ -349,139 +343,112 @@ test.describe('WF02-S07 deletion request', () => {
       }),
     )
     const danger = page.locator('[data-card="danger"]')
-    await danger.getByRole('button', { name: 'Yêu cầu xoá tài khoản' }).click()
+    await danger.getByRole('button', { name: 'Gửi yêu cầu' }).click()
     await danger.getByRole('button', { name: 'Xác nhận gửi yêu cầu' }).click()
     await expect(danger.getByRole('alert')).toContainText('Chưa gửi được yêu cầu')
     await expect(danger.getByRole('button', { name: 'Xác nhận gửi yêu cầu' })).toBeVisible()
   })
 })
 
-test.describe('WF02-S07 pixel QA', () => {
-  test('viewport against the approved reference (shell, login card top, sessions card head)', async ({
+test.describe('WF02-S07 pixel QA (corrected L11 ME0 subset)', () => {
+  const REFERENCE = 'design-reference/final/revision/L2/L11__me-settings__SOURCE.png'
+  /** L11, measured once: title box, card tops, the sessions row top (row 3). */
+  const REF = {
+    title: { x: 406, y: 88 },
+    account: 171,
+    sessions: 349,
+    visibility: 444,
+    danger: 1803,
+  }
+  const RIGHT = 1320
+
+  test('1440×900 full page: head, account card, sessions row, visibility, closing card', async ({
     page,
   }) => {
-    const { screens } = loadManifest()
-    const screen = findScreen(screens, 'WF02-S07')
-    const reports = await runScreenQa(page, screen, qaConfigFor('WF02-S07')!, {
-      // Test-only state: the seeded member keeps sessions from earlier specs;
-      // leave only the one this run just created, and no deletion request.
-      beforeNavigate: async () => {
-        await query(
-          `UPDATE user_sessions SET revoked_at = now()
-            WHERE account_id = $1 AND revoked_at IS NULL
-              AND id <> (SELECT id FROM user_sessions WHERE account_id = $1 ORDER BY created_at DESC LIMIT 1)`,
-          [MEMBER_ACCOUNT],
-        )
-        await query('DELETE FROM account_deletion_requests WHERE account_id = $1', [MEMBER_ACCOUNT])
-      },
-      afterLoad: async (p) => {
-        await expect(p.locator('[data-card="sessions"] li')).toHaveCount(1)
-      },
-    })
-    const viewport = reports.find((r) => r.capture === 'viewport')!
-    expect(viewport.typography?.violations).toEqual([])
-
-    const actual = decodePng(await page.screenshot({ animations: 'disabled' }))
-    const textMask: Rect[] = await page.evaluate(() => {
-      const rects: { x: number; y: number; width: number; height: number }[] = []
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-      while (walker.nextNode()) {
-        if (!walker.currentNode.textContent!.trim()) continue
-        const range = document.createRange()
-        range.selectNodeContents(walker.currentNode)
-        for (const r of range.getClientRects())
-          rects.push({ x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 })
-      }
-      for (const svg of document.querySelectorAll('header svg')) {
-        const r = svg.getBoundingClientRect()
-        rects.push({ x: r.x - 1, y: r.y - 1, width: r.width + 2, height: r.height + 2 })
-      }
-      return rects
-    })
-    const sessionsTop = Math.round(
-      (await page.locator('[data-card="sessions"] section').boundingBox())!.y,
-    )
-    const dy = sessionsTop - 405
-    const REF_TEXT: Rect[] = [
-      { x: 60, y: 18, width: 400, height: 24 },
-      { x: 1236, y: 18, width: 100, height: 24 },
-      { x: 60, y: 88, width: 110, height: 18 },
-      ...[0, 1, 2, 3, 4, 5, 6].map((i) => ({ x: 74, y: 128 + 44 * i, width: 180, height: 26 })),
-      { x: 336, y: 94, width: 230, height: 36 },
-      { x: 362, y: 168, width: 320, height: 70 },
-      ...[
-        { x: 362, y: 429, width: 100, height: 20 },
-        { x: 1178, y: 428, width: 176, height: 22 },
-        { x: 362, y: 457, width: 320, height: 44 },
-        { x: 1296, y: 470, width: 48, height: 16 },
-      ].map((r) => ({ ...r, y: r.y + dy })),
-    ]
-    // INTENTIONAL-P0-SCOPE: "Đổi email" (email change) and the bell.
-    const OMITTED: Rect[] = [
-      { x: 1254, y: 192, width: 102, height: 46 },
-      { x: 1196, y: 16, width: 36, height: 28 },
-    ]
-    const reference = readPng(path.join(REPO_ROOT, screen.viewport_baseline))
-    const diffPath = resolveOutputPath('diff', 'WF02-S07.segments.diff.png')
-    const results = compareSegments(
-      reference,
-      actual,
-      [
+    await completedMember(page.request, 's07-px')
+    await page.goto('/me/settings', { waitUntil: 'networkidle' })
+    await expect(sessionsCard(page)).toHaveAttribute('aria-busy', 'false')
+    await expect(page.locator('[data-visibility]')).toBeVisible()
+    const box = (selector: string) =>
+      page
+        .locator(selector)
+        .first()
+        .evaluate((el) => {
+          const r = el.getBoundingClientRect()
+          return { x: Math.round(r.x), y: Math.round(r.y + scrollY), right: Math.round(r.right) }
+        })
+    const title = await box('main h1')
+    const account = await box('[data-card="account"]')
+    const sessions = await box('[data-card="sessions"]')
+    const visibility = await box('[data-card="visibility"]')
+    const danger = await box('[data-card="danger"]')
+    const dx = account.x - REF.title.x
+    await auditRevision(page, {
+      name: 'WF02-S07.L11',
+      reference: REFERENCE,
+      full: true,
+      segments: [
         {
-          name: 'shell+title+login-top',
-          reference: { x: 0, y: 0, width: 1440, height: 262 },
-          dy: 0,
+          name: 'head',
+          reference: { x: 400, y: 84, width: 340, height: 72 },
+          dx: title.x - REF.title.x,
+          dy: title.y - REF.title.y,
         },
-        { name: 'sessions-head', reference: { x: 330, y: 396, width: 1060, height: 128 }, dy },
-        { name: 'sidebar-rest', reference: { x: 0, y: 262, width: 330, height: 638 }, dy: 0 },
+        {
+          name: 'account-head',
+          reference: { x: 400, y: 165, width: 470, height: 80 },
+          dx,
+          dy: account.y - REF.account,
+        },
+        {
+          name: 'sessions-title',
+          reference: { x: 420, y: 352, width: 260, height: 36 },
+          dx,
+          dy: sessions.y - REF.sessions,
+        },
+        {
+          name: 'sessions-action',
+          reference: { x: 1230, y: 352, width: 96, height: 52 },
+          dx: account.right - RIGHT,
+          dy: sessions.y - REF.sessions,
+        },
+        {
+          name: 'visibility-head',
+          reference: { x: 400, y: 438, width: 470, height: 77 },
+          dx,
+          dy: visibility.y - REF.visibility,
+        },
+        {
+          name: 'visibility-action',
+          reference: { x: 1230, y: 490, width: 96, height: 50 },
+          dx: visibility.right - RIGHT,
+          dy: visibility.y - REF.visibility,
+        },
+        {
+          name: 'closing-head',
+          reference: { x: 400, y: 1797, width: 470, height: 79 },
+          dx,
+          dy: danger.y - REF.danger,
+        },
       ],
-      [...textMask, ...REF_TEXT, ...OMITTED],
-      { diffPath },
-    )
-    writeJsonReport('WF02-S07.segments.json', {
-      screen_id: 'WF02-S07',
-      state: qaConfigFor('WF02-S07')!.state,
       intentional: [
         {
-          class: 'INTENTIONAL-P0-SCOPE',
-          reference_region: OMITTED[0],
-          reason: 'DEC-WF02-H8: "Đổi email" not rendered',
-        },
-        {
-          class: 'INTENTIONAL-P0-SCOPE',
-          reference_region: { x: 340, y: 262, width: 1036, height: 70 },
+          class: 'INTENTIONAL-SHELL',
           reason:
-            'DEC-WF02-H8: Google linking row not rendered; login card shorter (sessions card dy)',
-          vertical_effect_px: dy,
+            'HD-11 / DEC-L2-D1: the member shell (header, "Tài khoản của tôi" sidebar) stays; the reference settings sidebar is a shell change',
         },
         {
-          class: 'INTENTIONAL-P0-SCOPE',
-          reference_region: { x: 340, y: 715, width: 1036, height: 355 },
-          reason: 'DEC-WF02-H8: email notification preferences not rendered',
-        },
-        {
-          class: 'INTENTIONAL-CONTRACT',
+          class: 'INTENTIONAL-SCOPE',
           reason:
-            'DEC-WF02-H8 / S07-D1: session rows show stored start/expiry only, never browser/OS/city; one session in the fixture',
+            'DEC-L2-D1: Bucket B / Future rows omitted (email change, Google, HUB tags, public URL, view-as, purpose consents, viewer stats, personal log, export, email preferences, invitations, organisations, transfer)',
         },
         {
-          class: 'INTENTIONAL-CONTRACT',
+          class: 'INTENTIONAL-DATA',
           reason:
-            'DEC-WF02-S07-G3: deletion request enabled with confirmation; transfer button and owner warning omitted (P0 scope); request-only wording',
+            "summaries show this account's own data (email, session count, visibility, consent)",
         },
-        {
-          class: 'INTENTIONAL-P0-SCOPE',
-          reference_region: OMITTED[1],
-          reason: 'DEC-WF02-H9/H10: bell counter omitted; SVG bell',
-        },
-        {
-          class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
-          reason: 'text glyphs masked; DOM typography contract asserted',
-        },
+        { class: 'INTENTIONAL-SCOPE', reason: 'HD-11: no floating "Góp ý" button' },
       ],
-      segments: results,
-      product_pixel_pass_claimed: false,
     })
-    for (const r of results) expect(r.outside_ratio, `${r.name} drift`).toBeLessThan(0.002)
   })
 })
