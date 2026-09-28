@@ -1,19 +1,12 @@
-import path from 'node:path'
-
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { decodePng, readPng } from '../pixel-qa/png'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect } from '../pixel-qa/segments'
+import { auditRevision } from '../pixel-qa/revision'
 
 /**
  * WF03-S02 — organization dashboard (/ops/org/:orgId).
- * API 05 §8.2; DEC-WF03-G1/G11/G15; DEC-WF03-S02-D1..D3.
+ * API 05 §8.2; DEC-WF03-G1/G11/G15; DEC-WF03-S02-D1..D3; the page is the
+ * corrected L20 CHP1 subset (TASK 22.4, DEC-L3-D2).
  */
 
 const HUB = '10000000-0000-0000-0000-000000000001'
@@ -184,140 +177,119 @@ test.describe('WF03-S02 states', () => {
   })
 })
 
-test.describe('WF03-S02 pixel QA', () => {
-  test('components against the approved reference (drawn without a sidebar)', async ({ page }) => {
-    const { screens } = loadManifest()
-    const screen = findScreen(screens, 'WF03-S02')
-    const reports = await runScreenQa(page, screen, qaConfigFor('WF03-S02')!, {
-      afterLoad: async (p) => {
-        await expect(p.locator('[data-work-item="pending_memberships"]')).toBeVisible()
-      },
-    })
-    const viewport = reports.find((r) => r.capture === 'viewport')!
-    const full = reports.find((r) => r.capture === 'full_page')!
-    expect(viewport.typography?.violations).toEqual([])
-    expect(full.full_page_rule).toBe('CROP_TO_REFERENCE_HEIGHT')
-    // Below the 782px reference only the OpsShell sidebar continues (T00-D1).
-    const bbox = full.below_reference!.unexpected_bbox
-    if (bbox) expect(bbox.x + bbox.width, 'UI below the reference').toBeLessThanOrEqual(216)
+test.describe('WF03-S02 header action (DEC-L3-D2)', () => {
+  test('"Tạo sự kiện" for event:manage opens the events create panel; the work chip names the unit', async ({
+    page,
+  }) => {
+    await login(page.request, 'leader@example.test')
+    await page.goto(`/ops/org/${CHAPTER_01}`, { waitUntil: 'networkidle' })
+    await expect(page.locator('[data-screen="WF03-S02"] h1')).toHaveText('Chapter 01')
+    const create = page.locator('[data-nav="dashboard-create-event"]')
+    await expect(create).toHaveText('Tạo sự kiện')
+    await expect(create).toHaveAttribute('href', `/ops/org/${CHAPTER_01}/events?create=1`)
+    await expect(page.locator('[data-work-item="pending_memberships"]')).toContainText(
+      'Chờ chapter',
+    )
+    // No summit button, scope notice or capability chips (S02-D1, HD-08).
+    await expect(page.getByText('Tạo summit mới')).toHaveCount(0)
+    await expect(page.getByText(/phạm vi quyền/)).toHaveCount(0)
+  })
+})
 
-    const actual = decodePng(await page.screenshot({ animations: 'disabled' }))
-    const kpi = (await page.locator('[data-metric="active_members"]').boundingBox())!
-    const work = (await page.locator('[data-card="work"]').boundingBox())!
-    const chip = (await page.locator('[data-work-item] span').first().boundingBox())!
-    const act = (await page.getByRole('link', { name: 'Làm ngay' }).boundingBox())!
-    const textMask: Rect[] = await page.evaluate(() => {
-      const rects: { x: number; y: number; width: number; height: number }[] = []
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-      while (walker.nextNode()) {
-        if (!walker.currentNode.textContent!.trim()) continue
-        const range = document.createRange()
-        range.selectNodeContents(walker.currentNode)
-        for (const r of range.getClientRects())
-          rects.push({ x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 })
-      }
-      return rects
-    })
-    const dx = 216
-    const kpiDy = Math.round(kpi.y) - 236
-    const workDy = Math.round(work.y) - 403
-    const chipDx = Math.round(chip.x) - 729
-    const chipDy = Math.round(chip.y) - 461
-    const actDx = Math.round(act.x) - 830
-    const actDy = Math.round(act.y) - 457
-    // Reference text boxes (in reference coordinates), shifted like their segment.
-    const REF = {
-      header: [{ x: 44, y: 18, width: 300, height: 48 }],
-      kpi: [
-        { x: 66, y: 254, width: 150, height: 18 },
-        { x: 66, y: 290, width: 60, height: 32 },
-        { x: 66, y: 338, width: 150, height: 22 },
-      ],
-      work: [
-        { x: 68, y: 423, width: 120, height: 22 },
-        { x: 68, y: 455, width: 320, height: 42 },
-      ],
-      chip: [{ x: 740, y: 466, width: 64, height: 18 }],
-      act: [{ x: 842, y: 466, width: 72, height: 18 }],
+test.describe('WF03-S02 pixel QA (corrected L20 CHP1 subset)', () => {
+  const REFERENCE = 'design-reference/final/revision/L3/L20__chapter-dashboard__SOURCE.png'
+  /** L20 is drawn without a sidebar: the left column moves by the 216px OpsShell. */
+  const LEFT = 216
+  /** L20, measured once: KPI and work card tops, the work label, a "Chờ chapter" chip. */
+  const REF = { kpi: 187, work: 360, label: { x: 997 }, chip: { x: 1087, y: 552 }, create: 1100 }
+
+  test('1440×900: header, KPI card frame, work card head, chip, header action', async ({
+    page,
+  }) => {
+    await login(page.request, 'leader@example.test')
+    await page.goto(`/ops/org/${CHAPTER_01}`, { waitUntil: 'networkidle' })
+    await expect(page.locator('[data-work-item="pending_memberships"]')).toBeVisible()
+    const box = async (selector: string) => {
+      const b = (await page.locator(selector).first().boundingBox())!
+      return { x: Math.round(b.x), y: Math.round(b.y), right: Math.round(b.x + b.width) }
     }
-    const shift = (rects: Rect[], x: number, y: number) =>
-      rects.map((r) => ({ ...r, x: r.x + x, y: r.y + y }))
-    const reference = readPng(path.join(REPO_ROOT, screen.viewport_baseline))
-    const results = compareSegments(
-      reference,
-      actual,
-      [
-        { name: 'header-band', reference: { x: 0, y: 0, width: 700, height: 90 }, dy: 0, dx },
-        { name: 'kpi-card', reference: { x: 44, y: 232, width: 250, height: 151 }, dy: kpiDy, dx },
+    const kpi = await box('[data-metric="active_members"]')
+    const work = await box('[data-card="work"]')
+    const chip = await box('[data-work-item] [class*="chip"]')
+    const create = await box('[data-nav="dashboard-create-event"]')
+    const dyKpi = kpi.y - REF.kpi
+    const dyWork = work.y - REF.work
+    await auditRevision(page, {
+      name: 'WF03-S02.L20',
+      reference: REFERENCE,
+      segments: [
+        // "Chapter" and "Bảng điều khiển ·" are common to both headers.
+        { name: 'title', reference: { x: 44, y: 18, width: 66, height: 30 }, dx: LEFT, dy: 0 },
+        { name: 'subtitle', reference: { x: 44, y: 46, width: 100, height: 22 }, dx: LEFT, dy: 0 },
         {
-          name: 'work-card-head',
-          reference: { x: 44, y: 399, width: 420, height: 104 },
-          dy: workDy,
-          dx,
+          name: 'header-rule',
+          reference: { x: 400, y: 70, width: 600, height: 30 },
+          dx: LEFT,
+          dy: 0,
+        },
+        {
+          name: 'create-event',
+          reference: { x: 1094, y: 14, width: 138, height: 56 },
+          dx: create.x - REF.create,
+          dy: 0,
+        },
+        {
+          name: 'kpi-left-edge',
+          reference: { x: 42, y: 181, width: 26, height: 156 },
+          dx: LEFT,
+          dy: dyKpi,
+        },
+        {
+          name: 'kpi-right-edge',
+          reference: { x: 350, y: 181, width: 24, height: 156 },
+          dx: kpi.right - 369,
+          dy: dyKpi,
+        },
+        {
+          name: 'work-label',
+          reference: { x: 990, y: 376, width: 90, height: 34 },
+          dx: work.x + 25 - REF.label.x,
+          dy: dyWork,
+        },
+        {
+          name: 'work-rule',
+          reference: { x: 1000, y: 404, width: 360, height: 18 },
+          dx: work.x + 25 - REF.label.x,
+          dy: dyWork,
         },
         {
           name: 'chip',
-          reference: { x: 725, y: 457, width: 93, height: 36 },
-          dy: chipDy,
-          dx: chipDx,
-        },
-        {
-          name: 'button',
-          reference: { x: 826, y: 453, width: 105, height: 44 },
-          dy: actDy,
-          dx: actDx,
+          reference: { x: 1083, y: 548, width: 90, height: 34 },
+          dx: chip.x - REF.chip.x,
+          dy: chip.y - REF.chip.y,
         },
       ],
-      [
-        ...textMask,
-        ...shift(REF.header, dx, 0),
-        ...shift(REF.kpi, dx, kpiDy),
-        ...shift(REF.work, dx, workDy),
-        ...shift(REF.chip, chipDx, chipDy),
-        ...shift(REF.act, actDx, actDy),
-      ],
-      { diffPath: resolveOutputPath('diff', 'WF03-S02.segments.diff.png') },
-    )
-    writeJsonReport('WF03-S02.segments.json', {
-      screen_id: 'WF03-S02',
-      state: qaConfigFor('WF03-S02')!.state,
-      offsets: { dx, kpiDy, workDy, chipDx, chipDy, actDx, actDy },
-      full_page: { rule: full.full_page_rule, below_reference: full.below_reference },
       intentional: [
         {
-          class: 'INTENTIONAL-CONTRACT',
-          reason:
-            'DEC-WF03-G15: OpsShell sidebar; the reference is drawn full-width, so the frame is compared per component with offsets and card widths follow the narrower content area',
+          class: 'INTENTIONAL-SHELL',
+          reason: 'HD-11 / DEC-L3-D2: OpsShell stays; L20 is drawn without a sidebar',
         },
         {
-          class: 'INTENTIONAL-P0-SCOPE',
-          reference_region: { x: 0, y: 84, width: 1440, height: 129 },
+          class: 'INTENTIONAL-SCOPE',
           reason:
-            'DEC-WF03-G1: capability chip bar and the enterprise scope notice are not rendered',
-        },
-        {
-          class: 'INTENTIONAL-CONTRACT',
-          reason:
-            'DEC-WF03-G1 / S02-D1: KPI cards carry canonical aggregates (Thành viên, Yêu cầu chờ duyệt, Ban điều hành, Sự kiện đã công khai); enterprise KPIs have no P0 source',
-        },
-        {
-          class: 'INTENTIONAL-P0-SCOPE',
-          reference_region: { x: 972, y: 403, width: 420, height: 252 },
-          reason: 'Pilot card (WF04 / WF05) not rendered; the work card spans the content width',
+            'DEC-WF03-S02-D1 / DEC-L3-D2: no scope notice, landing / registration / qualifying KPIs, conversion funnel or "Tạo summit mới"; the four KPI cards carry the canonical aggregates',
         },
         {
           class: 'INTENTIONAL-CONTRACT',
           reason:
-            'One canonical work item (pending membership requests); the drawn enterprise items have no P0 source',
+            'One canonical work item (pending membership requests) with its "Làm ngay" link; the work card spans the content width (no funnel beside it)',
         },
         {
-          class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
-          reason: 'glyphs masked; DOM typography contract asserted',
+          class: 'INTENTIONAL-DATA',
+          reason: 'organization name, unit and counts come from Chapter 01; no actor line',
         },
+        { class: 'INTENTIONAL-SCOPE', reason: 'HD-11: no floating "Góp ý" button' },
       ],
-      segments: results,
-      product_pixel_pass_claimed: false,
     })
-    for (const r of results) expect(r.outside_ratio, `${r.name} drift`).toBeLessThan(0.002)
   })
 })

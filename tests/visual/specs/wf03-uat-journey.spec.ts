@@ -287,6 +287,7 @@ test.describe('WF03 UAT — happy path', () => {
 
     // HC-WF03-15..17: the leader creates, edits and publishes a standalone event.
     await leader.goto(`/ops/org/${CHAPTER_01}/events`, { waitUntil: 'networkidle' })
+    await leader.locator('[data-action="new-event"]').click()
     await leader.locator('#event-name').fill(UAT_EVENT)
     await leader.locator('#event-starts').fill('2031-05-20T09:00')
     await leader.locator('#event-ends').fill('2031-05-20T12:00')

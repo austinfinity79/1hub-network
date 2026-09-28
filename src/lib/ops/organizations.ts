@@ -151,6 +151,7 @@ export type OpsOrganizationContext = {
 const CONTEXT_CAPABILITIES: readonly Capability[] = [
   'org:read',
   'member:read',
+  'membership:confirm',
   'org:manage',
   'event:manage',
   'org:manage_relationship',

@@ -1,21 +1,13 @@
-import path from 'node:path'
-
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { decodePng, readPng } from '../pixel-qa/png'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect } from '../pixel-qa/segments'
+import { auditRevision } from '../pixel-qa/revision'
 
 /**
  * WF03-S07 — standalone Event management (/ops/org/:orgId/events).
  * API 05 §8.6; DEC-WF03-G2/G10/G14; DEC-WF03-S07-EVENT-LIFECYCLE; DEC-WF03-S07-D1..D4.
- * The S07 bitmap is a WF04 collage (not authority): visual QA compares the
- * screen's primitives with the approved WF03 S08 (ADM21) reference.
+ * The S07 bitmap is a WF04 collage (not authority); the page is the corrected
+ * L23 CHP4 subset (TASK 22.4, DEC-L3-D3), which pixel QA compares against.
  */
 
 const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
@@ -245,6 +237,9 @@ test.describe('WF03-S07 lifecycle through the UI', () => {
   }) => {
     await login(page.request, 'leader@example.test')
     await page.goto(PAGE(CHAPTER_01), { waitUntil: 'networkidle' })
+    // DEC-L3-D3: the panel opens on demand, from "Tạo sự kiện".
+    await expect(page.locator('[data-card="create"]')).toHaveCount(0)
+    await page.locator('[data-action="new-event"]').click()
     await expect(page.locator('[data-card="create"]')).toBeVisible()
     await page.locator('#event-name').fill('S07 Chapter Summit')
     await page.locator('#event-starts').fill('2031-03-10T09:00')
@@ -352,108 +347,138 @@ test.describe('WF03-S07 lifecycle through the UI', () => {
   })
 })
 
-async function textRects(page: Page): Promise<Rect[]> {
-  return page.evaluate(() => {
-    const rects: { x: number; y: number; width: number; height: number }[] = []
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-    while (walker.nextNode()) {
-      if (!walker.currentNode.textContent!.trim()) continue
-      const range = document.createRange()
-      range.selectNodeContents(walker.currentNode)
-      for (const r of range.getClientRects())
-        rects.push({ x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 })
-    }
-    return rects
-  })
-}
-
-test.describe('WF03-S07 visual QA (approved WF03 primitives)', () => {
-  test('capture + typography; header, table card and form primitives match ADM21 (S08)', async ({
+test.describe('WF03-S07 status chips and the create panel (DEC-L3-D3)', () => {
+  test('dashboard "Tạo sự kiện" opens the panel; chips group the list by status and time', async ({
     page,
   }) => {
-    const { screens } = loadManifest()
-    const screen = findScreen(screens, 'WF03-S07')
-    const reports = await runScreenQa(page, screen, qaConfigFor('WF03-S07')!, {
-      // Deterministic state: only the seeded events (test-created ones are removed).
-      beforeNavigate: async () => {
-        const mine = `SELECT id FROM events WHERE name LIKE 'S07 %'`
-        await query(`DELETE FROM audit_events WHERE resource_id IN (${mine})`)
-        await query(`DELETE FROM events WHERE id IN (${mine})`)
-      },
-      afterLoad: async (p) => {
-        await expect(p.locator('[data-event]')).toHaveCount(1)
-        await expect(p.locator(`[data-event="${DEMO_EVENT}"]`)).toBeVisible()
-        await expect(p.locator('[data-card="create"]')).toBeVisible()
-      },
-    })
-    const viewport = reports.find((r) => r.capture === 'viewport')!
-    expect(viewport.typography?.violations).toEqual([])
+    await login(page.request, 'leader@example.test')
+    const draft = await (
+      await page.request.post(LIST(CHAPTER_01), {
+        data: { name: 'S07 Chip Draft', starts_at: future(9), ends_at: future(10) },
+      })
+    ).json()
+    await page.goto(`/ops/org/${CHAPTER_01}`, { waitUntil: 'networkidle' })
+    await page.locator('[data-nav="dashboard-create-event"]').click()
+    await expect(page).toHaveURL(`${PAGE(CHAPTER_01)}?create=1`)
+    await expect(page.locator('[data-card="create"]')).toBeVisible()
+    await page.locator('[data-action="close-detail"]').click()
+    await expect(page.locator('[data-card="create"]')).toHaveCount(0)
 
-    const actual = decodePng(await page.screenshot({ animations: 'disabled' }))
-    const s08 = findScreen(screens, 'WF03-S08')
-    const reference = readPng(path.join(REPO_ROOT, s08.viewport_baseline))
-    const button = (await page.locator('[data-action="new-event"]').boundingBox())!
-    expect([Math.round(button.x), Math.round(button.y), Math.round(button.width)]).toEqual([
-      931, 32, 122,
-    ])
-    const card = (await page.locator('[data-card="events"]').boundingBox())!
-    const side = (await page.locator('[data-card="create"]').boundingBox())!
-    expect([Math.round(side.x), Math.round(side.y)]).toEqual([1071, 23])
-    const cardDy = Math.round(card.y) - 401
-    const mask = await textRects(page)
-    // ADM21 text in the compared regions (title, button label, eyebrows, column
-    // labels, form label and select value): moved with its segment.
-    const REF_TEXT: Rect[] = [
-      { x: 238, y: 20, width: 440, height: 58 },
-      { x: 936, y: 38, width: 112, height: 22 },
-      { x: 258, y: 417 + cardDy, width: 780, height: 44 },
-      { x: 1086, y: 40, width: 320, height: 48 },
-      { x: 1096, y: 96, width: 300, height: 26 },
-      { x: 1086, y: 138, width: 320, height: 20 },
-    ]
-    const results = compareSegments(
-      reference,
-      actual,
-      [
-        { name: 'header', reference: { x: 216, y: 0, width: 850, height: 84 }, dy: 0 },
+    const rowsOf = page.locator('[data-event]')
+    const total = await rowsOf.count()
+    await page.locator('[data-filter="draft"]').click()
+    await expect(page.locator('[data-filter="draft"]')).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.locator(`[data-event="${draft.id}"]`)).toBeVisible()
+    for (const status of await rowsOf.evaluateAll((els) => els.map((e) => e.dataset.status)))
+      expect(status).toBe('DRAFT')
+    await page.locator('[data-filter="upcoming"]').click()
+    await expect(page.locator(`[data-event="${DEMO_EVENT}"]`)).toBeVisible()
+    await expect(page.locator(`[data-event="${draft.id}"]`)).toHaveCount(0)
+    for (const status of await rowsOf.evaluateAll((els) => els.map((e) => e.dataset.status)))
+      expect(['PUBLISHED', 'LIVE']).toContain(status)
+    // Pressing the active chip again shows every event.
+    await page.locator('[data-filter="upcoming"]').click()
+    await expect(rowsOf).toHaveCount(total)
+    // A member without event:manage never reaches the page or the panel.
+    await page.context().clearCookies()
+    await login(page.request, 'member@example.test')
+    expect((await page.goto(`${PAGE(CHAPTER_01)}?create=1`))?.status()).toBe(404)
+  })
+})
+
+test.describe('WF03-S07 pixel QA (corrected L23 CHP4 subset)', () => {
+  const REFERENCE = 'design-reference/final/revision/L3/L23__chapter-events__SOURCE.png'
+  /** L23 is drawn without a sidebar: the left column moves by the 216px OpsShell. */
+  const LEFT = 216
+
+  test('1440×900: header, chips, create button, column labels, first row', async ({ page }) => {
+    // Deterministic state: only the seeded events (test-created ones are removed).
+    const mine = `SELECT id FROM events WHERE name LIKE 'S07 %'`
+    await query(`DELETE FROM audit_events WHERE resource_id IN (${mine})`)
+    await query(`DELETE FROM events WHERE id IN (${mine})`)
+    await login(page.request, 'leader@example.test')
+    await page.goto(PAGE(CHAPTER_01), { waitUntil: 'networkidle' })
+    await expect(page.locator(`[data-event="${DEMO_EVENT}"]`)).toBeVisible()
+    await expect(page.locator('[data-event]').first()).toHaveAttribute('data-event', DEMO_EVENT)
+    const x = async (selector: string) =>
+      Math.round((await page.locator(selector).first().boundingBox())!.x)
+    await auditRevision(page, {
+      name: 'WF03-S07.L23',
+      reference: REFERENCE,
+      segments: [
+        { name: 'title', reference: { x: 40, y: 12, width: 260, height: 36 }, dx: LEFT, dy: 0 },
         {
-          name: 'table-card-top',
-          reference: { x: 236, y: 395, width: 824, height: 72 },
-          dy: cardDy,
+          name: 'header-rule',
+          reference: { x: 320, y: 66, width: 800, height: 30 },
+          dx: LEFT,
+          dy: 0,
         },
         {
-          // Eyebrow, first label and first field (a select in ADM21, a text input here:
-          // the caret is masked).
-          name: 'form-card-top',
-          reference: { x: 1064, y: 16, width: 360, height: 118 },
+          name: 'chip-ended',
+          reference: { x: 163, y: 114, width: 120, height: 38 },
+          dx: (await x('[data-filter="ended"]')) - 167,
+          dy: 0,
+        },
+        {
+          name: 'chip-draft',
+          reference: { x: 284, y: 114, width: 106, height: 38 },
+          dx: (await x('[data-filter="draft"]')) - 288,
+          dy: 0,
+        },
+        { name: 'create', reference: { x: 1262, y: 106, width: 136, height: 54 }, dx: 0, dy: 0 },
+        {
+          name: 'label-event',
+          reference: { x: 60, y: 170, width: 80, height: 28 },
+          dx: LEFT,
+          dy: 0,
+        },
+        {
+          name: 'label-time',
+          reference: { x: 680, y: 170, width: 90, height: 28 },
+          dx: (await x('[data-card="events"] [role="columnheader"]:nth-child(2)')) - 690,
+          dy: 0,
+        },
+        {
+          name: 'row-1-left',
+          reference: { x: 44, y: 205, width: 26, height: 88 },
+          dx: LEFT,
+          dy: 0,
+        },
+        {
+          name: 'row-1-manage',
+          reference: { x: 1240, y: 220, width: 100, height: 58 },
+          dx: 0,
+          dy: 0,
+        },
+        {
+          name: 'row-1-right',
+          reference: { x: 1340, y: 205, width: 58, height: 88 },
+          dx: 0,
           dy: 0,
         },
       ],
-      [...mask, ...REF_TEXT, { x: 1360, y: 100, width: 26, height: 20 }],
-      { diffPath: resolveOutputPath('diff', 'WF03-S07.primitives.diff.png') },
-    )
-    writeJsonReport('WF03-S07.primitives.json', {
-      screen_id: 'WF03-S07',
-      state: qaConfigFor('WF03-S07')!.state,
-      reference_compared: s08.viewport_baseline,
-      s07_bitmap: {
-        status: viewport.comparison.status,
-        classification: 'INTENTIONAL-CONTRACT (DEC-WF03-G2: WF04 collage, not business authority)',
-      },
       intentional: [
         {
-          class: 'INTENTIONAL-CONTRACT',
-          reason:
-            'DEC-WF03-G2: the S07 bitmap draws WF04 programme / challenge content (landing funnel, qualifying round, campaign mail); none is rendered. The screen uses the ADM21 (S08) primitives, compared here',
+          class: 'INTENTIONAL-SHELL',
+          reason: 'HD-11 / DEC-L3-D3: OpsShell stays; L23 is drawn without a sidebar',
         },
         {
-          class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
-          reason: 'glyphs masked; DOM typography contract asserted',
+          class: 'INTENTIONAL-SCOPE',
+          reason:
+            'DEC-L3-D3 (HD-09): no type, registration or owner columns, no owner warning, no rule notes and no actor line in the header (no P0 source)',
         },
+        {
+          class: 'INTENTIONAL-STATE',
+          reason:
+            'L23 draws "Sắp diễn ra" pressed while the table lists every group; the page opens with no chip pressed and lists every event',
+        },
+        {
+          class: 'INTENTIONAL-DATA',
+          reason:
+            'rows, counts and the place column come from the seeded events; times keep the S07 format (date, year, start–end)',
+        },
+        { class: 'INTENTIONAL-SCOPE', reason: 'HD-11: no floating "Góp ý" button' },
       ],
-      segments: results,
-      product_pixel_pass_claimed: false,
     })
-    for (const r of results) expect(r.outside_ratio, `${r.name} drift`).toBeLessThan(0.002)
   })
 })

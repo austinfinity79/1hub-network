@@ -14,14 +14,19 @@ Approved pixel references from the corrected Homepage + L1–L6 revision ([audit
 | L13a PRJ1 `/projects/new` step 1 | `L2/L13a__project-create-core__SOURCE.png` | 1440×1385 | `032197acb4f9a5fd53c843feafbf5582aa43875de39628ede6bbe176559eb22f` | `L2.zip` (`6fee10fb…04b9`), `L13a · PRJ1 · Tạo dự án/startup — B1 Thông tin cốt lõi.png`, byte-identical copy | TASK 22.3 |
 | L13b PRJ2 `/projects/new` step 2 | `L2/L13b__project-create-team__SOURCE.png` | 1440×1084 | `42d4b8a10aa71a566b9220887a7220c93252b65c92aa1c08f784323e75644592` | `L2.zip` (`6fee10fb…04b9`), `L13b · PRJ2 · Tạo dự án/startup — B2 Mời đội ngũ.png`, byte-identical copy | TASK 22.3 |
 | L13c PRJ3 `/projects/new` step 3 | `L2/L13c__project-create-done__SOURCE.png` | 1440×912 | `d9eeb249e53e569565eb49d7b8051f95f68bc8295f5a473ef9de40601412f312` | `L2.zip` (`6fee10fb…04b9`), `L13c · PRJ3 · Tạo xong — làm gì tiếp.png`, byte-identical copy | TASK 22.3 |
+| L19 CHP0 `/organizations/:slug` | `L3/L19__chapter-public__SOURCE.png` | 1440×2561 | `39761125371f677381ce4f6e6d6843cb9442ad2b7715d576bbb95fac38040e4c` | `L3.zip` (`180908cd…623c`), `L19 · CHP0 · Trang chapter công khai.png`, byte-identical copy | TASK 22.4 |
+| L20 CHP1 `/ops/org/:orgId` | `L3/L20__chapter-dashboard__SOURCE.png` | 1440×856 | `88f977b2374660dfb5641eb3257e6da63dd36e7469d649512bc0ed84b9754190` | `L3.zip` (`180908cd…623c`), `L20 · CHP1 · Bảng điều khiển chapter.png`, byte-identical copy | TASK 22.4 |
+| L23 CHP4 `/ops/org/:orgId/events` | `L3/L23__chapter-events__SOURCE.png` | 1440×736 | `fd425bd4eb04dbcf43accda5f674af7975580a7f10bee2800600b53a854f4238` | `L3.zip` (`180908cd…623c`), `L23 · CHP4 · Sự kiện của chapter.png`, byte-identical copy | TASK 22.4 |
+| L26 CHP7 `/ops/org/:orgId/members` | `L3/L26__chapter-members__SOURCE.png` | 1600×1530 | `382087c9354cfeb1803e472eb172851ec8971721c5bceb99008d5b31c3fcc73a` | `L3.zip` (`180908cd…623c`), `L26 · CHP7 · Thành viên & duyệt.png`, byte-identical copy (drawn 1600 wide) | TASK 22.4 |
 
 Rules:
 - Typography: Space Grotesk where the reference uses it (DEC-HD-12); mono labels keep IBM Plex Mono 500.
 - Blocks omitted under HD-01 (placeholder or unverified content) are not compared; the P0-LANDING spec lists them.
 - L1: only AUTH1–AUTH4 and the ACC-10 subset are Bucket A (DEC-L1-D1). The other L1 frames stay out of the repository until their decisions (HD-02 … HD-05) are made.
 - L2: only L11 and L13a–c are Bucket A (DEC-L2-D1). L10, L12, L13, L14, L16, L18 (B) and L15, L17 (C) stay out of the repository.
+- L3: only L19, L20, L23 and L26 are Bucket A (DEC-L3-D1). L21, L22, L24, L25 and L27 stay out of the repository. L26 is drawn 1600 wide; its spec compares components at their own anchors.
 - Never edit or re-export a file here to make a diff pass. A new source revision gets a new file and hash.
 
 ## Related
 - [../README.md](../README.md) — WF01–WF03 baselines
-- [../../../docs/decisions/DECISION_LOG.md](../../../docs/decisions/DECISION_LOG.md) — DEC-HD-12, DEC-H1, DEC-L1, DEC-L2
+- [../../../docs/decisions/DECISION_LOG.md](../../../docs/decisions/DECISION_LOG.md) — DEC-HD-12, DEC-H1, DEC-L1, DEC-L2, DEC-L3

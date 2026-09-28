@@ -1,29 +1,41 @@
 /*
- * WF03-S09 — public organization page. Measured from the approved "Hồ sơ
- * Chapter" reference at 1440x900 DPR1 (px / 16 = rem), including its 38px white
- * page frame. Content column 151..1288 (113px inside the frame). Gradients were
- * fitted to the bitmap (angle + stops). Local to this screen.
+ * WF03-S09 — public organization page as the corrected L19 CHP0 subset (TASK
+ * 22.4): full bleed, content column 120..1320 at 1440 (px / 16 = rem),
+ * measured at 1440x900 DPR1. A Corrected Design Revision screen, so the text is
+ * Space Grotesk (DEC-HD-12). The hero and join gradients are the fitted WF03-S09
+ * ones (the revision draws the same colours). Local to this screen.
  */
 
 .canvas {
+  --font-ui: 'Space Grotesk', 'Be Vietnam Pro', system-ui, sans-serif;
+
   min-height: 100vh;
-  padding: 2.375rem 2.375rem 3.4375rem;
   background: #ffffff;
+  color: #170002;
+  font-family: var(--font-ui);
 }
 
 .page {
   background: #ffffff;
 }
 
+.inner {
+  width: min(75rem, calc(100% - 2rem));
+  margin: 0 auto;
+}
+
 /* ------------------------------------------------------------------ top bar */
 
 .bar {
+  background: #160002;
+}
+
+.barInner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 4.625rem;
-  padding: 0 7.0625rem;
-  background: #160002;
+  gap: 1.5rem;
+  height: 4.875rem;
 }
 
 .brand {
@@ -31,20 +43,20 @@
   align-items: center;
   gap: 0.875rem;
   margin: 0;
-  font-size: 0.875rem;
-  font-weight: var(--weight-semibold);
+  font-size: 1.0625rem;
+  font-weight: 600;
   letter-spacing: 0.04em;
   color: #ffffff;
 }
 
 .slash {
-  font-weight: var(--weight-regular);
+  font-weight: 400;
   color: #c3a9a9;
 }
 
 .brandOrg {
-  font-size: 0.75rem;
-  font-weight: var(--weight-medium);
+  font-size: 0.8125rem;
+  font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #ff533d;
@@ -53,8 +65,8 @@
 .links {
   display: flex;
   align-items: center;
-  gap: 1.3125rem;
-  font-size: 0.8125rem;
+  gap: 1.4375rem;
+  font-size: 0.875rem;
 }
 
 .links a {
@@ -65,49 +77,40 @@
 .links .barCta {
   display: inline-flex;
   align-items: center;
-  /* Drawn box pinned (143x40) with its drawn edge: darker inner left / right /
-     bottom lines and a black outer line. */
   justify-content: center;
-  width: 8.9375rem;
-  height: 2.5rem;
-  padding: 0;
+  width: 9.375rem;
+  height: 2.625rem;
+  margin-left: 0.0625rem;
   border-radius: 0.375rem;
   background: #fc523c;
-  box-shadow:
-    inset 1px 0 0 #ba3a2b,
-    inset -1px 0 0 #74211a,
-    inset 0 -1px 0 #cb4130,
-    0 1px 0 #000000,
-    -1px 0 0 #000000,
-    1px 0 0 #000000;
-  font-weight: var(--weight-medium);
+  font-weight: 500;
   color: #160002;
 }
 
 /* --------------------------------------------------------------------- hero */
 
 .hero {
-  padding: 2.625rem 7.0625rem 2.1875rem;
+  padding: 2.75rem 0 2.25rem;
   background: linear-gradient(160deg, #8b281f 18%, #58040c 50%, #160102 87%);
   color: #ffffff;
 }
 
 .intro {
-  min-height: 15.8125rem;
+  min-height: 16.75rem;
 }
 
 .eyebrowRow {
   display: flex;
-  height: 1.625rem;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
+  height: 1.75rem;
   margin: 0;
 }
 
 .heroEyebrow {
   font-size: 0.6875rem;
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.06em;
+  font-weight: 500;
+  letter-spacing: 0.075em;
   text-transform: uppercase;
   color: #ff543d;
 }
@@ -115,25 +118,25 @@
 .statusChip {
   display: inline-flex;
   align-items: center;
-  height: 1.625rem;
-  padding: 0 0.75rem;
-  border-radius: 0.8125rem;
+  height: 1.75rem;
+  padding: 0 0.8125rem;
+  border-radius: 62.5rem;
   background: #2a0a0c;
   font-size: 0.6875rem;
-  color: #ffb4a7;
+  color: #ffe2dc;
 }
 
 .identity {
   display: flex;
   align-items: flex-start;
   gap: 1.25rem;
-  margin-top: 1.125rem;
+  margin-top: 1.1875rem;
 }
 
 .logo {
   flex: none;
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 4.75rem;
+  height: 4.75rem;
   border: 1px solid rgb(255 255 255 / 0.2);
   border-radius: 0.75rem;
   background: rgb(255 255 255 / 0.14);
@@ -141,51 +144,53 @@
 
 .name {
   margin: 0;
-  font-size: 2.5rem;
-  line-height: 3rem;
-  font-weight: var(--weight-semibold);
-  color: #ffffff;
+  font-size: 2.75rem;
+  font-weight: 600;
+  line-height: 3.125rem;
+  letter-spacing: -0.013em;
 }
 
 .description {
-  max-width: 41.5rem;
+  max-width: 43.75rem;
   margin: 1.125rem 0 0;
-  font-size: 1rem;
-  line-height: 1.75rem;
-  color: #ffffff;
+  font-size: 1.0625rem;
+  line-height: 1.8125rem;
+  color: rgb(255 255 255 / 0.9);
 }
 
 .stats {
   display: flex;
   justify-content: space-between;
+  gap: 1.5rem;
   margin: 0;
-  padding: 1.1875rem 0 1.1875rem;
-  border-top: 1px solid rgb(255 255 255 / 0.1);
-  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  padding: 1.25rem 0 1.3125rem;
+  border-top: 1px solid rgb(255 255 255 / 0.16);
+  border-bottom: 1px solid rgb(255 255 255 / 0.16);
 }
 
 .stats div {
   display: flex;
   flex-direction: column-reverse;
-  gap: 0.125rem;
+  gap: 0.25rem;
 }
 
 .stats dd {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.625rem;
+  font-weight: 600;
   line-height: 2rem;
-  font-weight: var(--weight-semibold);
-  color: #ffffff;
+  letter-spacing: -0.03em;
 }
 
 .stats dt {
   font-size: 0.8125rem;
   line-height: 1.125rem;
-  color: #c9b0b0;
+  color: rgb(255 255 255 / 0.72);
 }
 
 .heroActions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
   margin-top: 1.375rem;
@@ -193,41 +198,38 @@
 
 .primary,
 .ghost {
-  /* Drawn sizes pinned (165x48, 211x48). */
   display: inline-flex;
-  flex: none;
   align-items: center;
   justify-content: center;
-  height: 3rem;
-  padding: 0;
   border-radius: 0.375rem;
   font-size: 0.9375rem;
-  font-weight: var(--weight-medium);
+  font-weight: 500;
   text-decoration: none;
 }
 
 .primary {
-  width: 10.3125rem;
+  height: 3.1875rem;
+  padding: 0 1.90625rem;
   background: #fc523c;
   color: #160002;
 }
 
 .ghost {
-  width: 13.1875rem;
-  border: 1px solid rgb(255 255 255 / 0.45);
+  height: 3.3125rem;
+  padding: 0 1.625rem;
+  border: 1px solid rgb(255 255 255 / 0.4);
   color: #ffffff;
 }
 
 .heroNote {
   font-size: 0.8125rem;
-  color: #e0cdcb;
+  color: rgb(255 255 255 / 0.78);
 }
 
-/* ----------------------------------------------------------------- sections */
+/* ------------------------------------------------------------------ sections */
 
 .section {
-  padding: 3.75rem 7.0625rem 3.75rem;
-  background: #ffffff;
+  padding: 3.8125rem 0 3.9375rem;
 }
 
 .grey {
@@ -239,179 +241,254 @@
   align-items: center;
   gap: 0.75rem;
   margin: 0;
-  font-size: 0.625rem;
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.08em;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.075em;
   text-transform: uppercase;
-  color: #b7110a;
+  color: #b91610;
 }
 
 .eyebrow::before {
   content: '';
-  width: 1.375rem;
-  height: 2px;
+  width: 1.5rem;
+  height: 0.1875rem;
   background: #fc523c;
 }
 
 .title {
-  margin: 0.8125rem 0 0;
-  font-size: 1.75rem;
+  margin: 0.3125rem 0 0;
+  font-size: 1.875rem;
+  font-weight: 600;
   line-height: 2.25rem;
-  font-weight: var(--weight-semibold);
-  color: #140002;
+  letter-spacing: -0.01em;
 }
 
 .lede {
-  max-width: 43rem;
-  margin: 0.75rem 0 0;
+  max-width: 45rem;
+  margin: 0.875rem 0 0;
   font-size: 0.9375rem;
-  line-height: 1.5625rem;
-  color: #453031;
+  line-height: 1.625rem;
+  color: #534041;
 }
 
 .cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.1875rem;
-  margin: 1.75rem 0 0;
+  gap: 1.25rem;
+  margin: 1.6875rem 0 0;
   padding: 0;
   list-style: none;
 }
 
 .card {
-  padding: 1.375rem 1.375rem 1.5rem;
-  border: 1px solid #e1dede;
-  border-radius: 0.625rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e3dddd;
+  border-radius: 0.875rem;
   background: #ffffff;
-  box-shadow: 0 2px 8px rgb(20 0 2 / 0.05);
+  box-shadow: 0 0.25rem 1rem rgb(22 0 2 / 0.05);
+}
+
+.card:not(.eventCard) {
+  min-height: 17.8125rem;
+  padding: 0 1.3125rem 0.9375rem;
+}
+
+.cardBanner {
+  display: block;
+  height: 6.5rem;
+  margin: 0 -1.3125rem;
+  background: linear-gradient(160deg, #8b281f 0%, #3d0206 70%, #160102 100%);
+}
+
+.cardBanner[data-tone='1'] {
+  background: linear-gradient(160deg, #fc523c 0%, #b91610 55%, #3d0206 100%);
+}
+
+.cardBanner[data-tone='2'] {
+  background: linear-gradient(160deg, #58040c 0%, #2a0104 60%, #160102 100%);
+}
+
+.cardAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.375rem;
+  height: 4.375rem;
+  flex: none;
+  margin-top: -2.25rem;
+  border: 4px solid #ffffff;
+  border-radius: 50%;
+  background: #8b1a14;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* L19 puts the card's chip row beside the avatar; the type label sits there. */
+.cardHead {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.875rem;
 }
 
 .cardType {
-  margin: 0;
+  margin: 0 0 0.5625rem;
+  line-height: 1rem;
   font-size: 0.6875rem;
-  line-height: 1.5rem;
-  color: #493536;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8e7677;
 }
 
 .cardTitle {
-  margin: 0.75rem 0 0;
-  font-size: 1.0625rem;
-  line-height: 1.5rem;
-  font-weight: var(--weight-medium);
-  color: #140002;
+  margin: 0.6875rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.625rem;
 }
 
 .cardStats {
   display: flex;
-  gap: 1.25rem;
-  margin: 0.75rem 0 0;
+  gap: 2.25rem;
+  margin: 0.875rem 0 0;
 }
 
 .cardStats div {
   display: flex;
   flex-direction: column-reverse;
+  gap: 0.3125rem;
 }
 
 .cardStats dd {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
+  font-weight: 600;
   line-height: 1.5rem;
-  font-weight: var(--weight-semibold);
-  color: #140002;
 }
 
 .cardStats dt {
-  font-size: 0.6875rem;
-  color: #493536;
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: #534041;
 }
 
 .cardLink {
   display: inline-block;
-  margin-top: 0.75rem;
-  font-size: 0.8125rem;
-  font-weight: var(--weight-medium);
-  color: #b20000;
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #b91610;
   text-decoration: none;
 }
 
 .eventCard {
-  border-color: #ded8d8;
-  background: #f9f6f6;
-  box-shadow: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  min-height: 8.3125rem;
+  padding: 0.875rem;
+}
+
+.eventMedia {
+  position: relative;
+  flex: none;
+  width: 6.5rem;
+  height: 6.5rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #fc523c 0%, #b91610 45%, #160102 100%);
+}
+
+.eventMedia[data-tone='1'] {
+  background: linear-gradient(135deg, #5b050d 0%, #160102 100%);
+}
+
+.eventMedia[data-tone='2'] {
+  background: linear-gradient(135deg, #8d0f0d 0%, #4a0209 45%, #160102 100%);
 }
 
 .eventDate {
-  margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.75rem;
-  font-weight: var(--weight-semibold);
-  color: #b30000;
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.125rem 0.4375rem;
+  border-radius: 0.375rem;
+  background: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.125rem;
+  color: #b91610;
+}
+
+.eventText {
+  min-width: 0;
+  padding-top: 0.25rem;
 }
 
 .eventName {
-  margin: 0.625rem 0 0;
-  font-size: 1rem;
-  line-height: 1.5rem;
-  font-weight: var(--weight-medium);
-  color: #140002;
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.375rem;
 }
 
 .eventMeta {
-  margin: 0.5rem 0 0;
+  margin: 0.375rem 0 0;
   font-size: 0.8125rem;
-  color: #493536;
+  line-height: 1.125rem;
+  color: #534041;
 }
 
 .empty {
-  margin: 1.75rem 0 0;
+  margin: 1.5rem 0 0;
   font-size: 0.9375rem;
-  color: #453031;
+  color: #534041;
 }
 
-/* --------------------------------------------------------------- join band */
+/* --------------------------------------------------------------------- join */
 
 .join {
-  padding: 3.0625rem 7.0625rem 3.625rem;
-  background: linear-gradient(168deg, #fc503a 15%, #c41e16 35%, #8f0e0e 50%, #160102 86%);
+  padding: 3.1875rem 0 3.625rem;
+  background: linear-gradient(160deg, #fc523c 0%, #b91610 45%, #160102 100%);
   color: #ffffff;
 }
 
 .joinEyebrow {
   margin: 0;
-  font-size: 0.625rem;
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.08em;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.075em;
   text-transform: uppercase;
-  color: #ffe0d9;
+  color: rgb(255 255 255 / 0.75);
 }
 
 .joinTitle {
-  margin: 0.125rem 0 0;
-  font-size: 1.75rem;
+  margin: 0.25rem 0 0;
+  font-size: 1.875rem;
+  font-weight: 600;
   line-height: 2.25rem;
-  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
 }
 
 .joinText {
-  max-width: 48.75rem;
-  margin: 1.0625rem 0 0;
-  font-size: 0.9375rem;
-  line-height: 1.625rem;
+  max-width: 75rem;
+  margin: 1.125rem 0 0;
+  font-size: 1.0625rem;
+  line-height: 1.8125rem;
+  color: rgb(255 255 255 / 0.88);
 }
 
 .joinButton {
-  /* Drawn size pinned (176x48). */
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 11rem;
-  height: 3rem;
-  margin-top: 0.5rem;
-  padding: 0;
+  height: 3.1875rem;
+  margin-top: 0.5625rem;
+  padding: 0 1.75rem;
   border-radius: 0.375rem;
   background: #160002;
   font-size: 0.9375rem;
-  font-weight: var(--weight-medium);
+  font-weight: 500;
   color: #ffffff;
   text-decoration: none;
 }
@@ -425,25 +502,63 @@
   outline-offset: 0.125em;
 }
 
-/* ------------------------------------------------------------------ footer */
+.cardLink:focus-visible {
+  outline-color: var(--color-fg-accent);
+}
+
+/* ------------------------------------------------------------------- footer */
 
 .footer {
-  height: 5.875rem;
-  padding: 1.6875rem 7.0625rem 0;
+  padding: 1.9375rem 0;
   background: #160002;
+  color: #ffffff;
 }
 
 .footerBrand {
   margin: 0;
   font-size: 0.8125rem;
-  font-weight: var(--weight-semibold);
+  font-weight: 600;
+  line-height: 1rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #ffffff;
 }
 
 .footerSub {
-  margin: 0.25rem 0 0;
+  margin: 0.375rem 0 0;
   font-size: 0.8125rem;
-  color: #d1b7b8;
+  line-height: 1rem;
+  color: rgb(255 255 255 / 0.65);
+}
+
+/* IA-P2-03 basic responsive safety: bar, stats and cards stack. */
+@media (max-width: 1023px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .barInner {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 0.875rem 0;
+  }
+
+  .links {
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+  }
+
+  .name {
+    font-size: 2rem;
+    line-height: 2.5rem;
+  }
+
+  .stats {
+    flex-direction: column;
+  }
+
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

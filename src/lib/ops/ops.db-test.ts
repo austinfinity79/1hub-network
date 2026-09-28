@@ -203,6 +203,7 @@ describe('WF03-T00 organization context (URL is context, never authority)', () =
     expect(ctx.capabilities).toEqual([
       'org:read',
       'member:read',
+      'membership:confirm',
       'org:manage',
       'event:manage',
       'org:manage_relationship',

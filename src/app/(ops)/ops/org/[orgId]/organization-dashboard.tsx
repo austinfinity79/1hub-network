@@ -17,6 +17,12 @@ import styles from './dashboard.module.css'
  * enterprise KPIs (bài toán, giải pháp, vòng trong, pilot) and the pilot card
  * have no P0 source and are not rendered. The one work item is the canonical
  * pending-membership count; it links to the members screen.
+ *
+ * TASK 22.4 (DEC-L3-D2): drawn as the corrected L20 CHP1 subset in Space
+ * Grotesk. Its landing-view, registration and qualification KPIs, the funnel,
+ * the scope notice and "Tạo summit mới" stay out (S02-D1, Bucket B / C); the
+ * header's "Tạo sự kiện" opens the existing events screen for holders of
+ * `event:manage`, and the work chip names the unit type.
  */
 
 /** Copy the approved bitmap does not carry; pending PO copy review (DEC-WF03-S02-D1). */
@@ -32,7 +38,8 @@ const COPY = {
   work: 'Việc cần làm',
   pendingTitle: 'yêu cầu thành viên chờ duyệt',
   pendingSub: 'Xem và duyệt ở mục Thành viên',
-  chip: 'Chờ đơn vị',
+  chip: 'Chờ',
+  createEvent: 'Tạo sự kiện',
   act: 'Làm ngay',
   none: 'Không có việc cần làm.',
   failed: 'Không tải được bảng điều khiển.',
@@ -40,14 +47,19 @@ const COPY = {
 } as const
 
 const TYPE_LABELS: Record<string, string> = { HUB: 'HUB', CHAPTER: 'Chapter', CLB: 'CLB' }
+/** In running text, as L20 writes it ("Chờ chapter"). */
+const UNIT: Record<string, string> = { HUB: 'HUB', CHAPTER: 'chapter', CLB: 'CLB' }
 
 type State =
   { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; data: OrganizationDashboardDTO }
 
 export function OrganizationDashboard({
   organization,
+  canManageEvents,
 }: {
   organization: Pick<OrganizationRefDTO, 'id' | 'name' | 'type'>
+  /** UI affordance only; the events screen and its API authorize again. */
+  canManageEvents: boolean
 }) {
   const [state, setState] = useState<State>({ kind: 'loading' })
 
@@ -94,10 +106,21 @@ export function OrganizationDashboard({
   return (
     <div className={styles.page} data-screen="WF03-S02">
       <header className={styles.header}>
-        <h1 className={`type-section-sm ${styles.title}`}>{organization.name}</h1>
-        <p className={`type-meta-xs ${styles.subtitle}`}>
-          {COPY.subtitle} · {TYPE_LABELS[organization.type] ?? organization.type}
-        </p>
+        <div>
+          <h1 className={styles.title}>{organization.name}</h1>
+          <p className={styles.subtitle}>
+            {COPY.subtitle} · {TYPE_LABELS[organization.type] ?? organization.type}
+          </p>
+        </div>
+        {canManageEvents ? (
+          <Link
+            href={`/ops/org/${organization.id}/events?create=1`}
+            className={styles.headerAction}
+            data-nav="dashboard-create-event"
+          >
+            {COPY.createEvent}
+          </Link>
+        ) : null}
       </header>
       <div className={styles.body}>
         {state.kind === 'failed' ? (
@@ -116,7 +139,7 @@ export function OrganizationDashboard({
                   <p className={styles.kpiValue} data-value>
                     {card.value ?? '–'}
                   </p>
-                  {card.sub ? <p className={`type-meta-xs ${styles.kpiSub}`}>{card.sub}</p> : null}
+                  {card.sub ? <p className={styles.kpiSub}>{card.sub}</p> : null}
                 </section>
               ))}
             </div>
@@ -125,20 +148,22 @@ export function OrganizationDashboard({
               {s === null ? null : s.pending_memberships > 0 ? (
                 <div className={styles.item} data-work-item="pending_memberships">
                   <div>
-                    <p className={`type-body-md ${styles.itemTitle}`}>
+                    <p className={styles.itemTitle}>
                       {s.pending_memberships} {COPY.pendingTitle}
                     </p>
-                    <p className={`type-meta-xs ${styles.itemSub}`}>{COPY.pendingSub}</p>
+                    <p className={styles.itemMeta}>
+                      <span className={styles.itemSub}>{COPY.pendingSub}</span>
+                      <span className={styles.chip}>
+                        {COPY.chip} {UNIT[organization.type] ?? organization.type}
+                      </span>
+                    </p>
                   </div>
-                  <div className={styles.itemActions}>
-                    <span className={styles.chip}>{COPY.chip}</span>
-                    <Link href={`/ops/org/${organization.id}/members`} className={styles.act}>
-                      {COPY.act}
-                    </Link>
-                  </div>
+                  <Link href={`/ops/org/${organization.id}/members`} className={styles.act}>
+                    {COPY.act}
+                  </Link>
                 </div>
               ) : (
-                <p className={`type-body-sm ${styles.none}`} data-state="work-empty">
+                <p className={styles.none} data-state="work-empty">
                   {COPY.none}
                 </p>
               )}

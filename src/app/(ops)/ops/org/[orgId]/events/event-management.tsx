@@ -19,19 +19,26 @@ import styles from './events.module.css'
  * selected event — editable in DRAFT / PUBLISHED, with "Công khai" (DRAFT) and
  * "Huỷ sự kiện" (PUBLISHED / LIVE, confirmed). Times are entered and shown in
  * Asia/Ho_Chi_Minh. No registration, programme, challenge or funnel content.
+ *
+ * TASK 22.4 (DEC-L3-D3): drawn as the corrected L23 CHP4 subset in Space
+ * Grotesk. The list is full width with status chips over the existing
+ * statuses; the side column opens from "Tạo sự kiện" (or `?create=1`) or a
+ * row's "Quản lý" and closes with "Đóng". Type, owner, capacity and
+ * registration columns and the two rule notes stay out (HD-09, Bucket B).
  */
 
 /** Copy the approved bitmap does not carry; pending PO copy review (DEC-WF03-S07-D4). */
 const COPY = {
-  title: 'Sự kiện',
-  summary: (org: string, total: number, published: number) =>
-    `${org} · ${total} sự kiện · ${published} đang công khai`,
-  create: '+ Tạo sự kiện',
+  title: (unit: string) => `Sự kiện của ${unit}`,
+  summary: (org: string, total: number, upcoming: number) =>
+    `${org} · ${total} sự kiện · ${upcoming} sắp diễn ra`,
+  create: 'Tạo sự kiện',
   list: 'Sự kiện độc lập',
-  columns: ['Sự kiện', 'Thời gian', 'Địa điểm', 'Trạng thái'],
+  filters: 'Lọc sự kiện',
+  columns: ['Sự kiện', 'Thời gian', 'Địa điểm'],
   empty: 'Chưa có sự kiện nào.',
   noTime: 'Chưa có thời gian',
-  open: 'Mở',
+  open: 'Quản lý',
   createTitle: 'Tạo sự kiện',
   detailTitle: 'Chi tiết sự kiện',
   name: 'Tên sự kiện',
@@ -76,6 +83,36 @@ const FIELD_ERRORS: Record<string, string> = {
 }
 const EDITABLE = ['DRAFT', 'PUBLISHED']
 const CANCELLABLE = ['PUBLISHED', 'LIVE']
+const UNIT: Record<string, string> = { HUB: 'HUB', CHAPTER: 'chapter', CLB: 'CLB' }
+
+/** Row badge for everything but an upcoming published event (L23 draws "Nháp"). */
+const BADGES: Record<string, string> = {
+  DRAFT: 'Nháp',
+  LIVE: 'Đang diễn ra',
+  ENDED: 'Đã kết thúc',
+  CANCELLED: 'Đã huỷ',
+  ARCHIVED: 'Đã lưu trữ',
+}
+
+/**
+ * Chip groups over the existing statuses. "Upcoming" is the public page's rule
+ * (published and not yet ended, lib/public/organization.ts); P0 has no job
+ * that moves a past event to ENDED, so a past published event counts as ended.
+ */
+type Group = 'upcoming' | 'ended' | 'draft' | 'cancelled'
+const GROUPS: { key: Group; label: string }[] = [
+  { key: 'upcoming', label: 'Sắp diễn ra' },
+  { key: 'ended', label: 'Đã kết thúc' },
+  { key: 'draft', label: 'Bản nháp' },
+  { key: 'cancelled', label: 'Đã huỷ' },
+]
+const groupOf = (e: EventDTO, now: number): Group => {
+  if (e.status === 'DRAFT') return 'draft'
+  if (e.status === 'CANCELLED' || e.status === 'ARCHIVED') return 'cancelled'
+  if (e.status === 'ENDED') return 'ended'
+  const end = e.ends_at ?? e.starts_at
+  return end && Date.parse(end) < now ? 'ended' : 'upcoming'
+}
 
 // Times are entered and shown in the display zone (DEC-WF03-S07-EVENT-LIFECYCLE E4).
 const OFFSET = '+07:00'
@@ -127,11 +164,17 @@ type Notice = { tone: 'ok' | 'error'; text: string } | null
 export function EventManagement({
   organization,
   initial,
+  initialCreate = false,
 }: {
-  organization: Pick<OrganizationRefDTO, 'id' | 'name'>
+  organization: Pick<OrganizationRefDTO, 'id' | 'name' | 'type'>
   initial: EventDTO[]
+  /** `?create=1` (the dashboard's "Tạo sự kiện") opens the create form. */
+  initialCreate?: boolean
 }) {
   const [events, setEvents] = useState(initial)
+  const [panel, setPanel] = useState(initialCreate)
+  const [filter, setFilter] = useState<Group | null>(null)
+  const [now] = useState(() => Date.now())
   const [selected, setSelected] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -157,6 +200,7 @@ export function EventManagement({
   }
 
   const open = (e: EventDTO | null) => {
+    setPanel(true)
     setSelected(e?.id ?? null)
     setDraft(e ? draftOf(e) : emptyDraft)
     setErrors({})
@@ -221,7 +265,15 @@ export function EventManagement({
           COPY.created,
         )
 
-  const published = events.filter((e) => e.status === 'PUBLISHED').length
+  const counts = new Map<Group, number>()
+  for (const e of events) counts.set(groupOf(e, now), (counts.get(groupOf(e, now)) ?? 0) + 1)
+  const visible = filter ? events.filter((e) => groupOf(e, now) === filter) : events
+  const close = () => {
+    setPanel(false)
+    setSelected(null)
+    setConfirming(false)
+    setNotice(null)
+  }
   const fieldError = (f: string) =>
     errors[f] ? (
       <span className={styles.fieldError} data-field-error={f}>
@@ -231,26 +283,40 @@ export function EventManagement({
 
   return (
     <div className={styles.page} data-screen="WF03-S07">
-      <div className={styles.main}>
-        <header className={styles.header}>
-          <div>
-            <h1 className={styles.title}>{COPY.title}</h1>
-            <p className={styles.subtitle}>
-              {COPY.summary(organization.name, events.length, published)}
-            </p>
-          </div>
-          <button
-            type="button"
-            className={styles.primary}
-            onClick={() => open(null)}
-            data-action="new-event"
-          >
-            {COPY.create}
-          </button>
-        </header>
+      <header className={styles.header}>
+        <h1 className={styles.title}>{COPY.title(UNIT[organization.type] ?? organization.type)}</h1>
+        <p className={styles.subtitle}>
+          {COPY.summary(organization.name, events.length, counts.get('upcoming') ?? 0)}
+        </p>
+      </header>
 
-        <section className={styles.card} data-card="events">
-          <h2 className={styles.eyebrow}>{COPY.list}</h2>
+      <div className={`${styles.body} ${panel ? styles.withPanel : ''}`}>
+        <div className={styles.main}>
+          <div className={styles.toolbar}>
+            <div className={styles.filters} role="group" aria-label={COPY.filters}>
+              {GROUPS.filter((g) => g.key !== 'cancelled' || counts.get('cancelled')).map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  className={styles.filter}
+                  aria-pressed={filter === g.key}
+                  onClick={() => setFilter(filter === g.key ? null : g.key)}
+                  data-filter={g.key}
+                >
+                  {g.label} · {counts.get(g.key) ?? 0}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className={styles.primary}
+              onClick={() => open(null)}
+              data-action="new-event"
+            >
+              {COPY.create}
+            </button>
+          </div>
+
           {loadFailed ? (
             <div className={styles.failed} role="alert" data-state="events-failed">
               <span>{COPY.failed}</span>
@@ -259,7 +325,7 @@ export function EventManagement({
               </button>
             </div>
           ) : null}
-          <div className={styles.table} role="table" aria-label={COPY.list}>
+          <div className={styles.table} role="table" aria-label={COPY.list} data-card="events">
             <div className={styles.head} role="row">
               {COPY.columns.map((c) => (
                 <span key={c} role="columnheader">
@@ -268,12 +334,12 @@ export function EventManagement({
               ))}
               <span role="columnheader" />
             </div>
-            {events.length === 0 ? (
+            {visible.length === 0 ? (
               <p className={styles.empty} data-state="events-empty">
                 {COPY.empty}
               </p>
             ) : null}
-            {events.map((e) => (
+            {visible.map((e) => (
               <div
                 key={e.id}
                 role="row"
@@ -283,6 +349,11 @@ export function EventManagement({
               >
                 <span role="cell" className={styles.name}>
                   {e.name}
+                  {BADGES[e.status] ? (
+                    <span className={`${styles.badge} ${styles[`status${e.status}`] ?? ''}`}>
+                      {BADGES[e.status]}
+                    </span>
+                  ) : null}
                 </span>
                 <span role="cell" className={styles.cell}>
                   {when(e)}
@@ -290,15 +361,10 @@ export function EventManagement({
                 <span role="cell" className={styles.cell}>
                   {e.location_text ?? '—'}
                 </span>
-                <span role="cell">
-                  <span className={`${styles.chip} ${styles[`status${e.status}`] ?? ''}`}>
-                    {STATUS_LABELS[e.status] ?? e.status}
-                  </span>
-                </span>
                 <span role="cell" className={styles.actionCell}>
                   <button
                     type="button"
-                    className={styles.textAction}
+                    className={styles.manage}
                     onClick={() => open(e)}
                     data-action="open"
                   >
@@ -308,197 +374,197 @@ export function EventManagement({
               </div>
             ))}
           </div>
-        </section>
-      </div>
+        </div>
 
-      <aside className={styles.side}>
-        <section className={styles.card} data-card={current ? 'detail' : 'create'}>
-          <div className={styles.sideHead}>
-            <h2 className={styles.eyebrow}>{current ? COPY.detailTitle : COPY.createTitle}</h2>
-            {current ? (
-              <span className={`${styles.chip} ${styles[`status${current.status}`] ?? ''}`}>
-                {STATUS_LABELS[current.status] ?? current.status}
-              </span>
-            ) : null}
-          </div>
-          {notice ? (
-            <p
-              className={`${styles.notice} ${notice.tone === 'ok' ? styles.noticeOk : styles.noticeError}`}
-              role={notice.tone === 'ok' ? 'status' : 'alert'}
-              data-state={notice.tone === 'ok' ? 'action-success' : 'action-failed'}
-            >
-              {notice.text}
-            </p>
-          ) : null}
-          <form
-            className={styles.form}
-            onSubmit={(ev) => {
-              ev.preventDefault()
-              void submit()
-            }}
-            data-event-form
-            noValidate
-          >
-            <label className={styles.field} htmlFor="event-name">
-              <span className={styles.label}>{COPY.name}</span>
-              <input
-                id="event-name"
-                className={styles.input}
-                value={draft.name}
-                maxLength={EVENT_LIMITS.name}
-                disabled={!editable}
-                aria-invalid={Boolean(errors.name)}
-                onChange={(ev) => setDraft({ ...draft, name: ev.target.value })}
-              />
-              {fieldError('name')}
-            </label>
-            <label className={styles.field} htmlFor="event-starts">
-              <span className={styles.label}>{COPY.starts}</span>
-              <input
-                id="event-starts"
-                type="datetime-local"
-                className={styles.input}
-                value={draft.starts}
-                disabled={!editable}
-                aria-invalid={Boolean(errors.starts_at)}
-                onChange={(ev) => setDraft({ ...draft, starts: ev.target.value })}
-              />
-              {fieldError('starts_at')}
-            </label>
-            <label className={styles.field} htmlFor="event-ends">
-              <span className={styles.label}>{COPY.ends}</span>
-              <input
-                id="event-ends"
-                type="datetime-local"
-                className={styles.input}
-                value={draft.ends}
-                disabled={!editable}
-                aria-invalid={Boolean(errors.ends_at)}
-                onChange={(ev) => setDraft({ ...draft, ends: ev.target.value })}
-              />
-              {fieldError('ends_at')}
-            </label>
-            <p className={styles.hint}>{COPY.zone}</p>
-            <label className={styles.field} htmlFor="event-location">
-              <span className={styles.label}>{COPY.location}</span>
-              <input
-                id="event-location"
-                className={styles.input}
-                value={draft.location}
-                maxLength={EVENT_LIMITS.location}
-                disabled={!editable}
-                aria-invalid={Boolean(errors.location_text)}
-                onChange={(ev) => setDraft({ ...draft, location: ev.target.value })}
-              />
-              {fieldError('location_text')}
-            </label>
-            <label className={styles.field} htmlFor="event-summary">
-              <span className={styles.label}>{COPY.description}</span>
-              <textarea
-                id="event-summary"
-                className={`${styles.input} ${styles.textarea}`}
-                value={draft.summary}
-                maxLength={EVENT_LIMITS.summary}
-                rows={3}
-                disabled={!editable}
-                aria-invalid={Boolean(errors.summary)}
-                onChange={(ev) => setDraft({ ...draft, summary: ev.target.value })}
-              />
-              {fieldError('summary')}
-            </label>
-            {editable ? (
-              <div className={styles.actions}>
-                <button
-                  type="submit"
-                  className={styles.secondary}
-                  disabled={busy || !draft.name.trim()}
-                  data-action="save"
-                >
-                  {current ? COPY.save : COPY.saveDraft}
-                </button>
-                {current?.status === 'DRAFT' ? (
-                  <button
-                    type="button"
-                    className={styles.primaryInline}
-                    disabled={busy}
-                    onClick={() =>
-                      void run(
-                        () =>
-                          apiRequest<EventDTO>(`/ops/events/${current.id}/publish`, {
-                            method: 'POST',
-                            idempotencyKey: crypto.randomUUID(),
-                          }),
-                        COPY.published,
-                      )
-                    }
-                    data-action="publish"
-                  >
-                    {COPY.publish}
-                  </button>
+        {panel ? (
+          <aside className={styles.side}>
+            <section className={styles.card} data-card={current ? 'detail' : 'create'}>
+              <div className={styles.sideHead}>
+                <h2 className={styles.eyebrow}>{current ? COPY.detailTitle : COPY.createTitle}</h2>
+                {current ? (
+                  <span className={`${styles.chip} ${styles[`status${current.status}`] ?? ''}`}>
+                    {STATUS_LABELS[current.status] ?? current.status}
+                  </span>
                 ) : null}
               </div>
-            ) : (
-              <p className={styles.hint} data-state="read-only">
-                {COPY.readOnly}
-              </p>
-            )}
-          </form>
-          {current && CANCELLABLE.includes(current.status) ? (
-            <div className={styles.cancelBox}>
-              {confirming ? (
-                <>
-                  <p className={styles.hint}>{COPY.cancelNote}</p>
+              {notice ? (
+                <p
+                  className={`${styles.notice} ${notice.tone === 'ok' ? styles.noticeOk : styles.noticeError}`}
+                  role={notice.tone === 'ok' ? 'status' : 'alert'}
+                  data-state={notice.tone === 'ok' ? 'action-success' : 'action-failed'}
+                >
+                  {notice.text}
+                </p>
+              ) : null}
+              <form
+                className={styles.form}
+                onSubmit={(ev) => {
+                  ev.preventDefault()
+                  void submit()
+                }}
+                data-event-form
+                noValidate
+              >
+                <label className={styles.field} htmlFor="event-name">
+                  <span className={styles.label}>{COPY.name}</span>
+                  <input
+                    id="event-name"
+                    className={styles.input}
+                    value={draft.name}
+                    maxLength={EVENT_LIMITS.name}
+                    disabled={!editable}
+                    aria-invalid={Boolean(errors.name)}
+                    onChange={(ev) => setDraft({ ...draft, name: ev.target.value })}
+                  />
+                  {fieldError('name')}
+                </label>
+                <label className={styles.field} htmlFor="event-starts">
+                  <span className={styles.label}>{COPY.starts}</span>
+                  <input
+                    id="event-starts"
+                    type="datetime-local"
+                    className={styles.input}
+                    value={draft.starts}
+                    disabled={!editable}
+                    aria-invalid={Boolean(errors.starts_at)}
+                    onChange={(ev) => setDraft({ ...draft, starts: ev.target.value })}
+                  />
+                  {fieldError('starts_at')}
+                </label>
+                <label className={styles.field} htmlFor="event-ends">
+                  <span className={styles.label}>{COPY.ends}</span>
+                  <input
+                    id="event-ends"
+                    type="datetime-local"
+                    className={styles.input}
+                    value={draft.ends}
+                    disabled={!editable}
+                    aria-invalid={Boolean(errors.ends_at)}
+                    onChange={(ev) => setDraft({ ...draft, ends: ev.target.value })}
+                  />
+                  {fieldError('ends_at')}
+                </label>
+                <p className={styles.hint}>{COPY.zone}</p>
+                <label className={styles.field} htmlFor="event-location">
+                  <span className={styles.label}>{COPY.location}</span>
+                  <input
+                    id="event-location"
+                    className={styles.input}
+                    value={draft.location}
+                    maxLength={EVENT_LIMITS.location}
+                    disabled={!editable}
+                    aria-invalid={Boolean(errors.location_text)}
+                    onChange={(ev) => setDraft({ ...draft, location: ev.target.value })}
+                  />
+                  {fieldError('location_text')}
+                </label>
+                <label className={styles.field} htmlFor="event-summary">
+                  <span className={styles.label}>{COPY.description}</span>
+                  <textarea
+                    id="event-summary"
+                    className={`${styles.input} ${styles.textarea}`}
+                    value={draft.summary}
+                    maxLength={EVENT_LIMITS.summary}
+                    rows={3}
+                    disabled={!editable}
+                    aria-invalid={Boolean(errors.summary)}
+                    onChange={(ev) => setDraft({ ...draft, summary: ev.target.value })}
+                  />
+                  {fieldError('summary')}
+                </label>
+                {editable ? (
                   <div className={styles.actions}>
                     <button
-                      type="button"
-                      className={styles.danger}
-                      disabled={busy}
-                      onClick={() =>
-                        void run(
-                          () =>
-                            apiRequest<EventDTO>(`/ops/events/${current.id}/cancel`, {
-                              method: 'POST',
-                            }),
-                          COPY.cancelled,
-                        )
-                      }
-                      data-action="confirm-cancel"
+                      type="submit"
+                      className={styles.secondary}
+                      disabled={busy || !draft.name.trim()}
+                      data-action="save"
                     >
-                      {COPY.confirmCancel}
+                      {current ? COPY.save : COPY.saveDraft}
                     </button>
+                    {current?.status === 'DRAFT' ? (
+                      <button
+                        type="button"
+                        className={styles.primaryInline}
+                        disabled={busy}
+                        onClick={() =>
+                          void run(
+                            () =>
+                              apiRequest<EventDTO>(`/ops/events/${current.id}/publish`, {
+                                method: 'POST',
+                                idempotencyKey: crypto.randomUUID(),
+                              }),
+                            COPY.published,
+                          )
+                        }
+                        data-action="publish"
+                      >
+                        {COPY.publish}
+                      </button>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className={styles.hint} data-state="read-only">
+                    {COPY.readOnly}
+                  </p>
+                )}
+              </form>
+              {current && CANCELLABLE.includes(current.status) ? (
+                <div className={styles.cancelBox}>
+                  {confirming ? (
+                    <>
+                      <p className={styles.hint}>{COPY.cancelNote}</p>
+                      <div className={styles.actions}>
+                        <button
+                          type="button"
+                          className={styles.danger}
+                          disabled={busy}
+                          onClick={() =>
+                            void run(
+                              () =>
+                                apiRequest<EventDTO>(`/ops/events/${current.id}/cancel`, {
+                                  method: 'POST',
+                                }),
+                              COPY.cancelled,
+                            )
+                          }
+                          data-action="confirm-cancel"
+                        >
+                          {COPY.confirmCancel}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.secondary}
+                          onClick={() => setConfirming(false)}
+                        >
+                          {COPY.keep}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
                     <button
                       type="button"
-                      className={styles.secondary}
-                      onClick={() => setConfirming(false)}
+                      className={styles.textAction}
+                      onClick={() => setConfirming(true)}
+                      data-action="cancel-event"
                     >
-                      {COPY.keep}
+                      {COPY.cancel}
                     </button>
-                  </div>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.textAction}
-                  onClick={() => setConfirming(true)}
-                  data-action="cancel-event"
-                >
-                  {COPY.cancel}
-                </button>
-              )}
-            </div>
-          ) : null}
-          {current ? (
-            <button
-              type="button"
-              className={styles.linkAction}
-              onClick={() => open(null)}
-              data-action="close-detail"
-            >
-              {COPY.close}
-            </button>
-          ) : null}
-        </section>
-      </aside>
+                  )}
+                </div>
+              ) : null}
+              <button
+                type="button"
+                className={styles.linkAction}
+                onClick={close}
+                data-action="close-detail"
+              >
+                {COPY.close}
+              </button>
+            </section>
+          </aside>
+        ) : null}
+      </div>
     </div>
   )
 }

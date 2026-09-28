@@ -1,48 +1,99 @@
 /*
  * WF03-S07 — standalone Event management. The approved S07 bitmap is a WF04
- * collage (DEC-WF03-G2), so the screen reuses the approved WF03 ops primitives
- * of ADM21 / S08 as drawn there (px / 16 = rem): 810px main + 342px side
- * columns, the pinned 122x33 header button, card chrome, table, chips and form
- * fields. Local to this screen; no global token changes.
+ * collage (DEC-WF03-G2), so the side column reuses the approved WF03 ops
+ * primitives of ADM21 / S08 as drawn there (px / 16 = rem): the 342px column,
+ * card chrome, chips and form fields. Local to this screen; no global token
+ * changes.
+ */
+
+/*
+ * TASK 22.4 — the list follows the corrected L23 CHP4 subset in Space Grotesk
+ * (DEC-HD-12), measured at 1440x900 DPR1: the header band, the chips and
+ * "Tạo sự kiện" toolbar, card rows with "Quản lý". The side column (create /
+ * detail form) keeps the ADM21 / S08 form primitives above and opens on demand.
  */
 
 .page {
+  --font-ui: 'Space Grotesk', 'Be Vietnam Pro', system-ui, sans-serif;
+
+  min-height: 100vh;
+  color: #170002;
+  font-family: var(--font-ui);
+}
+
+.header {
+  height: 5.25rem;
+  padding: 1.125rem 3rem 0;
+  border-bottom: 1px solid #e3dddd;
+  background: var(--hub-surface);
+}
+
+.title {
+  margin: 0.0625rem 0 0;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.5rem;
+}
+
+.subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #534041;
+}
+
+.body {
+  padding: 1.75rem 3rem 3rem;
+}
+
+.withPanel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 21.375rem;
   align-items: start;
   gap: 1.125rem;
-  min-height: 100vh;
-  padding: 1.4375rem 1.6875rem 1.5rem;
 }
 
 .main,
 .side {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
   min-width: 0;
 }
 
-.header {
+.side {
+  gap: 1rem;
+}
+
+.toolbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.title {
-  margin: 0;
-  font-size: 1.375rem;
-  line-height: 1.875rem;
-  font-weight: var(--weight-semibold);
-  color: #140002;
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
 }
 
-.subtitle {
-  margin: 0.1875rem 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.125rem;
-  color: #533f41;
+.filter {
+  height: 1.875rem;
+  padding: 0 0.8125rem;
+  border: 1px solid #e3dddd;
+  border-radius: 62.5rem;
+  background: var(--hub-surface);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #534041;
+  cursor: pointer;
+}
+
+.filter[aria-pressed='true'] {
+  border-color: #f8c2b8;
+  background: #fef3f1;
+  color: #b91610;
 }
 
 .primary,
@@ -54,26 +105,22 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.375rem;
+  font: inherit;
   font-size: 0.8125rem;
-  font-weight: var(--weight-medium);
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
 }
 
 .primary {
-  /* The S08 header button, pinned (122x33). */
-  width: 7.625rem;
-  height: 2.0625rem;
-  margin-top: 0.5625rem;
+  /* L23 toolbar button (124x42). */
+  width: 7.75rem;
+  height: 2.625rem;
   padding: 0;
   border: 0;
-  border-radius: 0.4375rem;
   background: #fc523c;
-  font-size: 0.75rem;
+  font-size: 0.84375rem;
   color: #160002;
-  box-shadow:
-    0 -1px 0 rgb(252 82 60 / 0.25),
-    0 1px 0 rgb(252 82 60 / 0.3);
 }
 
 .primaryInline {
@@ -112,6 +159,8 @@
 .primaryInline:focus-visible,
 .secondary:focus-visible,
 .danger:focus-visible,
+.filter:focus-visible,
+.manage:focus-visible,
 .textAction:focus-visible,
 .linkAction:focus-visible,
 .input:focus-visible {
@@ -147,46 +196,85 @@
 }
 
 .table {
-  margin-top: 0.5rem;
+  margin-top: 1.4375rem;
 }
 
 .head,
 .row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 15rem 7.5rem 7rem 2rem;
+  grid-template-columns: minmax(0, 1fr) 12.5rem 12.5rem 5.0625rem;
   align-items: center;
-  column-gap: 0.75rem;
+  column-gap: 1.5rem;
 }
 
 .head {
-  height: 1.8125rem;
-  border-bottom: 1px solid #f1ebeb;
-  font-size: 0.625rem;
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.02em;
+  margin-bottom: 1.375rem;
+  padding: 0 3.6875rem 0 1.375rem;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  line-height: 0.75rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #533f41;
+  color: #8e7677;
 }
 
 .row {
-  min-height: 2.75rem;
-  border-bottom: 1px solid #f1ebeb;
+  min-height: 4.6875rem;
+  margin-bottom: 0.75rem;
+  padding: 0 3.6875rem 0 1.5rem;
+  border: 1px solid #e3dddd;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
 }
 
 .selected {
+  border-color: #f8c2b8;
   background: #fff7f5;
 }
 
 .name {
-  font-size: 0.875rem;
-  font-weight: var(--weight-medium);
-  color: #170002;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  font-size: 0.90625rem;
+  font-weight: 600;
+  line-height: 1.25rem;
 }
 
 .cell {
-  font-size: 0.75rem;
-  color: #533f41;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #534041;
   white-space: nowrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 1.3125rem;
+  padding: 0 0.5rem;
+  border: 1px solid #e3dddd;
+  border-radius: 62.5rem;
+  background: #f7f5f5;
+  font-size: 0.625rem;
+  font-weight: 400;
+  color: #534041;
+}
+
+.manage {
+  /* L23 "Quản lý" (81x37). */
+  width: 5.0625rem;
+  height: 2.3125rem;
+  padding: 0;
+  border: 1px solid #cfc5c5;
+  border-radius: 0.375rem;
+  background: var(--hub-surface);
+  font: inherit;
+  font-size: 0.8125rem;
+  color: #170002;
+  cursor: pointer;
 }
 
 .chip {
@@ -351,10 +439,31 @@
   .table {
     overflow-x: auto;
   }
+
+  /* Keep the name column readable; the table scrolls inside its column. */
+  .head,
+  .row {
+    min-width: 51rem;
+  }
 }
 
 @media (max-width: 1023px) {
-  .page {
+  .withPanel {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 767px) {
+  .header {
+    height: auto;
+    padding: 1rem 1rem 0.75rem;
+  }
+
+  .body {
+    padding: 1.25rem 1rem 3rem;
   }
 }

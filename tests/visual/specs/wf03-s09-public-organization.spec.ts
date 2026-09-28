@@ -1,20 +1,13 @@
-import path from 'node:path'
-
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { decodePng, readPng } from '../pixel-qa/png'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect } from '../pixel-qa/segments'
+import { auditRevision } from '../pixel-qa/revision'
 
 /**
  * WF03-S09 — public organization page (/organizations/:slug).
  * API 05 §8.5 `GET /organizations/by-slug/{slug}`; DEC-WF03-G9/G10/G13;
- * DEC-WF01-S07-D2 (PROFILE_DISCOVERY never public); DEC-WF03-S09-D1..D4.
+ * DEC-WF01-S07-D2 (PROFILE_DISCOVERY never public); DEC-WF03-S09-D1..D4; the
+ * page is the corrected L19 CHP0 subset (TASK 22.4, DEC-L3-D1).
  */
 
 const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
@@ -268,145 +261,123 @@ test.describe('WF03-S09 privacy and event filtering', () => {
   })
 })
 
-async function textRects(page: Page): Promise<Rect[]> {
-  return page.evaluate(() => {
-    const rects: { x: number; y: number; width: number; height: number }[] = []
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-    while (walker.nextNode()) {
-      if (!walker.currentNode.textContent!.trim()) continue
-      const range = document.createRange()
-      range.selectNodeContents(walker.currentNode)
-      for (const r of range.getClientRects())
-        rects.push({ x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 })
-    }
-    return rects
-  })
-}
+test.describe('WF03-S09 pixel QA (corrected L19 CHP0 subset)', () => {
+  const REFERENCE = 'design-reference/final/revision/L3/L19__chapter-public__SOURCE.png'
+  /** L19, measured once: section tops, the first CLB and event cards, the join button, the footer. */
+  const REF = {
+    children: 1195,
+    childCard: 1418,
+    events: 1767,
+    eventCard: 1953,
+    join: 2149,
+    joinButton: 2352,
+    footer: 2461,
+  }
 
-test.describe('WF03-S09 pixel QA', () => {
-  test('viewport + full page against the approved reference (section segments)', async ({
+  test('1440×900 full page: bar, hero frame and actions, sections, cards, join band, footer', async ({
     page,
   }) => {
-    const { screens } = loadManifest()
-    const screen = findScreen(screens, 'WF03-S09')
-    const reports = await runScreenQa(page, screen, qaConfigFor('WF03-S09')!, {
-      // Deterministic state: only seeded rows (test-created events / children removed).
-      beforeNavigate: async () => {
-        await query(`DELETE FROM events WHERE name LIKE 'S09 %'`)
-        await query(
-          `DELETE FROM organization_relationships WHERE target_org_id IN (SELECT id FROM organizations WHERE slug LIKE 's09-%')`,
-        )
-      },
-      afterLoad: async (p) => {
-        await expect(p.locator('[data-event-card]')).toHaveCount(1)
-        await expect(p.locator('[data-child]')).toHaveCount(1)
-      },
-    })
-    const viewport = reports.find((r) => r.capture === 'viewport')!
-    expect(viewport.typography?.violations).toEqual([])
-
-    const actual = decodePng(await page.screenshot({ animations: 'disabled', fullPage: true }))
-    const reference = readPng(path.join(REPO_ROOT, screen.full_page_baseline!))
+    // Deterministic state: only seeded rows (test-created events / children removed).
+    await query(`DELETE FROM events WHERE name LIKE 'S09 %'`)
+    await query(
+      `DELETE FROM organization_relationships WHERE target_org_id IN (SELECT id FROM organizations WHERE slug LIKE 's09-%')`,
+    )
+    await page.goto('/organizations/chapter-01', { waitUntil: 'networkidle' })
+    await expect(page.locator('[data-event-card]')).toHaveCount(1)
+    await expect(page.locator('[data-child]')).toHaveCount(1)
     const top = async (sel: string) =>
       Math.round((await page.locator(sel).first().boundingBox())!.y)
-    const childDy = (await top('#truc-thuoc')) - 1170
-    const eventsDy = (await top('#su-kien')) - 1705
-    const joinY = await top('[data-screen="WF03-S09"] section:last-of-type')
-    const joinDy = joinY - 2064
-    const footerDy = (await top('[data-screen="WF03-S09"] footer')) - 2362
-    const ghost = (await page.locator('a[href="#su-kien"]').last().boundingBox())!
-    const childCardDy = (await top('[data-child]')) - 1381
-    const mask = await textRects(page)
-    // Reference text regions (moved with their segments).
-    const REF_TEXT: Rect[] = [
-      { x: 146, y: 62, width: 290, height: 26 },
-      { x: 1160, y: 64, width: 116, height: 24 },
-      { x: 146, y: 158, width: 205, height: 20 },
-      { x: 238, y: 196, width: 380, height: 84 },
-      { x: 146, y: 288, width: 670, height: 56 },
-      { x: 146, y: 426, width: 1150, height: 58 },
-      { x: 170, y: 532, width: 130, height: 26 },
-      { x: 146, y: 1230 + childDy, width: 700, height: 130 },
-      { x: 146, y: 1760 + eventsDy, width: 700, height: 100 },
-      { x: 146, y: 2116 + joinDy, width: 800, height: 130 },
-      { x: 146, y: 2384 + footerDy, width: 320, height: 46 },
-    ]
-    // INTENTIONAL-CONTRACT / P0-SCOPE regions of the reference (D4): the "Bài toán" nav link
-    // (WF04), the founding-date chip, the summit button and note, the chapter link card.
-    const OMITTED: Rect[] = [
-      { x: 790, y: 60, width: 350, height: 30 },
-      { x: 340, y: 150, width: 225, height: 34 },
-      { x: 322, y: 516, width: 520, height: 58 },
-      { x: ghost.x - 4, y: ghost.y - 4, width: 520, height: ghost.height + 8 },
-      { x: 970, y: 2136 + joinDy, width: 325, height: 150 },
-      // "Nộp bài không qua chapter" (WF04), CLB region chips, footer links (no P0 source).
-      { x: 336, y: 2252 + joinDy, width: 248, height: 60 },
-      { x: 168, y: 1396 + childCardDy, width: 210, height: 36 },
-      { x: 930, y: 2396 + footerDy, width: 365, height: 24 },
-    ]
-    const results = compareSegments(
-      reference,
-      actual,
-      [
-        { name: 'frame-top', reference: { x: 0, y: 0, width: 1440, height: 38 }, dy: 0 },
-        { name: 'top-bar', reference: { x: 0, y: 38, width: 1440, height: 74 }, dy: 0 },
-        { name: 'hero', reference: { x: 0, y: 112, width: 1440, height: 492 }, dy: 0 },
+    const dyChildren = (await top('#truc-thuoc')) - REF.children
+    const dyChildCard = (await top('[data-child]')) - REF.childCard
+    const dyEvents = (await top('#su-kien')) - REF.events
+    const dyEventCard = (await top('[data-event-card]')) - REF.eventCard
+    const join = page.locator('[data-screen="WF03-S09"] section').last()
+    const dyJoin = Math.round((await join.boundingBox())!.y) - REF.join
+    const dyJoinButton = Math.round((await join.locator('a').boundingBox())!.y) - REF.joinButton
+    const dyFooter = (await top('[data-screen="WF03-S09"] footer')) - REF.footer
+    await auditRevision(page, {
+      name: 'WF03-S09.L19',
+      reference: REFERENCE,
+      full: true,
+      segments: [
+        // "HUB NETWORK /" and the join CTA; the org name differs.
+        { name: 'bar-brand', reference: { x: 0, y: 0, width: 272, height: 78 }, dy: 0 },
+        { name: 'bar-cta', reference: { x: 1160, y: 8, width: 170, height: 62 }, dy: 0 },
+        { name: 'hero-logo', reference: { x: 100, y: 156, width: 106, height: 104 }, dy: 0 },
+        { name: 'stats-top-rule', reference: { x: 120, y: 384, width: 1200, height: 12 }, dy: 0 },
+        { name: 'stats-first-label', reference: { x: 112, y: 446, width: 90, height: 24 }, dy: 0 },
         {
-          name: 'children-section-top',
-          reference: { x: 0, y: 1170, width: 1440, height: 205 },
-          dy: childDy,
+          name: 'stats-bottom-rule',
+          reference: { x: 120, y: 480, width: 1200, height: 12 },
+          dy: 0,
+        },
+        { name: 'hero-join', reference: { x: 110, y: 500, width: 194, height: 70 }, dy: 0 },
+        {
+          // L19's eyebrow row also holds the omitted QĐ-13 chip, which makes it 5px lower.
+          name: 'children-eyebrow',
+          reference: { x: 110, y: 1256, width: 150, height: 26 },
+          dy: dyChildren - 5,
         },
         {
-          name: 'child-card-top',
-          reference: { x: 145, y: 1375, width: 380, height: 60 },
-          dy: childCardDy,
+          name: 'child-card-banner',
+          reference: { x: 118, y: 1415, width: 392, height: 70 },
+          dy: dyChildCard,
         },
         {
-          name: 'events-section-top',
-          reference: { x: 0, y: 1705, width: 1440, height: 170 },
-          dy: eventsDy,
+          name: 'child-card-link',
+          reference: { x: 132, y: 1660, width: 140, height: 30 },
+          dy: dyChildCard,
         },
         {
-          name: 'event-card-top',
-          reference: { x: 145, y: 1875, width: 380, height: 20 },
-          dy: (await top('[data-event-card]')) - 1881,
+          name: 'child-card-bottom',
+          reference: { x: 118, y: 1690, width: 392, height: 20 },
+          dy: dyChildCard,
         },
-        { name: 'join-band', reference: { x: 0, y: 2064, width: 1440, height: 298 }, dy: joinDy },
-        { name: 'footer', reference: { x: 0, y: 2362, width: 1440, height: 149 }, dy: footerDy },
+        {
+          name: 'events-eyebrow',
+          reference: { x: 110, y: 1822, width: 110, height: 26 },
+          dy: dyEvents,
+        },
+        {
+          name: 'event-card-media',
+          reference: { x: 118, y: 2006, width: 128, height: 86 },
+          dy: dyEventCard,
+        },
+        {
+          name: 'event-card-right',
+          reference: { x: 470, y: 1949, width: 40, height: 142 },
+          dy: dyEventCard,
+        },
+        { name: 'join-eyebrow', reference: { x: 110, y: 2200, width: 90, height: 30 }, dy: dyJoin },
+        {
+          name: 'join-button',
+          reference: { x: 120, y: 2352, width: 186, height: 51 },
+          dy: dyJoinButton,
+        },
+        {
+          name: 'footer-brand',
+          reference: { x: 110, y: 2482, width: 186, height: 30 },
+          dy: dyFooter,
+        },
       ],
-      [...mask, ...REF_TEXT, ...OMITTED],
-      { diffPath: resolveOutputPath('diff', 'WF03-S09.segments.diff.png') },
-    )
-    const full = reports.find((r) => r.capture === 'full_page')!
-    writeJsonReport('WF03-S09.segments.json', {
-      screen_id: 'WF03-S09',
-      state: qaConfigFor('WF03-S09')!.state,
-      full_page: {
-        rule: 'EXACT',
-        status: full.comparison.status,
-        reference_height: 2511,
-        actual_height: full.comparison.actual_size!.height,
-      },
-      offsets: { childDy, eventsDy, joinDy, footerDy },
       intentional: [
         {
           class: 'INTENTIONAL-CONTRACT',
           reason:
-            'DEC-WF03-S09-D3: no person is rendered (PROFILE_DISCOVERY is never public, DEC-WF01-S07-D2) — the leadership section is omitted; no contact email',
+            'DEC-WF03-S09-D3 / DEC-L3-D1: no person is rendered (PROFILE_DISCOVERY is never public) — the leadership section is omitted; no contact email',
         },
         {
-          class: 'INTENTIONAL-P0-SCOPE',
+          class: 'INTENTIONAL-SCOPE',
           reason:
-            'No P0 source: founding date, region line, partner strip, team / summit counts, "Bài toán", summit button, registration chips and capacity, chapter challenge link, CLB region chips and the QĐ-13 note; the later sections move up (compared per section)',
+            'DEC-L3-D1 (HD-08, no P0 source): "Bài toán" nav, founding-date chip, region line, partner strip, team / summit counts, summit button, QĐ-13 chip, province chips, registration chips and capacities, footer links; later sections move up (compared per section)',
         },
         {
-          class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
-          reason: 'glyphs masked; DOM typography contract asserted',
+          class: 'INTENTIONAL-DATA',
+          reason:
+            'names, counts, description and the event come from the seeded Chapter 01; the stat labels are the three canonical counts; CLB banners and initials are decoration',
         },
+        { class: 'INTENTIONAL-SCOPE', reason: 'HD-11: no floating "Góp ý" button' },
       ],
-      segments: results,
-      product_pixel_pass_claimed: false,
     })
-    for (const r of results) expect(r.outside_ratio, `${r.name} drift`).toBeLessThan(0.002)
   })
 })
