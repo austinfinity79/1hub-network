@@ -61,6 +61,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-PREVIEW-01 — INTERNAL ALPHA PREVIEW (HOMEPAGE + L1 + L2): GREEN, frozen, not deployed** ([report](reports/TASK-22-PREVIEW-01_preview-release.md), [manifest](INTERNAL_ALPHA_PREVIEW_RELEASE.md)). APP PREVIEW SHA `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` (tag `internal-alpha-preview-01`); rollback `9c61458` (deployed now, schema-safe). No product change: targeted suite 342 / 0 failed, happy path 19 / 19, pixel 0 / 0 / 0, #418 = 0, build PASS. 12 preview limitations documented (inert homepage CTAs, no auth return, no AI, desktop-frame member pages, …).
 
+**TASK 22-PREVIEW-LOGIN-UI — L1 login hotfix: DONE** ([report](reports/TASK-22-PREVIEW-LOGIN-UI_login-hotfix.md)). AUTH1 split layout kept (PO); the Google control is drawn disabled with "Sắp có", plus the divider (DEC-L1-D9); auth logic unchanged. NEW APP PREVIEW SHA `33f8b0c2c2cb7b78ce7d6b8979def4d7660025bd` (tag `internal-alpha-preview-02`), rollback `cc6ca28` (the deployed preview). Regression 219 / 0 failed; pixel 0 / 0 / 0; build PASS. Real e-mail login stays BLOCKED CONFIGURATION ([stop report](reports/TASK-22-PREVIEW-AUTH_email-config-stop.md)).
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -150,7 +152,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Preview track: TASK 22-PREVIEW-02 — deploy the exact APP PREVIEW SHA `cc6ca28` to 1hubnetwork.io.vn (Claude B).
+- Preview track: deploy the NEW exact APP PREVIEW SHA `33f8b0c` to 1hubnetwork.io.vn (Claude B); real e-mail login waits for its configuration.
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.

@@ -5,21 +5,22 @@
 ## Release
 | Field | Value |
 |---|---|
-| **APP PREVIEW SHA** (branch `main`) | **`cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1`** — last product commit; local tag `internal-alpha-preview-01`. Later `main` commits are docs only (`cdc5d1a`, `75db535`, the report commit) |
-| **ROLLBACK SHA** | `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` — the release running on https://1hubnetwork.io.vn now; `rollback.sh` reuses its kept image |
+| **APP PREVIEW SHA** (branch `main`) | **`33f8b0c2c2cb7b78ce7d6b8979def4d7660025bd`** — local tag `internal-alpha-preview-02`; TASK 22-PREVIEW-LOGIN-UI (AUTH1 Google control disabled with "Sắp có" + divider, [DEC-L1-D9](../decisions/DECISION_LOG.md#dec-l1-d9)) on top of the first preview. Later `main` commits are docs only |
+| Previous preview | `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` (tag `internal-alpha-preview-01`), deployed by TASK 22-PREVIEW-02 |
+| **ROLLBACK SHA** | `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` — the preview running on https://1hubnetwork.io.vn now; before it, `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` |
 | Deploy tooling | branch `deploy/vps-foundation` (worktree `/Users/thanosvn/workspace/1hub-network-deploy`, tip `6604fd8`); `deploy/` unchanged since `68488cf` (copies `patches/` before the install) |
-| Product commits since the rollback SHA | `a05917a` 22.1 homepage · `5735d78` 22.2 auth / completion · `2a57fe9` 22.3 settings / project wizard · `cc6ca28` 22.4 chapter (ops, outside the demo scope, GREEN) |
-| Schema | no migration and no seed change since the rollback SHA (`db/` identical): migrate expects 9 × skip; rollback is schema-safe |
-| Dependencies | `package.json` / lockfile add `@fontsource/space-grotesk` (dev); the 12 Space Grotesk `woff2` files are committed in `public/fonts`, so no `fonts:sync` at deploy |
+| Product commits since `9c61458` | `a05917a` 22.1 homepage · `5735d78` 22.2 auth / completion · `2a57fe9` 22.3 settings / project wizard · `cc6ca28` 22.4 chapter (ops, outside the demo scope) · `33f8b0c` login UI hotfix |
+| Schema | no migration and no seed change since `9c61458` (`db/` identical): migrate expects 9 × skip; rollback is schema-safe |
+| Dependencies | unchanged since the first preview (Space Grotesk `woff2` committed in `public/fonts`; no `fonts:sync` at deploy) |
 | Environment | unchanged from [INTERNAL_ALPHA_RELEASE_MANIFEST.md](INTERNAL_ALPHA_RELEASE_MANIFEST.md) |
 
 ## Deploy (Claude B, TASK 22-PREVIEW-02)
 | Step | Command / check |
 |---|---|
 | Backup | `/opt/1hub-network/app/bin/backup.sh` |
-| Deploy | `deploy/bin/deploy.sh cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` from the deploy worktree (the SHA must be present in the local repo it archives from; nothing is pushed) |
-| Smoke | `deploy/bin/smoke.sh`, then over HTTPS: `/` 200 without login; `/auth` 200; `/me` → `/auth` for a guest; operator link for `member@example.test` → `/me`; `/me/settings`, `/projects/new` 200; hero "Tạo hồ sơ startup của bạn" → `/auth` for a guest |
-| Rollback | `rollback.sh` → `9c61458` |
+| Deploy | `deploy/bin/deploy.sh 33f8b0c2c2cb7b78ce7d6b8979def4d7660025bd` from the deploy worktree (the SHA must be present in the local repo it archives from; nothing is pushed) |
+| Smoke | `deploy/bin/smoke.sh`, then over HTTPS: `/` 200 without login; `/auth` 200; `/me` → `/auth` for a guest; operator link for `member@example.test` → `/me`; `/me/settings`, `/projects/new` 200; hero "Tạo hồ sơ startup của bạn" → `/auth` for a guest; `/auth` shows the disabled "Tiếp tục với Google" + "Sắp có" and the divider |
+| Rollback | `rollback.sh` → `cc6ca28` |
 
 ## Preview routes (19)
 `/` · `/auth` · `/auth/check-email` · `/auth/callback` · `/auth/error` · `/onboarding/purpose` · `/onboarding/profile` · `/onboarding/privacy` · `/onboarding/complete` · `/me` · `/me/profile/edit` · `/me/privacy` · `/me/settings` · `/me/roles` · `/projects/new` · `/projects/:id/edit` · `/projects/:id/team` · `/organizations/hub-network` (homepage network link) · `/legal/:kind/:version`
