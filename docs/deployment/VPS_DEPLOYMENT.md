@@ -23,9 +23,9 @@ Browser ─HTTPS─▶ OneShield/WAF ─▶ Nginx :80/:443 (origin) ─▶ 127.0
 
 | Item | Value |
 |---|---|
-| Deployed | `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` (INTERNAL ALPHA PREVIEW — HOMEPAGE + L1 + L2, not the final Alpha), 2026-09-28 04:48 UTC |
-| Previous | `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` (Internal Alpha release); `rollback.sh` returns to it |
-| Records | [INTERNAL_ALPHA_PREVIEW_DEPLOYMENT.md](INTERNAL_ALPHA_PREVIEW_DEPLOYMENT.md), [INTERNAL_ALPHA_DEPLOYMENT.md](INTERNAL_ALPHA_DEPLOYMENT.md) |
+| Deployed | `5a195f72acf05dd6537b6c70ad185e0737acd916` (INTERNAL ALPHA PREVIEW — HOMEPAGE + L1 with real e-mail login + L2, not the final Alpha), 2026-09-28 06:55 UTC |
+| Previous | `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` (first preview); `rollback.sh` returns to it |
+| Records | [INTERNAL_ALPHA_PREVIEW_REAL_EMAIL_DEPLOYMENT.md](INTERNAL_ALPHA_PREVIEW_REAL_EMAIL_DEPLOYMENT.md), [INTERNAL_ALPHA_PREVIEW_DEPLOYMENT.md](INTERNAL_ALPHA_PREVIEW_DEPLOYMENT.md), [INTERNAL_ALPHA_DEPLOYMENT.md](INTERNAL_ALPHA_DEPLOYMENT.md) |
 
 ## Server paths
 
