@@ -23,9 +23,9 @@ Browser ─HTTPS─▶ OneShield/WAF ─▶ Nginx :80/:443 (origin) ─▶ 127.0
 
 | Item | Value |
 |---|---|
-| Deployed | `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` (Internal Alpha release) with tooling `68488cf`, 2026-09-27 17:37 UTC |
-| Previous | `0a2df094b941f6d0f0fc87cdb7767b2e92272198`; rollback round trip verified |
-| Record | [INTERNAL_ALPHA_DEPLOYMENT.md](INTERNAL_ALPHA_DEPLOYMENT.md) |
+| Deployed | `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1` (INTERNAL ALPHA PREVIEW — HOMEPAGE + L1 + L2, not the final Alpha), 2026-09-28 04:48 UTC |
+| Previous | `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` (Internal Alpha release); `rollback.sh` returns to it |
+| Records | [INTERNAL_ALPHA_PREVIEW_DEPLOYMENT.md](INTERNAL_ALPHA_PREVIEW_DEPLOYMENT.md), [INTERNAL_ALPHA_DEPLOYMENT.md](INTERNAL_ALPHA_DEPLOYMENT.md) |
 
 ## Server paths
 
