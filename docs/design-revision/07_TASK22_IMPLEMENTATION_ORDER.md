@@ -20,7 +20,7 @@
 
 Order: 22.1 → 22.2 → 22.3 → 22.4 → 22.7 → 22.8. Batches 22.5 and 22.6 stay empty until B decisions are made. Each batch stops for review, per protected-workflow practice.
 
-## Test Pack impact (baseline `docs/uat/`, commit `2d19cad`; the prompt's `2d19ca0` is the same commit; update only after the revised UI is redeployed GREEN)
+## Test Pack impact (baseline pack from `2d19cad`, now in `docs/implementation/` with the flows in `docs/implementation/internal-alpha/`; update only after the revised UI is redeployed GREEN)
 | Test Pack item | Change | Status |
 |---|---|---|
 | Test actors, accounts, reset rules | Unchanged by Bucket A | NO CHANGE |
@@ -34,4 +34,4 @@ Order: 22.1 → 22.2 → 22.3 → 22.4 → 22.7 → 22.8. Batches 22.5 and 22.6 
 
 ## Related
 - [06_SCOPE_BUCKETS.md](06_SCOPE_BUCKETS.md) · [05_BUSINESS_API_DATA_CONFLICT_MATRIX.md](05_BUSINESS_API_DATA_CONFLICT_MATRIX.md)
-- [../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md) — baseline Test Pack
+- [../implementation/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](../implementation/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md) — baseline Test Pack
