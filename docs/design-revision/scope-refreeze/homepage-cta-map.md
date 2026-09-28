@@ -19,10 +19,12 @@
 ## Discovery CTAs — proposed, PO review before freeze
 | CTA | Proposed target | Why |
 |---|---|---|
-| Mạng lưới đổi mới sáng tạo (header) · Khám phá mạng lưới (03/03, footer) | `/organizations/hub-network` (public, exists) | Only public network surface |
+| Mạng lưới đổi mới sáng tạo (header) | `/library`, the public Library demo ([DEC-L15-D4](../../decisions/DECISION_LOG.md#dec-l15-d4), PO 28/09) | Discovery surface |
+| Khám phá mạng lưới (03/03, footer) | `/organizations/hub-network` (public, exists) | Only public network surface |
 | Khám phá mạng lưới (Cửa 01 Giải pháp & Startup) | "Sắp có" | A startup directory needs public ventures; ventures are private (HD-08) |
 | Khám phá mạng lưới (Cửa 02 Nhà sáng lập) | "Sắp có" | A founder directory conflicts with PROFILE_DISCOVERY never public (DEC-WF01-S07-D2) |
-| Đăng bài toán · Kết nối nguồn lực · challenge / problem library | "Sắp có" | Problem entity is Future; L15 DIR1 needs HD-A7 |
+| Đăng bài toán · Kết nối nguồn lực | "Sắp có" | Problem entity is Future |
+| Challenge / problem library | `/library` static demo ([DEC-L15](../../decisions/DECISION_LOG.md#dec-l15)) | Labelled demo data; a real directory still needs HD-A7 |
 | Chương trình · Sự kiện (header, footer) | `/programmes` · `/events` | Same directories as above |
 | Về HUB Network (header, footer) | `/about` | Same as "Tìm hiểu về HUB Network" |
 | Tham gia mạng lưới (01/03) | `/login?redirect=/me/roles` | Membership request stays WF02-S04 |

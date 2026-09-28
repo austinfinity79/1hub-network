@@ -123,8 +123,10 @@ test.describe('P0-LANDING behaviour', () => {
         expect(r.status(), href).toBeLessThan(400)
       }
     }
-    // The published HUB page is the network destination (Task 21 v2 audit).
-    for (const cta of ['network-bar', 'network-investors', 'network-community', 'closing-network'])
+    // The bar's "Mạng lưới đổi mới sáng tạo" opens the public Library (DEC-L15-D4).
+    await expect(page.locator('[data-cta="network-bar"]')).toHaveAttribute('href', '/library')
+    // The published HUB page stays the other network destinations (Task 21 v2 audit).
+    for (const cta of ['network-investors', 'network-community', 'closing-network'])
       await expect(page.locator(`[data-cta="${cta}"]`)).toHaveAttribute(
         'href',
         /^\/organizations\/[a-z0-9-]+$/,

@@ -83,7 +83,7 @@ export function Landing({
             <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Sự kiện">
               Sự kiện
             </Cta>
-            <Cta action={network} label="Mạng lưới đổi mới sáng tạo" cta="network-bar">
+            <Cta action={{ href: '/library' }} label="Mạng lưới đổi mới sáng tạo" cta="network-bar">
               Mạng lưới đổi mới sáng tạo
             </Cta>
           </nav>
