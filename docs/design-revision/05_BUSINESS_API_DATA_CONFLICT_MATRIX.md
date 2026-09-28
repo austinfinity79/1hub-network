@@ -2,6 +2,8 @@
 
 Behaviour is governed by the Business / Data SOT, API contract, RBAC and approved decisions; the design authorises presentation only.
 
+> **28/09 refreeze:** HD-04, HD-06 and HD-07 are superseded; HD-01, HD-09 and HD-10 are superseded in part ([DEC-2809](../decisions/DECISION_LOG.md#dec-2809)). Open questions now live in [scope-refreeze/human-decisions.md](scope-refreeze/human-decisions.md) (HD-A1…A14, plus HD-02, 03, 05, 08, 11). The "No AI" and "WF05 is a session demo" facts below describe the code today, not the target.
+
 Verified facts used below:
 - **No AI:** no AI / LLM SDK in `package.json`, 0 AI references in `src/`, none in the SOT.
 - **Onboarding intents:** allowlist `SUBMIT_SOLUTION · POST_CHALLENGE · ORGANIZE_COMMUNITY · EXPLORE_NETWORK` (DEC-WF01-S05-D1).

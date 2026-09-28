@@ -2,6 +2,8 @@
 
 Actions: KEEP · CHANGE · ADD · REMOVE · FUTURE · HUMAN_DECISION. No route is invented: a new page without an approved route is HUMAN_DECISION (HD-xx in [05](05_BUSINESS_API_DATA_CONFLICT_MATRIX.md)).
 
+> **28/09 refreeze:** the Homepage CTA table below is superseded where it differs from [scope-refreeze/homepage-cta-map.md](scope-refreeze/homepage-cta-map.md); `/login`, `/about`, `/events`, `/programmes`, `/programmes/create` are now required routes ([DEC-2809-D1](../decisions/DECISION_LOG.md#dec-2809-d1)). L28, L27, L52, L53, L47 / L18 and L54 are Future ([matrix files](scope-refreeze/overview.md)).
+
 ## Root "/" — PASS, no correction
 | Check (read-only on https://1hubnetwork.io.vn, 2026-09-28) | Result | Contract | Action |
 |---|---|---|---|

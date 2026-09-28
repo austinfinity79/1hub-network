@@ -2,6 +2,8 @@
 
 **Bucket A only**, after the PO freezes this audit and accepts the conservative defaults. Before Task 22 starts, the approved frames are copied into `design-reference/` as the new pixel baseline (PO-approved subset only). Protected-workflow rules apply: targeted regression per batch, then a full regression, a release freeze and a redeploy.
 
+> **28/09 refreeze:** batches 22.5–22.8 below are **SUPERSEDED**. The new order is [scope-refreeze/task-sequence.md](scope-refreeze/task-sequence.md): 22.5 Application persistence foundation → 22.6 auth return-to → 22.7 L5 Application UI → 22.8 homepage CTAs + public directories → 22.9 L1 AI → 22.10 consolidation. The Test Pack impact table stays valid and gains WF-TEST-05 (applications persist) after 22.7.
+
 ## Batches
 | Batch | Screens | Routes | Components | Business / API / data impact | Pixel baseline | Regression scope | Blockers |
 |---|---|---|---|---|---|---|---|

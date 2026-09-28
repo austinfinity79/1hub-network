@@ -57,6 +57,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22.4 — CORRECTED L3 CHAPTER / WF03 (Bucket A): DONE** ([report](reports/TASK-22.4_l3-chapter-wf03.md)). L19 `/organizations/:slug`, L20 `/ops/org/:id`, L23 `…/events` and L26 `…/members` are rebuilt to `design-reference/final/revision/L3` under DEC-L3-D1…D5: full-bleed public page over the unchanged projection, dashboard restyle with a "Tạo sự kiện" entry, event status chips with an on-demand panel, member tabs with inline approve / reject through the unchanged S04 call. L27 (B) and L21, L22, L24, L25 (C) are not built. Business, API, DB, RBAC and lifecycles unchanged; WF03 stays PROTECTED / CLOSED. 0 typography violations; P0 / P1 / P2 = 0. Responsive 1440 / 1024 / 768 / 390: 0 page overflow. Full suite 679 = 655 passed / 24 skipped / 0 failed. Implementation `cc6ca28`; nothing deployed.
 
+**TASK 22 — THẢO 28/09 SCOPE REFREEZE: DONE (docs only)** ([report](reports/TASK-22-2809_scope-refreeze.md), [scope-refreeze](../design-revision/scope-refreeze/overview.md)). DEC-2809-D1…D7 frozen from `Update 28_9.docx`: homepage CTAs with login return, live AI onboarding suggestion, L3 = dashboard / chapter information / member approval, L4 and L6 = Directory / Form only (0 screens each), one canonical Venture with quick-create, server-side Application (DRAFT → SUBMITTED, snapshot on submit). 62 screens: APPROVED ALPHA 24, FUTURE 38. The WF05 session-only Application (DEC-WF05-G5 / T00-D1) and 14 other records are SUPERSEDED; batches 22.5–22.8 of the old order are replaced. 19 human decisions open (HD-A1…A14, HD-02 / 03 / 05 / 08 / 11). Runtime, schema, API and RBAC: 0.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -146,7 +148,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Design revision track: the next approved Bucket A batch. In the [07 order](../design-revision/07_TASK22_IMPLEMENTATION_ORDER.md) that is 22.7 (L54 404 / 500); 22.5 and 22.6 stay empty until the B decisions.
+- Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
 

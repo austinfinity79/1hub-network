@@ -2,6 +2,8 @@
 
 One primary bucket per screen (62 screens; the 2 annotations are not implemented). Screens are bucketed individually, not by design group.
 
+> **28/09 refreeze:** for Internal Alpha these buckets are superseded by the classification in [scope-refreeze/](scope-refreeze/overview.md): APPROVED ALPHA 24 screens (H1, AUTH1–4, ACC-10, L06b, L06c, L11, L13a–c, L16, L19, L20, L23, L26, L37–L43), FUTURE 38. L54 leaves Bucket A (System Status is Future); L06b / L06c, L16 and L37–L43 enter Alpha; L27, L28, L47, L52, L53 become Future. The tables below are kept as the Task 21 v2 record.
+
 - **A:** approved existing-behaviour UI revision, safe for Task 22 once the PO freezes this audit. Screens marked *subset* ship only the blocks backed by existing behaviour; the other blocks are omitted.
 - **B:** business / API / data delta. Needs PO / BA approval before implementation.
 - **C:** future or outside Internal Alpha. Not in Task 22.
