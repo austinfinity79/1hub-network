@@ -69,6 +69,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **PRE-PROVISION 3 INTERNAL ALPHA LOGIN ACCOUNTS: DONE** ([report](reports/TASK-22-PREVIEW-PROVISION_alpha-accounts.md)). New operator command `provision-account.sh` (deploy `1f558d6`): account only, idempotent, through the app's own modules. 3 testers created once (re-run ALREADY EXISTS), onboarding incomplete, no role / admin / leadership / membership / project; magic link accepted by Resend for each.
 
+**TASK 22-PREVIEW-ABOUT-DEPLOY — About + homepage link: DEPLOYED GREEN** ([report](reports/TASK-22-PREVIEW-ABOUT-DEPLOY_about-deploy.md)). `04795794` (tag `internal-alpha-preview-04`) runs on https://1hubnetwork.io.vn: public `/about` with 46 supplied photos (34 Humans of HUB portraits), "Về HUB Network" → `/about`, real e-mail login preserved; #418 = 0, 5xx 0, restart PASS, rollback `5a195f7`. Follow-up FU-AUTH-DOUBLE-CONSUME (pre-existing, callback occasionally shows "used" after a successful sign-in).
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -158,7 +160,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Preview track: `5a195f7` is deployed; PO demo and the 3 provisioned testers' real-email sign-in on 1hubnetwork.io.vn.
+- Preview track: `0479579` is deployed (About + real e-mail login); PO demo on 1hubnetwork.io.vn; then FU-AUTH-DOUBLE-CONSUME.
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
