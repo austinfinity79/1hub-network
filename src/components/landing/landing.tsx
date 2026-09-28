@@ -4,17 +4,11 @@ import type { LandingEntry } from '@/lib/landing/entry'
 
 import { INERT_REASONS } from '@/lib/member/nav'
 
+import { Events, Pipeline, Programmes } from './landing-activities'
+import { Community } from './landing-community'
+import { AllInOne, Closing, Network } from './landing-network'
 import { Arrow, Cta, type Action } from './landing-parts'
-import {
-  AllInOne,
-  Closing,
-  Community,
-  ForOrganisers,
-  Loop,
-  Network,
-  Partners,
-} from './landing-network'
-import { Events, Opportunities, Pain, Solution } from './landing-story'
+import { Opportunities, Pain, Solution } from './landing-story'
 import styles from './landing.module.css'
 
 /**
@@ -24,9 +18,9 @@ import styles from './landing.module.css'
  * Typography is Space Grotesk where the corrected reference uses it
  * (DEC-HD-12); mono labels keep the approved IBM Plex Mono.
  *
- * Content follows the Task 21 v2 audit (HD-01 default): the approved copy is
- * kept; placeholder and mock blocks are omitted (problem, programme, iHUB and
- * event carousels, metrics, partner wall, unfinished quote). Every call to
+ * TASK 22-HOMEPAGE-FINAL-ALIGN (DEC-H1-R2): content and order follow the latest
+ * Homepage export, with the PO removals applied. Illustrative cards and the
+ * partner matrix carry a visible "Dữ liệu minh hoạ" label. Every call to
  * action goes to a real destination or is inert with a reason (see
  * `landing-parts.tsx`). Nothing here reads member, count or private data.
  */
@@ -103,7 +97,6 @@ export function Landing({
         </header>
 
         <main className={styles.heroMain}>
-          <p className={styles.heroEyebrow}>1HUB.NETWORK — ĐƯỢC PHÁT TRIỂN BỞI HUB NETWORK</p>
           <h1 className={styles.heroTitle}>
             Nền tảng kết nối
             <br />
@@ -148,16 +141,6 @@ export function Landing({
                 Khám phá cơ hội
               </a>
             </div>
-            <p className={styles.heroHelp}>
-              <span>Bạn đang tìm kiếm giải pháp cho bài toán của doanh nghiệp, tổ chức mình?</span>
-              <Cta
-                action={{ inert: 'FUTURE' }}
-                label="Đăng bài toán"
-                className={styles.heroHelpLink}
-              >
-                Đăng bài toán <Arrow />
-              </Cta>
-            </p>
           </div>
           <p className={styles.wordmark}>1hub.network</p>
         </main>
@@ -186,14 +169,13 @@ export function Landing({
 
       <Pain />
       <Solution />
-      <Opportunities links={links} network={network} />
+      <Opportunities />
       <Events />
+      <Programmes />
+      <Pipeline />
       <AllInOne links={links} memberLabel={member} />
       <Network />
-      <ForOrganisers />
-      <Loop />
-      <Community network={network} />
-      <Partners />
+      <Community />
       <Closing network={network} />
 
       <footer className={styles.footer} data-section="footer">

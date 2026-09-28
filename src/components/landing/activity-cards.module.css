@@ -1,0 +1,420 @@
+/*
+ * Homepage activity cards: event, programme, fund and asset cards
+ * (DEC-H1-R2). Geometry follows design-reference/final/revision/H1 at 1440 px;
+ * tokens come from .page in landing.module.css.
+ */
+
+.event,
+.asset {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: none;
+  width: 480px;
+  height: 561px;
+  padding: 24px 24px 23px;
+  border: 1px solid var(--ink);
+  border-radius: 32px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgb(22 0 2 / 50%);
+}
+
+.asset {
+  width: 420px;
+}
+
+.asset .meta {
+  margin-top: 23px;
+}
+
+.asset .cardTitle,
+.asset .cardText {
+  max-width: none;
+}
+
+.art,
+.panel {
+  position: relative;
+  align-self: stretch;
+  flex: 1;
+  min-height: 160px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* One ramp (coral, red, door, ink), fitted to the reference per card. */
+.art[data-tone='ember'] {
+  background: linear-gradient(140deg, #fc523c 12.8%, #b91610 49.4%, #5c040c 86%, #160002 122.5%);
+}
+
+.art[data-tone='dusk'] {
+  background: linear-gradient(142deg, #fc523c -48.3%, #b91610 -5.8%, #5c040c 36.7%, #160002 79.2%);
+}
+
+.art[data-tone='wine'] {
+  background: linear-gradient(142deg, #fc523c -23.2%, #b91610 13.5%, #5c040c 50.2%, #160002 86.9%);
+}
+
+.date {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  height: 58px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.day {
+  font-size: 27px;
+  font-weight: 500;
+  line-height: 28px;
+  letter-spacing: -0.04em;
+}
+
+.month {
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 500;
+  line-height: 10px;
+  letter-spacing: 0.1em;
+  color: var(--grey);
+  white-space: nowrap;
+}
+
+.artTag {
+  position: absolute;
+  right: 16px;
+  top: 22px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+}
+
+.meta {
+  margin-top: 21px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  color: var(--red);
+}
+
+.cardTitle {
+  max-width: 300px;
+  margin-top: 9px;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 32px;
+  letter-spacing: -0.02em;
+}
+
+.cardText {
+  max-width: 320px;
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--grey);
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+/* ---------- Programme cards ---------- */
+.programme {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: none;
+  width: 480px;
+  height: 560px;
+  padding: 28px;
+  border-radius: 32px;
+  color: #ffffff;
+}
+
+.programme[data-tone='ember'] {
+  background:
+    linear-gradient(to bottom, rgb(22 0 2 / 0%) 31%, rgb(22 0 2 / 77%) 100%),
+    linear-gradient(to bottom right, #fc523c 0%, #b91610 33.3%, #5c040c 66.6%, #160002 100%);
+}
+
+.programme[data-tone='dusk'] {
+  background:
+    linear-gradient(to bottom, rgb(22 0 2 / 0%) 31%, rgb(22 0 2 / 77%) 100%),
+    linear-gradient(155deg, #5c040c 0%, #160002 133%);
+}
+
+.programme[data-tone='glow'] {
+  background:
+    linear-gradient(to bottom, rgb(22 0 2 / 0%) 31%, rgb(22 0 2 / 77%) 100%),
+    radial-gradient(circle 305px at 50% 33%, rgb(252 82 60 / 33%), rgb(252 82 60 / 0%)),
+    linear-gradient(155deg, #4c020a 0%, #160002 133%);
+}
+
+.pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status,
+.blank {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.status {
+  padding: 0 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.108em;
+  color: var(--ink);
+  background: var(--coral);
+}
+
+.status[data-tone='white'],
+.blank {
+  background: #ffffff;
+}
+
+.programmeTitle {
+  max-width: 340px;
+  margin-top: auto;
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 40px;
+  letter-spacing: -0.025em;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: 144px 1fr;
+  margin: 13px 0 0;
+  font-size: 15px;
+  line-height: 22.5px;
+}
+
+.facts dt {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #f3dcd8;
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.programmeMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  height: 44px;
+  margin-top: 14px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: var(--coral);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* ---------- Pipeline cards ---------- */
+.fund {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: none;
+  width: 620px;
+  height: 561px;
+  padding: 18px 18px 22px;
+  border-radius: 32px;
+  background: var(--ink);
+  color: #ffffff;
+}
+
+.browser {
+  position: relative;
+  align-self: stretch;
+  flex: 1;
+  min-height: 200px;
+  border: 1px solid rgb(255 255 255 / 85%);
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(150deg, #fc523c -1.7%, #b91610 34.1%, #5c040c 70%, #160002 105.8%)
+    no-repeat 0 43px / 100% calc(100% - 43px);
+}
+
+.browserBar {
+  display: block;
+  height: 43px;
+  padding-left: 67px;
+  background: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 43px;
+  letter-spacing: 0.04em;
+  color: var(--pink);
+}
+
+.browserNote {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  color: #ffffff;
+}
+
+.browserMark {
+  width: 12px;
+  height: 4px;
+  border: 1px solid var(--pink);
+}
+
+.fundMeta {
+  margin: 19px 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  color: var(--coral);
+}
+
+.fundTitle {
+  margin: 10px 0 0 6px;
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 36px;
+  letter-spacing: -0.02em;
+}
+
+.fundText {
+  margin: 7px 0 0 6px;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--pink);
+}
+
+.fundMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 5px 0 0 6px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.out {
+  transform: rotate(-45deg) scale(0.85);
+}
+
+.panel {
+  background: var(--canvas);
+}
+
+.panelCentre {
+  display: grid;
+  place-items: center;
+}
+
+.sheet {
+  position: absolute;
+  border-radius: 12px;
+  background: linear-gradient(to bottom right, #fc523c, #b91610 45%, #2a0105);
+}
+
+.sheet[data-sheet='1'] {
+  left: 8px;
+  top: -8px;
+  width: 150px;
+  height: 108px;
+  transform: rotate(-9deg);
+}
+
+.sheet[data-sheet='2'] {
+  left: 34px;
+  top: 8px;
+  width: 154px;
+  height: 104px;
+}
+
+.sheet[data-sheet='3'] {
+  left: 60px;
+  top: 22px;
+  width: 152px;
+  height: 104px;
+  transform: rotate(10deg);
+}
+
+.vault {
+  width: 90px;
+  height: 90px;
+  border-radius: 22px;
+  background: var(--ink);
+}
+
+@media (max-width: 767px) {
+  .event,
+  .asset,
+  .programme,
+  .fund {
+    width: min(84vw, 340px);
+    height: auto;
+    min-height: 460px;
+    padding: 18px;
+  }
+
+  .art,
+  .panel,
+  .browser {
+    min-height: 190px;
+  }
+
+  .cardTitle,
+  .fundTitle {
+    font-size: 26px;
+    line-height: 30px;
+  }
+
+  .programmeTitle {
+    font-size: 30px;
+    line-height: 34px;
+  }
+
+  .facts {
+    grid-template-columns: 124px 1fr;
+  }
+}

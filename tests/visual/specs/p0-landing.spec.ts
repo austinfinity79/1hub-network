@@ -9,16 +9,17 @@ import { writeJsonReport } from '../pixel-qa/report'
 import { compareSegments, type Rect, type Segment } from '../pixel-qa/segments'
 
 /**
- * P0-LANDING — the public homepage at `/`, restyled by TASK 22.1 to the
- * corrected Homepage reference (H1, design-reference/final/revision/H1).
- * Behaviour stays DEC-P0-LANDING-D1: public for every visitor, the entry CTA
- * goes to /auth or the onboarding resolver. Calls to action follow the Task 21
- * v2 audit: real destination or inert with a reason. Typography is Space
- * Grotesk where the reference uses it (DEC-HD-12) and a real defect otherwise.
+ * P0-LANDING — the public homepage at `/`, aligned by TASK
+ * 22-HOMEPAGE-FINAL-ALIGN to the latest Homepage export (H1 revision 2,
+ * design-reference/final/revision/H1, DEC-H1-R2). Behaviour stays
+ * DEC-P0-LANDING-D1: public for every visitor, the entry CTA goes to /auth or
+ * the onboarding resolver. Calls to action are a real destination or inert
+ * with a reason. Typography is Space Grotesk where the reference uses it
+ * (DEC-HD-12) and a real defect otherwise.
  */
 
 const ACTUAL = path.join(REPO_ROOT, 'tests/visual/actual')
-const H1_REFERENCE = 'design-reference/final/revision/H1/H1__homepage__SOURCE.png'
+const H1_REFERENCE = 'design-reference/final/revision/H1/H1__homepage-r2__SOURCE.png'
 let consoleErrors: string[] = []
 
 test.beforeEach(async ({ page }) => {
@@ -56,7 +57,7 @@ test.describe('P0-LANDING behaviour', () => {
     await expect(page.locator('h1')).toHaveCount(1)
     await expect(page.locator('h1')).toContainText('Nền tảng kết nối')
     for (const id of ['co-hoi', 'cong-dong']) await expect(page.locator(`#${id}`)).toHaveCount(1)
-    for (const cta of ['primary-bar', 'login', 'join', 'primary'])
+    for (const cta of ['primary-bar', 'login', 'primary'])
       await expect(page.locator(`[data-cta="${cta}"]`)).toHaveAttribute('href', '/auth')
     await expect(page.locator('[data-cta="primary-bar"]')).toHaveText('Tạo tài khoản')
     await expect(page.locator('[data-cta="startup"]')).toHaveAttribute('href', '/projects/new')
@@ -125,8 +126,10 @@ test.describe('P0-LANDING behaviour', () => {
     }
     // The bar's "Mạng lưới đổi mới sáng tạo" opens the public Library (DEC-L15-D4).
     await expect(page.locator('[data-cta="network-bar"]')).toHaveAttribute('href', '/library')
+    // "Tìm hiểu về HUB Network" opens the About page (DEC-H1-R2-D4).
+    await expect(page.locator('[data-cta="about-community"]')).toHaveAttribute('href', '/about')
     // The published HUB page stays the other network destinations (Task 21 v2 audit).
-    for (const cta of ['network-investors', 'network-community', 'closing-network'])
+    for (const cta of ['closing-network', 'network-footer'])
       await expect(page.locator(`[data-cta="${cta}"]`)).toHaveAttribute(
         'href',
         /^\/organizations\/[a-z0-9-]+$/,
@@ -144,7 +147,7 @@ test.describe('P0-LANDING behaviour', () => {
     await expect(search).toBeDisabled()
   })
 
-  test('content: approved copy only; no internal, personal, placeholder or unverified data', async ({
+  test('content: approved copy only; PO removals gone; illustrative blocks labelled', async ({
     page,
   }) => {
     await login(page, 'ops@example.test')
@@ -153,20 +156,52 @@ test.describe('P0-LANDING behaviour', () => {
     expect(text.replace('global@1hub.network', '')).not.toMatch(
       /@|PLATFORM_ADMIN|HUB_COMMUNITY_LEADER|role_code|[0-9a-f]{8}-[0-9a-f]{4}-/i,
     )
-    // HD-01 omissions: metrics, the problem catalogue and its source note,
-    // mock programmes / events / partners, iHUB placeholders, the unfinished quote.
+    // PO removals (TASK 22-HOMEPAGE-FINAL-ALIGN): none of these may come back.
     expect(text).not.toMatch(
-      /\d[\d.]*\+|~60|13 chapter|QĐ 1193|30 bài toán|APEC|Honda|Ngân hàng Nhà nước|Demo Day|Doanh nghiệp A|Quỹ A|ihub\.ventures|chờ ảnh|chờ nội dung|chờ cập nhật|XEM HTML|\.{4,}/i,
+      /được phát triển bởi|thành dữ liệu, dữ liệu thành cơ hội|dành cho đơn vị tổ chức|dành cho các tổ chức|dự định tổ chức chương trình|tạo chương trình|bạn muốn tổ chức một sự kiện|từ dữ liệu đến những kết nối|HUB Network đóng góp|cùng kết nối nguồn lực|QĐ 1193|XEM HTML|\.{4,}/i,
     )
     for (const heading of [
-      'Hệ sinh thái không thiếu hoạt động.',
+      'Hệ sinh thái không thiếu hoạt động. Điều còn thiếu là sự kết nối.',
       'Mỗi hoạt động đều để lại giá trị',
       'Hệ sinh thái cơ hội',
-      'Sự kiện',
+      'Khám phá hoạt động — Sự kiện',
+      'Chương trình đổi mới sáng tạo',
+      'Tiếp cận trực tiếp Pipeline đầu tư',
       'Mạng lưới đổi mới sáng tạo',
       'Được xây dựng bởi cộng đồng',
     ])
       await expect(page.locator('h2', { hasText: heading })).toHaveCount(1)
+    // Section order follows the reference.
+    expect(
+      await page
+        .locator('[data-screen="P0-LANDING"] > [data-section]')
+        .evaluateAll((els) => els.map((el) => el.getAttribute('data-section'))),
+    ).toEqual([
+      'hero',
+      'strip',
+      'pain',
+      'solution',
+      'opportunities',
+      'events',
+      'programmes',
+      'pipeline',
+      'all-in-one',
+      'network',
+      'community',
+      'closing',
+      'footer',
+    ])
+    // Illustrative cards and the partner matrix are labelled, never shown as verified.
+    const demo = page.locator('[data-demo="true"]')
+    await expect(demo).toHaveCount(4)
+    for (const label of await demo.all()) {
+      await expect(label).toBeVisible()
+      await expect(label).toHaveText('DỮ LIỆU MINH HOẠ')
+    }
+    for (const name of ['events', 'programmes', 'pipeline', 'partners'])
+      await expect(page.locator(`[data-section="${name}"] [data-demo="true"]`)).toHaveCount(1)
+    await expect(page.locator('[data-section="partners"] a')).toHaveCount(0)
+    await expect(page.locator('[data-section="partners"] img')).toHaveCount(0)
   })
 
   test('protected routes keep their guards and the canonical resolver', async ({ page }) => {
@@ -275,136 +310,101 @@ const section = (name: string) => `[data-section="${name}"]`
 const anchor = (name: string) => `[data-anchor="${name}"]`
 const H1_SEGMENTS: SegmentSpec[] = [
   {
-    name: 'header-hero',
+    name: '01-header-hero',
     anchor: section('hero'),
     refTop: 0,
     rect: { x: 0, y: 0, width: 1440, height: 900 },
   },
   {
-    name: 'journey-strip',
+    name: '02-journey-strip',
     anchor: section('strip'),
     refTop: 900,
     rect: { x: 0, y: 900, width: 1440, height: 102 },
   },
   {
-    name: 'pain',
+    name: '03-pain',
     anchor: section('pain'),
     refTop: 1002,
     rect: { x: 0, y: 1002, width: 1440, height: 873 },
   },
   {
-    name: 'solution',
+    name: '04-solution',
     anchor: section('solution'),
     refTop: 1875,
-    rect: { x: 0, y: 1875, width: 1440, height: 2514 },
+    rect: { x: 0, y: 1875, width: 1440, height: 2455 },
   },
   {
-    name: 'opportunities-head',
+    name: '05-opportunities',
     anchor: section('opportunities'),
-    refTop: 4389,
-    rect: { x: 0, y: 4389, width: 1440, height: 434 },
+    refTop: 4330,
+    rect: { x: 0, y: 4330, width: 1440, height: 434 },
   },
   {
-    name: 'sub-1-bar-body',
-    anchor: section('sub-1'),
-    refTop: 4823,
-    rect: { x: 0, y: 4823, width: 1440, height: 190 },
-  },
-  {
-    name: 'sub-2-bar-body',
-    anchor: section('sub-2'),
-    refTop: 5853,
-    rect: { x: 0, y: 5853, width: 1440, height: 270 },
-  },
-  {
-    name: 'org-box-programmes',
-    anchor: anchor('org-programme'),
-    refTop: 6940,
-    rect: { x: 50, y: 6932, width: 1340, height: 260 },
-  },
-  {
-    name: 'sub-3-bar-body',
-    anchor: section('sub-3'),
-    refTop: 7281,
-    rect: { x: 0, y: 7281, width: 1440, height: 235 },
-  },
-  {
-    name: 'events-head',
+    name: '06-events',
     anchor: section('events'),
-    refTop: 8355,
-    rect: { x: 0, y: 8355, width: 1440, height: 125 },
+    refTop: 4764,
+    rect: { x: 0, y: 4764, width: 1440, height: 973 },
   },
   {
-    name: 'org-box-events',
-    anchor: anchor('org-events'),
-    refTop: 9061,
-    rect: { x: 50, y: 9053, width: 1340, height: 225 },
+    // Ends above the organiser block, which the PO removed (DEC-H1-R2-D1).
+    name: '07-programmes',
+    anchor: section('programmes'),
+    refTop: 5738,
+    rect: { x: 0, y: 5737, width: 1440, height: 903 },
   },
   {
-    name: 'all-in-one',
+    name: '08-pipeline',
+    anchor: section('pipeline'),
+    refTop: 6926,
+    rect: { x: 0, y: 6926, width: 1440, height: 977 },
+  },
+  {
+    name: '09-one-profile',
     anchor: section('all-in-one'),
-    refTop: 9399,
-    rect: { x: 0, y: 9399, width: 1440, height: 880 },
+    refTop: 7904,
+    rect: { x: 0, y: 7904, width: 1440, height: 949 },
   },
   {
-    name: 'network-head',
+    name: '10-network',
     anchor: section('network'),
-    refTop: 10349,
-    rect: { x: 0, y: 10530, width: 1440, height: 260 },
+    refTop: 8854,
+    rect: { x: 0, y: 8854, width: 1440, height: 1074 },
   },
   {
-    name: 'network-doors-notes',
-    anchor: anchor('doors'),
-    refTop: 10831,
-    rect: { x: 40, y: 10825, width: 1360, height: 510 },
-  },
-  {
-    name: 'organisers',
-    anchor: section('organisers'),
-    refTop: 11439,
-    rect: { x: 0, y: 11560, width: 1440, height: 1339 },
-  },
-  {
-    name: 'loop',
-    anchor: section('loop'),
-    refTop: 13000,
-    rect: { x: 0, y: 13000, width: 1440, height: 1271 },
-  },
-  {
-    name: 'community-head',
+    name: '11-community-head',
     anchor: section('community'),
-    refTop: 14271,
-    rect: { x: 0, y: 14271, width: 1440, height: 580 },
+    refTop: 9928,
+    rect: { x: 0, y: 9928, width: 1440, height: 470 },
   },
   {
-    name: 'community-card',
+    name: '11-community-metrics',
+    anchor: anchor('metrics'),
+    refTop: 10408,
+    rect: { x: 0, y: 10400, width: 1440, height: 190 },
+  },
+  {
+    name: '11-community-card',
     anchor: anchor('community-card'),
-    refTop: 15127,
-    rect: { x: 50, y: 15120, width: 1340, height: 205 },
+    refTop: 10620,
+    rect: { x: 0, y: 10600, width: 1440, height: 200 },
   },
   {
-    name: 'partners-head',
-    anchor: section('partners'),
-    refTop: 15446,
-    rect: { x: 0, y: 15446, width: 1440, height: 430 },
+    name: '12-partner-matrix',
+    anchor: anchor('matrix'),
+    refTop: 10828,
+    rect: { x: 0, y: 10810, width: 1440, height: 643 },
   },
   {
-    name: 'partners-cta',
-    anchor: anchor('partners-cta'),
-    refTop: 16419,
-    rect: { x: 1190, y: 16410, width: 200, height: 70 },
-  },
-  {
-    name: 'closing',
+    name: '13-closing',
     anchor: section('closing'),
-    refTop: 16599,
-    rect: { x: 0, y: 16599, width: 1440, height: 900 },
+    refTop: 11453,
+    rect: { x: 0, y: 11453, width: 1440, height: 900 },
   },
   {
-    name: 'footer',
+    name: '14-footer',
     anchor: section('footer'),
-    refTop: 17499,
-    rect: { x: 0, y: 17499, width: 1440, height: 500 },
+    refTop: 12353,
+    rect: { x: 0, y: 12353, width: 1440, height: 500 },
   },
 ]
 
@@ -418,14 +418,15 @@ const SHIFT_TOLERANCE = 2
 const MAX_OUTSIDE = 0.015
 const MAX_BEYOND_SHIFT = 0.02
 
-/** Reference regions of omitted content inside a compared segment (HD-01), never compared. */
-const OMITTED_INSIDE: Array<{ segment: string; rect: Rect; reason: string }> = [
-  {
-    segment: 'community-card',
-    rect: { x: 86, y: 15205, width: 700, height: 32 },
-    reason: 'HD-01: "13 chapter · 9 quốc gia …" metrics line omitted',
-  },
-]
+/** Intentional additions to the reference (DEC-H1-R2-D2): the "Dữ liệu minh hoạ" labels. */
+async function demoLabels(page: Page): Promise<Rect[]> {
+  return page.locator('[data-demo="true"]').evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect()
+      return { x: r.x - 3, y: r.y + window.scrollY - 3, width: r.width + 6, height: r.height + 6 }
+    }),
+  )
+}
 
 test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
   test('typography: Space Grotesk where the reference uses it, approved mono, no fallback', async ({
@@ -479,7 +480,7 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
     const actual = decodePng(full)
     const reference = readPng(resolveReferencePath(H1_REFERENCE))
     expect(reference.width).toBe(1440)
-    expect(reference.height).toBe(17999)
+    expect(reference.height).toBe(12853)
 
     const segments: Segment[] = []
     for (const s of H1_SEGMENTS) {
@@ -489,16 +490,13 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
         .evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY))
       segments.push({ name: s.name, reference: s.rect, dy: top - s.refTop })
     }
-    // Omitted regions are masked in capture coordinates, like text.
-    const mask = await textRects(page)
-    const omitted: Rect[] = OMITTED_INSIDE.map((o) => {
-      const seg = segments.find((s) => s.name === o.segment)!
-      return { ...o.rect, y: o.rect.y + seg.dy }
-    })
+    // The added labels are masked in capture coordinates, like text.
+    const labels = await demoLabels(page)
+    const mask = [...(await textRects(page)), ...labels]
     const results = compareSegments(reference, actual, segments, mask, {
       diffPath: resolveOutputPath('diff', 'P0-LANDING.H1.segments.diff.png'),
       shiftTolerance: SHIFT_TOLERANCE,
-      exclude: omitted,
+      exclude: labels,
     })
     const report = results.map((r) => ({ ...r, in_text_ratio: r.diff_in_text / r.pixels }))
     writeJsonReport('P0-LANDING.H1.pixel.json', {
@@ -509,14 +507,9 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
       capture_height: actual.height,
       shift_tolerance_px: SHIFT_TOLERANCE,
       thresholds: { outside_ratio: MAX_OUTSIDE, beyond_shift_ratio: MAX_BEYOND_SHIFT },
-      omitted_blocks_hd01: [
-        'problem tabs, chips, carousel and source note (sub 01/03)',
-        'programme heading and carousel (sub 02/03)',
-        'iHUB Ventures, deck and data-room cards (sub 03/03)',
-        'event rows and "Xem tất cả sự kiện"',
-        'unfinished quote (network)',
-        'community metrics and the "13 chapter · 9 quốc gia" line',
-        'partner wall and the "200+ đối tác" line',
+      intentional_differences: [
+        'organiser block after the programme cards removed (PO override, DEC-H1-R2-D1)',
+        '"Dữ liệu minh hoạ" labels on events, programmes, pipeline and the partner matrix (DEC-H1-R2-D2)',
       ],
       segments: report,
     })

@@ -4,7 +4,7 @@ Approved pixel references from the corrected Homepage + L1–L6 revision ([audit
 
 | Screen | File | Size | SHA-256 | Source | Added by |
 |---|---|---|---|---|---|
-| H1 Homepage `/` | `H1/H1__homepage__SOURCE.png` | 1440×17999 | `9f77830527ee7fa02cbab43e3f9329b88a28f858f45b20c67728efc05380e979` | `Homepage.zip` (`31d6e5cc…ae35`), `Sprint 1_ (DL29) new 25/Homepage.png`, byte-identical copy | TASK 22.1 |
+| H1 Homepage `/` | `H1/H1__homepage-r2__SOURCE.png` | 1440×12853 | `fd8987a0ddc9ec96044650c03d548caade9421fd420ce17b5cc1a6c8b7f32c0c` | `1hub redesign — (15).zip` (`ef8b16e1…4c9b`), `Sprint 1_ (DL29) new 25/Homepage.png` (PO, 28/09), byte-identical copy; supersedes `H1__homepage__SOURCE.png` (1440×17999, `9f778305…e979`, TASK 22.1) | TASK 22-HOMEPAGE-FINAL-ALIGN |
 | AUTH1 `/auth` | `L1/AUTH1__auth-entry__SOURCE.png` | 1440×900 | `2c453178d14a4e750efd152adb048022b0b08748ac61f4bb3e63ef1b6153d7da` | `L1.zip` (`c1049e5c…4467`), `AUTH1 · Đăng nhập & đăng ký.png`, byte-identical copy | TASK 22.2 |
 | AUTH2 `/auth/check-email` | `L1/AUTH2__check-email__SOURCE.png` | 1440×900 | `53601c955da37d54281feb9f1ac211e35cc2e604c1d83db3ea2dca7bf81a757c` | `L1.zip` (`c1049e5c…4467`), `AUTH2 · Kiểm tra hộp thư.png`, byte-identical copy | TASK 22.2 |
 | AUTH3 `/auth/callback` | `L1/AUTH3__auth-callback-states__SOURCE.png` | 1440×900 | `640190da2e0fb3ccd96e954aa15491f579a5e6f4d8cdda8541922533cf835971` | `L1.zip` (`c1049e5c…4467`), `AUTH3 · Kết quả bấm link.png`, byte-identical copy | TASK 22.2 |
@@ -22,7 +22,7 @@ Approved pixel references from the corrected Homepage + L1–L6 revision ([audit
 
 Rules:
 - Typography: Space Grotesk where the reference uses it (DEC-HD-12); mono labels keep IBM Plex Mono 500.
-- Blocks omitted under HD-01 (placeholder or unverified content) are not compared; the P0-LANDING spec lists them.
+- H1: the organiser block after the programme cards is removed by PO override and not compared; the "Dữ liệu minh hoạ" labels are additions (DEC-H1-R2). The P0-LANDING spec lists both.
 - L1: only AUTH1–AUTH4 and the ACC-10 subset are Bucket A (DEC-L1-D1). The other L1 frames stay out of the repository until their decisions (HD-02 … HD-05) are made.
 - L2: only L11 and L13a–c are Bucket A (DEC-L2-D1). L10, L12, L13, L14, L16, L18 (B) and L17 (C) stay out of the repository. L15 is in since DEC-L15 (`/library`), as the full frame.
 - L3: only L19, L20, L23 and L26 are Bucket A (DEC-L3-D1). L21, L22, L24, L25 and L27 stay out of the repository. L26 is drawn 1600 wide; its spec compares components at their own anchors.
@@ -30,4 +30,4 @@ Rules:
 
 ## Related
 - [../README.md](../README.md) — WF01–WF03 baselines
-- [../../../docs/decisions/DECISION_LOG.md](../../../docs/decisions/DECISION_LOG.md) — DEC-HD-12, DEC-H1, DEC-L1, DEC-L2, DEC-L3
+- [../../../docs/decisions/DECISION_LOG.md](../../../docs/decisions/DECISION_LOG.md) — DEC-HD-12, DEC-H1, DEC-H1-R2, DEC-L1, DEC-L2, DEC-L3, DEC-L15

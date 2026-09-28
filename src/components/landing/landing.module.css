@@ -14,7 +14,6 @@
   --grey: #534041;
   --red: #b91610;
   --pink: #f8c2b8;
-  --soft: #fef3f1;
   --door: #5c040c;
   --gutter: 58px;
   --sg: 'Space Grotesk', var(--font-ui), sans-serif;
@@ -87,8 +86,7 @@
 
 /* ---------- Pills ---------- */
 .darkPill,
-.coralPill,
-.outlinePill {
+.coralPill {
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -118,14 +116,6 @@
   gap: 11px;
   background: var(--coral);
   color: var(--ink);
-}
-
-.outlinePill {
-  height: 52px;
-  padding: 0 25.5px;
-  border: 1px solid #ffffff;
-  color: #ffffff;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 50%);
 }
 
 /* ---------- Hero ---------- */
@@ -185,22 +175,11 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 485px;
   grid-template-areas:
-    'eyebrow eyebrow'
     'title side'
     'mark mark';
   align-items: end;
   column-gap: 40px;
   padding-right: 6px;
-}
-
-.heroEyebrow {
-  grid-area: eyebrow;
-  margin-top: 78px;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 11.5px;
-  line-height: 16px;
-  letter-spacing: 0.1em;
 }
 
 .heroTitle {
@@ -213,7 +192,7 @@
 
 .heroSide {
   grid-area: side;
-  margin-top: 66px;
+  margin-top: 212px;
 }
 
 .heroLede {
@@ -299,26 +278,6 @@
   border: 1px solid var(--ink);
   box-shadow: inset 0 0 0 1px rgb(22 0 2 / 50%);
   padding: 0 24.5px;
-}
-
-.heroHelp {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  margin-top: 17px;
-  font-size: 14px;
-  line-height: 18px;
-}
-
-.heroHelp > span:first-child {
-  max-width: 358px;
-}
-
-.heroHelpLink {
-  font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  white-space: nowrap;
 }
 
 .wordmark {
@@ -448,8 +407,12 @@
 
   .heroMain {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'eyebrow' 'title' 'side' 'mark';
+    grid-template-areas: 'title' 'side' 'mark';
     padding-right: 0;
+  }
+
+  .heroTitle {
+    margin-top: 96px;
   }
 
   .heroSide {
@@ -524,12 +487,8 @@
     display: none;
   }
 
-  .heroEyebrow {
-    margin-top: 32px;
-    letter-spacing: 0.04em;
-  }
-
   .heroTitle {
+    margin-top: 48px;
     font-size: 36px;
     line-height: 40px;
   }
@@ -567,8 +526,7 @@
   }
 
   .darkPill,
-  .coralPill,
-  .outlinePill {
+  .coralPill {
     white-space: normal;
     height: auto;
     min-height: 45px;

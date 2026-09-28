@@ -1,30 +1,28 @@
-import { Arrow, Cta, Eyebrow, type Action } from './landing-parts'
-import type { LandingLinks } from './landing'
+import { Eyebrow } from './landing-parts'
 import shared from './landing.module.css'
 import styles from './story.module.css'
 
 /**
- * TASK 22.1 — homepage (H1) story sections, in reference order: pain,
- * solution, opportunities (bars 01–03), events. Omitted placeholder / mock
- * blocks (HD-01) are noted where they sat.
+ * Homepage story sections, in reference order: pain, solution, opportunities.
+ * Copy follows the latest Homepage export (DEC-H1-R2).
  */
 
 const PAIN = [
   {
     title: 'Cơ hội phân tán',
-    text: 'Các nhà sáng lập tìm kiếm chương trình, sự kiện và nguồn lực trên nhiều kênh khác nhau.',
+    text: 'Các nhà sáng lập tìm kiếm chương trình, nguồn lực qua nhiều kênh.',
   },
   {
     title: 'Mỗi chương trình gần như bắt đầu lại từ đầu',
-    text: 'Đơn vị tổ chức xây dựng các biểu mẫu, bộ dữ liệu, quy trình mới.',
+    text: 'Đơn vị tổ chức phải tạo lại biểu mẫu và quy trình.',
   },
   {
     title: 'Giá trị sau chương trình khó được tiếp nối',
-    text: 'Dữ liệu người tham gia, đội ngũ tiềm năng và các mối quan hệ hình thành trong chương trình khó được theo dõi và khai thác cho các cơ hội tiếp theo.',
+    text: 'Dữ liệu người tham gia, các mối quan hệ hình thành trong chương trình khó được theo dõi và khai thác cho các cơ hội tiếp theo.',
   },
   {
     title: 'Khó tìm đúng người, đúng giải pháp',
-    text: 'Doanh nghiệp và nhà đầu tư vẫn mất nhiều thời gian để tìm kiếm, sàng lọc và kết nối với startup phù hợp, hầu hết phụ thuộc mạng lưới mối quan hệ cá nhân.',
+    text: 'Doanh nghiệp, nhà đầu tư và tổ chức hỗ trợ thiếu dữ liệu để tìm đúng người, đúng giải pháp.',
   },
 ]
 
@@ -34,36 +32,32 @@ export function Pain() {
       <div className={styles.painLeft}>
         <Eyebrow className={shared.red}>ĐIỂM NGHẼN</Eyebrow>
         <h2 id="pain-title" className={styles.painTitle}>
-          Hệ sinh thái không thiếu hoạt động. Điều còn thiếu là một hành trình được kết nối.
+          Hệ sinh thái <br />
+          không thiếu <br />
+          hoạt động. Điều <br />
+          còn thiếu là sự <br />
+          kết nối.
         </h2>
         <p className={styles.painText}>
-          Mỗi năm có nhiều cuộc thi, sự kiện và chương trình đổi mới sáng tạo diễn ra. Nhưng người
-          tham gia, dự án, dữ liệu và các mối quan hệ thường bị phân tán sau từng hoạt động.
-        </p>
-      </div>
-      <div className={styles.painRight}>
-        <ol className={styles.painList}>
-          {PAIN.map((p, i) => (
-            <li key={p.title} className={styles.painItem}>
-              <span className={`${styles.painIndex} ${i === 0 ? styles.painIndexActive : ''}`}>
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <div>
-                <h3 className={styles.painItemTitle}>{p.title}</h3>
-                <p className={styles.painItemText}>{p.text}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-        <p className={styles.painClosing}>
-          1hub.network{' '}
+          1hub.network kết nối từng hoạt động thành một hành trình liên tục —{' '}
           <span className={shared.redText}>
-            kết nối các điểm rời rạc này
-            <br />
-            thành một hành trình liên tục
+            nơi dữ liệu được kế thừa, năng lực được ghi nhận và các kết nối tiếp tục phát triển.
           </span>
         </p>
       </div>
+      <ol className={styles.painList}>
+        {PAIN.map((p, i) => (
+          <li key={p.title} className={styles.painItem}>
+            <span className={`${styles.painIndex} ${i === 0 ? styles.painIndexActive : ''}`}>
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <div>
+              <h3 className={styles.painItemTitle}>{p.title}</h3>
+              <p className={styles.painItemText}>{p.text}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
     </section>
   )
 }
@@ -116,46 +110,17 @@ export function Solution() {
           </li>
         ))}
       </ol>
-      <p className={styles.solutionClosing}>Biến hoạt động thành dữ liệu, dữ liệu thành cơ hội.</p>
     </section>
   )
 }
 
 const AUDIENCES = [
-  { title: 'Nhà đổi mới sáng tạo, Nhà sáng lập và Startup', tag: 'BÀI TOÁN' },
+  { title: 'Nhà đổi mới sáng tạo, Nhà sáng lập và Startup', tag: 'SỰ KIỆN' },
   { title: 'Đơn vị tổ chức, Doanh nghiệp và Đơn vị đặt đề', tag: 'CHƯƠNG TRÌNH' },
   { title: 'Quỹ đầu tư, Đơn vị ươm tạo và Nhà tuyển dụng', tag: 'IHUB VENTURES' },
 ]
 
-function Bar({
-  index,
-  title,
-  label,
-  action,
-  actionLabel,
-  cta,
-}: {
-  index: string
-  title: string
-  label: string
-  action: Action
-  actionLabel: string
-  cta?: string
-}) {
-  return (
-    <div className={styles.bar2}>
-      <span className={styles.barIndex}>{index}</span>
-      <h3 className={styles.barTitle}>{title}</h3>
-      <span className={styles.barLabel}>{label}</span>
-      <Cta action={action} label={actionLabel} className={shared.darkPill} cta={cta}>
-        {actionLabel} <Arrow />
-      </Cta>
-      <span className={styles.barProgress} aria-hidden="true" />
-    </div>
-  )
-}
-
-export function Opportunities({ links, network }: { links: LandingLinks; network: Action }) {
+export function Opportunities() {
   return (
     <section
       className={styles.opportunities}
@@ -163,143 +128,22 @@ export function Opportunities({ links, network }: { links: LandingLinks; network
       data-section="opportunities"
       aria-labelledby="opportunities-title"
     >
-      <div className={styles.oppHead}>
-        <div>
-          <Eyebrow className={shared.red}>GIÁ TRỊ ĐA TẦNG</Eyebrow>
-          <h2 id="opportunities-title" className={styles.oppTitle}>
-            Hệ sinh thái cơ hội
-          </h2>
-          <p className={styles.oppText}>Khi dữ liệu đủ tin cậy, nguồn lực có thể đến đúng nơi.</p>
-        </div>
-        <ol className={styles.audiences}>
-          {AUDIENCES.map((a, i) => (
-            <li key={a.title} className={styles.audience}>
-              <span className={styles.audienceIndex}>{String(i + 1).padStart(2, '0')}</span>
-              <span className={styles.audienceTitle}>{a.title}</span>
-              <span className={styles.audienceTag}>{a.tag}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      <div className={styles.sub} data-section="sub-1">
-        <Bar
-          index="01 / 03"
-          title="Nhà đổi mới sáng tạo, Nhà sáng lập và Startup"
-          label="KHÁM PHÁ BÀI TOÁN"
-          action={{ href: links.entry }}
-          actionLabel="Tham gia mạng lưới"
-          cta="join"
-        />
-        <p className={styles.subText}>
-          Khám phá chương trình, xây dựng hồ sơ, ghi nhận hành trình và tiếp cận các nguồn lực phát
-          triển phù hợp.
-        </p>
-        {/* Omitted: problem tabs, chips and carousel, source note (placeholder, HD-01). */}
-      </div>
-
-      <div className={styles.sub} data-section="sub-2">
-        <Bar
-          index="02 / 03"
-          title="Đơn vị tổ chức, Doanh nghiệp và Đơn vị đặt đề"
-          label="CHƯƠNG TRÌNH ĐỔI MỚI SÁNG TẠO"
-          action={{ inert: 'NO_P0_SCREEN' }}
-          actionLabel="Triển khai chương trình"
-        />
-        <p className={styles.subText}>
-          Vận hành toàn bộ chương trình trên một nền tảng, hoặc đưa bài toán thực tế đến cộng đồng
-          để tìm kiếm nhân tài, ý tưởng và giải pháp phù hợp.
-        </p>
-        {/* Omitted: programme heading and carousel (mock programmes, HD-01). */}
-        <OrgBox
-          anchor="org-programme"
-          eyebrow="DÀNH CHO CÁC TỔ CHỨC, DOANH NGHIỆP"
-          title={
-            <>
-              Dự định tổ chức chương trình đổi mới sáng tạo
-              <br />
-              hoặc cuộc thi khởi nghiệp?
-            </>
-          }
-          text={
-            <>
-              Đăng tải và vận hành chương trình trên 1hub.network
-              <br />
-              để kết nối với các nhà đổi mới sáng tạo, nhà nghiên cứu, đội ngũ công nghệ và startup
-              tiềm năng.
-            </>
-          }
-          actionLabel="Tạo chương trình"
-        />
-      </div>
-
-      <div className={styles.sub} data-section="sub-3">
-        <Bar
-          index="03 / 03"
-          title="Quỹ đầu tư, Đơn vị ươm tạo và Nhà tuyển dụng"
-          label="IHUB VENTURES · SẢN PHẨM VỆ TINH"
-          action={network}
-          actionLabel="Khám phá mạng lưới"
-          cta="network-investors"
-        />
-        <p className={styles.subText}>
-          Tìm kiếm giải pháp, startup và cá nhân theo lĩnh vực, năng lực, giai đoạn phát triển và
-          lịch sử hoạt động.
-        </p>
-        {/* Omitted: iHUB Ventures, deck and data-room cards (placeholder, HD-01). */}
-      </div>
-    </section>
-  )
-}
-
-function OrgBox({
-  anchor,
-  eyebrow,
-  title,
-  text,
-  actionLabel,
-}: {
-  anchor: string
-  eyebrow: string
-  title: React.ReactNode
-  text: React.ReactNode
-  actionLabel: string
-}) {
-  return (
-    <div className={styles.orgBox} data-anchor={anchor}>
       <div>
-        <Eyebrow className={styles.orgEyebrow}>{eyebrow}</Eyebrow>
-        <h3 className={styles.orgTitle}>{title}</h3>
-        <p className={styles.orgText}>{text}</p>
+        <Eyebrow className={shared.red}>GIÁ TRỊ ĐA TẦNG</Eyebrow>
+        <h2 id="opportunities-title" className={styles.oppTitle}>
+          Hệ sinh thái cơ hội
+        </h2>
+        <p className={styles.oppText}>Khi dữ liệu đủ tin cậy, nguồn lực có thể đến đúng nơi.</p>
       </div>
-      <Cta action={{ inert: 'NO_P0_SCREEN' }} label={actionLabel} className={shared.coralPill}>
-        {actionLabel} <Arrow />
-      </Cta>
-    </div>
-  )
-}
-
-export function Events() {
-  return (
-    <section className={styles.events} data-section="events" aria-labelledby="events-title">
-      <Eyebrow className={shared.red}>KHÁM PHÁ HOẠT ĐỘNG</Eyebrow>
-      <h2 id="events-title" className={styles.eventsTitle}>
-        Sự kiện
-      </h2>
-      {/* Omitted: mock event rows and "Xem tất cả sự kiện" (no event discovery, HD-09). */}
-      <OrgBox
-        anchor="org-events"
-        eyebrow="DÀNH CHO ĐƠN VỊ TỔ CHỨC SỰ KIỆN"
-        title="Bạn muốn tổ chức một sự kiện?"
-        text={
-          <>
-            Đăng tải sự kiện và kết nối với nhà đổi mới sáng tạo, nhà nghiên cứu, đội ngũ công nghệ
-            <br />
-            và startup có khả năng phát triển và thử nghiệm giải pháp.
-          </>
-        }
-        actionLabel="Tạo sự kiện"
-      />
+      <ol className={styles.audiences}>
+        {AUDIENCES.map((a, i) => (
+          <li key={a.title} className={styles.audience}>
+            <span className={styles.audienceIndex}>{String(i + 1).padStart(2, '0')}</span>
+            <span className={styles.audienceTitle}>{a.title}</span>
+            <span className={styles.audienceTag}>{a.tag}</span>
+          </li>
+        ))}
+      </ol>
     </section>
   )
 }
