@@ -1,40 +1,39 @@
 # Claude Task Report
 
 ## Task
-TASK 22-PREVIEW-03 — DEPLOY REAL-EMAIL AUTH PREVIEW. Full report: [reports/TASK-22-PREVIEW-03_real-email-deploy.md](reports/TASK-22-PREVIEW-03_real-email-deploy.md).
+PRE-PROVISION 3 INTERNAL ALPHA LOGIN ACCOUNTS. Full report: [reports/TASK-22-PREVIEW-PROVISION_alpha-accounts.md](reports/TASK-22-PREVIEW-PROVISION_alpha-accounts.md).
 
 ## Verdict
-**DEPLOYED GREEN — READY FOR DEMO.** `5a195f72acf05dd6537b6c70ad185e0737acd916` runs on https://1hubnetwork.io.vn. A real e-mail arrived in the operator's inbox and signed them in (callback → session → onboarding). Negative link checks, the L1 / L2 demo, runtime, responsive and restart pass.
+**DONE.** The three operator-supplied addresses (masked: `g***@1hub.network`, `t***@gmail.com` × 2) have one ACTIVE account each on https://1hubnetwork.io.vn, onboarding incomplete, no elevated permission. Each passes the invite-only check: `POST /api/v1/auth/magic-link` → 202, Resend accepted.
 
 ## Scope implemented
-- Deploy of the exact SHA with the existing tooling (backup, build, 9 × migration skip, recreate, smoke).
-- Domain checks: env presence, health, real-inbox sign-in, negative auth, demo flow, runtime, responsive, restart, logs.
+- Operator command `provision-account.sh` / `.mjs` on `deploy/vps-foundation` `1f558d6`: account + `account_created` through the app's own modules, idempotent.
+- Provisioning run twice on the server (CREATED × 3, then ALREADY EXISTS × 3); eligibility and permission checks.
 
 ## Files changed
-- `main`: this report, the task report, `INTERNAL_ALPHA_PREVIEW_RELEASE.md` (deployed), `P0_STATUS.md`.
-- `deploy/vps-foundation` `958a2ae`: deployment record, `VPS_DEPLOYMENT.md`, 8 review screenshots.
+- `main`: this report, the task report, `INTERNAL_ALPHA_PREVIEW_RELEASE.md` (how to provision), `P0_STATUS.md`.
+- `deploy/vps-foundation`: `1f558d6` (command), `8e0335b` (`VPS_DEPLOYMENT.md` command row, deployment record).
 
 ## Migrations / data
-No migration, seed or schema change. Created by the smoke: the operator's real test account (onboarding not completed), persona `preview03-demo-…@example.test` with one test project, extra sessions.
+No migration or schema change. Data: 3 `user_accounts` rows + 3 `account_created` events; 3 magic-link requests from the eligibility check. One tester has since signed in (`/onboarding/purpose`).
 
 ## Tests
-Domain smoke only (no product code change): all checks PASS; #418 = 0; app 5xx 0.
+Local run of the command against the dev database (idempotency, case-insensitivity, refusal); server verification queries; public endpoint 202 × 3.
 
 ## Visual QA
-1440 clean; 390 clean except the known PL-07 desktop frame on `/me`, `/me/privacy` and project edit.
+Not applicable.
 
 ## Deviations / blockers
-- Requested SHA had 41 characters; the PO confirmed the 40-character SHA.
-- The wrapper refuses real addresses; with PO approval the same script ran inside the container. No approved command exists yet to provision real testers.
+- No existing account-only mechanism: roster import needs an organisation membership, and the link wrapper allows `@example.test` only. Added the minimal operator command above instead of a raw SQL insert.
 - Blocking gaps: 0.
 
 ## Git
-- Branch: `main`; start HEAD `aa8748a`, checked again before the commit
-- Implementation commit: none (deployment only); deployed `5a195f72acf05dd6537b6c70ad185e0737acd916`
+- Branch: `main`; start HEAD `2dc6c7e`, checked again before the commit
+- Implementation commit: `deploy/vps-foundation` `1f558d6` (tooling only; the app stays `5a195f7`)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN**; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO demo on the domain; then an approved operator command to provision real Internal Alpha testers. Not started automatically.
+Real-email sign-in by the three testers. Not started automatically.

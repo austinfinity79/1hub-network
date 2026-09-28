@@ -67,6 +67,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-PREVIEW-03 — real-email auth preview: DEPLOYED GREEN** ([report](reports/TASK-22-PREVIEW-03_real-email-deploy.md)). `5a195f7` runs on https://1hubnetwork.io.vn (exact SHA; the prompt's 41-character SHA was corrected by the PO). Real inbox sign-in confirmed by the operator; unknown / reused / expired / malformed links refused; L1 / L2 demo PASS; #418 = 0; app 5xx 0; restart PASS; rollback `cc6ca28`.
 
+**PRE-PROVISION 3 INTERNAL ALPHA LOGIN ACCOUNTS: DONE** ([report](reports/TASK-22-PREVIEW-PROVISION_alpha-accounts.md)). New operator command `provision-account.sh` (deploy `1f558d6`): account only, idempotent, through the app's own modules. 3 testers created once (re-run ALREADY EXISTS), onboarding incomplete, no role / admin / leadership / membership / project; magic link accepted by Resend for each.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -156,7 +158,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Preview track: `5a195f7` is deployed; PO demo on 1hubnetwork.io.vn. Open follow-up: an approved operator command to provision real Internal Alpha testers.
+- Preview track: `5a195f7` is deployed; PO demo and the 3 provisioned testers' real-email sign-in on 1hubnetwork.io.vn.
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
