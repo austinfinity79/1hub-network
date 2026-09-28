@@ -77,6 +77,10 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **FINAL PRE-PRODUCTION CONSOLIDATION — DEPLOYED, NOT READY (open blockers)** ([report](reports/TASK-22-FINAL-RELEASE_final-release.md), [release](INTERNAL_ALPHA_PREVIEW_RELEASE.md)). `08bbbb9` (tag `internal-alpha-preview-05`: Homepage, About, Library with real `startup.json`, favicon, login UI, Resend auth, L1, L2) runs on https://1hubnetwork.io.vn; rollback `c535c35`. Unit 255 / 255, DB-API 354 / 354, visual 673 / 0 failed; domain #418 0, 5xx 0. Blockers: legal pages 404 (`PRODUCTION_LEGAL_CONTENT_REQUIRED`) and EDGE-H3-POST-RESEND (the edge's HTTP/3 makes Chrome resend the consume POST; ~1 in 8 logins show "link used"; replaces the FU-AUTH-DOUBLE-CONSUME diagnosis).
 
+**FINAL RELEASE BLOCKER CLOSURE — BLOCKED (edge)** ([report](reports/TASK-22-FINAL-BLOCKER-CLOSURE_blocker-closure.md)). Legal closed: `2033264` (tag `internal-alpha-preview-06`) serves the PO-approved v1.5 text through `LEGAL_CONTENT_DIR=content/legal`; `/legal/terms` and `/legal/privacy` resolve ([DEC-LEGAL](../decisions/DECISION_LOG.md#dec-legal)). Deployed 28/09 12:30 UTC, rollback `08bbbb9`. Open on the OneShield edge: HTTP/3 off (EDGE-H3-POST-RESEND), Referrer-Policy pass-through, health check on `/api/v1/auth/providers`; the auth re-test and the real inbox login wait for it.
+
+**TASK 22-HOMEPAGE-FINAL-ALIGN — homepage aligned to the latest export: DONE (local)** ([report](reports/TASK-22-HOMEPAGE-FINAL-ALIGN_homepage-align.md)). `3fd00e4`: PO removals applied, new Điểm nghẽn layout, events / programmes / pipeline rails, community numbers, partner matrix; illustrative blocks labelled "Dữ liệu minh hoạ" ([DEC-H1-R2](../decisions/DECISION_LOG.md#dec-h1-r2)). Pixel P0 / P1 / P2 = 0 over 16 segments; regression 191 / 191; unit 257 / 257. Not deployed.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -166,7 +170,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Release track: `08bbbb9` is deployed; open: production legal copy (PO), edge HTTP/3 off or fixed (EDGE-H3-POST-RESEND), monitor on `/api/v1/auth/providers`; then re-run the login smoke.
+- Release track: `2033264` is deployed (legal closed); open on the edge: HTTP/3 off (EDGE-H3-POST-RESEND), Referrer-Policy, health check path; then the auth re-test and the real inbox login. `3fd00e4` (homepage) waits for PO review and a deploy instruction.
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
