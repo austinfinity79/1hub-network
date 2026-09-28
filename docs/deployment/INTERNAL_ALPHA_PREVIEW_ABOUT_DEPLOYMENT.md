@@ -33,6 +33,10 @@ TASK 22-PREVIEW-ABOUT-DEPLOY record: **INTERNAL ALPHA PREVIEW — HOMEPAGE + ABO
 
 One domain callback of eight (08:07:46 UTC, headless) sent `consume` twice (200, then 409) and showed the "used" state although a session had been created; the retry landed on `/me`. Pre-existing callback code (unchanged since `5735d78`); follow-up FU-AUTH-DOUBLE-CONSUME on `main`.
 
+## Tester provisioning
+
+2026-09-28 (PO request): `provision-account.sh` for one more operator address (`q***@gmail.com`, the operator's second inbox). Run 1 CREATED, run 2 ALREADY EXISTS; accounts 13 → 14, no other table changed. One ACTIVE account, one `account_created`, no profile (onboarding incomplete), no role.
+
 ## Test data created by this smoke
 
 - `preview04-demo-…@example.test`: account from the operator link, onboarding not started.
