@@ -34,7 +34,11 @@ TASK 22-PREVIEW-03 record: **INTERNAL ALPHA PREVIEW — HOMEPAGE + L1 (login UI 
 
 ## Provisioning note
 
-The server wrapper `issue-login-link.sh` refuses real addresses. With PO approval the same `issue-login-link.mjs` ran inside the app container for the test inbox, and the app's own callback created the account. There is still no approved operator command to provision a real tester; `pnpm roster:import` needs organisation data.
+The server wrapper `issue-login-link.sh` refuses real addresses. With PO approval the same `issue-login-link.mjs` ran inside the app container for the test inbox, and the app's own callback created the account. Real testers are now provisioned with `provision-account.sh` (`1f558d6`, see below).
+
+## Tester provisioning (2026-09-28 07:26 UTC)
+
+`provision-account.sh` for 3 operator-supplied addresses (`g***@1hub.network`, `t***@gmail.com` × 2): run 1 CREATED × 3, run 2 ALREADY EXISTS × 3; accounts 9 → 12, no other table changed. Each: 1 ACTIVE account (normalised address), 1 `account_created`, 0 profile (onboarding incomplete), 0 role / admin / leadership / membership / roster / project invite. `POST /api/v1/auth/magic-link` → 202 and Resend accepted for all three. One tester signed in meanwhile: callback → consume → `/onboarding/purpose`.
 
 ## Test data created by this smoke
 

@@ -60,6 +60,7 @@ The session cookie is `Secure` because `NODE_ENV=production`, so login only work
 | Smoke (internal) | `/opt/1hub-network/app/bin/smoke.sh` |
 | Rollback | `/opt/1hub-network/app/bin/rollback.sh [sha]` (default: `shared/state/previous`) |
 | Review login link | `ssh hub-vps /opt/1hub-network/app/bin/issue-login-link.sh <persona>@example.test` (app's own `requestMagicLink`, stdout only) |
+| Provision a real Internal Alpha tester | `ssh hub-vps /opt/1hub-network/app/bin/provision-account.sh <email> [email …]`: one ACTIVE account + `account_created` through the app's own modules; onboarding incomplete, no role / membership / leadership / profile / project; idempotent (`ALREADY EXISTS`); masked output. The tester then signs in by e-mail on `/auth` |
 | Review data | `docker compose run --rm --no-deps app node scripts/db.mjs seed` (NON-production fixtures, idempotent) |
 | Backup | `/opt/1hub-network/app/bin/backup.sh`; daily by `onehub-backup.timer` 19:30 UTC (02:30 ICT), keeps newest 7 (`BACKUP_KEEP`); logs: `journalctl -u onehub-backup` |
 
