@@ -33,6 +33,19 @@ The task prompt spelled the release SHA with 41 characters (`…c78fa7ef7bc0`), 
 | Security / logs | cookie Secure, HttpOnly, SameSite=Lax. `token=` count 0 in the Nginx, app and DB logs; no secrets in logs. App errors 0, DB ERROR/FATAL 0, Nginx 5xx 0. The public DTO carries no PII keys |
 | Rollback | `rollback.sh` 9c61458 → 0a2df09 → 9c61458, smoke PASS each way; schema unchanged (no migration since 0a2df09) |
 
+## Re-verification (Task 20 re-issue, 2026-09-28 01:00–01:10 UTC)
+
+The task was re-issued with the same 41-character SHA. It was not redeployed; the running release was re-verified.
+
+| Check | Result |
+|---|---|
+| Running release | `APP_SHA=9c61458…fafe7bc0`, image `f80211919c49`, state current 9c61458 / previous 0a2df09. The deploy worktree `81da9bd` is clean, and `deploy/` is unchanged since `68488cf` |
+| No-cache build | `docker build --no-cache` of `releases/9c61458…`: `COPY patches` runs before `pnpm install --frozen-lockfile` (lockfile up to date, +385 packages), production build compiled, EXIT=0. The image installs `next@15.5.26_patch_hash=989560c2…` and the fix is in `react-dom-client.production.js`. The verify image was removed |
+| Backup | `onehub-20260928T010155Z.dump` (93,524 B, sha256 `674cf1999bc0…`, 202 entries) |
+| App restart | `docker compose restart app`. Row counts unchanged (9 migrations, 5 profiles, 3 memberships, 1 venture, 2 events, 17 live sessions). A pre-restart signed-in session still opens `/me` and `/me/roles`. Health 5/5 locally and on the domain |
+| Domain smoke after restart | 5/5 suites PASS: #418 = 0, console errors 0, failed responses 0, clipped controls 0. 390 px sideways scroll only on the accepted shells (IA-P3-08) |
+| Logs | app errors 0, DB ERROR/FATAL 0, Nginx 5xx 0; `token=` and secret or cookie strings 0 |
+
 ## Rollback procedure
 
 ```
