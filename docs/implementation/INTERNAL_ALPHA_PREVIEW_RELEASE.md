@@ -25,7 +25,7 @@
 `/` · `/auth` · `/auth/check-email` · `/auth/callback` · `/auth/error` · `/onboarding/purpose` · `/onboarding/profile` · `/onboarding/privacy` · `/onboarding/complete` · `/me` · `/me/profile/edit` · `/me/privacy` · `/me/settings` · `/me/roles` · `/projects/new` · `/projects/:id/edit` · `/projects/:id/team` · `/organizations/hub-network` (homepage network link) · `/legal/:kind/:version`
 
 ## Demo sign-in
-No e-mail provider: the operator issues a one-time link with `issue-login-link.sh <address>@example.test` ([test accounts](INTERNAL_ALPHA_TEST_ACCOUNTS.md)). A new address gives the manual onboarding path; `member@example.test` is an onboarded member who owns Demo Startup.
+**Real e-mail magic link: NOT in this preview — BLOCKED CONFIGURATION** (no provider, sender or real provisioned addresses; [stop report](reports/TASK-22-PREVIEW-AUTH_email-config-stop.md)). No e-mail provider: the operator issues a one-time link with `issue-login-link.sh <address>@example.test` ([test accounts](INTERNAL_ALPHA_TEST_ACCOUNTS.md)). A new address gives the manual onboarding path; `member@example.test` is an onboarded member who owns Demo Startup.
 
 ## Preview limitations
 | ID | Limitation | Planned |
