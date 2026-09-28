@@ -1,39 +1,41 @@
 # Claude Task Report
 
 ## Task
-TASK 22.2 — CORRECTED L1 AUTH / ONBOARDING (Bucket A). Full report: [reports/TASK-22.2_l1-auth-onboarding.md](reports/TASK-22.2_l1-auth-onboarding.md).
+TASK 22.3 — CORRECTED L2 MEMBER / PROFILE / PROJECT (Bucket A). Full report: [reports/TASK-22.3_l2-member-project.md](reports/TASK-22.3_l2-member-project.md).
 
 ## Verdict
-**DONE.** Decisions: [DEC-L1-D1…D8](../decisions/DECISION_LOG.md#dec-l1-d1). Batch 22.3 is not started.
+**DONE.** Decisions: [DEC-L2-D1…D5](../decisions/DECISION_LOG.md#dec-l2-d1). Batch 22.4 is not started.
 
 ## Scope implemented
-- **Screens:** AUTH1 `/auth`, AUTH2 `/auth/check-email`, AUTH3 `/auth/callback`, AUTH4 `/auth/error`, ACC-10 subset `/onboarding/complete`.
-- **References:** `design-reference/final/revision/L1`; 5 byte-identical copies from `L1.zip`, README updated.
-- **Typography:** Space Grotesk (self-hosted) scoped to the `(auth)` group and the S08 card and exit; 0 violations.
-- **Skipped:** 8 Bucket B frames (ACC-05, ACC-06, L06b, L06c, ACC-07, ACC-08, ACC-09, FP1-OWN). No AI UI and no functional AI.
-- **Behaviour frozen:**
-  - magic link only;
-  - account ≠ profile;
-  - server-derived completion;
-  - consent step and visibility default unchanged;
-  - routes and guards unchanged.
+- **Screens:**
+  - L11 ME0 `/me/settings` (overview of existing settings);
+  - L13a–c PRJ1–3 `/projects/new` (3-step wizard over the existing create and invitation APIs).
+- **References:** `design-reference/final/revision/L2`; 4 byte-identical copies from `L2.zip`, README updated.
+- **Typography:** Space Grotesk (self-hosted) on the wizard and the settings content; 0 violations.
+- **Skipped:**
+  - Bucket B: L10, L12, L13 ME7, L14, L16, L18;
+  - Bucket C: L15, L17.
+- **Unchanged:** `/me/privacy`, the editor and the team page.
+- **Domain frozen:**
+  - one canonical venture (POST once, then PATCH);
+  - owner-only wizard;
+  - invitation lifecycle, profile model and visibility, organisation model unchanged;
+  - WF05 reuses the same venture.
 
 ## Files changed
-- Auth:
-  - `src/app/(auth)/layout.tsx`, `auth-group.module.css`;
-  - `auth/` (`page`, `auth-entry-form`, CSS);
-  - `check-email/`, `callback/`, `error/` (page, screen, CSS).
-- Completion: `src/app/(onboarding)/onboarding/complete/` (`page`, `complete-view`, CSS).
-- Shared: `src/components/shell/auth-split-layout.tsx` + CSS, `onboarding-shell.module.css` (< 768 px only).
-- Tests:
-  - `tests/visual/pixel-qa/revision.ts` (new);
-  - WF01 S01–S04 and S08 specs;
-  - `p0-landing.spec.ts` (the scope test samples WF01-S05);
-  - label updates in the WF01–WF05 UAT journeys, `internal-alpha-release` and `p0-shell-navigation`.
-- Docs:
+- **Wizard:** `src/app/(member)/projects/new/` (`page`, `project-wizard`, `wizard-team`, `wizard-done`, `wizard.module.css`).
+- **Editor:** `projects/venture-editor.tsx` (create path removed, edit only).
+- **Settings:**
+  - `src/app/(member)/me/settings/` (`page`, `settings-view`, CSS);
+  - `src/components/shell/member-shell.module.css` (comment only).
+- **Tests:**
+  - `tests/visual/pixel-qa/revision.ts` (full-page option);
+  - WF02-S05 and S07 specs;
+  - WF02 / WF05 UAT journeys and `p0-shell-navigation` (wizard and settings selectors).
+- **Docs:**
   - `design-reference/final/revision/README.md`;
-  - `DECISION_LOG.md` (DEC-L1);
-  - `docs/design-revision/07`;
+  - `DECISION_LOG.md` (DEC-L2);
+  - `docs/design-revision/06`, `07`;
   - `P0_STATUS.md`;
   - this report and the task report.
 
@@ -42,28 +44,27 @@ None. Business, API, DB, RBAC and audit changes: 0. The WF01–WF03 baselines an
 
 ## Tests
 - Format, lint, typecheck, unit 237, DB 349, build: PASS.
-- Full visual suite: 644 passed / 24 opt-in skipped / 0 failed. WF01 153, P0-LANDING 10, P0-SHELL 14, WF02 94, WF03 66, WF04 115, WF05 66, release 7.
-- First run: 1 failure. The P0-LANDING scope test used `/auth` as its legacy sample, which is now a revision screen. It now uses WF01-S05, and the rerun is green.
+- Full visual suite: 652 passed / 24 opt-in skipped / 0 failed. WF02 102, WF01 153, P0-LANDING 10, P0-SHELL 14, WF03 66, WF04 115, WF05 66, release 7.
 
 ## Visual QA
-- **Rule:** 1440×900 DPR1 against L1; per segment, outside text < 1.5 % and beyond ±2 px < 2 %.
-- **Worst segment:** AUTH1 form, 1.10 % outside text / 1.12 % beyond ±2 px.
-- **Classes:** Structural 0 · Major 0 · Component 0 · P3 raster residual · Intentional 8 · typography violations 0.
-- **Responsive:** 1440 / 1024 / 768 / 390: 0 overflow and 0 off-screen controls on all five routes.
+- **Rule:** 1440 DPR1 full page against L11 / L13a–c; per segment, outside text < 1.5 % and beyond ±2 px < 2 %.
+- **Worst segments:** L13a card head, 0.61 % outside text; L13c next index, 0.95 % beyond ±2 px.
+- **Classes:** Structural 0 · Major 0 · Component 0 · P3 raster residual (pill half-pixel edges) · Intentional 7 · typography violations 0.
+- **Responsive:** 1440 / 1024 / 768 / 390: 0 overflow on the wizard (3 steps) and settings (closed, open, confirm).
 
 ## Deviations / blockers
-- **Intentional:** D2 Google / divider, D3 terms notice, D4 "Mở Gmail", D6 untrue board claims, D7 shell / stepper / single card / "Góp ý".
-- **Test Pack:** label changes are listed in `docs/design-revision/07`; update them after the redeploy.
-- **Pre-existing:** S07 privacy card overflows 13 px at 390 px (outside this batch).
+- **Intentional:** shell kept (HD-11); Bucket B rows and fields omitted; "Hoàn tất" and "Về Tài khoản của tôi" labels; one next action.
+- **Test Pack:** label and step changes are listed in `docs/design-revision/07`; update them after the redeploy.
+- **Pre-existing:** the other member pages stay desktop-first (DEC-P0-SHELL-D7).
 - No blocker.
 
 ## Git
-- Branch: `main`; start HEAD `5827ac2`, checked again before each commit
-- Implementation commit: `5735d789680ebd3f0558b076d65f646278e52cd4`
+- Branch: `main`; start HEAD `3bd34fd`, checked again before each commit
+- Implementation commit: `2a57fe943571a79c062e636b2ec75fdeb44f7dd1`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-TASK 22.3 — L2 MEMBER / PROFILE / PROJECT BUCKET A. Not started automatically.
+TASK 22.4 — L3 CHAPTER / WF03 BUCKET A. Not started automatically.

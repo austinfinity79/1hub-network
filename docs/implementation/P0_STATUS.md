@@ -53,6 +53,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22.2 — CORRECTED L1 AUTH / ONBOARDING (Bucket A): DONE** ([report](reports/TASK-22.2_l1-auth-onboarding.md)). AUTH1–AUTH4 and the ACC-10 subset are rebuilt to `design-reference/final/revision/L1` under DEC-L1-D1…D8. The 8 Bucket B frames (onboarding restructure, AI, roles, consent removal, FP1-OWN) are not built. Auth model, consent step, routes, APIs and DB are unchanged. Space Grotesk is scoped to the auth group and the S08 card; 0 typography violations; P0 / P1 / P2 = 0. Responsive 1440 / 1024 / 768 / 390: 0 overflow. Full suite 644 passed / 24 skipped / 0 failed. Implementation `5735d78`; nothing deployed.
 
+**TASK 22.3 — CORRECTED L2 MEMBER / PROFILE / PROJECT (Bucket A): DONE** ([report](reports/TASK-22.3_l2-member-project.md)). L11 `/me/settings` becomes the overview of existing settings; L13a–c turn `/projects/new` into a 3-step wizard over the existing create and invitation APIs (one canonical venture; the URL carries the id). 6 Bucket B and 2 Bucket C L2 frames are not built. Profile, organisation, venture lifecycle, APIs, DB and RBAC are unchanged; WF05 still reuses the canonical venture. 0 typography violations; P0 / P1 / P2 = 0. Responsive 1440 / 1024 / 768 / 390: 0 overflow. Full suite 652 passed / 24 skipped / 0 failed. Implementation `2a57fe9`; nothing deployed.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -141,7 +143,7 @@ No product pixel pass has been claimed for any screen.
 
 ## Next task
 
-TASK 22.3 — L2 MEMBER / PROFILE / PROJECT BUCKET A. The PO self-review with the test pack can run in parallel on the current release. Not started automatically.
+TASK 22.4 — L3 CHAPTER / WF03 BUCKET A. The PO self-review with the test pack can run in parallel on the current release. Not started automatically.
 
 ## Related
 
