@@ -1271,6 +1271,18 @@ Superseded records (traceable conflicts C-01…C-14 in [conflict-audit.md](../de
 | HD-10 default (L27, L28, L52, L53 pending) | resolved as Future | D3, D4, D7 |
 | 06 Bucket A row L54 and batch 22.7; batches 22.5 / 22.6 / 22.8 of 07 | fully | D7; [task-sequence.md](../design-revision/scope-refreeze/task-sequence.md) |
 
+
+## DEC-AUTH-EMAIL — Real e-mail magic link, invite-only (TASK 22-PREVIEW-AUTH)
+
+<a id="dec-auth-email"></a>**Status:** IMPLEMENTED 2026-09-28 on the PO instruction for the Internal Alpha preview ("invite / pre-provisioned account only", Resend as provider). Token, hash, expiry, single use, callback, session, cookie and redirects are unchanged.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-auth-email-d1"></a>DEC-AUTH-EMAIL-D1 | **Invite-only request.** `POST /auth/magic-link` issues a link only to a provisioned address: an existing account (any status; a blocked account still reaches the AUTH4 blocked state) or an unconsumed launch-roster row (`membership_bootstrap`). Anything else answers 403 `AUTH_ACCOUNT_NOT_PROVISIONED`, creates no token and no account; the form shows "Email này chưa được cấp quyền truy cập Internal Alpha.". This supersedes, for this endpoint, the contract rules "same flow handles first-time account creation" and "do not disclose whether an account exists" (API 05 §4.1). Accounts are still created at the callback only for roster addresses and for operator / dev links, which are explicit provisioning. Test seam: with dev routes on (local / CI, never a server) `@example.test` personas count as provisioned |
+| <a id="dec-auth-email-d2"></a>DEC-AUTH-EMAIL-D2 | **Rate limit.** At most 10 links per address per 15 minutes (counted in `auth_magic_link_requests`, request and resend) and 30 requests per client IP per 15 minutes (process memory, one review container; requests without a trusted IP skip it). Over the limit: 429 `AUTH_RATE_LIMITED`. Neither limit applies with dev routes on (local / CI): the dev sign-in route issues many links per persona and `next start` gives every local request one loopback address |
+| <a id="dec-auth-email-d3"></a>DEC-AUTH-EMAIL-D3 | **Delivery.** Resend over HTTPS (no SDK), server-only env `RESEND_API_KEY` (secret, server env file only), `EMAIL_FROM` (`1Hub Network <no-reply@1hubnetwork.io.vn>`), `APP_PUBLIC_BASE_URL` (HTTPS; the link is `<base>/auth/callback?token=…`). E-mail "Đăng nhập 1hub.network": one CTA, the 15-minute single-use note, an ignore line. A failed send rolls the token back (request) or retires it (resend) and answers 500 `AUTH_EMAIL_DELIVERY_FAILED`; no success is reported for an unsent e-mail. Logs carry the provider id and the masked address only. Without a key and with dev routes on, the message goes to the local `/dev/outbox`; with neither, delivery fails closed |
+| <a id="dec-auth-email-d4"></a>DEC-AUTH-EMAIL-D4 | **Unchanged operator path.** `issue-login-link.sh` keeps issuing one-time links for `@example.test` review personas through `requestMagicLink`, outside the public endpoint |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

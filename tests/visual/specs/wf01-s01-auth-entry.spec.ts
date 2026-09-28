@@ -20,9 +20,10 @@ let consoleErrors: string[] = []
 test.beforeEach(async ({ page }) => {
   consoleErrors = []
   page.on('console', (m) => {
-    // Simulated 429/500 responses are logged by Chromium as failed resources;
-    // they are the scenario under test, not an application error.
-    if (m.type() === 'error' && !/status of (429|500)/.test(m.text())) consoleErrors.push(m.text())
+    // Simulated 429/500 responses and the invite-only 403 are logged by Chromium as
+    // failed resources; they are the scenario under test, not an application error.
+    if (m.type() === 'error' && !/status of (403|429|500)/.test(m.text()))
+      consoleErrors.push(m.text())
   })
   page.on('pageerror', (e) => consoleErrors.push(e.message))
   await page.context().clearCookies()
@@ -138,21 +139,24 @@ test.describe('WF01-S01 functional', () => {
     expect(stored).not.toContain('newcomer@example.test')
   })
 
-  test('anti-enumeration: a known and an unknown address get the same outcome', async ({
+  test('invite-only (DEC-AUTH-EMAIL-D1): a known address moves on, an unknown one gets the neutral notice', async ({
     page,
   }) => {
-    const outcome = async (email: string) => {
-      await page.context().clearCookies()
-      await open(page)
-      await emailField(page).fill(email)
-      const [req] = await Promise.all([page.waitForRequest(MAGIC_LINK), submit(page).click()])
-      const res = await req.response()
-      await expect(page).toHaveURL('/auth/check-email')
-      return { status: res!.status(), keys: Object.keys(await res!.json()).sort() }
-    }
-    const known = await outcome('member@example.test')
-    const unknown = await outcome(`nobody-${Date.now()}@example.test`)
-    expect(unknown).toEqual(known)
+    await open(page)
+    await emailField(page).fill('member@example.test')
+    const [known] = await Promise.all([page.waitForResponse(MAGIC_LINK), submit(page).click()])
+    expect(known.status()).toBe(202)
+    await expect(page).toHaveURL('/auth/check-email')
+
+    await open(page)
+    await emailField(page).fill(`nobody-${Date.now()}@not-provisioned.vn`)
+    const [unknown] = await Promise.all([page.waitForResponse(MAGIC_LINK), submit(page).click()])
+    expect(unknown.status()).toBe(403)
+    await expect(page.locator('.ui-notice[role="alert"]')).toHaveText(
+      'Email này chưa được cấp quyền truy cập Internal Alpha.',
+    )
+    await expect(page).toHaveURL(ROUTE)
+    await expect(submit(page)).toBeEnabled()
   })
 
   test('a pending request disables the form and cannot be submitted twice', async ({ page }) => {

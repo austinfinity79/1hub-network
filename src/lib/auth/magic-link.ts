@@ -35,6 +35,8 @@ export type MagicLinkRequestResult = {
   }
   /** Never serialised to the client. */
   token: string
+  /** The normalised address the link belongs to; never serialised. */
+  email: string
 }
 
 export type ConsumeResult = {
@@ -97,6 +99,7 @@ export async function requestMagicLink(
       expires_in_seconds: MAGIC_LINK_EXPIRES_IN_SECONDS,
     },
     token,
+    email: normalized,
   }
 }
 
@@ -106,7 +109,11 @@ export async function requestMagicLink(
  * Issues a fresh token and invalidates the previous one by consuming it, so a
  * resend cannot leave two usable links outstanding.
  */
-export async function resendMagicLink(authRequestId: string): Promise<MagicLinkRequestResult> {
+export async function resendMagicLink(
+  authRequestId: string,
+  /** Runs after validation, before anything changes (the caller's rate limit). */
+  beforeIssue?: (emailNormalized: string) => Promise<void>,
+): Promise<MagicLinkRequestResult> {
   const uuid = fromRequestId(authRequestId)
   if (!uuid) {
     throw new ApiError('AUTH_LINK_INVALID', 400, 'Unknown authentication request.')
@@ -125,10 +132,22 @@ export async function resendMagicLink(authRequestId: string): Promise<MagicLinkR
     throw new ApiError('AUTH_LINK_ALREADY_USED', 409, 'This link has already been used.')
   }
 
+  await beforeIssue?.(row.email_normalized)
+
   // Retire the superseded request so only the newest link works.
   await query(`UPDATE auth_magic_link_requests SET consumed_at = now() WHERE id = $1`, [uuid])
 
   return requestMagicLink(row.email_normalized, null)
+}
+
+/** Retires an issued link whose e-mail could not be sent, so no undelivered token stays usable. */
+export async function retireMagicLinkRequest(authRequestId: string): Promise<void> {
+  const uuid = fromRequestId(authRequestId)
+  if (!uuid) return
+  await query(
+    `UPDATE auth_magic_link_requests SET consumed_at = now() WHERE id = $1 AND consumed_at IS NULL`,
+    [uuid],
+  )
 }
 
 /**

@@ -24,8 +24,9 @@ import styles from './auth-entry.module.css'
  * notice stays under the button: the revision drops it, but consent placement
  * is HD-03 (DEC-L1-D3).
  *
- * The response is identical whether or not an account exists (05:181), and
- * this screen shows the same outcome either way, so nothing is enumerable.
+ * Internal Alpha is invite-only (DEC-AUTH-EMAIL-D1): an address that is not
+ * provisioned gets the neutral "chưa được cấp quyền" notice and no link; a
+ * provisioned one moves on to WF01-S02 and receives the link by e-mail.
  */
 
 /** Copy for states the reference does not show. The rate-limit line is AUTH4's R1 row,
@@ -34,6 +35,8 @@ const MESSAGES = {
   empty: 'Vui lòng nhập email.',
   invalid: 'Email chưa đúng định dạng.',
   rateLimited: 'Bạn đã yêu cầu liên kết quá nhiều lần. Vui lòng thử lại sau ít phút.',
+  // DEC-AUTH-EMAIL-D1: Internal Alpha is invite-only.
+  notProvisioned: 'Email này chưa được cấp quyền truy cập Internal Alpha.',
   failed: 'Chưa gửi được liên kết. Vui lòng thử lại.',
 } as const
 
@@ -91,6 +94,8 @@ export function AuthEntryForm() {
         inputRef.current?.focus()
       } else if (isApiError(error) && error.code === 'AUTH_RATE_LIMITED') {
         setFormError(MESSAGES.rateLimited)
+      } else if (isApiError(error) && error.code === 'AUTH_ACCOUNT_NOT_PROVISIONED') {
+        setFormError(MESSAGES.notProvisioned)
       } else {
         setFormError(MESSAGES.failed)
       }

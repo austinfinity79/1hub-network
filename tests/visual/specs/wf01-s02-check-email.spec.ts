@@ -277,9 +277,15 @@ test.describe('WF01-S02 functional', () => {
 })
 
 test.describe('WF01-S02 pixel QA (corrected AUTH2)', () => {
-  test('1440×900: panel, card head and resend block match AUTH2', async ({ page, request }) => {
-    // The reference address, as QA data only; a request creates no account.
-    await withPending(page, await requestLink(request, 'chi.dang@tracely.vn'))
+  test('1440×900: panel, card head and resend block match AUTH2', async ({ page }) => {
+    // The reference address, as QA data only. Requests are invite-only
+    // (DEC-AUTH-EMAIL-D1), so the 202 DTO is built as WF01-S01 stores it.
+    await withPending(page, {
+      request_id: `authreq_${crypto.randomUUID()}`,
+      email_masked: 'c***@tracely.vn',
+      resend_after_seconds: 60,
+      expires_in_seconds: 900,
+    })
     await openAt(page, 15)
     await expect(resendButton(page)).toHaveText('Gửi lại sau 0:45')
     // Reference geometry, measured once from the frozen AUTH2 raster.
