@@ -270,13 +270,18 @@ export function HumansStrip({ later }: { later: Action }) {
       <ul className={styles.humansRow}>
         {shown.length === 0 ? <li className={styles.pending}>Chờ cập nhật</li> : null}
         {shown.map((h, i) => (
-          <li key={i} className={styles.human}>
+          <li key={h.photo.src} className={styles.human}>
             <div className={styles.humanPhoto}>
-              <Photo caption={h.caption} tone={h.tone} />
+              <Photo
+                caption={`ẢNH · CHÂN DUNG · ${h.name.toUpperCase()}`}
+                tone={i % 2 ? 'warm' : 'deep'}
+                photo={h.photo}
+                sizes="270px"
+              />
             </div>
-            <p className={styles.humanRole}>{h.role}</p>
-            <p className={styles.humanName}>Họ tên — chờ cập nhật</p>
-            <p className={styles.humanTerm}>NHIỆM KỲ HIỆN TẠI</p>
+            <p className={styles.humanRole}>VAI TRÒ · CHỜ CẬP NHẬT</p>
+            <p className={styles.humanName}>{h.name}</p>
+            <p className={styles.humanTerm}>NHIỆM KỲ · CHỜ CẬP NHẬT</p>
             <Cta action={later} label="Xem thêm" className={styles.humanMore}>
               Xem thêm →
             </Cta>
@@ -370,7 +375,12 @@ export function TimelineTrack() {
                 </ol>
               ) : null}
               <div className={styles.tlPhoto}>
-                <Photo caption={m.caption} tone={i <= 2 ? m.tone : i === 3 ? 'pale' : 'mauve'} />
+                <Photo
+                  caption={m.caption}
+                  tone={i <= 2 ? m.tone : i === 3 ? 'pale' : 'mauve'}
+                  photo={m.photo}
+                  sizes="(max-width: 1279px) 100vw, 700px"
+                />
               </div>
               {m.places.length ? (
                 <p className={styles.tlPlaces}>

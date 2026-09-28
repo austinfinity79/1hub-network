@@ -137,6 +137,11 @@
   border-radius: 14px;
 }
 
+/* Real photo inside a slot: fills the frame, cropped rather than distorted. */
+.photoImg {
+  object-fit: cover;
+}
+
 .photo_warm {
   background: linear-gradient(135deg, #fc523c 0%, #b91610 48%, #160002 100%);
 }

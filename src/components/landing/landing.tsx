@@ -74,7 +74,7 @@ export function Landing({
             HUB NETWORK
           </Link>
           <nav className={styles.nav} aria-label="Trang chủ">
-            <Cta action={{ href: '#cong-dong' }} label="Về HUB Network">
+            <Cta action={{ href: '/about' }} label="Về HUB Network">
               Về HUB Network
             </Cta>
             <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Chương trình">
@@ -236,7 +236,7 @@ export function Landing({
             </Cta>
           </FooterColumn>
           <FooterColumn title="THÔNG TIN" wide>
-            <Cta action={{ href: '#cong-dong' }} label="Về HUB Network">
+            <Cta action={{ href: '/about' }} label="Về HUB Network">
               Về HUB Network
             </Cta>
             <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Câu hỏi thường gặp">

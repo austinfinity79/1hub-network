@@ -13,7 +13,15 @@ import {
   OrgDiagram,
   TimelineTrack,
 } from './about-client'
-import { HERO_CARDS, HERO_STATS, MISSIONS, ORG_TIERS, SCALE_FUNCTIONS, VALUES } from './about-data'
+import {
+  HERO_CARDS,
+  HERO_STATS,
+  MISSIONS,
+  ORG_TIERS,
+  SCALE_FUNCTIONS,
+  SCALE_PHOTOS,
+  VALUES,
+} from './about-data'
 import { Photo, ScaleRing } from './about-parts'
 import styles from './about.module.css'
 
@@ -117,7 +125,14 @@ export function About({
           <div className={styles.heroCards} aria-hidden="true">
             {HERO_CARDS.map((c, i) => (
               <div key={c.caption} className={`${styles.heroCard} ${styles[`heroCard${i + 1}`]}`}>
-                <Photo caption={c.caption} tone={c.tone} rounded={false} />
+                <Photo
+                  caption={c.caption}
+                  tone={c.tone}
+                  rounded={false}
+                  photo={c.photo}
+                  sizes="(max-width: 899px) 45vw, 250px"
+                  priority
+                />
               </div>
             ))}
           </div>
@@ -182,7 +197,12 @@ export function About({
                 <span className={styles.missionNo}>{m.no}</span>
                 <p className={styles.missionTitle}>{m.title}</p>
                 <div className={styles.missionPhoto} data-reveal="open">
-                  <Photo caption={m.caption} tone={m.tone} />
+                  <Photo
+                    caption={m.caption}
+                    tone={m.tone}
+                    photo={m.photo}
+                    sizes="(max-width: 1279px) 100vw, 520px"
+                  />
                 </div>
               </li>
             ))}
@@ -280,7 +300,12 @@ export function About({
                 các hoạt động phù hợp.
               </p>
               <div className={styles.tierPhoto}>
-                <Photo caption="ẢNH · HOẠT ĐỘNG TẠI MỘT HUB KHU VỰC" tone="warm" />
+                <Photo
+                  caption="ẢNH · HOẠT ĐỘNG TẠI MỘT HUB KHU VỰC"
+                  tone="warm"
+                  photo={SCALE_PHOTOS.memberHubs}
+                  sizes="(max-width: 1279px) 100vw, 660px"
+                />
               </div>
             </article>
             <article className={styles.tierCard}>
@@ -297,7 +322,12 @@ export function About({
                 môn.
               </p>
               <div className={styles.tierPhoto}>
-                <Photo caption="ẢNH · CÂU LẠC BỘ TẠI TRƯỜNG" tone="dark" />
+                <Photo
+                  caption="ẢNH · CÂU LẠC BỘ TẠI TRƯỜNG"
+                  tone="dark"
+                  photo={SCALE_PHOTOS.clubs}
+                  sizes="(max-width: 1279px) 100vw, 660px"
+                />
               </div>
             </article>
           </div>

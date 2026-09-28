@@ -1,17 +1,48 @@
-import { SCALE_RING } from './about-data'
+import Image from 'next/image'
+
+import { SCALE_RING, type PhotoAsset } from './about-data'
 import { dust, ring } from './about-geometry'
 import styles from './about.module.css'
 
-/** A labelled photo slot, as the pack draws it (gradient + "▭ ẢNH · …" caption). */
+/**
+ * A photo slot. With `photo` it shows the real image (cover, inside the same
+ * frame; the tone stays behind it while it loads). Without one it keeps the
+ * pack's labelled placeholder (gradient + "▭ ẢNH · …" caption).
+ */
 export function Photo({
   caption,
   tone,
   rounded = true,
+  photo,
+  sizes,
+  priority = false,
 }: {
   caption: string
   tone: 'warm' | 'deep' | 'dark' | 'pale' | 'mauve'
   rounded?: boolean
+  photo?: PhotoAsset | null
+  /** Rendered width hint for the responsive srcset. */
+  sizes?: string
+  /** Above the fold only (the hero); every other photo lazy-loads. */
+  priority?: boolean
 }) {
+  if (photo) {
+    return (
+      <div
+        className={`${styles.photo} ${styles[`photo_${tone}`]} ${rounded ? styles.photoRounded : ''}`}
+      >
+        <Image
+          src={photo.src}
+          alt={photo.alt}
+          fill
+          sizes={sizes ?? '100vw'}
+          priority={priority}
+          className={styles.photoImg}
+          style={photo.focus ? { objectPosition: photo.focus } : undefined}
+        />
+      </div>
+    )
+  }
   return (
     <div
       className={`${styles.photo} ${styles[`photo_${tone}`]} ${rounded ? styles.photoRounded : ''}`}

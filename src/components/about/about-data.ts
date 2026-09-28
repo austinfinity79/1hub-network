@@ -2,10 +2,21 @@
  * TASK 22-PREVIEW-ABOUT — content of the public About page (/about).
  *
  * Every string, number and label is transcribed from the approved About.zip
- * design pack (Sprint 1 · DL29, 28/09). Nothing is invented: photo slots stay
- * the pack's labelled placeholders ("ẢNH · …"), people stay "Họ tên — chờ cập
- * nhật", and activity fields the pack marks "Chờ cập nhật" stay that way.
+ * design pack (Sprint 1 · DL29, 28/09). Photos come from the "Ảnh About Hub"
+ * pack (28/09, optimised to WebP in public/about); a slot with no supplied
+ * photo keeps the pack's labelled placeholder ("ẢNH · …"). People carry the
+ * name from their portrait file; roles and terms stay "Chờ cập nhật", and
+ * activity fields the pack marks "Chờ cập nhật" stay that way.
  */
+
+/** A supplied photo: path under public/, alt text, optional crop focus. */
+export type PhotoAsset = { src: string; alt: string; focus?: string }
+
+const about = (file: string, alt: string, focus?: string): PhotoAsset => ({
+  src: `/about/${file}`,
+  alt,
+  ...(focus ? { focus } : {}),
+})
 
 export type HubCode =
   'HN' | 'HCM' | 'DN' | 'SG' | 'CN' | 'AU' | 'UK' | 'US' | 'UAE' | 'EU' | 'QN' | 'THPT' | 'BIZ'
@@ -54,9 +65,24 @@ export const HERO_STATS = [
  * ("…ỘNG Đ… …UB TẠI SỰ KIỆ…") match the pack's own "CỘNG ĐỒNG HUB" wording.
  */
 export const HERO_CARDS = [
-  { caption: 'ẢNH · CỘNG ĐỒNG HUB TẠI SỰ KIỆN', tone: 'deep' },
-  { caption: 'ẢNH · THÀNH VIÊN QUỐC TẾ', tone: 'deep' },
-  { caption: 'ẢNH · WORKSHOP KHỞI NGHIỆP', tone: 'warm' },
+  {
+    caption: 'ẢNH · CỘNG ĐỒNG HUB TẠI SỰ KIỆN',
+    tone: 'deep',
+    photo: about(
+      'hero-community.webp',
+      'Cộng đồng HUB Network chụp ảnh chung trên sân khấu một sự kiện',
+    ),
+  },
+  {
+    caption: 'ẢNH · THÀNH VIÊN QUỐC TẾ',
+    tone: 'deep',
+    photo: about('hero-summit.webp', 'Thành viên HUB Network tại HUB Summit'),
+  },
+  {
+    caption: 'ẢNH · WORKSHOP KHỞI NGHIỆP',
+    tone: 'warm',
+    photo: about('hero-workshop.webp', 'Người tham dự một buổi workshop của HUB Network'),
+  },
 ] as const
 
 export const MISSIONS = [
@@ -65,18 +91,27 @@ export const MISSIONS = [
     title: 'Xây dựng, phát triển cộng đồng',
     caption: 'ẢNH · CỘNG ĐỒNG HUB',
     tone: 'warm',
+    photo: about(
+      'mission-community.webp',
+      'Thành viên HUB Network chụp ảnh chung ngoài trời cùng cờ HUB Network',
+    ),
   },
   {
     no: '02',
     title: 'Kết nối đa nguồn lực, đồng hành cùng các sáng kiến đổi mới sáng tạo',
     caption: 'ẢNH · KẾT NỐI NGUỒN LỰC',
     tone: 'deep',
+    photo: about(
+      'mission-resources.webp',
+      'HUB Network đồng hành cùng HANOIBA trên hành trình mới',
+    ),
   },
   {
     no: '03',
     title: 'Xây dựng nền tảng dữ liệu đổi mới sáng tạo Việt Nam',
     caption: 'ẢNH · NỀN TẢNG DỮ LIỆU',
     tone: 'dark',
+    photo: null,
   },
 ] as const
 
@@ -121,46 +156,71 @@ export const SCALE_FUNCTIONS = [
   'Xây dựng hệ thống vận hành chung',
 ] as const
 
+/** Section 04 tier cards (tầng 2, tầng 3). */
+export const SCALE_PHOTOS = {
+  memberHubs: about('scale-member-hubs.webp', 'Sự kiện HUB Forum tại một HUB thành viên'),
+  clubs: about('scale-clubs.webp', 'Sinh viên tham dự một sự kiện của câu lạc bộ tại trường'),
+} as const
+
 export const ORG_TIERS = [
   { tier: 'TẦNG 01', title: 'HUB Tổng', note: null },
   { tier: 'TẦNG 02', title: 'HUB thành viên', note: '13 HUB' },
   { tier: 'TẦNG 03', title: 'Câu lạc bộ, cộng đồng', note: 'Gần 60 cộng đồng và CLB' },
 ] as const
 
-export type Human = { role: string; caption: string; tone: 'deep' | 'warm'; term: 'CURRENT' }
+export type Human = {
+  name: string
+  photo: PhotoAsset
+  /** Unknown until the content owner supplies it: listed under "Tất cả" only. */
+  term: 'CURRENT' | 'PAST' | null
+}
 
-/** The pack shows five portrait slots, all with names pending. */
+/**
+ * Humans of HUB portraits ("Ảnh About Hub" pack). The name is the portrait file
+ * name as supplied (a trailing HUB tag such as "USA", "- Sing", "- Uk" dropped);
+ * role and term are not in the pack and stay "Chờ cập nhật".
+ */
+const human = (name: string, file: string): Human => ({
+  name,
+  photo: about(`humans/${file}.webp`, `Chân dung ${name}`, '50% 22%'),
+  term: null,
+})
+
 export const HUMANS: Human[] = [
-  {
-    role: 'BAN ĐIỀU HÀNH HUB TỔNG',
-    caption: 'ẢNH · CHÂN DUNG · BAN ĐIỀU HÀNH HUB TỔNG',
-    tone: 'deep',
-    term: 'CURRENT',
-  },
-  {
-    role: 'BAN ĐIỀU HÀNH HUB TỔNG',
-    caption: 'ẢNH · CHÂN DUNG · BAN ĐIỀU HÀNH HUB TỔNG',
-    tone: 'warm',
-    term: 'CURRENT',
-  },
-  {
-    role: 'BAN ĐIỀU HÀNH HUB TỔNG',
-    caption: 'ẢNH · CHÂN DUNG · BAN ĐIỀU HÀNH HUB TỔNG',
-    tone: 'deep',
-    term: 'CURRENT',
-  },
-  {
-    role: 'TRƯỞNG HUB · HÀ NỘI',
-    caption: 'ẢNH · CHÂN DUNG · TRƯỞNG HUB – HÀ NỘI',
-    tone: 'deep',
-    term: 'CURRENT',
-  },
-  {
-    role: 'TRƯỞNG HUB · TP. HỒ CHÍ MINH',
-    caption: 'ẢNH · CHÂN DUNG · TRƯỞNG HUB · TP. HỒ CHÍ MINH',
-    tone: 'warm',
-    term: 'CURRENT',
-  },
+  human('Bui Ha Phuong', 'bui-ha-phuong'),
+  human('Dao Viet Tung', 'dao-viet-tung'),
+  human('Doan Le Anh Thu', 'doan-le-anh-thu'),
+  human('Doan Nhuan Phat', 'doan-nhuan-phat'),
+  human('Huynh Dang Khoa', 'huynh-dang-khoa'),
+  human('Huỳnh Đức', 'huynh-duc'),
+  human('Lâm Mỹ Kỳ', 'lam-my-ky'),
+  human('Le Dieu Anh', 'le-dieu-anh'),
+  human('Le Duc Anh', 'le-duc-anh'),
+  human('Le Mai Huong', 'le-mai-huong'),
+  human('Le Phuong Thao', 'le-phuong-thao'),
+  human('Mai Thao Bac Dung', 'mai-thao-bac-dung'),
+  human('Ngo Tri Nguyen', 'ngo-tri-nguyen'),
+  human('Nguyen Hoang Khanh', 'nguyen-hoang-khanh'),
+  human('Nguyen Huy Hoang', 'nguyen-huy-hoang'),
+  human('Nguyen Manh Hung', 'nguyen-manh-hung'),
+  human('Nguyen Manh Tung', 'nguyen-manh-tung'),
+  human('Nguyen Thanh Hien', 'nguyen-thanh-hien'),
+  human('Nguyen Vu Ha Vy', 'nguyen-vu-ha-vy'),
+  human('Pham Khanh Van', 'pham-khanh-van'),
+  human('Pham Minh Hang', 'pham-minh-hang'),
+  human('Phan Phuong', 'phan-phuong'),
+  human('Phung Thi Ngoc Linh', 'phung-thi-ngoc-linh'),
+  human('Phương Phương', 'phuong-phuong'),
+  human('Thanh Long', 'thanh-long'),
+  human('Tran Le Hung', 'tran-le-hung'),
+  human('Tran Quang Hung', 'tran-quang-hung'),
+  human('Tran Vy Dieu', 'tran-vy-dieu'),
+  human('Vũ Bích Diệp', 'vu-bich-diep'),
+  human('Vu Dinh Duc', 'vu-dinh-duc'),
+  human('Vũ Minh Tâm', 'vu-minh-tam'),
+  human('Vu Thu Hang', 'vu-thu-hang'),
+  human('Vuong Bao Son', 'vuong-bao-son'),
+  human('Vương Hữu Nam', 'vuong-huu-nam'),
 ]
 
 export type Milestone = {
@@ -169,6 +229,8 @@ export type Milestone = {
   year: string
   title: string
   caption: string
+  /** Absent: no supplied photo, the placeholder stays. */
+  photo?: PhotoAsset
   places: string[]
   badge?: string
   items?: string[]
@@ -181,6 +243,7 @@ export const MILESTONES: Milestone[] = [
     year: '2021',
     title: 'HUB Network được thành lập tại TP. Hà Nội.',
     caption: 'ẢNH · DẤU ẤN 2021',
+    photo: about('milestone-2021.webp', 'Thành viên HUB Network, dấu ấn năm 2021'),
     places: ['Hà Nội'],
     tone: 'warm',
   },
@@ -189,6 +252,7 @@ export const MILESTONES: Milestone[] = [
     year: '2023',
     title: 'Mở rộng hoạt động tại TP. Hồ Chí Minh.',
     caption: 'ẢNH · DẤU ẤN 2023',
+    photo: about('milestone-2023.webp', 'Sự kiện HUB Forum, dấu ấn năm 2023'),
     places: ['TP. Hồ Chí Minh'],
     tone: 'dark',
   },
@@ -198,6 +262,7 @@ export const MILESTONES: Milestone[] = [
     title:
       'Mở rộng tới TP. Đà Nẵng và phát triển mạng lưới quốc tế tại Singapore, Trung Quốc đại lục, Úc, Vương quốc Anh và Hoa Kỳ.',
     caption: 'ẢNH · DẤU ẤN 2024',
+    photo: about('milestone-2024.webp', 'HUB Summit 2024'),
     places: ['Đà Nẵng', 'Singapore', 'Trung Quốc đại lục', 'Úc', 'Vương quốc Anh', 'Hoa Kỳ'],
     tone: 'deep',
   },
@@ -207,6 +272,7 @@ export const MILESTONES: Milestone[] = [
     title:
       'Tiếp tục mở rộng mạng lưới quốc tế tại UAE, châu Âu và mở rộng tệp thành viên là học sinh THPT (HUB HighSchool).',
     caption: 'ẢNH · DẤU ẤN 2025',
+    photo: about('milestone-2025.webp', 'Trao quyết định thành lập HUB Network HighSchool'),
     places: ['UAE', 'Châu Âu', 'HUB HighSchool'],
     tone: 'warm',
   },
@@ -225,6 +291,10 @@ export const MILESTONES: Milestone[] = [
     year: '2026',
     title: 'Một năm của những bước đi mới',
     caption: 'ẢNH · DẤU ẤN 2026',
+    photo: about(
+      'milestone-2026.webp',
+      'Công bố Mạng lưới CLB Khởi nghiệp, Đổi mới sáng tạo và Chuyển đổi số Thủ đô HUB Network',
+    ),
     places: ['Quảng Ninh'],
     items: [
       'Thành lập Mạng lưới HUB Business.',
