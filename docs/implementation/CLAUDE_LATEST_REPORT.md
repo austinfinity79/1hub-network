@@ -1,40 +1,41 @@
 # Claude Task Report
 
 ## Task
-TASK 22-PREVIEW-LIBRARY-FIX — REAL STARTUP.JSON DATA + PIXEL UI REMAP. Full report: [reports/TASK-22-PREVIEW-LIBRARY-FIX_library-fix.md](reports/TASK-22-PREVIEW-LIBRARY-FIX_library-fix.md).
+FINAL PRE-PRODUCTION CONSOLIDATION + FIX + FREEZE + DEPLOY. Full report: [reports/TASK-22-FINAL-RELEASE_final-release.md](reports/TASK-22-FINAL-RELEASE_final-release.md).
 
 ## Verdict
-**DONE (local), ready for PO visual review.** Startup (72) and Nhà sáng lập (84) come from `startup.json`; Bài toán stays the labelled demo fixture. The page follows the full "L15 · DIR1 · Thư viện" frame: P0 / P1 / P2 = 0. Not deployed.
+**NOT READY — deployed, open blockers.** `08bbbb9e25a2d51f41323dd93dab33cfcf04001c` (tag `internal-alpha-preview-05`) runs on https://1hubnetwork.io.vn with Homepage, About + Humans of HUB, Library (real `startup.json`), favicon, login UI, Resend auth, L1, L2 and test accounts. Blocking: legal pages 404 (no production copy) and the edge HTTP/3 login defect (EDGE-H3-POST-RESEND).
 
 ## Scope implemented
-- Read-only adapter + cached server read of startup.json; per-tab directory model; startup and founder cards; error state.
-- Light directory body and toolbar / facet / load-more remap; mobile facet toggle.
+- Consolidation: favicon cherry-picked as `08bbbb9`; freeze, backup, deploy, domain smoke, restart, rollback check.
+- Root cause of the intermittent "link used": the edge's HTTP/3 makes Chrome resend the consume POST (FU-AUTH-DOUBLE-CONSUME corrected).
 
 ## Files changed
-- New: `src/lib/library/startup-adapter.ts` (+ test), `src/lib/library/startup-source.ts`, `src/components/library/library-model.ts`, `design-reference/final/revision/L2/L15__library__SOURCE.png`.
-- Updated: `src/app/(public)/library/page.tsx`, `src/components/library/*`, `tests/visual/specs/public-library.spec.ts`, `tests/visual/pixel-qa/revision.ts` (back to its original), `design-reference/final/revision/README.md`, `DECISION_LOG.md` (DEC-L15-D7/D8), `.env.example`.
-- Removed: the four `L15__library-*` fragments.
+- `docs/implementation/INTERNAL_ALPHA_PREVIEW_RELEASE.md`, `P0_STATUS.md`, this report, `reports/TASK-22-FINAL-RELEASE_final-release.md`.
+- Product commit of the task: `08bbbb9` (`src/app/icon.png`).
 
 ## Migrations / data
-None. No API, DB, auth, RBAC or e-mail change; nothing imported.
+None. Migrate 9 × skip. Backup `onehub-20260928T110146Z.dump`. Smoke rows only (links, sessions, one onboarding persona).
 
 ## Tests
-format, lint, typecheck, build PASS; unit 255 / 255; regression 142 / 142.
+format, lint, typecheck, build PASS; unit 255 / 255; DB-API 354 / 354; visual 673 passed, 24 skipped, 0 failed.
 
 ## Visual QA
-Max outside 0.0111, max beyond 0.0114; geometry asserted (810 / 873 / 358 / 324 × 431 / 23 / 2340 / 2470). Responsive 1440 / 1024 / 768 / 390 clean. #418 0, 5xx 0.
+Library P0 / P1 / P2 = 0 against the full L15 frame; About P3 only; responsive clean except PL-07. Domain: #418 0, 5xx 0, broken assets 0.
 
 ## Deviations / blockers
-- Blocking gaps: 0.
-- Deploy needs outbound HTTPS to startup.1hub.cloud (else the error state shows).
+- BLOCKER `PRODUCTION_LEGAL_CONTENT_REQUIRED` (`/legal/terms`, `/legal/privacy` 404).
+- EDGE-H3-POST-RESEND: ~1 in 8 Chrome logins show "Liên kết không còn hiệu lực" without a session; fix on the edge (disable HTTP/3 or its POST handling).
+- External: edge `Referrer-Policy` rewrite; monitor must use `/api/v1/auth/providers`.
+- Real inbox click: NOT RUN (PO skipped).
 
 ## Git
-- Branch: `main`; start HEAD `c47fc92`, checked again before each commit
-- Implementation commit: `e128d1cd903e867a014876a3493a758621e80b4e`
+- Branch: `main`; start HEAD `08bbbb9`, checked again before the commit
+- Implementation commit: `08bbbb9e25a2d51f41323dd93dab33cfcf04001c`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN**; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO visual review of `/library` (local server); deploy only on instruction. Not started automatically.
+Legal copy from the PO and the edge HTTP/3 change, then re-run the login smoke. Not started automatically.

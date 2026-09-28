@@ -75,6 +75,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-PREVIEW-LIBRARY-FIX — real startup.json + L15 remap: DONE (local)** ([report](reports/TASK-22-PREVIEW-LIBRARY-FIX_library-fix.md)). Startup (72) and Nhà sáng lập (84, deduplicated) from `startup.1hub.cloud/data/startup.json` through a cached, sanitising adapter (DEC-L15-D7); Bài toán stays the labelled demo fixture; light directory body per the full L15 frame (D8). Pixel P0 / P1 / P2 = 0; regression 142 / 142; #418 0. Implementation `e128d1c`, not deployed.
 
+**FINAL PRE-PRODUCTION CONSOLIDATION — DEPLOYED, NOT READY (open blockers)** ([report](reports/TASK-22-FINAL-RELEASE_final-release.md), [release](INTERNAL_ALPHA_PREVIEW_RELEASE.md)). `08bbbb9` (tag `internal-alpha-preview-05`: Homepage, About, Library with real `startup.json`, favicon, login UI, Resend auth, L1, L2) runs on https://1hubnetwork.io.vn; rollback `c535c35`. Unit 255 / 255, DB-API 354 / 354, visual 673 / 0 failed; domain #418 0, 5xx 0. Blockers: legal pages 404 (`PRODUCTION_LEGAL_CONTENT_REQUIRED`) and EDGE-H3-POST-RESEND (the edge's HTTP/3 makes Chrome resend the consume POST; ~1 in 8 logins show "link used"; replaces the FU-AUTH-DOUBLE-CONSUME diagnosis).
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -164,7 +166,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Preview track: `0479579` is deployed (About + real e-mail login); PO demo on 1hubnetwork.io.vn; then FU-AUTH-DOUBLE-CONSUME.
+- Release track: `08bbbb9` is deployed; open: production legal copy (PO), edge HTTP/3 off or fixed (EDGE-H3-POST-RESEND), monitor on `/api/v1/auth/providers`; then re-run the login smoke.
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
