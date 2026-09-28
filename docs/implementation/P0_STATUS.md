@@ -71,6 +71,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-PREVIEW-ABOUT-DEPLOY — About + homepage link: DEPLOYED GREEN** ([report](reports/TASK-22-PREVIEW-ABOUT-DEPLOY_about-deploy.md)). `04795794` (tag `internal-alpha-preview-04`) runs on https://1hubnetwork.io.vn: public `/about` with 46 supplied photos (34 Humans of HUB portraits), "Về HUB Network" → `/about`, real e-mail login preserved; #418 = 0, 5xx 0, restart PASS, rollback `5a195f7`. Follow-up FU-AUTH-DOUBLE-CONSUME (pre-existing, callback occasionally shows "used" after a successful sign-in).
 
+**TASK 22-PREVIEW-LIBRARY — Homepage → public L2 Thư viện: DONE (local)** ([report](reports/TASK-22-PREVIEW-LIBRARY_library.md)). `/library` static demo (DEC-L15): labelled six-problem fixture with client-side search, facets, chips, sort; Startup / Nhà sáng lập "Sắp có"; homepage "Mạng lưới đổi mới sáng tạo" → `/library`. Pixel 0 / 0 / 0; regression 139 / 139; #418 0. Implementation `4c38745`, not deployed.
+
 ## Completed (committed)
 
 | Task | Scope |

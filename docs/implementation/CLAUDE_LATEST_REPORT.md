@@ -1,39 +1,40 @@
 # Claude Task Report
 
 ## Task
-TASK 22-PREVIEW-ABOUT-DEPLOY — FINALIZE ABOUT + HOMEPAGE LINK + DEPLOY. Full report: [reports/TASK-22-PREVIEW-ABOUT-DEPLOY_about-deploy.md](reports/TASK-22-PREVIEW-ABOUT-DEPLOY_about-deploy.md).
+TASK 22-PREVIEW-LIBRARY — HOMEPAGE → PUBLIC L2 THƯ VIỆN. Full report: [reports/TASK-22-PREVIEW-LIBRARY_library.md](reports/TASK-22-PREVIEW-LIBRARY_library.md).
 
 ## Verdict
-**DEPLOYED GREEN.** `04795794cd72e70c58652dfa037a4c2fab6c0304` runs on https://1hubnetwork.io.vn: `/about` public with the supplied photos and 34 Humans of HUB portraits, homepage "Về HUB Network" → `/about`, real e-mail login preserved. Rollback `5a195f7` ready.
+**DONE (local).** Public `/library` built from the L2-15 pack as a static demo (DEC-L15): the "Bài toán" directory runs on a labelled six-problem fixture; Startup and Nhà sáng lập are "Sắp có". The homepage "Mạng lưới đổi mới sáng tạo" opens it. Not deployed.
 
 ## Scope implemented
-- Concurrency and content precheck; freeze (tag `internal-alpha-preview-04`); deploy with the approved script; domain smoke; one restart.
-- No code change in this task: the homepage link was already committed in `0479579`.
+- `/library` page, components, fixture, client-side search / filters / sort; homepage link.
+- L15 references in the revision baselines; `referenceBackdrop` in the pixel helper; spec `public-library`.
 
 ## Files changed
-- `main`: this report, the task report, `INTERNAL_ALPHA_PREVIEW_RELEASE.md`, `P0_STATUS.md`.
-- `deploy/vps-foundation`: deployment record and `VPS_DEPLOYMENT.md`.
+- New: `src/app/(public)/library/page.tsx`, `src/components/library/*`, `tests/visual/specs/public-library.spec.ts`, `design-reference/final/revision/L2/L15__library-*` (4).
+- Updated: `src/components/landing/landing.tsx`, `tests/visual/specs/p0-landing.spec.ts`, `tests/visual/pixel-qa/revision.ts`, `design-reference/final/revision/README.md`, `DECISION_LOG.md` (DEC-L15), `homepage-cta-map.md`.
+- Docs: this report, the task report, `P0_STATUS.md`.
 
 ## Migrations / data
-None (9 × skip). Smoke data: persona `preview04-demo-…@example.test` (onboarding not started), sessions for `member@example.test`, one magic-link request for the operator's test inbox.
+None. No API, DB, auth, RBAC or e-mail change.
 
 ## Tests
-Local: gates PASS; unit 245; targeted regression 129 / 129. Domain: `/about` checks at four widths, homepage link, auth, onboarding, member / L2, runtime, restart PASS.
+format, lint, typecheck, build PASS; unit 245 / 245; regression 139 / 139 (incl. public-library 10 / 10).
 
 ## Visual QA
-1440 / 1024 / 768 / 390: 0 overflow, 0 broken or distorted images, footer links 8 / 8.
+1440 DPR1 vs L15: Structural 0, Major 0, Component 0; P3 / intentional recorded. Responsive 1440 / 1024 / 768 / 390: 0 overflow, 0 clipped controls. #418 0, 5xx 0.
 
 ## Deviations / blockers
+- PO decisions: static demo, neutral fixture names, fixture-derived counts (28/09).
 - Blocking gaps: 0.
-- Pre-existing follow-up FU-AUTH-DOUBLE-CONSUME: the callback occasionally consumes twice and shows "used" although signed in (1 of 8 domain callbacks today); unchanged code, not touched here.
 
 ## Git
-- Branch: `main`; start HEAD `3f5fbc2`, checked again before the commit
-- Implementation commit: `04795794cd72e70c58652dfa037a4c2fab6c0304` (About photos + homepage link; About page `4d1e2dd`)
+- Branch: `main`; start HEAD `4aed631`, checked again before each commit
+- Implementation commit: `4c38745cc65f4f389913e2034ce43e83a070c9f6`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN**; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO demo; then FU-AUTH-DOUBLE-CONSUME. Not started automatically.
+PO review of `/library` locally; freeze and deploy only on instruction. Not started automatically.
