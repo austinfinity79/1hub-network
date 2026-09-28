@@ -83,6 +83,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-HOMEPAGE-FINAL-DEPLOY — homepage alignment: DEPLOYED GREEN** ([report](reports/TASK-22-HOMEPAGE-FINAL-DEPLOY_homepage-deploy.md)). `3fd00e4` (tag `internal-alpha-preview-07`) runs on https://1hubnetwork.io.vn since 28/09 15:23 UTC; rollback `2033264`. The domain render equals the verified local render pixel for pixel; PO removals absent; About, Library, favicon, real e-mail login, L1 and L2 preserved; restart clean. Overall release NOT READY: HTTP/3, Referrer-Policy and the health check are still open on the edge. Follow-up FU-IMAGE-CACHE.
 
+**HOTFIX FAVICON: DEPLOYED GREEN** ([report](reports/TASK-22-FAVICON-HOTFIX_favicon-hotfix.md)). `935fd4a` (tag `internal-alpha-preview-08`) runs on https://1hubnetwork.io.vn since 28/09 16:48 UTC; rollback `3fd00e4`. `src/app/icon.png` is the supplied 32 × 32 file, byte for byte; every page links `/icon.png?18acfe949f7832f0`, served with the new bytes on all edge nodes. The bare `/icon.png` is still cached with the old icon on two edge nodes (purge in the panel).
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -172,7 +174,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Release track: `3fd00e4` is deployed (homepage aligned, legal closed); open on the edge: HTTP/3 off (EDGE-H3-POST-RESEND), Referrer-Policy, health check path; then the auth re-test and the real inbox login.
+- Release track: `935fd4a` is deployed (new favicon, homepage aligned, legal closed); open on the edge: HTTP/3 off (EDGE-H3-POST-RESEND), Referrer-Policy, health check path; then the auth re-test and the real inbox login.
 - Design revision track: TASK 22.5 — APPLICATION PERSISTENCE BACKEND FOUNDATION (first of the [recalculated order](../design-revision/scope-refreeze/task-sequence.md)); the old 22.7 (L54) is cancelled.
 
 Neither is started automatically.
