@@ -17,10 +17,12 @@ import styles from './auth-entry.module.css'
  * per the corrected L1 reference (TASK 22.2, DEC-L1-D2).
  *
  * Provider sign-in is config-driven (WF01 contract: "provider entry if
- * configured") and GET /api/v1/auth/providers returns an empty list in P0, so no
- * provider button or "hoặc tiếp tục bằng email" divider is rendered
- * (INTENTIONAL-BUSINESS-CONFIG, as before). The terms notice stays under the
- * button: the revision drops it, but consent placement is HD-03 (DEC-L1-D3).
+ * configured") and GET /api/v1/auth/providers returns an empty list in P0. The
+ * drawn "Tiếp tục với Google" control and its divider are shown as in AUTH1,
+ * but the control is a disabled button with a visible "Sắp có" and no handler:
+ * it starts no provider flow (DEC-L1-D9, the 28/09 no-dead-CTA rule). The terms
+ * notice stays under the button: the revision drops it, but consent placement
+ * is HD-03 (DEC-L1-D3).
  *
  * The response is identical whether or not an account exists (05:181), and
  * this screen shows the same outcome either way, so nothing is enumerable.
@@ -99,6 +101,25 @@ export function AuthEntryForm() {
     <AuthCard>
       <div className={styles.stack}>
         <h1 className={styles.title}>Đăng nhập</h1>
+
+        <div className={styles.providers}>
+          <button
+            type="button"
+            className={styles.provider}
+            disabled
+            aria-label="Tiếp tục với Google (sắp có)"
+            data-provider="google"
+          >
+            <span className={styles.providerMark} aria-hidden="true">
+              G
+            </span>
+            <span>Tiếp tục với Google</span>
+            <span className={styles.soon} aria-hidden="true">
+              Sắp có
+            </span>
+          </button>
+          <p className={styles.divider}>hoặc tiếp tục bằng email</p>
+        </div>
 
         <form
           className={styles.form}

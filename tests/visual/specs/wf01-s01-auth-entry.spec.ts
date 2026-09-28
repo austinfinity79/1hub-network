@@ -7,8 +7,9 @@ import { auditRevision, topOf } from '../pixel-qa/revision'
  *
  * Functional QA drives the real POST /api/v1/auth/magic-link; only the failure
  * cases are simulated with page.route. The pixel run compares the screen with
- * design-reference/final/revision/L1 in segments, so the omitted provider block
- * and the kept terms notice (DEC-L1-D2/D3) cannot hide drift anywhere else.
+ * design-reference/final/revision/L1 in segments, so the disabled provider
+ * control's "Sắp có" pill and the kept terms notice (DEC-L1-D9 / D3) cannot hide
+ * drift anywhere else.
  */
 
 const ROUTE = '/auth'
@@ -48,7 +49,7 @@ test.describe('WF01-S01 functional', () => {
     await expect(page.getByText('HUB NETWORK', { exact: true })).toBeVisible()
   })
 
-  test('providers=[] renders the email-only path with no provider UI', async ({
+  test('providers=[]: the drawn Google control is disabled, says "Sắp có" and starts nothing (DEC-L1-D9)', async ({
     page,
     request,
   }) => {
@@ -56,9 +57,21 @@ test.describe('WF01-S01 functional', () => {
     expect(providers).toEqual({ providers: [] })
 
     await open(page)
-    await expect(page.getByText(/Google/i)).toHaveCount(0)
-    await expect(page.getByText('hoặc tiếp tục bằng email')).toHaveCount(0)
-    await expect(page.getByRole('button')).toHaveCount(1)
+    const google = page.locator('[data-provider="google"]')
+    await expect(google).toBeVisible()
+    await expect(google).toBeDisabled()
+    await expect(google).toContainText('Tiếp tục với Google')
+    await expect(google).toContainText('Sắp có')
+    await expect(page.getByRole('button', { name: 'Tiếp tục với Google (sắp có)' })).toBeDisabled()
+    await expect(page.getByText('hoặc tiếp tục bằng email', { exact: true })).toBeVisible()
+    // A forced click on the disabled control sends nothing and stays on /auth.
+    const requests: string[] = []
+    page.on('request', (r) => requests.push(r.url()))
+    await google.click({ force: true })
+    await page.waitForTimeout(300)
+    expect(requests).toEqual([])
+    await expect(page).toHaveURL(ROUTE)
+    await expect(page.getByRole('button', { disabled: false })).toHaveCount(1)
     await expect(submit(page)).toBeVisible()
   })
 
@@ -246,8 +259,9 @@ test.describe('WF01-S01 pixel QA (corrected AUTH1)', () => {
   test('1440×900: panel, card title and form match AUTH1', async ({ page }) => {
     await open(page)
     // Reference geometry, measured once from the frozen AUTH1 raster.
-    const REF = { cardTop: 260, inputTop: 485 } as const
+    const REF = { cardTop: 260, googleTop: 352, inputTop: 485 } as const
     const card = await topOf(page, '[data-ui="surface"]')
+    const google = await topOf(page, '[data-provider="google"]')
     const input = await topOf(page, 'input[type="email"]')
     await auditRevision(page, {
       name: 'WF01-S01.AUTH1',
@@ -262,6 +276,23 @@ test.describe('WF01-S01 pixel QA (corrected AUTH1)', () => {
           dy: card - REF.cardTop,
         },
         {
+          // Mark, label and left edge of the Google control; the "Sắp có" pill (right) is not in AUTH1.
+          // Interior rows only: AUTH1 draws the top / bottom edges on a half pixel (P3).
+          name: 'card-google',
+          reference: { x: 810, y: 354, width: 295, height: 46 },
+          dy: google - REF.googleTop,
+        },
+        {
+          name: 'card-google-right-edge',
+          reference: { x: 1176, y: 354, width: 14, height: 46 },
+          dy: google - REF.googleTop,
+        },
+        {
+          name: 'card-divider',
+          reference: { x: 810, y: 418, width: 380, height: 26 },
+          dy: google - REF.googleTop,
+        },
+        {
           name: 'card-form',
           reference: { x: 770, y: 454, width: 460, height: 155 },
           dy: input - REF.inputTop,
@@ -271,7 +302,7 @@ test.describe('WF01-S01 pixel QA (corrected AUTH1)', () => {
         {
           class: 'INTENTIONAL-BUSINESS-CONFIG',
           reason:
-            'DEC-L1-D2: no provider is configured (GET /api/v1/auth/providers = []), so the Google button and the "hoặc tiếp tục bằng email" divider are not rendered; the card is shorter and centred',
+            'DEC-L1-D9: no provider is configured (GET /api/v1/auth/providers = []), so the drawn Google control is disabled and carries a "Sắp có" pill (not compared); the card is taller by the terms notice and centred',
         },
         {
           class: 'INTENTIONAL-BUSINESS',
