@@ -14,10 +14,10 @@ One primary bucket per screen (62 screens; the 2 annotations are not implemented
 | ACC-10 Hoàn tất | `/onboarding/complete` | The "Theo dõi xác minh chức vụ HUB" card (HD-02); current next actions kept · **22.2 DONE** ([DEC-L1-D7](../decisions/DECISION_LOG.md#dec-l1-d7)) |
 | L11 ME0 Cài đặt | `/me/settings` (+ `/me/privacy`) | Change email, Google link, 4-purpose consent, "view as", view statistics, personal log, export, email preferences · **22.3 DONE** ([DEC-L2-D1](../decisions/DECISION_LOG.md#dec-l2-d1)) |
 | L13a PRJ1, L13b PRJ2, L13c PRJ3 | `/projects/new` | Stage, deck, AI, Owner / Editor / Viewer, link invitations · **22.3 DONE** ([DEC-L2-D2](../decisions/DECISION_LOG.md#dec-l2-d2)) |
-| L19 CHP0 | `/organizations/[slug]` | KPIs and public leadership (HD-08), partner strip, "Bài toán" nav, summit |
-| L20 CHP1 | `/ops/org/:id` | Landing views, funnel, local Q&A inbox |
-| L23 CHP4 | `/ops/org/:id/events` | Event type, owner, capacity |
-| L26 CHP7 | `/ops/org/:id/members` | Email invite, export, transfer / remove-role actions |
+| L19 CHP0 | `/organizations/[slug]` | KPIs and public leadership (HD-08), partner strip, "Bài toán" nav, summit · **22.4 DONE** ([DEC-L3-D1](../decisions/DECISION_LOG.md#dec-l3-d1)) |
+| L20 CHP1 | `/ops/org/:id` | Landing views, funnel, local Q&A inbox · **22.4 DONE** ([DEC-L3-D2](../decisions/DECISION_LOG.md#dec-l3-d2)) |
+| L23 CHP4 | `/ops/org/:id/events` | Event type, owner, capacity · **22.4 DONE** ([DEC-L3-D3](../decisions/DECISION_LOG.md#dec-l3-d3)) |
+| L26 CHP7 | `/ops/org/:id/members` | Email invite, export, transfer / remove-role actions · **22.4 DONE** ([DEC-L3-D4](../decisions/DECISION_LOG.md#dec-l3-d4)) |
 | L54 SYS1 | 404 page + 500 view | Maintenance state |
 
 ## Bucket B — 26

@@ -55,6 +55,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22.3 — CORRECTED L2 MEMBER / PROFILE / PROJECT (Bucket A): DONE** ([report](reports/TASK-22.3_l2-member-project.md)). L11 `/me/settings` becomes the overview of existing settings; L13a–c turn `/projects/new` into a 3-step wizard over the existing create and invitation APIs (one canonical venture; the URL carries the id). 6 Bucket B and 2 Bucket C L2 frames are not built. Profile, organisation, venture lifecycle, APIs, DB and RBAC are unchanged; WF05 still reuses the canonical venture. 0 typography violations; P0 / P1 / P2 = 0. Responsive 1440 / 1024 / 768 / 390: 0 overflow. Full suite 652 passed / 24 skipped / 0 failed. Implementation `2a57fe9`; nothing deployed.
 
+**TASK 22.4 — CORRECTED L3 CHAPTER / WF03 (Bucket A): DONE** ([report](reports/TASK-22.4_l3-chapter-wf03.md)). L19 `/organizations/:slug`, L20 `/ops/org/:id`, L23 `…/events` and L26 `…/members` are rebuilt to `design-reference/final/revision/L3` under DEC-L3-D1…D5: full-bleed public page over the unchanged projection, dashboard restyle with a "Tạo sự kiện" entry, event status chips with an on-demand panel, member tabs with inline approve / reject through the unchanged S04 call. L27 (B) and L21, L22, L24, L25 (C) are not built. Business, API, DB, RBAC and lifecycles unchanged; WF03 stays PROTECTED / CLOSED. 0 typography violations; P0 / P1 / P2 = 0. Responsive 1440 / 1024 / 768 / 390: 0 page overflow. Full suite 679 = 655 passed / 24 skipped / 0 failed. Implementation `cc6ca28`; nothing deployed.
+
 ## Completed (committed)
 
 | Task | Scope |
@@ -144,7 +146,7 @@ No product pixel pass has been claimed for any screen.
 ## Next task
 
 - Internal Alpha review track: HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN (with the test pack), then ALPHA-AUTO-REVIEW-01.
-- Design revision track: TASK 22.4 — L3 CHAPTER / WF03 BUCKET A.
+- Design revision track: the next approved Bucket A batch. In the [07 order](../design-revision/07_TASK22_IMPLEMENTATION_ORDER.md) that is 22.7 (L54 404 / 500); 22.5 and 22.6 stay empty until the B decisions.
 
 Neither is started automatically.
 

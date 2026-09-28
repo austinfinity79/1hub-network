@@ -1,53 +1,52 @@
 # Claude Task Report
 
 ## Task
-POST-DEPLOY INTERNAL ALPHA TEST PACK PREPARATION. Full report: [reports/INTERNAL-ALPHA_post-deploy-test-pack.md](reports/INTERNAL-ALPHA_post-deploy-test-pack.md).
+TASK 22.4 — L3 CHAPTER / WF03 BUCKET A (PROCESS-P0-ACCELERATED-SAFE-V2, LOCAL REVIEW MODE). Full report: [reports/TASK-22.4_l3-chapter-wf03.md](reports/TASK-22.4_l3-chapter-wf03.md).
 
 ## Verdict
-**DONE.** Ready for human self-review on https://1hubnetwork.io.vn (release `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0`). Team UAT: **PENDING**.
+**DONE.** L19, L20, L23 and L26 subsets implemented under [DEC-L3-D1…D5](../decisions/DECISION_LOG.md#dec-l3-d1); WF03 stays PROTECTED / CLOSED. Nothing pushed or deployed.
 
 ## Scope implemented
-- **Accounts:** [INTERNAL_ALPHA_TEST_ACCOUNTS.md](INTERNAL_ALPHA_TEST_ACCOUNTS.md) — operator sign-in, actors A–I, missing actor E.
-- **Guide:**
-  - [INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md) — labels, six flows, checklist, verdict, limitations;
-  - the flows are in `internal-alpha/` (6 files).
-- **Data and reset:** [INTERNAL_ALPHA_TEST_DATA_RESET.md](INTERNAL_ALPHA_TEST_DATA_RESET.md) — data, persistence, tester resets, technical reset.
-- **Old pack:** the `docs/uat/` pack (`2d19cad`) now points here; `P0_STATUS.md` and `docs/design-revision/07` are updated.
+- **L19** `/organizations/:slug`: full-bleed public page over the unchanged projection (three canonical counts, children, upcoming events, join band).
+- **L20** `/ops/org/:id`: KPI / work-card restyle, "Tạo sự kiện" → `…/events?create=1` for `event:manage`, chip "Chờ chapter".
+- **L23** `…/events`: status chips, row cards with "Quản lý", create / detail panel on demand.
+- **L26** `…/members`: tabs "Đơn chờ duyệt" / "Đang hoạt động" / "Tất cả", inline "Duyệt" / "Từ chối" through the unchanged S04 call, "Ban điều hành" block.
+- **Not built:** L27 (Bucket B, HD-10); L21, L22, L24, L25 (Bucket C). Omitted blocks are listed in D1–D4.
 
 ## Files changed
-- `docs/implementation/`:
-  - `INTERNAL_ALPHA_TEST_ACCOUNTS.md`, `INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md`, `INTERNAL_ALPHA_TEST_DATA_RESET.md`;
-  - `internal-alpha/` (6);
-  - this report and the task report;
-  - `P0_STATUS.md`.
-- `docs/uat/` (11 pointer files), `docs/design-revision/07_TASK22_IMPLEMENTATION_ORDER.md`.
+- `src/app/(public)/organizations/[slug]/`: `page.tsx`, `public-organization.module.css`.
+- `src/app/(ops)/ops/org/[orgId]/`: `page.tsx`, `organization-dashboard.tsx`, `dashboard.module.css`; `events/` (`page.tsx`, `event-management.tsx`, `events.module.css`); `members/` (`page.tsx`, `member-list.tsx`, `members.module.css`).
+- `src/lib/ops/organizations.ts` (display capability list) and `src/lib/ops/ops.db-test.ts`.
+- `tests/visual/specs/`: `wf03-s02`, `wf03-s03`, `wf03-s07`, `wf03-s09`, `wf03-uat-journey`.
+- `design-reference/final/revision/L3/` (4 byte-identical references) and its `README.md`.
+- Docs: `DECISION_LOG.md` (DEC-L3), `06_SCOPE_BUCKETS.md`, `07_TASK22_IMPLEMENTATION_ORDER.md`, `P0_STATUS.md`, the task report, this report.
 
 ## Migrations / data
-None. Runtime, business logic, DB, product UI and deploy: 0. No data was changed on the domain.
+None. Business, API, DB, RBAC, audit and lifecycle changes: 0. `membership:confirm` joins the page-context capability list (display only; the PATCH re-checks it).
 
-## Tests
-Docs only: format check PASS. Domain checks (read-only, signed out):
-- public pages 200;
-- protected pages → `/auth`;
-- rendered copy matches the release;
-- 0 console errors;
-- landing / auth have no sideways scroll at 1440 and 390.
+## Tests / build
+- Format, lint, typecheck, unit 237, DB 349, production build: PASS.
+- Full visual suite on the final build: 679 = 655 passed / 24 skipped / 0 failed.
+- Targeted (release, WF03, P0-SHELL, P0-LANDING): 100 passed.
 
 ## Visual QA
-Not applicable (no UI change).
+- 1440 DPR1: Structural / Major / Component = 0; typography 0 violations (Space Grotesk, DEC-HD-12).
+- Max outside text / beyond ±2 px: L20 0.46 / 1.08 %, L23 0.37 / 0.40 %, L26 0.91 / 1.46 %, L19 0.59 / 1.82 %.
+- Responsive 1440 / 1024 / 768 / 390: 0 page overflow. The event and member tables scroll inside their card below 1280 px.
 
 ## Deviations / blockers
-- The prompt's release SHA has 41 characters; the deployed SHA is `…c78fafe7bc0`.
-- Signed-in steps were not re-run on the domain, which would need operator links; they come from the earlier local replay of the same release and the Task 20 smoke.
-- No blocker.
+- Typography: the prompt listed only the legacy faces; DEC-HD-12 (CLOSED) and CLAUDE.md §5 put Space Grotesk on corrected revision screens, so it is used.
+- The "Đã rời" tab became "Tất cả" (P0 has no "left" grouping).
+- Pre-existing, out of scope: OpsShell has no narrow layout (HD-11 / 22.8); WF04-S05's double "next" click raced once under full-suite load (27 / 27 on repeat, green in the final run; WF04 is protected, so the spec is unchanged).
+- The 07 order puts 22.7 (L54) next; 22.5 / 22.6 stay empty until the B decisions.
 
 ## Git
-- Branch: `main`; start HEAD `d06d49e`, checked again before the commit
-- Implementation commit: none (docs-only task)
+- Branch: `main`; start HEAD `5b1343c`, checked again before each commit
+- Implementation commit: `cc6ca287a3d549b579ff8c5b6c7f9edd637c03e1`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
-- Push status: **NOT RUN**; remote HEAD `0b4095f`
+- Push status: **NOT RUN** — LOCAL REVIEW MODE; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-HUMAN / PO SELF-REVIEW ON DEPLOYED DOMAIN, then ALPHA-AUTO-REVIEW-01. Neither is started automatically.
+TASK 22.5 — NEXT APPROVED BUCKET-A BATCH (per the 07 order: 22.7, L54). Not started automatically.
