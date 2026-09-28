@@ -73,6 +73,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-PREVIEW-LIBRARY — Homepage → public L2 Thư viện: DONE (local)** ([report](reports/TASK-22-PREVIEW-LIBRARY_library.md)). `/library` static demo (DEC-L15): labelled six-problem fixture with client-side search, facets, chips, sort; Startup / Nhà sáng lập "Sắp có"; homepage "Mạng lưới đổi mới sáng tạo" → `/library`. Pixel 0 / 0 / 0; regression 139 / 139; #418 0. Implementation `4c38745`, not deployed.
 
+**TASK 22-PREVIEW-LIBRARY-FIX — real startup.json + L15 remap: DONE (local)** ([report](reports/TASK-22-PREVIEW-LIBRARY-FIX_library-fix.md)). Startup (72) and Nhà sáng lập (84, deduplicated) from `startup.1hub.cloud/data/startup.json` through a cached, sanitising adapter (DEC-L15-D7); Bài toán stays the labelled demo fixture; light directory body per the full L15 frame (D8). Pixel P0 / P1 / P2 = 0; regression 142 / 142; #418 0. Implementation `e128d1c`, not deployed.
+
 ## Completed (committed)
 
 | Task | Scope |

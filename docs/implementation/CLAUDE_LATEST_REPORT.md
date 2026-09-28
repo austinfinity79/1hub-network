@@ -1,40 +1,40 @@
 # Claude Task Report
 
 ## Task
-TASK 22-PREVIEW-LIBRARY — HOMEPAGE → PUBLIC L2 THƯ VIỆN. Full report: [reports/TASK-22-PREVIEW-LIBRARY_library.md](reports/TASK-22-PREVIEW-LIBRARY_library.md).
+TASK 22-PREVIEW-LIBRARY-FIX — REAL STARTUP.JSON DATA + PIXEL UI REMAP. Full report: [reports/TASK-22-PREVIEW-LIBRARY-FIX_library-fix.md](reports/TASK-22-PREVIEW-LIBRARY-FIX_library-fix.md).
 
 ## Verdict
-**DONE (local).** Public `/library` built from the L2-15 pack as a static demo (DEC-L15): the "Bài toán" directory runs on a labelled six-problem fixture; Startup and Nhà sáng lập are "Sắp có". The homepage "Mạng lưới đổi mới sáng tạo" opens it. Not deployed.
+**DONE (local), ready for PO visual review.** Startup (72) and Nhà sáng lập (84) come from `startup.json`; Bài toán stays the labelled demo fixture. The page follows the full "L15 · DIR1 · Thư viện" frame: P0 / P1 / P2 = 0. Not deployed.
 
 ## Scope implemented
-- `/library` page, components, fixture, client-side search / filters / sort; homepage link.
-- L15 references in the revision baselines; `referenceBackdrop` in the pixel helper; spec `public-library`.
+- Read-only adapter + cached server read of startup.json; per-tab directory model; startup and founder cards; error state.
+- Light directory body and toolbar / facet / load-more remap; mobile facet toggle.
 
 ## Files changed
-- New: `src/app/(public)/library/page.tsx`, `src/components/library/*`, `tests/visual/specs/public-library.spec.ts`, `design-reference/final/revision/L2/L15__library-*` (4).
-- Updated: `src/components/landing/landing.tsx`, `tests/visual/specs/p0-landing.spec.ts`, `tests/visual/pixel-qa/revision.ts`, `design-reference/final/revision/README.md`, `DECISION_LOG.md` (DEC-L15), `homepage-cta-map.md`.
-- Docs: this report, the task report, `P0_STATUS.md`.
+- New: `src/lib/library/startup-adapter.ts` (+ test), `src/lib/library/startup-source.ts`, `src/components/library/library-model.ts`, `design-reference/final/revision/L2/L15__library__SOURCE.png`.
+- Updated: `src/app/(public)/library/page.tsx`, `src/components/library/*`, `tests/visual/specs/public-library.spec.ts`, `tests/visual/pixel-qa/revision.ts` (back to its original), `design-reference/final/revision/README.md`, `DECISION_LOG.md` (DEC-L15-D7/D8), `.env.example`.
+- Removed: the four `L15__library-*` fragments.
 
 ## Migrations / data
-None. No API, DB, auth, RBAC or e-mail change.
+None. No API, DB, auth, RBAC or e-mail change; nothing imported.
 
 ## Tests
-format, lint, typecheck, build PASS; unit 245 / 245; regression 139 / 139 (incl. public-library 10 / 10).
+format, lint, typecheck, build PASS; unit 255 / 255; regression 142 / 142.
 
 ## Visual QA
-1440 DPR1 vs L15: Structural 0, Major 0, Component 0; P3 / intentional recorded. Responsive 1440 / 1024 / 768 / 390: 0 overflow, 0 clipped controls. #418 0, 5xx 0.
+Max outside 0.0111, max beyond 0.0114; geometry asserted (810 / 873 / 358 / 324 × 431 / 23 / 2340 / 2470). Responsive 1440 / 1024 / 768 / 390 clean. #418 0, 5xx 0.
 
 ## Deviations / blockers
-- PO decisions: static demo, neutral fixture names, fixture-derived counts (28/09).
 - Blocking gaps: 0.
+- Deploy needs outbound HTTPS to startup.1hub.cloud (else the error state shows).
 
 ## Git
-- Branch: `main`; start HEAD `4aed631`, checked again before each commit
-- Implementation commit: `4c38745cc65f4f389913e2034ce43e83a070c9f6`
+- Branch: `main`; start HEAD `c47fc92`, checked again before each commit
+- Implementation commit: `e128d1cd903e867a014876a3493a758621e80b4e`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN**; remote HEAD `0b4095f`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO review of `/library` locally; freeze and deploy only on instruction. Not started automatically.
+PO visual review of `/library` (local server); deploy only on instruction. Not started automatically.
