@@ -5,7 +5,7 @@
 ## Release
 | Field | Value |
 |---|---|
-| **APP RELEASE SHA** (branch `main`) | **`935fd4ada12160f744d87c64bcf17409309401a0`** — local tag `internal-alpha-preview-08`; new favicon on top of `3fd00e4` (tag `-07`: homepage aligned, [DEC-H1-R2](../decisions/DECISION_LOG.md#dec-h1-r2)), `2033264` (tag `-06`: approved legal text, [DEC-LEGAL](../decisions/DECISION_LOG.md#dec-legal)) and `08bbbb9` (tag `-05`: `/library`, `/about`, real e-mail magic link, login UI). Later `main` commits are docs only |
+| **APP RELEASE SHA** (branch `main`) | **`935fd4ada12160f744d87c64bcf17409309401a0`** — tag `internal-alpha-preview-08` (on `origin` since 28/09); new favicon on top of `3fd00e4` (tag `-07`: homepage aligned, [DEC-H1-R2](../decisions/DECISION_LOG.md#dec-h1-r2)), `2033264` (tag `-06`: approved legal text, [DEC-LEGAL](../decisions/DECISION_LOG.md#dec-legal)) and `08bbbb9` (tag `-05`: `/library`, `/about`, real e-mail magic link, login UI). Later `main` commits are docs only |
 | Deployment | **Deployed** by the favicon hotfix on 2026-09-28 16:48 UTC; image `sha256:b66cfffdd49d4795d6835313a2314021d795d7095bd8ebdd187390775b41e31e` |
 | Previous deployed | `3fd00e4c30103aa6ffcc36753c6b5f11324948e9` (tag `-07`) · `2033264b9f8314cee8e8c1bf9c0022d2906ac4e9` (tag `-06`) · `08bbbb9` (tag `-05`) · `c535c35` · `0479579` (tag `-04`) · `5a195f7` (`-03`) · `cc6ca28` (`-01`) |
 | **ROLLBACK SHA** | `3fd00e4c30103aa6ffcc36753c6b5f11324948e9` — `state/previous`; image and sources kept on the server; `rollback.sh` returns to it (same product, previous favicon) |
