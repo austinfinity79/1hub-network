@@ -23,8 +23,8 @@ Browser ─HTTPS─▶ OneShield/WAF ─▶ Nginx :80/:443 (origin) ─▶ 127.0
 
 | Item | Value |
 |---|---|
-| Deployed | `2033264b9f8314cee8e8c1bf9c0022d2906ac4e9` (approved legal text on the consolidated release, tag `internal-alpha-preview-06`), 2026-09-28 12:30 UTC; record: [INTERNAL_ALPHA_LEGAL_DEPLOYMENT.md](INTERNAL_ALPHA_LEGAL_DEPLOYMENT.md) |
-| Previous | `08bbbb9e25a2d51f41323dd93dab33cfcf04001c` (final pre-production consolidation); `rollback.sh` returns to it |
+| Deployed | `3fd00e4c30103aa6ffcc36753c6b5f11324948e9` (homepage aligned to the latest export, tag `internal-alpha-preview-07`), 2026-09-28 15:23 UTC; record: [INTERNAL_ALPHA_HOMEPAGE_DEPLOYMENT.md](INTERNAL_ALPHA_HOMEPAGE_DEPLOYMENT.md) |
+| Previous | `2033264b9f8314cee8e8c1bf9c0022d2906ac4e9` (approved legal text); `rollback.sh` returns to it |
 | Records | [INTERNAL_ALPHA_PREVIEW_ABOUT_DEPLOYMENT.md](INTERNAL_ALPHA_PREVIEW_ABOUT_DEPLOYMENT.md), [INTERNAL_ALPHA_PREVIEW_REAL_EMAIL_DEPLOYMENT.md](INTERNAL_ALPHA_PREVIEW_REAL_EMAIL_DEPLOYMENT.md), [INTERNAL_ALPHA_PREVIEW_DEPLOYMENT.md](INTERNAL_ALPHA_PREVIEW_DEPLOYMENT.md), [INTERNAL_ALPHA_DEPLOYMENT.md](INTERNAL_ALPHA_DEPLOYMENT.md) |
 
 ## Server paths
