@@ -5,7 +5,7 @@
 ## Release
 | Field | Value |
 |---|---|
-| **APP RELEASE SHA** (branch `main`) | **`3fd00e4c30103aa6ffcc36753c6b5f11324948e9`** — local tag `internal-alpha-preview-07`; homepage aligned to the latest export ([DEC-H1-R2](../decisions/DECISION_LOG.md#dec-h1-r2)) on top of `2033264` (tag `-06`: approved legal text, [DEC-LEGAL](../decisions/DECISION_LOG.md#dec-legal)) and `08bbbb9` (tag `-05`: favicon, `/library`, `/about`, real e-mail magic link, login UI). Later `main` commits are docs only |
+| **APP RELEASE SHA** (branch `main`) | **`3fd00e4c30103aa6ffcc36753c6b5f11324948e9`** — tag `internal-alpha-preview-07` (on `origin` since 28/09); homepage aligned to the latest export ([DEC-H1-R2](../decisions/DECISION_LOG.md#dec-h1-r2)) on top of `2033264` (tag `-06`: approved legal text, [DEC-LEGAL](../decisions/DECISION_LOG.md#dec-legal)) and `08bbbb9` (tag `-05`: favicon, `/library`, `/about`, real e-mail magic link, login UI). Later `main` commits are docs only |
 | Deployment | **Deployed** by TASK 22-HOMEPAGE-FINAL-DEPLOY on 2026-09-28 15:23 UTC; image `sha256:34f4403f693649ac7a6677f1e5404d0db70810218a9a8cdb21086f2e8c850f3f` |
 | Previous deployed | `2033264b9f8314cee8e8c1bf9c0022d2906ac4e9` (tag `-06`) · `08bbbb9e25a2d51f41323dd93dab33cfcf04001c` (tag `-05`) · `c535c35` · `0479579` (tag `-04`) · `5a195f7` (`-03`) · `cc6ca28` (`-01`) |
 | **ROLLBACK SHA** | `2033264b9f8314cee8e8c1bf9c0022d2906ac4e9` — `state/previous`; image and sources kept on the server; `rollback.sh` returns to it (same legal content and schema, previous homepage) |
@@ -19,7 +19,7 @@
 | Step | Command / check |
 |---|---|
 | Backup | `/opt/1hub-network/app/bin/backup.sh` |
-| Deploy | `deploy/bin/deploy.sh 3fd00e4c30103aa6ffcc36753c6b5f11324948e9` from the deploy worktree (nothing is pushed) |
+| Deploy | `deploy/bin/deploy.sh 3fd00e4c30103aa6ffcc36753c6b5f11324948e9` from the deploy worktree (the deploy archives from the local repository) |
 | Smoke | `smoke.sh`; `/`, `/about`, `/library`, `/auth`, `/icon.png`, `/api/v1/auth/providers` 200; `/legal/terms` and `/legal/privacy` 307 → 200; homepage → `/about` (nav, footer) and "Mạng lưới đổi mới sáng tạo" → `/library`; `/library` tabs Bài toán 6 · Startup 72 · Nhà sáng lập 84; new persona → `/onboarding/purpose`; `member@example.test` → `/me`, L2 routes 200; guest `/me` → `/auth` |
 | Rollback | `rollback.sh` → `2033264` |
 
