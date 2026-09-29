@@ -22,6 +22,9 @@ import { computeCompletion, loadCompletionFacts } from './completion'
  * phone; stage 2 adds specialization_ids and the period and description of an
  * experience record. `phone` is private: it is returned here, to its owner,
  * and by no other read model.
+ *
+ * Workspace (DEC-L2R-D3): `education` is writable, a list replaced as a whole
+ * like experience: institution, programme and the months of the period.
  */
 
 export const PATCH_FIELDS = [
@@ -39,6 +42,7 @@ export const PATCH_FIELDS = [
   'current_need',
   'experience',
   'no_experience_yet',
+  'education',
   'links',
 ] as const
 
@@ -69,6 +73,8 @@ export const LIST_LIMITS = {
   experience: 20,
   experience_text: 200,
   experience_description: 2000,
+  education: 20,
+  education_text: 200,
   links: 5,
   link_url: 500,
   link_label: 100,
@@ -86,6 +92,15 @@ export type ExperienceDTO = {
   description: string | null
 }
 
+/** `started_on` / `ended_on` are months, "YYYY-MM"; FP1-OWN draws their years. */
+export type EducationDTO = {
+  id: string
+  institution: string
+  programme: string | null
+  started_on: string | null
+  ended_on: string | null
+}
+
 export type OwnProfileDTO = {
   id: string | null
   status: string
@@ -101,7 +116,7 @@ export type OwnProfileDTO = {
   domains: Ref[]
   specializations: Ref[]
   skills: Ref[]
-  education: { id: string; institution: string; programme: string | null }[]
+  education: EducationDTO[]
   experience: ExperienceDTO[]
   /** Explicit NO_EXPERIENCE_YET (Freeze §D3 group 8), additive for WF02-S02. */
   no_experience_yet: boolean
@@ -202,8 +217,10 @@ export async function getOwnProfile(
     domains: await refs(exec, 'profile_domains', row.id),
     specializations: await refs(exec, 'profile_specializations', row.id),
     skills: await refs(exec, 'profile_skills', row.id),
-    education: await exec(
-      `SELECT id::text, institution, programme FROM profile_education
+    education: await exec<EducationDTO>(
+      `SELECT id::text, institution, programme, to_char(started_on, 'YYYY-MM') AS started_on,
+              to_char(ended_on, 'YYYY-MM') AS ended_on
+         FROM profile_education
         WHERE profile_id = $1 ORDER BY sort_order, created_at`,
       [row.id],
     ),
@@ -253,7 +270,15 @@ type Patch = {
   skill_ids?: string[]
   experience?: ExperiencePatch[]
   no_experience_yet?: boolean
+  education?: EducationPatch[]
   links?: { url: string; label: string | null }[]
+}
+
+type EducationPatch = {
+  institution: string
+  programme: string | null
+  started_on: string | null
+  ended_on: string | null
 }
 
 /** Optional text inside a list item: trimmed, blank → null, bounded. */
@@ -302,6 +327,7 @@ function linkUrl(value: unknown): string {
 }
 
 const EXPERIENCE_KEYS = ['title', 'organization_name', 'started_on', 'ended_on', 'description']
+const EDUCATION_KEYS = ['institution', 'programme', 'started_on', 'ended_on']
 
 /** Shape validation; no database access, so nothing can be half-written. */
 export function parsePatch(body: unknown): Patch {
@@ -386,6 +412,33 @@ export function parsePatch(body: unknown): Patch {
   if ('no_experience_yet' in input) {
     if (typeof input.no_experience_yet !== 'boolean') throw invalid('no_experience_yet', 'invalid')
     patch.no_experience_yet = input.no_experience_yet
+  }
+  if ('education' in input) {
+    const value = input.education
+    if (!Array.isArray(value)) throw invalid('education', 'invalid')
+    if (value.length > LIST_LIMITS.education) throw invalid('education', 'too_many')
+    patch.education = value.map((item) => {
+      if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+        throw invalid('education', 'invalid')
+      }
+      const entry = item as Record<string, unknown>
+      for (const k of Object.keys(entry)) {
+        if (!EDUCATION_KEYS.includes(k)) throw invalid('education', 'invalid')
+      }
+      const institution = itemText('education', entry.institution, LIST_LIMITS.education_text)
+      if (!institution) throw invalid('education', 'institution_required')
+      const record: EducationPatch = {
+        institution,
+        programme: itemText('education', entry.programme, LIST_LIMITS.education_text),
+        started_on: 'started_on' in entry ? month('education', entry.started_on) : null,
+        ended_on: 'ended_on' in entry ? month('education', entry.ended_on) : null,
+      }
+      // "YYYY-MM" compares as text; an end needs a start and cannot precede it.
+      if (record.ended_on && (!record.started_on || record.ended_on < record.started_on)) {
+        throw invalid('education', 'invalid_period')
+      }
+      return record
+    })
   }
   if ('links' in input) {
     const value = input.links
@@ -574,6 +627,17 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
             pick('description'),
             i,
           ],
+        )
+      }
+    }
+    if (patch.education) {
+      await exec('DELETE FROM profile_education WHERE profile_id = $1', [profile!.id])
+      for (const [i, item] of patch.education.entries()) {
+        await exec(
+          `INSERT INTO profile_education
+             (profile_id, institution, programme, started_on, ended_on, sort_order)
+           VALUES ($1, $2, $3, to_date($4, 'YYYY-MM'), to_date($5, 'YYYY-MM'), $6)`,
+          [profile!.id, item.institution, item.programme, item.started_on, item.ended_on, i],
         )
       }
     }

@@ -165,6 +165,82 @@ describe('WF02-S02 profile edit', () => {
     expect((await getOwnProfile(id)).links).toEqual([])
   })
 
+  it('DEC-L2R-D3: education replaces as a whole, months as "YYYY-MM"; completion is untouched', async () => {
+    const id = await account()
+    await updateOwnProfile(id, { display_name: 'Chi' })
+    const before = await percent(id)
+    await updateOwnProfile(id, {
+      education: [
+        {
+          institution: '  ĐH Bách khoa Hà Nội ',
+          programme: ' Kỹ thuật phần mềm ',
+          started_on: '2015-09',
+          ended_on: '2020-06',
+        },
+        { institution: 'Fulbright', started_on: '2021-01' },
+        { institution: 'Coursera', programme: '  ', started_on: null, ended_on: null },
+      ],
+    })
+    const dto = await getOwnProfile(id)
+    expect(
+      dto.education.map((e) => [e.institution, e.programme, e.started_on, e.ended_on]),
+    ).toEqual([
+      ['ĐH Bách khoa Hà Nội', 'Kỹ thuật phần mềm', '2015-09', '2020-06'],
+      ['Fulbright', null, '2021-01', null],
+      ['Coursera', null, null, null],
+    ])
+    expect(dto.education.every((e) => typeof e.id === 'string')).toBe(true)
+    // Replaced as a whole, in the order sent; a one-month period is allowed.
+    await updateOwnProfile(id, {
+      education: [{ institution: 'Fulbright', started_on: '2021-01', ended_on: '2021-01' }],
+    })
+    expect((await getOwnProfile(id)).education).toMatchObject([
+      { institution: 'Fulbright', programme: null, started_on: '2021-01', ended_on: '2021-01' },
+    ])
+    await updateOwnProfile(id, { education: [] })
+    expect((await getOwnProfile(id)).education).toEqual([])
+    // Education is not one of the frozen completion groups.
+    expect(await percent(id)).toBe(before)
+  })
+
+  it('validates education items: institution, months, period, unknown keys, bounds; atomic', async () => {
+    const id = await account()
+    await updateOwnProfile(id, { display_name: 'Chi', education: [{ institution: 'Kept' }] })
+    for (const [body, reason] of [
+      [{ education: [{ institution: '  ' }] }, 'institution_required'],
+      [{ education: [{ programme: 'No school' }] }, 'institution_required'],
+      [{ education: [{ institution: 'X', degree: 'BSc' }] }, 'invalid'],
+      [{ education: [{ institution: 'X', id: 'abc' }] }, 'invalid'],
+      [{ education: [{ institution: 'X', programme: 42 }] }, 'invalid'],
+      [{ education: ['X'] }, 'invalid'],
+      [{ education: { institution: 'X' } }, 'invalid'],
+      [{ education: [{ institution: 'X', started_on: '2020-01-01' }] }, 'invalid_month'],
+      [{ education: [{ institution: 'X', ended_on: '2021-13' }] }, 'invalid_month'],
+      [
+        { education: [{ institution: 'X', started_on: '2021-06', ended_on: '2021-05' }] },
+        'invalid_period',
+      ],
+      [{ education: [{ institution: 'X', ended_on: '2021-05' }] }, 'invalid_period'],
+      [
+        { education: [{ institution: 'X', started_on: null, ended_on: '2021-05' }] },
+        'invalid_period',
+      ],
+      [{ education: [{ institution: 'x'.repeat(201) }] }, 'too_long'],
+      [{ education: Array.from({ length: 21 }, () => ({ institution: 'X' })) }, 'too_many'],
+    ] as const) {
+      expect(
+        await refusal(updateOwnProfile(id, { headline: 'Changed', ...body })),
+        JSON.stringify(body),
+      ).toMatchObject({
+        code: 'PROFILE_VALIDATION_FAILED',
+        status: 422,
+        fields: { education: reason },
+      })
+    }
+    const dto = await getOwnProfile(id)
+    expect([dto.headline, dto.education.map((e) => e.institution)]).toEqual([null, ['Kept']])
+  })
+
   it('server-owned and foreign fields are refused before any write', async () => {
     const id = await account()
     await updateOwnProfile(id, { display_name: 'Before' })
@@ -175,7 +251,6 @@ describe('WF02-S02 profile edit', () => {
       'avatar_asset_id',
       'profile_id',
       'account_id',
-      'education',
       'primary_intent',
     ]) {
       const r = await refusal(updateOwnProfile(id, { display_name: 'After', [key]: 1 }))

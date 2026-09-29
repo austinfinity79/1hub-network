@@ -11,12 +11,16 @@ import {
   inviteMember,
   removeMember,
   updateMemberRole,
+  type MemberPermission,
 } from './team'
-import { createVenture, getVenture, updateVenture } from './venture'
+import { seedVenture } from './testing'
+import { getVenture, updateVenture } from './venture'
 
 /**
  * WF02-S06 — canonical venture team against live PostgreSQL
- * (DEC-WF02-H7, DEC-WF02-S06-G1..G9, migration 008).
+ * (DEC-WF02-H7, DEC-WF02-S06-G1..G9, migration 008; DEC-L2R-D6..D8,
+ * migration 011). The e-mail side of an invitation and ME7's own list are in
+ * invitations.db-test.ts.
  */
 
 afterAll(async () => {
@@ -52,14 +56,15 @@ async function refusal(promise: Promise<unknown>) {
 
 const RID = 'req-team-test'
 
-async function venture(owner: Person, name = 'Team venture') {
-  return createVenture(owner.accountId, { type: 'STARTUP', name })
+/** The team's venture; the record itself is covered by venture.db-test.ts. */
+async function venture(owner: Person, name = 'Team venture', extra: Record<string, unknown> = {}) {
+  return seedVenture(owner.accountId, { type: 'STARTUP', name, ...extra })
 }
 
 async function rowOf(id: string) {
   const [row] = await query<Record<string, unknown>>(
     `SELECT state::text AS state, profile_id::text AS profile_id, invite_email_normalized,
-            joined_at, ended_at, invited_by_profile_id::text AS invited_by, role_label
+            joined_at, ended_at, invited_by_profile_id::text AS invited_by, role_label, permission
        FROM project_members WHERE id = $1`,
     [id],
   )
@@ -74,15 +79,15 @@ async function auditsFor(id: string) {
   )
 }
 
-/** Owner + one ACTIVE member reached through the real invite/accept path. */
-async function teamWithMember() {
+/** Owner + one ACTIVE member reached through the real invite/accept path; VIEW unless stated. */
+async function teamWithMember(permission?: MemberPermission) {
   const owner = await person()
   const mate = await person()
   const v = await venture(owner)
   const inv = await inviteMember(
     owner.accountId,
     v.id,
-    { email: mate.email, role_label: 'CTO' },
+    { email: mate.email, role_label: 'CTO', ...(permission ? { permission } : {}) },
     RID,
   )
   await acceptInvitation(mate.accountId, v.id, inv.membership_id!, RID)
@@ -144,6 +149,70 @@ describe('WF02-S06 invitation create', () => {
     ).toMatchObject({ status: 422, fields: { role_label: 'too_long' } })
   })
 
+  it('DEC-L2R-D7: an invitation is VIEW unless the owner states EDIT; OWNER is never a row', async () => {
+    const owner = await person()
+    const v = await venture(owner)
+    const viewer = await inviteMember(owner.accountId, v.id, { email: 'viewer@example.test' }, RID)
+    const editor = await inviteMember(
+      owner.accountId,
+      v.id,
+      { email: 'editor@example.test', permission: 'EDIT' },
+      RID,
+    )
+    expect([viewer.permission, editor.permission]).toEqual(['VIEW', 'EDIT'])
+    expect((await rowOf(viewer.membership_id!)).permission).toBe('VIEW')
+    expect((await rowOf(editor.membership_id!)).permission).toBe('EDIT')
+    expect(await auditsFor(editor.membership_id!)).toEqual([
+      {
+        action: 'VENTURE_TEAM_INVITED',
+        before_data: null,
+        after_data: { project_id: v.id, state: 'PENDING_CONFIRMATION', permission: 'EDIT' },
+      },
+    ])
+    for (const permission of ['OWNER', 'Chủ sở hữu', 'edit', '', null, 42]) {
+      expect(
+        await refusal(
+          inviteMember(owner.accountId, v.id, { email: 'x@example.test', permission }, RID),
+        ),
+        String(permission),
+      ).toMatchObject({
+        code: 'PROFILE_VALIDATION_FAILED',
+        status: 422,
+        fields: { permission: 'invalid' },
+      })
+    }
+    expect(
+      await query(
+        `SELECT 1 FROM project_members WHERE project_id = $1 AND invite_email_normalized = 'x@example.test'`,
+        [v.id],
+      ),
+    ).toHaveLength(0)
+  })
+
+  it('DEC-L2R-D8: at most 20 pending invitations per venture; a closed one frees its place', async () => {
+    const owner = await person()
+    const v = await venture(owner)
+    for (let i = 0; i < 20; i++) {
+      await inviteMember(owner.accountId, v.id, { email: `cap-${i}@example.test` }, RID)
+    }
+    expect(
+      await refusal(inviteMember(owner.accountId, v.id, { email: 'cap-20@example.test' }, RID)),
+    ).toMatchObject({
+      code: 'PROFILE_VALIDATION_FAILED',
+      status: 422,
+      fields: { email: 'too_many_pending' },
+    })
+    const [first] = await query<{ id: string }>(
+      `SELECT id::text FROM project_members
+        WHERE project_id = $1 AND invite_email_normalized = 'cap-0@example.test'`,
+      [v.id],
+    )
+    await removeMember(owner.accountId, v.id, first!.id, RID)
+    const sent = await inviteMember(owner.accountId, v.id, { email: 'cap-20@example.test' }, RID)
+    expect(sent.kind).toBe('PENDING_INVITATION')
+    expect((await getTeam(owner.accountId, v.id)).counts.pending).toBe(20)
+  })
+
   it('the owner cannot invite their own email; no row is created', async () => {
     const owner = await person()
     const v = await venture(owner)
@@ -194,12 +263,18 @@ describe('WF02-S06 invitation create', () => {
     expect(rows).toHaveLength(1)
   })
 
-  it('non-owner cannot invite: member 403, stranger and bad ids 404', async () => {
+  it('non-owner cannot invite: VIEW and EDIT members 403, stranger and bad ids 404', async () => {
     const { mate, v } = await teamWithMember()
+    const editing = await teamWithMember('EDIT')
     const stranger = await person()
-    expect(
-      await refusal(inviteMember(mate.accountId, v.id, { email: 'x@example.test' }, RID)),
-    ).toMatchObject({ code: 'SCOPE_FORBIDDEN', status: 403 })
+    for (const [who, id] of [
+      [mate, v.id],
+      [editing.mate, editing.v.id],
+    ] as const) {
+      expect(
+        await refusal(inviteMember(who.accountId, id, { email: 'x@example.test' }, RID)),
+      ).toMatchObject({ code: 'SCOPE_FORBIDDEN', status: 403 })
+    }
     for (const [who, id] of [
       [stranger, v.id],
       [mate, '00000000-0000-0000-0000-000000000000'],
@@ -228,6 +303,7 @@ describe('WF02-S06 accept / decline (explicit, recipient only)', () => {
     expect(await getOwnInvitation(mate.accountId, v.id)).toMatchObject({
       membership_id: inv.membership_id,
       role_label: 'Dev',
+      permission: 'VIEW',
     })
 
     const first = await acceptInvitation(mate.accountId, v.id, inv.membership_id!, RID)
@@ -238,6 +314,7 @@ describe('WF02-S06 accept / decline (explicit, recipient only)', () => {
       profile_id: mate.profileId,
       invite_email_normalized: null,
       role_label: 'Dev',
+      permission: 'VIEW',
     })
     expect(row.joined_at).not.toBeNull()
 
@@ -245,7 +322,43 @@ describe('WF02-S06 accept / decline (explicit, recipient only)', () => {
     const audits = await auditsFor(inv.membership_id!)
     expect(audits.map((a) => a.action)).toEqual(['VENTURE_TEAM_INVITED', 'VENTURE_TEAM_JOINED'])
     const read = await getVenture(mate.accountId, v.id)
-    expect([read.relation, read.can_edit]).toEqual(['MEMBER', false])
+    expect([read.relation, read.permission, read.can_edit]).toEqual(['MEMBER', 'VIEW', false])
+  })
+
+  it('DEC-L2R-D7: accepting keeps the level the invitation carries', async () => {
+    const owner = await person()
+    const mate = await person()
+    const v = await venture(owner)
+    const inv = await inviteMember(
+      owner.accountId,
+      v.id,
+      { email: mate.email, role_label: 'Dev', permission: 'EDIT' },
+      RID,
+    )
+    const own = await getOwnInvitation(mate.accountId, v.id)
+    expect(own).toEqual({
+      venture: { id: v.id, name: 'Team venture', type: 'STARTUP' },
+      membership_id: inv.membership_id,
+      role_label: 'Dev',
+      permission: 'EDIT',
+      invited_at: expect.any(String),
+    })
+    expect(inv).toMatchObject({ invited_at: own!.invited_at })
+    await acceptInvitation(mate.accountId, v.id, inv.membership_id!, RID)
+    expect(await rowOf(inv.membership_id!)).toMatchObject({ state: 'ACTIVE', permission: 'EDIT' })
+    expect(await getVenture(mate.accountId, v.id)).toMatchObject({
+      relation: 'MEMBER',
+      permission: 'EDIT',
+      role_label: 'Dev',
+      can_edit: true,
+    })
+    expect((await updateVenture(mate.accountId, v.id, { name: 'Edited' }, RID)).name).toBe('Edited')
+    // JOINED is a state transition; the level is not restated on it.
+    expect((await auditsFor(inv.membership_id!)).at(-1)).toEqual({
+      action: 'VENTURE_TEAM_JOINED',
+      before_data: { project_id: v.id, state: 'PENDING_CONFIRMATION' },
+      after_data: { project_id: v.id, state: 'ACTIVE' },
+    })
   })
 
   it('concurrent accepts create one ACTIVE row and one event', async () => {
@@ -394,7 +507,12 @@ describe('WF02-S06 role edit, cancel, remove, owner protection', () => {
       { role_label: 'Owner' },
       RID,
     )
-    expect(out).toEqual({ membership_id: membershipId, state: 'ACTIVE', role_label: 'Owner' })
+    expect(out).toEqual({
+      membership_id: membershipId,
+      state: 'ACTIVE',
+      role_label: 'Owner',
+      permission: 'VIEW',
+    })
     // Same value again: no new event.
     await updateMemberRole(owner.accountId, v.id, membershipId, { role_label: 'Owner' }, RID)
     const changed = (await auditsFor(membershipId)).filter(
@@ -402,8 +520,8 @@ describe('WF02-S06 role edit, cancel, remove, owner protection', () => {
     )
     expect(changed).toHaveLength(1)
     expect(JSON.stringify(changed)).not.toContain('Owner')
-    // A label of "Owner" still grants no management capability.
-    expect(await refusal(updateVenture(mate.accountId, v.id, { name: 'x' }))).toMatchObject({
+    // A label of "Owner" still grants no management capability, and no level.
+    expect(await refusal(updateVenture(mate.accountId, v.id, { name: 'x' }, RID))).toMatchObject({
       status: 403,
     })
     expect(
@@ -413,6 +531,99 @@ describe('WF02-S06 role edit, cancel, remove, owner protection', () => {
       mate.profileId,
     ])
     expect(roles).toHaveLength(0)
+  })
+
+  it('DEC-L2R-D7: the owner sets a member’s level; a change is audited with the level, never the label', async () => {
+    const { owner, mate, v, membershipId } = await teamWithMember()
+    const raised = await updateMemberRole(
+      owner.accountId,
+      v.id,
+      membershipId,
+      { permission: 'EDIT' },
+      RID,
+    )
+    expect(raised).toEqual({
+      membership_id: membershipId,
+      state: 'ACTIVE',
+      role_label: 'CTO',
+      permission: 'EDIT',
+    })
+    expect(await getVenture(mate.accountId, v.id)).toMatchObject({
+      permission: 'EDIT',
+      can_edit: true,
+    })
+    const both = await updateMemberRole(
+      owner.accountId,
+      v.id,
+      membershipId,
+      { role_label: 'Advisor', permission: 'VIEW' },
+      RID,
+    )
+    expect(both).toMatchObject({ role_label: 'Advisor', permission: 'VIEW' })
+    expect(await getVenture(mate.accountId, v.id)).toMatchObject({
+      permission: 'VIEW',
+      role_label: 'Advisor',
+      can_edit: false,
+    })
+    const changed = (await auditsFor(membershipId)).filter(
+      (a) => a.action === 'VENTURE_TEAM_ROLE_CHANGED',
+    )
+    expect(changed.map((a) => [a.before_data, a.after_data])).toEqual([
+      [
+        { project_id: v.id, state: 'ACTIVE', permission: 'VIEW' },
+        { project_id: v.id, state: 'ACTIVE', permission: 'EDIT' },
+      ],
+      [
+        { project_id: v.id, state: 'ACTIVE', permission: 'EDIT' },
+        { project_id: v.id, state: 'ACTIVE', permission: 'VIEW' },
+      ],
+    ])
+    expect(JSON.stringify(changed)).not.toMatch(/CTO|Advisor/)
+    for (const [body, field, reason] of [
+      [{}, 'role_label', 'required'],
+      [{ permission: 'OWNER' }, 'permission', 'invalid'],
+      [{ permission: 'view' }, 'permission', 'invalid'],
+      [{ role_label: 'x', permission: null }, 'permission', 'invalid'],
+    ] as const) {
+      expect(
+        await refusal(updateMemberRole(owner.accountId, v.id, membershipId, body, RID)),
+        JSON.stringify(body),
+      ).toMatchObject({
+        code: 'PROFILE_VALIDATION_FAILED',
+        status: 422,
+        fields: { [field]: reason },
+      })
+    }
+    expect(await rowOf(membershipId)).toMatchObject({ role_label: 'Advisor', permission: 'VIEW' })
+  })
+
+  it('DEC-L2R-D7: an EDIT member updates the venture and nothing in the team', async () => {
+    const { owner, mate, v, membershipId } = await teamWithMember('EDIT')
+    const other = await inviteMember(owner.accountId, v.id, { email: 'other@example.test' }, RID)
+    expect((await updateVenture(mate.accountId, v.id, { name: 'By the member' }, RID)).name).toBe(
+      'By the member',
+    )
+    expect(
+      await refusal(inviteMember(mate.accountId, v.id, { email: 'q@example.test' }, RID)),
+    ).toMatchObject({ code: 'SCOPE_FORBIDDEN', status: 403 })
+    expect(
+      await refusal(
+        updateMemberRole(mate.accountId, v.id, membershipId, { permission: 'EDIT' }, RID),
+      ),
+    ).toMatchObject({ code: 'SCOPE_FORBIDDEN', status: 403 })
+    for (const id of [other.membership_id!, membershipId]) {
+      expect(await refusal(removeMember(mate.accountId, v.id, id, RID))).toMatchObject({
+        code: 'SCOPE_FORBIDDEN',
+        status: 403,
+      })
+    }
+    expect(await getTeam(mate.accountId, v.id)).toMatchObject({
+      viewer: 'MEMBER',
+      can_manage: false,
+      counts: { members: 2, pending: null },
+    })
+    expect((await rowOf(other.membership_id!)).state).toBe('PENDING_CONFIRMATION')
+    expect((await getTeam(owner.accountId, v.id)).counts.pending).toBe(1)
   })
 
   it('non-owner cannot change roles or remove; body authority fields refused', async () => {
@@ -532,7 +743,12 @@ describe('WF02-S06 list and privacy (G8)', () => {
     const own = await getTeam(owner.accountId, v.id)
     expect(own.viewer).toBe('OWNER')
     expect(own.rows.map((r) => r.kind)).toEqual(['OWNER', 'ACTIVE_MEMBER', 'PENDING_INVITATION'])
-    expect(own.rows[0]).toMatchObject({ membership_id: null, joined_at: null, role_label: null })
+    expect(own.rows[0]).toMatchObject({
+      membership_id: null,
+      joined_at: null,
+      role_label: null,
+      permission: 'OWNER',
+    })
     expect(own.counts).toEqual({ members: 2, pending: 1 })
 
     const seen = await getTeam(mate.accountId, v.id)
@@ -568,5 +784,31 @@ describe('WF02-S06 list and privacy (G8)', () => {
       expect(await refusal(getTeam(who.accountId, v.id))).toMatchObject({ status: 404 })
     }
     expect(await getOwnInvitation(invitee.accountId, v.id)).not.toBeNull()
+  })
+
+  it('DEC-L2R-D6/D7: every row states its level; the owner row states the creator role', async () => {
+    const owner = await person()
+    const editor = await person()
+    const v = await venture(owner, 'Levels', { owner_role_label: 'Founder' })
+    const inv = await inviteMember(
+      owner.accountId,
+      v.id,
+      { email: editor.email, role_label: 'Dev', permission: 'EDIT' },
+      RID,
+    )
+    await inviteMember(owner.accountId, v.id, { email: 'waiting@example.test' }, RID)
+    await acceptInvitation(editor.accountId, v.id, inv.membership_id!, RID)
+    const team = await getTeam(owner.accountId, v.id)
+    expect(team.rows.map((r) => [r.kind, r.role_label, r.permission])).toEqual([
+      ['OWNER', 'Founder', 'OWNER'],
+      ['ACTIVE_MEMBER', 'Dev', 'EDIT'],
+      ['PENDING_INVITATION', null, 'VIEW'],
+    ])
+    // The creator role is display text of the owner row, not a level and not a member row.
+    expect(team.counts).toEqual({ members: 2, pending: 1 })
+    expect((await getTeam(editor.accountId, v.id)).rows.map((r) => r.permission)).toEqual([
+      'OWNER',
+      'EDIT',
+    ])
   })
 })

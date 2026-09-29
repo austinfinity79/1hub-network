@@ -18,6 +18,9 @@ export type AuditAction =
   | 'VENTURE_TEAM_INVITATION_REJECTED'
   | 'VENTURE_TEAM_ROLE_CHANGED'
   | 'VENTURE_TEAM_REMOVED'
+  // WF02 venture record (DEC-L2R-D9): ids, type, status and field names only.
+  | 'VENTURE_CREATED'
+  | 'VENTURE_UPDATED'
   // WF03-S04 membership review / leadership ops (DEC-WF03-G14): ids and states only.
   | 'MEMBERSHIP_APPROVED'
   | 'MEMBERSHIP_REJECTED'

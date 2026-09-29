@@ -7,12 +7,20 @@ import { query, type Executor } from '@/lib/db/client'
  * Item lists are data, never code: this module reads `vocabulary_items` and
  * holds no literal taxonomy. P0 types are REGION, DOMAIN and SKILL; the
  * four-stage onboarding adds COUNTRY and SPECIALIZATION (migration 010,
- * DEC-L1R-D4). Items are ACTIVE or ARCHIVED; an archived item stays valid on
+ * DEC-L1R-D4), the venture its VENTURE_STAGE (migration 011, DEC-L2R-D5).
+ * Items are ACTIVE or ARCHIVED; an archived item stays valid on
  * relations that already point at it, but can never be newly selected
  * (Freeze:209).
  */
 
-export const VOCABULARY_TYPES = ['REGION', 'DOMAIN', 'SKILL', 'COUNTRY', 'SPECIALIZATION'] as const
+export const VOCABULARY_TYPES = [
+  'REGION',
+  'DOMAIN',
+  'SKILL',
+  'COUNTRY',
+  'SPECIALIZATION',
+  'VENTURE_STAGE',
+] as const
 export type VocabularyType = (typeof VOCABULARY_TYPES)[number]
 
 export type VocabularyStatus = 'ACTIVE' | 'ARCHIVED'

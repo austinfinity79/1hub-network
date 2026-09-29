@@ -4,6 +4,8 @@ import { isPlausibleEmail, normalizeEmail } from '@/lib/auth/email'
 import { query, withTransaction, type Executor } from '@/lib/db/client'
 import { getOnboardingState } from '@/lib/onboarding/state'
 
+import type { InvitationNotice } from './invitation-email'
+
 /**
  * WF02-S06 — canonical venture team (API 05 §5.4; DEC-WF02-H7,
  * DEC-WF02-S06-G1..G9).
@@ -14,11 +16,16 @@ import { getOnboardingState } from '@/lib/onboarding/state'
  * the team rows of the list are derived from it (G5). A legacy row whose
  * profile is the owner is ignored and cannot be addressed.
  *
- * Authority: every mutation needs `venture:team_manage` (owner only, Matrix
- * §E). An ACTIVE member holds `venture:read` only; `role_label` grants nothing.
- * Accept/decline belong to the recipient alone: the session account's
+ * Authority (DEC-L2R-D7): every mutation here needs `venture:team_manage`,
+ * which is the owner's alone. A row carries the level of its member, EDIT
+ * ("Biên tập") or VIEW ("Xem"), set by the owner; EDIT lets the member update
+ * the venture (venture.ts) and nothing in the team. `role_label` grants
+ * nothing. Accept/decline belong to the recipient alone: the session account's
  * normalised email must equal the invitation email (G2). Invite creation never
  * looks up accounts, so it cannot reveal whether an email is registered.
+ *
+ * Sending (DEC-L2R-D8): `inviteMember` hands the notice to `deliver` inside
+ * its transaction, so an e-mail that cannot be sent leaves no invitation.
  *
  * Races: each mutation locks its membership row, so accept vs cancel and
  * remove vs role edit resolve to one canonical transition; the partial unique
@@ -27,7 +34,18 @@ import { getOnboardingState } from '@/lib/onboarding/state'
  * with ids and states only.
  */
 
-export const TEAM_LIMITS = { roleLabel: 100 } as const
+/** Provisional TECHNICAL bounds; not business rules. */
+export const TEAM_LIMITS = { roleLabel: 100, pendingPerVenture: 20 } as const
+
+/**
+ * Invitation e-mails sent in the last 24 hours, counted over every state, so
+ * cancelling an invitation gives no send back (DEC-L2R-D13): per venture and
+ * address, and per inviting profile.
+ */
+export const INVITE_SEND_LIMITS = { perAddress: 3, perInviter: 50 } as const
+
+export const MEMBER_PERMISSIONS = ['EDIT', 'VIEW'] as const
+export type MemberPermission = (typeof MEMBER_PERMISSIONS)[number]
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -36,7 +54,8 @@ export type TeamRow =
       kind: 'OWNER'
       membership_id: null
       display_name: string
-      role_label: null
+      role_label: string | null
+      permission: 'OWNER'
       joined_at: null
     }
   | {
@@ -44,6 +63,7 @@ export type TeamRow =
       membership_id: string
       display_name: string
       role_label: string | null
+      permission: MemberPermission
       joined_at: string
     }
   | {
@@ -51,6 +71,7 @@ export type TeamRow =
       membership_id: string
       email: string
       role_label: string | null
+      permission: MemberPermission
       invited_at: string
     }
 
@@ -68,6 +89,7 @@ export type InvitationView = {
   venture: { id: string; name: string; type: string }
   membership_id: string
   role_label: string | null
+  permission: MemberPermission
   invited_at: string
 }
 
@@ -77,6 +99,7 @@ type Venture = {
   type: string
   status: string
   owner_profile_id: string
+  owner_role_label: string | null
 }
 
 type Member = {
@@ -84,6 +107,7 @@ type Member = {
   profile_id: string | null
   state: string
   role_label: string | null
+  permission: MemberPermission
   invite_email_normalized: string | null
 }
 
@@ -94,6 +118,9 @@ const invalid = (field: string, reason: string) =>
 
 const archived = () =>
   new ApiError('PROFILE_DEACTIVATED', 409, 'This venture is archived and read-only.')
+
+const sendLimited = () =>
+  new ApiError('INVITATION_RATE_LIMITED', 429, 'Too many invitations sent. Try again later.')
 
 async function actor(exec: Executor, accountId: string) {
   const [row] = await exec<{ profile_id: string; email: string }>(
@@ -109,7 +136,7 @@ async function ventureOf(exec: Executor, ventureId: string): Promise<Venture | n
   if (!UUID.test(ventureId)) return null
   const [row] = await exec<Venture>(
     `SELECT id::text, name, type::text AS type, status::text AS status,
-            owner_profile_id::text
+            owner_profile_id::text, owner_role_label
        FROM projects WHERE id = $1`,
     [ventureId],
   )
@@ -145,7 +172,7 @@ async function managed(exec: Executor, accountId: string, ventureId: string) {
 async function lockedMember(exec: Executor, venture: Venture, membershipId: string) {
   if (!UUID.test(membershipId)) throw notFound()
   const [row] = await exec<Member>(
-    `SELECT id::text, profile_id::text, state::text AS state, role_label,
+    `SELECT id::text, profile_id::text, state::text AS state, role_label, permission,
             invite_email_normalized
        FROM project_members WHERE id = $1 AND project_id = $2 FOR UPDATE`,
     [membershipId, venture.id],
@@ -163,14 +190,26 @@ async function audit(
   before: string | null,
   after: string,
   requestId: string,
+  /** The level before and after, when the event is about it. */
+  permission?: { before: MemberPermission | null; after: MemberPermission },
 ) {
   await writeAudit(exec, {
     actorAccountId: accountId,
     action,
     resourceType: 'project_member',
     resourceId: membershipId,
-    before: before ? { project_id: venture.id, state: before } : null,
-    after: { project_id: venture.id, state: after },
+    before: before
+      ? {
+          project_id: venture.id,
+          state: before,
+          ...(permission?.before ? { permission: permission.before } : {}),
+        }
+      : null,
+    after: {
+      project_id: venture.id,
+      state: after,
+      ...(permission ? { permission: permission.after } : {}),
+    },
     requestId,
   })
 }
@@ -181,6 +220,14 @@ function parseRoleLabel(value: unknown): string | null {
   const text = value.trim()
   if (text.length > TEAM_LIMITS.roleLabel) throw invalid('role_label', 'too_long')
   return text || null
+}
+
+function parsePermission(value: unknown): MemberPermission {
+  if (!(MEMBER_PERMISSIONS as readonly unknown[]).includes(value)) {
+    // OWNER is ownership and is never given through a team row.
+    throw invalid('permission', 'invalid')
+  }
+  return value as MemberPermission
 }
 
 function onlyKeys(body: unknown, allowed: readonly string[]): Record<string, unknown> {
@@ -212,9 +259,10 @@ export async function getTeam(accountId: string, ventureId: string): Promise<Tea
     id: string
     display_name: string | null
     role_label: string | null
+    permission: MemberPermission
     joined_at: Date
   }>(
-    `SELECT m.id::text, p.display_name, m.role_label, m.joined_at
+    `SELECT m.id::text, p.display_name, m.role_label, m.permission, m.joined_at
        FROM project_members m JOIN individual_profiles p ON p.id = m.profile_id
       WHERE m.project_id = $1 AND m.state = 'ACTIVE' AND m.profile_id <> $2
       ORDER BY m.joined_at, m.id`,
@@ -225,9 +273,10 @@ export async function getTeam(accountId: string, ventureId: string): Promise<Tea
         id: string
         invite_email_normalized: string
         role_label: string | null
+        permission: MemberPermission
         invited_at: Date
       }>(
-        `SELECT id::text, invite_email_normalized, role_label, invited_at
+        `SELECT id::text, invite_email_normalized, role_label, permission, invited_at
            FROM project_members
           WHERE project_id = $1 AND state = 'PENDING_CONFIRMATION'
           ORDER BY invited_at, id`,
@@ -240,7 +289,8 @@ export async function getTeam(accountId: string, ventureId: string): Promise<Tea
       kind: 'OWNER',
       membership_id: null,
       display_name: ownerProfile?.display_name ?? '',
-      role_label: null,
+      role_label: venture.owner_role_label,
+      permission: 'OWNER',
       joined_at: null,
     },
     ...members.map((m): TeamRow => ({
@@ -248,6 +298,7 @@ export async function getTeam(accountId: string, ventureId: string): Promise<Tea
       membership_id: m.id,
       display_name: m.display_name ?? '',
       role_label: m.role_label,
+      permission: m.permission,
       joined_at: iso(m.joined_at),
     })),
     ...pending.map((p): TeamRow => ({
@@ -255,6 +306,7 @@ export async function getTeam(accountId: string, ventureId: string): Promise<Tea
       membership_id: p.id,
       email: p.invite_email_normalized,
       role_label: p.role_label,
+      permission: p.permission,
       invited_at: iso(p.invited_at),
     })),
   ]
@@ -267,33 +319,65 @@ export async function getTeam(accountId: string, ventureId: string): Promise<Tea
   }
 }
 
-/** POST /ventures/{id}/team/invitations `{email, role_label}` → 201 PENDING_CONFIRMATION. */
+/**
+ * POST /ventures/{id}/team/invitations `{email, role_label, permission}` → 201
+ * PENDING_CONFIRMATION. Without a level the invitation is VIEW. `deliver`
+ * sends the notice; when it throws, nothing of the invitation remains.
+ */
 export async function inviteMember(
   accountId: string,
   ventureId: string,
   body: unknown,
   requestId: string,
+  deliver?: (notice: InvitationNotice) => Promise<void>,
 ): Promise<TeamRow> {
-  const input = onlyKeys(body, ['email', 'role_label'])
+  const input = onlyKeys(body, ['email', 'role_label', 'permission'])
   if (typeof input.email !== 'string' || !isPlausibleEmail(input.email))
     throw invalid('email', 'invalid')
   const email = normalizeEmail(input.email)
   const roleLabel = parseRoleLabel(input.role_label)
+  const permission: MemberPermission =
+    input.permission === undefined ? 'VIEW' : parsePermission(input.permission)
 
   return withTransaction(async (exec) => {
     const { me, venture } = await managed(exec, accountId, ventureId)
     // The owner is never a row. Only the owner's own address is compared, so
     // nothing about any other account is looked up or revealed.
     if (email === me.email) throw invalid('email', 'invalid')
+    // One invitation of a venture at a time, so the counts below hold at insert.
+    await exec(`SELECT 1 FROM projects WHERE id = $1 FOR UPDATE`, [venture.id])
+    const [{ pending } = { pending: 0 }] = await exec<{ pending: number }>(
+      `SELECT count(*)::int AS pending FROM project_members
+        WHERE project_id = $1 AND state = 'PENDING_CONFIRMATION'`,
+      [venture.id],
+    )
+    if (pending >= TEAM_LIMITS.pendingPerVenture) throw invalid('email', 'too_many_pending')
+    const [sent = { to_address: 0, by_inviter: 0 }] = await exec<{
+      to_address: number
+      by_inviter: number
+    }>(
+      `SELECT count(*) FILTER (WHERE project_id = $1 AND invite_email_normalized = $2)::int
+                AS to_address,
+              count(*) FILTER (WHERE invited_by_profile_id = $3)::int AS by_inviter
+         FROM project_members
+        WHERE invited_at > now() - interval '24 hours'
+          AND (project_id = $1 OR invited_by_profile_id = $3)`,
+      [venture.id, email, me.profile_id],
+    )
+    if (
+      sent.to_address >= INVITE_SEND_LIMITS.perAddress ||
+      sent.by_inviter >= INVITE_SEND_LIMITS.perInviter
+    )
+      throw sendLimited()
     let created: { id: string; invited_at: Date } | undefined
     try {
       ;[created] = await exec<{ id: string; invited_at: Date }>(
         `INSERT INTO project_members
-           (project_id, profile_id, role_label, state, joined_at,
+           (project_id, profile_id, role_label, permission, state, joined_at,
             invite_email_normalized, invited_by_profile_id, invited_at, updated_at)
-         VALUES ($1, NULL, $2, 'PENDING_CONFIRMATION', NULL, $3, $4, now(), now())
+         VALUES ($1, NULL, $2, $3, 'PENDING_CONFIRMATION', NULL, $4, $5, now(), now())
          RETURNING id::text, invited_at`,
-        [venture.id, roleLabel, email, me.profile_id],
+        [venture.id, roleLabel, permission, email, me.profile_id],
       )
     } catch (error) {
       if ((error as { code?: string }).code === '23505') {
@@ -310,37 +394,52 @@ export async function inviteMember(
       null,
       'PENDING_CONFIRMATION',
       requestId,
+      { before: null, after: permission },
     )
+    // Last, inside the transaction: a notice that cannot be sent rolls all of it back.
+    await deliver?.({
+      to: email,
+      venture: { name: venture.name, type: venture.type },
+      role_label: roleLabel,
+      permission,
+    })
     return {
       kind: 'PENDING_INVITATION',
       membership_id: created!.id,
       email,
       role_label: roleLabel,
+      permission,
       invited_at: iso(created!.invited_at),
     }
   })
 }
 
-/** PATCH /ventures/{id}/team/{membershipId} `{role_label}`: ACTIVE non-owner rows only. */
+/**
+ * PATCH /ventures/{id}/team/{membershipId} `{role_label, permission}`: either
+ * or both, on an ACTIVE non-owner row only. The owner's level is not a row and
+ * cannot be given or taken here.
+ */
 export async function updateMemberRole(
   accountId: string,
   ventureId: string,
   membershipId: string,
   body: unknown,
   requestId: string,
-): Promise<MembershipResult & { role_label: string | null }> {
-  const input = onlyKeys(body, ['role_label'])
-  if (!('role_label' in input)) throw invalid('role_label', 'required')
-  const roleLabel = parseRoleLabel(input.role_label)
+): Promise<MembershipResult & { role_label: string | null; permission: MemberPermission }> {
+  const input = onlyKeys(body, ['role_label', 'permission'])
+  if (!('role_label' in input) && !('permission' in input)) throw invalid('role_label', 'required')
   return withTransaction(async (exec) => {
     const { venture } = await managed(exec, accountId, ventureId)
     const row = await lockedMember(exec, venture, membershipId)
     if (row.state !== 'ACTIVE') throw conflict('Only an active member has an editable role.')
-    if (row.role_label !== roleLabel) {
-      await exec('UPDATE project_members SET role_label = $2, updated_at = now() WHERE id = $1', [
-        row.id,
-        roleLabel,
-      ])
+    const roleLabel = 'role_label' in input ? parseRoleLabel(input.role_label) : row.role_label
+    const permission = 'permission' in input ? parsePermission(input.permission) : row.permission
+    if (row.role_label !== roleLabel || row.permission !== permission) {
+      await exec(
+        `UPDATE project_members SET role_label = $2, permission = $3, updated_at = now()
+          WHERE id = $1`,
+        [row.id, roleLabel, permission],
+      )
       await audit(
         exec,
         accountId,
@@ -350,9 +449,10 @@ export async function updateMemberRole(
         'ACTIVE',
         'ACTIVE',
         requestId,
+        { before: row.permission, after: permission },
       )
     }
-    return { membership_id: row.id, state: 'ACTIVE', role_label: roleLabel }
+    return { membership_id: row.id, state: 'ACTIVE', role_label: roleLabel, permission }
   })
 }
 
@@ -403,7 +503,7 @@ async function recipientRow(
   const venture = me ? await ventureOf(exec, ventureId) : null
   if (!me || !venture || !UUID.test(membershipId)) throw notFound()
   const [row] = await exec<Member>(
-    `SELECT id::text, profile_id::text, state::text AS state, role_label,
+    `SELECT id::text, profile_id::text, state::text AS state, role_label, permission,
             invite_email_normalized
        FROM project_members WHERE id = $1 AND project_id = $2 FOR UPDATE`,
     [membershipId, venture.id],
@@ -508,8 +608,15 @@ export async function getOwnInvitation(
   const me = await actor(query, accountId)
   const venture = me ? await ventureOf(query, ventureId) : null
   if (!me || !venture || venture.owner_profile_id === me.profile_id) return null
-  const [row] = await query<{ id: string; role_label: string | null; invited_at: Date }>(
-    `SELECT id::text, role_label, invited_at FROM project_members
+  // As GET /me/venture-invitations: an archived venture takes no one in.
+  if (venture.status === 'ARCHIVED') return null
+  const [row] = await query<{
+    id: string
+    role_label: string | null
+    permission: MemberPermission
+    invited_at: Date
+  }>(
+    `SELECT id::text, role_label, permission, invited_at FROM project_members
       WHERE project_id = $1 AND state = 'PENDING_CONFIRMATION'
         AND invite_email_normalized = $2`,
     [venture.id, me.email],
@@ -519,6 +626,44 @@ export async function getOwnInvitation(
     venture: { id: venture.id, name: venture.name, type: venture.type },
     membership_id: row.id,
     role_label: row.role_label,
+    permission: row.permission,
     invited_at: iso(row.invited_at),
   }
+}
+
+/**
+ * GET /me/venture-invitations (DEC-L2R-D8): the pending invitations sent to
+ * the account's own address, oldest first. Each carries the venture's name and
+ * type, the role and the level, and nothing of the team. An account without a
+ * profile is asked too: the invitation waits for the address, not the profile.
+ */
+export async function listOwnInvitations(accountId: string): Promise<InvitationView[]> {
+  const rows = await query<{
+    id: string
+    venture_id: string
+    name: string
+    type: string
+    role_label: string | null
+    permission: MemberPermission
+    invited_at: Date
+  }>(
+    `SELECT m.id::text, p.id::text AS venture_id, p.name, p.type::text AS type,
+            m.role_label, m.permission, m.invited_at
+       FROM user_accounts a
+       JOIN project_members m
+         ON m.invite_email_normalized = a.email_normalized AND m.state = 'PENDING_CONFIRMATION'
+       JOIN projects p ON p.id = m.project_id AND p.status <> 'ARCHIVED'
+      WHERE a.id = $1
+        AND NOT EXISTS (SELECT 1 FROM individual_profiles o
+                         WHERE o.account_id = a.id AND o.id = p.owner_profile_id)
+      ORDER BY m.invited_at, m.id`,
+    [accountId],
+  )
+  return rows.map((row) => ({
+    venture: { id: row.venture_id, name: row.name, type: row.type },
+    membership_id: row.id,
+    role_label: row.role_label,
+    permission: row.permission,
+    invited_at: iso(row.invited_at),
+  }))
 }

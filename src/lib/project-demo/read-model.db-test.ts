@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { isApiError } from '@/lib/api/errors'
 import { closePool, query } from '@/lib/db/client'
 import { DEMO_PROGRAMMES } from '@/lib/programme-demo/fixtures'
-import { createVenture } from '@/lib/venture/venture'
+import { seedVenture } from '@/lib/venture/testing'
 
 import {
   getDemoVenture,
@@ -84,9 +84,9 @@ async function world() {
   const teammate = await member()
   const invitee = await member()
   const stranger = await member()
-  const startup = await createVenture(owner.accountId, { type: 'STARTUP', name: 'WF05 Startup' })
-  const project = await createVenture(owner.accountId, { type: 'PROJECT', name: 'WF05 Project' })
-  const archived = await createVenture(owner.accountId, { type: 'STARTUP', name: 'WF05 Archived' })
+  const startup = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'WF05 Startup' })
+  const project = await seedVenture(owner.accountId, { type: 'PROJECT', name: 'WF05 Project' })
+  const archived = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'WF05 Archived' })
   await query(`UPDATE projects SET status = 'ARCHIVED' WHERE id = $1`, [archived.id])
   await query(
     `INSERT INTO project_members (project_id, profile_id, role_label, state, joined_at)

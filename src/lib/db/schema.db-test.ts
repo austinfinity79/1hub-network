@@ -143,6 +143,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '009_p0_one_active_parent.sql',
       // TASK 22-L1-L2-SOT-REALIGN (DEC-L1R-D4 / D5): four-stage onboarding data.
       '010_p0_onboarding_four_stage.sql',
+      // TASK 22-L1-L2-SOT-REALIGN (DEC-L2R-D5 / D6 / D7): venture stage, creator role, member level.
+      '011_p0_venture_lifecycle.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -361,5 +363,117 @@ describe('M0-T07 seed fixture quality', () => {
       .scripts as Record<string, string>
     expect(scripts['db:seed']).toBe('node scripts/db.mjs seed')
     expect(Object.values(scripts).join('\n')).not.toMatch(/seed_dev/)
+  })
+})
+
+describe('TASK 22-L1-L2 venture lifecycle (migration 011)', () => {
+  it('adds the stage and the creator role to projects and the level to project_members', async () => {
+    const cols = await query<{
+      table_name: string
+      column_name: string
+      data_type: string
+      is_nullable: string
+      column_default: string | null
+    }>(
+      `SELECT table_name, column_name, data_type, is_nullable, column_default
+         FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND (table_name, column_name) IN
+              (('projects', 'stage_id'), ('projects', 'owner_role_label'),
+               ('project_members', 'permission'))
+        ORDER BY table_name, column_name`,
+    )
+    expect(cols).toEqual([
+      {
+        table_name: 'project_members',
+        column_name: 'permission',
+        data_type: 'text',
+        is_nullable: 'NO',
+        column_default: "'VIEW'::text",
+      },
+      {
+        table_name: 'projects',
+        column_name: 'owner_role_label',
+        data_type: 'text',
+        is_nullable: 'YES',
+        column_default: null,
+      },
+      {
+        table_name: 'projects',
+        column_name: 'stage_id',
+        data_type: 'uuid',
+        is_nullable: 'YES',
+        column_default: null,
+      },
+    ])
+    // The stage is one controlled item, enforced by the engine.
+    const fks = await query<{ def: string }>(
+      `SELECT pg_get_constraintdef(oid) AS def FROM pg_constraint
+        WHERE conrelid = 'projects'::regclass AND contype = 'f'
+          AND pg_get_constraintdef(oid) LIKE 'FOREIGN KEY (stage_id)%'`,
+    )
+    expect(fks.map((r) => r.def)).toEqual([
+      'FOREIGN KEY (stage_id) REFERENCES vocabulary_items(id)',
+    ])
+  })
+
+  it('ck_pm_permission admits EDIT and VIEW only; rows that existed are VIEW', async () => {
+    const [check] = await query<{ def: string }>(
+      `SELECT pg_get_constraintdef(oid) AS def FROM pg_constraint
+        WHERE conname = 'ck_pm_permission' AND conrelid = 'project_members'::regclass`,
+    )
+    expect(check!.def).toBe("CHECK ((permission = ANY (ARRAY['EDIT'::text, 'VIEW'::text])))")
+    // OWNER is ownership, never a row: the engine refuses it and writes nothing.
+    // The row is a valid pending invitation in every other respect (008).
+    const [project] = await query<{ id: string; owner: string }>(
+      'SELECT id::text, owner_profile_id::text AS owner FROM projects LIMIT 1',
+    )
+    await expect(
+      query(
+        `INSERT INTO project_members
+           (project_id, profile_id, role_label, permission, state, joined_at,
+            invite_email_normalized, invited_by_profile_id, invited_at)
+         VALUES ($1, NULL, 'x', 'OWNER', 'PENDING_CONFIRMATION', NULL, 'ck@example.test', $2, now())`,
+        [project!.id, project!.owner],
+      ),
+    ).rejects.toMatchObject({ code: '23514', constraint: 'ck_pm_permission' })
+    // Migration 011 backfills nothing: every seeded row carries the default.
+    const [other] = await query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM project_members WHERE permission <> 'VIEW'`,
+    )
+    expect(other!.n).toBe(0)
+  })
+
+  it('seeds VENTURE_STAGE with the five stages of PRJ1, fixed ids, in order (DEC-L2R-D5)', async () => {
+    const [type] = await query<{ label: string }>(
+      `SELECT label FROM vocabulary_types WHERE code = 'VENTURE_STAGE'`,
+    )
+    expect(type).toEqual({ label: 'Giai đoạn' })
+    const items = await query<{ id: string; slug: string; label: string; status: string }>(
+      `SELECT id::text, slug, label, status::text AS status FROM vocabulary_items
+        WHERE type_code = 'VENTURE_STAGE' ORDER BY sort_order, label`,
+    )
+    expect(items).toEqual([
+      { id: '23000000-0000-0000-0000-000000000001', slug: 'idea', label: 'Ý tưởng', status: 'ACTIVE' },
+      {
+        id: '23000000-0000-0000-0000-000000000002',
+        slug: 'prototype',
+        label: 'Prototype',
+        status: 'ACTIVE',
+      },
+      { id: '23000000-0000-0000-0000-000000000003', slug: 'pilot', label: 'Pilot', status: 'ACTIVE' },
+      {
+        id: '23000000-0000-0000-0000-000000000004',
+        slug: 'selling',
+        label: 'Đang bán',
+        status: 'ACTIVE',
+      },
+      {
+        id: '23000000-0000-0000-0000-000000000005',
+        slug: 'scaled',
+        label: 'Đã mở rộng',
+        status: 'ACTIVE',
+      },
+    ])
   })
 })

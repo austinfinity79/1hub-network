@@ -110,7 +110,9 @@ describe('M0-T05 idempotency', () => {
     const bullets = [...section.matchAll(/^-\s+(.+?);?$/gm)].map((m) => m[1]!)
 
     expect(bullets).toHaveLength(7)
-    expect(IDEMPOTENT_OPERATIONS).toHaveLength(7)
+    // The seven of 05:56-63 and `venture.create` of amendment A2 (05 §19).
+    expect(IDEMPOTENT_OPERATIONS).toHaveLength(8)
+    expect(CONTRACT.split('# 19. Amendment A2')[1]).toContain('venture.create')
   })
 })
 

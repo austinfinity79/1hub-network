@@ -73,6 +73,10 @@ export const DECISION_ERROR_CODES = [
   'VISIBILITY_VALIDATION_FAILED',
   // DEC-AUTH-EMAIL-D3: 500, the sign-in e-mail could not be sent; the link was rolled back.
   'AUTH_EMAIL_DELIVERY_FAILED',
+  // DEC-L2R-D8: 500, the team invitation e-mail could not be sent; no invitation was created.
+  'INVITATION_EMAIL_DELIVERY_FAILED',
+  // DEC-L2R-D13: 429, too many invitation e-mails for this address or inviter in 24 hours.
+  'INVITATION_RATE_LIMITED',
 ] as const
 
 export type DecisionErrorCode = (typeof DECISION_ERROR_CODES)[number]

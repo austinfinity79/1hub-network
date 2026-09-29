@@ -636,8 +636,8 @@ describe('migration 003 shape', () => {
     expect(applied).toContain('003_p0_idempotency_store.sql')
   })
 
-  it('keeps the operation catalogue aligned with the frozen seven', () => {
-    expect(IDEMPOTENT_OPERATIONS).toHaveLength(7)
+  it('keeps the operation catalogue aligned with the frozen seven and amendment A2', () => {
+    expect(IDEMPOTENT_OPERATIONS).toHaveLength(8)
     const contract = readFileSync(
       join(ROOT, 'docs/architecture/05_API_CONTRACT_P0_v1.0.md'),
       'utf8',

@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 
 import { ApiError, notFound } from '@/lib/api/errors'
+import { writeAudit } from '@/lib/audit/audit'
 import { query, withTransaction, type Executor } from '@/lib/db/client'
 import { getOnboardingState } from '@/lib/onboarding/state'
 import { assertSelectable, type VocabularyStatus } from '@/lib/vocabulary/vocabulary'
@@ -9,14 +10,19 @@ import { assertSelectable, type VocabularyStatus } from '@/lib/vocabulary/vocabu
  * WF02-S05 — canonical Project/Startup ("Venture" in API 05 §5.3).
  *
  * One `projects` row per venture, reused later by WF05 (never copied per
- * programme). Write model (DEC-WF02-H6): type, name, summary, domain_ids,
- * region_id. The owner is the session's profile (`owner_profile_id`, DEC-WF02-
- * S05-G5); no `project_members` row is created for it. Relation capabilities
- * (DEC-WF02-H7, Matrix §E): `venture:read` = owner or an ACTIVE member,
- * `venture:manage` = owner only. `role_label` never grants anything. Status
- * starts DRAFT; DRAFT and ACTIVE are editable, ARCHIVED is read-only (G3);
- * `type` is fixed at creation (G4). Never serialised: slug, metadata, owner or
- * member profile ids.
+ * programme). Write model (DEC-L2R-D4..D6): type, name, summary, domain_ids,
+ * stage_id, owner_role_label, region_id. Name, summary, one field and the
+ * stage are required when a venture is created, and none of them can be
+ * cleared later. The owner is the session's profile (`owner_profile_id`,
+ * DEC-WF02-S05-G5); no `project_members` row is created for it.
+ *
+ * Levels (DEC-L2R-D7): OWNER is ownership; EDIT and VIEW belong to an ACTIVE
+ * member. `venture:read` = any of the three, `venture:manage` = OWNER or EDIT,
+ * `venture:team_manage` = OWNER. A role label, the creator's included, is
+ * display text and grants nothing, here or on the platform. Status starts
+ * DRAFT and nothing publishes it (DEC-L2R-D10); DRAFT and ACTIVE are editable,
+ * ARCHIVED is read-only (G3); `type` is fixed at creation (G4). Never
+ * serialised: slug, metadata, owner or member profile ids.
  */
 
 export const VENTURE_TYPES = ['PROJECT', 'STARTUP'] as const
@@ -24,8 +30,10 @@ export type VentureType = (typeof VENTURE_TYPES)[number]
 
 export type VentureCapability = 'venture:read' | 'venture:manage' | 'venture:team_manage'
 
+export type VenturePermission = 'OWNER' | 'EDIT' | 'VIEW'
+
 /** Provisional TECHNICAL bounds; not business rules (DEC-WF02-S05-D1). */
-export const VENTURE_LIMITS = { name: 200, summary: 2000, domains: 10 } as const
+export const VENTURE_LIMITS = { name: 200, summary: 2000, domains: 10, roleLabel: 100 } as const
 
 type Ref = { id: string; label: string; status: VocabularyStatus }
 
@@ -35,10 +43,21 @@ export type VentureDTO = {
   name: string
   summary: string | null
   status: string
+  stage: Ref | null
   region: Ref | null
   domains: Ref[]
   relation: 'OWNER' | 'MEMBER'
+  /** The viewer's level in this venture. */
+  permission: VenturePermission
+  /** The role the viewer states in this venture; display text. */
+  role_label: string | null
   can_edit: boolean
+}
+
+/** One row of "Dự án & startup của tôi" (ME7). `pending_invitations` is the owner's to know. */
+export type VentureSummaryDTO = VentureDTO & {
+  members: number
+  pending_invitations: number | null
 }
 
 const invalid = (field: string, reason: string) =>
@@ -50,9 +69,18 @@ type Input = {
   summary?: string | null
   region_id?: string | null
   domain_ids?: string[]
+  stage_id?: string | null
+  owner_role_label?: string | null
 }
 
-const WRITABLE = ['name', 'summary', 'region_id', 'domain_ids'] as const
+const WRITABLE = [
+  'name',
+  'summary',
+  'region_id',
+  'domain_ids',
+  'stage_id',
+  'owner_role_label',
+] as const
 
 /** Shape checks only; no database access, so nothing can be half-written. */
 function parse(body: unknown, mode: 'create' | 'update'): Input {
@@ -75,10 +103,11 @@ function parse(body: unknown, mode: 'create' | 'update'): Input {
     if (input.name.trim().length > VENTURE_LIMITS.name) throw invalid('name', 'too_long')
     out.name = input.name.trim()
   }
-  if ('summary' in input) {
-    if (input.summary !== null && typeof input.summary !== 'string')
+  if ('summary' in input || mode === 'create') {
+    if (input.summary !== undefined && input.summary !== null && typeof input.summary !== 'string')
       throw invalid('summary', 'invalid')
-    const text = (input.summary as string | null)?.trim() || null
+    const text = (input.summary as string | null | undefined)?.trim() || null
+    if (!text && mode === 'create') throw invalid('summary', 'required')
     if (text && text.length > VENTURE_LIMITS.summary) throw invalid('summary', 'too_long')
     out.summary = text
   }
@@ -87,13 +116,33 @@ function parse(body: unknown, mode: 'create' | 'update'): Input {
       throw invalid('region_id', 'invalid')
     out.region_id = (input.region_id as string | null)?.toLowerCase() || null
   }
-  if ('domain_ids' in input) {
-    const v = input.domain_ids
+  if ('domain_ids' in input || mode === 'create') {
+    const v = input.domain_ids ?? []
     if (!Array.isArray(v) || !v.every((id) => typeof id === 'string'))
       throw invalid('domain_ids', 'invalid')
     const ids = [...new Set(v.map((id) => id.toLowerCase()))]
+    if (ids.length === 0 && mode === 'create') throw invalid('domain_ids', 'required')
     if (ids.length > VENTURE_LIMITS.domains) throw invalid('domain_ids', 'too_many')
     out.domain_ids = ids
+  }
+  if ('stage_id' in input || mode === 'create') {
+    if (
+      input.stage_id !== undefined &&
+      input.stage_id !== null &&
+      typeof input.stage_id !== 'string'
+    )
+      throw invalid('stage_id', 'invalid')
+    const id = (input.stage_id as string | null | undefined)?.toLowerCase() || null
+    if (!id && mode === 'create') throw invalid('stage_id', 'required')
+    out.stage_id = id
+  }
+  if ('owner_role_label' in input) {
+    const value = input.owner_role_label
+    if (value !== null && typeof value !== 'string') throw invalid('owner_role_label', 'invalid')
+    const text = (value as string | null)?.trim() || null
+    if (text && text.length > VENTURE_LIMITS.roleLabel)
+      throw invalid('owner_role_label', 'too_long')
+    out.owner_role_label = text
   }
   return out
 }
@@ -113,9 +162,22 @@ type Row = {
   summary: string | null
   status: string
   region_id: string | null
+  stage_id: string | null
+  owner_role_label: string | null
   owner: boolean
   member: boolean
+  member_permission: 'EDIT' | 'VIEW' | null
+  member_role_label: string | null
 }
+
+const COLUMNS = `p.id::text, p.type::text AS type, p.name, p.summary, p.status::text AS status,
+            p.region_id::text, p.stage_id::text, p.owner_role_label,
+            p.owner_profile_id = $1::uuid AS owner, m.id IS NOT NULL AS member,
+            m.permission AS member_permission, m.role_label AS member_role_label`
+
+/** The viewer's own ACTIVE row, if any; the partial unique index allows one at most. */
+const VIEWER_JOIN = `LEFT JOIN project_members m
+              ON m.project_id = p.id AND m.profile_id = $1::uuid AND m.state = 'ACTIVE'`
 
 /** The venture as seen by `profileId`, or null when it holds no `venture:read`. */
 async function readable(
@@ -126,23 +188,29 @@ async function readable(
 ): Promise<Row | null> {
   if (!/^[0-9a-f-]{36}$/i.test(ventureId)) return null
   const [row] = await exec<Row>(
-    `SELECT p.id::text, p.type::text AS type, p.name, p.summary, p.status::text AS status,
-            p.region_id::text, p.owner_profile_id = $2::uuid AS owner,
-            EXISTS (SELECT 1 FROM project_members m WHERE m.project_id = p.id
-                     AND m.profile_id = $2::uuid AND m.state = 'ACTIVE') AS member
-       FROM projects p WHERE p.id = $1::uuid ${lock ? 'FOR UPDATE OF p' : ''}`,
-    [ventureId, profileId],
+    `SELECT ${COLUMNS}
+       FROM projects p ${VIEWER_JOIN}
+      WHERE p.id = $2::uuid ${lock ? 'FOR UPDATE OF p' : ''}`,
+    [profileId, ventureId],
   )
   return row && (row.owner || row.member) ? row : null
 }
 
+const permissionOf = (row: Row): VenturePermission =>
+  row.owner ? 'OWNER' : (row.member_permission ?? 'VIEW')
+
+async function item(exec: Executor, id: string | null): Promise<Ref | null> {
+  if (!id) return null
+  const [row] = await exec<Ref>(
+    'SELECT id::text, label, status::text AS status FROM vocabulary_items WHERE id = $1',
+    [id],
+  )
+  return row ?? null
+}
+
 async function toDTO(exec: Executor, row: Row): Promise<VentureDTO> {
-  const [region] = row.region_id
-    ? await exec<Ref>(
-        'SELECT id::text, label, status::text AS status FROM vocabulary_items WHERE id = $1',
-        [row.region_id],
-      )
-    : []
+  const region = await item(exec, row.region_id)
+  const stage = await item(exec, row.stage_id)
   const domains = await exec<Ref>(
     `SELECT v.id::text, v.label, v.status::text AS status
        FROM project_domains d JOIN vocabulary_items v ON v.id = d.vocabulary_item_id
@@ -155,10 +223,13 @@ async function toDTO(exec: Executor, row: Row): Promise<VentureDTO> {
     name: row.name,
     summary: row.summary,
     status: row.status,
-    region: region ?? null,
+    stage,
+    region,
     domains,
     relation: row.owner ? 'OWNER' : 'MEMBER',
-    can_edit: row.owner && row.status !== 'ARCHIVED',
+    permission: permissionOf(row),
+    role_label: row.owner ? row.owner_role_label : row.member_role_label,
+    can_edit: permissionOf(row) !== 'VIEW' && row.status !== 'ARCHIVED',
   }
 }
 
@@ -167,7 +238,17 @@ async function validateTaxonomy(
   input: Input,
   keepRegion: string | null,
   keepDomains: string[],
+  keepStage: string | null = null,
 ): Promise<void> {
+  if (input.stage_id) {
+    await assertSelectable(
+      exec,
+      'stage_id',
+      'VENTURE_STAGE',
+      [input.stage_id],
+      new Set(keepStage ? [keepStage] : []),
+    )
+  }
   if (input.region_id) {
     await assertSelectable(
       exec,
@@ -194,32 +275,61 @@ async function replaceDomains(exec: Executor, ventureId: string, ids: string[]) 
   )
 }
 
-/** POST /ventures (G2): onboarding DONE required; owner = session profile; DRAFT. */
-export async function createVenture(accountId: string, body: unknown): Promise<VentureDTO> {
+/**
+ * POST /ventures inside the caller's transaction (G2): onboarding DONE
+ * required; owner = session profile; DRAFT. The idempotent route runs it under
+ * its claim, so a repeated request creates nothing new (DEC-L2R-D9).
+ */
+export async function createVentureIn(
+  exec: Executor,
+  accountId: string,
+  body: unknown,
+  requestId: string,
+): Promise<VentureDTO> {
   const input = parse(body, 'create')
-  const state = await getOnboardingState(accountId)
+  // On the caller's connection: it holds the transaction (and the claim).
+  const state = await getOnboardingState(accountId, exec)
   if (!state.completed) {
     throw new ApiError('SCOPE_FORBIDDEN', 403, 'Complete onboarding before creating a venture.')
   }
-  return withTransaction(async (exec) => {
-    const profileId = await profileOf(exec, accountId)
-    if (!profileId) throw new ApiError('SCOPE_FORBIDDEN', 403, 'No profile.')
-    await validateTaxonomy(exec, input, null, [])
-    const [created] = await exec<{ id: string }>(
-      `INSERT INTO projects (type, owner_profile_id, slug, name, summary, region_id, status)
-       VALUES ($1::project_type, $2, $3, $4, $5, $6, 'DRAFT') RETURNING id::text`,
-      [
-        input.type,
-        profileId,
-        `v-${randomBytes(9).toString('hex')}`,
-        input.name,
-        input.summary ?? null,
-        input.region_id ?? null,
-      ],
-    )
-    if (input.domain_ids?.length) await replaceDomains(exec, created!.id, input.domain_ids)
-    return toDTO(exec, (await readable(exec, created!.id, profileId))!)
+  const profileId = await profileOf(exec, accountId)
+  if (!profileId) throw new ApiError('SCOPE_FORBIDDEN', 403, 'No profile.')
+  await validateTaxonomy(exec, input, null, [])
+  const [created] = await exec<{ id: string }>(
+    `INSERT INTO projects
+       (type, owner_profile_id, slug, name, summary, region_id, stage_id, owner_role_label, status)
+     VALUES ($1::project_type, $2, $3, $4, $5, $6, $7, $8, 'DRAFT') RETURNING id::text`,
+    [
+      input.type,
+      profileId,
+      `v-${randomBytes(9).toString('hex')}`,
+      input.name,
+      input.summary ?? null,
+      input.region_id ?? null,
+      input.stage_id ?? null,
+      input.owner_role_label ?? null,
+    ],
+  )
+  if (input.domain_ids?.length) await replaceDomains(exec, created!.id, input.domain_ids)
+  // Ids, type and status only; no free text (audit.ts).
+  await writeAudit(exec, {
+    actorAccountId: accountId,
+    action: 'VENTURE_CREATED',
+    resourceType: 'project',
+    resourceId: created!.id,
+    before: null,
+    after: { type: input.type, status: 'DRAFT' },
+    requestId,
   })
+  return toDTO(exec, (await readable(exec, created!.id, profileId))!)
+}
+
+export async function createVenture(
+  accountId: string,
+  body: unknown,
+  requestId: string,
+): Promise<VentureDTO> {
+  return withTransaction((exec) => createVentureIn(exec, accountId, body, requestId))
 }
 
 /** GET /ventures/{id}: owner or ACTIVE member; anyone else gets the same 404. */
@@ -230,19 +340,27 @@ export async function getVenture(accountId: string, ventureId: string): Promise<
   return toDTO(query, row)
 }
 
-/** PATCH /ventures/{id}: owner only (`venture:manage`); ARCHIVED read-only (G3). */
+/**
+ * PATCH /ventures/{id}: `venture:manage` = the owner or a member with EDIT;
+ * the creator's own role is the owner's to state; ARCHIVED read-only (G3).
+ */
 export async function updateVenture(
   accountId: string,
   ventureId: string,
   body: unknown,
+  requestId: string,
 ): Promise<VentureDTO> {
   const input = parse(body, 'update')
   return withTransaction(async (exec) => {
     const profileId = await profileOf(exec, accountId)
     const row = profileId ? await readable(exec, ventureId, profileId, true) : null
     if (!row) throw notFound()
-    if (!row.owner)
-      throw new ApiError('SCOPE_FORBIDDEN', 403, 'Only the owner can edit this venture.')
+    if (permissionOf(row) === 'VIEW') {
+      throw new ApiError('SCOPE_FORBIDDEN', 403, 'This venture is read-only for you.')
+    }
+    if ('owner_role_label' in input && !row.owner) {
+      throw new ApiError('SCOPE_FORBIDDEN', 403, 'Only the owner states the owner role.')
+    }
     if (row.status === 'ARCHIVED') {
       throw new ApiError('PROFILE_DEACTIVATED', 409, 'This venture is archived and read-only.')
     }
@@ -252,7 +370,12 @@ export async function updateVenture(
         [row.id],
       )
     ).map((r) => r.id)
-    await validateTaxonomy(exec, input, row.region_id, linked)
+    // A required value stays once it exists; older ventures keep what they have.
+    if ('summary' in input && !input.summary && row.summary) throw invalid('summary', 'required')
+    if ('stage_id' in input && !input.stage_id && row.stage_id)
+      throw invalid('stage_id', 'required')
+    if (input.domain_ids?.length === 0 && linked.length > 0) throw invalid('domain_ids', 'required')
+    await validateTaxonomy(exec, input, row.region_id, linked, row.stage_id)
 
     const sets: string[] = []
     const values: unknown[] = [row.id]
@@ -263,11 +386,55 @@ export async function updateVenture(
     if ('name' in input) set('name', input.name)
     if ('summary' in input) set('summary', input.summary)
     if ('region_id' in input) set('region_id', input.region_id)
+    if ('stage_id' in input) set('stage_id', input.stage_id)
+    if ('owner_role_label' in input) set('owner_role_label', input.owner_role_label)
+    // Nothing named, nothing written: no update and no audit event.
+    if (sets.length === 0 && !input.domain_ids)
+      return toDTO(exec, (await readable(exec, row.id, profileId!))!)
     await exec(
       `UPDATE projects SET ${[...sets, 'updated_at = now()'].join(', ')} WHERE id = $1`,
       values,
     )
     if (input.domain_ids) await replaceDomains(exec, row.id, input.domain_ids)
+    // Field names only; no value is copied into the audit trail.
+    await writeAudit(exec, {
+      actorAccountId: accountId,
+      action: 'VENTURE_UPDATED',
+      resourceType: 'project',
+      resourceId: row.id,
+      before: { status: row.status },
+      after: { status: row.status, fields: Object.keys(input).sort() },
+      requestId,
+    })
     return toDTO(exec, (await readable(exec, row.id, profileId!))!)
   })
+}
+
+/**
+ * GET /me/ventures (05 §5.3): the ventures the account owns or belongs to as
+ * an ACTIVE member, owned ones first, then by name. A pending invitation is
+ * not a relation and is not listed here.
+ */
+export async function listOwnVentures(accountId: string): Promise<VentureSummaryDTO[]> {
+  const profileId = await profileOf(query, accountId)
+  if (!profileId) return []
+  const rows = await query<Row & { members: number; pending: number }>(
+    `SELECT ${COLUMNS},
+            1 + (SELECT count(*)::int FROM project_members x
+                  WHERE x.project_id = p.id AND x.state = 'ACTIVE'
+                    AND x.profile_id <> p.owner_profile_id) AS members,
+            (SELECT count(*)::int FROM project_members x
+              WHERE x.project_id = p.id AND x.state = 'PENDING_CONFIRMATION') AS pending
+       FROM projects p ${VIEWER_JOIN}
+      WHERE p.owner_profile_id = $1::uuid OR m.id IS NOT NULL
+      ORDER BY (p.owner_profile_id = $1::uuid) DESC, p.name, p.id`,
+    [profileId],
+  )
+  return Promise.all(
+    rows.map(async (row) => ({
+      ...(await toDTO(query, row)),
+      members: row.members,
+      pending_invitations: row.owner ? row.pending : null,
+    })),
+  )
 }
