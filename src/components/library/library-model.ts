@@ -5,7 +5,7 @@ import type {
   LibraryStartup,
   StartupDirectory,
 } from '@/lib/library/startup-adapter'
-import { STAGES, fold } from '@/lib/library/startup-adapter'
+import { STAGE_LABEL, STAGES, fold } from '@/lib/library/startup-adapter'
 
 /**
  * TASK 22-PREVIEW-LIBRARY-FIX — one view model for the three Library tabs, so
@@ -89,12 +89,13 @@ const CATEGORY_ORDER: Category[] = [
 const TONES: Tone[] = ['coral', 'wine', 'ember', 'ash', 'red', 'smoke']
 const QUICK: Category[] = ['LOGISTICS', 'FINTECH', 'AGRI', 'AI', 'HEALTH']
 const NO_STAGE = 'NONE'
+/** "Giai đoạn phát triển": the most advanced stage first (DEC-2909-L2H2). */
 const STAGE_RANK: Record<string, number> = {
-  'Scale-up': 0,
-  Growth: 1,
-  MVP: 2,
-  Prototype: 3,
-  Ideation: 4,
+  GROWTH: 0,
+  SELLING: 1,
+  PILOT: 2,
+  MVP: 3,
+  IDEA: 4,
 }
 /** "Sắp hết hạn": open problems first, then judging, upcoming, announced. */
 const PROBLEM_RANK: Record<string, number> = {
@@ -225,7 +226,7 @@ function startupItem(s: LibraryStartup): Item {
     tone: toneOf(s.id),
     head: s.name,
     mark: startupMark(s.name),
-    pill: s.stage,
+    pill: s.stage ? STAGE_LABEL[s.stage] : null,
     title: s.name,
     prize: null,
     summary: s.tagline,
@@ -265,7 +266,7 @@ function founderItem(f: LibraryFounder): Item {
     row: {
       mark: startupMark(first.name),
       name: `${first.name}${more}`,
-      note: first.stage,
+      note: first.stage ? STAGE_LABEL[first.stage] : null,
       href: first.website,
     },
     cta: { label: 'Xem hồ sơ', href: null },
@@ -291,8 +292,9 @@ export function startupTab(dir: StartupDirectory): TabModel {
         key: 'stage',
         title: 'GIAI ĐOẠN',
         values: [
-          ...[...STAGES].reverse().map((s) => ({ value: s, label: s })),
-          { value: NO_STAGE, label: 'Chưa cập nhật' },
+          ...STAGES.map((s) => ({ value: s, label: STAGE_LABEL[s] })),
+          // No or unmapped source value: counted under no stage (DEC-2909-L2H2).
+          { value: NO_STAGE, label: 'Chưa xác định' },
         ],
       },
     ],

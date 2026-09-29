@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { adaptStartups, categorise, cleanText, safeUrl } from './startup-adapter'
+import { adaptStartups, categorise, cleanText, safeUrl, stageOf } from './startup-adapter'
 import { loadStartupDirectory } from './startup-source'
 
 /** TASK 22-PREVIEW-LIBRARY-FIX — startup.json adapter and source (DEC-L15-D7). */
@@ -44,7 +44,7 @@ describe('adaptStartups', () => {
         founderNames: ['Nguyễn Tùng'],
         domains: ['Logistics'],
         categories: ['LOGISTICS'],
-        stage: 'Growth',
+        stage: 'GROWTH',
         website: 'https://psilab.example.vn/',
         memberCount: 2,
       },
@@ -55,7 +55,7 @@ describe('adaptStartups', () => {
         id: 'nguyen-tung',
         name: 'Nguyễn Tùng',
         role: 'Co-Founder',
-        startups: [{ name: 'PSI Lab', website: 'https://psilab.example.vn/', stage: 'Growth' }],
+        startups: [{ name: 'PSI Lab', website: 'https://psilab.example.vn/', stage: 'GROWTH' }],
         categories: ['LOGISTICS'],
       },
     ])
@@ -97,6 +97,37 @@ describe('adaptStartups', () => {
     expect(founders).toHaveLength(1)
     expect(founders[0]!.startups.map((s) => s.name)).toEqual(['A', 'B'])
     expect(founders[0]!.categories).toEqual(expect.arrayContaining(['LOGISTICS', 'FINTECH', 'AI']))
+  })
+
+  it('maps stages to the Alpha vocabulary only where deterministic (DEC-2909-L2H2)', () => {
+    const stages = [
+      'Ideation',
+      'idea',
+      'MVP',
+      'Pilot',
+      'Selling',
+      'Revenue',
+      'Commercial',
+      'Growth',
+      'Scale-up',
+      'Prototype',
+      'Seed',
+      null,
+    ].map((v) => stageOf(v))
+    expect(stages).toEqual([
+      'IDEA',
+      'IDEA',
+      'MVP',
+      'PILOT',
+      'SELLING',
+      'SELLING',
+      'SELLING',
+      'GROWTH',
+      'GROWTH',
+      null,
+      null,
+      null,
+    ])
   })
 
   it('keeps unique ids for startups with the same name', () => {

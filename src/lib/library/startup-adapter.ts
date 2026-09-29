@@ -9,7 +9,8 @@
  *   san_pham_chinh               → product (search only, DEC-L15-D13)
  *   mo_ta_ngan                   → tagline
  *   linh_vuc[] (free text)       → domains (as written) + categories (filter taxonomy)
- *   giai_doan_phat_trien         → stage (known values only, else null)
+ *   giai_doan_phat_trien         → stage: the Alpha venture stages, mapped only where
+ *                                  deterministic (DEC-2909-L2H2), else null
  *   website                      → website (http/https only, else null)
  *   thanh_vien[].ho_ten/vai_tro  → founders (founder roles only; name, role, startup) and the
  *                                  startup's founderNames (search only, DEC-L15-D13)
@@ -25,7 +26,8 @@
 export type Category =
   'LOGISTICS' | 'FINTECH' | 'HEALTH' | 'AGRI' | 'EDU' | 'AI' | 'ENV' | 'IT' | 'OTHER'
 
-export type StartupStage = 'Ideation' | 'Prototype' | 'MVP' | 'Growth' | 'Scale-up'
+/** The Alpha venture stages (VENTURE_STAGE, migration 012), DEC-2909-L2H2. */
+export type StartupStage = 'IDEA' | 'MVP' | 'PILOT' | 'SELLING' | 'GROWTH'
 
 export type LibraryStartup = {
   id: string
@@ -53,7 +55,33 @@ export type LibraryFounder = {
 export type StartupDirectory =
   { status: 'ok'; startups: LibraryStartup[]; founders: LibraryFounder[] } | { status: 'error' }
 
-export const STAGES: StartupStage[] = ['Ideation', 'Prototype', 'MVP', 'Growth', 'Scale-up']
+export const STAGES: StartupStage[] = ['IDEA', 'MVP', 'PILOT', 'SELLING', 'GROWTH']
+
+/** The vocabulary labels of migration 012. */
+export const STAGE_LABEL: Record<StartupStage, string> = {
+  IDEA: 'Ý tưởng',
+  MVP: 'MVP',
+  PILOT: 'Pilot / Thử nghiệm',
+  SELLING: 'Đang bán',
+  GROWTH: 'Tăng trưởng',
+}
+
+/**
+ * startup.json values that map deterministically (PO, 29/09); the canonical codes
+ * map to themselves. Anything else (e.g. "Prototype") stays unmapped: no stage is
+ * invented and the record counts under no stage.
+ */
+const STAGE_MAP: Record<string, StartupStage> = {
+  idea: 'IDEA',
+  ideation: 'IDEA',
+  mvp: 'MVP',
+  pilot: 'PILOT',
+  selling: 'SELLING',
+  revenue: 'SELLING',
+  commercial: 'SELLING',
+  growth: 'GROWTH',
+  'scale-up': 'GROWTH',
+}
 
 export const MAX_RECORDS = 1000
 
@@ -138,10 +166,9 @@ function splitDomains(value: unknown): string[] {
   return out.slice(0, 4)
 }
 
-function stageOf(value: unknown): StartupStage | null {
+export function stageOf(value: unknown): StartupStage | null {
   if (typeof value !== 'string') return null
-  const f = fold(value)
-  return STAGES.find((s) => fold(s) === f) ?? null
+  return STAGE_MAP[fold(value)] ?? null
 }
 
 const slug = (text: string) =>
