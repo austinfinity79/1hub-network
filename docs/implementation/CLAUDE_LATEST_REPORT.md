@@ -1,35 +1,35 @@
 # Claude Task Report
 
 ## Task
-ABOUT IMAGE HOTFIX + DEPLOY. Full report: [reports/ABOUT-IMAGE_deploy.md](reports/ABOUT-IMAGE_deploy.md).
+ABOUT HUB LEAD HOTFIX + DEPLOY. Full report: [reports/ABOUT-HUB-LEAD_deploy.md](reports/ABOUT-HUB-LEAD_deploy.md) (previous: [ABOUT-IMAGE](reports/ABOUT-IMAGE_deploy.md)).
 
 ## Verdict
-**DEPLOYED GREEN.** `ec33ee258acb1d5d832c211d6efb1732e6cde8c4` runs on https://1hubnetwork.io.vn.
+**DEPLOYED.** `c02cdd9ba4ab6b84bf87a569c02c608cc62804a0` runs on https://1hubnetwork.io.vn.
 
 ## Scope implemented
-- `/about` mission 03 shows the supplied Vietnam network picture (1600 × 900 webp, 160 KB, from a 1.6 MB PNG) instead of the labelled placeholder; layout, frame and animation unchanged.
+- `/about` HUB structure panel: HUB HN shows Le Phuong Thao as TRƯỞNG HUB (existing portrait, name under the role); other HUBs unchanged.
 - Deployed the exact SHA with the existing tooling; no database change.
 
 ## Files changed
-- `public/about/about-data-platform-vietnam.webp`, `src/components/about/about-data.ts`.
-- Docs: this report, the deploy report, `P0_STATUS.md`. Deploy branch: `ABOUT_IMAGE_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md`.
+- `src/components/about/about-data.ts`, `about-client.tsx`, `about.module.css`.
+- Docs: this report, the deploy report, `P0_STATUS.md`. Deploy branch: `ABOUT_HUB_LEAD_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md`.
 
 ## Migrations / data
-None. Backup `onehub-20260929T110300Z.dump` by procedure.
+None. Backup `onehub-20260929T111338Z.dump` by procedure.
 
 ## Tests
-format, lint, typecheck, build PASS; `/about` at 1440 / 1024 / 768 / 390 locally and on the domain: picture loaded, fills the frame, no caption, no broken image, no overflow, #418 0, console 0, CLS 0 on the domain.
+format, lint, typecheck, build PASS; quick check at 1440 / 390 locally and on the domain: portrait loaded, name and role visible, other HUBs unchanged, no broken image, #418 0, 5xx 0.
 
 ## Visual QA
-Whole map in the crop at 1440, 1024 and 390; at 768 the 4 : 1 frame keeps the north and centre and cuts the southern tip.
+The HN panel grows by the name line (34 px) and stays inside the diagram frame.
 
 ## Deviations / blockers
-- The file was delivered as `~/Downloads/anh-03 .png` (a space before the extension; an identical `anh-03  copy.png` sits beside it).
+- Only HUB HN has an approved lead; the panel shows the other HUBs' placeholders as before.
 - Blocking gaps: 0.
 
 ## Git
-- Branch: `main`; start HEAD `3eecbede164120d3f540ae789ec125a0c53fcd70`; no concurrent change
-- Implementation commit: `ec33ee2` (deployed)
+- Branch: `main`; start HEAD `8a0e86b`; no concurrent change
+- Implementation commit: `c02cdd9` (deployed)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** (not requested)

@@ -101,6 +101,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **ABOUT IMAGE HOTFIX: DEPLOYED GREEN** ([report](reports/ABOUT-IMAGE_deploy.md)). `ec33ee2` runs on https://1hubnetwork.io.vn: `/about` mission 03 shows the Vietnam network picture instead of the placeholder; layout unchanged. Rollback `2c6cc4a`.
 
+**ABOUT HUB LEAD HOTFIX: DEPLOYED** ([report](reports/ABOUT-HUB-LEAD_deploy.md)). `c02cdd9` runs on https://1hubnetwork.io.vn: the HUB HN panel on `/about` shows Le Phuong Thao as TRƯỞNG HUB. Rollback `ec33ee2`.
+
 ## Completed (committed)
 
 | Task | Scope |
