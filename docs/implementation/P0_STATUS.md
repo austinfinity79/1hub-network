@@ -93,6 +93,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 22-L1-L2-PO-DECISION-FREEZE — Alpha PO decisions for L1 / L2: GREEN (local, not pushed, not deployed)** ([evidence](l1-l2-realign/po-decision-freeze.md), [report](reports/TASK-22-L1-L2-PO-DECISION-FREEZE.md), [decisions](../decisions/DECISION_LOG.md#dec-pdf)). Closed: D-V1 (owner's "Công khai" on a complete venture: name, field, description, stage, creator role; server-checked; DRAFT → ACTIVE + PUBLIC; no review), D-T1 (e-mail invitation only; link DEFERRED), D-V2 (no field count; group completion), D-E1 (approved invitation copy), VENTURE_STAGE (IDEA, MVP, PILOT, SELLING, GROWTH), D-S1 (eight specialisations frozen), D-H1 (only a Platform Admin verifies a HUB declaration; leaders cannot; a declaration grants nothing; no new admin screen). Migration 012 additive. Unit 254 / 254; database and API 448 / 448; 417 browser tests on the final build, 0 failed (WF02 170, WF01 62, security and RBAC 49); runtime #418 0, 5xx 0. Deferred: invitation by link, Google OAuth, AI provider, HUB verification screen, public venture page.
 
+**FINAL INTERNAL ALPHA — L1 / L2 + PO freeze + Thảo UAT + Library hotfix: DEPLOYED GREEN** ([report](reports/INTERNAL-ALPHA-L1-L2_deploy.md), [backlog](l1-l2-realign/alpha-backlog.md)). `b3feee7` (tag `internal-alpha-preview-09`) runs on https://1hubnetwork.io.vn; rollback `935fd4a`. Backup `onehub-20260929T100004Z.dump`; migrations 010–012 applied. Integrated build: Library 15 / 15, Thảo UAT PASS 10 / FAIL 0 / DEFERRED 1, route smoke clean; domain smoke 43 / 43, #418 0, 5xx 0, restart verified. Internal Alpha READY; full business completeness NOT READY (ten backlog items).
+
 ## Completed (committed)
 
 | Task | Scope |

@@ -1,46 +1,41 @@
 # Claude Task Report
 
 ## Task
-TASK 22-L1-L2-PO-DECISION-FREEZE — the PO's Internal Alpha decisions applied to L1 / L2. Full report: [reports/TASK-22-L1-L2-PO-DECISION-FREEZE.md](reports/TASK-22-L1-L2-PO-DECISION-FREEZE.md). Evidence: [l1-l2-realign/po-decision-freeze.md](l1-l2-realign/po-decision-freeze.md).
+FINAL INTERNAL ALPHA — INTEGRATE UAT + LIBRARY HOTFIX + FREEZE + DEPLOY. Full report: [reports/INTERNAL-ALPHA-L1-L2_deploy.md](reports/INTERNAL-ALPHA-L1-L2_deploy.md).
 
 ## Verdict
-**GREEN.** Local only: not pushed, not deployed, L5 not started.
+**DEPLOYED GREEN.** `b3feee7e354e9692e2eda05f099215c785c59681` runs on https://1hubnetwork.io.vn (Internal Alpha). Full business completeness: NOT READY (see the [Alpha backlog](l1-l2-realign/alpha-backlog.md)).
 
 ## Scope implemented
-- D-V1 CLOSED: owner-only "Công khai" on a complete venture (name, field, description, stage, creator role), server-checked; DRAFT → ACTIVE + PUBLIC; DRAFT never PUBLIC; no review.
-- D-T1 DEFERRED: e-mail invitation only; the PRJ2 link row says the feature comes later.
-- D-V2 CLOSED: no field count; group completion unchanged.
-- D-E1 CLOSED: approved invitation copy with the inviter's name.
-- VENTURE_STAGE CLOSED: IDEA, MVP, PILOT, SELLING, GROWTH.
-- D-S1 CLOSED: eight specialisations frozen.
-- D-H1 CLOSED: only a Platform Admin verifies a HUB declaration; leaders cannot; nothing is granted.
+- Committed the Thảo business UAT suite (`da685b3`), cherry-picked the Library layout hotfix (`b6aa0fa` from `c1b60c3`), recorded the Alpha backlog (`b3feee7`), froze and tagged `internal-alpha-preview-09`.
+- Backed up the production database, deployed the exact SHA with the existing tooling (migrations 010–012), smoked the real domain and restarted once.
 
 ## Files changed
-- Code and tests: migration 012, venture service and publish route, invitation e-mail, HUB declaration review, venture editor, ME7 chip, ops member list and detail, PRJ2 link row; DB tests and specs (commit `0e39f94`).
-- Docs: decision log (DEC-PDF, superseded marks), API contract §20, WF01 / WF02 workflow notes, UAT matrix, `l1-l2-realign/`, `P0_STATUS.md`, this report.
+- `tests/uat/**` (UAT suite), `src/components/library/library.module.css`, `tests/visual/specs/public-library.spec.ts`, `docs/implementation/l1-l2-realign/alpha-backlog.md`, `overview.md`, this report, the deploy report, `P0_STATUS.md`.
+- Deploy branch: `docs/deployment/INTERNAL_ALPHA_L1_L2_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md` (`d0af6ea`).
 
 ## Migrations / data
-`012_p0_alpha_decision_freeze.sql`: `projects.visibility` (PRIVATE default, DRAFT never PUBLIC), stage slugs and labels on the ids of 011, `community_memberships.hub_declaration`. Local and test database only.
+Production: 010, 011, 012 applied (additive). Backup `onehub-20260929T100004Z.dump`. Smoke rows left: two `@example.test` accounts, two SMOKE ventures, one REMOVED invitation.
 
 ## Tests
-format, lint, typecheck, build PASS; unit 254 / 254; database and API 448 / 448; 417 browser tests on the final build, 0 failed (WF02 170, WF01 62, security and RBAC 49, decisions 4, smoke 132); runtime #418 0, 5xx 0, broken assets 0, console errors 0.
+Integrated build: format, lint, typecheck, build PASS; Library 15 / 15; Thảo UAT 19 / 19 (PASS 10, FAIL 0, DEFERRED 1); route smoke clean at four widths. Domain: 43 / 43 steps; #418 0; 5xx 0; restart verified.
 
 ## Visual QA
-L2 pixel audits (FP1-OWN, L12, ME7, PRJ1–PRJ3) and WF03-S03 (L26) pass; responsive 29 / 29. No baseline overwritten.
+Library at 1440 unchanged against L15 (pixel suite green); gutter fixed at 45 px and first card at 358 on wide screens, on the domain too.
 
 ## Deviations / blockers
-- Interpretations recorded in the evidence file (publish = ACTIVE + PUBLIC; no public read path yet; the owner alone invites; HUB internal ops act through a Platform Admin; only onboarding declarations need the Platform Admin).
-- Deferred: invitation by link, Google OAuth, AI provider, HUB verification screen, public venture page.
-- Blocking gaps: 0.
+- The prompt's Library SHA lacked one character; the branch commit `c1b60c3894f28c3dadefdfb9415773dd0845d3f8` was used.
+- A scripted burst of parallel browsers saw a few `ERR_CONNECTION_CLOSED` from the OneShield edge; spaced loads 0 failures; the files return 200.
+- Blocking gaps: 0. Non-blocking: the ten backlog items.
 
 ## Git
-- Branch: `main`; start HEAD `6686468e626ba5467484367a708cd9258a1fcd0d`, compared again before each commit; no concurrent change
-- Implementation commit: `0e39f94` fix(wf01-wf02): freeze alpha business decisions
-- Report/final commit: the commit containing this report, `docs(wf01-wf02): record alpha decision freeze`
+- Branch: `main`; start HEAD `2999c044c39aef66434aabcf08176b0c2bd82b02`; no concurrent change
+- Implementation commits: `da685b3` (UAT), `b6aa0fa` (Library), `b3feee7` (backlog, deployed)
+- Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
-- Push status: **NOT RUN** (the task forbids a push)
-- Remote HEAD: `53599925f5aef6abf20127e293611e4f758f898b` (tracking ref), not changed by this task; local `main` is ahead of it
+- Push status: **NOT RUN** (not requested)
+- Remote HEAD: `53599925f5aef6abf20127e293611e4f758f898b` (tracking ref), unchanged; local `main` is ahead of it
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-L1 + L2 PO REVIEW → merge the Library hotfix if GREEN → targeted combined regression → freeze the exact SHA → deploy. Not started automatically.
+PO review of the Internal Alpha on the domain; the backlog items as separate tasks. Not started automatically.
