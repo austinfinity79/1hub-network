@@ -1,35 +1,38 @@
 # Claude Task Report
 
 ## Task
-HOMEPAGE IMAGE REPLACEMENT + DEPLOY. Full report: [reports/HOMEPAGE-IMAGES_deploy.md](reports/HOMEPAGE-IMAGES_deploy.md).
+LIBRARY DATA UPDATE + DEPLOY. Full report: [reports/LIBRARY-DATA_deploy.md](reports/LIBRARY-DATA_deploy.md).
 
 ## Verdict
-**DEPLOYED GREEN.** `91ba7a8de792bb7e382a94050f620c1f61bc8bc5` runs on https://1hubnetwork.io.vn.
+**DEPLOYED GREEN.** `2c6cc4ac4f42df252d81afc467ec541c622a07af` runs on https://1hubnetwork.io.vn.
 
 ## Scope implemented
-- Replaced the homepage event (3), programme (3) and pipeline (1) placeholder art with the Hub's photos, optimised to webp; layout, copy and logic unchanged. The Kawai picture has no card and is not used.
-- Backed up the production database and deployed the exact SHA with the existing tooling.
+- "Bài toán" runs on the supplied problem dataset (47 records) through a server-side adapter; facets, counts and search derive from it; the demo fixture is removed; missing prize, deadline, team count and logo render nothing invented.
+- Public source labels removed from all three Library tabs ([DEC-L15-D9](../decisions/DECISION_LOG.md#dec-l15-d9)).
+- Deployed the exact SHA with the existing tooling; no database change.
 
 ## Files changed
-- `public/home/*.webp` (7), `src/components/landing/landing-activities.tsx`, `src/components/landing/activity-cards.module.css`, `tests/visual/specs/p0-landing.spec.ts`, this report, the deploy report, `P0_STATUS.md`.
-- Deploy branch: `docs/deployment/HOMEPAGE_IMAGES_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md`.
+- `src/lib/library/dir-bai-toan.json`, `problem-adapter.ts`, `problem-adapter.test.ts`, `problem-source.ts`; `src/components/library/library-client.tsx`, `library-model.ts`, `library.tsx`, `library.module.css`; `library-data.ts` deleted; `src/app/(public)/library/page.tsx`; `.prettierignore`; `tests/visual/specs/public-library.spec.ts`.
+- Docs: `DECISION_LOG.md` (DEC-L15-D9), this report, the deploy report, `P0_STATUS.md`. Deploy branch: `LIBRARY_DATA_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md`.
 
 ## Migrations / data
-None. Backup `onehub-20260929T101820Z.dump`.
+None. Backup `onehub-20260929T104837Z.dump` by procedure.
 
 ## Tests
-format, lint, typecheck, build PASS; `p0-landing` 10 / 10; visual 1440 / 390: 7 / 7 pictures, no layout shift, no overflow, #418 0. Domain: `/` and all 14 picture URLs 200; #418 0; 5xx 0.
+format, lint, typecheck, build PASS; unit 17 / 17; `public-library` 16 / 16; 1440 / 1024 / 768 / 390 clean on all tabs, locally and on the domain.
 
 ## Visual QA
-H1 pixel: the replaced pictures are masked as an intentional PO difference; every other area within the thresholds.
+Layout unchanged (gutter 45, columns 358 / 705 / 1052, cards 324 × 431). Card rows now checked by geometry, not pixels (record colours and text).
 
 ## Deviations / blockers
-- The H1 capture does not scroll, so lazy pictures were never in the compared pixels; the mask records the change instead of hiding it.
+- The dataset was read from `~/Downloads/dir-bai-toan.json`; `/mnt/data` does not exist on this machine.
+- Prize hidden on all 47 (`giai_thuong` null), including the 17 whose display reads "Đang đàm phán".
+- Hero "Tìm nhanh" chip "AI" matches no problem tag (the data says "Dữ liệu & AI"); chips unchanged.
 - Blocking gaps: 0.
 
 ## Git
-- Branch: `main`; start HEAD `ced90343d30d080450d49a364e55557947f1b71a`; no concurrent change
-- Implementation commit: `91ba7a8` (deployed)
+- Branch: `main`; start HEAD `c448885567aec8f11446e30afb494a9210964fc8`; no concurrent change
+- Implementation commit: `2c6cc4a` (deployed)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** (not requested)
@@ -37,4 +40,4 @@ H1 pixel: the replaced pictures are masked as an intentional PO difference; ever
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO review of the homepage on the domain. Not started automatically.
+PO review of `/library` on the domain. Not started automatically.

@@ -97,6 +97,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **HOMEPAGE IMAGE REPLACEMENT: DEPLOYED GREEN** ([report](reports/HOMEPAGE-IMAGES_deploy.md)). `91ba7a8` runs on https://1hubnetwork.io.vn: the event, programme and pipeline cards show the Hub's photos (7 webp, 680 KB); layout and copy unchanged; the Kawai picture has no card. Rollback `b3feee7`.
 
+**LIBRARY DATA UPDATE: DEPLOYED GREEN** ([report](reports/LIBRARY-DATA_deploy.md), [DEC-L15-D9](../decisions/DECISION_LOG.md#dec-l15-d9)). `2c6cc4a` runs on https://1hubnetwork.io.vn: "Bài toán" shows the supplied problem dataset (47), facets and counts from the records, nothing invented for missing values; no Library tab names a data source. Rollback `91ba7a8`.
+
 ## Completed (committed)
 
 | Task | Scope |
