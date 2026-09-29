@@ -29,6 +29,13 @@ Approved pixel references from the corrected Homepage + L1–L6 revision ([audit
 | L15 DIR1 `/library` | `L2/L15__library__SOURCE.png` | 1440×2470 | `8f7d6b13e4471fd2ae5c55555b2f51b3c80c0464067d3b04badbaf976fb3ae6d` | `Sprint 1_ (DL29) new 26/L15 · DIR1 · Thư viện.png` (PO, 28/09), byte-identical copy; supersedes the four `L15__library-*` fragments of `L2-15 Thu vien.zip` | TASK 22-PREVIEW-LIBRARY-FIX |
 | L15b DIR1 Startup tab | `L2/L15b__library-startup__SOURCE.png` | 1440×2383 | `e12d4486e0f30b96a4a389750f66a6f574f4b8b190936b5da236e568a810cb82` | `Luồng 2 · Member Profile & Network Management.png` (PO, 29/09; 16440×5465, `db7294a9…61b6`), crop x 9120, y 2901 | TASK 24.1 |
 | L15c DIR1 Nhà sáng lập tab | `L2/L15c__library-founder__SOURCE.png` | 1440×2464 | `e4d7ca48b42a650064e9e12d4ddbecb33dd3836a7b60bd6cef7f7696c2f3f2ec` | the same board, crop x 10760, y 2901 | TASK 24.1 |
+| L37 SUB0 quick team | `L5/L37__sub0-quick-team__SOURCE.png` | 1440×934 | `adc7860d13e8b5f573500184cdf5c24e23a46dda77623072c884a1bc5b2157af` | `Luồng 5 - Startup Journey.png` (PO, 29/09; 16440×2071, `9a269e7d…59b4d8`), crop x 120, y 120 | TASK 24.4 |
+| L38 SUB1-B1 Hiểu đề | `L5/L38__sub1-understand__SOURCE.png` | 1440×899 | `422ce8a3f08da023856f829f91d984e869d4a0b6ee5a2aae8f50485ead31b6aa` | the same board, crop x 1920, y 120 | TASK 24.4 |
+| L39 SUB1-B2 Cách giải | `L5/L39__sub1-solution__SOURCE.png` | 1440×1131 | `ce4927ab0d2723d2dd5ec84c34eb024de85aa6b69139b97f06fa78fe8b2b0447` | the same board, crop x 3720, y 120 | TASK 24.4 |
+| L40 SUB1-B3 Đội & kế hoạch | `L5/L40__sub1-team-plan__SOURCE.png` | 1440×1013 | `87e65537f55e78905ae840d1f1a51bd8086ec5bf7ba269f47e32812270025f1f` | the same board, crop x 5520, y 120 | TASK 24.4 |
+| L41 SUB1-B4 Cần hỗ trợ gì | `L5/L41__sub1-support__SOURCE.png` | 1440×1096 | `fc2dfdd27fd0ff71a5de8fbcd91238b2259fc759fe6231f8e70dec240169be59` | the same board, crop x 7320, y 120 | TASK 24.4 |
+| L42 SUB2 review | `L5/L42__sub2-review__SOURCE.png` | 1440×983 | `40da01646d54995868700a3c6661d06f4a61bcdc3eb25e6b8295445c75217b2e` | the same board, crop x 9120, y 120 | TASK 24.4 |
+| L43 SUB3 submitted | `L5/L43__sub3-submitted__SOURCE.png` | 1440×984 | `63a67718ab1f0679ae5e3e32028fdb1d3b106de0a39c58972b581484d3ffa60b` | the same board, crop x 10920, y 120 | TASK 24.4 |
 
 Rules:
 - Typography: Space Grotesk where the reference uses it (DEC-HD-12); mono labels keep IBM Plex Mono 500.
@@ -36,6 +43,7 @@ Rules:
 - L1: AUTH1–AUTH4 and ACC-10 came with TASK 22.2 (DEC-L1-D1). ACC-05 … ACC-09 are crops of the L1 flow board, which is the only form the PO supplied them in; the board matches the five older L1 files pixel for pixel at the same positions, so a crop is the frame. The AI-filled state of ACC-06, FP1-OWN and the board's annotation panels are not in the repository: AI suggestion has no provider (D-A1) and FP1-OWN belongs to the L2 run (DEC-L1R).
 - L2: L11 and L13a–c came with TASK 22.3 (DEC-L2-D1); they match the L2 board of 28/09 at the same positions up to raster noise (at most 6 pixels differ by more than 8 levels), so they stay. ME7, FP1-OWN and the L12 dialog are crops of the boards (DEC-L2R). L15 is in since DEC-L15 (`/library`), as the full frame. L15b and L15c (the Startup and Nhà sáng lập tabs, DEC-L15-D10) came with TASK 24.1; on the 29/09 board the Bài toán frame is pixel-identical to L15. FP1 (another member's view), ORGP1, DIR1's other states, EV1, EV2 and NOTI1 stay out.
 - L3: only L19, L20, L23 and L26 are Bucket A (DEC-L3-D1). L21, L22, L24, L25 and L27 stay out of the repository. L26 is drawn 1600 wide; its spec compares components at their own anchors.
+- L5: L37–L43 (SUB0–SUB3) came with TASK 24.4 (DEC-L5); they draw a Problem-based form, of which the programme application keeps the layout, steps and states (DEC-L5-D6). L44 / L45 stay out (FUTURE).
 - Never edit or re-export a file here to make a diff pass. A new source revision gets a new file and hash.
 
 ## Related

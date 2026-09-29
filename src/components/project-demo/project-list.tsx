@@ -16,28 +16,28 @@ import {
   VENTURE_STATUS_LABEL,
   VENTURE_TYPE_LABEL,
 } from '@/lib/project-demo/copy'
+import { applicationRoutes } from '@/lib/application/routes'
+import type { ApplicationSummaryDTO } from '@/lib/application/types'
+import { projectDemoRoutes } from '@/lib/project-demo/routes'
 import type {
-  DemoApplication,
   DemoVenturesDTO,
   DemoVentureSummaryDTO,
   OpenProgrammeDTO,
 } from '@/lib/project-demo/types'
 
-import { projectDemoRoutes } from '@/lib/project-demo/routes'
-
-import { useProjectDemo } from './demo-store'
 import styles from './project-list.module.css'
 
 /**
  * WF05-S01 — my Projects / Startups and the open programmes (DEC-WF05-G1..G3,
  * INTENTIONAL-DEMO composition: the WF04 demo frame and card chrome, the WF02
- * venture wording). One read, `GET /api/v1/demo/projects`: the member's own
- * relations (owner or ACTIVE member) and the PUBLISHED programmes. Read only —
- * no edit, apply or programme action; each venture row opens its detail (S02). The
- * member's demo applications show only when this browser session holds one.
+ * venture wording). Two reads: `GET /api/v1/demo/projects` (the member's own
+ * relations and the PUBLISHED programmes) and `GET /api/v1/me/applications`
+ * (the server applications, TASK 24.4 / DEC-L5-D4). No edit; each venture row
+ * opens its detail (S02); each programme opens the L5 entry ("Đăng ký").
  */
 
-type Load = { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; data: DemoVenturesDTO }
+type Data = DemoVenturesDTO & { applications: ApplicationSummaryDTO[] }
+type Load = { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; data: Data }
 
 export function ProjectDemoList() {
   const [load, setLoad] = useState<Load>({ kind: 'loading' })
@@ -45,9 +45,18 @@ export function ProjectDemoList() {
   const fetchList = useCallback(async () => {
     setLoad({ kind: 'loading' })
     try {
-      const response = await fetch('/api/v1/demo/projects', { cache: 'no-store' })
-      if (!response.ok) throw new Error(String(response.status))
-      setLoad({ kind: 'ready', data: (await response.json()) as DemoVenturesDTO })
+      const [list, mine] = await Promise.all([
+        fetch('/api/v1/demo/projects', { cache: 'no-store' }),
+        fetch('/api/v1/me/applications', { cache: 'no-store' }),
+      ])
+      if (!list.ok || !mine.ok) throw new Error(String(list.ok ? mine.status : list.status))
+      setLoad({
+        kind: 'ready',
+        data: {
+          ...((await list.json()) as DemoVenturesDTO),
+          applications: (await mine.json()) as ApplicationSummaryDTO[],
+        },
+      })
     } catch {
       setLoad({ kind: 'failed' })
     }
@@ -117,7 +126,12 @@ function Sections({ load }: { load: Exclude<Load, { kind: 'failed' }> }) {
         ) : data ? (
           <ul className={cards.list}>
             {data.ventures.map((v) => (
-              <VentureRow key={v.id} venture={v} programmes={data.programmes} />
+              <VentureRow
+                key={v.id}
+                venture={v}
+                programmes={data.programmes}
+                applications={data.applications}
+              />
             ))}
           </ul>
         ) : null}
@@ -158,9 +172,11 @@ function Sections({ load }: { load: Exclude<Load, { kind: 'failed' }> }) {
 function VentureRow({
   venture,
   programmes,
+  applications,
 }: {
   venture: DemoVentureSummaryDTO
   programmes: OpenProgrammeDTO[]
+  applications: ApplicationSummaryDTO[]
 }) {
   return (
     <li
@@ -184,7 +200,7 @@ function VentureRow({
           {VENTURE_TYPE_LABEL[venture.type] ?? venture.type} ·{' '}
           {relationLabel(venture.relation, venture.role_label)}
         </p>
-        <Applications ventureId={venture.id} programmes={programmes} />
+        <Applications ventureId={venture.id} programmes={programmes} applications={applications} />
       </div>
       <span className={`weight-medium ${pill.pill}`} data-venture-status={venture.status}>
         {VENTURE_STATUS_LABEL[venture.status] ?? venture.status}
@@ -193,32 +209,24 @@ function VentureRow({
   )
 }
 
-/** This browser session's demo applications of one venture, if any (read only). */
+/** The server applications of one venture to the listed programmes, if any (read only). */
 function Applications({
   ventureId,
   programmes,
+  applications,
 }: {
   ventureId: string
   programmes: OpenProgrammeDTO[]
+  applications: ApplicationSummaryDTO[]
 }) {
-  const { state, ready, readFailed } = useProjectDemo()
-  if (!ready) return null
-  if (readFailed)
-    return (
-      <p className={`type-meta-xs ${styles.applications}`} data-state="applications-unreadable">
-        {COPY.applicationsUnreadable}
-      </p>
-    )
   const names = new Map(programmes.map((p) => [p.id, p.name]))
-  const mine = Object.values(state.applications).filter(
-    (a: DemoApplication) => a.primary_applicant_id === ventureId && names.has(a.programme_id),
-  )
+  const mine = applications.filter((a) => a.venture.id === ventureId && names.has(a.programme.id))
   if (mine.length === 0) return null
   return (
     <p className={`type-meta-xs ${styles.applications}`} data-venture-applications>
       {COPY.applications}:{' '}
       {mine
-        .map((a) => `${names.get(a.programme_id)} · ${APPLICATION_STATUS_LABEL[a.status]}`)
+        .map((a) => `${names.get(a.programme.id)} · ${APPLICATION_STATUS_LABEL[a.status]}`)
         .join('; ')}
     </p>
   )
@@ -246,7 +254,17 @@ function ProgrammeRow({ programme }: { programme: OpenProgrammeDTO }) {
             .join(', ')}
         </p>
       </div>
-      <ProgrammeStatusPill status={programme.status} />
+      <div className={styles.rowActions}>
+        <ProgrammeStatusPill status={programme.status} />
+        {/* TASK 24.4: the L5 entry (SUB0 without an eligible venture, else the form). */}
+        <Link
+          href={applicationRoutes.apply(programme.id)}
+          className={`weight-medium ${styles.textAction}`}
+          data-action="apply-entry"
+        >
+          {COPY.apply}
+        </Link>
+      </div>
     </li>
   )
 }

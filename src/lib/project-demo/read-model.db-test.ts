@@ -74,7 +74,7 @@ async function fingerprint() {
             ${table('project_domains')} AS domains, ${table('programmes')} AS programmes,
             ${table('events')} AS events, ${table('role_assignments')} AS roles,
             ${table('audit_events')} AS audit, ${table('schema_migrations')} AS ledger,
-            to_regclass('public.applications')::text AS applications`,
+            ${table('applications')} AS applications`,
   )
   return row!
 }
@@ -166,10 +166,9 @@ describe('WF05-T00 demo read model', () => {
       /@|email|slug|metadata|owner_profile_id|profile_id|account|token|cookie/i,
     )
     expect(json).not.toContain(w.owner.profileId)
-    // Reading wrote nothing.
+    // Reading wrote nothing, application rows included (the table exists since DEC-L5).
     expect(await fingerprint()).toEqual(mid)
     expect(before.ledger).toBe(mid.ledger)
-    expect(mid.applications).toBeNull()
   })
 
   it('an ACTIVE team member reads the venture but is not eligible to apply', async () => {

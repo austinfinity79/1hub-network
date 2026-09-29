@@ -97,7 +97,7 @@ async function snapshot() {
   const [row] = await query<Record<string, string | null>>(
     `SELECT ${table('programmes')} AS programmes,
             ${table('events')} AS events,
-            to_regclass('public.applications')::text AS applications_table,
+            (SELECT count(*) FROM applications)::text AS applications,
             ${table('role_assignments')} AS roles,
             ${table('community_memberships')} AS memberships,
             ${table('leadership_records')} AS leadership,

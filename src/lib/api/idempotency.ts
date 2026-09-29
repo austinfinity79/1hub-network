@@ -14,8 +14,9 @@ export const IDEMPOTENCY_HEADER = 'Idempotency-Key'
 const MAX_KEY_LENGTH = 255
 
 /**
- * The seven operation classes listed at 05:56-63, and `venture.create`, which
- * amendment A2 of the contract adds (05 §19, DEC-L2R-D9).
+ * The seven operation classes listed at 05:56-63, `venture.create` of amendment
+ * A2 (05 §19, DEC-L2R-D9), and `application.create` / `application.submit` of
+ * amendment A4 (05 §21, DEC-L5-D3).
  */
 export const IDEMPOTENT_OPERATIONS = [
   'auth.magic-link.request',
@@ -26,6 +27,8 @@ export const IDEMPOTENT_OPERATIONS = [
   'event.create-or-publish',
   'organization.relationship-create-or-close',
   'venture.create',
+  'application.create',
+  'application.submit',
 ] as const
 
 export type IdempotentOperation = (typeof IDEMPOTENT_OPERATIONS)[number]

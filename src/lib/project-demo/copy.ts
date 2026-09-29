@@ -3,15 +3,16 @@ import { DEMO_COPY } from '@/lib/programme-demo/copy'
 /**
  * WF05 — user-facing copy of the Founder / Project / Startup demo. The demo
  * indicator is the WF04 one (DEC-WF05-G1: one demo frame); the notice says
- * what is real (the member's own Project / Startup) and what is demo (the
- * application, kept in this browser session only). No technical terms.
+ * what is real: the member's own Project / Startup and, since TASK 24.4
+ * (HD-A10), their programme applications, which the demo reset never touches.
+ * No technical terms.
  */
 export const PROJECT_DEMO_COPY = {
   /** DEC-WF05-G2: the MemberShell entry label. */
   entry: 'Dự án & Startup · Demo',
   noticeEyebrow: DEMO_COPY.noticeEyebrow,
   noticeBody:
-    'Dự án và startup là hồ sơ thật của bạn. Đơn đăng ký chương trình chỉ là bản demo: lưu trong phiên trình duyệt này, không gửi tới ban tổ chức và không ghi vào hệ thống.',
+    'Dự án, startup và đơn đăng ký chương trình là dữ liệu thật trong tài khoản của bạn. Đặt lại dữ liệu demo không xoá chúng.',
   reset: DEMO_COPY.reset,
   resetConfirm:
     'Xoá mọi đơn đăng ký demo trong phiên này? Hồ sơ dự án và startup của bạn không thay đổi.',
@@ -46,8 +47,9 @@ export const S01_COPY = {
   programmesHint: 'Chương trình và challenge đang công khai trong bản demo.',
   programmesEmpty: 'Hiện chưa có chương trình nào đang mở.',
   applicantTypes: 'Dành cho',
-  applications: 'Đơn đăng ký demo',
-  applicationsUnreadable: 'Chưa đọc được đơn đăng ký demo của phiên này.',
+  // HD-A10 (DEC-L5-D1): applications persist, so they carry no demo label.
+  applications: 'Đơn đăng ký',
+  apply: 'Đăng ký',
 } as const
 
 /** WF05-S02 — one Project / Startup and its participation. */
@@ -82,72 +84,4 @@ export const S02_COPY = {
     TYPE_NOT_ACCEPTED: 'Chương trình không nhận loại hồ sơ này.',
     NOT_PUBLISHED: 'Chương trình chưa mở.',
   },
-} as const
-
-/** WF05-S03 — the application draft. */
-export const S03_COPY = {
-  title: (programme: string) => `Đăng ký: ${programme}`,
-  loading: 'Đang tải…',
-  failed: 'Chưa tải được đơn đăng ký. Vui lòng thử lại.',
-  retry: 'Thử lại',
-  missing: 'Không tìm thấy đơn đăng ký này.',
-  back: '← Hồ sơ dự án',
-  save: 'Lưu nháp',
-  saving: 'Đang lưu…',
-  saved: 'Đã lưu bản nháp.',
-  saveFailed: 'Chưa lưu được bản nháp. Vui lòng thử lại.',
-  review: 'Rà soát & nộp',
-  applicant: 'Hồ sơ đăng ký',
-  applicantAs: 'Đăng ký với tư cách',
-  reuse:
-    'Hồ sơ dự án / startup được dùng lại như hiện có; chương trình chỉ hỏi thêm các câu dưới đây.',
-  programme: 'Chương trình',
-  questions: 'Câu hỏi của chương trình',
-  questionsHint: 'Có thể lưu nháp khi chưa trả lời hết. Mọi câu cần được trả lời trước khi nộp.',
-  noQuestions: 'Chương trình không có câu hỏi riêng.',
-  question: (n: number) => `Câu hỏi ${n}`,
-  tooLong: (max: number) => `Tối đa ${max} ký tự.`,
-  stateNew: 'Chưa lưu',
-  stateDraft: 'Bản nháp',
-  submitted: 'Đơn đã nộp: không sửa được.',
-  mismatch: 'Đơn nháp này không khớp câu hỏi hiện tại của chương trình, nên chỉ xem được.',
-  cannotApply: 'Không đăng ký được',
-  viewSubmitted: 'Xem đơn đã nộp',
-} as const
-
-/** WF05-S04 — review + submit. */
-export const S04_COPY = {
-  title: (programme: string) => `Rà soát đơn: ${programme}`,
-  loading: 'Đang tải…',
-  failed: 'Chưa tải được đơn đăng ký. Vui lòng thử lại.',
-  retry: 'Thử lại',
-  missing: 'Không tìm thấy đơn đăng ký này.',
-  noApplication: 'Chưa có đơn đăng ký nào cho chương trình này trong phiên này.',
-  start: 'Mở đơn đăng ký',
-  edit: '← Sửa đơn',
-  back: '← Hồ sơ dự án',
-  venture: 'Dự án / Startup',
-  programme: 'Chương trình',
-  answers: 'Câu trả lời',
-  noAnswer: 'Chưa trả lời',
-  applicantAs: 'Đăng ký với tư cách',
-  checklist: 'Điều kiện nộp',
-  ready: 'Sẵn sàng nộp',
-  missingCount: (n: number) => `Còn thiếu ${n} mục`,
-  pass: '✓ Đạt',
-  fail: '✗ Còn thiếu',
-  items: {
-    owner: 'Bạn là chủ sở hữu dự án / startup',
-    active: 'Hồ sơ dự án / startup chưa lưu trữ',
-    type: 'Chương trình nhận loại hồ sơ này',
-    answers: 'Mọi câu hỏi đã có câu trả lời hợp lệ',
-  },
-  submit: 'Nộp đơn',
-  submitting: 'Đang nộp…',
-  submitHint: 'Sau khi nộp, đơn chỉ xem được, không sửa được.',
-  blocked: 'Hoàn thành các mục còn thiếu để nộp.',
-  submitFailed: 'Chưa nộp được đơn. Vui lòng thử lại.',
-  submitRefused: 'Chưa nộp được đơn: kiểm tra lại các mục bên dưới.',
-  submitted: 'Đã nộp đơn. Đơn chỉ xem được, không sửa được.',
-  submittedOn: (date: string) => `Nộp ngày ${date}`,
 } as const

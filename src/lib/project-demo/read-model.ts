@@ -1,10 +1,9 @@
 import { createHash } from 'node:crypto'
 
 import { ApiError } from '@/lib/api/errors'
-import { query } from '@/lib/db/client'
+import { listOpenForms } from '@/lib/application/application'
 import { getOwnNetwork } from '@/lib/network/network'
 import { getOnboardingState } from '@/lib/onboarding/state'
-import { DEMO_PROGRAMMES } from '@/lib/programme-demo/fixtures'
 import { getTeam } from '@/lib/venture/team'
 import { getVenture, VENTURE_TYPES, type VentureType } from '@/lib/venture/venture'
 
@@ -24,10 +23,9 @@ import type {
  *   member's own relations (`getOwnNetwork`), and one venture only for its owner
  *   or an ACTIVE member (`getVenture`, `getTeam`); anyone else — including a
  *   PLATFORM_ADMIN, a HUB leader or a pending invitee — gets the same 404.
- * - Programmes are the WF04 fixtures with status PUBLISHED, read in place (no
- *   copy, no mutation, WF04 unchanged), without counts, team or drafts; the
- *   owner's name is read from `organizations` (a fixture whose owning
- *   organization does not exist is not listed, as in WF04).
+ * - Programmes are the PUBLISHED server programmes with an application form
+ *   (TASK 24.4, DEC-L5, HD-A12: the approved WF04 programme as a read-only
+ *   row), without counts, team or drafts; the WF04 operator demo is unchanged.
  * - Entry needs onboarding DONE (DEC-WF05-G2); identity comes from the session
  *   only — no profile, owner, role or organization input is accepted.
  */
@@ -46,33 +44,20 @@ async function requireEntry(accountId: string): Promise<void> {
 const ventureType = (value: string): VentureType =>
   (VENTURE_TYPES as readonly string[]).includes(value) ? (value as VentureType) : 'PROJECT'
 
-/** The PUBLISHED WF04 demo programmes as a member sees them (DEC-WF05-G3). */
+/** The PUBLISHED programmes open to applications, as a member sees them (DEC-WF05-G3). */
 export async function listOpenProgrammes(): Promise<OpenProgrammeDTO[]> {
-  const open = DEMO_PROGRAMMES.filter((d) => d.programme.status === 'PUBLISHED')
-  if (open.length === 0) return []
-  const orgs = await query<{ id: string; name: string }>(
-    'SELECT id::text, name FROM organizations WHERE id = ANY($1::uuid[])',
-    [[...new Set(open.map((d) => d.programme.organization_id))]],
-  )
-  const names = new Map(orgs.map((o) => [o.id, o.name]))
-  return open.flatMap((d): OpenProgrammeDTO[] => {
-    const organization = names.get(d.programme.organization_id)
-    if (!organization) return []
-    return [
-      {
-        id: d.programme.id,
-        status: 'PUBLISHED',
-        type: d.programme.type,
-        name: d.programme.name,
-        summary: d.programme.summary,
-        starts_at: d.programme.starts_at,
-        ends_at: d.programme.ends_at,
-        organization: { name: organization },
-        applicant_types: [...d.registration.applicant_types],
-        questions: [...d.registration.questions],
-      },
-    ]
-  })
+  return (await listOpenForms()).map((f) => ({
+    id: f.programme.id,
+    status: 'PUBLISHED',
+    type: f.programme.type,
+    name: f.programme.name,
+    summary: f.programme.summary,
+    starts_at: f.starts_at,
+    ends_at: f.ends_at,
+    organization: f.programme.organization,
+    applicant_types: [...f.applicant_types],
+    questions: f.questions.map((q) => q.prompt),
+  }))
 }
 
 /** GET /api/v1/demo/projects: the member's ventures and the open programmes. */

@@ -1,7 +1,6 @@
-import { createHash } from 'node:crypto'
 import path from 'node:path'
 
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 
 import { onboardThroughUi } from '../support/onboarding'
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
@@ -15,20 +14,24 @@ import { writeJsonReport } from '../pixel-qa/report'
 import { compareSegments, type Rect, type Segment, type SegmentResult } from '../pixel-qa/segments'
 
 /**
- * WF05 closing gate (PROCESS-P0-ACCELERATED-SAFE-V2 §I): HC-WF05 journeys (a
- * PROJECT and a STARTUP owner signed in through the real magic link and WF01
- * onboarding, entering from MemberShell), canonical reuse (a WF02 rename),
- * reset; SEC-WF05-01 (8 actors × every WF05 route and API, spoofed); NEG-WF05;
- * STORE-WF05; NAV-WF05; VIS-WF05 / COPY-WF05. Every WF05 phase is bracketed by
- * row-exact hashes of every table in the schema; WF01 / WF02 setup writes
- * happen outside the brackets, through their own workflows. Screen-level cases
- * stay in each WF05-T00 / S0x spec.
+ * WF05 closing gate (PROCESS-P0-ACCELERATED-SAFE-V2 §I), realigned by TASK
+ * 24.4 (DEC-L5): the application lives on the server and its screens are the
+ * L5 member routes. HC-WF05 journeys (a PROJECT and a STARTUP owner signed in
+ * through the real magic link and WF01 onboarding, entering from MemberShell),
+ * canonical reuse (a WF02 rename), reset; SEC-WF05-01 (8 actors × every WF05 /
+ * L5 route and API, spoofed, and the application writes); NEG-WF05;
+ * SERVER-WF05; NAV-WF05; VIS-WF05 / COPY-WF05. Every phase is bracketed by
+ * row-exact hashes of every table in the schema: only an application step may
+ * write, and only the application, its audit events and its idempotency keys.
+ * WF01 / WF02 setup writes happen outside the brackets, through their own
+ * workflows. Screen-level cases stay in each WF05 spec and the L5 spec.
  */
 
 const PROGRAMME = 'd4000000-0000-0000-0000-000000000001'
 const CHALLENGE = 'd4000000-0000-0000-0000-000000000002'
 const RANDOM = '7c9e6679-7425-40de-944b-e07fc1f90ae7'
 const API = '/api/v1/demo/projects'
+const APPS = '/api/v1/applications'
 const ACTUAL = path.join(REPO_ROOT, 'tests/visual/actual')
 const Q1 = 'Dự án của bạn giải quyết vấn đề gì?'
 const Q2 = 'Bạn cần chương trình hỗ trợ điều gì?'
@@ -40,11 +43,15 @@ const COPY_BANNED =
   /fixture|\bmock\b|sessionStorage|localStorage|\bDTO\b|canonical|\benum\b|owner_profile_id|profile_id|account_id|\bAPI\b|\bJSON\b|approved|accepted|under review|matched|recommended|đã duyệt|phê duyệt|chấp nhận|đang xem xét|trúng tuyển|được chọn|đề xuất|xếp hạng|điểm số|kết quả/i
 /** Written by a sign-in (WF01) only; a bracket that signs someone in may change these, WF05 never. */
 const SIGN_IN_TABLES = ['auth_magic_link_requests', 'user_sessions']
+/** Written by an application step only (DEC-L5-D2 / D3); nothing else in WF05 writes. */
+const APPLICATION_TABLES = ['applications', 'audit_events', 'idempotency_keys']
 
 const detailUrl = (id: string) => `/demo/projects/${id}`
-const appUrl = (id: string, programme = PROGRAMME) =>
-  `/demo/projects/${id}/applications/${programme}`
-const reviewUrl = (id: string, programme = PROGRAMME) => `${appUrl(id, programme)}/review`
+const formUrl = (id: string, programme = PROGRAMME) => `/projects/${id}/applications/${programme}`
+const reviewUrl = (id: string, programme = PROGRAMME) => `${formUrl(id, programme)}/review`
+const submittedUrl = (id: string) => `${formUrl(id)}/submitted`
+/** The WF05-S03 path, a redirect since TASK 24.4 (HD-A10). */
+const oldFormUrl = (id: string) => `/demo/projects/${id}/applications/${PROGRAMME}`
 
 type Person = { accountId: string; profileId: string; email: string }
 const accounts: string[] = []
@@ -65,12 +72,10 @@ test.afterEach(() => {
 })
 
 test.afterAll(async () => {
-  await query(
-    `DELETE FROM project_members WHERE project_id IN
-       (SELECT p.id FROM projects p JOIN individual_profiles i ON i.id = p.owner_profile_id
-         WHERE i.account_id = ANY($1::uuid[]))`,
-    [accounts],
-  )
+  const owned = `(SELECT p.id FROM projects p JOIN individual_profiles i ON i.id = p.owner_profile_id
+                   WHERE i.account_id = ANY($1::uuid[]))`
+  await query(`DELETE FROM applications WHERE venture_id IN ${owned}`, [accounts])
+  await query(`DELETE FROM project_members WHERE project_id IN ${owned}`, [accounts])
   await query(
     `DELETE FROM projects WHERE owner_profile_id IN
        (SELECT id FROM individual_profiles WHERE account_id = ANY($1::uuid[]))`,
@@ -172,82 +177,92 @@ async function tables(): Promise<Record<string, string>> {
 
 /**
  * Tables that differ between two snapshots. Strict (no table at all) unless the
- * bracket itself signs someone in, which may touch the WF01 sign-in tables only.
+ * bracket signs someone in (the WF01 sign-in tables) or takes an application
+ * step (the application tables).
  */
 function expectNoWrites(
   before: Record<string, string>,
   after: Record<string, string>,
-  { signIns = false } = {},
+  { signIns = false, applications = false } = {},
 ) {
   expect(Object.keys(after)).toEqual(Object.keys(before))
-  expect(after.applications, 'no applications table').toBeUndefined()
+  const allowed = [...(signIns ? SIGN_IN_TABLES : []), ...(applications ? APPLICATION_TABLES : [])]
   const changed = Object.keys(before).filter((t) => before[t] !== after[t])
   expect(
-    changed.filter((t) => !(signIns && SIGN_IN_TABLES.includes(t))),
+    changed.filter((t) => !allowed.includes(t)),
     'tables written',
   ).toEqual([])
   return changed
 }
 
-const storeKey = (accountId: string) =>
-  `hub.wf05-demo.v1.${createHash('sha256').update(`wf05-demo:${accountId}`).digest('hex').slice(0, 16)}`
-type StoredApplication = {
-  primary_applicant_type: string
-  primary_applicant_id: string
+type Answer = { question_id: string; value: string }
+type ApplicationRow = {
+  id: string
+  venture_id: string
   programme_id: string
   status: string
-  programme_specific_answers: string[]
+  type: string
+  answers: Answer[]
   created_at: string
-  updated_at: string
   submitted_at: string | null
-}
-const rawStore = (page: Page, accountId: string) =>
-  page.evaluate((k) => sessionStorage.getItem(k), storeKey(accountId))
-async function stored(page: Page, accountId: string) {
-  const raw = await rawStore(page, accountId)
-  return raw
-    ? (JSON.parse(raw) as { version: number; applications: Record<string, StoredApplication> })
-    : null
+  snapshot: {
+    venture: { id: string; name: string }
+    answers: Answer[]
+    programme: { id: string; name: string }
+  } | null
 }
 
-async function plant(
-  page: Page,
-  accountId: string,
-  entries: {
-    ventureId: string
-    type?: 'TEAM' | 'STARTUP'
-    status?: 'DRAFT' | 'SUBMITTED'
-    answers?: string[]
-  }[],
-) {
-  const now = new Date().toISOString()
-  const applications = Object.fromEntries(
-    entries.map((e) => [
-      `${e.ventureId}:${PROGRAMME}`,
-      {
-        primary_applicant_type: e.type ?? 'STARTUP',
-        primary_applicant_id: e.ventureId,
-        programme_id: PROGRAMME,
-        status: e.status ?? 'DRAFT',
-        programme_specific_answers: e.answers ?? ['Trả lời một', 'Trả lời hai'],
-        created_at: now,
-        updated_at: now,
-        submitted_at: e.status === 'SUBMITTED' ? now : null,
-      },
-    ]),
+/** The server applications of these ventures, oldest first. */
+function applicationsOf(ventureIds: string[]) {
+  return query<ApplicationRow>(
+    `SELECT id::text, venture_id::text, programme_id::text, status::text,
+            primary_applicant_type::text AS type, answers, created_at::text,
+            submitted_at::text, snapshot
+       FROM applications WHERE venture_id = ANY($1::uuid[]) ORDER BY created_at`,
+    [ventureIds],
   )
-  await page.evaluate(
-    ([k, v]) => sessionStorage.setItem(k!, v!),
-    [storeKey(accountId), JSON.stringify({ version: 1, applications })],
+}
+
+async function auditOf(resourceId: string) {
+  const rows = await query<{ action: string }>(
+    `SELECT action FROM audit_events WHERE resource_id::text = $1 ORDER BY created_at`,
+    [resourceId],
   )
+  return rows.map((r) => r.action)
+}
+
+const answersOf = (a0: string, a1: string): Answer[] => [
+  { question_id: 'q-problem', value: a0 },
+  { question_id: 'q-support', value: a1 },
+]
+
+/** A DRAFT through the L5 API (the owner's request), with its answers when given. */
+async function draft(request: APIRequestContext, ventureId: string, answers?: [string, string]) {
+  const created = await request.post(APPS, {
+    data: { venture_id: ventureId, programme_id: PROGRAMME },
+  })
+  expect(created.status()).toBe(201)
+  const { id } = (await created.json()) as { id: string }
+  if (answers)
+    expect(
+      (await request.patch(`${APPS}/${id}`, { data: { answers: answersOf(...answers) } })).status(),
+    ).toBe(200)
+  return id
+}
+
+async function submit(request: APIRequestContext, id: string) {
+  expect((await request.post(`${APPS}/${id}/submit`)).status()).toBe(200)
+}
+
+async function errorCode(response: APIResponse) {
+  const body = (await response.json()) as { error?: { code: string } }
+  return `${response.status()} ${body.error?.code ?? ''}`.trim()
 }
 
 async function settled(page: Page, url: string) {
   const response = await page.goto(url, { waitUntil: 'networkidle' })
   await expect(
-    page.locator(
-      '[data-state="projects-loading"], [data-state="detail-loading"], [data-state="application-loading"], [data-state="review-loading"]',
-    ),
+    page.locator('[data-state="projects-loading"], [data-state="detail-loading"]'),
   ).toHaveCount(0)
   return response
 }
@@ -267,22 +282,19 @@ function journal(name: string) {
   }
 }
 
-const answer = (page: Page, i: number) => page.locator(`#answer-${i}`)
+const answer = (page: Page, question: 'q-problem' | 'q-support') => page.locator(`#q-${question}`)
 const screenState = (page: Page, screen: string) => page.locator(`[data-screen="${screen}"]`)
-const answersShown = (page: Page) =>
-  page
-    .locator('[data-review-answer]')
-    .evaluateAll((els) => els.map((e) => (e as HTMLElement).innerText))
+const formStep = (page: Page) => screenState(page, 'L5-SUB1')
 
 // ------------------------------------------------------------ HC journeys
 
-type Kind = { type: 'PROJECT' | 'STARTUP'; label: string; applicant: string; stored: string }
+type Kind = { type: 'PROJECT' | 'STARTUP'; label: string; stored: string }
 const KINDS: Record<'PROJECT' | 'STARTUP', Kind> = {
-  PROJECT: { type: 'PROJECT', label: 'Dự án', applicant: 'Đội', stored: 'TEAM' },
-  STARTUP: { type: 'STARTUP', label: 'Startup', applicant: 'Startup', stored: 'STARTUP' },
+  PROJECT: { type: 'PROJECT', label: 'Dự án', stored: 'TEAM' },
+  STARTUP: { type: 'STARTUP', label: 'Startup', stored: 'STARTUP' },
 }
 
-/** HC-WF05-01 / 02: sign-in → onboarding → MemberShell → S01 → WF02 create → S01 → S02 → S03 → S04 → SUBMITTED. */
+/** HC-WF05-01 / 02: sign-in → onboarding → MemberShell → S01 → WF02 create → S01 → S02 → L5 form → review → SUBMITTED. */
 async function ownerJourney(page: Page, kind: Kind, id: string) {
   const log = journal(id)
   const email = newEmail(kind.type.toLowerCase())
@@ -351,112 +363,104 @@ async function ownerJourney(page: Page, kind: Kind, id: string) {
   log.step(page, 'HP-04', 'S01 → S02: detail, P1 eligible, "Đăng ký"')
 
   await participation.locator('[data-action="apply"]').click()
-  await expect(page).toHaveURL(appUrl(ventureId))
-  await expect(screenState(page, 'WF05-S03')).toHaveAttribute('data-application-state', 'NONE')
-  await expect(page.locator('[data-applicant-name]')).toHaveText(name)
-  await expect(page.locator('[data-section="applicant"]')).toContainText(
-    `Đăng ký với tư cách: ${kind.applicant}`,
-  )
-  await expect(page.locator('label[for^="answer-"]')).toHaveText(['Câu hỏi 1', 'Câu hỏi 2'])
-  await expect(page.locator('[data-application-form]')).toContainText(Q1)
-  await expect(page.locator('[data-application-form]')).toContainText(Q2)
-  expect(await rawStore(page, me.accountId)).toBeNull()
-  log.step(page, 'HP-05', `S02 → S03 as ${kind.stored}; opening stores nothing`)
+  await expect(page).toHaveURL(formUrl(ventureId))
+  await expect(formStep(page)).toHaveAttribute('data-step', '1')
+  await expect(page.locator('label[for="q-q-problem"]')).toContainText(Q1)
+  await expect(page.locator('[data-save-state]')).toHaveText('Chưa lưu')
+  expect(await applicationsOf([ventureId])).toEqual([])
+  log.step(page, 'HP-05', 'S02 "Đăng ký" → L5 form, step 01; opening it writes nothing')
 
-  await answer(page, 0).fill(a0)
-  await page.locator('[data-action="save-draft"]').click()
-  await expect(page.locator('[data-state="draft-saved"]')).toBeVisible()
-  const draft = (await stored(page, me.accountId))!.applications[`${ventureId}:${PROGRAMME}`]!
-  expect(draft).toMatchObject({
-    primary_applicant_type: kind.stored,
-    primary_applicant_id: ventureId,
+  await answer(page, 'q-problem').fill(a0)
+  await page.locator('[data-action="next"]').click()
+  await expect(formStep(page)).toHaveAttribute('data-step', '3')
+  await expect(page).toHaveURL(`${formUrl(ventureId)}?buoc=3`)
+  const [draftRow, ...others] = await applicationsOf([ventureId])
+  expect(others).toEqual([])
+  expect(draftRow).toMatchObject({
     programme_id: PROGRAMME,
     status: 'DRAFT',
-    programme_specific_answers: [a0, ''],
+    type: kind.stored,
+    // An empty answer is not stored (DEC-L5-D3).
+    answers: [{ question_id: 'q-problem', value: a0 }],
     submitted_at: null,
+    snapshot: null,
   })
-  log.step(page, 'HP-06', 'Incomplete "Lưu nháp" creates one DRAFT')
+  log.step(page, 'HP-06', `Leaving step 01 saves one DRAFT on the server as ${kind.stored}`)
 
+  await page.locator('[data-action="next"]').click()
+  await expect(formStep(page)).toHaveAttribute('data-step', '4')
+  await expect(page.locator('label[for="q-q-support"]')).toContainText(Q2)
+  await answer(page, 'q-support').fill(a1)
+  await answer(page, 'q-support').blur()
+  await expect(page.locator('[data-save-state="idle"]')).toHaveText(/^Đã lưu lúc \d\d:\d\d$/)
   await page.reload({ waitUntil: 'networkidle' })
-  await expect(answer(page, 0)).toHaveValue(a0)
-  await expect(answer(page, 1)).toHaveValue('')
-  await expect(screenState(page, 'WF05-S03')).toHaveAttribute('data-application-state', 'DRAFT')
-  log.step(page, 'HP-07', 'Refresh: answers kept')
+  await expect(formStep(page)).toHaveAttribute('data-step', '4')
+  await expect(answer(page, 'q-support')).toHaveValue(a1)
+  log.step(page, 'HP-07', 'Leaving a field saves; refresh resumes step 04 with its answer')
 
-  await answer(page, 1).fill(a1)
-  await page.locator('[data-action="review"]').click()
+  await page.locator('[data-action="to-review"]').click()
   await expect(page).toHaveURL(reviewUrl(ventureId))
-  await expect(page.locator('[data-review-venture]')).toHaveText(name)
-  await expect(page.locator('[data-review-applicant]')).toHaveText(
-    `${kind.label} · Đăng ký với tư cách: ${kind.applicant}`,
-  )
-  await expect(page.locator('[data-review-programme]')).toHaveText(PROGRAMME_NAME)
-  expect(await answersShown(page)).toEqual([`${Q1}\n${a0}`, `${Q2}\n${a1}`])
-  await expect(page.locator('[data-readiness]')).toHaveText('Sẵn sàng nộp')
-  log.step(page, 'HP-08', '"Rà soát & nộp" saves and opens S04; checklist green')
+  await expect(page.locator('[data-question="q-problem"]')).toContainText(Q1)
+  await expect(page.locator('[data-question="q-problem"]')).toContainText(a0)
+  await expect(page.locator('[data-question="q-support"]')).toContainText(a1)
+  await expect(page.locator('[data-anchor="attached"]')).toContainText(name)
+  await expect(page.locator('[data-anchor="readiness"]')).toHaveText('Đủ điều kiện nộp')
+  log.step(page, 'HP-08', '"Soát lại trước khi nộp" → review: both answers, the venture attached')
 
-  await page.locator('[data-action="submit"]').click()
-  await expect(screenState(page, 'WF05-S04')).toHaveAttribute('data-application-state', 'SUBMITTED')
-  await expect(page.locator('[data-state="review-submitted"]')).toHaveText(
-    'Đã nộp đơn. Đơn chỉ xem được, không sửa được.',
-  )
-  const submitted = (await stored(page, me.accountId))!
-  expect(Object.keys(submitted.applications)).toEqual([`${ventureId}:${PROGRAMME}`])
-  expect(submitted.applications[`${ventureId}:${PROGRAMME}`]).toMatchObject({
+  await page.locator('[data-action="submit"]').dblclick()
+  await expect(page).toHaveURL(submittedUrl(ventureId))
+  await expect(screenState(page, 'L5-SUB3')).toBeVisible()
+  const [done, ...more] = await applicationsOf([ventureId])
+  expect(more).toEqual([])
+  expect(done).toMatchObject({
+    id: draftRow!.id,
     status: 'SUBMITTED',
-    programme_specific_answers: [a0, a1],
-    created_at: draft.created_at,
+    answers: answersOf(a0, a1),
+    created_at: draftRow!.created_at,
   })
-  log.step(page, 'HP-09', 'DRAFT → SUBMITTED once; answers and created_at kept')
+  expect(done!.snapshot).toMatchObject({
+    venture: { id: ventureId, name },
+    answers: answersOf(a0, a1),
+    programme: { id: PROGRAMME, name: PROGRAMME_NAME },
+  })
+  expect(await auditOf(done!.id)).toEqual(['APPLICATION_DRAFT_CREATED', 'APPLICATION_SUBMITTED'])
+  log.step(page, 'HP-09', 'Double-click "Nộp hồ sơ": DRAFT → SUBMITTED once; one audit each')
 
   await page.reload({ waitUntil: 'networkidle' })
-  await expect(screenState(page, 'WF05-S04')).toHaveAttribute('data-application-state', 'SUBMITTED')
-  await expect(page.locator('[data-action="submit"], textarea')).toHaveCount(0)
-  log.step(page, 'HP-10', 'Refresh: still SUBMITTED, read only')
+  await expect(screenState(page, 'L5-SUB3')).toBeVisible()
+  await expect(page.locator('textarea, [data-action="submit"]')).toHaveCount(0)
+  for (const url of [formUrl(ventureId), reviewUrl(ventureId), oldFormUrl(ventureId)]) {
+    await page.goto(url, { waitUntil: 'networkidle' })
+    await expect(page, url).toHaveURL(submittedUrl(ventureId))
+  }
+  log.step(page, 'HP-10', 'Refresh: still SUBMITTED, read only; the form and review open it')
 
-  await page.locator('[data-nav="review-back"]').click()
-  await expect(page).toHaveURL(detailUrl(ventureId))
+  await settled(page, detailUrl(ventureId))
   await expect(participation.locator('[data-application]')).toHaveText('Đã nộp')
   await expect(page.locator('[data-action="apply"]')).toHaveCount(0)
+  await expect(participation.locator('[data-nav="application-view"]')).toHaveAttribute(
+    'href',
+    submittedUrl(ventureId),
+  )
   await page.locator('[data-nav="detail-back"]').click()
   await expect(page).toHaveURL('/demo/projects')
   await expect(row.locator('[data-venture-applications]')).toHaveText(
-    `Đơn đăng ký demo: ${PROGRAMME_NAME} · Đã nộp`,
+    `Đơn đăng ký: ${PROGRAMME_NAME} · Đã nộp`,
   )
-  log.step(page, 'HP-11', 'S04 → S02 "Đã nộp", no second "Đăng ký" → S01 "Đã nộp"')
+  log.step(page, 'HP-11', 'S02 "Đã nộp", no second "Đăng ký" → S01 "Đã nộp"')
 
-  await settled(page, appUrl(ventureId))
-  await expect(page.locator('[data-state="application-locked"]')).toHaveText(
-    'Đơn đã nộp: không sửa được.',
-  )
-  await expect(
-    page.locator('textarea, [data-action="save-draft"], [data-action="review"]'),
-  ).toHaveCount(0)
-  await page.locator('[data-nav="application-view-submitted"]').click()
-  await expect(page).toHaveURL(reviewUrl(ventureId))
-  await page.goBack()
-  await expect(page).toHaveURL(appUrl(ventureId))
-  await page.goBack()
-  await expect(page).toHaveURL('/demo/projects')
-  log.step(page, 'HP-12', 'S03 attempted after submit: locked; "Xem đơn đã nộp"; back works')
-
-  // No copy of venture or programme data; one canonical record; nothing written.
-  const raw = (await rawStore(page, me.accountId))!
-  expect(raw).not.toContain(name)
-  expect(raw).not.toMatch(/Chương trình ươm tạo|Chapter 01|@|hub_session|token|cookie/)
-  expect(storeKey(me.accountId)).not.toMatch(/@|example|[0-9a-f]{8}-/)
   const [{ n }] = (await query<{ n: number }>(
     `SELECT count(*)::int AS n FROM projects WHERE owner_profile_id = $1`,
     [me.profileId],
   )) as [{ n: number }]
   expect(n).toBe(1)
-  const changed = expectNoWrites(before, await tables())
-  log.step(page, 'HP-13', 'Store: references + answers only; 1 canonical venture; 0 table writes')
+  const changed = expectNoWrites(before, await tables(), { applications: true })
+  log.step(page, 'HP-12', '1 canonical venture; only the application tables written')
   log.write({ type: kind.type, applicant: kind.stored, tables_changed: changed })
 }
 
 test.describe('HC-WF05-01 / 02 owner journeys', () => {
-  test('HC-WF05-01 PROJECT owner: magic link → onboarding → MemberShell → S01 → WF02 → S02 → S03 (TEAM) → S04 → SUBMITTED', async ({
+  test('HC-WF05-01 PROJECT owner: magic link → onboarding → MemberShell → S01 → WF02 → S02 → L5 form (TEAM) → review → SUBMITTED', async ({
     page,
   }) => {
     await ownerJourney(page, KINDS.PROJECT, 'HC01')
@@ -468,17 +472,14 @@ test.describe('HC-WF05-01 / 02 owner journeys', () => {
 })
 
 test.describe('HC-WF05-03 canonical reuse', () => {
-  test('a WF02 rename shows on S01, S02, S03 and S04; no sync, copy or second venture', async ({
+  test('a WF02 rename shows on S01, S02 and the review; the DRAFT references the venture, no copy', async ({
     page,
   }) => {
     const log = journal('HC03')
     const w = await world()
     await login(page.request, w.owner.email)
-    await settled(page, appUrl(w.startup.id))
-    await answer(page, 0).fill('Giữ nguyên câu trả lời')
-    await page.locator('[data-action="save-draft"]').click()
-    await expect(page.locator('[data-state="draft-saved"]')).toBeVisible()
-    const raw = (await rawStore(page, w.owner.accountId))!
+    await draft(page.request, w.startup.id, ['Giữ nguyên câu trả lời', ''])
+    const [kept] = await applicationsOf([w.startup.id])
     log.step(page, 'CR-01', 'A DRAFT for the STARTUP')
 
     // WF02 edit through S02 "Sửa hồ sơ" (the WF02 write, outside the WF05 bracket).
@@ -500,60 +501,60 @@ test.describe('HC-WF05-03 canonical reuse', () => {
     await page.locator(`[data-venture="${w.startup.id}"] [data-nav="venture-detail"]`).click()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Startup UAT đổi tên')
     await page.locator('[data-nav="application-resume"]').click()
-    await expect(page.locator('[data-applicant-name]')).toHaveText('Startup UAT đổi tên')
-    await expect(page.locator('[data-demo-meta]')).toHaveText('Startup UAT đổi tên · Bản nháp')
+    await expect(page).toHaveURL(formUrl(w.startup.id))
+    await expect(formStep(page)).toBeVisible()
     await settled(page, reviewUrl(w.startup.id))
-    await expect(page.locator('[data-review-venture]')).toHaveText('Startup UAT đổi tên')
-    log.step(page, 'CR-03', 'S01, S02, S03, S04 show the new name')
+    await expect(page.locator('[data-anchor="attached"]')).toContainText('Startup UAT đổi tên')
+    log.step(page, 'CR-03', 'S01, S02 and the review show the new name')
 
-    expect(await rawStore(page, w.owner.accountId)).toBe(raw)
+    expect(await applicationsOf([w.startup.id])).toEqual([kept])
     const names = await query<{ name: string }>(
       `SELECT name FROM projects WHERE owner_profile_id = $1 ORDER BY name`,
       [w.owner.profileId],
     )
     expect(names.map((r) => r.name)).toEqual(['Dự án UAT', 'Lưu trữ UAT', 'Startup UAT đổi tên'])
     const changed = expectNoWrites(before, await tables())
-    log.step(page, 'CR-04', 'Store byte-identical; one record per venture; 0 table writes')
+    log.step(page, 'CR-04', 'DRAFT row identical; one record per venture; 0 table writes')
     log.write({ tables_changed: changed })
   })
 })
 
 test.describe('HC-WF05-04 reset', () => {
-  test('reset after DRAFT and after SUBMITTED clears only the session; canonical and WF04 data unchanged', async ({
+  test('reset after DRAFT and after SUBMITTED leaves the server applications (HD-A10); canonical and WF04 data unchanged', async ({
     page,
   }) => {
     const log = journal('HC04')
     const w = await world()
     await login(page.request, w.owner.email)
+    await draft(page.request, w.project.id, ['Nháp vẫn còn', ''])
+    const sent = await draft(page.request, w.startup.id, ['Một', 'Hai'])
+    await submit(page.request, sent)
+    const kept = await applicationsOf([w.project.id, w.startup.id])
     const before = await tables()
     const programmes = await (await page.request.get(API)).json()
-    await settled(page, appUrl(w.project.id))
-    await answer(page, 0).fill('Nháp sẽ bị xoá')
-    await page.locator('[data-action="save-draft"]').click()
-    await expect(page.locator('[data-state="draft-saved"]')).toBeVisible()
+    await settled(page, '/demo/projects')
     await reset(page)
-    await expect(screenState(page, 'WF05-S03')).toHaveAttribute('data-application-state', 'NONE')
-    await expect(answer(page, 0)).toHaveValue('')
-    expect(await rawStore(page, w.owner.accountId)).toBeNull()
-    log.step(page, 'RS-01', 'Reset after DRAFT: form afresh, store empty')
+    await expect(page.locator('[data-demo-notice]')).toContainText('Đã đặt lại dữ liệu demo.')
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(
+      page.locator(`[data-venture="${w.project.id}"] [data-venture-applications]`),
+    ).toHaveText(`Đơn đăng ký: ${PROGRAMME_NAME} · Nháp`)
+    await expect(
+      page.locator(`[data-venture="${w.startup.id}"] [data-venture-applications]`),
+    ).toHaveText(`Đơn đăng ký: ${PROGRAMME_NAME} · Đã nộp`)
+    log.step(page, 'RS-01', 'Reset on S01: the DRAFT and the SUBMITTED application stay')
 
-    await plant(page, w.owner.accountId, [{ ventureId: w.startup.id }])
-    await settled(page, reviewUrl(w.startup.id))
-    await page.locator('[data-action="submit"]').click()
-    await expect(screenState(page, 'WF05-S04')).toHaveAttribute(
-      'data-application-state',
-      'SUBMITTED',
-    )
-    await reset(page)
-    await expect(page.locator('[data-state="review-no-application"]')).toBeVisible()
-    expect(await rawStore(page, w.owner.accountId)).toBeNull()
     await settled(page, detailUrl(w.startup.id))
-    await expect(page.locator('[data-action="apply"]')).toHaveCount(1)
-    log.step(page, 'RS-02', 'Reset after SUBMITTED: gone; S02 offers "Đăng ký" again')
+    await reset(page)
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(page.locator('[data-nav="application-view"]')).toHaveCount(1)
+    await expect(page.locator('[data-action="apply"]')).toHaveCount(0)
+    log.step(page, 'RS-02', 'Reset on S02: still "Đã nộp", no second "Đăng ký"')
 
+    expect(await applicationsOf([w.project.id, w.startup.id])).toEqual(kept)
     expect(await (await page.request.get(API)).json()).toEqual(programmes)
     const changed = expectNoWrites(before, await tables())
-    log.step(page, 'RS-03', 'Ventures, members, profiles, programmes, events: unchanged')
+    log.step(page, 'RS-03', 'Applications, ventures, members, profiles, programmes: unchanged')
     log.write({ tables_changed: changed })
   })
 })
@@ -561,10 +562,13 @@ test.describe('HC-WF05-04 reset', () => {
 // --------------------------------------------------------------- SEC matrix
 
 test.describe('SEC-WF05-01 authorization matrix', () => {
-  test('8 actors × 4 WF05 routes + 2 APIs, plain and spoofed; relation from the server only; no write, no leak', async ({
+  test('8 actors × 6 WF05 / L5 routes + 4 APIs + 3 writes, plain and spoofed; relation from the server only; no write, no leak', async ({
     page,
   }) => {
     const w = await world()
+    await login(page.request, w.owner.email)
+    const own = await draft(page.request, w.startup.id, ['Một', ''])
+    await page.context().clearCookies()
     const before = await tables()
     const spoofs = {
       'x-role': 'PLATFORM_ADMIN',
@@ -577,10 +581,12 @@ test.describe('SEC-WF05-01 authorization matrix', () => {
     const pages = [
       '/demo/projects',
       detailUrl(w.startup.id),
-      appUrl(w.startup.id),
+      formUrl(w.startup.id),
       reviewUrl(w.startup.id),
+      submittedUrl(w.startup.id),
+      oldFormUrl(w.startup.id),
     ]
-    const apis = [API, `${API}/${w.startup.id}`]
+    const apis = [API, `${API}/${w.startup.id}`, '/api/v1/me/applications', `${APPS}/${own}`]
     const secrets = [
       w.owner.email,
       w.owner.accountId,
@@ -590,9 +596,14 @@ test.describe('SEC-WF05-01 authorization matrix', () => {
       w.teammate.profileId,
       w.invitee.email,
     ]
-    type Row = { actor: string; pages: string[]; apis: number[]; spoofed: 'same' }
+    type Row = { actor: string; pages: string[]; apis: number[]; writes: string[] }
     const matrix: Row[] = []
-    const run = async (actor: string, expectPages: string[], expectApis: number[]) => {
+    const run = async (
+      actor: string,
+      expectPages: string[],
+      expectApis: number[],
+      expectWrites: string[] | null,
+    ) => {
       const got: string[] = []
       for (const url of pages) {
         for (const [suffix, headers] of [
@@ -627,58 +638,93 @@ test.describe('SEC-WF05-01 authorization matrix', () => {
         codes.push(plain.status())
       }
       expect(codes, actor).toEqual(expectApis)
-      matrix.push({ actor, pages: got, apis: codes, spoofed: 'same' })
+      // The application writes, spoofed as the owner: never allowed for anyone else.
+      if (!expectWrites) return void matrix.push({ actor, pages: got, apis: codes, writes: [] })
+      const writes = [
+        await errorCode(
+          await page.request.post(APPS, {
+            data: { venture_id: w.startup.id, programme_id: PROGRAMME },
+            headers: spoofs,
+          }),
+        ),
+        await errorCode(
+          await page.request.patch(`${APPS}/${own}`, {
+            data: { answers: answersOf('Sửa', 'Sửa') },
+            headers: spoofs,
+          }),
+        ),
+        await errorCode(await page.request.post(`${APPS}/${own}/submit`, { headers: spoofs })),
+      ]
+      expect(writes, actor).toEqual(expectWrites)
+      matrix.push({ actor, pages: got, apis: codes, writes })
     }
 
-    await run('guest', ['auth', 'auth', 'auth', 'auth'], [401, 401])
+    const auth = ['auth', 'auth', 'auth', 'auth', 'auth', 'auth']
+    await run(
+      'guest',
+      auth,
+      [401, 401, 401, 401],
+      [
+        '401 UNCONTRACTED_UNAUTHENTICATED',
+        '401 UNCONTRACTED_UNAUTHENTICATED',
+        '401 UNCONTRACTED_UNAUTHENTICATED',
+      ],
+    )
     await login(page.request, 'newcomer@example.test')
     await run(
       'onboarding incomplete',
-      ['onboarding', 'onboarding', 'onboarding', 'onboarding'],
-      [403, 403],
+      ['onboarding', 'onboarding', 'onboarding', 'onboarding', 'onboarding', 'onboarding'],
+      [403, 403, 403, 403],
+      ['403 SCOPE_FORBIDDEN', '403 SCOPE_FORBIDDEN', '403 SCOPE_FORBIDDEN'],
     )
-    for (const [actor, email, expected] of [
-      ['owner', w.owner.email, ['200', '200', '200', '200']],
-      ['ACTIVE member ("Founder" label)', w.teammate.email, ['200', '200', '200', '200']],
-      ['pending invitee', w.invitee.email, ['200', '404', '404', '404']],
-      ['unrelated member', w.stranger.email, ['200', '404', '404', '404']],
-      ['platform admin', 'ops@example.test', ['200', '404', '404', '404']],
-      ['HUB leader', 'leader@example.test', ['200', '404', '404', '404']],
+    await page.context().clearCookies()
+    await login(page.request, w.owner.email)
+    // The owner reads everything; the owner's writes are the journeys' and NEG's.
+    await run('owner', ['200', '200', '200', '200', '200', '200'], [200, 200, 200, 200], null)
+    const notFound = [
+      '404 UNCONTRACTED_NOT_FOUND',
+      '404 UNCONTRACTED_NOT_FOUND',
+      '404 UNCONTRACTED_NOT_FOUND',
+    ]
+    for (const [actor, email, expected, writes] of [
+      [
+        'ACTIVE member ("Founder" label)',
+        w.teammate.email,
+        ['200', '200', '404', '404', '404', '404'],
+        ['403 SCOPE_FORBIDDEN', '404 UNCONTRACTED_NOT_FOUND', '404 UNCONTRACTED_NOT_FOUND'],
+      ],
+      ['pending invitee', w.invitee.email, ['200', '404', '404', '404', '404', '404'], notFound],
+      ['unrelated member', w.stranger.email, ['200', '404', '404', '404', '404', '404'], notFound],
+      ['platform admin', 'ops@example.test', ['200', '404', '404', '404', '404', '404'], notFound],
+      ['HUB leader', 'leader@example.test', ['200', '404', '404', '404', '404', '404'], notFound],
     ] as const) {
       await page.context().clearCookies()
       await login(page.request, email)
       const detailCode = expected[1] === '200' ? 200 : 404
-      await run(actor, [...expected], [200, detailCode])
+      await run(actor, [...expected], [200, detailCode, 200, 404], [...writes])
       const list = await (await page.request.get(API)).json()
-      const listed = JSON.stringify(list).includes(w.startup.id)
-      expect(listed, `${actor} lists the venture`).toBe(detailCode === 200)
+      expect(JSON.stringify(list).includes(w.startup.id), `${actor} lists the venture`).toBe(
+        detailCode === 200,
+      )
+      expect(await (await page.request.get('/api/v1/me/applications')).json(), actor).toEqual([])
     }
 
     // The relation and the eligibility come from the server: the member reads, never applies.
-    const member = await (await page.request.get(`${API}/${w.startup.id}`)).json()
-    expect(member).toBeDefined()
     await page.context().clearCookies()
     await login(page.request, w.teammate.email)
     const asMember = await (await page.request.get(`${API}/${w.startup.id}`)).json()
     expect(asMember.venture.relation).toBe('MEMBER')
     expect(asMember.programmes[0].eligibility).toEqual({ eligible: false, reason: 'NOT_OWNER' })
-    await settled(page, appUrl(w.startup.id))
-    await expect(page.locator('[data-state="application-locked"]')).toHaveText(
-      'Không đăng ký được: Chỉ chủ sở hữu đăng ký được.',
-    )
-    await plant(page, w.teammate.accountId, [{ ventureId: w.startup.id }])
-    const planted = await rawStore(page, w.teammate.accountId)
-    await settled(page, reviewUrl(w.startup.id))
-    await expect(page.locator('[data-check="owner"]')).toHaveAttribute('data-ok', 'false')
-    await expect(page.locator('[data-action="submit"]')).toBeDisabled()
-    expect(await rawStore(page, w.teammate.accountId)).toBe(planted)
+    await settled(page, detailUrl(w.startup.id))
+    await expect(page.locator('[data-action="apply"]')).toHaveCount(0)
+    await expect(page.locator('[data-nav^="application-"]')).toHaveCount(0)
 
     // No method other than GET on the demo API.
     await page.context().clearCookies()
     await login(page.request, w.owner.email)
     const asOwner = await (await page.request.get(`${API}/${w.startup.id}`)).json()
     expect(asOwner.venture.relation).toBe('OWNER')
-    for (const url of apis)
+    for (const url of [API, `${API}/${w.startup.id}`])
       for (const method of ['post', 'put', 'patch', 'delete'] as const)
         expect((await page.request[method](url, { data: {} })).status(), `${method} ${url}`).toBe(
           405,
@@ -692,131 +738,187 @@ test.describe('SEC-WF05-01 authorization matrix', () => {
 // ------------------------------------------------------------------ NEG
 
 test.describe('NEG-WF05 negative / alternate', () => {
-  test('ids: foreign / random / malformed venture, DRAFT / random / malformed programme, future sub-route, id swap after a valid load, planted foreign draft', async ({
+  test('ids: foreign / random / malformed venture, programme and application; future sub-routes; id swap; a foreign venture or application is never attached or submitted', async ({
     page,
+    browser,
+    baseURL,
   }) => {
     const w = await world()
+    const theirs = await browser.newContext({ baseURL })
+    await login(theirs.request, w.stranger.email)
+    const foreignApp = await draft(theirs.request, w.foreign.id, ['Của người khác', 'Hai'])
+    await theirs.close()
     await login(page.request, w.owner.email)
+    const mine = await draft(page.request, w.startup.id, ['Một', ''])
+    const kept = await applicationsOf([w.startup.id, w.foreign.id])
     const before = await tables()
-    await settled(page, reviewUrl(w.startup.id))
     for (const url of [
       detailUrl(w.foreign.id),
       detailUrl(RANDOM),
       detailUrl('abc'),
-      appUrl(w.foreign.id),
-      appUrl(w.startup.id, CHALLENGE),
-      appUrl(w.startup.id, RANDOM),
-      appUrl(w.startup.id, 'abc'),
+      formUrl(w.foreign.id),
+      formUrl(w.startup.id, CHALLENGE),
+      formUrl(w.startup.id, RANDOM),
+      formUrl(w.startup.id, 'abc'),
+      formUrl('abc'),
       reviewUrl(w.foreign.id),
       reviewUrl(w.startup.id, CHALLENGE),
-      `${appUrl(w.startup.id)}/submit`,
+      reviewUrl(w.startup.id, 'abc'),
+      submittedUrl(w.foreign.id),
+      oldFormUrl(w.foreign.id),
+      `${formUrl(w.startup.id)}/submit`,
       `${reviewUrl(w.startup.id)}/next`,
       `${detailUrl(w.startup.id)}/applications`,
+      `/programmes/${CHALLENGE}/apply`,
+      `/programmes/${RANDOM}/apply`,
+      '/programmes/abc/apply',
     ])
       expect((await page.goto(url))?.status(), url).toBe(404)
-    // A draft planted under a foreign venture in the owner's own store is never shown or used.
-    await plant(page, w.owner.accountId, [{ ventureId: w.foreign.id }, { ventureId: w.startup.id }])
-    const planted = (await stored(page, w.owner.accountId))!
-    await settled(page, reviewUrl(w.startup.id))
-    await page.locator('[data-action="submit"]').click()
-    await expect(screenState(page, 'WF05-S04')).toHaveAttribute(
-      'data-application-state',
-      'SUBMITTED',
+
+    const post = (data: unknown) => page.request.post(APPS, { data })
+    expect(await errorCode(await post({ venture_id: w.foreign.id, programme_id: PROGRAMME }))).toBe(
+      '404 UNCONTRACTED_NOT_FOUND',
     )
-    const after = (await stored(page, w.owner.accountId))!
-    expect(after.applications[`${w.foreign.id}:${PROGRAMME}`]).toEqual(
-      planted.applications[`${w.foreign.id}:${PROGRAMME}`],
+    expect(await errorCode(await post({ venture_id: w.startup.id, programme_id: CHALLENGE }))).toBe(
+      '404 UNCONTRACTED_NOT_FOUND',
     )
-    expect((await page.goto(reviewUrl(w.foreign.id)))?.status()).toBe(404)
+    expect(await errorCode(await post({ venture_id: w.startup.id, programme_id: RANDOM }))).toBe(
+      '404 UNCONTRACTED_NOT_FOUND',
+    )
+    expect(await errorCode(await post({ venture_id: 'abc', programme_id: PROGRAMME }))).toBe(
+      '422 APPLICATION_VALIDATION_FAILED',
+    )
+    expect(
+      await errorCode(
+        await post({ venture_id: w.project.id, programme_id: PROGRAMME, status: 'SUBMITTED' }),
+      ),
+    ).toBe('422 APPLICATION_VALIDATION_FAILED')
+    for (const url of [`${APPS}/${foreignApp}`, `${APPS}/abc`, `${APPS}/${RANDOM}`]) {
+      expect(await errorCode(await page.request.get(url)), url).toBe('404 UNCONTRACTED_NOT_FOUND')
+      expect(
+        await errorCode(await page.request.patch(url, { data: { answers: answersOf('x', 'y') } })),
+        url,
+      ).toBe('404 UNCONTRACTED_NOT_FOUND')
+      expect(await errorCode(await page.request.post(`${url}/submit`)), url).toBe(
+        '404 UNCONTRACTED_NOT_FOUND',
+      )
+    }
+    // Id swap: an application's venture, programme or status never changes through a save.
+    for (const extra of [
+      { venture_id: w.foreign.id },
+      { programme_id: CHALLENGE },
+      { status: 'SUBMITTED' },
+    ])
+      expect(
+        await errorCode(
+          await page.request.patch(`${APPS}/${mine}`, {
+            data: { answers: answersOf('x', 'y'), ...extra },
+          }),
+        ),
+        JSON.stringify(extra),
+      ).toBe('422 APPLICATION_VALIDATION_FAILED')
+    expect(await applicationsOf([w.startup.id, w.foreign.id])).toEqual(kept)
     expectNoWrites(before, await tables())
   })
 
-  test('lifecycle: archived, existing SUBMITTED, duplicate start / save, double submit, missing / invalid answers, a stale form after SUBMITTED', async ({
+  test('lifecycle: archived, duplicate start, invalid / missing answers, existing SUBMITTED final, a stale form after SUBMITTED', async ({
     page,
   }) => {
     const w = await world()
     await login(page.request, w.owner.email)
     const before = await tables()
-    // ARCHIVED: no "Đăng ký", S03 locked, S04 blocked.
+    // ARCHIVED: no "Đăng ký", the form locked, the API refuses.
     await settled(page, detailUrl(w.archived.id))
     await expect(page.locator('[data-action="apply"]')).toHaveCount(0)
-    await settled(page, appUrl(w.archived.id))
-    await expect(page.locator('[data-state="application-locked"]')).toHaveText(
-      'Không đăng ký được: Hồ sơ đã lưu trữ.',
+    await settled(page, formUrl(w.archived.id))
+    await expect(page.locator('[data-ineligible="ARCHIVED"]')).toHaveText(
+      'Hồ sơ này đã lưu trữ nên không nộp được.',
     )
-    await plant(page, w.owner.accountId, [{ ventureId: w.archived.id }])
-    await settled(page, reviewUrl(w.archived.id))
-    await expect(page.locator('[data-check="active"]')).toHaveAttribute('data-ok', 'false')
-    await expect(page.locator('[data-action="submit"]')).toBeDisabled()
-    await reset(page)
+    await expect(answer(page, 'q-problem')).toBeDisabled()
+    const archived = await page.request.post(APPS, {
+      data: { venture_id: w.archived.id, programme_id: PROGRAMME },
+    })
+    expect(await errorCode(archived)).toBe('409 APPLICATION_NOT_ELIGIBLE')
+    expect(await applicationsOf([w.archived.id])).toEqual([])
 
-    // Duplicate start and duplicate save: one application.
-    await settled(page, appUrl(w.startup.id))
-    await settled(page, appUrl(w.startup.id))
-    await answer(page, 0).fill('Một')
-    await page.locator('[data-action="save-draft"]').dblclick()
-    await expect(page.locator('[data-state="draft-saved"]')).toBeVisible()
-    await settled(page, appUrl(w.startup.id))
-    await answer(page, 1).fill('Hai')
-    await page.locator('[data-action="save-draft"]').click()
-    await expect(page.locator('[data-state="draft-saved"]')).toBeVisible()
-    let state = (await stored(page, w.owner.accountId))!
-    expect(Object.keys(state.applications)).toEqual([`${w.startup.id}:${PROGRAMME}`])
+    // Duplicate start: the same key replays; another start is 409 with the existing id.
+    const key = crypto.randomUUID()
+    const data = { venture_id: w.startup.id, programme_id: PROGRAMME }
+    const first = await page.request.post(APPS, { data, headers: { 'Idempotency-Key': key } })
+    const replay = await page.request.post(APPS, { data, headers: { 'Idempotency-Key': key } })
+    expect([first.status(), replay.status()]).toEqual([201, 201])
+    const id = ((await first.json()) as { id: string }).id
+    expect(((await replay.json()) as { id: string }).id).toBe(id)
+    const again = await page.request.post(APPS, { data })
+    expect(await errorCode(again)).toBe('409 APPLICATION_EXISTS')
+    expect(
+      ((await again.json()) as { error: { fields: Record<string, string> } }).error.fields,
+    ).toMatchObject({ application_id: id })
+    expect((await applicationsOf([w.startup.id])).map((r) => r.id)).toEqual([id])
     await settled(page, detailUrl(w.startup.id))
     await expect(page.locator('[data-action="apply"]')).toHaveCount(0)
     await expect(page.locator('[data-nav="application-resume"]')).toHaveText('Tiếp tục')
 
-    // Invalid answer: refused at save, blocked at submit; missing answer: blocked.
-    await settled(page, appUrl(w.startup.id))
-    const good = await rawStore(page, w.owner.accountId)
-    await answer(page, 1).fill('x'.repeat(2001))
-    await page.locator('[data-action="save-draft"]').click()
-    await expect(page.locator('[data-error="answer-1"]')).toHaveText('Tối đa 2000 ký tự.')
-    expect(await rawStore(page, w.owner.accountId)).toBe(good)
-    for (const answers of [
-      ['Một', ''],
-      ['Một', 'x'.repeat(2001)],
-    ]) {
-      await plant(page, w.owner.accountId, [{ ventureId: w.startup.id, answers }])
-      const planted = await rawStore(page, w.owner.accountId)
-      await settled(page, reviewUrl(w.startup.id))
-      await expect(page.locator('[data-check="answers"]')).toHaveAttribute('data-ok', 'false')
-      await expect(page.locator('[data-action="submit"]')).toBeDisabled()
-      expect(await rawStore(page, w.owner.accountId)).toBe(planted)
-    }
-
-    // Double submit: one transition. Existing SUBMITTED: no "Đăng ký", S03 locked.
-    await plant(page, w.owner.accountId, [{ ventureId: w.startup.id }])
+    // Invalid answer: refused by the server and capped by the form; missing answer: blocked.
+    expect(
+      await errorCode(
+        await page.request.patch(`${APPS}/${id}`, {
+          data: { answers: answersOf('Một', 'x'.repeat(2001)) },
+        }),
+      ),
+    ).toBe('422 APPLICATION_VALIDATION_FAILED')
+    await settled(page, `${formUrl(w.startup.id)}?buoc=4`)
+    await answer(page, 'q-support').fill('x'.repeat(2001))
+    await expect(answer(page, 'q-support')).toHaveValue('x'.repeat(2000))
+    await answer(page, 'q-support').fill('')
+    expect(
+      (
+        await page.request.patch(`${APPS}/${id}`, { data: { answers: answersOf('Một', '') } })
+      ).status(),
+    ).toBe(200)
+    const incomplete = await page.request.post(`${APPS}/${id}/submit`)
+    expect(await errorCode(incomplete)).toBe('422 APPLICATION_INCOMPLETE')
     await settled(page, reviewUrl(w.startup.id))
-    await page.locator('[data-action="submit"]').dblclick()
-    await expect(screenState(page, 'WF05-S04')).toHaveAttribute(
-      'data-application-state',
-      'SUBMITTED',
+    await expect(page.locator('[data-action="submit"]')).toBeDisabled()
+    await expect(page.locator('[data-anchor="readiness"]')).toHaveText(
+      'Còn 1 việc trước khi nộp được',
     )
-    state = (await stored(page, w.owner.accountId))!
-    expect(Object.keys(state.applications)).toHaveLength(1)
+
+    // A form opened while DRAFT, submitted meanwhile: its save is refused; SUBMITTED is final.
+    await settled(page, `${formUrl(w.startup.id)}?buoc=1`)
+    await page.request.patch(`${APPS}/${id}`, { data: { answers: answersOf('Một', 'Hai') } })
+    await submit(page.request, id)
+    const [final] = await applicationsOf([w.startup.id])
+    await answer(page, 'q-problem').fill('Sửa sau khi nộp')
+    await answer(page, 'q-problem').blur()
+    await expect(page.locator('[data-save-state="failed"]')).toHaveText('Chưa lưu được — thử lại')
+    expect(await applicationsOf([w.startup.id])).toEqual([final])
+
+    // Existing SUBMITTED: no "Đăng ký", every route opens the submitted view, every write is 409.
     await settled(page, detailUrl(w.startup.id))
     await expect(page.locator('[data-action="apply"]')).toHaveCount(0)
-    await settled(page, appUrl(w.startup.id))
-    await expect(page.locator('[data-state="application-locked"]')).toBeVisible()
-
-    // A form opened while DRAFT, submitted meanwhile: the save is refused; SUBMITTED never returns to DRAFT.
-    await plant(page, w.owner.accountId, [{ ventureId: w.startup.id }])
-    await settled(page, appUrl(w.startup.id))
-    await plant(page, w.owner.accountId, [{ ventureId: w.startup.id, status: 'SUBMITTED' }])
-    const final = await rawStore(page, w.owner.accountId)
-    await answer(page, 0).fill('Sửa sau khi nộp')
-    await page.locator('[data-action="save-draft"]').click()
-    await expect(page.locator('[data-state="draft-failed"]')).toBeVisible()
-    expect(await rawStore(page, w.owner.accountId)).toBe(final)
-    expectNoWrites(before, await tables())
+    await expect(page.locator('[data-nav="application-view"]')).toHaveText('Xem đơn')
+    await settled(page, formUrl(w.startup.id))
+    await expect(page).toHaveURL(submittedUrl(w.startup.id))
+    expect(
+      await errorCode(
+        await page.request.patch(`${APPS}/${id}`, { data: { answers: answersOf('x', 'y') } }),
+      ),
+    ).toBe('409 APPLICATION_SUBMITTED')
+    expect(await errorCode(await page.request.post(`${APPS}/${id}/submit`))).toBe(
+      '409 APPLICATION_SUBMITTED',
+    )
+    expect(await errorCode(await page.request.post(APPS, { data }))).toBe('409 APPLICATION_EXISTS')
+    expect(await applicationsOf([w.startup.id])).toEqual([final])
+    expect(await auditOf(id)).toEqual(['APPLICATION_DRAFT_CREATED', 'APPLICATION_SUBMITTED'])
+    expectNoWrites(before, await tables(), { applications: true })
   })
 })
 
-// ---------------------------------------------------------------- STORE
+// --------------------------------------------------------------- SERVER
 
-test.describe('STORE-WF05 application store', () => {
-  test('refresh, resume, a new clean session, one pair, no snapshot / PII / secret, atomic save and submit', async ({
+test.describe('SERVER-WF05 application record', () => {
+  test('refresh, resume from S01 → S02, a new browser session sees the same DRAFT, nothing in browser storage, the snapshot at submit', async ({
     page,
     browser,
     baseURL,
@@ -824,120 +926,83 @@ test.describe('STORE-WF05 application store', () => {
     const w = await world()
     await login(page.request, w.owner.email)
     const before = await tables()
-    await settled(page, appUrl(w.project.id))
-    await answer(page, 0).fill('Câu một')
-    await page.locator('[data-action="save-draft"]').click()
-    await expect(page.locator('[data-state="draft-saved"]')).toBeVisible()
-    // Refresh and resume from S01 → S02 "Tiếp tục".
+    await settled(page, formUrl(w.project.id))
+    await answer(page, 'q-problem').fill('Câu một')
+    await answer(page, 'q-problem').blur()
+    await expect(page.locator('[data-save-state="idle"]')).toHaveText(/^Đã lưu lúc/)
+    // Refresh resumes on the first step with an unanswered required question.
     await page.reload({ waitUntil: 'networkidle' })
-    await expect(answer(page, 0)).toHaveValue('Câu một')
+    await expect(formStep(page)).toHaveAttribute('data-step', '4')
+    await page.locator('[data-action="prev"]').click()
+    await page.locator('[data-action="prev"]').click()
+    await expect(formStep(page)).toHaveAttribute('data-step', '1')
+    await expect(answer(page, 'q-problem')).toHaveValue('Câu một')
     await settled(page, '/demo/projects')
     await page.locator(`[data-venture="${w.project.id}"] [data-nav="venture-detail"]`).click()
     await page.locator('[data-nav="application-resume"]').click()
-    await expect(answer(page, 0)).toHaveValue('Câu một')
+    await expect(page).toHaveURL(formUrl(w.project.id))
+    await expect(formStep(page)).toHaveAttribute('data-step', '4')
 
-    // Shape: the T00 field names only; no venture / programme copy; no PII or secret.
-    const raw = (await rawStore(page, w.owner.accountId))!
-    const parsed = JSON.parse(raw)
-    expect(Object.keys(parsed).sort()).toEqual(['applications', 'version'])
-    expect(Object.keys(parsed.applications)).toEqual([`${w.project.id}:${PROGRAMME}`])
-    expect(Object.keys(parsed.applications[`${w.project.id}:${PROGRAMME}`]).sort()).toEqual([
-      'created_at',
-      'primary_applicant_id',
-      'primary_applicant_type',
-      'programme_id',
-      'programme_specific_answers',
-      'status',
-      'submitted_at',
-      'updated_at',
-    ])
-    const cookies = await page.context().cookies()
-    for (const c of cookies) expect(raw).not.toContain(c.value)
-    expect(raw).not.toMatch(/Dự án UAT|Chủ Hồ Sơ|Chương trình ươm tạo|@|hub_session|token/)
-    expect(storeKey(w.owner.accountId)).not.toContain(w.owner.accountId)
-    const keys = await page.evaluate(() => Object.keys(sessionStorage))
-    expect(keys.filter((k) => k.startsWith('hub.wf05-demo'))).toEqual([storeKey(w.owner.accountId)])
-    expect(
-      await page.evaluate(() => Object.keys(localStorage).filter((k) => /wf05/.test(k))),
-    ).toEqual([])
+    // Nothing of the application lives in the browser.
+    for (const store of ['sessionStorage', 'localStorage'] as const)
+      expect(
+        await page.evaluate(
+          (s) => Object.keys(window[s]).filter((k) => /wf05|application/i.test(k)),
+          store,
+        ),
+        store,
+      ).toEqual([])
 
-    // Atomic save and submit: a refused browser write changes nothing.
-    const block = () =>
-      page.evaluate(() => {
-        const original = Storage.prototype.setItem
-        ;(window as unknown as { __restore: () => void }).__restore = () => {
-          Storage.prototype.setItem = original
-        }
-        Storage.prototype.setItem = () => {
-          throw new DOMException('quota', 'QuotaExceededError')
-        }
-      })
-    const unblock = () =>
-      page.evaluate(() => (window as unknown as { __restore: () => void }).__restore())
-    await answer(page, 1).fill('Câu hai')
-    await block()
-    await page.locator('[data-action="save-draft"]').click()
-    await expect(page.locator('[data-state="draft-failed"]')).toBeVisible()
-    expect(await rawStore(page, w.owner.accountId)).toBe(raw)
-    await unblock()
-    await page.locator('[data-action="review"]').click()
-    await expect(page).toHaveURL(reviewUrl(w.project.id))
-    const draft = (await stored(page, w.owner.accountId))!.applications[
-      `${w.project.id}:${PROGRAMME}`
-    ]!
-    const complete = await rawStore(page, w.owner.accountId)
-    await block()
-    await page.locator('[data-action="submit"]').click()
-    await expect(page.locator('[data-state="submit-failed"]')).toBeVisible()
-    expect(await rawStore(page, w.owner.accountId)).toBe(complete)
-    await unblock()
-    await page.locator('[data-action="submit"]').click()
-    await expect(screenState(page, 'WF05-S04')).toHaveAttribute(
-      'data-application-state',
-      'SUBMITTED',
-    )
-    const done = (await stored(page, w.owner.accountId))!.applications[
-      `${w.project.id}:${PROGRAMME}`
-    ]!
-    expect(done.programme_specific_answers).toEqual(['Câu một', 'Câu hai'])
-    expect(done.created_at).toBe(draft.created_at)
-
-    // A new clean browser session of the same account holds no application.
+    // A new clean browser session of the same account continues the same DRAFT.
     const fresh = await browser.newContext({ baseURL })
     const other = await fresh.newPage()
     await login(other.request, w.owner.email)
-    await other.goto(detailUrl(w.project.id), { waitUntil: 'networkidle' })
-    await expect(other.locator('[data-action="apply"]')).toHaveCount(1)
-    expect(await other.evaluate(() => Object.keys(sessionStorage).length)).toBe(0)
+    await other.goto(`${formUrl(w.project.id)}?buoc=1`, { waitUntil: 'networkidle' })
+    await expect(answer(other, 'q-problem')).toHaveValue('Câu một')
+    await other.goto(`${formUrl(w.project.id)}?buoc=4`, { waitUntil: 'networkidle' })
+    await answer(other, 'q-support').fill('Câu hai')
+    await other.locator('[data-action="to-review"]').click()
+    await expect(other).toHaveURL(reviewUrl(w.project.id))
+    await other.locator('[data-action="submit"]').click()
+    await expect(other).toHaveURL(submittedUrl(w.project.id))
     await fresh.close()
-    expectNoWrites(before, await tables(), { signIns: true })
+
+    const [row, ...more] = await applicationsOf([w.project.id])
+    expect(more).toEqual([])
+    expect(row).toMatchObject({ status: 'SUBMITTED', type: 'TEAM' })
+    expect(row!.snapshot).toMatchObject({
+      venture: { id: w.project.id, name: 'Dự án UAT' },
+      answers: answersOf('Câu một', 'Câu hai'),
+    })
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(page).toHaveURL(submittedUrl(w.project.id))
+    await expect(page.locator('[data-question="q-support"]')).toContainText('Câu hai')
+    expectNoWrites(before, await tables(), { signIns: true, applications: true })
   })
 })
 
 // ------------------------------------------------------------------- NAV
 
 test.describe('NAV-WF05 navigation crawl', () => {
-  test('every link on every WF05 route and state leads to a built screen; no #, placeholder, dev or future route; back and refresh', async ({
+  test('every link on every WF05 / L5 route and state leads to a built screen; no placeholder, dev or future route; back and refresh', async ({
     page,
   }) => {
     const w = await world()
     await login(page.request, w.owner.email)
-    await page.goto('/demo/projects', { waitUntil: 'networkidle' })
-    await plant(page, w.owner.accountId, [
-      { ventureId: w.startup.id },
-      { ventureId: w.project.id, type: 'TEAM', status: 'SUBMITTED' },
-    ])
+    await draft(page.request, w.startup.id, ['Một', ''])
+    await submit(page.request, await draft(page.request, w.project.id, ['Một', 'Hai']))
     const visits = [
       '/demo/projects',
       detailUrl(w.startup.id),
       detailUrl(w.project.id),
       detailUrl(w.archived.id),
-      appUrl(w.startup.id),
-      appUrl(w.project.id),
-      appUrl(w.archived.id),
+      `${formUrl(w.startup.id)}?buoc=1`,
+      `${formUrl(w.startup.id)}?buoc=3`,
+      `${formUrl(w.startup.id)}?buoc=4`,
       reviewUrl(w.startup.id),
-      reviewUrl(w.project.id),
-      reviewUrl(w.archived.id),
+      submittedUrl(w.project.id),
+      formUrl(w.archived.id),
+      `/programmes/${PROGRAMME}/apply`,
     ]
     const hrefs = new Map<string, string>()
     let visited = 0
@@ -951,8 +1016,13 @@ test.describe('NAV-WF05 navigation crawl', () => {
         for (const href of await page
           .locator('a')
           .evaluateAll((els) => els.map((e) => e.getAttribute('href') ?? ''))) {
-          expect(href, `${label} ${url}`).not.toMatch(/^(#.*|javascript:.*|)$/)
-          expect(href, `${label} ${url}`).not.toMatch(/\/dev\b|\/applications\/[^/]+\/(?!review$)/)
+          expect(href, `${label} ${url}`).not.toMatch(/^(#|javascript:.*|)$/)
+          // An in-page anchor must land on this page.
+          if (href.startsWith('#')) {
+            await expect(page.locator(href), `${label} ${url} ${href}`).toHaveCount(1)
+            continue
+          }
+          expect(href, `${label} ${url}`).not.toMatch(/\/dev\b/)
           if (!hrefs.has(href)) hrefs.set(href, `${label} ${url}`)
         }
       }
@@ -960,14 +1030,7 @@ test.describe('NAV-WF05 navigation crawl', () => {
     await crawl('owner')
     await page.context().clearCookies()
     await login(page.request, w.teammate.email)
-    visits.splice(
-      0,
-      visits.length,
-      '/demo/projects',
-      detailUrl(w.startup.id),
-      appUrl(w.startup.id),
-      reviewUrl(w.startup.id),
-    )
+    visits.splice(0, visits.length, '/demo/projects', detailUrl(w.startup.id))
     await crawl('member')
 
     await page.context().clearCookies()
@@ -979,25 +1042,25 @@ test.describe('NAV-WF05 navigation crawl', () => {
         dead.push(`${href} (${from})`)
     }
     expect(dead).toEqual([])
-    const wf05 = [...hrefs.keys()].filter((h) => h.startsWith('/demo/projects'))
-    for (const h of wf05)
+    const uuid = '[0-9a-f-]{36}'
+    for (const h of [...hrefs.keys()].filter((h) => /^\/demo\/projects|\/applications\//.test(h)))
       expect(h).toMatch(
-        /^\/demo\/projects(\/[0-9a-f-]{36}(\/applications\/d4000000-0000-0000-0000-000000000001(\/review)?)?)?$/,
+        new RegExp(
+          `^(/demo/projects(/${uuid})?|/projects/${uuid}/applications/${PROGRAMME}(/review|/submitted)?(\\?buoc=[1-4])?)$`,
+        ),
       )
 
-    // Clicks forward S01 → S02 → S03 → S04, then back at every step; direct refresh on each.
-    await plant(page, w.owner.accountId, [])
+    // Clicks forward S01 → S02 → form → review, then back at every step; direct refresh on each.
     await settled(page, '/demo/projects')
     await page.locator(`[data-venture="${w.startup.id}"] [data-nav="venture-detail"]`).click()
     await expect(page).toHaveURL(detailUrl(w.startup.id))
-    await page.locator('[data-action="apply"]').click()
-    await expect(page).toHaveURL(appUrl(w.startup.id))
-    await answer(page, 0).fill('Một')
-    await answer(page, 1).fill('Hai')
-    await page.locator('[data-action="review"]').click()
+    await page.locator('[data-nav="application-resume"]').click()
+    await expect(page).toHaveURL(formUrl(w.startup.id))
+    await answer(page, 'q-support').fill('Hai')
+    await page.locator('[data-action="to-review"]').click()
     await expect(page).toHaveURL(reviewUrl(w.startup.id))
     for (const [back, marker] of [
-      [appUrl(w.startup.id), 'WF05-S03'],
+      [formUrl(w.startup.id), 'L5-SUB1'],
       [detailUrl(w.startup.id), 'WF05-S02'],
       ['/demo/projects', 'WF05-S01'],
     ] as const) {
@@ -1038,11 +1101,14 @@ async function textRects(page: Page): Promise<Rect[]> {
 }
 
 test.describe('VIS-WF05 / COPY-WF05 visual and copy completion', () => {
-  test('11 representative states at 1440 / 768 / 390: typography, shell and header band vs approved primitives, no overflow, key action reachable, copy clean', async ({
+  test('6 representative WF05 states at 1440 / 768 / 390: typography, shell and header band vs approved primitives, no overflow, key action reachable, copy clean', async ({
     page,
   }) => {
     const w = await world()
     const empty = await person('Chưa Có Hồ Sơ')
+    await login(page.request, w.owner.email)
+    await draft(page.request, w.startup.id, ['Một', ''])
+    await page.context().clearCookies()
     const shellRef = readPng(
       path.join(REPO_ROOT, 'design-reference/final/WF02/WF02-S01__account-home__1440x900.png'),
     )
@@ -1057,111 +1123,45 @@ test.describe('VIS-WF05 / COPY-WF05 visual and copy completion', () => {
       { x: 1196, y: 16, width: 36, height: 28 },
       { x: 60, y: 118, width: 262, height: 48 },
     ]
-    const long = 'Một câu trả lời dài để kiểm tra việc xuống dòng trên màn hình nhỏ '
-      .repeat(6)
-      .trim()
     type State = { name: string; who: Person; key: string; open: () => Promise<void> }
-    /** Opens `url` with an empty application store (states never inherit one). */
-    const clean = async (url: string) => {
-      await settled(page, url)
-      await plant(page, w.owner.accountId, [])
-      await page.reload({ waitUntil: 'networkidle' })
-      await settled(page, url)
-    }
+    const at = (url: string) => async () => void (await settled(page, url))
+    // The L5 screens are audited against L37–L43 in the L5 spec (TASK 24.4).
     const states: State[] = [
       {
         name: 's01-populated',
         who: w.owner,
         key: '[data-nav="create-project"]',
-        open: () => clean('/demo/projects'),
+        open: at('/demo/projects'),
       },
       {
         name: 's01-empty',
         who: empty,
         key: '[data-state="ventures-empty"]',
-        open: async () => void (await settled(page, '/demo/projects')),
+        open: at('/demo/projects'),
       },
       {
         name: 's02-project',
         who: w.owner,
         key: '[data-action="apply"]',
-        open: () => clean(detailUrl(w.project.id)),
+        open: at(detailUrl(w.project.id)),
       },
       {
-        name: 's02-startup',
+        name: 's02-startup-draft',
         who: w.owner,
-        key: '[data-action="apply"]',
-        open: () => clean(detailUrl(w.startup.id)),
+        key: '[data-nav="application-resume"]',
+        open: at(detailUrl(w.startup.id)),
       },
       {
         name: 's02-archived',
         who: w.owner,
         key: '[data-programme] [data-ineligible]',
-        open: () => clean(detailUrl(w.archived.id)),
+        open: at(detailUrl(w.archived.id)),
       },
       {
-        name: 's03-new',
-        who: w.owner,
-        key: '[data-action="save-draft"]',
-        open: async () => {
-          await plant(page, w.owner.accountId, [])
-          await settled(page, appUrl(w.startup.id))
-        },
-      },
-      {
-        name: 's03-saved',
-        who: w.owner,
-        key: '[data-state="draft-saved"]',
-        open: async () => {
-          await plant(page, w.owner.accountId, [])
-          await settled(page, appUrl(w.startup.id))
-          await answer(page, 0).fill(long)
-          await page.locator('[data-action="save-draft"]').click()
-          await expect(page.locator('[data-state="draft-saved"]')).toBeVisible()
-        },
-      },
-      {
-        name: 's03-validation',
-        who: w.owner,
-        key: '[data-error="answer-1"]',
-        open: async () => {
-          await plant(page, w.owner.accountId, [])
-          await settled(page, appUrl(w.startup.id))
-          await answer(page, 1).fill('x'.repeat(2001))
-          await page.locator('[data-action="save-draft"]').click()
-          await expect(page.locator('[data-error="answer-1"]')).toBeVisible()
-        },
-      },
-      {
-        name: 's04-ready',
-        who: w.owner,
-        key: '[data-action="submit"]',
-        open: async () => {
-          await plant(page, w.owner.accountId, [
-            { ventureId: w.startup.id, answers: [long, 'Hai'] },
-          ])
-          await settled(page, reviewUrl(w.startup.id))
-        },
-      },
-      {
-        name: 's04-incomplete',
-        who: w.owner,
-        key: '[data-publish-state="incomplete"]',
-        open: async () => {
-          await plant(page, w.owner.accountId, [{ ventureId: w.startup.id, answers: [long, ''] }])
-          await settled(page, reviewUrl(w.startup.id))
-        },
-      },
-      {
-        name: 's04-submitted',
-        who: w.owner,
-        key: '[data-publish-state="submitted"]',
-        open: async () => {
-          await plant(page, w.owner.accountId, [
-            { ventureId: w.startup.id, answers: [long, 'Hai'], status: 'SUBMITTED' },
-          ])
-          await settled(page, reviewUrl(w.startup.id))
-        },
+        name: 's02-member',
+        who: w.teammate,
+        key: '[data-programme] [data-ineligible]',
+        open: at(detailUrl(w.startup.id)),
       },
     ]
     const results: SegmentResult[] = []
@@ -1249,7 +1249,7 @@ test.describe('VIS-WF05 / COPY-WF05 visual and copy completion', () => {
         {
           class: 'INTENTIONAL-DEMO',
           reason:
-            'DEC-WF05-G1: MemberShell + WF04 demo frame, card chrome, S05 form and S07 checklist; no WF05 pixel parity claimed',
+            'DEC-WF05-G1: MemberShell + WF04 demo frame and card chrome; no WF05 pixel parity claimed. The application screens are L5 (DEC-L5-D4), audited in l5-startup-journey.spec.ts',
         },
       ],
       segments: results,

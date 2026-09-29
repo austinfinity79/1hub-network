@@ -1385,3 +1385,22 @@ The approved copy: subject "Bạn được mời tham gia {venture} trên 1hub.n
 ## 20.4 HUB declarations
 
 A membership filed from the onboarding declaration carries `declaration: true` in the ops DTOs (§8.3). `PATCH /ops/organizations/{orgId}/memberships/{membershipId}` decides such a membership only with `membership:confirm` held platform-wide (Platform Admin); an organization-scoped holder gets `403 SCOPE_FORBIDDEN` and nothing changes. The member detail's `permissions` follow the same rule. Ordinary join requests are unchanged.
+
+---
+
+# 21. Amendment A4 — server-side application, L5 (2026-09-29)
+
+Source: [DEC-L5](../decisions/DECISION_LOG.md#dec-l5). Additive; supersedes §15 for application submission only (review stays out of P0). Session required; onboarding DONE; the caller must own the venture (relation rule, outside the RBAC matrix). Anyone else, a malformed id or an unknown id gets the same `404`; a member who is not the owner gets `403 SCOPE_FORBIDDEN` on create.
+
+## 21.1 Endpoints
+| Call | Rule |
+|---|---|
+| `GET /me/applications` | the caller's applications: `id`, `status`, `programme {id, name}`, `venture {id, name, type}`, `updated_at`, `submitted_at` |
+| `POST /applications` `{venture_id, programme_id}` | the programme is PUBLISHED with an application form (else `404`); the venture is not ARCHIVED and its applicant type is accepted (else `409 APPLICATION_NOT_ELIGIBLE` with `reason`); an active pair exists → `409 APPLICATION_EXISTS` with `application_id`; `201` with the DRAFT. Idempotent: `application.create` |
+| `GET /applications/{id}` | the application: a DRAFT with the live venture, team and form; a SUBMITTED one from its snapshot only; `missing` lists unanswered required question ids |
+| `PATCH /applications/{id}` `{answers: [{question_id, value}]}` | DRAFT only (`409 APPLICATION_SUBMITTED`); known question ids; `value` ≤ 2000 characters; an empty value clears the answer; `422 APPLICATION_VALIDATION_FAILED` otherwise |
+| `POST /applications/{id}/submit` | no body; eligibility re-checked; every required answer present (else `422 APPLICATION_INCOMPLETE`, each missing id as `required`); SUBMITTED and the snapshot in one transaction; a second submit `409 APPLICATION_SUBMITTED`. Idempotent: `application.submit` |
+
+## 21.2 Rules
+The application references the venture and the programme and stores only its answers; the snapshot (`schema_version` 1: programme, questions, answers, venture, team without e-mails or account ids, `submitted_at`) is written once. Audit: `APPLICATION_DRAFT_CREATED`, `APPLICATION_SUBMITTED` (ids and statuses, never answers). No uploads, application code or e-mail.
+

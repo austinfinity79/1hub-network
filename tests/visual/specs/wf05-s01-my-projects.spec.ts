@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto'
 import path from 'node:path'
 
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
@@ -15,9 +14,10 @@ import { compareSegments, type Rect, type SegmentResult } from '../pixel-qa/segm
 /**
  * WF05-S01 — my Projects / Startups + open programmes (DEC-WF05-G1..G3,
  * DEC-WF05-T00-D1..D3): the canonical WF02 ventures the member owns or is an
- * ACTIVE member of, the PUBLISHED WF04 programmes, states, the MemberShell
- * entry, no S02 link, no application created by viewing, reset, IDOR /
- * spoofing, no writes, responsive and primitives.
+ * ACTIVE member of, the PUBLISHED programmes with their L5 entry (TASK 24.4),
+ * states, the MemberShell entry, no application created by viewing, the
+ * server application status, reset leaving it, IDOR / spoofing, no writes,
+ * responsive and primitives.
  */
 
 const URL_ = '/demo/projects'
@@ -45,6 +45,12 @@ test.afterEach(() => {
 })
 
 test.afterAll(async () => {
+  await query(
+    `DELETE FROM applications WHERE venture_id IN
+       (SELECT p.id FROM projects p JOIN individual_profiles i ON i.id = p.owner_profile_id
+         WHERE i.account_id = ANY($1::uuid[]))`,
+    [accounts],
+  )
   await query(
     `DELETE FROM project_members WHERE project_id IN
        (SELECT p.id FROM projects p JOIN individual_profiles i ON i.id = p.owner_profile_id
@@ -122,15 +128,10 @@ async function fingerprint() {
             ${table('events')} AS events, ${table('role_assignments')} AS roles,
             ${table('individual_profiles')} AS profiles, ${table('audit_events')} AS audit,
             (SELECT count(*) FROM analytics_events)::text AS analytics,
-            to_regclass('public.applications')::text AS applications`,
+            ${table('applications')} AS applications`,
   )
   return row!
 }
-
-const storeKey = (accountId: string) =>
-  `hub.wf05-demo.v1.${createHash('sha256').update(`wf05-demo:${accountId}`).digest('hex').slice(0, 16)}`
-const stored = (page: Page, accountId: string) =>
-  page.evaluate((k) => sessionStorage.getItem(k), storeKey(accountId))
 
 async function open(page: Page) {
   await page.goto(URL_, { waitUntil: 'networkidle' })
@@ -205,7 +206,8 @@ test.describe('WF05-S01 my projects / startups', () => {
     await expect(ventureRow(page, w.startup.id).locator('p').first()).toHaveText(
       'Startup S01 đổi tên',
     )
-    expect(await stored(page, w.owner.accountId)).toBeNull()
+    // Viewing creates no application.
+    expect(await (await page.request.get('/api/v1/me/applications')).json()).toEqual([])
   })
 
   test('4/5/6. ACTIVE member sees the venture as a member; unrelated and pending-invite ventures never appear', async ({
@@ -273,8 +275,13 @@ test.describe('WF05-S01 open programmes', () => {
       '01/09/2026 – 15/12/2026 · Dành cho: Đội, Startup',
     )
     await expect(row.locator('[data-status]')).toHaveText('Đang công khai')
-    // Read only: no programme action; nothing about ops (counts, team, stages).
-    await expect(page.locator('[data-programme] a, [data-programme] button')).toHaveCount(0)
+    // One action only: the L5 entry (TASK 24.4); no programme management, nothing about ops.
+    await expect(page.locator('[data-programme] button')).toHaveCount(0)
+    expect(
+      await page
+        .locator('[data-programme] a')
+        .evaluateAll((els) => els.map((e) => e.getAttribute('href'))),
+    ).toEqual([`/programmes/${PROGRAMME}/apply`])
     const text = await page.locator('[data-section="programmes"]').innerText()
     expect(text).not.toMatch(
       /Người vận hành|Thử thách đổi mới|Bản nháp|Đã nộp|Đang xem xét|Cần bổ sung/,
@@ -384,11 +391,15 @@ test.describe('WF05-S01 states, entry and boundaries', () => {
     await expect(page.locator('[aria-current="page"]')).toHaveCount(1)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(page.locator('[data-venture]')).toHaveCount(1)
-    // WF02 creation and, since S02, the row's detail; nothing else (no S03 route).
+    // WF02 creation, the row's detail and the programme's L5 entry (TASK 24.4); nothing else.
     const links = await page
       .locator('[data-screen="WF05-S01"] a')
       .evaluateAll((els) => els.map((e) => e.getAttribute('href')))
-    expect(links).toEqual(['/projects/new', `/demo/projects/${solo.ventureId}`])
+    expect(links).toEqual([
+      '/projects/new',
+      `/demo/projects/${solo.ventureId}`,
+      `/programmes/${PROGRAMME}/apply`,
+    ])
     await page.locator('[data-nav="venture-detail"]').click()
     await expect(page).toHaveURL(`/demo/projects/${solo.ventureId}`)
     expect(
@@ -401,7 +412,7 @@ test.describe('WF05-S01 states, entry and boundaries', () => {
     ).toBe(404)
   })
 
-  test('19/20. viewing creates no application; a session application shows; reset clears it only', async ({
+  test('19/20. viewing creates no application; a server application shows; reset leaves it (HD-A10)', async ({
     page,
   }) => {
     const w = await world()
@@ -409,44 +420,27 @@ test.describe('WF05-S01 states, entry and boundaries', () => {
     await login(page.request, w.owner.email)
     await open(page)
     await page.reload({ waitUntil: 'networkidle' })
-    expect(await stored(page, w.owner.accountId)).toBeNull()
+    expect(await fingerprint()).toEqual(before)
     await expect(page.locator('[data-venture-applications]')).toHaveCount(0)
-    // A demo application of this session (the T00 store shape) shows as read-only text.
-    const now = new Date().toISOString()
-    await page.evaluate(
-      ([k, v]) => sessionStorage.setItem(k!, v!),
-      [
-        storeKey(w.owner.accountId),
-        JSON.stringify({
-          version: 1,
-          applications: {
-            [`${w.startup.id}:${PROGRAMME}`]: {
-              primary_applicant_type: 'STARTUP',
-              primary_applicant_id: w.startup.id,
-              programme_id: PROGRAMME,
-              status: 'DRAFT',
-              programme_specific_answers: ['', ''],
-              created_at: now,
-              updated_at: now,
-              submitted_at: null,
-            },
-          },
-        }),
-      ],
-    )
+    const created = await page.request.post('/api/v1/applications', {
+      data: { venture_id: w.startup.id, programme_id: PROGRAMME },
+    })
+    expect(created.status()).toBe(201)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(ventureRow(page, w.startup.id).locator('[data-venture-applications]')).toHaveText(
-      'Đơn đăng ký demo: Chương trình ươm tạo (demo) · Nháp',
+      'Đơn đăng ký: Chương trình ươm tạo (demo) · Nháp',
     )
     await expect(ventureRow(page, w.project.id).locator('[data-venture-applications]')).toHaveCount(
       0,
     )
     await page.locator('[data-demo-reset="start"]').click()
     await page.locator('[data-demo-reset="confirm"]').click()
-    await expect(page.locator('[data-venture-applications]')).toHaveCount(0)
-    expect(await stored(page, w.owner.accountId)).toBeNull()
+    // The application lives on the server: the demo reset leaves it.
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(ventureRow(page, w.startup.id).locator('[data-venture-applications]')).toHaveCount(
+      1,
+    )
     await expect(page.locator('[data-venture]')).toHaveCount(3)
-    expect(await fingerprint()).toEqual(before)
   })
 })
 

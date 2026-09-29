@@ -95,7 +95,7 @@ async function snapshot() {
   const [row] = await query<Record<string, string | null>>(
     `SELECT (SELECT count(*) FROM programmes)::text AS programmes,
             (SELECT max(updated_at)::text FROM programmes) AS programmes_at,
-            to_regclass('public.applications')::text AS applications_table,
+            (SELECT count(*) FROM applications)::text AS applications,
             (SELECT count(*) FROM projects)::text AS projects,
             (SELECT max(updated_at)::text FROM projects) AS projects_at,
             (SELECT max(updated_at)::text FROM individual_profiles) AS profiles_at,
@@ -168,7 +168,6 @@ test.describe('WF04-S05 registration configuration', () => {
     page,
   }) => {
     const before = await snapshot()
-    expect(before!.applications_table).toBeNull()
     await login(page.request, 'leader@example.test')
     await open(page, PROGRAMME)
     await page.locator('[data-action="edit-registration"]').click()

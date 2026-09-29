@@ -1,6 +1,4 @@
-import { createHash } from 'node:crypto'
-
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
 import { PROJECT_DEMO_ENTRY } from '../../../src/lib/member/nav'
@@ -8,15 +6,14 @@ import { seedVenture } from '../../../src/lib/venture/testing'
 
 /**
  * WF05-T00 — Founder / Project / Startup demo foundation (DEC-WF05-G1..G5,
- * DEC-WF05-T00-D1..D3): the read-only demo API under the WF02 relation rule,
- * the hidden MemberShell entry, and — through the dev-only harness — the
- * browser-session application store (refresh, a new session, reset, one per
- * pair, DRAFT → SUBMITTED only, owner only, archived refused, no snapshot, no
- * PII). No S01–S04 screen exists yet.
+ * DEC-WF05-T00-D1..D3): the read-only demo API under the WF02 relation rule
+ * and the MemberShell entry. TASK 24.4 (DEC-L5) moved the application from the
+ * browser-session store to the server: the store, its dev harness and their
+ * cases are gone; the application rules are covered by
+ * `src/lib/application/application.db-test.ts` and the L5 spec.
  */
 
 const API = '/api/v1/demo/projects'
-const HARNESS = '/dev/project-demo'
 const PROGRAMME = 'd4000000-0000-0000-0000-000000000001'
 const SEED_VENTURE = '50000000-0000-0000-0000-000000000001' // owned by member@
 const RANDOM = '7c9e6679-7425-40de-944b-e07fc1f90ae7'
@@ -105,30 +102,10 @@ async function fingerprint() {
             ${table('community_memberships')} AS memberships,
             ${table('leadership_records')} AS leadership, ${table('individual_profiles')} AS profiles,
             ${table('audit_events')} AS audit, (SELECT count(*) FROM analytics_events)::text AS analytics,
-            ${table('schema_migrations')} AS ledger, to_regclass('public.applications')::text AS applications`,
+            ${table('schema_migrations')} AS ledger, ${table('applications')} AS applications`,
   )
   return row!
 }
-
-const storeKey = (accountId: string) =>
-  `hub.wf05-demo.v1.${createHash('sha256').update(`wf05-demo:${accountId}`).digest('hex').slice(0, 16)}`
-const wf04Key = (accountId: string) =>
-  `hub.wf04-demo.v1.${createHash('sha256').update(`wf04-demo:${accountId}`).digest('hex').slice(0, 16)}`
-
-async function harness(page: Page, url = HARNESS) {
-  await page.goto(url, { waitUntil: 'networkidle' })
-  await expect(page.locator('[data-harness-ready]')).toHaveAttribute('data-harness-ready', 'true')
-}
-
-const cell = (page: Page, ventureId: string) =>
-  page.locator(`[data-harness-venture="${ventureId}"] [data-harness-programme="${PROGRAMME}"]`)
-
-async function act(page: Page, ventureId: string, action: string) {
-  await cell(page, ventureId).locator(`[data-harness-action="${action}"]`).click()
-}
-
-const stored = (page: Page, accountId: string) =>
-  page.evaluate((k) => sessionStorage.getItem(k), storeKey(accountId))
 
 test.describe('WF05-T00 demo read API (security matrix)', () => {
   test('1-15: guest, onboarding, member, owner, team, unrelated, invitee, admin, leader, foreign, malformed, random, spoofs; 405; 0 writes', async ({
@@ -226,12 +203,11 @@ test.describe('WF05-T00 demo read API (security matrix)', () => {
     }
 
     expect(await fingerprint()).toEqual(before)
-    expect(before.applications).toBeNull()
   })
 })
 
 test.describe('WF05-T00 route and entry contract', () => {
-  test('the MemberShell entry contract (shown since WF05-S01); the application and review routes are screens (S03 / S04); the harness is guarded', async ({
+  test('the MemberShell entry contract (shown since WF05-S01); the S03 / S04 paths redirect to the L5 member routes; the harness is gone', async ({
     page,
   }) => {
     expect(PROJECT_DEMO_ENTRY).toEqual({
@@ -241,33 +217,31 @@ test.describe('WF05-T00 route and entry contract', () => {
       href: '/demo/projects',
       visible: true,
     })
-    // Guest → /auth on the harness; onboarding incomplete → its resolver step.
-    await page.goto(HARNESS)
+    const oldForm = `/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}`
+    // Guest → /auth; onboarding incomplete → its resolver step.
+    await page.goto(oldForm)
     await expect(page).toHaveURL('/auth')
     await login(page.request, 'newcomer@example.test')
-    await page.goto(HARNESS)
+    await page.goto(oldForm)
     await expect(page).toHaveURL(/\/onboarding(\/|$)/)
 
     await page.context().clearCookies()
     await login(page.request, 'member@example.test')
-    // WF05-S01 / S02 made /demo/projects and the owner's venture detail real screens;
-    // S03 / S04 made the application and its review real screens.
     expect((await page.request.get('/demo/projects')).status()).toBe(200)
     expect((await page.request.get(`/demo/projects/${SEED_VENTURE}`)).status()).toBe(200)
-    // WF05-S03 / S04: the owner's application draft and its review are screens; nothing else.
-    expect(
-      (await page.request.get(`/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}`)).status(),
-    ).toBe(200)
-    expect(
-      (
-        await page.request.get(`/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}/review`)
-      ).status(),
-    ).toBe(200)
-    expect(
-      (
-        await page.request.get(`/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}/unknown`)
-      ).status(),
-    ).toBe(404)
+    // TASK 24.4 (HD-A10): the S03 / S04 paths redirect to the member routes, which answer.
+    for (const [from, to] of [
+      [oldForm, `/projects/${SEED_VENTURE}/applications/${PROGRAMME}`],
+      [`${oldForm}/review`, `/projects/${SEED_VENTURE}/applications/${PROGRAMME}/review`],
+    ] as const) {
+      const hop = await page.request.get(from, { maxRedirects: 0 })
+      expect(hop.status(), from).toBe(307)
+      expect(hop.headers().location, from).toBe(to)
+      expect((await page.request.get(from)).status(), from).toBe(200)
+    }
+    expect((await page.request.get(`${oldForm}/unknown`)).status()).toBe(404)
+    // The dev harness of the browser store is removed.
+    expect((await page.request.get('/dev/project-demo')).status()).toBe(404)
     // DEC-L2R-D1: /me is FP1-OWN (no sidebar); /projects carries the entry instead.
     for (const url of ['/projects', '/me/roles', '/me/privacy', '/me/settings']) {
       await page.goto(url, { waitUntil: 'networkidle' })
@@ -277,153 +251,5 @@ test.describe('WF05-T00 route and entry contract', () => {
         '/demo/projects',
       )
     }
-    // The resource guard: another member's venture is the same 404 on the harness.
-    await login(page.request, 'leader@example.test')
-    expect((await page.request.get(`${HARNESS}?venture=${SEED_VENTURE}`)).status()).toBe(404)
-    expect((await page.request.get(`${HARNESS}?venture=abc`)).status()).toBe(404)
-  })
-})
-
-test.describe('WF05-T00 application store (browser session)', () => {
-  test('store 1-10: DRAFT, unique pair, mapping, archived, owner only, answers, SUBMITTED final, refresh, new session, reset, no snapshot / PII', async ({
-    page,
-    browser,
-  }) => {
-    const w = await world()
-    const before = await fingerprint()
-    const [{ now: startedAt } = { now: new Date() }] = await query<{ now: Date }>(
-      'SELECT now() AS now',
-    )
-    await login(page.request, w.owner.email)
-    await harness(page)
-    await expect(page.locator('[data-demo-notice]')).toContainText('Dữ liệu demo · Internal Alpha')
-    await expect(page.locator('[data-demo-notice]')).toContainText(
-      'Dự án và startup là hồ sơ thật của bạn.',
-    )
-    // 4 / 5 / 6: derived types; archived is not eligible.
-    await expect(page.locator(`[data-harness-venture="${w.startup.id}"]`)).toHaveAttribute(
-      'data-applicant-type',
-      'STARTUP',
-    )
-    await expect(page.locator(`[data-harness-venture="${w.project.id}"]`)).toHaveAttribute(
-      'data-applicant-type',
-      'TEAM',
-    )
-    await expect(cell(page, w.archived.id)).toHaveAttribute('data-reason', 'ARCHIVED')
-    await act(page, w.archived.id, 'start')
-    await expect(page.locator('[data-harness-last]')).toHaveText('ARCHIVED')
-    expect(await stored(page, w.owner.accountId)).toBeNull()
-
-    // 1. Start → DRAFT; 2 / 3. the same pair cannot start again.
-    await act(page, w.startup.id, 'start')
-    await expect(cell(page, w.startup.id)).toHaveAttribute('data-application', 'DRAFT')
-    await act(page, w.startup.id, 'start')
-    await expect(page.locator('[data-harness-last]')).toHaveText('EXISTS')
-    await act(page, w.project.id, 'start')
-    let state = JSON.parse((await stored(page, w.owner.accountId))!)
-    expect(Object.keys(state.applications)).toEqual([
-      `${w.startup.id}:${PROGRAMME}`,
-      `${w.project.id}:${PROGRAMME}`,
-    ])
-    expect(state.applications[`${w.project.id}:${PROGRAMME}`].primary_applicant_type).toBe('TEAM')
-
-    // Answers: incomplete cannot submit; complete submits once; SUBMITTED is final.
-    await act(page, w.startup.id, 'answer-partial')
-    await act(page, w.startup.id, 'submit')
-    await expect(page.locator('[data-harness-last]')).toHaveText('INCOMPLETE')
-    await act(page, w.startup.id, 'answer')
-    await act(page, w.startup.id, 'submit')
-    await expect(cell(page, w.startup.id)).toHaveAttribute('data-application', 'SUBMITTED')
-    for (const action of ['submit', 'answer', 'start']) {
-      await act(page, w.startup.id, action)
-      await expect(page.locator('[data-harness-last]')).toHaveText(
-        action === 'start' ? 'EXISTS' : 'SUBMITTED',
-      )
-    }
-
-    // 9 / 10. The stored value holds ids, type, status, answers and times only.
-    const raw = (await stored(page, w.owner.accountId))!
-    expect(raw).not.toMatch(/Startup T00|Dự án T00|WF05 Founder|@|token|cookie|display_name/)
-    expect(storeKey(w.owner.accountId)).not.toContain(w.owner.email)
-
-    // 8. Refresh keeps it; a new tab / browser session starts empty.
-    await page.reload({ waitUntil: 'networkidle' })
-    await expect(cell(page, w.startup.id)).toHaveAttribute('data-application', 'SUBMITTED')
-    const other = await browser.newContext({ baseURL: new URL(page.url()).origin })
-    const fresh = await other.newPage()
-    await login(fresh.request, w.owner.email)
-    await harness(fresh)
-    await expect(cell(fresh, w.startup.id)).toHaveAttribute('data-application', 'NONE')
-    expect(await stored(fresh, w.owner.accountId)).toBeNull()
-    await other.close()
-
-    // A canonical rename (WF02) shows through; the application is untouched (a reference).
-    expect(
-      (
-        await page.request.patch(`/api/v1/ventures/${w.startup.id}`, {
-          data: { name: 'Startup T00 mới' },
-        })
-      ).status(),
-    ).toBe(200)
-    await page.reload({ waitUntil: 'networkidle' })
-    await expect(page.locator(`[data-harness-venture="${w.startup.id}"] h2`)).toHaveText(
-      'Startup T00 mới',
-    )
-    expect(await stored(page, w.owner.accountId)).toBe(raw)
-
-    // 7. Reset clears this store only: the WF04 demo key and the sign-in stay.
-    await page.evaluate(
-      ([k]) => sessionStorage.setItem(k!, '{"version":1,"programmes":{},"created":[]}'),
-      [wf04Key(w.owner.accountId)],
-    )
-    await page.locator('[data-demo-reset="start"]').click()
-    await page.locator('[data-demo-reset="confirm"]').click()
-    await expect(page.locator('[data-demo-notice]')).toContainText('Đã đặt lại dữ liệu demo.')
-    await expect(cell(page, w.startup.id)).toHaveAttribute('data-application', 'NONE')
-    expect(await stored(page, w.owner.accountId)).toBeNull()
-    expect(
-      await page.evaluate((k) => sessionStorage.getItem(k), wf04Key(w.owner.accountId)),
-    ).not.toBeNull()
-    expect((await (await page.request.get('/api/v1/session')).json()).authenticated).toBe(true)
-
-    // Canonical data: only the WF02 rename changed projects and, since DEC-L2R-D9,
-    // wrote its one VENTURE_UPDATED event; nothing else was written.
-    state = await fingerprint()
-    expect({ ...state, projects: null, audit: null }).toEqual({
-      ...before,
-      projects: null,
-      audit: null,
-    })
-    const written = await query<{ action: string; resource_id: string }>(
-      `SELECT action, resource_id::text FROM audit_events WHERE created_at >= $1 ORDER BY created_at`,
-      [startedAt],
-    )
-    expect(written).toEqual([{ action: 'VENTURE_UPDATED', resource_id: w.startup.id }])
-  })
-
-  test('an ACTIVE team member reads but cannot start; another actor never reads this store', async ({
-    page,
-  }) => {
-    const w = await world()
-    await login(page.request, w.owner.email)
-    await harness(page)
-    await act(page, w.startup.id, 'start')
-    await expect(cell(page, w.startup.id)).toHaveAttribute('data-application', 'DRAFT')
-
-    await page.context().clearCookies()
-    await login(page.request, w.teammate.email)
-    await harness(page)
-    await expect(page.locator(`[data-harness-venture="${w.startup.id}"]`)).toHaveAttribute(
-      'data-relation',
-      'MEMBER',
-    )
-    await expect(cell(page, w.startup.id)).toHaveAttribute('data-reason', 'NOT_OWNER')
-    // The owner's application (same tab) is under the owner's key: not visible to the member.
-    await expect(cell(page, w.startup.id)).toHaveAttribute('data-application', 'NONE')
-    await act(page, w.startup.id, 'start')
-    await expect(page.locator('[data-harness-last]')).toHaveText('NOT_OWNER')
-    expect(await stored(page, w.teammate.accountId)).toBeNull()
-    await expect(page.locator(`[data-harness-venture="${w.project.id}"]`)).toHaveCount(0)
-    expect((await page.request.get(`${HARNESS}?venture=${w.project.id}`)).status()).toBe(404)
   })
 })

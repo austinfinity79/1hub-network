@@ -38,6 +38,9 @@ export type AuditAction =
   | 'EVENT_UPDATED'
   | 'EVENT_PUBLISHED'
   | 'EVENT_CANCELLED'
+  // L5 application (DEC-L5-D3): ids and statuses only, never answers.
+  | 'APPLICATION_DRAFT_CREATED'
+  | 'APPLICATION_SUBMITTED'
 
 export async function writeAudit(
   exec: Executor,

@@ -10,6 +10,14 @@
   justify-content: space-between;
 }
 
+/* TASK 24.4: the programme status and its L5 entry, side by side. */
+.rowActions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+}
+
 /* WF05-S02: the venture name links to its detail; the whole row is the hit area. */
 .rowLink {
   color: inherit;

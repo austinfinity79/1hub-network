@@ -77,6 +77,16 @@ export const DECISION_ERROR_CODES = [
   'INVITATION_EMAIL_DELIVERY_FAILED',
   // DEC-L2R-D13: 429, too many invitation e-mails for this address or inviter in 24 hours.
   'INVITATION_RATE_LIMITED',
+  // DEC-L5-D3: 422, an application request body or answer is invalid.
+  'APPLICATION_VALIDATION_FAILED',
+  // DEC-L5-D3: 409, the venture cannot apply (archived, type not accepted, programme closed).
+  'APPLICATION_NOT_ELIGIBLE',
+  // DEC-L5-D3: 409, the venture already has an active application to this programme.
+  'APPLICATION_EXISTS',
+  // DEC-L5-D3: 409, a submitted application is final.
+  'APPLICATION_SUBMITTED',
+  // DEC-L5-D3: 422, a required question is unanswered at submit.
+  'APPLICATION_INCOMPLETE',
 ] as const
 
 export type DecisionErrorCode = (typeof DECISION_ERROR_CODES)[number]

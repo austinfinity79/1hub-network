@@ -147,6 +147,7 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '011_p0_venture_lifecycle.sql',
       // TASK 22-L1-L2-PO-DECISION-FREEZE (DEC-PDF-D1 / D5 / D6B): visibility, stages, declarations.
       '012_p0_alpha_decision_freeze.sql',
+      '013_p0_applications.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -317,6 +318,8 @@ describe('M0-T07 seed fixture quality', () => {
       // WF02-S07 P13: a runtime request store; a seeded request would be a false one.
       'account_deletion_requests',
       'analytics_events',
+      // Migration 013 (DEC-L5): a founder creates an application at runtime.
+      'applications',
       'audit_events',
       'auth_magic_link_requests',
       'feedback_submissions',

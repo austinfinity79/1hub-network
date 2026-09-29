@@ -105,7 +105,7 @@ async function snapshot() {
   const [row] = await query<Record<string, string | null>>(
     `SELECT ${table('programmes')} AS programmes,
             ${table('events')} AS events,
-            to_regclass('public.applications')::text AS applications_table,
+            (SELECT count(*) FROM applications)::text AS applications,
             ${table('role_assignments')} AS roles,
             ${table('community_memberships')} AS memberships,
             ${table('leadership_records')} AS leadership,
@@ -735,7 +735,6 @@ test.describe('WF04-S08 data safety', () => {
     page,
   }) => {
     const before = await snapshot()
-    expect(before!.applications_table).toBeNull()
     await login(page.request, 'leader@example.test')
     await open(page, PROGRAMME)
     await open(page, CHALLENGE)

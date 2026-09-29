@@ -1,33 +1,34 @@
 # Claude Task Report
 
 ## Task
-TASK 24 — L2 DELTA + L3 → L6 SEQUENTIAL REALIGNMENT, step 24.3 (L4 challenge operations). Full report: [reports/TASK-24.3_l4-challenge-closure.md](reports/TASK-24.3_l4-challenge-closure.md); earlier: [24.1](reports/TASK-24.1_l2-library-delta.md), [24.2](reports/TASK-24.2_l3-clb-closure.md).
+TASK 24 — L2 DELTA + L3 → L6 SEQUENTIAL REALIGNMENT, step 24.4 (L5 Startup Journey). Full report: [reports/TASK-24.4_l5-startup-closure.md](reports/TASK-24.4_l5-startup-closure.md); earlier: [24.1](reports/TASK-24.1_l2-library-delta.md), [24.2](reports/TASK-24.2_l3-clb-closure.md), [24.3](reports/TASK-24.3_l4-challenge-closure.md).
 
 ## Verdict
-**24.3 GREEN (no in-scope delta) — STOP CHECKPOINT.** 24.4 (L5) not started.
+**24.4 GREEN — STOP CHECKPOINT.** 24.5 (L6) not started.
 
 ## Scope implemented
-- L4 board of 29/09 audited: nine public / participant screens, no operator frame, all FUTURE (DEC-L4-D1); the WF04 operator demo re-verified unchanged.
+- Server-side programme application (DEC-L5-D1…D6): SUB0 quick team, SUB1 form (programme questions on the drawn steps), SUB2 review, SUB3 submitted; DRAFT → SUBMITTED, owner only, idempotent, final once submitted.
+- WF05 S01 / S02 read the server applications; the session store, S03 / S04 and the harness are replaced; old paths redirect.
 
 ## Files changed
-- Docs only: L4 inventory, closure report, DEC-L4-D1, status files.
+- Migration 013, seed, `src/lib/application`, application API, L5 screens, WF05 list / detail / redirects, SHARED error codes / audit actions / idempotency ops / 05 §21 A4, specs, L5 baselines, docs.
 
 ## Migrations / data
-None.
+`013_p0_applications.sql` (additive: two enums, `programme_application_forms`, `applications`); seed adds the PUBLISHED demo programme and its form.
 
 ## Tests
-WF04 unit 65 / 65, DB 9 / 9, e2e 115 / 115; smoke L1 / L2 UAT 19 / 19, L3 UAT + homepage + shell 27 / 27.
+Unit 252 / 252, DB 462 / 462; L5 13 / 13; WF05 38 / 38; UAT L1 / L2 19 / 19; smoke L1–L4 + release (WF01–WF04 UAT, Library, WF04 T00 / S05 / S07 / S08, landing, shell, REL data / matrix / nav / responsive) 184 / 184.
 
 ## Visual QA
-Not applicable (no approved L4 frame; WF04 demo claims no pixel parity).
+L37, L38, L40, L41, L42, L43 at 1440×900 DPR1: every segment under the thresholds (worst 1.35 % outside, 0.92 % beyond ±2 px); responsive 1440 / 1024 / 768 / 390 PASS.
 
 ## Deviations / blockers
-- Open PO decisions: 24.1 H1–H5; L3-H1, L3-H2; L4-H1 (L28–L36), L4-H2 (a drawn operator-side L4).
-- Blocking gaps: 0.
+- Intentional: programme questions, not the Problem schema; no uploads, commitments, completion %, code, e-mail, timeline (HD-A8); SUB0 asks type (both accepted) and stage (HD-A11, DEC-L5-D5).
+- Blockers: 0.
 
 ## Git
-- Branch: `main`; start HEAD `075cf985dd92e7f7f577d90c7958dd28e464fac1`; no concurrent change
-- Implementation commit: `feat(wf04): align challenge operations with latest workflow`
+- Branch: `main`; start HEAD `88a241a35b380e14c256e747478d7d40c396cae4`; no concurrent change
+- Implementation commit: `feat(wf05): align startup journey with latest workflow`
 - Report/final commit: the same commit
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** (task says do not push)
@@ -35,4 +36,4 @@ Not applicable (no approved L4 frame; WF04 demo claims no pixel parity).
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-24.4 L5 Startup Journey, after the checkpoint.
+24.5 L6, after the checkpoint.

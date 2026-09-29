@@ -10,17 +10,17 @@ import pill from '@/components/programme-demo/status-pill.module.css'
 import { APPLICANT_LABEL, APPLICATION_STATUS_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
 import { formatDemoDateRange } from '@/lib/programme-demo/format'
 import type { ApplicantType } from '@/lib/programme-demo/types'
-import { applicationOf } from '@/lib/project-demo/application-store'
 import {
   relationLabel,
   S02_COPY as COPY,
   VENTURE_STATUS_LABEL,
   VENTURE_TYPE_LABEL,
 } from '@/lib/project-demo/copy'
+import { applicationRoutes } from '@/lib/application/routes'
+import type { ApplicationSummaryDTO } from '@/lib/application/types'
 import { projectDemoRoutes } from '@/lib/project-demo/routes'
 import type { DemoVentureDetailDTO } from '@/lib/project-demo/types'
 
-import { useProjectDemo } from './demo-store'
 import styles from './project-list.module.css'
 
 /**
@@ -30,15 +30,16 @@ import styles from './project-list.module.css'
  * the canonical WF02 venture (owner or ACTIVE member), its team (owner +
  * ACTIVE members), and the PUBLISHED programmes with this actor's eligibility.
  * Read only: editing stays on WF02 ("Sửa hồ sơ", "Xem đội"); the eligible owner
- * opens the application draft (S03) with "Đăng ký", or resumes a DRAFT with
- * "Tiếp tục"; the session's demo application status shows when there is one.
+ * opens the L5 application form with "Đăng ký", resumes a DRAFT with "Tiếp
+ * tục" or views a SUBMITTED one; the status is the server application's
+ * (`GET /api/v1/me/applications`, TASK 24.4 / DEC-L5-D4).
  */
 
 type Load =
   | { kind: 'loading' }
   | { kind: 'failed' }
   | { kind: 'missing' }
-  | { kind: 'ready'; data: DemoVentureDetailDTO }
+  | { kind: 'ready'; data: DemoVentureDetailDTO; applications: ApplicationSummaryDTO[] }
 
 export function ProjectDemoDetail({ id }: { id: string }) {
   const [load, setLoad] = useState<Load>({ kind: 'loading' })
@@ -46,12 +47,17 @@ export function ProjectDemoDetail({ id }: { id: string }) {
   const fetchDetail = useCallback(async () => {
     setLoad({ kind: 'loading' })
     try {
-      const response = await fetch(`/api/v1/demo/projects/${encodeURIComponent(id)}`, {
-        cache: 'no-store',
-      })
+      const [response, mine] = await Promise.all([
+        fetch(`/api/v1/demo/projects/${encodeURIComponent(id)}`, { cache: 'no-store' }),
+        fetch('/api/v1/me/applications', { cache: 'no-store' }),
+      ])
       if (response.status === 404) return setLoad({ kind: 'missing' })
-      if (!response.ok) throw new Error(String(response.status))
-      setLoad({ kind: 'ready', data: (await response.json()) as DemoVentureDetailDTO })
+      if (!response.ok || !mine.ok) throw new Error(String(response.status))
+      setLoad({
+        kind: 'ready',
+        data: (await response.json()) as DemoVentureDetailDTO,
+        applications: (await mine.json()) as ApplicationSummaryDTO[],
+      })
     } catch {
       setLoad({ kind: 'failed' })
     }
@@ -210,7 +216,16 @@ export function ProjectDemoDetail({ id }: { id: string }) {
           ) : (
             <ul className={cards.list}>
               {programmes.map((p) => (
-                <ParticipationRow key={p.id} ventureId={venture.id} programme={p} />
+                <ParticipationRow
+                  key={p.id}
+                  ventureId={venture.id}
+                  programme={p}
+                  application={
+                    load.applications.find(
+                      (a) => a.venture.id === venture.id && a.programme.id === p.id,
+                    ) ?? null
+                  }
+                />
               ))}
             </ul>
           )}
@@ -223,12 +238,12 @@ export function ProjectDemoDetail({ id }: { id: string }) {
 function ParticipationRow({
   ventureId,
   programme,
+  application,
 }: {
   ventureId: string
   programme: DemoVentureDetailDTO['programmes'][number]
+  application: ApplicationSummaryDTO | null
 }) {
-  const { state, ready } = useProjectDemo()
-  const application = ready ? applicationOf(state, ventureId, programme.id) : null
   const { eligibility } = programme
   return (
     <li
@@ -261,7 +276,7 @@ function ParticipationRow({
           </span>
           {application.status === 'DRAFT' && eligibility.eligible ? (
             <Link
-              href={projectDemoRoutes.application(ventureId, programme.id)}
+              href={applicationRoutes.form(ventureId, programme.id)}
               className={`weight-medium ${styles.textAction}`}
               data-nav="application-resume"
             >
@@ -269,7 +284,7 @@ function ParticipationRow({
             </Link>
           ) : application.status === 'SUBMITTED' ? (
             <Link
-              href={projectDemoRoutes.review(ventureId, programme.id)}
+              href={applicationRoutes.submitted(ventureId, programme.id)}
               className={`weight-medium ${styles.textAction}`}
               data-nav="application-view"
             >
@@ -278,9 +293,9 @@ function ParticipationRow({
           ) : null}
         </div>
       ) : eligibility.eligible ? (
-        // WF05-S03: the eligible owner opens the application draft (nothing is stored yet).
+        // TASK 24.4: the eligible owner opens the L5 form; the draft is created on the first save.
         <Link
-          href={projectDemoRoutes.application(ventureId, programme.id)}
+          href={applicationRoutes.form(ventureId, programme.id)}
           className={`weight-medium ${buttons.secondary}`}
           data-action="apply"
         >

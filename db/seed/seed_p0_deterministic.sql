@@ -268,4 +268,26 @@ ON CONFLICT (id) DO UPDATE SET
   ends_at = EXCLUDED.ends_at, location_text = EXCLUDED.location_text,
   updated_at = EXCLUDED.updated_at;
 
+
+-- ------------------------------------------------- L5 applications (DEC-L5)
+
+-- The approved PUBLISHED WF04 programme as a read-only server row, with its
+-- registration (HD-A12). Same id, name and dates as the WF04 demo fixture; the
+-- operator demo keeps reading its own fixture and never writes here.
+INSERT INTO programmes(id, organization_id, programme_type, slug, name, summary, status, starts_at, ends_at, metadata, created_at, updated_at) VALUES
+  ('d4000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000101', 'PROGRAMME', 'demo-chuong-trinh-uom-tao', 'Chương trình ươm tạo (demo)', 'Chương trình mẫu cho Internal Alpha: đồng hành cùng các đội dự án qua ba giai đoạn.', 'PUBLISHED', '2026-09-01T02:00:00Z', '2026-12-15T10:00:00Z', '{}', '2026-09-01T02:00:00Z', '2026-09-01T02:00:00Z')
+ON CONFLICT (id) DO UPDATE SET
+  programme_type = EXCLUDED.programme_type, slug = EXCLUDED.slug, name = EXCLUDED.name,
+  summary = EXCLUDED.summary, status = EXCLUDED.status, starts_at = EXCLUDED.starts_at,
+  ends_at = EXCLUDED.ends_at, updated_at = EXCLUDED.updated_at;
+
+INSERT INTO programme_application_forms(programme_id, applicant_types, questions, version, updated_at) VALUES
+  ('d4000000-0000-0000-0000-000000000001', ARRAY['TEAM','STARTUP']::applicant_type[],
+   '[{"id":"q-problem","prompt":"Dự án của bạn giải quyết vấn đề gì?","required":true,"step":1},
+     {"id":"q-support","prompt":"Bạn cần chương trình hỗ trợ điều gì?","required":true,"step":4}]'::jsonb,
+   1, '2026-09-01T02:00:00Z')
+ON CONFLICT (programme_id) DO UPDATE SET
+  applicant_types = EXCLUDED.applicant_types, questions = EXCLUDED.questions,
+  version = EXCLUDED.version, updated_at = EXCLUDED.updated_at;
+
 COMMIT;

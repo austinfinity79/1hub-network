@@ -3,18 +3,14 @@ import type { VentureType } from '@/lib/venture/venture'
 /**
  * WF05-T00 — DTO and state shapes of the Founder / Project / Startup demo
  * (DEC-WF05-G1..G5). Ventures are the canonical WF02 records, read through
- * WF02 services; programmes are the PUBLISHED WF04 fixtures; the application is
- * browser-session state in the SOT §12 shape (architecture 04 D4: future
- * production field names).
+ * WF02 services; programmes are the PUBLISHED server programmes with an
+ * application form. The application itself is server-side since TASK 24.4
+ * (`@/lib/application`, DEC-L5).
  */
 
 /** DEC-WF05-G4: the applicant types a venture can apply as (INDIVIDUAL is FUTURE). */
 export const WF05_APPLICANT_TYPES = ['TEAM', 'STARTUP'] as const
 export type Wf05ApplicantType = (typeof WF05_APPLICANT_TYPES)[number]
-
-/** DEC-WF05-G5 (2): the only demo lifecycle. */
-export const DEMO_APPLICATION_STATUSES = ['DRAFT', 'SUBMITTED'] as const
-export type DemoApplicationStatus = (typeof DEMO_APPLICATION_STATUSES)[number]
 
 export type VentureRelation = 'OWNER' | 'MEMBER'
 
@@ -93,20 +89,4 @@ export type DemoVentureDetailDTO = {
 export type DemoVenturesDTO = {
   ventures: DemoVentureSummaryDTO[]
   programmes: OpenProgrammeDTO[]
-}
-
-/**
- * One demo application (SOT §12 names). `primary_applicant_id` is the venture
- * id — a reference, never a copy of venture data. Answers follow the order of
- * the programme's questions.
- */
-export type DemoApplication = {
-  primary_applicant_type: Wf05ApplicantType
-  primary_applicant_id: string
-  programme_id: string
-  status: DemoApplicationStatus
-  programme_specific_answers: string[]
-  created_at: string
-  updated_at: string
-  submitted_at: string | null
 }

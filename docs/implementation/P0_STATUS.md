@@ -111,6 +111,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 24 PO FREEZE (29/09)** ([DEC-2909](../decisions/DECISION_LOG.md#dec-2909)): L2-H1…H5, L3-H1…H2, L4-H1…H2 CLOSED. Implemented: startup stages on the Alpha vocabulary in the Library (L2-H2); the rest confirm the current state.
 
+**TASK 24.4 — L5 STARTUP JOURNEY: GREEN (local, not pushed, not deployed)** ([report](reports/TASK-24.4_l5-startup-closure.md), [inventory](task-24/l5-startup-inventory.md), [contract](task-24/l5-startup-contract.md), [DEC-L5-D1…D6](../decisions/DECISION_LOG.md#dec-l5-d1)). Programme applications on the server (migration 013): SUB0 quick team → form → review → submitted, owner only, SUBMITTED final; L37–L43 pixel-audited; the WF05 session application and its S03 / S04 screens replaced, old paths redirect. STOP checkpoint before 24.5.
+
 ## Completed (committed)
 
 | Task | Scope |

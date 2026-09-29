@@ -1,26 +1,18 @@
-import { notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 
-import { ProjectDemoApplication } from '@/components/project-demo/project-application'
-import { requireDemoVentureRoute } from '@/lib/project-demo/guard'
+import { applicationRoutes } from '@/lib/application/routes'
 
 /**
- * WF05-S03 — /demo/projects/:id/applications/:programmeId: the demo
- * application draft of one venture for one PUBLISHED programme
- * (DEC-WF05-G3..G5). The server guard applies the WF02 relation rule to the
- * venture (else 404); a programme that is not PUBLISHED, unknown, random or
- * malformed is the same 404. Whether this actor may edit is decided by the
- * eligibility rules (owner, not archived, type taken); the page then reads the
- * demo API itself. Opening the page stores nothing.
+ * WF05-S03 path, superseded by TASK 24.4 (HD-A10, DEC-L5-D4): the application
+ * lives on the server and its form on the member route.
  */
 export const dynamic = 'force-dynamic'
 
-export default async function ProjectDemoApplicationPage({
+export default async function Page({
   params,
 }: {
   params: Promise<{ id: string; programmeId: string }>
 }) {
   const { id, programmeId } = await params
-  const { detail } = await requireDemoVentureRoute(id)
-  if (!detail.programmes.some((p) => p.id === programmeId)) notFound()
-  return <ProjectDemoApplication ventureId={id} programmeId={programmeId} />
+  redirect(applicationRoutes.form(id, programmeId))
 }

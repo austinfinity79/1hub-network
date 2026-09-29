@@ -242,7 +242,8 @@ test.describe('REL-SEC cross-workflow actor matrix', () => {
       'wf04-detail': `/demo/programmes/${PROGRAMME}`,
       'wf05-list': '/demo/projects',
       'wf05-seed': `/demo/projects/${SEED_VENTURE}`,
-      'wf05-seed-review': `/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}/review`,
+      // TASK 24.4 (DEC-L5-D4): the application form is the L5 member route.
+      'l5-seed-form': `/projects/${SEED_VENTURE}/applications/${PROGRAMME}`,
       'wf05-ia': `/demo/projects/${venture.id}`,
     }
     const apis: Record<string, string> = {
@@ -254,6 +255,7 @@ test.describe('REL-SEC cross-workflow actor matrix', () => {
       'api:ops-ch02-members': `/api/v1/ops/organizations/${CHAPTER_02}/members`,
       'api:demo-programmes': '/api/v1/demo/programmes',
       'api:demo-projects-seed': `/api/v1/demo/projects/${SEED_VENTURE}`,
+      'api:me-applications': '/api/v1/me/applications',
     }
     const spoofs = {
       'x-role': 'PLATFORM_ADMIN',
@@ -307,7 +309,7 @@ test.describe('REL-SEC cross-workflow actor matrix', () => {
     for (const n of ['landing', 'public-org']) expect(at('guest', n)).toBe('200')
     // Venture resources: owner or ACTIVE member only; everyone else the same 404.
     expect(at('member, seed STARTUP owner', 'seed-venture-edit')).toBe('200')
-    expect(at('member, seed STARTUP owner', 'wf05-seed-review')).toBe('200')
+    expect(at('member, seed STARTUP owner', 'l5-seed-form')).toBe('200')
     for (const actor of [
       'pending invitee (seed venture) + Chapter 01 leader',
       'platform admin',
@@ -315,7 +317,7 @@ test.describe('REL-SEC cross-workflow actor matrix', () => {
       'ACTIVE team member ("Founder" label)',
       'IA venture owner',
     ]) {
-      for (const n of ['seed-venture-edit', 'seed-venture-team', 'wf05-seed', 'wf05-seed-review'])
+      for (const n of ['seed-venture-edit', 'seed-venture-team', 'wf05-seed', 'l5-seed-form'])
         // DEC-WF02-S06-G2: the invitee opens the team page to accept or decline, nothing else.
         if (!(n === 'seed-venture-team' && actor.startsWith('pending invitee')))
           expect(at(actor, n), `${actor} ${n}`).toBe('404')
@@ -788,9 +790,14 @@ test.describe('REL-DATA schema-level invariants', () => {
       'events',
     ])
       expect(tables).toContain(t)
+    // TASK 24.4 (DEC-L5-D2, migration 013): the approved L5 application tables, nothing more.
+    const l5 = ['applications', 'programme_application_forms']
+    for (const t of l5) expect(tables).toContain(t)
     expect(
-      tables.filter((t) =>
-        /application|founder|startup_profile|investor|data_?room|match|recommend/i.test(t),
+      tables.filter(
+        (t) =>
+          !l5.includes(t) &&
+          /application|founder|startup_profile|investor|data_?room|match|recommend/i.test(t),
       ),
     ).toEqual([])
     const completion = await query<{ c: string }>(

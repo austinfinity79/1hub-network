@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto'
 import path from 'node:path'
 
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
@@ -16,9 +15,9 @@ import { compareSegments, type Rect, type SegmentResult } from '../pixel-qa/segm
  * WF05-S02 — one Project / Startup and its participation (DEC-WF05-G1..G5,
  * DEC-WF05-T00-D1..D3): the canonical WF02 venture for its owner or an ACTIVE
  * member, the team (owner + ACTIVE), the PUBLISHED programmes with the
- * actor's eligibility and the session application status; WF02 edit / team
- * links; "Đăng ký" disabled until S03; S01 → S02; IDOR / spoofing; no writes;
- * responsive and primitives.
+ * actor's eligibility and the server application status (TASK 24.4); WF02 edit
+ * / team links; "Đăng ký" opens the L5 form; S01 → S02; IDOR / spoofing; no
+ * writes; responsive and primitives.
  */
 
 const API = '/api/v1/demo/projects'
@@ -50,6 +49,12 @@ test.afterEach(() => {
 })
 
 test.afterAll(async () => {
+  await query(
+    `DELETE FROM applications WHERE venture_id IN
+       (SELECT p.id FROM projects p JOIN individual_profiles i ON i.id = p.owner_profile_id
+         WHERE i.account_id = ANY($1::uuid[]))`,
+    [accounts],
+  )
   await query(
     `DELETE FROM project_domains WHERE project_id IN
        (SELECT p.id FROM projects p JOIN individual_profiles i ON i.id = p.owner_profile_id
@@ -129,15 +134,10 @@ async function fingerprint() {
             ${table('events')} AS events, ${table('role_assignments')} AS roles,
             ${table('individual_profiles')} AS profiles, ${table('audit_events')} AS audit,
             (SELECT count(*) FROM analytics_events)::text AS analytics,
-            to_regclass('public.applications')::text AS applications`,
+            ${table('applications')} AS applications`,
   )
   return row!
 }
-
-const storeKey = (accountId: string) =>
-  `hub.wf05-demo.v1.${createHash('sha256').update(`wf05-demo:${accountId}`).digest('hex').slice(0, 16)}`
-const stored = (page: Page, accountId: string) =>
-  page.evaluate((k) => sessionStorage.getItem(k), storeKey(accountId))
 
 async function open(page: Page, id: string) {
   const response = await page.goto(detailUrl(id), { waitUntil: 'networkidle' })
@@ -150,22 +150,8 @@ const overview = (page: Page, key: string) =>
 const programmeRow = (page: Page, id = PROGRAMME) => page.locator(`[data-programme="${id}"]`)
 const apply = (page: Page) => page.locator('[data-action="apply"]')
 
-function application(ventureId: string, status: 'DRAFT' | 'SUBMITTED') {
-  const now = new Date().toISOString()
-  return {
-    primary_applicant_type: 'STARTUP',
-    primary_applicant_id: ventureId,
-    programme_id: PROGRAMME,
-    status,
-    programme_specific_answers: status === 'SUBMITTED' ? ['A', 'B'] : ['', ''],
-    created_at: now,
-    updated_at: now,
-    submitted_at: status === 'SUBMITTED' ? now : null,
-  }
-}
-
 test.describe('WF05-S02 project / startup detail', () => {
-  test('1/9. owner opens the PROJECT: canonical fields, team, P1 eligible as TEAM; "Đăng ký" waits for S03', async ({
+  test('1/9. owner opens the PROJECT: canonical fields, team, P1 eligible as TEAM; "Đăng ký" opens the L5 form', async ({
     page,
   }) => {
     const w = await world()
@@ -185,11 +171,11 @@ test.describe('WF05-S02 project / startup detail', () => {
     await expect(overview(page, 'domains')).toHaveText('Công nghệ khu vực công')
     await expect(page.locator('[data-team-count]')).toHaveText('1 thành viên')
     await expect(page.locator('[data-team-row]')).toHaveText(['Chủ Dự Án · Chủ sở hữu'])
-    // Eligible (PROJECT → TEAM ∈ P1): "Đăng ký" opens the application draft (S03).
+    // Eligible (PROJECT → TEAM ∈ P1): "Đăng ký" opens the L5 form (TASK 24.4).
     await expect(programmeRow(page)).toHaveAttribute('data-eligible', 'true')
     await expect(apply(page)).toHaveAttribute(
       'href',
-      `/demo/projects/${w.project.id}/applications/${PROGRAMME}`,
+      `/projects/${w.project.id}/applications/${PROGRAMME}`,
     )
     const api = await (await page.request.get(`${API}/${w.project.id}`)).json()
     expect(api.venture.applicant_type).toBe('TEAM')
@@ -305,11 +291,11 @@ test.describe('WF05-S02 participation', () => {
     await expect(programmeRow(page).locator('[data-programme-meta]')).toHaveText(
       '01/09/2026 – 15/12/2026 · Dành cho: Đội, Startup',
     )
-    // The row's only link is the eligible owner's "Đăng ký" (S03); no programme management.
+    // The row's only link is the eligible owner's "Đăng ký" (L5 form); no programme management.
     await expect(page.locator('[data-programme] a:not([data-action="apply"])')).toHaveCount(0)
     await expect(programmeRow(page).locator('[data-action="apply"]')).toHaveAttribute(
       'href',
-      `/demo/projects/${w.startup.id}/applications/${PROGRAMME}`,
+      `/projects/${w.startup.id}/applications/${PROGRAMME}`,
     )
     expect(await page.locator('[data-detail="programmes"]').innerText()).not.toMatch(
       /Người vận hành|Thử thách đổi mới|Đang xem xét|Cần bổ sung/,
@@ -343,42 +329,53 @@ test.describe('WF05-S02 participation', () => {
     await expect(row.locator('[data-action="apply"]')).toHaveCount(0)
   })
 
-  test('15/16. viewing creates no application; a session application shows its status and replaces "Đăng ký"', async ({
+  test('15/16. viewing creates no application; the server application shows its status and replaces "Đăng ký"', async ({
     page,
   }) => {
     const w = await world()
     await login(page.request, w.owner.email)
+    const before = await fingerprint()
     await open(page, w.startup.id)
     await page.reload({ waitUntil: 'networkidle' })
-    expect(await stored(page, w.owner.accountId)).toBeNull()
-    for (const [status, label] of [
-      ['DRAFT', 'Nháp'],
-      ['SUBMITTED', 'Đã nộp'],
-    ] as const) {
-      await page.evaluate(
-        ([k, v]) => sessionStorage.setItem(k!, v!),
-        [
-          storeKey(w.owner.accountId),
-          JSON.stringify({
-            version: 1,
-            applications: { [`${w.startup.id}:${PROGRAMME}`]: application(w.startup.id, status) },
-          }),
+    expect(await fingerprint()).toEqual(before)
+    const created = await (
+      await page.request.post('/api/v1/applications', {
+        data: { venture_id: w.startup.id, programme_id: PROGRAMME },
+      })
+    ).json()
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(programmeRow(page).locator('[data-application]')).toHaveText('Nháp')
+    await expect(apply(page)).toHaveCount(0)
+    await expect(programmeRow(page).locator('[data-nav="application-resume"]')).toHaveAttribute(
+      'href',
+      `/projects/${w.startup.id}/applications/${PROGRAMME}`,
+    )
+    await page.request.patch(`/api/v1/applications/${created.id}`, {
+      data: {
+        answers: [
+          { question_id: 'q-problem', value: 'A' },
+          { question_id: 'q-support', value: 'B' },
         ],
-      )
-      await page.reload({ waitUntil: 'networkidle' })
-      await expect(programmeRow(page).locator('[data-application]')).toHaveText(label)
-      await expect(apply(page)).toHaveCount(0)
-    }
+      },
+    })
+    expect((await page.request.post(`/api/v1/applications/${created.id}/submit`)).status()).toBe(
+      200,
+    )
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(programmeRow(page).locator('[data-application]')).toHaveText('Đã nộp')
+    await expect(programmeRow(page).locator('[data-nav="application-view"]')).toHaveAttribute(
+      'href',
+      `/projects/${w.startup.id}/applications/${PROGRAMME}/submitted`,
+    )
     // The other venture has no application: its "Đăng ký" stays.
     await open(page, w.project.id)
     await expect(apply(page)).toHaveCount(1)
-    // Reset clears the session application only.
+    // The application lives on the server: the demo reset leaves it (HD-A10).
     await open(page, w.startup.id)
     await page.locator('[data-demo-reset="start"]').click()
     await page.locator('[data-demo-reset="confirm"]').click()
-    await expect(programmeRow(page).locator('[data-application]')).toHaveCount(0)
-    await expect(apply(page)).toHaveCount(1)
-    expect(await stored(page, w.owner.accountId)).toBeNull()
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(programmeRow(page).locator('[data-application]')).toHaveText('Đã nộp')
   })
 
   test('20/21. no open programme; loading, then an error with a safe message and "Thử lại"', async ({
@@ -423,7 +420,7 @@ test.describe('WF05-S02 participation', () => {
 })
 
 test.describe('WF05-S02 navigation', () => {
-  test('17/19/22. S01 → S02 → back; direct refresh; S03 linked, no S04 route or link', async ({
+  test('17/19/22. S01 → S02 → back; direct refresh; the L5 form linked; old S03 / S04 paths redirect', async ({
     page,
   }) => {
     const w = await world()
@@ -446,9 +443,9 @@ test.describe('WF05-S02 navigation', () => {
       '/demo/projects',
       `/projects/${w.startup.id}/edit`,
       `/projects/${w.startup.id}/team`,
-      `/demo/projects/${w.startup.id}/applications/${PROGRAMME}`,
+      `/projects/${w.startup.id}/applications/${PROGRAMME}`,
     ])
-    // S03 and S04 exist; S02 links the review only for a SUBMITTED application.
+    // The old S03 / S04 paths redirect to the L5 member routes (HD-A10), which answer 200.
     expect(
       (await page.request.get(`${detailUrl(w.startup.id)}/applications/${PROGRAMME}`)).status(),
     ).toBe(200)
