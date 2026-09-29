@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
+import { onboardThroughUi } from '../support/onboarding'
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
 import { createVenture } from '../../../src/lib/venture/venture'
@@ -27,7 +28,6 @@ import { compareSegments, type Rect, type Segment, type SegmentResult } from '..
 const PROGRAMME = 'd4000000-0000-0000-0000-000000000001'
 const CHALLENGE = 'd4000000-0000-0000-0000-000000000002'
 const RANDOM = '7c9e6679-7425-40de-944b-e07fc1f90ae7'
-const REGION = '20000000-0000-0000-0000-000000000002'
 const API = '/api/v1/demo/projects'
 const ACTUAL = path.join(REPO_ROOT, 'tests/visual/actual')
 const Q1 = 'Dự án của bạn giải quyết vấn đề gì?'
@@ -98,24 +98,8 @@ async function signIn(page: Page, email: string) {
   await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
 }
 
-/** WF01 S05 → S08 through the UI, ending in MemberShell (/me). */
-async function onboard(page: Page, name: string) {
-  await expect(page).toHaveURL('/onboarding/purpose')
-  await page.getByRole('button', { name: 'Bỏ qua, làm sau' }).click()
-  await expect(page).toHaveURL('/onboarding/profile')
-  await page.getByLabel('Họ và tên').fill(name)
-  await page.getByLabel('Chức danh hiện tại').fill('Kỹ sư')
-  await page.getByLabel('Tỉnh / thành phố').selectOption(REGION)
-  // The first expertise chip shown, whatever the database's vocabulary (dev or freshly seeded).
-  await page.getByRole('checkbox').first().check({ force: true })
-  await page.getByRole('button', { name: 'Tiếp tục' }).click()
-  await expect(page).toHaveURL('/onboarding/privacy')
-  await page.getByRole('checkbox').check()
-  await page.getByRole('button', { name: 'Xong, vào HUB' }).click()
-  await expect(page).toHaveURL('/onboarding/complete')
-  await page.getByRole('link', { name: 'Vào Tài khoản của tôi' }).click()
-  await expect(page).toHaveURL('/me')
-}
+/** ACC-05 → ACC-10 → /me through the screens (DEC-L1R). */
+const onboard = onboardThroughUi
 
 async function accountOf(email: string): Promise<Person> {
   const [row] = await query<{ account_id: string; profile_id: string }>(

@@ -104,7 +104,7 @@ test.describe('WF03-T00 guard', () => {
     await login(page.request, `t00-new-${Date.now()}@example.test`)
     for (const route of ['/ops/network', `/ops/org/${CHAPTER_01}`]) {
       await page.goto(route)
-      await expect(page, route).toHaveURL('/onboarding/purpose')
+      await expect(page, route).toHaveURL('/onboarding')
     }
   })
 

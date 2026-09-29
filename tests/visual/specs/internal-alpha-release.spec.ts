@@ -121,7 +121,7 @@ test.describe('REL-AUTH magic link and session', () => {
     const first = await response
     expect(first.headers()['referrer-policy']).toBe('no-referrer')
     await page.waitForURL((u) => !u.pathname.startsWith('/auth'))
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
     expect(await page.content()).not.toContain(token)
     const [row] = await query<{ id: string }>(
       `SELECT id::text FROM user_accounts WHERE email_normalized = $1`,
@@ -301,7 +301,7 @@ test.describe('REL-SEC cross-workflow actor matrix', () => {
     const protectedApis = Object.keys(apis)
     for (const n of protectedPages) {
       expect(at('guest', n), `guest ${n}`).toBe('200→/auth')
-      expect(at('onboarding incomplete', n), `onboarding ${n}`).toMatch(/^200→\/onboarding\//)
+      expect(at('onboarding incomplete', n), `onboarding ${n}`).toMatch(/^200→\/onboarding(\/|$)/)
     }
     for (const n of protectedApis) expect(at('guest', n), `guest ${n}`).toBe('401')
     for (const n of ['landing', 'public-org']) expect(at('guest', n)).toBe('200')
@@ -475,8 +475,8 @@ test.describe('REL-RESP responsive sweep', () => {
       {
         name: 'onboarding',
         who: 'newcomer@example.test',
-        url: '/onboarding/purpose',
-        key: 'button',
+        url: '/onboarding',
+        key: '[data-nav="start"]',
         certified: false,
       },
       {

@@ -153,7 +153,7 @@ test.describe('WF04-T00 demo API and authorization', () => {
     await page.context().clearCookies()
     await login(page.request, `wf04-incomplete-${Date.now()}@example.test`)
     await page.goto('/demo/programmes')
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
   })
 
   test('5/6. foreign organization and spoofed scope are denied; labels grant nothing', async ({

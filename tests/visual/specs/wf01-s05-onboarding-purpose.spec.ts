@@ -1,37 +1,23 @@
-import path from 'node:path'
-
 import { expect, test, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { readPng } from '../pixel-qa/png'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect, type Segment } from '../pixel-qa/segments'
+import { auditRevision, topOf } from '../pixel-qa/revision'
+import { IDS, memberships, reach, signInFresh, stored, watchConsole } from '../support/onboarding'
 
 /**
- * WF01-S05 — Onboarding Purpose (/onboarding/purpose). Production.
- * Decisions DEC-WF01-S05-D1..D6 (docs/decisions/DECISION_LOG.md).
- *
- * Functional tests use a fresh account each, so no test depends on another's
- * writes. Pixel QA uses the seeded newcomer (reset by runScreenQa) with the
- * first option selected, the state the approved reference shows; nothing is
- * submitted.
+ * WF01-S05 / ACC-08 — onboarding stage 3, "Bạn tham gia hệ sinh thái với vai
+ * trò nào?" (/onboarding/purpose). Production. Decisions DEC-L1R-D3, D5, D7
+ * (docs/decisions/DECISION_LOG.md).
  */
 
-const INTENT_API = '/api/v1/me/onboarding/intent'
+const ROLES_API = '/api/v1/me/onboarding/roles'
+const STAGE_API = '/api/v1/me/onboarding/stage'
 
 let consoleErrors: string[] = []
 
 test.beforeEach(async ({ page }) => {
   consoleErrors = []
-  page.on('console', (m) => {
-    // Simulated 422/500 answers are the scenario under test.
-    if (m.type() === 'error' && !/status of (422|500)/.test(m.text())) consoleErrors.push(m.text())
-  })
-  page.on('pageerror', (e) => consoleErrors.push(e.message))
+  watchConsole(page, consoleErrors)
   await page.context().clearCookies()
 })
 
@@ -43,446 +29,372 @@ test.afterAll(async () => {
   await closePool()
 })
 
-/** Signs a brand-new account in through the real magic-link flow; returns its id. */
-async function signInFresh(page: Page): Promise<string> {
-  const email = `s05-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`
-  const response = await page.request.post('/dev/login', { data: { email } })
-  expect(response.ok()).toBe(true)
-  const [row] = await query<{ id: string }>(
-    'SELECT id::text FROM user_accounts WHERE email_normalized = $1',
-    [email],
+async function openRoles(page: Page) {
+  await page.goto('/onboarding/purpose', { waitUntil: 'networkidle' })
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Bạn tham gia hệ sinh thái với vai trò nào?',
   )
-  return row!.id
 }
 
-async function storedIntent(accountId: string): Promise<string | null | undefined> {
-  const rows = await query<{ primary_intent: string | null }>(
-    'SELECT primary_intent FROM individual_profiles WHERE account_id = $1',
+const role = (page: Page, name: string) => page.getByRole('checkbox', { name: new RegExp(name) })
+const next = (page: Page) => page.getByRole('button', { name: 'Tiếp tục' })
+const panel = (page: Page) => page.locator('[data-anchor="hub"]')
+
+/** What a declaration must never produce, for one account. */
+async function granted(accountId: string) {
+  const [row] = await query<{ leadership: number; assignments: number }>(
+    `SELECT (SELECT count(*)::int FROM leadership_records l WHERE l.profile_id = p.id) AS leadership,
+            (SELECT count(*)::int FROM role_assignments r
+              WHERE r.individual_profile_id = p.id) AS assignments
+       FROM individual_profiles p WHERE p.account_id = $1`,
     [accountId],
   )
-  return rows[0]?.primary_intent
+  return row
 }
 
-const radio = (page: Page, code: string) => page.locator(`input[value="${code}"]`)
-const continueButton = (page: Page) => page.getByRole('button', { name: 'Tiếp tục' })
-
-async function openPurpose(page: Page) {
-  await page.goto('/onboarding/purpose', { waitUntil: 'networkidle' })
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Bạn đến HUB để làm gì?')
-}
-
-test.describe('WF01-S05 functional', () => {
-  test('D5: a guest is sent to /auth by the server', async ({ page }) => {
+test.describe('WF01-S05 functional and security', () => {
+  test('a guest is sent to /auth; the API refuses', async ({ page, request }) => {
     await page.goto('/onboarding/purpose')
     await expect(page).toHaveURL('/auth')
+    expect((await request.get(ROLES_API)).status()).toBe(401)
+    expect((await request.put(ROLES_API, { data: { roles: [] } })).status()).toBe(401)
+    expect((await request.put(STAGE_API, { data: { completed: 'ROLE' } })).status()).toBe(401)
   })
 
-  test('D1: exactly the four P0 options with approved copy; no investor option', async ({
-    page,
-  }) => {
-    await signInFresh(page)
-    await openPurpose(page)
-    const values = await page
-      .locator('input[name="primary_intent"]')
-      .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
-    expect(values).toEqual([
-      'SUBMIT_SOLUTION',
-      'POST_CHALLENGE',
-      'ORGANIZE_COMMUNITY',
-      'EXPLORE_NETWORK',
-    ])
-    await expect(page.getByText('Tôi có giải pháp và muốn nộp cho bài toán')).toBeVisible()
-    await expect(page.getByText('Đơn vị tôi có bài toán cần giải')).toBeVisible()
-    await expect(page.getByText('Tôi tổ chức cộng đồng ở địa phương')).toBeVisible()
-    await expect(page.getByText('Tôi chỉ muốn xem trước đã')).toBeVisible()
-    const text = (await page.locator('body').innerText()).toLowerCase()
-    expect(text).not.toContain('nhà đầu tư')
-    expect(text).not.toContain('dataroom')
-  })
-
-  test('D4: nothing is selected by default and Continue is disabled', async ({ page }) => {
-    await signInFresh(page)
-    await openPurpose(page)
-    await expect(page.locator('input[name="primary_intent"]:checked')).toHaveCount(0)
-    await expect(continueButton(page)).toBeDisabled()
-  })
-
-  test('selecting, then changing, keeps exactly one choice', async ({ page }) => {
-    await signInFresh(page)
-    await openPurpose(page)
-    await page.getByText('Tôi có giải pháp và muốn nộp cho bài toán').click()
-    await expect(radio(page, 'SUBMIT_SOLUTION')).toBeChecked()
-    await page.getByText('Tôi tổ chức cộng đồng ở địa phương').click()
-    await expect(radio(page, 'ORGANIZE_COMMUNITY')).toBeChecked()
-    await expect(page.locator('input[name="primary_intent"]:checked')).toHaveCount(1)
-    await expect(continueButton(page)).toBeEnabled()
-  })
-
-  test('D2: Continue persists only the code, then moves to /onboarding/profile', async ({
-    page,
-  }) => {
-    const accountId = await signInFresh(page)
-    await openPurpose(page)
-    await page.getByText('Đơn vị tôi có bài toán cần giải').click()
-    await continueButton(page).click()
-    await expect(page).toHaveURL('/onboarding/profile')
-    const rows = await query<{
-      primary_intent: string
-      status: string
-      onboarding_completed_at: Date | null
-    }>(
-      `SELECT primary_intent, status::text, onboarding_completed_at
-         FROM individual_profiles WHERE account_id = $1`,
-      [accountId],
-    )
-    expect(rows).toEqual([
-      { primary_intent: 'POST_CHALLENGE', status: 'DRAFT', onboarding_completed_at: null },
-    ])
-  })
-
-  test('D3 (amended by DEC-WF01-RESUME-D1): skip records the step, never an intent, and moves to S06', async ({
-    page,
-  }) => {
-    const accountId = await signInFresh(page)
-    const bodies: unknown[] = []
-    page.on('request', (r) => {
-      if (r.url().includes(INTENT_API)) bodies.push(r.postDataJSON())
-    })
-    await openPurpose(page)
-    await page.getByRole('button', { name: 'Bỏ qua, làm sau' }).click()
-    await expect(page).toHaveURL('/onboarding/profile')
-    expect(bodies).toEqual([{ action: 'SKIP' }])
-    expect(await storedIntent(accountId)).toBeNull()
-    const [row] = await query<{ recorded: boolean }>(
-      'SELECT purpose_step_completed_at IS NOT NULL AS recorded FROM individual_profiles WHERE account_id = $1',
-      [accountId],
-    )
-    expect(row!.recorded).toBe(true)
-    // The Purpose step is done; onboarding is not.
-    const state = await page.request.get('/api/v1/me/onboarding')
-    expect(await state.json()).toEqual({ completed: false, current_step: 'PROFILE', intent: null })
-  })
-
-  test('D1: the server rejects INVESTOR and unknown values with 422, writing nothing', async ({
-    page,
-  }) => {
-    const accountId = await signInFresh(page)
-    for (const value of ['INVESTOR', 'UNKNOWN', 'explore_network', '', null]) {
-      const response = await page.request.put(INTENT_API, { data: { primary_intent: value } })
-      expect(response.status(), JSON.stringify(value)).toBe(422)
-      expect((await response.json()).error.code).toBe('PROFILE_VALIDATION_FAILED')
-    }
-    expect(await storedIntent(accountId)).toBeUndefined()
-  })
-
-  test('the intent endpoints refuse a guest', async ({ page }) => {
-    const put = await page.request.put(INTENT_API, { data: { primary_intent: 'EXPLORE_NETWORK' } })
-    expect(put.status()).toBe(401)
-    expect((await page.request.get('/api/v1/me/onboarding')).status()).toBe(401)
-  })
-
-  test('a rejected value surfaces inline and the user can choose again', async ({ page }) => {
-    await signInFresh(page)
-    await openPurpose(page)
-    await page.route(`**${INTENT_API}`, (route) =>
-      route.fulfill({
-        status: 422,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          error: { code: 'PROFILE_VALIDATION_FAILED', message: 'x', request_id: 'r' },
-        }),
-      }),
-    )
-    await page.getByText('Tôi chỉ muốn xem trước đã').click()
-    await continueButton(page).click()
-    await expect(page.locator('form').getByRole('alert')).toHaveText(
-      'Lựa chọn này chưa được hỗ trợ. Vui lòng chọn lại.',
-    )
-    await expect(page).toHaveURL('/onboarding/purpose')
-  })
-
-  test('an API failure is recoverable: error shown, retry succeeds', async ({ page }) => {
-    const accountId = await signInFresh(page)
-    await openPurpose(page)
-    await page.route(`**${INTENT_API}`, (route) =>
-      route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          error: { code: 'INTERNAL_ERROR', message: 'x', request_id: 'r' },
-        }),
-      }),
-    )
-    await page.getByText('Tôi chỉ muốn xem trước đã').click()
-    await continueButton(page).click()
-    await expect(page.locator('form').getByRole('alert')).toHaveText(
-      'Chưa lưu được lựa chọn. Vui lòng thử lại.',
-    )
-    await expect(radio(page, 'EXPLORE_NETWORK')).toBeChecked()
-    await expect(continueButton(page)).toBeEnabled()
-    expect(await storedIntent(accountId)).toBeUndefined()
-
-    await page.unroute(`**${INTENT_API}`)
-    await continueButton(page).click()
-    await expect(page).toHaveURL('/onboarding/profile')
-    expect(await storedIntent(accountId)).toBe('EXPLORE_NETWORK')
-  })
-
-  test('repeated submits send one request', async ({ page }) => {
-    await signInFresh(page)
-    await openPurpose(page)
-    let writes = 0
-    await page.route(`**${INTENT_API}`, async (route) => {
-      writes++
-      await new Promise((done) => setTimeout(done, 400))
-      await route.continue()
-    })
-    await page.getByText('Tôi có giải pháp và muốn nộp cho bài toán').click()
-    await page.locator('form').evaluate((form: HTMLFormElement) => {
-      form.requestSubmit()
-      form.requestSubmit()
-      form.requestSubmit()
-    })
-    await expect(page).toHaveURL('/onboarding/profile')
-    expect(writes).toBe(1)
-  })
-
-  test('D4/D6: a saved intent is preselected and can be edited before completion', async ({
-    page,
-  }) => {
-    const accountId = await signInFresh(page)
-    const put = await page.request.put(INTENT_API, { data: { primary_intent: 'POST_CHALLENGE' } })
-    expect(put.status()).toBe(200)
-
-    await openPurpose(page)
-    await expect(radio(page, 'POST_CHALLENGE')).toBeChecked()
-    await expect(continueButton(page)).toBeEnabled()
-
-    await page.getByText('Tôi tổ chức cộng đồng ở địa phương').click()
-    await continueButton(page).click()
-    await expect(page).toHaveURL('/onboarding/profile')
-    expect(await storedIntent(accountId)).toBe('ORGANIZE_COMMUNITY')
-  })
-
-  test('D6: completed onboarding follows the existing rule to /me', async ({ page }) => {
-    const accountId = await signInFresh(page)
-    await page.request.put(INTENT_API, { data: { primary_intent: 'EXPLORE_NETWORK' } })
-    await query(
-      `UPDATE individual_profiles SET status = 'ACTIVE', onboarding_completed_at = now() WHERE account_id = $1`,
-      [accountId],
-    )
+  test('the stage opens only after stage 2 is passed', async ({ page }) => {
+    await signInFresh(page.request, 's05')
+    await reach(page.request, 'CAPABILITY')
     await page.goto('/onboarding/purpose')
-    await expect(page).toHaveURL('/me')
+    await expect(page).toHaveURL('/onboarding/capability')
+    const refused = await page.request.put(STAGE_API, { data: { completed: 'ROLE' } })
+    expect(refused.status()).toBe(422)
+    expect((await refused.json()).error.fields).toEqual({ capability_stage: 'missing' })
   })
 
-  test('keyboard: radios by arrow keys, visible focus, Enter submits', async ({ page }) => {
-    const accountId = await signInFresh(page)
-    await openPurpose(page)
-    // P0-SHELL (DEC-P0-SHELL-D1): the wordmark → / is the first Tab stop.
-    await page.keyboard.press('Tab')
-    await expect(page.locator('[data-nav="home"]')).toBeFocused()
-    await page.keyboard.press('Tab')
-    await expect(page.getByRole('button', { name: 'Bỏ qua, làm sau' })).toBeFocused()
-    await page.keyboard.press('Tab')
-    await expect(radio(page, 'SUBMIT_SOLUTION')).toBeFocused()
-    expect(
-      await radio(page, 'SUBMIT_SOLUTION').evaluate((el) => getComputedStyle(el).outlineStyle),
-    ).not.toBe('none')
-    await page.keyboard.press('Space')
-    await expect(radio(page, 'SUBMIT_SOLUTION')).toBeChecked()
-    await page.keyboard.press('ArrowDown')
-    await expect(radio(page, 'POST_CHALLENGE')).toBeChecked()
-    await page.keyboard.press('Tab')
-    await expect(continueButton(page)).toBeFocused()
-    await page.keyboard.press('Enter')
-    await expect(page).toHaveURL('/onboarding/profile')
-    expect(await storedIntent(accountId)).toBe('POST_CHALLENGE')
+  test('six roles, multi-select, none required', async ({ page }) => {
+    const { accountId } = await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    await openRoles(page)
+    await expect(page.locator('header')).toContainText('BƯỚC 3/4 · VAI TRÒ')
+    await expect(page.locator('[data-role]')).toHaveCount(6)
+    await expect(page.locator('[data-role]')).toContainText([
+      'Thành viên HUB Network',
+      'Innovator/Nhà đổi mới sáng tạo',
+      'Startup Founder',
+      'Đại diện tổ chức',
+      'Đại diện quỹ/Nhà đầu tư',
+      'Quan tâm đến đổi mới sáng tạo',
+    ])
+    await expect(page.getByText('ĐÃ CHỌN 0')).toBeVisible()
+    await expect(panel(page)).toHaveCount(0)
+    await next(page).click()
+    await expect(page).toHaveURL('/onboarding/privacy')
+    const row = await stored(accountId)
+    expect(row).toMatchObject({ roles: [], claims: [] })
+    expect(row!.role_at).toBeInstanceOf(Date)
   })
 
-  test('a11y: one h1, a named radio group, named radios, current step marked', async ({ page }) => {
-    await signInFresh(page)
-    await openPurpose(page)
-    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
-    const group = page.getByRole('group', { name: 'Mục đích chính của bạn' })
-    await expect(group.getByRole('radio')).toHaveCount(4)
-    await expect(
-      page.getByRole('radio', { name: /Tôi có giải pháp và muốn nộp cho bài toán/ }),
-    ).toBeVisible()
-    await expect(page.locator('[aria-current="step"]')).toHaveText(/Vai trò/)
+  test('selected roles are stored as declared and grant nothing', async ({ page }) => {
+    const { accountId } = await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    await openRoles(page)
+    await role(page, 'Innovator').check({ force: true })
+    await role(page, 'Startup Founder').check({ force: true })
+    await role(page, 'Đại diện quỹ').check({ force: true })
+    await role(page, 'Đại diện quỹ').uncheck({ force: true })
+    await expect(page.getByText('ĐÃ CHỌN 2')).toBeVisible()
+    await next(page).click()
+    await expect(page).toHaveURL('/onboarding/privacy')
+    expect((await stored(accountId))!.roles).toEqual(['INNOVATOR', 'STARTUP_FOUNDER'])
+    expect(await memberships(accountId)).toEqual([])
+    expect(await granted(accountId)).toEqual({ leadership: 0, assignments: 0 })
+    const session = await (await page.request.get('/api/v1/session')).json()
+    expect(session.capabilities ?? []).toEqual([])
+    expect(session.managed_scopes ?? []).toEqual([])
   })
 
-  test('key text colours match the approved inks', async ({ page }) => {
-    await signInFresh(page)
-    await openPurpose(page)
-    await page.getByText('Tôi có giải pháp và muốn nộp cho bài toán').click()
-    const colours = await page.evaluate(() => {
-      // Resolves any computed colour syntax to sRGB 0-255 through a canvas.
-      const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!
-      const rgb = (el: Element | null) => {
-        ctx.clearRect(0, 0, 1, 1)
-        ctx.fillStyle = getComputedStyle(el!).color
-        ctx.fillRect(0, 0, 1, 1)
-        return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)]
-      }
-      const title = (code: string) => document.querySelector(`[data-intent="${code}"] span span`)
-      return {
-        title: rgb(document.querySelector('h1')),
-        lede: rgb(document.querySelector('h1 + p')),
-        option: rgb(title('POST_CHALLENGE')),
-        selected: rgb(title('SUBMIT_SOLUTION')),
-        cta: rgb(document.querySelector('button[type="submit"]')),
-      }
+  test('F. a HUB unit is a draft "Chờ xác minh": no membership, no leadership, no permission', async ({
+    page,
+  }) => {
+    const { accountId } = await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    await openRoles(page)
+    await role(page, 'Thành viên HUB Network').check({ force: true })
+    await expect(panel(page)).toBeVisible()
+    await expect(panel(page).locator('[data-badge="pending"]')).toHaveText('Chờ xác minh')
+    await expect(panel(page)).toContainText('không cấp quyền quản trị HUB Chapter hay CLB')
+    await panel(page).getByLabel('Đơn vị').selectOption(IDS.chapter01)
+    await panel(page).getByLabel('Chức vụ').fill('Phó trưởng chapter')
+    await panel(page).getByLabel('Thời gian').fill('2024 – nay')
+    await next(page).click()
+    await expect(page).toHaveURL('/onboarding/privacy')
+
+    expect(await stored(accountId)).toMatchObject({
+      roles: ['HUB_MEMBER'],
+      claims: [
+        { organization_id: IDS.chapter01, position: 'Phó trưởng chapter', period: '2024 – nay' },
+      ],
     })
-    // Inks read from the approved WF01-S05 bitmap; +-3 per channel for raster rounding.
-    const APPROVED: Record<keyof typeof colours, [number, number, number]> = {
-      title: [0x17, 0x00, 0x02],
-      lede: [0x53, 0x40, 0x41],
-      option: [0x17, 0x00, 0x02],
-      selected: [0x17, 0x00, 0x02],
-      cta: [0x16, 0x00, 0x02],
+    expect(await memberships(accountId)).toEqual([])
+    expect(await granted(accountId)).toEqual({ leadership: 0, assignments: 0 })
+
+    // The claimed unit's operations stay closed, screen and API alike.
+    const session = await (await page.request.get('/api/v1/session')).json()
+    expect(session.capabilities ?? []).toEqual([])
+    const ops = `/api/v1/ops/organizations/${IDS.chapter01}`
+    for (const path of [`${ops}/members`, `${ops}/dashboard`]) {
+      expect([403, 404], path).toContain((await page.request.get(path)).status())
     }
-    for (const key of Object.keys(APPROVED) as (keyof typeof colours)[]) {
-      colours[key].forEach((channel, i) => {
-        expect(Math.abs(channel - APPROVED[key][i]!), `${key} channel ${i}`).toBeLessThanOrEqual(3)
+    const audit = await query(
+      `SELECT 1 FROM audit_events WHERE actor_account_id = $1 AND action = 'MEMBERSHIP_REQUESTED'`,
+      [accountId],
+    )
+    expect(audit).toHaveLength(0)
+  })
+
+  test('the browser’s Back shows what was saved; saving again loses nothing', async ({ page }) => {
+    const { accountId } = await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    await openRoles(page)
+    await role(page, 'Innovator').check({ force: true })
+    await next(page).click()
+    await expect(page).toHaveURL('/onboarding/privacy')
+    await page.goBack()
+    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(role(page, 'Innovator')).toBeChecked()
+    await page.locator('header').getByRole('button', { name: 'Lưu và hoàn tất sau' }).click()
+    await expect(page).toHaveURL('/')
+    expect(await stored(accountId)).toMatchObject({ roles: ['INNOVATOR'] })
+  })
+
+  test('several units: one claim per unit; a row with text needs its unit', async ({ page }) => {
+    const { accountId } = await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    await openRoles(page)
+    await role(page, 'Thành viên HUB Network').check({ force: true })
+    await panel(page).getByLabel('Chức vụ').fill('Thành viên')
+    await next(page).click()
+    await expect(page.getByText('Vui lòng chọn đơn vị cho vị trí này.')).toBeVisible()
+    await expect(page).toHaveURL('/onboarding/purpose')
+    await panel(page).getByLabel('Đơn vị').selectOption(IDS.chapter01)
+
+    await panel(page)
+      .getByRole('button', { name: /Thêm vị trí khác/ })
+      .click()
+    const second = panel(page).locator('[data-claim="1"]')
+    // A unit picked in another row is not offered again.
+    await expect(second.locator(`option[value="${IDS.chapter01}"]`)).toHaveCount(0)
+    await second.getByLabel('Đơn vị').selectOption(IDS.chapter02)
+    await second.getByLabel('Chức vụ').fill('Trưởng ban')
+    await panel(page)
+      .getByRole('button', { name: /Thêm vị trí khác/ })
+      .click()
+    await panel(page)
+      .locator('[data-claim="2"]')
+      .getByRole('button', { name: 'Bỏ vị trí này' })
+      .click()
+    await expect(panel(page).locator('[data-claim]')).toHaveCount(2)
+    await next(page).click()
+    await expect(page).toHaveURL('/onboarding/privacy')
+    expect((await stored(accountId))!.claims).toEqual([
+      { organization_id: IDS.chapter01, position: 'Thành viên', period: null },
+      { organization_id: IDS.chapter02, position: 'Trưởng ban', period: null },
+    ])
+  })
+
+  test('deselecting the HUB role drops the named units', async ({ page }) => {
+    const { accountId } = await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    const saved = await page.request.put(ROLES_API, {
+      data: {
+        roles: ['HUB_MEMBER', 'INNOVATOR'],
+        hub_claims: [{ organization_id: IDS.chapter01, position: 'Thành viên' }],
+      },
+    })
+    expect(saved.status()).toBe(200)
+    await openRoles(page)
+    await expect(panel(page).getByLabel('Chức vụ')).toHaveValue('Thành viên')
+    await role(page, 'Thành viên HUB Network').uncheck({ force: true })
+    await expect(panel(page)).toHaveCount(0)
+    await next(page).click()
+    await expect(page).toHaveURL('/onboarding/privacy')
+    expect(await stored(accountId)).toMatchObject({ roles: ['INNOVATOR'], claims: [] })
+  })
+
+  test('the server refuses roles, states and units the form never sends', async ({ page }) => {
+    const { accountId } = await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    const [hidden] = await query<{ id: string }>(
+      `INSERT INTO organizations (type, slug, name, status)
+       VALUES ('CHAPTER', $1, 'Spec draft chapter', 'DRAFT') RETURNING id::text`,
+      [`s05-${Date.now()}`],
+    )
+    try {
+      for (const data of [
+        { roles: ['PLATFORM_ADMIN'] },
+        { roles: ['HUB_COMMUNITY_LEADER'] },
+        { roles: ['HUB_MEMBER'], role_code: 'PLATFORM_ADMIN' },
+        { roles: ['HUB_MEMBER'], capabilities: ['membership:confirm'] },
+        { roles: ['INNOVATOR'], hub_claims: [{ organization_id: IDS.chapter01 }] },
+        {
+          roles: ['HUB_MEMBER'],
+          hub_claims: [{ organization_id: IDS.chapter01, state: 'ACTIVE' }],
+        },
+        {
+          roles: ['HUB_MEMBER'],
+          hub_claims: [{ organization_id: IDS.chapter01, source: 'ORGANIZATION_VERIFIED' }],
+        },
+        { roles: ['HUB_MEMBER'], hub_claims: [{ organization_id: hidden!.id }] },
+        { roles: ['HUB_MEMBER'], hub_claims: [{ organization_id: 'chapter-01' }] },
+        {
+          roles: ['HUB_MEMBER'],
+          hub_claims: [{ organization_id: IDS.chapter01 }, { organization_id: IDS.chapter01 }],
+        },
+      ]) {
+        const response = await page.request.put(ROLES_API, { data })
+        expect(response.status(), JSON.stringify(data)).toBe(422)
+        expect((await response.json()).error.code).toBe('PROFILE_VALIDATION_FAILED')
+      }
+    } finally {
+      await query('DELETE FROM organizations WHERE id = $1', [hidden!.id])
+    }
+    expect(await stored(accountId)).toMatchObject({ roles: [], claims: [] })
+    expect(await memberships(accountId)).toEqual([])
+  })
+
+  test('one account cannot read or write another account’s declaration', async ({
+    page,
+    browser,
+  }) => {
+    const owner = await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    await page.request.put(ROLES_API, { data: { roles: ['STARTUP_FOUNDER'] } })
+    const other = await browser.newContext()
+    try {
+      const stranger = await signInFresh(other.request, 's05-other')
+      await reach(other.request, 'ROLE')
+      // The endpoint takes no account or profile id: a spoofed one is refused or ignored.
+      const spoofed = await other.request.put(ROLES_API, {
+        data: { roles: ['INVESTOR_REPRESENTATIVE'], account_id: owner.accountId },
+        headers: { 'x-account-id': owner.accountId, 'x-role': 'PLATFORM_ADMIN' },
       })
+      expect(spoofed.status()).toBe(422)
+      expect(await (await other.request.get(ROLES_API)).json()).toEqual({
+        roles: [],
+        hub_claims: [],
+      })
+      expect((await stored(owner.accountId))!.roles).toEqual(['STARTUP_FOUNDER'])
+      expect((await stored(stranger.accountId))!.roles).toEqual([])
+    } finally {
+      await other.close()
+    }
+  })
+
+  test('"Lưu và hoàn tất sau" saves without passing the stage; the account resumes here', async ({
+    page,
+  }) => {
+    const { accountId } = await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    await openRoles(page)
+    await role(page, 'Quan tâm đến đổi mới sáng tạo').check({ force: true })
+    await page.locator('header').getByRole('button', { name: 'Lưu và hoàn tất sau' }).click()
+    await expect(page).toHaveURL('/')
+    expect(await stored(accountId)).toMatchObject({
+      roles: ['INNOVATION_ENTHUSIAST'],
+      role_at: null,
+    })
+    await page.goto('/me')
+    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(role(page, 'Quan tâm đến đổi mới sáng tạo')).toBeChecked()
+    await page.getByRole('link', { name: 'Quay lại' }).click()
+    await expect(page).toHaveURL('/onboarding/capability')
+  })
+
+  test('keyboard and a11y', async ({ page }) => {
+    await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    await openRoles(page)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+    await expect(page.getByRole('checkbox')).toHaveCount(6)
+    await role(page, 'Thành viên HUB Network').focus()
+    await page.keyboard.press('Space')
+    await expect(role(page, 'Thành viên HUB Network')).toBeChecked()
+    expect(
+      await role(page, 'Thành viên HUB Network').evaluate(
+        (el) => getComputedStyle(el.closest('label')!).outlineStyle,
+      ),
+    ).not.toBe('none')
+    await expect(panel(page).getByRole('heading', { level: 2 })).toHaveText(
+      'Vị trí tại HUB Network',
+    )
+    for (const label of ['Đơn vị', 'Chức vụ', 'Thời gian']) {
+      await expect(panel(page).getByLabel(label), label).toHaveCount(1)
     }
   })
 })
 
-test.describe('WF01-S05 pixel QA', () => {
-  /**
-   * Measured once from the frozen reference, not from the implementation.
-   * The investor option (reference y 547-631) is INTENTIONAL-P0-SCOPE; below
-   * it everything moves up by its height plus one gap.
-   */
-  const REF = {
-    investor: { x: 340, y: 541, width: 760, height: 95 },
-    dividerTop: 749,
-    discs: [544, 661, 798],
-    connectors: [625, 762],
-  } as const
+test.describe('WF01-S05 pixel QA (ACC-08)', () => {
+  /** ACC-08, measured once. */
+  const REF = { cardTop: 113, rolesTop: 262, hubTop: 611, infoTop: 898, ruleTop: 996 } as const
 
-  test('manifest-driven capture, typography contract and segment comparison', async ({ page }) => {
-    const { screens } = loadManifest()
-    const reports = await runScreenQa(
-      page,
-      findScreen(screens, 'WF01-S05'),
-      qaConfigFor('WF01-S05')!,
-      {
-        afterLoad: async (p) => {
-          // The reference shows the first option selected; selecting submits nothing.
-          await p.getByText('Tôi có giải pháp và muốn nộp cho bài toán').click()
-          await p.mouse.move(0, 0)
-          await expect(radio(p, 'SUBMIT_SOLUTION')).toBeChecked()
+  test('1440×900: header, role cards, HUB panel, note and footer match ACC-08', async ({
+    page,
+  }) => {
+    await signInFresh(page.request, 's05')
+    await reach(page.request, 'ROLE')
+    const saved = await page.request.put(ROLES_API, {
+      data: {
+        roles: ['HUB_MEMBER', 'INNOVATOR', 'STARTUP_FOUNDER'],
+        hub_claims: [
+          { organization_id: IDS.chapter01, position: 'Phó trưởng chapter', period: '2024 – nay' },
+        ],
+      },
+    })
+    expect(saved.status()).toBe(200)
+    await openRoles(page)
+    const at = (name: string) => topOf(page, `[data-anchor="${name}"]`)
+    const card = await topOf(page, '[data-ui="surface"]')
+
+    await auditRevision(page, {
+      name: 'WF01-S05.ACC-08',
+      reference: 'design-reference/final/revision/L1/ACC-08__onboarding-role__SOURCE.png',
+      full: true,
+      segments: [
+        { name: 'header', reference: { x: 0, y: 0, width: 1440, height: 66 }, dy: 0 },
+        {
+          name: 'card-head',
+          reference: { x: 270, y: 100, width: 900, height: 150 },
+          dy: card - REF.cardTop,
         },
-      },
-    )
-    const viewport = reports.find((r) => r.capture === 'viewport')!
-    expect(viewport.conditions).toEqual({
-      viewport: { width: 1440, height: 900 },
-      dpr: 1,
-      fonts: 'loaded',
-    })
-    expect(viewport.comparison.status).not.toBe('DIMENSION_MISMATCH')
-    expect(viewport.typography!.violations).toEqual([])
-    expect(viewport.typography!.checked).toBeGreaterThan(10)
-
-    const divider = (await page.locator('hr').boundingBox())!
-    const lowerDy = Math.round(divider.y) - REF.dividerTop
-    // Stepper labels are wider in the frozen font, so later discs sit further
-    // right; each disc and connector is compared at its own position.
-    const discs = await page
-      .locator('ol li > span')
-      .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().x)))
-    const steps = await page
-      .locator('ol li')
-      .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().x)))
-
-    // Text glyphs only (per text node), so fills, borders and discs stay compared.
-    const textMask: Rect[] = await page.evaluate(() => {
-      const rects: { x: number; y: number; width: number; height: number }[] = []
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-      while (walker.nextNode()) {
-        const node = walker.currentNode
-        if (!node.textContent!.trim()) continue
-        const range = document.createRange()
-        range.selectNodeContents(node)
-        for (const r of range.getClientRects()) {
-          rects.push({ x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 })
-        }
-      }
-      return rects
-    })
-
-    const segments: Segment[] = [
-      { name: 'header-left', reference: { x: 0, y: 0, width: 530, height: 64 }, dy: 0 },
-      { name: 'header-right', reference: { x: 940, y: 0, width: 500, height: 64 }, dy: 0 },
-      ...REF.discs.map((x, i) => ({
-        name: `step-${i + 1}-disc`,
-        reference: { x: x - 4, y: 16, width: 30, height: 30 },
-        dy: 0,
-        dx: discs[i]! - x,
-      })),
-      ...REF.connectors.map((x, i) => ({
-        name: `connector-${i + 1}`,
-        reference: { x: x - 2, y: 27, width: 30, height: 8 },
-        dy: 0,
-        // The connector is the step's ::before, 12px into the <li>.
-        dx: steps[i + 1]! + 12 - x,
-      })),
-      { name: 'canvas-left', reference: { x: 0, y: 64, width: 300, height: 836 }, dy: 0 },
-      { name: 'canvas-right', reference: { x: 1140, y: 64, width: 300, height: 836 }, dy: 0 },
-      {
-        name: 'card-upper',
-        reference: { x: 300, y: 64, width: 840, height: REF.investor.y - 64 },
-        dy: 0,
-      },
-      {
-        name: 'card-lower',
-        reference: { x: 300, y: 636, width: 840, height: 900 - 636 },
-        dy: lowerDy,
-      },
-    ]
-
-    const reference = readPng(path.join(REPO_ROOT, viewport.images.REFERENCE))
-    const actual = readPng(path.join(REPO_ROOT, viewport.images.ACTUAL))
-    const diffPath = resolveOutputPath('diff', 'WF01-S05.segments.diff.png')
-    const results = compareSegments(reference, actual, segments, textMask, { diffPath })
-
-    writeJsonReport('WF01-S05.segments.json', {
-      screen_id: 'WF01-S05',
-      state: 'first option selected (reference example state), nothing submitted',
-      images: {
-        REFERENCE: viewport.images.REFERENCE,
-        ACTUAL: viewport.images.ACTUAL,
-        DIFF_FULL: viewport.images.DIFF,
-        DIFF_SEGMENTS: path.relative(REPO_ROOT, diffPath),
-      },
+        {
+          name: 'roles',
+          reference: { x: 310, y: 252, width: 820, height: 340 },
+          dy: (await at('roles')) - REF.rolesTop,
+        },
+        {
+          name: 'hub-panel',
+          reference: { x: 310, y: 600, width: 820, height: 280 },
+          dy: (await at('hub')) - REF.hubTop,
+        },
+        {
+          name: 'note',
+          reference: { x: 310, y: 888, width: 820, height: 90 },
+          dy: (await at('info')) - REF.infoTop,
+        },
+        {
+          name: 'footer',
+          reference: { x: 270, y: 985, width: 900, height: 180 },
+          dy: (await at('rule')) - REF.ruleTop,
+        },
+        { name: 'feedback', reference: { x: 1290, y: 810, width: 150, height: 90 }, dy: 0 },
+      ],
       intentional: [
         {
-          class: 'INTENTIONAL-P0-SCOPE',
-          reference_region: REF.investor,
+          class: 'INTENTIONAL-SCOPE',
           reason:
-            'DEC-WF01-S05-D1: investor option not rendered (Investor/VC/Dataroom is Future scope); content below moves up',
-          vertical_effect_px: { card_lower_dy: lowerDy },
-        },
-        {
-          class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
-          reason:
-            'reference raster predates the frozen font stack; text glyphs masked and checked by the DOM typography contract; wider stepper labels move discs 2-3 and connectors right, compared at their own positions',
-          step_dx: segments.filter((s) => s.name.startsWith('step-')).map((s) => s.dx),
+            'D-A1: no AI provider, so the "AI đề xuất" mark on a suggested role is not drawn; D-F1: "Góp ý" is drawn and inert',
         },
       ],
-      not_compared: [
-        'stepper label glyphs (text mask)',
-        'canvas below the shortened card (actual y > 805), plain canvas',
-      ],
-      segments: results,
-      product_pixel_pass_claimed: false,
     })
-
-    for (const r of results) {
-      expect(r.outside_ratio, `${r.name} drift`).toBeLessThan(0.002)
-    }
   })
 })

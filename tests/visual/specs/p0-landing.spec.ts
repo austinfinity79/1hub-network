@@ -87,10 +87,7 @@ test.describe('P0-LANDING behaviour', () => {
     await page.context().clearCookies()
     await login(page, `landing-${Date.now()}@example.test`)
     await page.goto('/')
-    await expect(page.locator('[data-cta="primary-bar"]')).toHaveAttribute(
-      'href',
-      '/onboarding/purpose',
-    )
+    await expect(page.locator('[data-cta="primary-bar"]')).toHaveAttribute('href', '/onboarding')
     await expect(page.locator('[data-cta="primary-bar"]')).toHaveText(
       'Tiếp tục thiết lập tài khoản',
     )
@@ -211,7 +208,7 @@ test.describe('P0-LANDING behaviour', () => {
     }
     await login(page, `landing-guard-${Date.now()}@example.test`)
     await page.goto('/me')
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
     await page.goto('/')
     await expect(page).toHaveURL('/')
   })
@@ -454,11 +451,12 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
   })
 
   test('legacy screens keep the approved faces (DEC-HD-12 is scoped)', async ({ page }) => {
-    // /auth is a revision screen since TASK 22.2 (DEC-L1-D1); WF01-S05 next to
-    // it stays legacy until HD-02, so it proves the scope still holds.
-    const email = `landing-scope-${Date.now()}@example.test`
-    expect((await page.request.post('/dev/login', { data: { email } })).ok()).toBe(true)
-    await page.goto('/onboarding/purpose', { waitUntil: 'networkidle' })
+    // /auth and the onboarding are revision screens (DEC-L1-D1, DEC-L1R-D7); the
+    // member home next to them stays legacy, so it proves the scope still holds.
+    expect(
+      (await page.request.post('/dev/login', { data: { email: 'member@example.test' } })).ok(),
+    ).toBe(true)
+    await page.goto('/me', { waitUntil: 'networkidle' })
     await settle(page)
     const result = await assertTypography(page, APPROVED_FACES)
     expect(result.violations).toEqual([])

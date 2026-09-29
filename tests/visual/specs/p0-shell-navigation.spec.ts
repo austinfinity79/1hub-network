@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
+import { reach } from '../support/onboarding'
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
 import { writeJsonReport } from '../pixel-qa/report'
@@ -154,7 +155,7 @@ test.describe('P0-SHELL navigation matrix', () => {
 
   test('incomplete account: landing and its resolver step', async ({ page }) => {
     await login(page, `shell-incomplete-${Date.now()}@example.test`)
-    for (const source of ['/', '/onboarding/purpose']) await crawl(page, 'incomplete', source)
+    for (const source of ['/', '/onboarding']) await crawl(page, 'incomplete', source)
   })
 
   test('completed member: landing, member area, project and team', async ({ page }) => {
@@ -251,35 +252,17 @@ test.describe('P0-SHELL journeys', () => {
     await expect(page).toHaveURL('/auth/check-email')
     const { token } = await requestMagicLink(email, null)
     await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
     // The landing sends an incomplete account back through the canonical resolver.
     await page.locator('[data-nav="home"]').click()
     await expect(page).toHaveURL('/')
-    await expect(page.locator('[data-cta="primary"]')).toHaveAttribute(
-      'href',
-      '/onboarding/purpose',
-    )
-    // Complete onboarding through the API, then S08 offers the project card.
-    await page.request.put('/api/v1/me/onboarding/intent', { data: { action: 'SKIP' } })
-    const region = '20000000-0000-0000-0000-000000000002'
-    const domain = '20000000-0000-0000-0000-000000000011'
-    expect(
-      (
-        await page.request.patch('/api/v1/me/profile', {
-          data: {
-            display_name: 'Shell Journey',
-            headline: 'QA',
-            region_id: region,
-            domain_ids: [domain],
-          },
-        })
-      ).status(),
-    ).toBe(200)
-    const { documents } = await (await page.request.get('/api/v1/legal/current')).json()
-    for (const doc of documents)
-      await page.request.post('/api/v1/me/consents/accept', {
-        data: { consent_type: doc.type, policy_version: doc.version },
-      })
+    await expect(page.locator('[data-cta="primary"]')).toHaveAttribute('href', '/onboarding')
+    // Complete onboarding through the API, then ACC-10 offers the project card.
+    await reach(page.request, 'DONE', {
+      full_name: 'Shell Journey',
+      display_name: 'Shell Journey',
+      headline: 'QA',
+    })
     await page.goto('/onboarding/complete')
     await expect(page.locator('[data-action-card="project"]')).toBeVisible()
     await page.locator('[data-nav="create-project"]').click()

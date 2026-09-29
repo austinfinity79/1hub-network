@@ -470,7 +470,7 @@ test.describe('WF05-S02 authorization, IDOR and privacy', () => {
     await expect(page).toHaveURL('/auth')
     await login(page.request, 'newcomer@example.test')
     await page.goto(detailUrl(w.startup.id))
-    await expect(page).toHaveURL(/\/onboarding\//)
+    await expect(page).toHaveURL(/\/onboarding(\/|$)/)
 
     const spoofs = {
       'x-role': 'PLATFORM_ADMIN',

@@ -457,7 +457,7 @@ test.describe('WF05-S01 authorization, IDOR and privacy', () => {
     await expect(page).toHaveURL('/auth')
     await login(page.request, 'newcomer@example.test')
     await page.goto(URL_)
-    await expect(page).toHaveURL(/\/onboarding\//)
+    await expect(page).toHaveURL(/\/onboarding(\/|$)/)
 
     const w = await world()
     const before = await fingerprint()

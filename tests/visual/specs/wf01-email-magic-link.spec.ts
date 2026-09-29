@@ -5,12 +5,13 @@ import { expect, test, type Page } from '@playwright/test'
 import { closePool, query } from '../../../src/lib/db/client'
 
 /**
- * TASK 22-PREVIEW-AUTH — real e-mail magic link, invite-only (DEC-AUTH-EMAIL-D1…D4).
+ * Real e-mail magic link with open sign-up (DEC-L1R-D1, which supersedes the
+ * invite-only DEC-AUTH-EMAIL-D1; D2 … D4 still hold).
  *
  * The test server runs without a Resend key and with dev routes on, so the
  * e-mail lands in /dev/outbox, read here like an inbox; every sign-in opens the
- * link the e-mail carries. Case A uses an account provisioned on a non-test
- * domain, so the invite-only rule (not the @example.test seam) admits it.
+ * link the e-mail carries. Cases A and C use addresses outside the reserved
+ * test domain, so nothing but the open rule admits them.
  */
 
 const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -56,8 +57,8 @@ async function inbox(page: Page, email: string): Promise<string> {
 const tokenOf = (link: string) => new URL(link).searchParams.get('token')!
 const hash = (token: string) => createHash('sha256').update(token, 'utf8').digest('hex')
 
-test.describe('TASK 22-PREVIEW-AUTH e-mail magic link', () => {
-  test('A. a provisioned account with onboarding to do: e-mailed link → session → onboarding', async ({
+test.describe('e-mail magic link, open sign-up', () => {
+  test('A. an existing account with onboarding to do: e-mailed link → session → onboarding', async ({
     page,
     context,
   }) => {
@@ -73,7 +74,7 @@ test.describe('TASK 22-PREVIEW-AUTH e-mail magic link', () => {
     expect(new URL(link).pathname).toBe('/auth/callback')
     expect(tokenOf(link)).toMatch(/^[A-Za-z0-9_-]{20,}$/)
     await page.goto(link)
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
     expect(page.url()).not.toContain(tokenOf(link))
     const cookie = (await context.cookies()).find((c) => c.httpOnly)
     expect(cookie?.secure && cookie.sameSite).toBeTruthy()
@@ -88,27 +89,76 @@ test.describe('TASK 22-PREVIEW-AUTH e-mail magic link', () => {
     await expect(page).toHaveURL('/me')
   })
 
-  test('C. an unknown address: neutral notice, no link, no token row, no account', async ({
+  test('C. a new address signs up: 202, no account until its link is used, then onboarding', async ({
     page,
+    context,
   }) => {
-    const email = `stranger-${stamp}@not-provisioned.vn`
+    const email = `new-${stamp}@open-signup.vn`
+    const accounts = () =>
+      query<{ status: string }>(
+        'SELECT status::text AS status FROM user_accounts WHERE email_normalized = $1',
+        [email],
+      )
+    expect(
+      await query('SELECT 1 FROM membership_bootstrap WHERE email_normalized = $1', [email]),
+    ).toHaveLength(0)
+
     const res = await requestLink(page, email)
-    expect(res.status()).toBe(403)
-    expect(((await res.json()) as { error: { code: string } }).error.code).toBe(
-      'AUTH_ACCOUNT_NOT_PROVISIONED',
+    expect(res.status()).toBe(202)
+    const body = JSON.stringify(await res.json())
+    // The answer is the same as for a known address and carries no token.
+    expect(Object.keys(JSON.parse(body)).sort()).toEqual(
+      ['email_masked', 'expires_in_seconds', 'request_id', 'resend_after_seconds'].sort(),
     )
-    await expect(page.locator('.ui-notice[role="alert"]')).toContainText(
-      'Email này chưa được cấp quyền truy cập Internal Alpha.',
-    )
+    await expect(page).toHaveURL('/auth/check-email')
+    await expect(page.locator('.ui-notice[role="alert"]')).toHaveCount(0)
+    // Asking for a link creates nothing: the account exists only once the address is verified.
+    expect(await accounts()).toHaveLength(0)
+    expect(await context.cookies()).toEqual([])
+
+    const link = await inbox(page, email)
+    expect(body).not.toContain(tokenOf(link))
+    await page.goto(link)
+    await expect(page).toHaveURL('/onboarding')
+    expect(page.url()).not.toContain(tokenOf(link))
+    expect(await accounts()).toEqual([{ status: 'ACTIVE' }])
+    const cookie = (await context.cookies()).find((c) => c.httpOnly)
+    expect(cookie?.secure && cookie.sameSite).toBeTruthy()
+    expect(
+      await query(
+        `SELECT 1 FROM individual_profiles p JOIN user_accounts a ON a.id = p.account_id
+          WHERE a.email_normalized = $1`,
+        [email],
+      ),
+    ).toHaveLength(0)
+  })
+
+  test('C2. a known and an unknown address get the same answer', async ({ page }) => {
+    const known = await requestLink(page, 'member@example.test')
+    const unknown = await requestLink(page, `never-seen-${stamp}@open-signup.vn`)
+    expect([known.status(), unknown.status()]).toEqual([202, 202])
+    const shape = async (res: typeof known) => {
+      const json = (await res.json()) as Record<string, unknown>
+      return Object.fromEntries(
+        Object.entries(json).map(([k, v]) => [k, typeof v === 'number' ? v : typeof v]),
+      )
+    }
+    expect(await shape(unknown)).toEqual(await shape(known))
+  })
+
+  test('C3. a malformed address is refused and nothing is sent', async ({ page }) => {
+    for (const email of ['not-an-email', 'a@b', 'two@@signs.vn', ' ']) {
+      const res = await page.request.post('/api/v1/auth/magic-link', { data: { email } })
+      expect(res.status(), email).toBe(400)
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe(
+        'AUTH_EMAIL_INVALID',
+      )
+    }
+    await page.goto('/auth', { waitUntil: 'networkidle' })
+    await emailField(page).fill('not-an-email')
+    await submit(page).click()
+    await expect(page.getByText('Email chưa đúng định dạng.')).toBeVisible()
     await expect(page).toHaveURL('/auth')
-    expect(
-      await query('SELECT 1 FROM user_accounts WHERE email_normalized = $1', [email]),
-    ).toHaveLength(0)
-    expect(
-      await query('SELECT 1 FROM auth_magic_link_requests WHERE email_normalized = $1', [email]),
-    ).toHaveLength(0)
-    const outbox = await page.request.get(`/dev/outbox?email=${encodeURIComponent(email)}`)
-    expect(outbox.status()).toBe(404)
   })
 
   test('D. the e-mailed link works once; reopening it is refused', async ({ page, browser }) => {

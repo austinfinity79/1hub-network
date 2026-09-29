@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
+import { onboardThroughUi } from '../support/onboarding'
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
 import { REPO_ROOT } from '../pixel-qa/paths'
@@ -16,8 +17,7 @@ import { REPO_ROOT } from '../pixel-qa/paths'
  * mutation. `UAT_KEEP=1` keeps the journey data for the restart proof.
  */
 
-const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-s06-qa-vocabulary.sql')
-const REGION = '20000000-0000-0000-0000-000000000002'
+const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-acc07-qa-vocabulary.sql')
 const HUB = '10000000-0000-0000-0000-000000000001'
 const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
 const CHAPTER_02 = '10000000-0000-0000-0000-000000000102'
@@ -113,23 +113,8 @@ async function signIn(page: Page, email: string) {
   await page.waitForURL((url) => !url.pathname.startsWith('/auth'))
 }
 
-/** WF01 S05 → S08 through the UI. */
-async function onboard(page: Page, name: string) {
-  await expect(page).toHaveURL('/onboarding/purpose')
-  await page.getByRole('button', { name: 'Bỏ qua, làm sau' }).click()
-  await expect(page).toHaveURL('/onboarding/profile')
-  await page.getByLabel('Họ và tên').fill(name)
-  await page.getByLabel('Chức danh hiện tại').fill('Kỹ sư')
-  await page.getByLabel('Tỉnh / thành phố').selectOption(REGION)
-  await page.getByRole('checkbox', { name: 'Logistics', exact: true }).check({ force: true })
-  await page.getByRole('button', { name: 'Tiếp tục' }).click()
-  await expect(page).toHaveURL('/onboarding/privacy')
-  await page.getByRole('checkbox').check()
-  await page.getByRole('button', { name: 'Xong, vào HUB' }).click()
-  await expect(page).toHaveURL('/onboarding/complete')
-  await page.getByRole('link', { name: 'Vào Tài khoản của tôi' }).click()
-  await expect(page).toHaveURL('/me')
-}
+/** ACC-05 → ACC-10 → /me through the screens (DEC-L1R). */
+const onboard = onboardThroughUi
 
 const audits = (resourceId: string) =>
   query<{ action: string }>(

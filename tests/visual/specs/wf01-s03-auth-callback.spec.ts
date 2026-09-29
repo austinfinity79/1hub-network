@@ -69,12 +69,10 @@ function trackUrls(page: Page): string[] {
 }
 
 test.describe('WF01-S03 functional', () => {
-  test('SUCCESS with incomplete onboarding: one session, then /onboarding/purpose', async ({
-    page,
-  }) => {
+  test('SUCCESS with incomplete onboarding: one session, then /onboarding', async ({ page }) => {
     const before = await sessionsFor(NEWCOMER)
     await page.goto(callback(await mint(NEWCOMER)))
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
     expect(await sessionsFor(NEWCOMER)).toBe(before + 1)
     const session = await (await page.request.get('/api/v1/session')).json()
     expect(session.authenticated).toBe(true)
@@ -88,7 +86,7 @@ test.describe('WF01-S03 functional', () => {
 
   test('SUCCESS renders the approved success state while navigating', async ({ page }) => {
     // Hold the destination so the transient state stays on screen.
-    await page.route('**/onboarding/purpose**', () => new Promise(() => {}))
+    await page.route(/\/onboarding(\?.*)?$/, () => new Promise(() => {}))
     await page.goto(callback(await mint(NEWCOMER)))
     const state = page.locator('[data-callback-state="success"]')
     await expect(state).toBeVisible()
@@ -181,7 +179,7 @@ test.describe('WF01-S03 functional', () => {
       pb.waitForURL(/onboarding|status=used/),
     ])
     const finals = [pa.url(), pb.url()].map((u) => new URL(u).pathname + new URL(u).search).sort()
-    expect(finals).toEqual(['/auth/callback?status=used', '/onboarding/purpose'])
+    expect(finals).toEqual(['/auth/callback?status=used', '/onboarding'])
     expect(await sessionsFor(NEWCOMER)).toBe(before + 1)
     await Promise.all([a.close(), b.close()])
   })
@@ -251,7 +249,7 @@ test.describe('WF01-S03 pixel QA (corrected AUTH3, per-state panel)', () => {
   for (const state of Object.keys(PANELS) as (keyof typeof PANELS)[]) {
     test(`${state}: typography and panel comparison`, async ({ page }) => {
       if (state === 'success') {
-        await page.route('**/onboarding/purpose**', () => new Promise(() => {}))
+        await page.route(/\/onboarding(\?.*)?$/, () => new Promise(() => {}))
         await page.goto(callback(await mint(NEWCOMER)), { waitUntil: 'load' })
       } else {
         await page.goto(`/auth/callback?status=${state}`, { waitUntil: 'networkidle' })

@@ -9,13 +9,13 @@ import { closePool, query } from '../../../src/lib/db/client'
  * public homepage for everyone and no longer redirects. The entry decision it
  * used to make moved into the homepage's primary call to action: a guest is
  * sent to /auth, a signed-in account wherever the canonical onboarding
- * resolver sends it (DEC-WF01-RESUME-D1). Each expected target is read back
+ * resolver sends it (DEC-L1R-D3). Each expected target is read back
  * from GET /api/v1/me/onboarding, the same resolver, so no step is hard-coded
  * twice. Protected routes keep their own guards (checked below).
  */
 
 const REGION = '20000000-0000-0000-0000-000000000002'
-const DOMAIN = '20000000-0000-0000-0000-000000000011'
+const COUNTRY = '21000000-0000-0000-0000-000000000001'
 
 test.beforeEach(async ({ page }) => {
   await page.context().clearCookies()
@@ -57,21 +57,23 @@ test.describe('M0-ENTRY-01 root entry', () => {
   }) => {
     const email = `root-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`
     expect((await page.request.post('/dev/login', { data: { email } })).ok()).toBe(true)
-    await expectRoot(page, '/onboarding/purpose') // 2. PURPOSE (new account)
+    await expectRoot(page, '/onboarding') // 2. INTRO (new account)
 
-    expect(
-      (await page.request.put('/api/v1/me/onboarding/intent', { data: { action: 'SKIP' } })).ok(),
-    ).toBe(true)
-    await expectRoot(page, '/onboarding/profile') // 3. PROFILE
+    const save = (data: Record<string, unknown>) =>
+      page.request.patch('/api/v1/me/profile', { data })
+    const pass = (completed: string) =>
+      page.request.put('/api/v1/me/onboarding/stage', { data: { completed } })
+    expect((await save({ full_name: 'Root Entry', display_name: 'Root' })).status()).toBe(200)
+    await expectRoot(page, '/onboarding/profile') // 3. BASIC (a required field is missing)
 
-    expect(
-      (
-        await page.request.patch('/api/v1/me/profile', {
-          data: { display_name: 'Root', headline: 'QA', region_id: REGION, domain_ids: [DOMAIN] },
-        })
-      ).status(),
-    ).toBe(200)
-    await expectRoot(page, '/onboarding/privacy') // 4. PRIVACY
+    expect((await save({ country_id: COUNTRY, region_id: REGION })).status()).toBe(200)
+    await expectRoot(page, '/onboarding/capability') // 4. CAPABILITY
+
+    expect((await pass('CAPABILITY')).ok()).toBe(true)
+    await expectRoot(page, '/onboarding/purpose') // 5. ROLE
+
+    expect((await pass('ROLE')).ok()).toBe(true)
+    await expectRoot(page, '/onboarding/privacy') // 5b. REVIEW
 
     const { documents } = await (await page.request.get('/api/v1/legal/current')).json()
     for (const doc of documents) {
@@ -83,7 +85,8 @@ test.describe('M0-ENTRY-01 root entry', () => {
         ).ok(),
       ).toBe(true)
     }
-    await expectRoot(page, '/onboarding/complete') // 5. COMPLETE
+    // Acceptance alone completes nothing: the account stays at the review.
+    await expectRoot(page, '/onboarding/privacy')
 
     expect((await page.request.post('/api/v1/me/onboarding/complete')).ok()).toBe(true)
     await expectRoot(page, '/me') // 6. DONE

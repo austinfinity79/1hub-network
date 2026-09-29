@@ -1,44 +1,39 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-
-import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { runScreenQa } from '../pixel-qa/capture'
-import { findScreen, loadManifest } from '../pixel-qa/manifest'
-import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
-import { decodePng, readPng, writeBuffer } from '../pixel-qa/png'
-import { qaConfigFor } from '../pixel-qa/qa-screens'
-import { writeJsonReport } from '../pixel-qa/report'
-import { compareSegments, type Rect, type Segment } from '../pixel-qa/segments'
+import { auditRevision, topOf } from '../pixel-qa/revision'
+import {
+  acceptLegal,
+  applyVocabularyFixture,
+  IDS,
+  memberships,
+  QA,
+  reach,
+  saveProfile,
+  signInFresh,
+  stored,
+  watchConsole,
+} from '../support/onboarding'
 
 /**
- * WF01-S07 — Privacy & Visibility (/onboarding/privacy). Production.
- * Decisions DEC-WF01-S07-D1..D8 (docs/decisions/DECISION_LOG.md).
- *
- * Legal versions are read from the database in every assertion, never
- * written as literals, so the tests hold when release configuration changes.
+ * WF01-S07 / ACC-09 — onboarding stage 4, "Rà soát hồ sơ trước khi hoàn tất"
+ * (/onboarding/privacy). Production. Decisions DEC-L1R-D3, D6, D7
+ * (docs/decisions/DECISION_LOG.md); DEC-WF01-S07-D1, D2, D8 still hold.
  */
 
-const VIS_API = '/api/v1/me/visibility'
-const ACCEPT_API = '/api/v1/me/consents/accept'
-const TYPES = ['TERMS_ACCEPTANCE', 'PRIVACY_DATA_PROCESSING'] as const
-const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-s06-qa-vocabulary.sql')
+const COMPLETE_API = '/api/v1/me/onboarding/complete'
+const VISIBILITY_API = '/api/v1/me/visibility'
+const ROLES_API = '/api/v1/me/onboarding/roles'
 
 let consoleErrors: string[] = []
 
 test.beforeAll(async () => {
-  await query(readFileSync(FIXTURE, 'utf8'))
+  await applyVocabularyFixture()
 })
 
 test.beforeEach(async ({ page }) => {
   consoleErrors = []
-  page.on('console', (m) => {
-    // Simulated 409/422/500 answers are the scenario under test.
-    if (m.type() === 'error' && !/status of (409|422|500)/.test(m.text()))
-      consoleErrors.push(m.text())
-  })
-  page.on('pageerror', (e) => consoleErrors.push(e.message))
+  watchConsole(page, consoleErrors)
   await page.context().clearCookies()
 })
 
@@ -50,757 +45,572 @@ test.afterAll(async () => {
   await closePool()
 })
 
-async function signInFresh(request: APIRequestContext): Promise<string> {
-  const email = `s07-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`
-  const response = await request.post('/dev/login', { data: { email } })
-  expect(response.ok()).toBe(true)
-  const [row] = await query<{ id: string }>(
-    'SELECT id::text FROM user_accounts WHERE email_normalized = $1',
-    [email],
-  )
-  return row!.id
-}
-
-/** A second, unrelated signed-in member in its own browser context. */
-async function otherMember(browser: Browser) {
-  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL })
-  await signInFresh(context.request)
-  return context
-}
-
-type Current = { id: string; type: string; version: string; content_uri: string }
-
-async function currentDocs(): Promise<Current[]> {
-  return query<Current>(
-    `SELECT DISTINCT ON (document_type) id::text, document_type::text AS type, version, content_uri
-       FROM legal_documents WHERE effective_at <= now() AND retired_at IS NULL
-      ORDER BY document_type, effective_at DESC, created_at DESC`,
-  )
-}
-
-async function consents(accountId: string) {
-  return query<{ type: string; version: string }>(
-    `SELECT c.consent_type::text AS type, d.version
-       FROM consent_records c JOIN legal_documents d ON d.id = c.legal_document_id
-      WHERE c.account_id = $1 ORDER BY 1, 2`,
-    [accountId],
-  )
-}
-
-async function audits(accountId: string, action: string) {
-  return query<{
-    resource_type: string
-    before_data: unknown
-    after_data: unknown
-    request_id: string | null
-  }>(
-    `SELECT resource_type, before_data, after_data, request_id FROM audit_events
-      WHERE actor_account_id = $1 AND action = $2 ORDER BY created_at`,
-    [accountId, action],
-  )
-}
-
-/** Publishes a new current Terms version for a race test; retire it in `finally`. */
-async function publishTermsV2(): Promise<{ version: string; retire: () => Promise<void> }> {
-  const version = `qa-s07-${Date.now()}`
-  await query(
-    `INSERT INTO legal_documents (document_type, version, title, content_uri, effective_at)
-     VALUES ('TERMS_ACCEPTANCE', $1, 'Điều khoản sử dụng', $2, now())`,
-    [version, `/legal/terms/${version}`],
-  )
-  return {
-    version,
-    retire: async () => {
-      await query('UPDATE legal_documents SET retired_at = now() WHERE version = $1', [version])
-    },
-  }
-}
-
-async function openPrivacy(page: Page) {
+async function openReview(page: Page) {
   await page.goto('/onboarding/privacy', { waitUntil: 'networkidle' })
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ai được thấy gì')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Rà soát hồ sơ trước khi hoàn tất',
+  )
 }
 
-const discoverySwitch = (page: Page) =>
-  page.getByRole('switch', { name: 'Hiện thẻ của tôi trong Thư viện' })
-const legalBox = (page: Page) => page.getByRole('checkbox')
-const cta = (page: Page) => page.getByRole('button', { name: 'Xong, vào HUB' })
+const finish = (page: Page) => page.getByRole('button', { name: 'Hoàn tất hồ sơ' })
+const agree = (page: Page) => page.getByRole('checkbox', { name: /Tôi đồng ý/ })
+const discovery = (page: Page) =>
+  page.getByRole('switch', { name: 'Hiển thị hồ sơ trong Mạng lưới' })
 
-/** A 1x1 PNG, generated so no binary lives in the repo. */
-const PNG_1X1 = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-  'base64',
-)
-
-test.describe('WF01-S07 functional and security', () => {
-  test('a guest is sent to /auth and every S07 API refuses', async ({ page, request }) => {
-    await page.goto('/onboarding/privacy')
-    await expect(page).toHaveURL('/auth')
-    for (const [method, url] of [
-      ['GET', '/api/v1/me/consents'],
-      ['GET', VIS_API],
-      ['PUT', VIS_API],
-      ['POST', ACCEPT_API],
-    ] as const) {
-      const response = await request.fetch(url, { method, data: {} })
-      expect(response.status(), `${method} ${url}`).toBe(401)
-    }
-  })
-
-  test('current legal documents come from the server, with working content links', async ({
-    page,
-  }) => {
-    await signInFresh(page.request)
-    const body = await (await page.request.get('/api/v1/legal/current')).json()
-    const docs = await currentDocs()
-    expect(body.documents.map((d: { type: string }) => d.type)).toEqual([...TYPES])
-    for (const doc of body.documents) {
-      const row = docs.find((d) => d.type === doc.type)!
-      expect(doc).toEqual({
-        type: row.type,
-        version: row.version,
-        title: expect.any(String),
-        required: true,
-        content_url: row.content_uri,
-      })
-    }
-    await openPrivacy(page)
-    for (const doc of body.documents) {
-      await expect(page.getByRole('link', { name: doc.title })).toHaveAttribute(
-        'href',
-        doc.content_url,
-      )
-      const content = await page.request.get(doc.content_url)
-      expect(content.status()).toBe(200)
-      // Local content is the marked non-production fixture, never legal prose.
-      expect(await content.text()).toContain('KHÔNG PHẢI VĂN BẢN PHÁP LÝ')
-      // DEC-LEGAL-D2: the address without a version opens the current document.
-      const kind = doc.content_url.split('/')[2]
-      const bare = await page.request.get(`/legal/${kind}`, { maxRedirects: 0 })
-      expect(bare.status()).toBe(307)
-      expect(bare.headers()['location']).toBe(doc.content_url)
-    }
-    expect((await page.request.get('/legal/terms/no-such-version')).status()).toBe(404)
-    expect((await page.request.get('/legal/no-such-kind')).status()).toBe(404)
-  })
-
-  test('D1: one acknowledgement creates two canonical records; S07 does not complete onboarding', async ({
-    page,
-  }) => {
-    const accountId = await signInFresh(page.request)
-    await openPrivacy(page)
-    await legalBox(page).check()
-    await cta(page).click()
-    await expect(page).toHaveURL('/onboarding/complete')
-    const docs = await currentDocs()
-    expect(await consents(accountId)).toEqual(
-      [...TYPES]
-        .sort()
-        .map((type) => ({ type, version: docs.find((d) => d.type === type)!.version })),
-    )
-    const [profile] = await query<{ status: string; completed: Date | null }>(
-      `SELECT status::text, onboarding_completed_at AS completed
-         FROM individual_profiles WHERE account_id = $1`,
+const consents = async (accountId: string) =>
+  (
+    await query<{ type: string; version: string }>(
+      `SELECT c.consent_type::text AS type, d.version FROM consent_records c
+         JOIN legal_documents d ON d.id = c.legal_document_id
+        WHERE c.account_id = $1 AND c.withdrawn_at IS NULL`,
       [accountId],
     )
-    expect(profile).toEqual({ status: 'DRAFT', completed: null })
-  })
+  ).sort((a, b) => a.type.localeCompare(b.type))
 
-  test('D1: without the acknowledgement nothing is accepted and S07 stays', async ({ page }) => {
-    const accountId = await signInFresh(page.request)
-    let accepts = 0
-    page.on('request', (r) => {
-      if (r.url().endsWith(ACCEPT_API)) accepts++
-    })
-    await openPrivacy(page)
-    await cta(page).click()
-    await expect(page.locator('form').getByRole('alert')).toHaveText(
-      'Vui lòng đồng ý với các văn bản bên dưới để tiếp tục.',
-    )
-    await expect(page).toHaveURL('/onboarding/privacy')
-    expect(accepts).toBe(0)
-    expect(await consents(accountId)).toEqual([])
-  })
+/** The stored PROFILE_DISCOVERY level, as the owner's API reports it. */
+const level = async (page: Page) =>
+  (await (await page.request.get(VISIBILITY_API)).json()).groups.find(
+    (g: { group_code: string }) => g.group_code === 'PROFILE_DISCOVERY',
+  ).level as string
 
-  test('repeated submits accept each document once', async ({ page }) => {
-    const accountId = await signInFresh(page.request)
-    await openPrivacy(page)
-    await legalBox(page).check()
-    let accepts = 0
-    await page.route(`**${ACCEPT_API}`, async (route) => {
-      accepts++
-      await new Promise((done) => setTimeout(done, 300))
-      await route.continue()
-    })
-    await page.locator('form').evaluate((form: HTMLFormElement) => {
-      form.requestSubmit()
-      form.requestSubmit()
-      form.requestSubmit()
-    })
-    await expect(page).toHaveURL('/onboarding/complete')
-    expect(accepts).toBe(2)
-    expect(await consents(accountId)).toHaveLength(2)
-  })
+/** The board's state, as far as the manual flow stores it. */
+const BOARD = {
+  headline: 'Đồng sáng lập · CEO tại Tracely',
+  bio: 'Mười năm vận hành chuỗi lạnh nông sản.',
+  domain_ids: [QA.domain.logistics, QA.domain.agritech, QA.domain.climate],
+  specialization_ids: [
+    QA.specialization.operations,
+    QA.specialization.technology,
+    QA.specialization.finance,
+  ],
+  skill_ids: [QA.skill.data, QA.skill.b2b, QA.skill.pitching],
+  experience: [
+    { title: 'Đồng sáng lập · CEO', organization_name: 'Tracely', started_on: '2022-02' },
+    {
+      title: 'Trưởng bộ phận vận hành chuỗi lạnh',
+      organization_name: 'Minh Phát Agri',
+      started_on: '2017-03',
+      ended_on: '2022-01',
+    },
+  ],
+  links: [{ label: 'LinkedIn', url: 'https://linkedin.com/in/dangkimchi' }],
+}
 
-  test('accept is idempotent and duplicate-safe; replays keep one record', async ({ page }) => {
-    const accountId = await signInFresh(page.request)
-    const terms = (await currentDocs()).find((d) => d.type === 'TERMS_ACCEPTANCE')!
-    const data = { consent_type: 'TERMS_ACCEPTANCE', policy_version: terms.version }
-    const first = await page.request.post(ACCEPT_API, {
-      data,
-      headers: { 'Idempotency-Key': 'k-1' },
-    })
-    expect(first.status()).toBe(201)
-    const replay = await page.request.post(ACCEPT_API, {
-      data,
-      headers: { 'Idempotency-Key': 'k-1' },
-    })
-    expect(replay.status()).toBe(201)
-    const again = await page.request.post(ACCEPT_API, {
-      data,
-      headers: { 'Idempotency-Key': 'k-2' },
-    })
-    expect(again.status()).toBe(200)
-    const ids = [first, replay, again].map(async (r) => (await r.json()).id)
-    expect(new Set(await Promise.all(ids)).size).toBe(1)
-    expect(await consents(accountId)).toHaveLength(1)
-    // One audit event for the one record, with no personal data.
-    const events = await audits(accountId, 'CONSENT_ACCEPTED')
-    expect(events).toHaveLength(1)
-    expect(events[0]).toMatchObject({
-      resource_type: 'consent_record',
-      after_data: { consent_type: 'TERMS_ACCEPTANCE', policy_version: terms.version },
-      request_id: expect.any(String),
-    })
-  })
+const CLAIM = {
+  organization_id: IDS.chapter01,
+  position: 'Phó trưởng chapter',
+  period: '2024 – nay',
+}
 
-  test('D8: a stale or unknown version is refused with 409', async ({ page }) => {
-    const accountId = await signInFresh(page.request)
-    for (const version of ['old-version', '', null]) {
-      const response = await page.request.post(ACCEPT_API, {
-        data: { consent_type: 'PRIVACY_DATA_PROCESSING', policy_version: version },
-      })
-      expect(response.status()).toBe(409)
-      expect((await response.json()).error.code).toBe('LEGAL_DOCUMENT_VERSION_STALE')
-    }
-    const unknown = await page.request.post(ACCEPT_API, {
-      data: { consent_type: 'MARKETING', policy_version: 'x' },
-    })
-    expect(unknown.status()).toBe(404)
-    expect(await consents(accountId)).toEqual([])
-  })
-
-  test('race A: Terms accepted, Privacy fails, retry completes without duplicating Terms', async ({
+test.describe('WF01-S07 functional and security', () => {
+  test('a guest is sent to /auth; the stage opens only after stage 3 is passed', async ({
     page,
   }) => {
-    const accountId = await signInFresh(page.request)
-    await openPrivacy(page)
-    await page.route(`**${ACCEPT_API}`, (route) =>
-      route.request().postDataJSON().consent_type === 'PRIVACY_DATA_PROCESSING'
-        ? route.fulfill({
-            status: 500,
-            contentType: 'application/json',
-            body: JSON.stringify({ error: { code: 'INTERNAL', message: 'x', request_id: 'r' } }),
-          })
-        : route.continue(),
-    )
-    await legalBox(page).check()
-    await cta(page).click()
-    await expect(page.locator('form').getByRole('alert')).toHaveText(
-      'Chưa lưu được lựa chọn. Vui lòng thử lại.',
-    )
-    await expect(page).toHaveURL('/onboarding/privacy')
-    expect((await consents(accountId)).map((c) => c.type)).toEqual(['TERMS_ACCEPTANCE'])
-
-    await page.unroute(`**${ACCEPT_API}`)
-    await cta(page).click()
-    await expect(page).toHaveURL('/onboarding/complete')
-    expect((await consents(accountId)).map((c) => c.type)).toEqual([...TYPES].sort())
-    expect(await audits(accountId, 'CONSENT_ACCEPTED')).toHaveLength(2)
+    await page.goto('/onboarding/privacy')
+    await expect(page).toHaveURL('/auth')
+    await signInFresh(page.request, 's07')
+    await reach(page.request, 'ROLE')
+    await page.goto('/onboarding/privacy')
+    await expect(page).toHaveURL('/onboarding/purpose')
   })
 
-  test('race B: the version changes while S07 is open; V1 refused, docs reload, V2 required', async ({
-    page,
-  }) => {
-    const accountId = await signInFresh(page.request)
-    await openPrivacy(page)
-    const v1Link = await page.getByRole('link', { name: 'Điều khoản sử dụng' }).getAttribute('href')
-    const v2 = await publishTermsV2()
-    try {
-      await legalBox(page).check()
-      await cta(page).click()
-      await expect(page.locator('form').getByRole('alert')).toHaveText(
-        'Văn bản vừa được cập nhật. Vui lòng xem lại và đồng ý với phiên bản mới.',
-      )
-      await expect(page.getByRole('link', { name: 'Điều khoản sử dụng' })).toHaveAttribute(
-        'href',
-        `/legal/terms/${v2.version}`,
-      )
-      expect(v1Link).not.toBe(`/legal/terms/${v2.version}`)
-      await expect(legalBox(page)).not.toBeChecked()
-      expect(await consents(accountId)).toEqual([])
+  test('the review shows what the three stages stored, with "Sửa" to each', async ({ page }) => {
+    await signInFresh(page.request, 's07')
+    await reach(page.request, 'CAPABILITY', BOARD)
+    await reach(page.request, 'ROLE')
+    await page.request.put(ROLES_API, {
+      data: { roles: ['HUB_MEMBER', 'INNOVATOR', 'STARTUP_FOUNDER'], hub_claims: [CLAIM] },
+    })
+    await reach(page.request, 'REVIEW', BOARD)
+    await openReview(page)
+    await expect(page.locator('header')).toContainText('BƯỚC 4/4 · RÀ SOÁT VÀ HOÀN TẤT')
+    await expect(page.locator('header ol li').nth(3)).toHaveAttribute('aria-current', 'step')
 
-      await legalBox(page).check()
-      await cta(page).click()
-      await expect(page).toHaveURL('/onboarding/complete')
-      const rows = await consents(accountId)
-      expect(rows.find((r) => r.type === 'TERMS_ACCEPTANCE')!.version).toBe(v2.version)
-      expect(rows).toHaveLength(2)
-    } finally {
-      await v2.retire()
-    }
-  })
-
-  test('race C / revisit: both current acceptances exist; satisfied state, nothing re-sent', async ({
-    page,
-  }) => {
-    const accountId = await signInFresh(page.request)
-    for (const doc of await currentDocs()) {
-      const response = await page.request.post(ACCEPT_API, {
-        data: { consent_type: doc.type, policy_version: doc.version },
-      })
-      expect(response.status()).toBe(201)
-    }
-    let accepts = 0
-    page.on('request', (r) => {
-      if (r.url().endsWith(ACCEPT_API)) accepts++
-    })
-    await openPrivacy(page)
-    await expect(legalBox(page)).toBeChecked()
-    await expect(legalBox(page)).toBeDisabled()
-    await cta(page).click()
-    await expect(page).toHaveURL('/onboarding/complete')
-    expect(accepts).toBe(0)
-    expect(await consents(accountId)).toHaveLength(2)
-  })
-
-  test('D4: PROFILE_DISCOVERY defaults to NETWORK_ONLY, shown ON', async ({ page }) => {
-    await signInFresh(page.request)
-    expect(await (await page.request.get(VIS_API)).json()).toEqual({
-      groups: [{ group_code: 'PROFILE_DISCOVERY', level: 'NETWORK_ONLY' }],
-    })
-    await openPrivacy(page)
-    await expect(discoverySwitch(page)).toHaveAttribute('aria-checked', 'true')
-  })
-
-  test('D2/D4: OFF persists PRIVATE as an override; ON again removes it; changes audited', async ({
-    page,
-  }) => {
-    const accountId = await signInFresh(page.request)
-    await openPrivacy(page)
-    await discoverySwitch(page).click()
-    await expect(discoverySwitch(page)).toHaveAttribute('aria-checked', 'false')
-    await legalBox(page).check()
-    await cta(page).click()
-    await expect(page).toHaveURL('/onboarding/complete')
-    const stored = async () =>
-      (
-        await query<{ default_level: string; group_overrides: unknown }>(
-          `SELECT v.default_level::text, v.group_overrides FROM profile_visibility_settings v
-             JOIN individual_profiles p ON p.id = v.profile_id WHERE p.account_id = $1`,
-          [accountId],
-        )
-      )[0]
-    expect(await stored()).toEqual({
-      default_level: 'NETWORK_ONLY',
-      group_overrides: { PROFILE_DISCOVERY: 'PRIVATE' },
-    })
-    await page.request.put(VIS_API, {
-      data: { groups: [{ group_code: 'PROFILE_DISCOVERY', level: 'NETWORK_ONLY' }] },
-    })
-    expect(await stored()).toEqual({ default_level: 'NETWORK_ONLY', group_overrides: {} })
-    // A no-op PUT writes no event.
-    await page.request.put(VIS_API, {
-      data: { groups: [{ group_code: 'PROFILE_DISCOVERY', level: 'NETWORK_ONLY' }] },
-    })
-    const events = await audits(accountId, 'PROFILE_VISIBILITY_CHANGED')
-    expect(events.map((e) => [e.before_data, e.after_data])).toEqual([
-      [{ PROFILE_DISCOVERY: 'NETWORK_ONLY' }, { PROFILE_DISCOVERY: 'PRIVATE' }],
-      [{ PROFILE_DISCOVERY: 'PRIVATE' }, { PROFILE_DISCOVERY: 'NETWORK_ONLY' }],
+    const part = (n: number) => page.locator(`[data-anchor="part-${n}"]`)
+    await expect(part(1).getByRole('heading', { level: 2 })).toHaveText('Thông tin cơ bản')
+    await expect(part(1).locator('dd')).toHaveText([
+      'Đặng Kim Chi',
+      'Kim Chi Đặng',
+      'Đồng sáng lập · CEO tại Tracely',
+      'Đà Nẵng, Việt Nam',
+      'Chưa có',
+      'Chưa thêm · riêng tư',
     ])
-    expect(events.every((e) => e.resource_type === 'individual_profile' && e.request_id)).toBe(true)
+    await expect(part(2).locator('dd')).toHaveText([
+      'Logistics · AgriTech · Climate Tech',
+      'Vận hành · Công nghệ · Tài chính',
+      'Phân tích dữ liệu · Đàm phán B2B · Pitching',
+      '2 mục',
+      'LinkedIn',
+    ])
+    await expect(part(3).locator('dd')).toHaveText([
+      'Thành viên HUB Network · Innovator · Founder',
+      'Phó trưởng chapter · Chapter 01 — Chờ xác minh',
+    ])
+    await expect(page.locator('[data-nav^="edit-"]')).toHaveCount(3)
+    const targets = await page
+      .locator('[data-nav^="edit-"]')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('href')))
+    expect(targets).toEqual([
+      '/onboarding/profile',
+      '/onboarding/capability',
+      '/onboarding/purpose',
+    ])
+    await expect(page.locator('main')).not.toContainText(/AI đề xuất|do AI/)
   })
 
-  test('D8: unknown groups and unsupported levels are refused with 422', async ({ page }) => {
-    await signInFresh(page.request)
-    for (const groups of [
-      [{ group_code: 'BASIC_PUBLIC', level: 'NETWORK_ONLY' }],
-      [{ group_code: 'INVESTOR_CONTACT', level: 'NETWORK_ONLY' }],
-      [{ group_code: 'RECRUITMENT', level: 'PRIVATE' }],
-      [{ group_code: 'PROFILE_DISCOVERY', level: 'PUBLIC' }],
-      [{ group_code: 'PROFILE_DISCOVERY', level: 'PROGRAMME_ACCESS' }],
-      [{ group_code: 'PROFILE_DISCOVERY', level: 'GRANTED_ACCESS' }],
-      [{ group_code: 'PROFILE_DISCOVERY', level: 'network_only' }],
-      [{ group_code: 'PROFILE_DISCOVERY' }],
-      [],
-    ]) {
-      const response = await page.request.put(VIS_API, { data: { groups } })
-      expect(response.status(), JSON.stringify(groups)).toBe(422)
-      expect((await response.json()).error.code).toBe('VISIBILITY_VALIDATION_FAILED')
+  test('completion is the server’s; the preview never shows private fields', async ({ page }) => {
+    await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW', { ...BOARD, phone: '+84901234567' })
+    await openReview(page)
+    const server = await (await page.request.get('/api/v1/me/profile/completion')).json()
+    expect(server.percent).toBe(70)
+    const box = page.locator('[data-completion]')
+    await expect(box).toContainText('70%')
+    await expect(box.locator('li')).toHaveText([
+      'Ảnh hồ sơ',
+      'Mục tiêu phát triển',
+      'Nhu cầu hiện tại',
+    ])
+    const preview = page.locator('[data-preview]')
+    await expect(preview).toContainText('Kim Chi Đặng')
+    await expect(preview).toContainText('Đồng sáng lập · CEO tại Tracely · Đà Nẵng')
+    await expect(preview.locator('li')).toHaveText(['Logistics', 'AgriTech', 'Climate Tech'])
+    const text = await preview.innerText()
+    for (const hidden of ['Đặng Kim Chi', '84901234567', '@example.test']) {
+      expect(text, hidden).not.toContain(hidden)
     }
-    expect((await (await page.request.get(VIS_API)).json()).groups[0].level).toBe('NETWORK_ONLY')
+    // Nothing was declared, so the card carries no role chip.
+    await expect(preview.locator('[data-preview-roles]')).toHaveCount(0)
   })
 
-  test("a member cannot change another profile's visibility", async ({ page, browser }) => {
-    await signInFresh(page.request)
-    const other = await otherMember(browser)
-    const [victim] = await query<{ id: string }>(
-      `SELECT p.id::text FROM individual_profiles p
-         JOIN user_accounts a ON a.id = p.account_id
-        WHERE a.email_normalized = 'member@example.test'`,
-    )
-    const response = await other.request.put(VIS_API, {
-      data: {
-        profile_id: victim!.id,
-        groups: [{ group_code: 'PROFILE_DISCOVERY', level: 'PRIVATE' }],
-      },
+  test('the preview’s role chips are descriptive text, never authority', async ({ page }) => {
+    await signInFresh(page.request, 's07')
+    await reach(page.request, 'ROLE')
+    await page.request.put(ROLES_API, {
+      data: { roles: ['HUB_MEMBER', 'INNOVATOR', 'STARTUP_FOUNDER'] },
     })
-    // Only the caller's own profile can ever be addressed.
-    expect(response.status()).toBe(200)
-    const [row] = await query<{ group_overrides: unknown }>(
-      'SELECT group_overrides FROM profile_visibility_settings WHERE profile_id = $1',
-      [victim!.id],
-    )
-    expect(row!.group_overrides).toEqual({})
-    await other.close()
-  })
+    await reach(page.request, 'REVIEW')
+    await openReview(page)
+    const chips = page.locator('[data-preview-roles] li')
+    // Without a named unit the HUB role is only self-declared.
+    await expect(chips).toHaveText(['Thành viên HUB · Tự khai', 'Innovator', 'Founder'])
+    await expect(page.locator('[data-preview] a, [data-preview] button')).toHaveCount(0)
 
-  test('DTOs carry no contact data and no raw consent metadata', async ({ page }) => {
-    await signInFresh(page.request)
-    const doc = (await currentDocs())[0]!
-    const created = await (
-      await page.request.post(ACCEPT_API, {
-        data: { consent_type: doc.type, policy_version: doc.version },
-      })
-    ).json()
-    expect(Object.keys(created).sort()).toEqual(
-      ['accepted_at', 'id', 'policy_version', 'revoked_at', 'status', 'type'].sort(),
-    )
-    const list = await (await page.request.get('/api/v1/me/consents')).json()
-    for (const item of list.items) {
-      expect(Object.keys(item).sort()).toEqual(Object.keys(created).sort())
-    }
-    const bodies = [
-      JSON.stringify(created),
-      JSON.stringify(list),
-      JSON.stringify(await (await page.request.get(VIS_API)).json()),
-      JSON.stringify(await (await page.request.get('/api/v1/legal/current')).json()),
-    ].join('\n')
-    expect(bodies).not.toMatch(/@example\.test|metadata|legal_document_id|account_id|email/)
-  })
-
-  test('D5: avatar visibility is enforced at the media boundary', async ({ page, browser }) => {
-    await signInFresh(page.request)
-    const upload = await page.request.post('/api/v1/me/profile/avatar', {
-      multipart: { file: { name: 'a.png', mimeType: 'image/png', buffer: PNG_1X1 } },
+    await page.request.put(ROLES_API, {
+      data: { roles: ['HUB_MEMBER', 'INNOVATOR', 'STARTUP_FOUNDER'], hub_claims: [CLAIM] },
     })
-    expect(upload.status()).toBe(200)
-    const { url } = await upload.json()
-    const other = await otherMember(browser)
-    const guest = await browser.newContext({ baseURL: test.info().project.use.baseURL })
-
-    expect((await page.request.get(url)).status(), 'owner').toBe(200)
-    expect((await other.request.get(url)).status(), 'member, NETWORK_ONLY').toBe(200)
-    expect((await guest.request.get(url)).status(), 'guest').toBe(404)
-
-    await page.request.put(VIS_API, {
-      data: { groups: [{ group_code: 'PROFILE_DISCOVERY', level: 'PRIVATE' }] },
-    })
-    expect((await page.request.get(url)).status(), 'owner, PRIVATE').toBe(200)
-    expect((await other.request.get(url)).status(), 'member, PRIVATE').toBe(404)
-    expect((await guest.request.get(url)).status(), 'guest, PRIVATE').toBe(404)
-    await other.close()
-    await guest.close()
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(chips).toHaveText(['Thành viên HUB · Chờ xác minh', 'Innovator', 'Founder'])
+    await expect(page.locator('[data-preview]')).not.toContainText(/Đã xác minh|Phó trưởng chapter/)
+    const session = await (await page.request.get('/api/v1/session')).json()
+    expect(session.capabilities ?? []).toEqual([])
+    expect(session.managed_scopes ?? []).toEqual([])
   })
 
-  test('D3/D6: no skip and no Future purpose control or mutation', async ({ page }) => {
-    await signInFresh(page.request)
-    await openPrivacy(page)
-    await expect(page.getByText('Bỏ qua, làm sau')).toHaveCount(0)
-    // Only the P0-SHELL wordmark → / link (DEC-P0-SHELL-D1); no skip or step link.
-    await expect(page.locator('header').getByRole('link')).toHaveCount(1)
-    await expect(page.locator('header [data-nav="home"]')).toHaveAttribute('href', '/')
-    await expect(page.getByRole('switch')).toHaveCount(1)
-    const text = (await page.locator('main').innerText()).toLowerCase()
-    for (const future of ['quỹ đầu tư', 'đặt bài toán liên hệ', 'tuyển dụng', 'google']) {
-      expect(text, future).not.toContain(future)
+  test('the confirmation is required: without it nothing is completed', async ({ page }) => {
+    const { accountId } = await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW')
+    const calls: string[] = []
+    page.on('request', (r) => {
+      if (r.method() !== 'GET') calls.push(`${r.method()} ${new URL(r.url()).pathname}`)
+    })
+    await openReview(page)
+    await expect(agree(page)).not.toBeChecked()
+    await finish(page).click()
+    await expect(page.getByText('Vui lòng đồng ý với hai văn bản để hoàn tất hồ sơ.')).toBeVisible()
+    await expect(page).toHaveURL('/onboarding/privacy')
+    expect(calls).toEqual([])
+    expect(await consents(accountId)).toEqual([])
+    expect(await stored(accountId)).toMatchObject({ status: 'DRAFT', completed: null })
+    // The API holds the same line.
+    const refused = await page.request.post(COMPLETE_API)
+    expect(refused.status()).toBe(422)
+    expect((await refused.json()).error.fields).toEqual({
+      TERMS_ACCEPTANCE: 'missing',
+      PRIVACY_DATA_PROCESSING: 'missing',
+    })
+  })
+
+  test('the documents open by their current version', async ({ page }) => {
+    await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW')
+    await openReview(page)
+    const { documents } = await (await page.request.get('/api/v1/legal/current')).json()
+    const links = page.locator('[data-legal] a')
+    await expect(links).toHaveCount(2)
+    for (const doc of documents) {
+      const link = page.locator('[data-legal]').getByRole('link', { name: doc.title })
+      await expect(link).toHaveAttribute('href', doc.content_url)
+      await expect(link).toHaveAttribute('target', '_blank')
+      expect((await page.request.get(doc.content_url)).status()).toBe(200)
     }
   })
 
-  test('D7: the lede emphasises "mục đích" without Markdown asterisks', async ({ page }) => {
-    await signInFresh(page.request)
-    await openPrivacy(page)
-    await expect(page.locator('p strong')).toHaveText('mục đích')
-    expect(await page.locator('main').innerText()).not.toContain('**')
-  })
-
-  test('keyboard and a11y: switch, acknowledgement, links, CTA', async ({ page }) => {
-    await signInFresh(page.request)
-    await openPrivacy(page)
-    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
-    // P0-SHELL (DEC-P0-SHELL-D1): the wordmark → / is the first Tab stop.
-    await page.keyboard.press('Tab')
-    await expect(page.locator('[data-nav="home"]')).toBeFocused()
-    await page.keyboard.press('Tab')
-    await expect(discoverySwitch(page)).toBeFocused()
-    expect(
-      await discoverySwitch(page).evaluate((el) => getComputedStyle(el).outlineStyle),
-    ).not.toBe('none')
-    await page.keyboard.press('Space')
-    await expect(discoverySwitch(page)).toHaveAttribute('aria-checked', 'false')
-    await page.keyboard.press('Space')
-    await expect(discoverySwitch(page)).toHaveAttribute('aria-checked', 'true')
-    await page.keyboard.press('Tab')
-    await expect(legalBox(page)).toBeFocused()
-    await page.keyboard.press('Space')
-    await expect(legalBox(page)).toBeChecked()
-    await page.keyboard.press('Tab')
-    await expect(page.getByRole('link', { name: 'Điều khoản sử dụng' })).toBeFocused()
-    await page.keyboard.press('Tab')
-    await expect(page.getByRole('link', { name: 'Chính sách quyền riêng tư' })).toBeFocused()
-    await cta(page).focus()
-    await page.keyboard.press('Enter')
+  test('B. "Hoàn tất hồ sơ" records two consents, the visibility and activates one profile', async ({
+    page,
+  }) => {
+    const { accountId } = await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW')
+    await openReview(page)
+    await agree(page).check({ force: true })
+    await finish(page).click()
     await expect(page).toHaveURL('/onboarding/complete')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Hồ sơ của bạn đã sẵn sàng')
+
+    const { documents } = await (await page.request.get('/api/v1/legal/current')).json()
+    expect(await consents(accountId)).toEqual(
+      [...documents]
+        .sort((a: { type: string }, b: { type: string }) => a.type.localeCompare(b.type))
+        .map((d: { type: string; version: string }) => ({ type: d.type, version: d.version })),
+    )
+    const row = await stored(accountId)
+    expect(row).toMatchObject({ status: 'ACTIVE', profiles: 1 })
+    expect(row!.completed).toBeInstanceOf(Date)
+    expect(await level(page)).toBe('NETWORK_ONLY')
+    const audits = await query<{ action: string }>(
+      `SELECT action FROM audit_events WHERE actor_account_id = $1 ORDER BY action`,
+      [accountId],
+    )
+    expect(audits.map((a) => a.action)).toEqual([
+      'CONSENT_ACCEPTED',
+      'CONSENT_ACCEPTED',
+      'PROFILE_ACTIVATED',
+    ])
   })
 
-  test('key text colours match the approved inks', async ({ page }) => {
-    await signInFresh(page.request)
-    await openPrivacy(page)
-    const colours = await page.evaluate(() => {
-      const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!
-      const rgb = (el: Element | null) => {
-        ctx.clearRect(0, 0, 1, 1)
-        ctx.fillStyle = getComputedStyle(el!).color
-        ctx.fillRect(0, 0, 1, 1)
-        return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)]
-      }
-      const text = (t: string) =>
-        [...document.querySelectorAll('p')].find((p) => p.textContent!.startsWith(t)) ?? null
-      return {
-        title: rgb(document.querySelector('h1')),
-        lede: rgb(document.querySelector('h1 + p')),
-        option: rgb(document.getElementById('discovery-title')),
-        hint: rgb(document.getElementById('discovery-hint')),
-        warning: rgb(text('Tắt thì')),
-        progress: rgb(text('Bước 3 trong 3')),
-        cta: rgb(document.querySelector('button[type="submit"]')),
-      }
+  test('G. visibility is its own choice: off stores PRIVATE, and it is not consent', async ({
+    page,
+  }) => {
+    const { accountId } = await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW')
+    await openReview(page)
+    await expect(discovery(page)).toHaveAttribute('aria-checked', 'true')
+    await discovery(page).click()
+    await expect(discovery(page)).toHaveAttribute('aria-checked', 'false')
+    // Switching visibility neither ticks nor replaces the confirmation.
+    await expect(agree(page)).not.toBeChecked()
+    await page
+      .locator('[data-anchor="footer"]')
+      .getByRole('button', { name: 'Lưu và hoàn tất sau' })
+      .click()
+    await expect(page).toHaveURL('/')
+    expect(await level(page)).toBe('PRIVATE')
+    expect(await consents(accountId)).toEqual([])
+    expect(await stored(accountId)).toMatchObject({ status: 'DRAFT', completed: null })
+
+    await page.goto('/me')
+    await expect(page).toHaveURL('/onboarding/privacy')
+    await expect(discovery(page)).toHaveAttribute('aria-checked', 'false')
+    await agree(page).check({ force: true })
+    await finish(page).click()
+    await expect(page).toHaveURL('/onboarding/complete')
+    expect(await level(page)).toBe('PRIVATE')
+    expect(await (await page.request.get(VISIBILITY_API)).json()).toEqual({
+      groups: [{ group_code: 'PROFILE_DISCOVERY', level: 'PRIVATE' }],
     })
-    // Inks read from the approved WF01-S07 bitmap; +-3 per channel for raster rounding.
-    const APPROVED: Record<keyof typeof colours, [number, number, number]> = {
-      title: [0x17, 0x00, 0x02],
-      lede: [0x53, 0x40, 0x41],
-      option: [0x17, 0x00, 0x02],
-      hint: [0x53, 0x40, 0x41],
-      warning: [0xb9, 0x16, 0x10],
-      progress: [0x53, 0x40, 0x41],
-      cta: [0x16, 0x00, 0x02],
+  })
+
+  test('F. completing files the named unit as a pending, self-declared request only', async ({
+    page,
+  }) => {
+    const { accountId } = await signInFresh(page.request, 's07')
+    await reach(page.request, 'ROLE')
+    await page.request.put(ROLES_API, { data: { roles: ['HUB_MEMBER'], hub_claims: [CLAIM] } })
+    await reach(page.request, 'REVIEW')
+    expect(await memberships(accountId)).toEqual([])
+    await openReview(page)
+    await agree(page).check({ force: true })
+    await finish(page).click()
+    await expect(page).toHaveURL('/onboarding/complete')
+
+    expect(await memberships(accountId)).toEqual([
+      {
+        organization_id: IDS.chapter01,
+        state: 'PENDING_APPROVAL',
+        source: 'SELF_DECLARED',
+        claimed_position: 'Phó trưởng chapter',
+        claimed_period: '2024 – nay',
+      },
+    ])
+    expect((await stored(accountId))!.claims).toEqual([])
+    const [granted] = await query<{ leadership: number; assignments: number }>(
+      `SELECT (SELECT count(*)::int FROM leadership_records l WHERE l.profile_id = p.id) AS leadership,
+              (SELECT count(*)::int FROM role_assignments r
+                WHERE r.individual_profile_id = p.id) AS assignments
+         FROM individual_profiles p WHERE p.account_id = $1`,
+      [accountId],
+    )
+    expect(granted).toEqual({ leadership: 0, assignments: 0 })
+    const session = await (await page.request.get('/api/v1/session')).json()
+    expect(session.capabilities ?? []).toEqual([])
+    expect(session.managed_scopes ?? []).toEqual([])
+    const ops = `/api/v1/ops/organizations/${IDS.chapter01}`
+    for (const path of [`${ops}/members`, `${ops}/dashboard`]) {
+      expect([403, 404], path).toContain((await page.request.get(path)).status())
     }
-    for (const key of Object.keys(APPROVED) as (keyof typeof colours)[]) {
-      colours[key].forEach((channel, i) => {
-        expect(Math.abs(channel - APPROVED[key][i]!), `${key} channel ${i}`).toBeLessThanOrEqual(3)
-      })
+    // The ops area does not exist for this account (DEC-WF03-G11: the same 404).
+    for (const route of ['/ops/network', `/ops/org/${IDS.chapter01}`]) {
+      expect((await page.goto(route))?.status(), route).toBe(404)
     }
+  })
+
+  test('a stale document version asks again and completes nothing', async ({ page }) => {
+    const { accountId } = await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW')
+    await openReview(page)
+    const version = `s07-${Date.now()}`
+    await query(
+      `INSERT INTO legal_documents (document_type, version, title, content_uri, effective_at)
+       VALUES ('TERMS_ACCEPTANCE', $1, 'Điều khoản (bản mới)', $2, now())`,
+      [version, `/legal/terms/${version}`],
+    )
+    try {
+      await agree(page).check({ force: true })
+      await finish(page).click()
+      await expect(
+        page.getByText('Văn bản vừa được cập nhật. Vui lòng xem lại và đồng ý với phiên bản mới.'),
+      ).toBeVisible()
+      await expect(page).toHaveURL('/onboarding/privacy')
+      await expect(agree(page)).not.toBeChecked()
+      await expect(page.locator('[data-legal]')).toContainText('Điều khoản (bản mới)')
+      expect(await stored(accountId)).toMatchObject({ status: 'DRAFT', completed: null })
+    } finally {
+      await query('UPDATE legal_documents SET retired_at = now() WHERE version = $1', [version])
+    }
+  })
+
+  test('an acceptance made stale behind a confirmed screen is asked again', async ({ page }) => {
+    const { accountId } = await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW')
+    await acceptLegal(page.request)
+    await openReview(page)
+    await expect(agree(page)).toBeChecked()
+    await expect(agree(page)).toBeDisabled()
+    const version = `s07b-${Date.now()}`
+    await query(
+      `INSERT INTO legal_documents (document_type, version, title, content_uri, effective_at)
+       VALUES ('TERMS_ACCEPTANCE', $1, 'Điều khoản (bản mới hơn)', $2, now())`,
+      [version, `/legal/terms/${version}`],
+    )
+    try {
+      await finish(page).click()
+      await expect(
+        page.getByText('Văn bản vừa được cập nhật. Vui lòng xem lại và đồng ý với phiên bản mới.'),
+      ).toBeVisible()
+      await expect(page).toHaveURL('/onboarding/privacy')
+      await expect(agree(page)).toBeEnabled()
+      await expect(agree(page)).not.toBeChecked()
+      await expect(page.locator('[data-legal]')).toContainText('Điều khoản (bản mới hơn)')
+      expect(await stored(accountId)).toMatchObject({ status: 'DRAFT', completed: null })
+      // Agreeing to the new version completes.
+      await agree(page).check({ force: true })
+      await finish(page).click()
+      await expect(page).toHaveURL('/onboarding/complete')
+      expect(await stored(accountId)).toMatchObject({ status: 'ACTIVE' })
+    } finally {
+      await query('UPDATE legal_documents SET retired_at = now() WHERE version = $1', [version])
+    }
+  })
+
+  test('double submit completes once; a failure shows no success and can be retried', async ({
+    page,
+  }) => {
+    const { accountId } = await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW')
+    let calls = 0
+    await page.route(`**${COMPLETE_API}`, async (route) => {
+      calls++
+      if (calls === 1) {
+        return route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: { code: 'INTERNAL', message: 'x', request_id: 'r' } }),
+        })
+      }
+      await new Promise((r) => setTimeout(r, 300))
+      return route.continue()
+    })
+    await openReview(page)
+    await agree(page).check({ force: true })
+    await finish(page).click()
+    await expect(page.getByText('Chưa hoàn tất được. Vui lòng thử lại.')).toBeVisible()
+    await expect(page).toHaveURL('/onboarding/privacy')
+    expect(await stored(accountId)).toMatchObject({ status: 'DRAFT', completed: null })
+
+    await finish(page).dblclick()
+    await expect(page).toHaveURL('/onboarding/complete')
+    expect(calls).toBe(2)
+    const audits = await query(
+      `SELECT 1 FROM audit_events WHERE actor_account_id = $1 AND action = 'PROFILE_ACTIVATED'`,
+      [accountId],
+    )
+    expect(audits).toHaveLength(1)
+    expect(await consents(accountId)).toHaveLength(2)
+  })
+
+  test('missing stage 1 data is named with the stage that collects it', async ({ page }) => {
+    await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW')
+    await openReview(page)
+    // The province is removed behind the open screen.
+    await saveProfile(page.request, { region_id: null })
+    await agree(page).check({ force: true })
+    await finish(page).click()
+    const notice = page.getByText(/Còn thiếu thông tin bắt buộc/)
+    await expect(notice).toBeVisible()
+    await expect(notice.getByRole('link', { name: /Thông tin cơ bản/ })).toHaveAttribute(
+      'href',
+      '/onboarding/profile',
+    )
+    await expect(page).toHaveURL('/onboarding/privacy')
+  })
+
+  test('keyboard and a11y', async ({ page }) => {
+    await signInFresh(page.request, 's07')
+    await reach(page.request, 'REVIEW')
+    await openReview(page)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+    await discovery(page).focus()
+    await page.keyboard.press('Space')
+    await expect(discovery(page)).toHaveAttribute('aria-checked', 'false')
+    await agree(page).focus()
+    await page.keyboard.press('Space')
+    await expect(agree(page)).toBeChecked()
+    await finish(page).focus()
+    expect(await finish(page).evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none')
   })
 })
 
-test.describe('WF01-S07 pixel QA', () => {
+test.describe('WF01-S07 pixel QA (ACC-09)', () => {
   /**
-   * Measured once from the frozen reference. The baseline is a scrolled
-   * viewport with the card over the header band (card top y=30); the runtime
-   * card sits under the header, so card regions are compared on a full-page
-   * capture at their own offsets. Reference y 300-620 (investor,
-   * challenge-owner and recruitment toggles) is INTENTIONAL-P0-SCOPE, and the
-   * runtime legal acknowledgement in its place is INTENTIONAL-LEGAL-REQUIREMENT.
+   * ACC-09, measured once. The board draws the AI-filled state, where rows
+   * with an "AI" mark are taller. The manual state has no mark, so each block
+   * is compared at its own anchor and the rows inside the review cards by
+   * position only.
    */
   const REF = {
-    cardTop: 30,
-    previewTop: 630,
-    skip: { x: 1290, y: 0, width: 150, height: 62 },
-    removed: { x: 340, y: 300, width: 760, height: 320 },
-    /** Baseline copy omitted by D2 because it would misstate visibility. */
-    omittedCopy: {
-      google: { x: 640, y: 228, width: 200, height: 18 },
-      guests: { x: 550, y: 646, width: 262, height: 18 },
-    },
+    cardTop: 113,
+    part1Top: 251,
+    part3Top: 765,
+    confirmTop: 915,
+    previewTop: 281,
+    completionTop: 601,
+    visibilityTop: 875,
+    ruleTop: 1044,
   } as const
 
-  test('manifest-driven capture, typography contract and segment comparison', async ({ page }) => {
-    const { screens } = loadManifest()
-    const reports = await runScreenQa(
-      page,
-      findScreen(screens, 'WF01-S07'),
-      qaConfigFor('WF01-S07')!,
-      {
-        beforeNavigate: async (p) => {
-          // Reference example state; values are fixture content, not business data.
-          const profile = await p.request.patch('/api/v1/me/profile', {
-            data: {
-              display_name: 'Đặng Kim Chi',
-              headline: 'Đồng sáng lập · CEO tại Tracely',
-              region_id: '20000000-0000-0000-0000-000000000002',
-              domain_ids: [
-                'e6000000-0000-0000-0000-000000000001',
-                'e6000000-0000-0000-0000-000000000002',
-              ],
-              skill_ids: [],
-            },
-          })
-          expect(profile.status()).toBe(200)
-          const vis = await p.request.put(VIS_API, {
-            data: { groups: [{ group_code: 'PROFILE_DISCOVERY', level: 'NETWORK_ONLY' }] },
-          })
-          expect(vis.status()).toBe(200)
-        },
-        afterLoad: async (p) => {
-          await expect(discoverySwitch(p)).toHaveAttribute('aria-checked', 'true')
-        },
-      },
-    )
-    const viewport = reports.find((r) => r.capture === 'viewport')!
-    expect(viewport.conditions).toEqual({
-      viewport: { width: 1440, height: 900 },
-      dpr: 1,
-      fonts: 'loaded',
+  test('1440×900: header, review cards, side column and footer match ACC-09', async ({ page }) => {
+    await signInFresh(page.request, 's07')
+    await reach(page.request, 'CAPABILITY', BOARD)
+    await reach(page.request, 'ROLE')
+    await page.request.put(ROLES_API, {
+      data: { roles: ['HUB_MEMBER', 'INNOVATOR', 'STARTUP_FOUNDER'], hub_claims: [CLAIM] },
     })
-    expect(viewport.typography!.violations).toEqual([])
+    await reach(page.request, 'REVIEW', BOARD)
+    await openReview(page)
+    const at = (name: string) => topOf(page, `[data-anchor="${name}"]`)
+    const card = await topOf(page, '[data-ui="surface"]')
 
-    const fullBuffer = await page.screenshot({ fullPage: true, animations: 'disabled' })
-    const fullPath = resolveOutputPath('actual', 'WF01-S07.full_page.png')
-    writeBuffer(fullPath, fullBuffer)
-    const actual = decodePng(fullBuffer)
-
-    const card = (await page.locator('[data-ui="surface"]').boundingBox())!
-    const preview = (await page.locator('[data-preview]').boundingBox())!
-    const upperDy = Math.round(card.y) - REF.cardTop
-    const lowerDy = Math.round(preview.y) - REF.previewTop
-
-    const textMask: Rect[] = await page.evaluate(() => {
-      const rects: { x: number; y: number; width: number; height: number }[] = []
-      const add = (r: DOMRect, pad = 2) =>
-        rects.push({
-          x: r.x - pad,
-          y: r.y - pad,
-          width: r.width + pad * 2,
-          height: r.height + pad * 2,
-        })
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-      while (walker.nextNode()) {
-        const node = walker.currentNode
-        if (!node.textContent!.trim()) continue
-        const range = document.createRange()
-        range.selectNodeContents(node)
-        for (const r of range.getClientRects()) add(r)
-      }
-      for (const svg of document.querySelectorAll('svg')) add(svg.getBoundingClientRect(), 1)
-      // Preview chips: their width follows the label in the frozen font.
-      for (const li of document.querySelectorAll('[data-preview] li')) {
-        const r = li.getBoundingClientRect()
-        add(new DOMRect(r.x + 10, r.y, r.width - 10, r.height), 1)
-      }
-      return rects
-    })
-
-    // RASTER-NOISE: baseline boxes sit on half pixels (smeared 1px horizontal
-    // edges); only those edge rows leave the count, the boxes are asserted instead.
-    const rasterRows: Rect[] = []
-    const geometry = []
-    for (const [name, selector, refTop, refHeight, dy] of [
-      ['discovery option', 'form > div:has(> [role="switch"])', 182, 110, upperDy],
-      ['preview card', '[data-preview] > div', 675, 107, lowerDy],
-      ['back button', 'a.ui-button', 848, 47, lowerDy],
-      ['cta', 'button[type="submit"]', 848, 47, lowerDy],
-    ] as const) {
-      const box = (await page.locator(selector).first().boundingBox())!
-      geometry.push({ name, actual_top: Math.round(box.y), expected_top: refTop + dy })
-      expect(Math.abs(Math.round(box.y) - (refTop + dy)), `${name} top`).toBeLessThanOrEqual(1)
-      expect(Math.abs(Math.round(box.height) - refHeight), `${name} height`).toBeLessThanOrEqual(2)
-      for (const y of [box.y - 2, box.y + box.height - 2]) {
-        rasterRows.push({ x: box.x, y: Math.round(y), width: box.width, height: 4 })
-      }
-    }
-    const omitted: Rect[] = [
-      { ...REF.omittedCopy.google, y: REF.omittedCopy.google.y + upperDy },
-      { ...REF.omittedCopy.guests, y: REF.omittedCopy.guests.y + lowerDy },
-    ]
-
-    const segments: Segment[] = [
-      { name: 'header-left', reference: { x: 0, y: 0, width: 300, height: 64 }, dy: 0 },
-      { name: 'header-right', reference: { x: 1140, y: 0, width: 150, height: 64 }, dy: 0 },
-      { name: 'canvas-left', reference: { x: 0, y: 64, width: 300, height: 836 }, dy: 0 },
-      { name: 'canvas-right', reference: { x: 1140, y: 64, width: 300, height: 836 }, dy: 0 },
-      {
-        name: 'card-upper',
-        reference: { x: 340, y: REF.cardTop, width: 760, height: REF.removed.y - REF.cardTop },
-        dy: upperDy,
-      },
-      {
-        name: 'card-lower',
-        reference: { x: 340, y: 620, width: 760, height: 280 },
-        dy: lowerDy,
-      },
-    ]
-
-    const reference = readPng(path.join(REPO_ROOT, viewport.images.REFERENCE))
-    const diffPath = resolveOutputPath('diff', 'WF01-S07.segments.diff.png')
-    const results = compareSegments(
-      reference,
-      actual,
-      segments,
-      [...textMask, ...rasterRows, ...omitted],
-      {
-        diffPath,
-      },
-    )
-
-    writeJsonReport('WF01-S07.segments.json', {
-      screen_id: 'WF01-S07',
-      state: 'reference example profile, discovery ON, acknowledgement unchecked',
-      images: {
-        REFERENCE: viewport.images.REFERENCE,
-        ACTUAL: viewport.images.ACTUAL,
-        ACTUAL_FULL_PAGE: path.relative(REPO_ROOT, fullPath),
-        DIFF_FULL: viewport.images.DIFF,
-        DIFF_SEGMENTS: path.relative(REPO_ROOT, diffPath),
-      },
+    await auditRevision(page, {
+      name: 'WF01-S07.ACC-09',
+      reference: 'design-reference/final/revision/L1/ACC-09__onboarding-review__SOURCE.png',
+      full: true,
+      segments: [
+        { name: 'header', reference: { x: 0, y: 0, width: 1440, height: 66 }, dy: 0 },
+        {
+          name: 'card-head',
+          reference: { x: 160, y: 100, width: 1120, height: 140 },
+          dy: card - REF.cardTop,
+        },
+        {
+          name: 'part-1-head',
+          reference: { x: 230, y: 244, width: 612, height: 50 },
+          dy: (await at('part-1')) - REF.part1Top,
+        },
+        {
+          name: 'part-3-head',
+          reference: { x: 230, y: 758, width: 612, height: 50 },
+          dy: (await at('part-3')) - REF.part3Top,
+        },
+        {
+          name: 'confirm',
+          reference: { x: 230, y: 908, width: 612, height: 116 },
+          dy: (await at('confirm')) - REF.confirmTop,
+        },
+        {
+          name: 'preview',
+          reference: { x: 848, y: 244, width: 362, height: 350 },
+          dy: (await at('preview')) - REF.previewTop,
+        },
+        {
+          name: 'completion',
+          reference: { x: 848, y: 594, width: 362, height: 274 },
+          dy: (await at('completion')) - REF.completionTop,
+        },
+        {
+          name: 'visibility',
+          reference: { x: 848, y: 868, width: 362, height: 80 },
+          dy: (await at('visibility')) - REF.visibilityTop,
+        },
+        {
+          name: 'footer',
+          reference: { x: 160, y: 1034, width: 1120, height: 150 },
+          dy: (await at('rule')) - REF.ruleTop,
+        },
+      ],
+      // The bar's fill is the server's percent (70), the board's is its sample (75); the
+      // confirmation's sentence is the consent, the board's is the AI one.
+      exclude: await page.evaluate(() =>
+        [
+          ...document.querySelectorAll(
+            '[data-completion] [aria-hidden="true"], [data-anchor="confirm"] > span:last-child',
+          ),
+        ].map((el) => {
+          const r = el.getBoundingClientRect()
+          const wide = el.closest('[data-anchor="confirm"]') ? 540 : r.width
+          return { x: r.x - 2, y: r.y + scrollY - 2, width: wide + 4, height: r.height + 4 }
+        }),
+      ),
       intentional: [
         {
-          class: 'INTENTIONAL-P0-SCOPE',
-          reference_region: REF.removed,
-          reason: 'DEC-WF01-S07-D3: investor, challenge-owner and recruitment toggles not rendered',
+          class: 'INTENTIONAL-BUSINESS',
+          reason:
+            'D-L1 (PO, 2026-09-29): the dark confirmation is the required acceptance of the two current documents, in the place of the AI confirmation the board draws',
         },
         {
-          class: 'INTENTIONAL-LEGAL-REQUIREMENT',
+          class: 'INTENTIONAL-SCOPE',
           reason:
-            'DEC-WF01-S07-D1: required acknowledgement with links to the current documents, in place of the removed toggles; D6: skip omitted',
-          reference_region: REF.skip,
+            'D-A1: no AI provider, so no "AI" mark is drawn and review rows keep their plain height; the cards are compared at their own anchors',
         },
         {
-          class: 'INTENTIONAL-LEGAL-REQUIREMENT',
+          class: 'INTENTIONAL-BUSINESS',
           reason:
-            'DEC-WF01-S07-D2: copy that would misstate visibility omitted ("Thẻ này Google tìm thấy được", "người chưa đăng nhập thấy đúng ngần này"); those text regions only',
-          reference_regions: REF.omittedCopy,
+            'D-C1: completion is the frozen ten groups, so the percent and the list are the server’s; the preview’s role chips are the member’s own declaration shown as text',
         },
         {
-          class: 'INTENTIONAL-COMPOSITION',
+          class: 'INTENTIONAL-BUSINESS',
           reason:
-            'baseline is a scrolled viewport with the card over the header band (stepper hidden under it); card compared on a full-page capture; stepper not compared',
-          vertical_effect_px: { card_upper_dy: upperDy, card_lower_dy: lowerDy },
+            'the preview’s role chips keep the order of ACC-08, which the board’s own review row uses ("Innovator · Founder"); the board’s card draws the two the other way round',
         },
         {
-          class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
+          class: 'INTENTIONAL-COPY',
           reason:
-            'text glyphs masked, checked by the DOM typography contract; D7 renders the lede emphasis as bold',
+            'the screen code "(ME0)" of the board’s hint is a design annotation and is not shown',
         },
-        { class: 'RASTER-NOISE', rows: rasterRows, geometry },
       ],
-      segments: results,
-      text_mask: textMask,
-      product_pixel_pass_claimed: false,
     })
 
-    for (const r of results) {
-      expect(r.outside_ratio, `${r.name} drift`).toBeLessThan(0.002)
+    // The blocks the masks above leave out keep the board's geometry.
+    const box = async (name: string) => {
+      const b = (await page.locator(`[data-anchor="${name}"]`).boundingBox())!
+      return { x: Math.round(b.x), width: Math.round(b.width) }
+    }
+    for (const name of ['part-1', 'part-2', 'part-3', 'confirm']) {
+      expect(await box(name), name).toEqual({ x: 241, width: 590 })
+    }
+    for (const name of ['preview', 'completion', 'visibility']) {
+      expect(await box(name), name).toEqual({ x: 859, width: 340 })
     }
   })
 })

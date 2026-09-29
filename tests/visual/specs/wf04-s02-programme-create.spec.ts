@@ -406,7 +406,7 @@ test.describe('WF04-S02 owner and authorization', () => {
     await expect(page).toHaveURL('/auth')
     await login(page.request, `wf04-s02-incomplete-${Date.now()}@example.test`)
     await page.goto('/demo/programmes/new')
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
     for (const who of [
       'member@example.test',
       (

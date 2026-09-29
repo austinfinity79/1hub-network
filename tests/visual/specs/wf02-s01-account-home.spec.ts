@@ -17,6 +17,7 @@ import { compareSegments, type Rect } from '../pixel-qa/segments'
  */
 
 const REGION = '20000000-0000-0000-0000-000000000002'
+const COUNTRY = '21000000-0000-0000-0000-000000000001'
 const DOMAIN = '20000000-0000-0000-0000-000000000011'
 const SKILL = '20000000-0000-0000-0000-000000000021'
 const CHAPTER_02 = '10000000-0000-0000-0000-000000000102'
@@ -56,12 +57,11 @@ async function signIn(request: APIRequestContext, label: string): Promise<string
 /** A member who finished WF01 through the real APIs: 60% (name, headline, region, bio, domain, skill). */
 async function completedMember(request: APIRequestContext, label = 's01'): Promise<Member> {
   const email = await signIn(request, label)
-  expect(
-    (await request.put('/api/v1/me/onboarding/intent', { data: { action: 'SKIP' } })).ok(),
-  ).toBe(true)
   const patch = await request.patch('/api/v1/me/profile', {
     data: {
+      full_name: 'Đặng Kim Chi',
       display_name: 'Đặng Kim Chi',
+      country_id: COUNTRY,
       headline: 'Đồng sáng lập',
       region_id: REGION,
       bio: 'Giới thiệu ngắn.',
@@ -76,6 +76,10 @@ async function completedMember(request: APIRequestContext, label = 's01'): Promi
       data: { consent_type: doc.type, policy_version: doc.version },
     })
     expect(r.ok()).toBe(true)
+  }
+  for (const completed of ['CAPABILITY', 'ROLE']) {
+    const stage = await request.put('/api/v1/me/onboarding/stage', { data: { completed } })
+    expect(stage.ok()).toBe(true)
   }
   expect((await request.post('/api/v1/me/onboarding/complete')).ok()).toBe(true)
   const [row] = await query<{ account_id: string; profile_id: string }>(
@@ -121,7 +125,7 @@ test.describe('WF02-S01 guards', () => {
   test('2. an account that has not finished onboarding → its resolver step', async ({ page }) => {
     await signIn(page.request, 's01-new')
     await page.goto('/me')
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
   })
 
   test('3. a completed member stays on /me inside the member shell', async ({ page }) => {

@@ -278,8 +278,8 @@ test.describe('WF01-S02 functional', () => {
 
 test.describe('WF01-S02 pixel QA (corrected AUTH2)', () => {
   test('1440×900: panel, card head and resend block match AUTH2', async ({ page }) => {
-    // The reference address, as QA data only. Requests are invite-only
-    // (DEC-AUTH-EMAIL-D1), so the 202 DTO is built as WF01-S01 stores it.
+    // The reference address, as QA data only: the 202 DTO is built as WF01-S01
+    // stores it, so no e-mail is sent to an address the suite does not own.
     await withPending(page, {
       request_id: `authreq_${crypto.randomUUID()}`,
       email_masked: 'c***@tracely.vn',

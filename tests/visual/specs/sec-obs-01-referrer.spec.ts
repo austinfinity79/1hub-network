@@ -68,7 +68,7 @@ test.describe('SEC-OBS-01 callback Referrer-Policy', () => {
       )[0]!.n
     const before = await count()
     await page.goto(callback(token))
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
     await page.waitForLoadState('networkidle')
     assertNoLeak(seen, token)
     expect(await count()).toBe(before + 1)

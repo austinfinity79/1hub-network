@@ -246,7 +246,7 @@ test.describe('WF05-T00 route and entry contract', () => {
     await expect(page).toHaveURL('/auth')
     await login(page.request, 'newcomer@example.test')
     await page.goto(HARNESS)
-    await expect(page).toHaveURL(/\/onboarding\//)
+    await expect(page).toHaveURL(/\/onboarding(\/|$)/)
 
     await page.context().clearCookies()
     await login(page.request, 'member@example.test')

@@ -10,6 +10,7 @@ import {
   type Page,
 } from '@playwright/test'
 
+import { onboardThroughUi } from '../support/onboarding'
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
 import { REPO_ROOT } from '../pixel-qa/paths'
@@ -23,8 +24,7 @@ import { REPO_ROOT } from '../pixel-qa/paths'
  * agree across /session, /me/profile and /me/profile/completion.
  */
 
-const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-s06-qa-vocabulary.sql')
-const REGION = '20000000-0000-0000-0000-000000000002'
+const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-acc07-qa-vocabulary.sql')
 const CHAPTER_02 = '10000000-0000-0000-0000-000000000102'
 const PNG_1X1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
@@ -77,23 +77,8 @@ async function signIn(page: Page, email: string) {
   return token
 }
 
-/** WF01 S05 → S08 through the UI. */
-async function onboard(page: Page, name: string) {
-  await expect(page).toHaveURL('/onboarding/purpose')
-  await page.getByRole('button', { name: 'Bỏ qua, làm sau' }).click()
-  await expect(page).toHaveURL('/onboarding/profile')
-  await page.getByLabel('Họ và tên').fill(name)
-  await page.getByLabel('Chức danh hiện tại').fill('Kỹ sư')
-  await page.getByLabel('Tỉnh / thành phố').selectOption(REGION)
-  await page.getByRole('checkbox', { name: 'Logistics', exact: true }).check({ force: true })
-  await page.getByRole('button', { name: 'Tiếp tục' }).click()
-  await expect(page).toHaveURL('/onboarding/privacy')
-  await page.getByRole('checkbox').check()
-  await page.getByRole('button', { name: 'Xong, vào HUB' }).click()
-  await expect(page).toHaveURL('/onboarding/complete')
-  await page.getByRole('link', { name: 'Vào Tài khoản của tôi' }).click()
-  await expect(page).toHaveURL('/me')
-}
+/** ACC-05 → ACC-10 → /me through the screens (DEC-L1R). */
+const onboard = onboardThroughUi
 
 async function ids(email: string) {
   const [row] = await query<{ account_id: string; profile_id: string }>(
@@ -426,10 +411,10 @@ test.describe('WF02 UAT — alternate and negative paths', () => {
     page,
   }) => {
     await signIn(page, newEmail('partial'))
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
     for (const route of MEMBER_ROUTES) {
       await page.goto(route)
-      await expect(page, route).toHaveURL('/onboarding/purpose')
+      await expect(page, route).toHaveURL('/onboarding')
     }
     const r = await page.request.post('/api/v1/ventures', { data: { type: 'PROJECT', name: 'x' } })
     expect(r.status()).toBe(403)

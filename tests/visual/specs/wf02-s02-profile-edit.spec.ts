@@ -17,6 +17,7 @@ import { compareSegments, type Rect } from '../pixel-qa/segments'
  */
 
 const REGION = '20000000-0000-0000-0000-000000000002'
+const COUNTRY = '21000000-0000-0000-0000-000000000001'
 const REGION_2 = '20000000-0000-0000-0000-000000000001'
 const DOMAIN = '20000000-0000-0000-0000-000000000011'
 const SKILL = '20000000-0000-0000-0000-000000000021'
@@ -53,13 +54,12 @@ async function completedMember(request: APIRequestContext, label = 's02'): Promi
   const email = `${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`
   expect((await request.post('/dev/login', { data: { email } })).ok()).toBe(true)
   expect(
-    (await request.put('/api/v1/me/onboarding/intent', { data: { action: 'SKIP' } })).ok(),
-  ).toBe(true)
-  expect(
     (
       await request.patch(PROFILE_API, {
         data: {
+          full_name: 'Đặng Kim Chi',
           display_name: 'Đặng Kim Chi',
+          country_id: COUNTRY,
           headline: 'QA',
           region_id: REGION,
           domain_ids: [DOMAIN],
@@ -77,6 +77,10 @@ async function completedMember(request: APIRequestContext, label = 's02'): Promi
         })
       ).ok(),
     ).toBe(true)
+  }
+  for (const completed of ['CAPABILITY', 'ROLE']) {
+    const stage = await request.put('/api/v1/me/onboarding/stage', { data: { completed } })
+    expect(stage.ok()).toBe(true)
   }
   expect((await request.post('/api/v1/me/onboarding/complete')).ok()).toBe(true)
   const [row] = await query<{ account_id: string; profile_id: string }>(
@@ -119,7 +123,7 @@ test.describe('WF02-S02 guards', () => {
       ).ok(),
     ).toBe(true)
     await page.goto('/me/profile/edit')
-    await expect(page).toHaveURL('/onboarding/purpose')
+    await expect(page).toHaveURL('/onboarding')
   })
 })
 
