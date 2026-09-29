@@ -20,6 +20,8 @@ export type Tone = 'coral' | 'wine' | 'ember' | 'ash' | 'red' | 'smoke'
 
 export type Item = {
   id: string
+  /** PROBLEM draws the dark L15 card; STARTUP and FOUNDER the white L15b / L15c card. */
+  kind: Entity
   tone: Tone
   /** Top-left label next to the round mark (organisation, domain or startup). */
   head: string
@@ -30,7 +32,15 @@ export type Item = {
   prize: string | null
   summary: string | null
   meta: string[]
+  /** White card: the line under the name ("N thành viên", "role · startup"). */
+  sub: string | null
+  /** White card: grey chips under the summary. */
+  chips: string[]
+  /** Founder card: the startup row. */
+  row: { mark: string; name: string; note: string | null; href: string | null } | null
   cta: { label: string; href: string | null }
+  /** White card: the outlined second button (inert: no follow / connect contract). */
+  secondary: string | null
   facets: Record<string, string[]>
   /** Folded text the search runs on. */
   text: string
@@ -103,14 +113,33 @@ function toneOf(id: string): Tone {
   return TONES[h % TONES.length]!
 }
 
-const initials = (name: string) =>
+const words = (name: string) =>
   name
     .replace(/[^\p{L}\p{N} ]/gu, ' ')
     .split(/\s+/)
     .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]!.toUpperCase())
+
+/**
+ * Startup mark as drawn in L15b: two words give their first letters ("Kho Lạnh" → KL),
+ * CamelCase its capitals ("LogiSense" → LS), else the first two letters ("Tracely" → Tr).
+ */
+function startupMark(name: string): string {
+  const [first = '', second] = words(name)
+  if (second) return `${first[0]}${second[0]}`.toUpperCase()
+  const caps = [...first].filter((c) => /\p{Lu}/u.test(c))
+  if (caps.length >= 2 && caps.length < first.length) return caps.slice(0, 2).join('')
+  return `${first.slice(0, 1).toUpperCase()}${first.slice(1, 2).toLowerCase()}`
+}
+
+/** Person mark as drawn in L15c: the last two names ("Đặng Kim Chi" → KC). */
+function personMark(name: string): string {
+  const w = words(name)
+  if (w.length === 1) return w[0]!.slice(0, 2).toUpperCase()
+  return w
+    .slice(-2)
+    .map((x) => x[0]!.toUpperCase())
     .join('')
+}
 
 const domainGroup = (values: string[]): Group => ({
   key: 'domain',
@@ -130,6 +159,7 @@ function valuesOf(lists: string[][]): Array<{ value: string; label: string }> {
 export function problemTab(problems: LibraryProblem[]): TabModel {
   const items = problems.map<Item>((p) => ({
     id: p.id,
+    kind: 'PROBLEM',
     tone: p.cover && p.cover >= 1 && p.cover <= TONES.length ? TONES[p.cover - 1]! : toneOf(p.id),
     head: p.org ?? '',
     mark: '',
@@ -138,6 +168,10 @@ export function problemTab(problems: LibraryProblem[]): TabModel {
     prize: p.prize,
     summary: p.summary,
     meta: [p.time, p.teams].filter((m): m is string => m !== null),
+    sub: null,
+    chips: [],
+    row: null,
+    secondary: null,
     cta: {
       label: p.stage === 'sap_dien_ra' ? 'Theo dõi bài toán' : 'Xem bài toán',
       href: null,
@@ -182,40 +216,60 @@ export function problemTab(problems: LibraryProblem[]): TabModel {
 
 const categoryQuick = QUICK.map((c) => ({ value: c, label: CATEGORY_LABEL[c] }))
 
+/** DEC-L15-D11: only what startup.json holds; no verified mark, city, needs or programmes. */
 function startupItem(s: LibraryStartup): Item {
   const stage = s.stage ?? NO_STAGE
   return {
     id: s.id,
+    kind: 'STARTUP',
     tone: toneOf(s.id),
-    head: s.domains[0] ?? CATEGORY_LABEL[s.categories[0]!],
-    mark: initials(s.name),
+    head: s.name,
+    mark: startupMark(s.name),
     pill: s.stage,
     title: s.name,
     prize: null,
     summary: s.tagline,
-    meta: [...s.domains.slice(0, 2), `${s.memberCount} thành viên`],
-    cta: { label: 'Xem startup', href: s.website },
+    meta: [],
+    sub: `${s.memberCount} thành viên`,
+    chips: s.domains.slice(0, 3),
+    row: null,
+    // The D7 card link: the startup's own website, or inert without one.
+    cta: { label: 'Xem hồ sơ', href: s.website },
+    secondary: 'Theo dõi',
     facets: { domain: s.categories, stage: [stage] },
-    text: fold([s.name, s.tagline ?? '', ...s.domains].join(' ')),
+    text: fold(
+      [s.name, s.tagline ?? '', s.product ?? '', ...s.domains, ...s.founderNames].join(' '),
+    ),
     sort: { rank: STAGE_RANK[stage] ?? 5, days: 0, prize: 0, name: s.name },
   }
 }
 
+/** DEC-L15-D12: name, role and startup only; founders are not accounts. */
 function founderItem(f: LibraryFounder): Item {
   const first = f.startups[0]!
   const more = f.startups.length > 1 ? ` +${f.startups.length - 1}` : ''
   const short = f.role.split(/[,&(/]/)[0]!.trim()
   return {
     id: f.id,
+    kind: 'FOUNDER',
     tone: toneOf(f.id),
     head: `${first.name}${more}`,
-    mark: initials(f.name),
-    pill: short.length <= 18 ? short : 'Nhà sáng lập',
+    mark: personMark(f.name),
+    pill: null,
     title: f.name,
     prize: null,
-    summary: `${f.role} · ${f.startups.map((s) => s.name).join(', ')}`,
-    meta: f.categories.slice(0, 2).map((c) => CATEGORY_LABEL[c]),
-    cta: { label: 'Xem startup', href: first.website },
+    summary: null,
+    meta: [],
+    sub: `${short.length <= 24 ? short : 'Nhà sáng lập'} · ${first.name}`,
+    chips: [],
+    row: {
+      mark: startupMark(first.name),
+      name: `${first.name}${more}`,
+      note: first.stage,
+      href: first.website,
+    },
+    cta: { label: 'Xem hồ sơ', href: null },
+    secondary: 'Kết nối',
     facets: { domain: f.categories },
     text: fold([f.name, f.role, ...f.startups.map((s) => s.name)].join(' ')),
     sort: { rank: 0, days: 0, prize: 0, name: f.name },

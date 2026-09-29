@@ -39,7 +39,7 @@ const ENTITIES: Array<{ key: Entity; label: string }> = [
 
 const PLACEHOLDER: Record<Entity, string> = {
   PROBLEM: 'Tìm theo tên bài toán, lĩnh vực, doanh nghiệp đặt bài…',
-  STARTUP: 'Tìm theo tên startup, lĩnh vực, mô tả…',
+  STARTUP: 'Tìm theo tên startup, sản phẩm, lĩnh vực hoặc nhà sáng lập…',
   FOUNDER: 'Tìm theo tên nhà sáng lập, vai trò, startup…',
 }
 
@@ -385,9 +385,13 @@ function Directory({
           </div>
         ) : (
           <ul className={styles.grid} data-anchor="grid">
-            {visible.map((item) => (
-              <Card key={item.id} item={item} />
-            ))}
+            {visible.map((item) =>
+              item.kind === 'PROBLEM' ? (
+                <Card key={item.id} item={item} />
+              ) : (
+                <ProfileCard key={item.id} item={item} />
+              ),
+            )}
           </ul>
         )}
 
@@ -440,6 +444,107 @@ function Card({ item }: { item: Item }) {
             {item.cta.label}
           </Cta>
         )}
+      </article>
+    </li>
+  )
+}
+
+/** Opens the record's own website in a new tab, or stays inert when it has none. */
+function OutLink({
+  href,
+  label,
+  title,
+  className,
+  children,
+}: {
+  href: string | null
+  label: string
+  title: string
+  className: string | undefined
+  children: ReactNode
+}) {
+  if (!href)
+    return (
+      <Cta action={{ inert: 'NO_P0_SCREEN' }} label={label} className={className}>
+        {children}
+      </Cta>
+    )
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer nofollow"
+      className={className}
+      aria-label={`${label} ${title} (mở trang ngoài)`}
+    >
+      {children}
+    </a>
+  )
+}
+
+/** DEC-L15-D11 / D12: the white Startup and Nhà sáng lập card (L15b, L15c). */
+function ProfileCard({ item }: { item: Item }) {
+  const titleId = `card-${item.id}`
+  return (
+    <li className={styles.pcard} data-kind={item.kind}>
+      <article aria-labelledby={titleId}>
+        <div className={styles.pcardHead}>
+          <span
+            className={`${styles.pcardMark} ${styles[`mark_${item.tone}`]}`}
+            data-round={item.kind === 'FOUNDER'}
+            aria-hidden="true"
+          >
+            {item.mark}
+          </span>
+          <div className={styles.pcardWho}>
+            <h2 id={titleId} className={styles.pcardName}>
+              {item.title}
+            </h2>
+            {item.sub ? <p className={styles.pcardSub}>{item.sub}</p> : null}
+          </div>
+          {item.pill ? <span className={styles.pcardStage}>{item.pill}</span> : null}
+        </div>
+        {item.summary ? <p className={styles.pcardSummary}>{item.summary}</p> : null}
+        {item.chips.length ? (
+          <p className={styles.pcardChips}>
+            {item.chips.map((c) => (
+              <span key={c}>{c}</span>
+            ))}
+          </p>
+        ) : null}
+        {item.row ? (
+          <OutLink
+            href={item.row.href}
+            label="Xem startup"
+            title={item.row.name}
+            className={styles.pcardRow}
+          >
+            <span className={`${styles.pcardRowMark} ${styles.mark_coral}`} aria-hidden="true">
+              {item.row.mark}
+            </span>
+            <span className={styles.pcardRowName}>{item.row.name}</span>
+            {item.row.note ? <span className={styles.pcardRowNote}>{item.row.note}</span> : null}
+          </OutLink>
+        ) : null}
+        <div className={styles.pcardActions}>
+          <OutLink
+            href={item.cta.href}
+            label={item.cta.label}
+            title={item.title}
+            className={styles.pcardPrimary}
+          >
+            {item.cta.label}
+          </OutLink>
+          {item.secondary ? (
+            <Cta
+              action={{ inert: 'FUTURE' }}
+              label={`${item.secondary} ${item.title}`}
+              className={styles.pcardSecondary}
+            >
+              {item.secondary}
+            </Cta>
+          ) : null}
+        </div>
       </article>
     </li>
   )

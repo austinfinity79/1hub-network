@@ -17,7 +17,7 @@ Suite `tests/uat/l1-l2/` (`pnpm exec playwright test --config=tests/uat/uat.conf
 | 7 | Invitation expiry; early refusal of a current member's address | UC07, UC08 | no expiry; a duplicate invitation is created and e-mailed, its acceptance is refused (409) |
 | 8 | Activity history; linking an experience to an organization on HUB | UC04, D-P1 | records show on the profile; no history; the organization is free text |
 | 9 | Directory / Mạng lưới backed by internal PUBLIC profiles and ventures | UC09 | server visibility works; `/library` reads its demo fixture and `startup.json`, not internal records; no public venture page |
-| 10 | Startup / Nhà sáng lập card redesign of the 29/09 frames | Library | the layout follows the frames; the cards keep the earlier design |
+| 10 | Startup / Nhà sáng lập card redesign of the 29/09 frames | Library | done in TASK 24.1 with the fields the sources hold (DEC-L15-D11…D13); needs, openness, city, verification, badges and expertise wait for a source |
 | — | Startup website and pitch deck fields | UC06 | the venture record holds neither |
 
 ## Related

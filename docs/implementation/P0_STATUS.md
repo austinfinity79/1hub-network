@@ -103,6 +103,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **ABOUT HUB LEAD HOTFIX: DEPLOYED** ([report](reports/ABOUT-HUB-LEAD_deploy.md)). `c02cdd9` runs on https://1hubnetwork.io.vn: the HUB HN panel on `/about` shows Le Phuong Thao as TRƯỞNG HUB. Rollback `ec33ee2`.
 
+**TASK 24.1 — L2 LIBRARY DELTA: GREEN (local, not pushed, not deployed)** ([report](reports/TASK-24.1_l2-library-delta.md), [delta](task-24/l2-library-delta.md), [DEC-L15-D10…D13](../decisions/DECISION_LOG.md#dec-l15-d10)). Startup and Nhà sáng lập tabs on the white-card frames with the data the sources hold; Bài toán unchanged. STOP checkpoint before 24.2.
+
 ## Completed (committed)
 
 | Task | Scope |

@@ -6,14 +6,16 @@
  * Library's own view model and nothing in the UI reads a remote field name:
  *
  *   ten_startup                  → LibraryStartup.name (required; record dropped without it)
+ *   san_pham_chinh               → product (search only, DEC-L15-D13)
  *   mo_ta_ngan                   → tagline
  *   linh_vuc[] (free text)       → domains (as written) + categories (filter taxonomy)
  *   giai_doan_phat_trien         → stage (known values only, else null)
  *   website                      → website (http/https only, else null)
- *   thanh_vien[].ho_ten/vai_tro  → founders (founder roles only; name, role, startup)
+ *   thanh_vien[].ho_ten/vai_tro  → founders (founder roles only; name, role, startup) and the
+ *                                  startup's founderNames (search only, DEC-L15-D13)
  *   thanh_vien.length            → memberCount
  *
- * Not read: san_pham_chinh (1 of 72 set), mo_ta_chi_tiet, chuong_trinh_tung_tham_gia,
+ * Not read: mo_ta_chi_tiet, chuong_trinh_tung_tham_gia,
  * thanh_vien[].don_vi_lam_viec_hoc_tap and .kinh_nghiem_thanh_tich_khac (personal
  * detail). Every kept string is trimmed, length-capped and stripped of e-mail
  * addresses and phone numbers; a member whose name carries contact data is
@@ -29,6 +31,10 @@ export type LibraryStartup = {
   id: string
   name: string
   tagline: string | null
+  /** Main product; search only. */
+  product: string | null
+  /** Founder names; search only. */
+  founderNames: string[]
   domains: string[]
   categories: Category[]
   stage: StartupStage | null
@@ -40,7 +46,7 @@ export type LibraryFounder = {
   id: string
   name: string
   role: string
-  startups: Array<{ name: string; website: string | null }>
+  startups: Array<{ name: string; website: string | null; stage: StartupStage | null }>
   categories: Category[]
 }
 
@@ -170,6 +176,8 @@ export function adaptStartups(payload: unknown): {
       id,
       name,
       tagline: cleanText(r.mo_ta_ngan, 200),
+      product: cleanText(r.san_pham_chinh, 120),
+      founderNames: [],
       domains,
       categories: categorise(domains),
       stage: stageOf(r.giai_doan_phat_trien),
@@ -188,7 +196,8 @@ export function adaptStartups(payload: unknown): {
       if (!person || !role || !isFounderRole(role) || !/\p{L}/u.test(person)) continue
       const key = fold(person)
       const found = founders.get(key)
-      const link = { name: startup.name, website: startup.website }
+      if (!startup.founderNames.includes(person)) startup.founderNames.push(person)
+      const link = { name: startup.name, website: startup.website, stage: startup.stage }
       if (found) {
         if (!found.startups.some((s) => s.name === link.name)) found.startups.push(link)
         found.categories = [...new Set([...found.categories, ...startup.categories])]
