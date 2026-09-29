@@ -1,40 +1,42 @@
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-
 import { OnboardingShell } from '@/components/shell/onboarding-shell'
-import { SESSION_COOKIE_NAME } from '@/lib/auth/config'
-import { resolveSession } from '@/lib/auth/sessions'
-import { getOnboardingState } from '@/lib/onboarding/state'
+import { listRequestableOrganizations } from '@/lib/network/membership-request'
+import { requireOnboardingStage } from '@/lib/onboarding/guard'
+import { getDeclaredRoles } from '@/lib/onboarding/roles'
 
-import { PurposeForm } from './purpose-form'
-import { SkipPurpose } from './skip-purpose'
+import { ACTION_SLOT_ID } from '../parts'
+import { RoleForm } from './role-form'
 
 /**
- * WF01-S05 — /onboarding/purpose. Next: WF01-S06 /onboarding/profile.
- * Approved baseline: design-reference/final/WF01/WF01-S05__onboarding-purpose__1440x900.png
+ * ACC-08 — /onboarding/purpose, stage 3 of 4. Next: ACC-09 /onboarding/privacy.
+ * Reference: design-reference/final/revision/L1/ACC-08__onboarding-role__SOURCE.png
+ * Decisions DEC-L1R-D3, D5. The route is the one WF01-S05 used.
  *
- * Server-authoritative guard (DEC-WF01-S05-D5): no session → /auth. Completed
- * onboarding → /me, the existing WF01 rule (D6). The saved intent, if any, is
- * read here so the form starts in the right state (D4, D6).
+ * The units offered are the requestable ones (HUB, CHAPTER, CLB, PUBLISHED),
+ * the same predicate the membership request uses; the PUT re-validates.
  */
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
-  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
-  const session = await resolveSession(token)
-  if (!session) redirect('/auth')
+  const { accountId } = await requireOnboardingStage('ROLE')
 
-  const state = await getOnboardingState(session.accountId)
-  if (state.completed) redirect('/me')
+  const [declared, units] = await Promise.all([
+    getDeclaredRoles(accountId),
+    listRequestableOrganizations(),
+  ])
 
   return (
-    <OnboardingShell
-      currentStep={1}
-      // DEC-WF01-S05-D3 / DEC-WF01-RESUME-D1: skip THIS step only; no intent,
-      // but the server records the step so resume lands on S06.
-      action={<SkipPurpose />}
-    >
-      <PurposeForm initialIntent={state.intent} />
+    <OnboardingShell stage={3} caption="BƯỚC 3/4 · VAI TRÒ" action={<div id={ACTION_SLOT_ID} />}>
+      <RoleForm
+        initial={{
+          roles: declared.roles,
+          claims: declared.hub_claims.map((c) => ({
+            organization_id: c.organization.id,
+            position: c.position ?? '',
+            period: c.period ?? '',
+          })),
+        }}
+        units={units.map((u) => ({ id: u.id, label: u.name }))}
+      />
     </OnboardingShell>
   )
 }

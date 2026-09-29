@@ -1,0 +1,315 @@
+/*
+ * Shared pieces of the onboarding stage cards ACC-05 … ACC-09, measured from
+ * the L1 board at 1440x900 DPR1 (px / 16 = rem). Colours are the board's;
+ * the shell sets the --ob-* inks and the Space Grotesk face (DEC-HD-12).
+ */
+
+.card {
+  width: 51.25rem;
+  max-width: 100%;
+  --unresolved-border-surface: #e4dede;
+  --unresolved-radius-surface: 0.875rem;
+  --unresolved-shadow-surface: 0 0.5rem 1.875rem
+    color-mix(in srgb, var(--hub-burgundy) 7%, transparent);
+  --unresolved-space-surface: 2.5rem;
+  --unresolved-radius-control: 0.5rem;
+  --unresolved-border-control: #cfc5c5;
+  --unresolved-fill-control: #f9f8f8;
+  --unresolved-fg-placeholder: #a79b9b;
+  --unresolved-space-control-x: 0.875rem;
+  --unresolved-space-input-y: 0.8125rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 2.25rem;
+}
+
+.lede {
+  margin: 0.625rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+  color: var(--ob-muted);
+}
+
+/* Mono section caption ("THÔNG TIN HIỂN THỊ", "CHỌN NHIỀU"). */
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.09em;
+  color: var(--ob-faint);
+  text-transform: uppercase;
+}
+
+.rule {
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--ob-line);
+}
+
+/* Footer: "Quay lại" on the left; "Lưu và hoàn tất sau" and the primary on the right. */
+.footer {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5625rem;
+  margin-top: 1.375rem;
+}
+
+.footer :global(.ui-button) {
+  height: 3rem;
+  padding: 0 1.4375rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  white-space: nowrap;
+}
+
+.footer :global(.ui-button[data-variant='primary']) {
+  color: var(--ob-ink);
+}
+
+.footer :global(.ui-button[data-variant='primary']:hover:not(:disabled)) {
+  color: var(--hub-surface);
+}
+
+/* The outlined button is drawn one pixel taller than the filled one. */
+.footer :global(.ui-button[data-variant='secondary']) {
+  height: 3.0625rem;
+  padding: 0 1.53125rem;
+  border-color: #dcd6d6;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* "Lưu và hoàn tất sau": a text action in the accent ink. */
+.later {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--ob-accent);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.later:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.later:focus-visible,
+.card a:focus-visible,
+.card button:focus-visible {
+  outline: 0.125em solid var(--ob-accent);
+  outline-offset: 0.125em;
+}
+
+.formError {
+  margin-top: 1rem;
+  --unresolved-radius-notice: 0.5rem;
+}
+
+@media (max-width: 767px) {
+  .card {
+    --unresolved-space-surface: 1.5rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+  }
+}
+
+/* ------------------------------------------------------------ Form pieces */
+
+.section {
+  margin-top: 1.8125rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+}
+
+.field {
+  margin-top: 0.9375rem;
+}
+
+.section > .eyebrow + .field,
+.section > .eyebrow + .grid2 > .field {
+  margin-top: 0.875rem;
+}
+
+.grid2 > .field {
+  min-width: 0;
+}
+
+.label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--ob-ink);
+}
+
+/* "· Không bắt buộc" after an optional label. */
+.optional {
+  margin-left: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--ob-faint);
+}
+
+.required {
+  margin-left: 0.375rem;
+  font-weight: 600;
+  color: var(--ob-accent);
+}
+
+.control {
+  margin-top: 0.3125rem;
+}
+
+.card :global(.ui-input) {
+  height: 2.9375rem;
+  font-size: 0.9375rem;
+  line-height: 1.25rem;
+}
+
+.card textarea:global(.ui-input) {
+  height: 6.5rem;
+  resize: vertical;
+}
+
+.helper {
+  margin: 0.4375rem 0 -0.0625rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--ob-muted);
+}
+
+.error {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  color: var(--ob-accent);
+}
+
+/* A native select under the drawn control, so the caret and placeholder follow the board. */
+.select {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.select:has(select:disabled) {
+  opacity: 0.5;
+}
+
+.select:has(select:focus-visible) {
+  outline: 0.125em solid var(--ob-accent);
+  outline-offset: 0.125em;
+}
+
+.select[data-invalid='true'] {
+  border-color: var(--ob-accent);
+}
+
+.selectValue {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placeholder {
+  color: var(--unresolved-fg-placeholder);
+}
+
+.caret {
+  flex: none;
+  width: 0.3125rem;
+  height: 0.25rem;
+  fill: var(--ob-ink);
+}
+
+/* A value with a badge on its right ("Từ tài khoản", "Riêng tư"). */
+.badged {
+  position: relative;
+}
+
+.badged :global(.ui-input) {
+  height: 3.0625rem;
+  padding-right: 7rem;
+}
+
+.badged + .helper {
+  margin-top: 0.5rem;
+}
+
+.badge {
+  position: absolute;
+  top: 50%;
+  right: 0.9375rem;
+  height: 1.375rem;
+  padding: 0 0.5rem;
+  border-radius: 0.6875rem;
+  background: #ebe6e6;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.375rem;
+  color: var(--ob-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.card :global(.ui-input:read-only:not(:disabled)) {
+  background-color: #f2efef;
+  color: var(--ob-muted);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}

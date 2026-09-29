@@ -50,10 +50,14 @@ export const FROZEN_ROUTES: readonly FrozenRoute[] = [
   r('WF01-S02', 'WF01', 'auth', '/auth/check-email'),
   r('WF01-S03', 'WF01', 'auth', '/auth/callback'),
   r('WF01-S04', 'WF01', 'auth', '/auth/error'),
+  // Four-stage onboarding (DEC-L1R): S05..S08 keep their routes for the stages
+  // that replace their screens; S09 (intro) and S10 (stage 2) are new.
   r('WF01-S05', 'WF01', 'onboarding', '/onboarding/purpose'),
   r('WF01-S06', 'WF01', 'onboarding', '/onboarding/profile'),
   r('WF01-S07', 'WF01', 'onboarding', '/onboarding/privacy'),
   r('WF01-S08', 'WF01', 'onboarding', '/onboarding/complete'),
+  r('WF01-S09', 'WF01', 'onboarding', '/onboarding'),
+  r('WF01-S10', 'WF01', 'onboarding', '/onboarding/capability'),
 
   // WF02 — Member Profile & Network Management
   r('WF02-S01', 'WF02', 'member', '/me'),

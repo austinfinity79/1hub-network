@@ -92,6 +92,11 @@
   cursor: pointer;
 }
 
+.provider:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
 .providerMark {
   font-size: 0.71875rem;
   font-weight: 600;

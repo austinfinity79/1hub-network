@@ -10,6 +10,11 @@ Approved pixel references from the corrected Homepage + L1–L6 revision ([audit
 | AUTH3 `/auth/callback` | `L1/AUTH3__auth-callback-states__SOURCE.png` | 1440×900 | `640190da2e0fb3ccd96e954aa15491f579a5e6f4d8cdda8541922533cf835971` | `L1.zip` (`c1049e5c…4467`), `AUTH3 · Kết quả bấm link.png`, byte-identical copy | TASK 22.2 |
 | AUTH4 `/auth/error` | `L1/AUTH4__auth-errors__SOURCE.png` | 1440×900 | `7d3369e837d1f4d77b917842d7053326f7e89a2b27f827c4742724b324d0e884` | `L1.zip` (`c1049e5c…4467`), `AUTH4 · Lỗi & chặn.png`, byte-identical copy | TASK 22.2 |
 | ACC-10 `/onboarding/complete` | `L1/ACC-10__onboarding-complete__SOURCE.png` | 1440×897 | `19463544539acd05be87deb423e3283e466be75bacda230bb8911c6762e094e0` | `L1.zip` (`c1049e5c…4467`), `ACC-10 · Hoàn tất — làm gì tiếp.png`, byte-identical copy | TASK 22.2 |
+| ACC-05 `/onboarding` | `L1/ACC-05__onboarding-intro__SOURCE.png` | 1440×999 | `54b5b58edbcb3ce21b03507f30f139da422f3ca0e383cb8df1857c5f82f492df` | `Luồng 1 · Identity & Onboarding.png` (PO, 28/09; 16440×4596, `6587ddb282958b3766ec0c96dfe885c90ece30ae80f93db03d0aaed251fd05a8`), crop x 3720, y 114 | TASK 22-L1-L2-SOT-REALIGN |
+| ACC-06 `/onboarding/profile` | `L1/ACC-06__onboarding-basic__SOURCE.png` | 1440×1721 | `1a0f15986b061d45766f65f2c306667c81fe9bf0d77a978591f65374504fc3ab` | the same board, crop x 5520, y 120 | TASK 22-L1-L2-SOT-REALIGN |
+| ACC-07 `/onboarding/capability` | `L1/ACC-07__onboarding-capability__SOURCE.png` | 1440×1568 | `779d6ec6881674c29c0e932b440e30420890dd90d7189e5743cc27879449d4d0` | the same board, crop x 7320, y 120 | TASK 22-L1-L2-SOT-REALIGN |
+| ACC-08 `/onboarding/purpose` | `L1/ACC-08__onboarding-role__SOURCE.png` | 1440×1205 | `d90d3e6c6727d96078aa6ad5292cf34df703da700fa553d242bd42fd15f46bb7` | the same board, crop x 9120, y 120 | TASK 22-L1-L2-SOT-REALIGN |
+| ACC-09 `/onboarding/privacy` | `L1/ACC-09__onboarding-review__SOURCE.png` | 1440×1371 | `cfd9a2503a64c6568c25a8dd966f0b1f0645f3e27c27a29248b02d86b58d1849` | the same board, crop x 10920, y 120 (the frame is marked "bản đề xuất — chờ spec ACC-09") | TASK 22-L1-L2-SOT-REALIGN |
 | L11 ME0 `/me/settings` | `L2/L11__me-settings__SOURCE.png` | 1440×1974 | `19f1f9ee35fb5f557ec6a8322fe379cfda5e9917366a2149df50a3f57d26ccab` | `L2.zip` (`6fee10fb…04b9`), `L11 · ME0 · Cài đặt hồ sơ & tài khoản.png`, byte-identical copy | TASK 22.3 |
 | L13a PRJ1 `/projects/new` step 1 | `L2/L13a__project-create-core__SOURCE.png` | 1440×1385 | `032197acb4f9a5fd53c843feafbf5582aa43875de39628ede6bbe176559eb22f` | `L2.zip` (`6fee10fb…04b9`), `L13a · PRJ1 · Tạo dự án/startup — B1 Thông tin cốt lõi.png`, byte-identical copy | TASK 22.3 |
 | L13b PRJ2 `/projects/new` step 2 | `L2/L13b__project-create-team__SOURCE.png` | 1440×1084 | `42d4b8a10aa71a566b9220887a7220c93252b65c92aa1c08f784323e75644592` | `L2.zip` (`6fee10fb…04b9`), `L13b · PRJ2 · Tạo dự án/startup — B2 Mời đội ngũ.png`, byte-identical copy | TASK 22.3 |
@@ -23,11 +28,11 @@ Approved pixel references from the corrected Homepage + L1–L6 revision ([audit
 Rules:
 - Typography: Space Grotesk where the reference uses it (DEC-HD-12); mono labels keep IBM Plex Mono 500.
 - H1: the organiser block after the programme cards is removed by PO override and not compared; the "Dữ liệu minh hoạ" labels are additions (DEC-H1-R2). The P0-LANDING spec lists both.
-- L1: only AUTH1–AUTH4 and the ACC-10 subset are Bucket A (DEC-L1-D1). The other L1 frames stay out of the repository until their decisions (HD-02 … HD-05) are made.
+- L1: AUTH1–AUTH4 and ACC-10 came with TASK 22.2 (DEC-L1-D1). ACC-05 … ACC-09 are crops of the L1 flow board, which is the only form the PO supplied them in; the board matches the five older L1 files pixel for pixel at the same positions, so a crop is the frame. The AI-filled state of ACC-06, FP1-OWN and the board's annotation panels are not in the repository: AI suggestion has no provider (D-A1) and FP1-OWN belongs to the L2 run (DEC-L1R).
 - L2: only L11 and L13a–c are Bucket A (DEC-L2-D1). L10, L12, L13, L14, L16, L18 (B) and L17 (C) stay out of the repository. L15 is in since DEC-L15 (`/library`), as the full frame.
 - L3: only L19, L20, L23 and L26 are Bucket A (DEC-L3-D1). L21, L22, L24, L25 and L27 stay out of the repository. L26 is drawn 1600 wide; its spec compares components at their own anchors.
 - Never edit or re-export a file here to make a diff pass. A new source revision gets a new file and hash.
 
 ## Related
 - [../README.md](../README.md) — WF01–WF03 baselines
-- [../../../docs/decisions/DECISION_LOG.md](../../../docs/decisions/DECISION_LOG.md) — DEC-HD-12, DEC-H1, DEC-H1-R2, DEC-L1, DEC-L2, DEC-L3, DEC-L15
+- [../../../docs/decisions/DECISION_LOG.md](../../../docs/decisions/DECISION_LOG.md) — DEC-HD-12, DEC-H1, DEC-H1-R2, DEC-L1, DEC-L1R, DEC-L2, DEC-L3, DEC-L15

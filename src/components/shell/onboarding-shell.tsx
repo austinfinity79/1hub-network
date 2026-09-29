@@ -1,61 +1,68 @@
 import type { ReactNode } from 'react'
 
-import styles from './onboarding-shell.module.css'
+import { Inert } from '@/components/onboarding/inert'
 import { HomeLink } from '@/components/shell/home-link'
 
-/** WF01 onboarding steps shown in the header (S05 Purpose, S06 Profile, S07 Privacy). */
-const STEPS = ['Vai trò', 'Thông tin', 'Quyền riêng tư'] as const
+import styles from './onboarding-shell.module.css'
+
+/** The four stages of the onboarding flow (BA workbook row 56), in order. */
+const STAGES = 4
 
 type Props = {
-  /** 1-based index of the current step; 4 = onboarding finished, all steps done (WF01-S08). */
-  currentStep: 1 | 2 | 3 | 4
+  /** 0 = the intro (ACC-05, no progress), 1–4 = the current stage, 5 = all done (ACC-10). */
+  stage: 0 | 1 | 2 | 3 | 4 | 5
+  /** Mono caption above the bars, e.g. "BƯỚC 1/4 · THÔNG TIN CƠ BẢN". */
+  caption?: string
   /** Right-hand header action; each screen supplies its own. */
   action?: ReactNode
   children: ReactNode
 }
 
 /**
- * Header + canvas shared by the onboarding screens (WF01-S05..S08 references
- * share the header band). Built for WF01-S05; the stepper is presentation only
- * and never gates navigation. Steps before the current one show as done
- * (WF01-S06..S08 references: dark disc with a check).
+ * Header + canvas shared by the onboarding screens ACC-05 … ACC-10 of the L1
+ * board (DEC-L1R-D7): wordmark, a caption over four progress bars, and one
+ * action. The bars are presentation only and never gate navigation; the page
+ * guards do. "Góp ý" floats over every screen and is inert (D-F1).
  */
-export function OnboardingShell({ currentStep, action, children }: Props) {
+export function OnboardingShell({ stage, caption, action, children }: Props) {
   return (
     <div className={styles.root} data-shell="onboarding">
-      <header className={styles.header}>
-        <p className={`type-section-sm ${styles.wordmark}`}>
+      <header className={styles.header} data-intro={stage === 0 ? 'true' : undefined}>
+        <p className={styles.wordmark}>
           <HomeLink>HUB NETWORK</HomeLink>
         </p>
-        <ol className={`type-meta-xs ${styles.steps}`} aria-label="Các bước khởi tạo">
-          {STEPS.map((label, i) => {
-            const current = i + 1 === currentStep
-            const done = i + 1 < currentStep
-            return (
-              <li
-                key={label}
-                className={`${styles.step} ${current ? `${styles.stepCurrent} weight-medium` : ''} ${done ? styles.stepDone : ''}`}
-                aria-current={current ? 'step' : undefined}
-              >
-                <span className={`type-meta-xs weight-semibold ${styles.stepNumber}`}>
-                  {done ? (
-                    // Deterministic inline SVG, not a font glyph (DEC-WF01-S03-ICON).
-                    <svg viewBox="0 0 22 22" aria-hidden="true" focusable="false">
-                      <path d="M6.5 11.5l3 3 6-6.5" />
-                    </svg>
-                  ) : (
-                    i + 1
-                  )}
-                </span>
-                {done ? <span className={styles.srOnly}>Đã xong: </span> : null}
-                {label}
-              </li>
-            )
-          })}
-        </ol>
+        {stage > 0 ? (
+          <div className={styles.progress}>
+            <p className={styles.caption}>{caption}</p>
+            <ol
+              className={styles.bars}
+              aria-label={stage > STAGES ? 'Đã xong cả 4 bước' : `Bước ${stage} trong ${STAGES}`}
+            >
+              {Array.from({ length: STAGES }, (_, i) => {
+                const state = i + 1 < stage ? 'done' : i + 1 === stage ? 'current' : 'todo'
+                return (
+                  <li
+                    key={i}
+                    className={styles.bar}
+                    data-state={state}
+                    aria-current={state === 'current' ? 'step' : undefined}
+                  />
+                )
+              })}
+            </ol>
+          </div>
+        ) : null}
         <div className={styles.action}>{action}</div>
       </header>
       <main className={styles.main}>{children}</main>
+      <div className={styles.feedback} data-anchor="feedback">
+        <Inert reason="NO_P0_SCREEN" label="Góp ý" className={styles.feedbackPill}>
+          <span className={styles.feedbackIcon} aria-hidden="true">
+            !
+          </span>
+          Góp ý
+        </Inert>
+      </div>
     </div>
   )
 }

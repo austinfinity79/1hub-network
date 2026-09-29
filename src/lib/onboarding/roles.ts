@@ -147,6 +147,34 @@ async function read(exec: Executor, profileId: string): Promise<DeclaredRolesDTO
   }
 }
 
+/**
+ * The membership requests that completing onboarding filed and that still wait
+ * for their unit (ACC-10 "Theo dõi xác minh chức vụ HUB"). Own records only.
+ */
+export async function listPendingClaims(accountId: string): Promise<HubClaimDTO[]> {
+  const rows = await query<{
+    id: string
+    name: string
+    type: string
+    position: string | null
+    period: string | null
+  }>(
+    `SELECT o.id::text, o.name, o.type::text AS type, m.claimed_position AS position,
+            m.claimed_period AS period
+       FROM community_memberships m
+       JOIN individual_profiles p ON p.id = m.profile_id
+       JOIN organizations o ON o.id = m.organization_id
+      WHERE p.account_id = $1 AND m.state = 'PENDING_APPROVAL' AND m.source = 'SELF_DECLARED'
+      ORDER BY m.created_at, m.id`,
+    [accountId],
+  )
+  return rows.map((r) => ({
+    organization: { id: r.id, name: r.name, type: r.type },
+    position: r.position,
+    period: r.period,
+  }))
+}
+
 /** GET /me/onboarding/roles. An account without a profile has declared nothing. */
 export async function getDeclaredRoles(
   accountId: string,

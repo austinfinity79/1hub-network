@@ -44,7 +44,7 @@ workflows:
       - activate_session
       - request_new_link
       next:
-      - WF01-S05
+      - WF01-S09
       - WF01-S04
     - id: WF01-S04
       route: /auth/error
@@ -59,60 +59,125 @@ workflows:
       next:
       - WF01-S01
       - WF01-S02
+    # Four-stage onboarding (TASK 22-L1-L2-SOT-REALIGN, DEC-L1R): the L1 board of
+    # 28/09 and the BA workbook (sheet "2. Actor", WF-01) supersede ONB1-ONB3.
+    # WF01-S05..S08 keep their ids and routes; S09 and S10 are new. Flow order:
+    # S09 -> S06 -> S10 -> S05 -> S07 -> S08.
     - id: WF01-S05
       route: /onboarding/purpose
-      source: ONB1
+      source: ACC-08
+      supersedes: ONB1
       reads:
       - UserAccount
+      - DeclaredRole
+      - Organization
       writes:
-      - OnboardingIntent
+      - DeclaredRole
+      - HubUnitClaimDraft
+      - OnboardingStage
       actions:
-      - select_primary_intent
-      - skip_later
+      - select_ecosystem_roles
+      - name_hub_unit_position
+      - save_and_finish_later
+      - continue
       next:
-      - WF01-S06
+      - WF01-S07
+      notes:
+      - Stage 3 of 4. A declaration grants no membership, leadership, role or capability.
     - id: WF01-S06
       route: /onboarding/profile
-      source: ONB2
+      source: ACC-06
+      supersedes: ONB2
       reads:
+      - UserAccount
       - IndividualProfile
       - ControlledVocabulary
       writes:
       - IndividualProfile
       actions:
       - upload_avatar
-      - save_profile
+      - save_basic_information
+      - save_and_finish_later
+      - continue
       next:
-      - WF01-S07
+      - WF01-S10
+      notes:
+      - Stage 1 of 4. AI suggestion is drawn and inert until a provider is configured.
     - id: WF01-S07
       route: /onboarding/privacy
-      source: ONB3
+      source: ACC-09
+      supersedes: ONB3
       reads:
+      - IndividualProfile
+      - DeclaredRole
+      - ProfileCompletion
       - ConsentVersion
       - ProfileVisibilitySetting
       writes:
       - ConsentRecord
       - ProfileVisibilitySetting
+      - OnboardingCompletion
+      - CommunityMembership
       actions:
-      - set_visibility_by_purpose
+      - edit_stage
+      - set_network_visibility
       - accept_required_legal
+      - save_and_finish_later
+      - complete_profile
       next:
       - WF01-S08
+      notes:
+      - Stage 4 of 4. Visibility and consent are separate controls.
+      - Completion files the named HUB units as PENDING_APPROVAL membership requests.
     - id: WF01-S08
       route: /onboarding/complete
-      source: ONB4
+      source: ACC-10
+      supersedes: ONB4
       reads:
       - IndividualProfile
-      - OnboardingIntent
-      - NetworkReadModel
-      writes:
-      - OnboardingCompletion
+      - ProfileCompletion
+      - CommunityMembership
+      writes: []
       actions:
-      - open_challenge_library
       - create_project_profile
-      - request_or_open_chapter
+      - open_hub_verification_status
+      - open_account_home
       next:
       - WF02-S01
+    - id: WF01-S09
+      route: /onboarding
+      source: ACC-05
+      reads:
+      - UserAccount
+      writes: []
+      actions:
+      - start
+      - later
+      next:
+      - WF01-S06
+      notes:
+      - Entry to the four-stage flow. AI block is drawn and inert.
+    - id: WF01-S10
+      route: /onboarding/capability
+      source: ACC-07
+      reads:
+      - IndividualProfile
+      - ControlledVocabulary
+      writes:
+      - IndividualProfile
+      - OnboardingStage
+      actions:
+      - select_domains
+      - select_specializations
+      - select_skills
+      - edit_experience
+      - save_links
+      - save_and_finish_later
+      - continue
+      next:
+      - WF01-S05
+      notes:
+      - Stage 2 of 4. Skills come from the controlled vocabulary, never free text.
     future_insertion:
       after: WF01-S03
       capability: 1Hub verified identity / CCCD verification

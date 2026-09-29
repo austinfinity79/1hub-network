@@ -1,0 +1,280 @@
+/* ACC-06 — stage 1 "Thông tin cơ bản": the AI block, the avatar row and the manual form. */
+
+.card {
+  composes: card from '../stage.module.css';
+  --unresolved-space-surface: 2.5rem;
+}
+
+.card > :global(.ui-surface) {
+  padding-bottom: 4.125rem;
+}
+
+.ai {
+  margin-top: 1.75rem;
+  padding: 1.625rem 1.625rem 1.5625rem;
+  border-radius: 0.875rem;
+  background: #170002;
+  color: #ffffff;
+}
+
+.aiHead {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.aiBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 1.75rem;
+  padding: 0 0.6875rem;
+  border-radius: 0.875rem;
+  background: var(--hub-primary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  color: #170002;
+}
+
+.spark {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  fill: currentColor;
+}
+
+.aiTitle {
+  margin: 0;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+}
+
+.aiBody {
+  margin: 1.125rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.3125rem;
+  color: #d9d0d0;
+}
+
+.aiTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.125rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aiTab {
+  display: inline-flex;
+  align-items: center;
+  height: 2.1875rem;
+  padding: 0 0.8125rem;
+  border: 1px solid #5f4b4c;
+  border-radius: 1.0625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.125rem;
+  color: #ffffff;
+  cursor: default;
+}
+
+.aiTabCurrent {
+  border-color: var(--hub-primary);
+  background: var(--hub-primary);
+  color: #170002;
+}
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 5.875rem;
+  margin-top: 1.125rem;
+  border: 1px dashed #6b3b3d;
+  border-radius: 0.625rem;
+  background: #240507;
+  cursor: default;
+}
+
+.dropTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.125rem;
+  color: #ffffff;
+}
+
+.dropHint {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 0.875rem;
+  letter-spacing: 0.1em;
+  color: #9c8f8f;
+}
+
+.aiFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.privacy {
+  max-width: 17.75rem;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.0625rem;
+  color: #d9d0d0;
+}
+
+.privacyLabel {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 0.875rem;
+  letter-spacing: 0.1em;
+  color: #9c8f8f;
+}
+
+.suggest {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.9375rem;
+  padding: 0 1.5625rem;
+  border-radius: 0.5rem;
+  background: var(--hub-primary);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: #170002;
+  white-space: nowrap;
+  cursor: default;
+}
+
+/* "HOẶC NHẬP THỦ CÔNG" between two rules. */
+.manual {
+  display: flex;
+  align-items: center;
+  gap: 0.9375rem;
+  margin: 1.75rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.09em;
+  color: var(--ob-faint);
+}
+
+.manual::before,
+.manual::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: #f1eeee;
+}
+
+.first {
+  margin-top: 1.75rem;
+}
+
+.avatarRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.avatar {
+  flex: none;
+  width: 4rem;
+  height: 4rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #e4dede;
+}
+
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarText {
+  flex: 1;
+  min-width: 0;
+}
+
+.avatarTitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+.avatarHint {
+  margin: 0.125rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--ob-muted);
+}
+
+.upload :global(.ui-button) {
+  height: 3rem;
+  padding: 0 1.5rem;
+  border-color: #dcd6d6;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.end {
+  margin-top: 1.6875rem;
+}
+
+.footer {
+  composes: footer from '../stage.module.css';
+  margin-top: 3rem;
+}
+
+@media (max-width: 767px) {
+  .card > :global(.ui-surface) {
+    padding-bottom: 1.5rem;
+  }
+
+  .ai {
+    padding: 1.25rem;
+  }
+
+  .aiFoot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .suggest {
+    justify-content: center;
+  }
+
+  .avatarRow {
+    flex-wrap: wrap;
+  }
+
+  /* The text keeps a readable measure; the button takes the next row. */
+  .avatarText {
+    min-width: 11rem;
+  }
+
+  .footer {
+    margin-top: 1.5rem;
+  }
+}

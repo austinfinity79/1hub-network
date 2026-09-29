@@ -1,138 +1,199 @@
 /*
- * Onboarding shell: the white header with wordmark, three-step stepper and a
- * right-hand action, over the canvas. Evidence: the approved WF01-S05..S08
- * references share this header band (differences are the active step and
- * the right action only). Values measured at 1440x900 DPR1 (px / 16 = rem)
- * and local to this shell.
+ * Onboarding shell of the L1 board (ACC-05 … ACC-10), measured at 1440x900
+ * DPR1 (px / 16 = rem): a 64px white band with a 1px rule, the wordmark, a
+ * mono caption over four 72px bars centred between wordmark and action, and
+ * the action. A Corrected Design Revision surface, so its text is Space
+ * Grotesk (DEC-HD-12) through a re-pointed --font-ui; mono stays IBM Plex
+ * Mono 500.
  */
 
 .root {
+  --font-ui: 'Space Grotesk', 'Be Vietnam Pro', system-ui, sans-serif;
+  --ob-ink: #170002;
+  --ob-muted: #534041;
+  --ob-faint: #8e7677;
+  --ob-accent: #b91610;
+  --ob-line: #e4dede;
+  --ob-canvas: #efefef;
+
   min-height: 100vh;
+  background: var(--ob-canvas);
+  color: var(--ob-ink);
+  font-family: var(--font-ui);
 }
 
 .header {
   display: flex;
   align-items: center;
-  height: 3.9375rem;
-  padding: 0 2.8125rem;
+  height: 4.0625rem;
+  padding: 0 2.875rem 0 2.75rem;
+  border-bottom: 1px solid var(--ob-line);
   background: var(--hub-surface);
-  border-bottom: 1px solid color-mix(in srgb, var(--hub-burgundy) 15%, var(--hub-surface));
+}
+
+/* ACC-05 draws its band 6px lower inside the same 64px. */
+.header[data-intro='true'] {
+  padding-top: 0.375rem;
 }
 
 .wordmark {
   margin: 0;
-  letter-spacing: 0.02em;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.375rem;
 }
 
-.steps {
+.progress {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  /* Centred in the space between wordmark and action, as on the baseline. */
+  /* Centred in the space between wordmark and action, as on the board. */
   margin: 0 auto;
+}
+
+.caption {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.07em;
+  color: var(--ob-muted);
+  white-space: nowrap;
+}
+
+.bars {
+  display: flex;
+  gap: 0.375rem;
+  margin: 0.4375rem 0 0;
   padding: 0;
   list-style: none;
 }
 
-.step {
-  display: flex;
-  align-items: center;
-  gap: 0.5625rem;
-  color: var(--unresolved-fg-muted);
+.bar {
+  width: 4.5rem;
+  height: 0.25rem;
+  border-radius: 0.125rem;
+  background: #dcd6d6;
 }
 
-.step + .step::before {
-  content: '';
-  width: 1.625rem;
-  height: 1px;
-  /* The step gap (9px) follows, so the connector ends 11px before the disc. */
-  margin: 0 0.125rem 0 0.75rem;
-  background: var(--unresolved-border-surface);
+.bar[data-state='current'] {
+  background: var(--hub-primary);
 }
 
-.stepNumber {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.375rem;
-  height: 1.375rem;
-  border-radius: 50%;
-  background: var(--unresolved-border-surface);
-}
-
-/* Done step: the S03 success ink (#2a3b24) as the disc, white check. */
-.stepDone .stepNumber {
-  background: #2a3b24;
-}
-
-.stepNumber svg {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: var(--hub-surface);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-.stepCurrent {
-  color: var(--color-fg-default);
-}
-
-.stepCurrent .stepNumber {
-  background: var(--color-bg-accent);
-  color: var(--color-fg-on-accent);
+.bar[data-state='done'] {
+  background: var(--ob-ink);
 }
 
 .action {
-  /* The action column keeps its width even when a screen has no action
-     (WF01-S06, DEC-WF01-S06-D5), so the stepper sits where every baseline
-     puts it: centred between wordmark and a 99px action column. */
   display: flex;
   justify-content: flex-end;
-  min-width: 6.1875rem;
+  margin-left: auto;
+}
+
+.progress + .action {
+  margin-left: 0;
+}
+
+.action :global(a),
+.action :global(button) {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--ob-accent);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.action :global(a:focus-visible),
+.action :global(button:focus-visible) {
+  outline: 0.125em solid var(--ob-accent);
+  outline-offset: 0.125em;
 }
 
 .main {
   display: flex;
   justify-content: center;
-  padding: 2.8125rem 0;
+  padding: 3rem 1rem 6rem;
 }
 
-/* Narrow screens only (TASK 22.2, DEC-L1-D8): the header wraps, wordmark and
-   action on the first row and the stepper on its own row, so nothing leaves
-   the viewport. Desktop and the approved references are untouched. */
+/* "Góp ý": 104 x 46, 24px from the right and from the bottom of the viewport. */
+.feedback {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 10;
+}
+
+.feedbackPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5625rem;
+  height: 2.875rem;
+  padding: 0 1.125rem 0 1rem;
+  border-radius: 1.4375rem;
+  background: #170002;
+  box-shadow: 0 0.75rem 1.75rem rgb(22 0 2 / 30%);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: default;
+}
+
+.feedbackIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 0.3125rem;
+  background: var(--hub-primary);
+  color: #170002;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Narrow screens: wordmark and action on the first row, progress on its own. */
 @media (max-width: 767px) {
-  .header {
+  .header,
+  .header[data-intro='true'] {
     flex-wrap: wrap;
     height: auto;
     row-gap: 0.625rem;
     padding: 0.75rem 1rem;
   }
 
-  .steps {
+  .progress {
     order: 1;
-    flex-wrap: wrap;
-    row-gap: 0.5rem;
     width: 100%;
     margin: 0;
   }
 
-  .step + .step::before {
-    width: 0.5rem;
-    margin: 0 0.125rem 0 0.25rem;
+  .bars {
+    width: 100%;
   }
 
+  .bar {
+    flex: 1;
+    width: auto;
+  }
+
+  .progress + .action,
   .action {
-    min-width: 0;
     margin-left: auto;
+  }
+
+  .main {
+    padding: 1.5rem 1rem 6rem;
+  }
+
+  .feedback {
+    right: 1rem;
+    bottom: 1rem;
   }
 }

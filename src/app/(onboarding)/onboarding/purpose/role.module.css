@@ -1,0 +1,287 @@
+/* ACC-08 — stage 3 "Bạn tham gia hệ sinh thái với vai trò nào?". */
+
+.card {
+  composes: card from '../stage.module.css';
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.8125rem;
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.09em;
+  color: var(--ob-accent);
+  white-space: nowrap;
+}
+
+.roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  /* The board draws the two columns 736px wide, 2px short of the card's content. */
+  max-width: 46rem;
+  margin: 1.6875rem 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.role {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  min-height: 6.1875rem;
+  padding: 1rem 1rem 0.875rem;
+  border: 1px solid #e4dede;
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+  cursor: pointer;
+}
+
+/* The selected card's rule is 2px; the padding gives the pixel back. */
+.role:has(:checked) {
+  padding: 0.9375rem 0.9375rem 0.8125rem;
+  border: 2px solid var(--hub-primary);
+  background: #fff6f4;
+}
+
+.role:has(:focus-visible) {
+  outline: 0.125em solid var(--ob-accent);
+  outline-offset: 0.125em;
+}
+
+.box {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.0625rem;
+  border: 1.5px solid #cfc5c5;
+  border-radius: 0.25rem;
+  background: var(--hub-surface);
+}
+
+.box svg {
+  display: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: none;
+  stroke: var(--ob-ink);
+  stroke-width: 1.8;
+}
+
+.role:has(:checked) .box {
+  border-color: var(--hub-primary);
+  background: var(--hub-primary);
+}
+
+.role:has(:checked) .box svg {
+  display: block;
+}
+
+.roleName {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.375rem;
+  color: var(--ob-ink);
+}
+
+.roleBody {
+  display: block;
+  margin-top: 0.1875rem;
+  font-size: 0.8125rem;
+  line-height: 1.1875rem;
+  color: var(--ob-muted);
+}
+
+/* "Vị trí tại HUB Network": shown while "Thành viên HUB Network" is selected. */
+.panel {
+  margin-top: 1.75rem;
+  padding: 1.4375rem 1.4375rem 1.3125rem;
+  border-radius: 0.75rem;
+  background: #f7f3f3;
+  --unresolved-fill-control: #ffffff;
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panelEyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.09em;
+  color: var(--ob-accent);
+}
+
+.panelTitle {
+  margin: 0.1875rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.375rem;
+  color: var(--ob-ink);
+}
+
+.pending {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 1.6875rem;
+  margin-top: 0.5rem;
+  padding: 0 0.75rem 0 0.6875rem;
+  border: 1px solid #cfc5c5;
+  border-radius: 0.84375rem;
+  background: var(--hub-surface);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  color: var(--ob-ink);
+  white-space: nowrap;
+}
+
+.pending::before {
+  content: '';
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: #c98a1b;
+}
+
+.claims {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.claim {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 0.9375rem;
+  margin-top: 0.9375rem;
+}
+
+.claim + .claim {
+  margin-top: 0.75rem;
+}
+
+.panel :global(.ui-input) {
+  height: 2.75rem;
+  font-size: 0.875rem;
+}
+
+.claimControl {
+  margin-top: 0.3125rem;
+}
+
+.remove {
+  grid-column: 1 / -1;
+  justify-self: end;
+  margin-top: 0.375rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--ob-accent);
+  cursor: pointer;
+}
+
+.addClaim {
+  display: block;
+  margin-top: 0.9375rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--ob-accent);
+  cursor: pointer;
+}
+
+.panelNote {
+  margin: 0.8125rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.3125rem;
+  color: var(--ob-muted);
+}
+
+.info {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  padding: 0.8125rem 1.125rem 0.8125rem 1.0625rem;
+  border: 1px solid #e4dede;
+  border-radius: 0.625rem;
+}
+
+.infoIcon {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--ob-accent);
+}
+
+.infoText {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.3125rem;
+  color: var(--ob-muted);
+}
+
+.end {
+  margin-top: 1.75rem;
+}
+
+.footer {
+  composes: footer from '../stage.module.css';
+  margin-top: 1.375rem;
+}
+
+@media (max-width: 767px) {
+  .roles {
+    grid-template-columns: 1fr;
+  }
+
+  .role {
+    min-height: 0;
+  }
+
+  .panel {
+    padding: 1.25rem 1rem;
+  }
+
+  .panelHead {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .claim {
+    grid-template-columns: 1fr;
+    gap: 0.75rem 0;
+  }
+}
