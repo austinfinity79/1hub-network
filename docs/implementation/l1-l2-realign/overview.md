@@ -53,5 +53,5 @@ State: L1 closed at `5d8cf56` ([l1-closure.md](l1-closure.md)). L2 (phases 3, 4 
 ## Related
 - [frame-inventory.md](frame-inventory.md) · [l1-delta-matrix.md](l1-delta-matrix.md) · [l2-delta-matrix.md](l2-delta-matrix.md) · [open-decisions.md](open-decisions.md)
 - [l1-screen-contracts.md](l1-screen-contracts.md) · [l1-conflict-record.md](l1-conflict-record.md) · [l1-closure.md](l1-closure.md) · [l1-regression-gate.md](l1-regression-gate.md)
-- [l2-delta-team.md](l2-delta-team.md) · [l2-screen-contracts.md](l2-screen-contracts.md) · [l2-closure.md](l2-closure.md) · [po-decision-freeze.md](po-decision-freeze.md)
+- [l2-delta-team.md](l2-delta-team.md) · [l2-screen-contracts.md](l2-screen-contracts.md) · [l2-closure.md](l2-closure.md) · [po-decision-freeze.md](po-decision-freeze.md) · [alpha-backlog.md](alpha-backlog.md)
 - [../../design-revision/05_BUSINESS_API_DATA_CONFLICT_MATRIX.md](../../design-revision/05_BUSINESS_API_DATA_CONFLICT_MATRIX.md) — the earlier HD register
