@@ -4,7 +4,7 @@ import path from 'node:path'
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { createVenture } from '../../../src/lib/venture/venture'
+import { seedVenture } from '../../../src/lib/venture/testing'
 import { assertTypography, settle } from '../pixel-qa/capture'
 import { findScreen, loadManifest } from '../pixel-qa/manifest'
 import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
@@ -95,16 +95,16 @@ async function world() {
   const teammate = await person('Thành Viên Đội')
   const invitee = await person('Người Được Mời')
   const stranger = await person('Người Ngoài')
-  const startup = await createVenture(owner.accountId, {
+  const startup = await seedVenture(owner.accountId, {
     type: 'STARTUP',
     name: 'Startup S02',
     summary: 'Nền tảng số cho hợp tác xã.',
     region_id: HANOI,
     domain_ids: [GOVTECH, EDU],
   })
-  const project = await createVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án S02' })
-  const archived = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Lưu trữ S02' })
-  const foreign = await createVenture(stranger.accountId, { type: 'PROJECT', name: 'Ngoài S02' })
+  const project = await seedVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án S02' })
+  const archived = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Lưu trữ S02' })
+  const foreign = await seedVenture(stranger.accountId, { type: 'PROJECT', name: 'Ngoài S02' })
   await query(`UPDATE projects SET status = 'ACTIVE' WHERE id = $1`, [startup.id])
   await query(`UPDATE projects SET status = 'ARCHIVED' WHERE id = $1`, [archived.id])
   await query(
@@ -179,9 +179,10 @@ test.describe('WF05-S02 project / startup detail', () => {
     await expect(page.locator('[data-demo-meta]')).toHaveText('Dự án · Chủ sở hữu')
     await expect(overview(page, 'type')).toHaveText('Dự án')
     await expect(overview(page, 'status')).toHaveText('Bản nháp')
-    await expect(overview(page, 'summary')).toHaveText('—')
+    // DEC-L2R-D4: description and field are required; region stays optional.
+    await expect(overview(page, 'summary')).toHaveText('Mô tả một dòng')
     await expect(overview(page, 'region')).toHaveText('—')
-    await expect(overview(page, 'domains')).toHaveText('—')
+    await expect(overview(page, 'domains')).toHaveText('Công nghệ khu vực công')
     await expect(page.locator('[data-team-count]')).toHaveText('1 thành viên')
     await expect(page.locator('[data-team-row]')).toHaveText(['Chủ Dự Án · Chủ sở hữu'])
     // Eligible (PROJECT → TEAM ∈ P1): "Đăng ký" opens the application draft (S03).
@@ -521,7 +522,7 @@ test.describe('WF05-S02 responsive basics', () => {
     page,
   }) => {
     const w = await world()
-    const long = await createVenture(w.owner.accountId, {
+    const long = await seedVenture(w.owner.accountId, {
       type: 'STARTUP',
       name: 'Startup-với-một-cái-tên-rất-dài-không-có-khoảng-trắng-để-kiểm-tra-xuống-dòng-S02',
     })

@@ -4,7 +4,7 @@ import path from 'node:path'
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { createVenture } from '../../../src/lib/venture/venture'
+import { seedVenture } from '../../../src/lib/venture/testing'
 import { assertTypography, settle } from '../pixel-qa/capture'
 import { findScreen, loadManifest } from '../pixel-qa/manifest'
 import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
@@ -87,10 +87,10 @@ async function world() {
   const teammate = await person('Thành Viên')
   const invitee = await person('Được Mời')
   const stranger = await person('Người Ngoài')
-  const startup = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Startup S03' })
-  const project = await createVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án S03' })
-  const archived = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Lưu trữ S03' })
-  const foreign = await createVenture(stranger.accountId, { type: 'STARTUP', name: 'Ngoài S03' })
+  const startup = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Startup S03' })
+  const project = await seedVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án S03' })
+  const archived = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Lưu trữ S03' })
+  const foreign = await seedVenture(stranger.accountId, { type: 'STARTUP', name: 'Ngoài S03' })
   await query(`UPDATE projects SET status = 'ACTIVE' WHERE id = $1`, [startup.id])
   await query(`UPDATE projects SET status = 'ARCHIVED' WHERE id = $1`, [archived.id])
   await query(

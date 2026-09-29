@@ -161,10 +161,12 @@ test.describe('WF02-S02 functional', () => {
     await save(page)
     expect(await completion(page.request)).toBe(90)
 
+    // /me is FP1-OWN (DEC-L2R-D1): its suggestion card reads the same server completion.
     await page.goto('/me', { waitUntil: 'networkidle' })
-    await expect(page.locator('[data-completion]')).toHaveText(
-      'Hồ sơ hoàn thiện 90% · còn thiếu ảnh đại diện',
-    )
+    const suggest = page.locator('[data-anchor="suggest"]')
+    await expect(suggest).toContainText('Hồ sơ hoàn thiện 90% · còn thiếu 1 mục')
+    await expect(suggest.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '90')
+    await expect(suggest.locator('[data-suggestion]')).toHaveAttribute('data-suggestion', 'AVATAR')
   })
 
   test('11/16. NO_EXPERIENCE_YET completes group 8; clearing lowers completion', async ({

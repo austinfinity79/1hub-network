@@ -1,5 +1,4 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
+import { randomUUID } from 'node:crypto'
 
 import {
   expect,
@@ -8,51 +7,58 @@ import {
   type Browser,
   type BrowserContext,
   type Page,
+  type Request,
 } from '@playwright/test'
 
-import { onboardThroughUi } from '../support/onboarding'
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
-import { REPO_ROOT } from '../pixel-qa/paths'
+import {
+  applyVocabularyFixture,
+  completedAccount,
+  onboardThroughUi,
+  watchConsole,
+} from '../support/onboarding'
+import { CORE, createVenture, freshAddress, invite, STAGE } from '../support/workspace'
 
 /**
- * WF02-COMPLETION-AUDIT — happy-path UAT across S01 → S07 as ONE journey
- * (docs/implementation/WF02_UAT_MATRIX.md, HC-WF02-01..12), plus alternate
- * and negative paths. Sign-in is the real magic-link path (WF01): the "mail"
- * step reads the newest link the way the inbox would receive it. The data is
- * checked after every transition, and the single completion service must
- * agree across /session, /me/profile and /me/profile/completion.
+ * WF02 L2 UAT — the business matrix of TASK 22-L1-L2-SOT-REALIGN (BA workbook
+ * WF-02, DEC-L2R-D1..D11), one test per letter:
+ *
+ *   A profile on /me (FP1-OWN)       H invitation by link (inert, D-T1)
+ *   B create PROJECT                 I accept → member at the invited level
+ *   C create STARTUP                 J IDOR
+ *   D duplicate create               K role / level spoofing
+ *   E stage persists                 L pending invitations: the invitee only
+ *   F creator role, no privilege     M DRAFT is never public (D-V1)
+ *   G e-mail invitation
+ *
+ * Every state is reached through the real screens and APIs; the database is
+ * read to check what was stored, never written. Guard paths follow (ALT-*).
  */
 
-const FIXTURE = path.join(REPO_ROOT, 'tests/visual/fixtures/wf01-acc07-qa-vocabulary.sql')
-const CHAPTER_02 = '10000000-0000-0000-0000-000000000102'
-const PNG_1X1 = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-  'base64',
-)
+const VENTURES = '/api/v1/ventures'
+const NIL = '00000000-0000-0000-0000-000000000000'
 const MEMBER_ROUTES = [
   '/me',
   '/me/profile/edit',
   '/me/privacy',
   '/me/roles',
   '/me/settings',
+  '/projects',
   '/projects/new',
-  '/projects/00000000-0000-0000-0000-000000000000/edit',
-  '/projects/00000000-0000-0000-0000-000000000000/team',
+  `/projects/${NIL}/edit`,
+  `/projects/${NIL}/team`,
 ]
 
 let consoleErrors: string[] = []
 
 test.beforeAll(async () => {
-  await query(readFileSync(FIXTURE, 'utf8'))
+  await applyVocabularyFixture()
 })
 
 test.beforeEach(async ({ page }) => {
   consoleErrors = []
-  page.on('console', (m) => {
-    if (m.type() === 'error' && !/status of (4\d\d)/.test(m.text())) consoleErrors.push(m.text())
-  })
-  page.on('pageerror', (e) => consoleErrors.push(e.message))
+  watchConsole(page, consoleErrors)
   await page.context().clearCookies()
 })
 
@@ -64,9 +70,9 @@ test.afterAll(async () => {
   await closePool()
 })
 
-const newEmail = (tag: string) =>
-  `uat2-${tag}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@example.test`
+const newEmail = (tag: string) => freshAddress(`uat2-${tag}`)
 
+/** WF01 sign-in as the member does it; the "mail" step reads a fresh link. */
 async function signIn(page: Page, email: string) {
   await page.goto('/auth', { waitUntil: 'networkidle' })
   await page.getByLabel('Email', { exact: true }).fill(email)
@@ -77,20 +83,16 @@ async function signIn(page: Page, email: string) {
   return token
 }
 
-/** ACC-05 → ACC-10 → /me through the screens (DEC-L1R). */
-const onboard = onboardThroughUi
-
-async function ids(email: string) {
-  const [row] = await query<{ account_id: string; profile_id: string }>(
-    `SELECT a.id::text AS account_id, p.id::text AS profile_id
-       FROM user_accounts a JOIN individual_profiles p ON p.account_id = a.id
-      WHERE a.email_normalized = $1`,
-    [email],
-  )
-  return row!
+/** Another member, signed in in a browser context of their own. */
+async function persona(browser: Browser, tag: string, display_name = tag) {
+  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL })
+  const page = await context.newPage()
+  watchConsole(page, consoleErrors)
+  const account = await completedAccount(page.request, `uat2-${tag}`, { display_name })
+  return { context, page, request: page.request, ...account }
 }
 
-/** The one completion service, read through all three endpoints (Audit 3). */
+/** The one completion service, read through all three endpoints. */
 async function completion(request: APIRequestContext): Promise<number> {
   const session = await (await request.get('/api/v1/session')).json()
   const profile = await (await request.get('/api/v1/me/profile')).json()
@@ -100,306 +102,667 @@ async function completion(request: APIRequestContext): Promise<number> {
   return values[0]
 }
 
-/** Everything a deletion REQUEST must leave untouched (Audit 8). */
-async function footprint(accountId: string, profileId: string) {
-  const [row] = await query<Record<string, unknown>>(
-    `SELECT (SELECT status::text FROM user_accounts WHERE id = $1) AS account,
-            (SELECT status::text FROM individual_profiles WHERE id = $2) AS profile,
-            (SELECT avatar_asset_id::text FROM individual_profiles WHERE id = $2) AS avatar,
-            (SELECT string_agg(state::text, ',' ORDER BY id) FROM community_memberships WHERE profile_id = $2) AS memberships,
-            (SELECT count(*)::int FROM leadership_records WHERE profile_id = $2) AS leadership,
-            (SELECT string_agg(status::text || ':' || type::text, ',' ORDER BY id) FROM projects WHERE owner_profile_id = $2) AS ventures,
-            (SELECT string_agg(m.state::text, ',' ORDER BY m.id) FROM project_members m JOIN projects p ON p.id = m.project_id WHERE p.owner_profile_id = $2) AS team,
-            (SELECT count(*)::int FROM consent_records WHERE account_id = $1) AS consents,
-            (SELECT count(*)::int FROM user_sessions WHERE account_id = $1 AND revoked_at IS NULL) AS sessions`,
-    [accountId, profileId],
+async function authority(request: APIRequestContext) {
+  const s = await (await request.get('/api/v1/session')).json()
+  return { capabilities: s.capabilities, managed_scopes: s.managed_scopes }
+}
+
+type Step1 = {
+  type: 'Dự án / ý tưởng' | 'Startup'
+  name: string
+  domains?: string[]
+  summary?: string
+  stage?: string
+  role?: string
+}
+
+const next = (page: Page) => page.getByRole('button', { name: 'Tiếp tục · Mời đội ngũ' })
+const alerts = (page: Page) => page.locator('[data-step-form="info"] [role="alert"]')
+
+async function fillStep1(page: Page, v: Step1) {
+  await page.getByRole('radio', { name: v.type, exact: true }).check({ force: true })
+  await page.locator('#ve-name').fill(v.name)
+  await page.locator('[aria-controls="ve-domain-list"]').click()
+  for (const label of v.domains ?? ['Logistics'])
+    await page.locator('#ve-domain-list').getByRole('button', { name: label, exact: true }).click()
+  await page.locator('#ve-summary').fill(v.summary ?? 'Một dòng mô tả.')
+  await page.getByRole('radio', { name: v.stage ?? 'Ý tưởng', exact: true }).check({ force: true })
+  if (v.role) await page.getByRole('radio', { name: v.role, exact: true }).check({ force: true })
+}
+
+/** PRJ1 → "Tiếp tục": the venture the server created, from its 201 answer. */
+async function createThroughWizard(page: Page, v: Step1) {
+  await page.goto('/projects/new', { waitUntil: 'networkidle' })
+  await fillStep1(page, v)
+  const response = page.waitForResponse(
+    (r) => r.url().endsWith(VENTURES) && r.request().method() === 'POST',
+  )
+  await next(page).click()
+  const res = await response
+  expect(res.status(), await res.text()).toBe(201)
+  const body = await res.json()
+  await expect(page).toHaveURL(`/projects/new?venture=${body.id}&step=team`)
+  return body
+}
+
+async function ventureRow(id: string) {
+  const [row] = await query<{
+    type: string
+    status: string
+    owner: string
+    stage_id: string | null
+    role: string | null
+    team_rows: number
+  }>(
+    `SELECT p.type::text AS type, p.status::text AS status, p.owner_profile_id::text AS owner,
+            p.stage_id::text AS stage_id, p.owner_role_label AS role,
+            (SELECT count(*)::int FROM project_members WHERE project_id = p.id) AS team_rows
+       FROM projects p WHERE p.id = $1`,
+    [id],
   )
   return row!
 }
 
-async function persona(browser: Browser, tag: string, name: string) {
-  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL })
-  const page = await context.newPage()
-  page.on('pageerror', (e) => consoleErrors.push(e.message))
-  const email = newEmail(tag)
-  await signIn(page, email)
-  return { context, page, email, name }
-}
+const ventureCount = async (profileId: string) =>
+  (
+    await query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM projects WHERE owner_profile_id = $1',
+      [profileId],
+    )
+  )[0]!.n
 
-async function relations(request: APIRequestContext) {
-  const net = await (await request.get('/api/v1/me/network')).json()
-  return net.roles.map((r: { venture: { name: string }; relation: string }) => ({
-    name: r.venture.name,
-    relation: r.relation,
-  }))
-}
-
-test.describe('WF02 UAT — canonical member journey', () => {
-  test('HC-WF02-01..12 one journey from a new account, data checked after every step', async ({
+test.describe('WF02 L2 UAT — business matrix', () => {
+  test('A · PROFILE: FP1-OWN shows the profile; an education record added in the dialog is saved, edited and shown after reload', async ({
     page,
-    browser,
-    context,
   }) => {
-    test.setTimeout(180_000)
-    const ownerEmail = newEmail('owner')
-    await signIn(page, ownerEmail)
-    await onboard(page, 'Chủ Dự Án UAT')
-    const owner = await ids(ownerEmail)
-    const programmesBefore = await query<{ n: number }>(
-      'SELECT (SELECT count(*) FROM programmes)::int + (SELECT count(*) FROM events)::int AS n',
-    )
+    await signIn(page, newEmail('a'))
+    await onboardThroughUi(page, 'Hồ Sơ UAT')
+    await expect(page).toHaveURL('/me')
+    await expect(page.locator('[data-anchor="identity"]')).toContainText('Hồ Sơ UAT')
+    const percent = await completion(page.request)
+    const education = page.locator('[data-anchor="education"]')
+    await expect(education).toContainText('Chưa có học vấn.')
 
-    // HC-WF02-01: account home, with the server completion.
-    let percent = await completion(page.request)
-    await expect(page.locator('[data-completion]')).toContainText(`${percent}%`)
-    await expect(page.locator('main')).toContainText('Chủ Dự Án UAT')
-    const [acct] = await query<{ profiles: number; ivs: number }>(
-      `SELECT (SELECT count(*)::int FROM individual_profiles WHERE account_id = $1) AS profiles,
-              (SELECT count(*)::int FROM role_assignments WHERE individual_profile_id = $2) AS ivs`,
-      [owner.account_id, owner.profile_id],
-    )
-    expect(acct).toEqual({ profiles: 1, ivs: 0 })
-
-    // HC-WF02-02: profile edit (goal + avatar) → S01 reflects it.
-    await page.goto('/me/profile/edit', { waitUntil: 'networkidle' })
-    await page.getByLabel('Mục tiêu phát triển').fill('Mở rộng dự án ra ba tỉnh.')
+    await page.getByRole('button', { name: 'Thêm học vấn' }).click()
+    const dialog = page.locator('dialog[data-dialog="education"]')
+    await expect(dialog.getByRole('heading')).toHaveText('Thêm học vấn')
+    // A refused save keeps the dialog open with its message.
+    await dialog.getByRole('button', { name: 'Lưu' }).click()
+    await expect(dialog.getByRole('alert')).toHaveText('Trường này là bắt buộc.')
+    await dialog.getByLabel('Trường', { exact: true }).fill('Đại học Bách khoa Đà Nẵng')
+    await dialog.getByLabel('Ngành / chương trình').fill('Kỹ sư · Kỹ thuật hệ thống công nghiệp')
+    await dialog.getByLabel('Từ', { exact: true }).fill('09/2012')
+    await dialog.getByLabel('Đến', { exact: true }).fill('06/2016')
     const saved = page.waitForResponse(
       (r) => r.url().endsWith('/api/v1/me/profile') && r.request().method() === 'PATCH',
     )
-    await page.getByRole('button', { name: 'Lưu', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Lưu' }).click()
     expect((await saved).status()).toBe(200)
-    const afterGoal = await completion(page.request)
-    expect(afterGoal).toBeGreaterThan(percent)
-    const upload = page.waitForResponse((r) => r.url().endsWith('/api/v1/me/profile/avatar'))
-    await page
-      .getByLabel('Ảnh đại diện', { exact: true })
-      .setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: PNG_1X1 })
-    expect((await upload).ok()).toBe(true)
-    percent = await completion(page.request)
-    expect(percent).toBe(afterGoal + 10)
-    await page.goto('/me', { waitUntil: 'networkidle' })
-    await expect(page.locator('[data-completion]')).toContainText(`${percent}%`)
-    const avatarUrl = (await (await page.request.get('/api/v1/me/profile')).json()).avatar.url
-
-    // HC-WF02-03: visibility PRIVATE; consent untouched; completion untouched.
-    const [consentsBefore] = await query<{ n: number }>(
-      'SELECT count(*)::int AS n FROM consent_records WHERE account_id = $1',
-      [owner.account_id],
-    )
-    await page.goto('/me/privacy', { waitUntil: 'networkidle' })
-    const toggle = page.getByRole('switch', { name: 'Hiện thẻ của tôi trong Thư viện' })
-    await expect(toggle).toHaveAttribute('aria-checked', 'true')
-    await toggle.click()
-    await expect(toggle).toHaveAttribute('aria-checked', 'false')
-    const vis = await (await page.request.get('/api/v1/me/visibility')).json()
-    expect(JSON.stringify(vis)).toContain('PRIVATE')
-    expect(await completion(page.request)).toBe(percent)
-    const [consentsAfter] = await query<{ n: number }>(
-      'SELECT count(*)::int AS n FROM consent_records WHERE account_id = $1',
-      [owner.account_id],
-    )
-    expect(consentsAfter!.n).toBe(consentsBefore!.n)
+    await expect(dialog).toBeHidden()
+    const record = education.locator('[data-record="education"]')
     await page.reload({ waitUntil: 'networkidle' })
-    await expect(toggle).toHaveAttribute('aria-checked', 'false')
+    await expect(record).toHaveCount(1)
+    await expect(record).toContainText('Đại học Bách khoa Đà Nẵng')
+    await expect(record).toContainText('Kỹ sư · Kỹ thuật hệ thống công nghiệp')
+    await expect(record).toContainText('2012 – 2016')
 
-    // HC-WF02-04: roles/network; a membership request stays PENDING_APPROVAL.
-    await page.goto('/me/roles', { waitUntil: 'networkidle' })
-    await expect(page.locator('[data-card="roles"] [data-state="network-empty"]')).toBeVisible()
-    await page.getByRole('combobox').selectOption({ label: 'Chapter 02' })
-    await page.locator('[data-card="request"]').getByRole('button', { name: 'Gửi yêu cầu' }).click()
-    await expect(page.locator('[data-state="request-sent"]')).toBeVisible()
-    await expect(page.locator('li[data-pending]')).toHaveCount(1)
-    const [net] = await query<{ state: string; leaders: number; roles: number }>(
-      `SELECT (SELECT string_agg(state::text, ',') FROM community_memberships WHERE profile_id = $1 AND organization_id = $2) AS state,
-              (SELECT count(*)::int FROM leadership_records WHERE profile_id = $1) AS leaders,
-              (SELECT count(*)::int FROM role_assignments WHERE individual_profile_id = $1) AS roles`,
-      [owner.profile_id, CHAPTER_02],
-    )
-    expect(net).toEqual({ state: 'PENDING_APPROVAL', leaders: 0, roles: 0 })
-    const session = await (await page.request.get('/api/v1/session')).json()
-    expect(session.capabilities).toEqual([])
-    await page.goto('/me', { waitUntil: 'networkidle' })
-    await expect(page.locator('main')).toContainText('Chapter 02')
-
-    // HC-WF02-05 / 06: PROJECT and STARTUP through the S05 wizard (TASK 22.3).
-    const created: Record<string, string> = {}
-    for (const [label, name] of [
-      ['Dự án / ý tưởng', 'Dự Án UAT'],
-      ['Startup', 'Startup UAT'],
-    ] as const) {
-      await page.goto('/projects/new', { waitUntil: 'networkidle' })
-      await page.getByRole('radio', { name: label }).check()
-      await page.locator('#ve-name').fill(name)
-      await page.getByRole('button', { name: 'Tiếp tục · Mời đội ngũ' }).click()
-      await expect(page).toHaveURL(/\/projects\/new\?venture=[0-9a-f-]{36}&step=team$/)
-      created[name] = new URL(page.url()).searchParams.get('venture')!
-    }
-    const ventures = await query<{ type: string; status: string; members: number }>(
-      `SELECT p.type::text AS type, p.status::text AS status,
-              (SELECT count(*)::int FROM project_members m WHERE m.project_id = p.id) AS members
-         FROM projects p WHERE p.owner_profile_id = $1 ORDER BY p.type`,
-      [owner.profile_id],
-    )
-    expect(ventures).toEqual([
-      { type: 'PROJECT', status: 'DRAFT', members: 0 },
-      { type: 'STARTUP', status: 'DRAFT', members: 0 },
+    // Edit in place: the pencil, then the record's own pencil.
+    await page.getByRole('button', { name: 'Sửa học vấn' }).click()
+    await education.getByRole('button', { name: 'Sửa Đại học Bách khoa Đà Nẵng' }).click()
+    await expect(dialog.getByRole('heading')).toHaveText('Sửa học vấn')
+    await expect(dialog.getByLabel('Từ', { exact: true })).toHaveValue('09/2012')
+    await dialog.getByLabel('Ngành / chương trình').fill('Thạc sĩ · Quản trị chuỗi cung ứng')
+    await dialog.getByRole('button', { name: 'Lưu' }).click()
+    await expect(dialog).toBeHidden()
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(record).toContainText('Thạc sĩ · Quản trị chuỗi cung ứng')
+    const profile = await (await page.request.get('/api/v1/me/profile')).json()
+    expect(profile.education).toEqual([
+      expect.objectContaining({
+        institution: 'Đại học Bách khoa Đà Nẵng',
+        programme: 'Thạc sĩ · Quản trị chuỗi cung ứng',
+        started_on: '2012-09',
+        ended_on: '2016-06',
+      }),
     ])
-    expect(await completion(page.request)).toBe(percent)
-    // Canonical edit; type stays fixed.
-    const startup = created['Startup UAT']!
-    await page.goto(`/projects/${startup}/edit`, { waitUntil: 'networkidle' })
-    await page.locator('#ve-name').fill('Startup UAT 2')
+    // The one completion service still agrees on every endpoint.
+    expect(await completion(page.request)).toBeGreaterThanOrEqual(percent)
+  })
+
+  test('B · create PROJECT: required fields named → DRAFT → the creator is the owner', async ({
+    page,
+  }) => {
+    const m = await completedAccount(page.request, 'uat2-b')
+    await page.goto('/projects', { waitUntil: 'networkidle' })
+    await expect(page.locator('[data-state="empty"]')).toBeVisible()
+    await page.locator('[data-nav="create-project-empty"]').click()
+    await expect(page).toHaveURL('/projects/new')
+    await next(page).click()
+    await expect(alerts(page)).toHaveText(Array(5).fill('Trường này là bắt buộc.'))
+    expect(await ventureCount(m.profileId)).toBe(0)
+
+    const v = await createThroughWizard(page, { type: 'Dự án / ý tưởng', name: 'Dự Án UAT' })
+    expect(v).toMatchObject({ type: 'PROJECT', status: 'DRAFT', relation: 'OWNER' })
+    expect(await ventureRow(v.id)).toMatchObject({
+      type: 'PROJECT',
+      status: 'DRAFT',
+      owner: m.profileId,
+      team_rows: 0,
+    })
+    await page.goto('/projects', { waitUntil: 'networkidle' })
+    const card = page.locator(`[data-venture="${v.id}"]`)
+    await expect(card.locator('[data-kind="type"]')).toHaveText('Dự án')
+    await expect(card.locator('[data-kind="status"]')).toHaveText('Nháp · chỉ đội thấy')
+    await expect(card.locator('[data-kind="permission"]')).toHaveText('Chủ sở hữu')
+    const mine = await (await page.request.get('/api/v1/me/ventures')).json()
+    expect(mine.items.map((x: { id: string; relation: string }) => [x.id, x.relation])).toEqual([
+      [v.id, 'OWNER'],
+    ])
+  })
+
+  test('C · create STARTUP: required fields named → DRAFT → the creator is the owner', async ({
+    page,
+  }) => {
+    const m = await completedAccount(page.request, 'uat2-c')
+    await page.goto('/projects', { waitUntil: 'networkidle' })
+    await page.locator('[data-nav="create-project"]').click()
+    await expect(page).toHaveURL('/projects/new')
+    await page.getByRole('radio', { name: 'Startup', exact: true }).check({ force: true })
+    await page.locator('#ve-name').fill('Startup UAT')
+    await next(page).click()
+    await expect(alerts(page)).toHaveText(Array(3).fill('Trường này là bắt buộc.'))
+    expect(await ventureCount(m.profileId)).toBe(0)
+
+    const v = await createThroughWizard(page, {
+      type: 'Startup',
+      name: 'Startup UAT',
+      domains: ['AgriTech', 'Logistics'],
+    })
+    expect(v).toMatchObject({ type: 'STARTUP', status: 'DRAFT', relation: 'OWNER' })
+    expect(await ventureRow(v.id)).toMatchObject({
+      type: 'STARTUP',
+      status: 'DRAFT',
+      owner: m.profileId,
+      team_rows: 0,
+    })
+    await page.goto('/projects', { waitUntil: 'networkidle' })
+    const card = page.locator(`[data-venture="${v.id}"]`)
+    await expect(card.locator('[data-kind="type"]')).toHaveText('Startup')
+    await expect(card.locator('[data-kind="permission"]')).toHaveText('Chủ sở hữu')
+  })
+
+  test('D · duplicate: double submit, the same key again, refresh and back leave one venture', async ({
+    page,
+  }) => {
+    const m = await completedAccount(page.request, 'uat2-d')
+    await page.goto('/projects/new', { waitUntil: 'networkidle' })
+    const creates: Request[] = []
+    await page.route(`**${VENTURES}`, async (route) => {
+      if (route.request().method() === 'POST') {
+        creates.push(route.request())
+        await new Promise((resolve) => setTimeout(resolve, 400))
+      }
+      await route.continue()
+    })
+    await fillStep1(page, { type: 'Dự án / ý tưởng', name: 'Trùng UAT' })
+    await next(page).dblclick()
+    await expect(page).toHaveURL(/step=team$/)
+    await page.unroute(`**${VENTURES}`)
+    expect(creates).toHaveLength(1)
+    const id = new URL(page.url()).searchParams.get('venture')!
+
+    const replay = await page.request.post(VENTURES, {
+      data: creates[0]!.postDataJSON(),
+      headers: { 'Idempotency-Key': creates[0]!.headers()['idempotency-key']! },
+    })
+    expect([replay.status(), (await replay.json()).id]).toEqual([201, id])
+    await page.reload({ waitUntil: 'networkidle' })
+    await page.getByRole('button', { name: 'Quay lại' }).click()
+    await expect(page).toHaveURL(`/projects/new?venture=${id}&step=info`)
+    await page.getByRole('button', { name: 'Lưu nháp', exact: true }).click()
+    await expect(page.locator('[data-step-form="info"] [role="status"]')).toBeVisible()
+    await page.goto('/projects', { waitUntil: 'networkidle' })
+    await page.goBack({ waitUntil: 'networkidle' })
+    await expect(page).toHaveURL(`/projects/new?venture=${id}&step=info`)
+    expect(await ventureCount(m.profileId)).toBe(1)
+    await page.goto('/projects', { waitUntil: 'networkidle' })
+    await expect(page.locator('[data-venture]')).toHaveCount(1)
+  })
+
+  test('E · stage: chosen on PRJ1, stored, shown after reload, changed in the editor', async ({
+    page,
+  }) => {
+    await completedAccount(page.request, 'uat2-e')
+    const v = await createThroughWizard(page, {
+      type: 'Startup',
+      name: 'Giai Đoạn UAT',
+      stage: 'Pilot',
+    })
+    expect(v.stage).toMatchObject({ id: STAGE.pilot, label: 'Pilot' })
+    expect((await ventureRow(v.id)).stage_id).toBe(STAGE.pilot)
+    await page.goto(`/projects/new?venture=${v.id}&step=info`, { waitUntil: 'networkidle' })
+    await expect(page.getByRole('radio', { name: 'Pilot', exact: true })).toBeChecked()
+
+    await page.goto(`/projects/${v.id}/edit`, { waitUntil: 'networkidle' })
+    await expect(page.locator('#ve-stage')).toHaveValue(STAGE.pilot)
+    await page.locator('#ve-stage').selectOption({ label: 'Đang bán' })
     await page.getByRole('button', { name: 'Lưu', exact: true }).click()
     await expect(page.locator('[data-status]')).toContainText('đã lưu lúc')
-    const typeChange = await page.request.patch(`/api/v1/ventures/${startup}`, {
-      data: { type: 'PROJECT' },
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(page.locator('#ve-stage')).toHaveValue(STAGE.selling)
+    expect((await ventureRow(v.id)).stage_id).toBe(STAGE.selling)
+    const read = await (await page.request.get(`${VENTURES}/${v.id}`)).json()
+    expect(read.stage).toMatchObject({ id: STAGE.selling, label: 'Đang bán' })
+    await page.goto('/projects', { waitUntil: 'networkidle' })
+    await expect(page.locator(`[data-venture="${v.id}"]`)).toContainText('Giai đoạn: Đang bán')
+  })
+
+  test('F · creator role: stored and shown again; it grants no platform privilege and changes no level', async ({
+    page,
+  }) => {
+    const m = await completedAccount(page.request, 'uat2-f')
+    const before = await authority(page.request)
+    expect(before).toEqual({ capabilities: [], managed_scopes: [] })
+    const v = await createThroughWizard(page, {
+      type: 'Dự án / ý tưởng',
+      name: 'Vai Trò UAT',
+      role: 'Co-founder',
     })
-    expect(typeChange.status()).toBe(422)
-    expect(await relations(page.request)).toEqual(
-      expect.arrayContaining([
-        { name: 'Dự Án UAT', relation: 'OWNER' },
-        { name: 'Startup UAT 2', relation: 'OWNER' },
-      ]),
-    )
-    await page.goto('/me/roles', { waitUntil: 'networkidle' })
-    await expect(page.locator('[data-card="roles"] [data-kind="venture"]')).toHaveCount(2)
+    expect(v).toMatchObject({ role_label: 'Co-founder', permission: 'OWNER' })
+    expect((await ventureRow(v.id)).role).toBe('Co-founder')
+    await page.goto(`/projects/new?venture=${v.id}&step=info`, { waitUntil: 'networkidle' })
+    await expect(page.getByRole('radio', { name: 'Co-founder', exact: true })).toBeChecked()
+    await page.goto(`/projects/${v.id}/edit`, { waitUntil: 'networkidle' })
+    await expect(page.locator('#ve-role')).toHaveValue('Co-founder')
+    await page.goto(`/projects/${v.id}/team`, { waitUntil: 'networkidle' })
+    const owner = page.locator('[data-row-kind="OWNER"]').getByRole('cell')
+    await expect(owner.nth(1)).toHaveText('Co-founder')
+    await expect(owner.nth(2)).toHaveText('Chủ sở hữu')
 
-    // HC-WF02-07: owner invites (no email is sent, none claimed).
-    const mate = await persona(browser, 'mate', 'Thành Viên UAT')
-    await onboard(mate.page, mate.name)
-    const mateIds = await ids(mate.email)
-    const matePercent = await completion(mate.page.request)
-    await page.goto(`/projects/${startup}/team`, { waitUntil: 'networkidle' })
-    await page.getByRole('button', { name: 'Mời thành viên' }).click()
-    await page.locator('#team-invite-email').fill(mate.email)
-    await page.locator('#team-invite-role').fill('CTO')
-    await page.getByRole('button', { name: 'Tạo lời mời' }).click()
-    await expect(page.locator('[data-state="invite-created"]')).toContainText('Chưa có email')
-    const [invite] = await query<{ id: string; state: string; profile_id: string | null }>(
-      `SELECT id::text, state::text AS state, profile_id::text FROM project_members WHERE project_id = $1`,
-      [startup],
-    )
-    expect(invite).toMatchObject({ state: 'PENDING_CONFIRMATION', profile_id: null })
+    // The lowest role still leaves the creator the owner of their venture.
+    const low = await createVenture(page.request, {
+      type: 'PROJECT',
+      name: 'Vai Trò Thấp UAT',
+      owner_role_label: 'Thành viên',
+    })
+    const lowRead = await (await page.request.get(`${VENTURES}/${low.id}`)).json()
+    expect(lowRead).toMatchObject({ permission: 'OWNER', can_edit: true, role_label: 'Thành viên' })
+    const lowTeam = await (await page.request.get(`${VENTURES}/${low.id}/team`)).json()
+    expect([lowTeam.viewer, lowTeam.can_manage]).toEqual(['OWNER', true])
 
-    // HC-WF02-08: the invitee signs in again → still pending; explicit accept.
-    await mate.context.clearCookies()
-    await signIn(mate.page, mate.email)
-    await expect(mate.page).toHaveURL('/me')
-    const [still] = await query<{ state: string }>(
-      'SELECT state::text AS state FROM project_members WHERE id = $1',
-      [invite!.id],
+    // Nothing on the platform: no role assignment, no leadership, no capability, no ops.
+    const [rows] = await query<{ roles: number; leaders: number; memberships: number }>(
+      `SELECT (SELECT count(*)::int FROM role_assignments WHERE individual_profile_id = $1) AS roles,
+              (SELECT count(*)::int FROM leadership_records WHERE profile_id = $1) AS leaders,
+              (SELECT count(*)::int FROM community_memberships WHERE profile_id = $1) AS memberships`,
+      [m.profileId],
     )
-    expect(still!.state).toBe('PENDING_CONFIRMATION')
-    await mate.page.goto(`/projects/${startup}/team`, { waitUntil: 'networkidle' })
-    await mate.page.getByRole('button', { name: 'Nhận lời mời' }).click()
-    await expect(mate.page.locator('[data-team-view]')).toHaveAttribute('data-viewer', 'MEMBER')
-    await expect(mate.page.locator('[data-row-kind="PENDING_INVITATION"]')).toHaveCount(0)
-    expect(await relations(mate.page.request)).toEqual([
-      { name: 'Startup UAT 2', relation: 'MEMBER' },
+    expect(rows).toEqual({ roles: 0, leaders: 0, memberships: 0 })
+    expect(await authority(page.request)).toEqual(before)
+    expect((await page.goto('/ops/network'))?.status()).toBe(404)
+    const ops = await page.request.get('/api/v1/ops/organizations')
+    expect([403, 404]).toContain(ops.status())
+  })
+
+  test('G · e-mail invitation: PENDING_CONFIRMATION with role and level, the message in the outbox', async ({
+    page,
+  }) => {
+    const m = await completedAccount(page.request, 'uat2-g')
+    const v = await createThroughWizard(page, { type: 'Startup', name: 'Mời UAT' })
+    const address = newEmail('g-invitee')
+    await page.locator('#team-invite-email').fill(address)
+    await page.locator('#team-invite-role').selectOption('Co-founder')
+    await page.locator('#team-invite-permission').selectOption('EDIT')
+    await page.getByRole('button', { name: 'Gửi lời mời' }).click()
+    await expect(page.locator('[data-state="invite-sent"]')).toHaveText('Đã gửi lời mời.')
+    const row = page.locator('[data-row-kind="PENDING_INVITATION"]')
+    await expect(row).toContainText(address)
+    await expect(row).toContainText('Chờ xác nhận')
+    const [stored] = await query<Record<string, unknown>>(
+      `SELECT state::text AS state, profile_id::text AS profile, permission, role_label,
+              invited_by_profile_id::text AS inviter
+         FROM project_members WHERE project_id = $1`,
+      [v.id],
+    )
+    expect(stored).toEqual({
+      state: 'PENDING_CONFIRMATION',
+      profile: null,
+      permission: 'EDIT',
+      role_label: 'Co-founder',
+      inviter: m.profileId,
+    })
+    const mail = await page.request.get(
+      `/dev/outbox/invitations?email=${encodeURIComponent(address)}`,
+    )
+    expect(mail.status()).toBe(200)
+    const { subject, text, link } = await mail.json()
+    expect(subject).toBe('Lời mời vào đội Mời UAT trên 1hub.network')
+    expect(text).toContain('Mời UAT mời bạn vào đội với vai trò Co-founder · quyền Biên tập.')
+    expect(new URL(link).pathname).toBe('/projects')
+    expect(`${text}${link}`).not.toMatch(/token|[0-9a-f]{8}-[0-9a-f]{4}-/i)
+    // Nobody joined: the team is the owner alone.
+    const team = await (await page.request.get(`${VENTURES}/${v.id}/team`)).json()
+    expect(team.counts).toEqual({ members: 1, pending: 1 })
+  })
+
+  test('H · link invitation: drawn and inert, no endpoint (NOT SUPPORTED BY CONTRACT, D-T1)', async ({
+    page,
+  }) => {
+    await completedAccount(page.request, 'uat2-h')
+    const v = await createVenture(page.request, { type: 'PROJECT', name: 'Link UAT' })
+    await page.goto(`/projects/new?venture=${v.id}&step=team`, { waitUntil: 'networkidle' })
+    const link = page.locator('[data-invite-link] [data-cta-kind="INERT"]')
+    await expect(link).toHaveText('Sao chép link')
+    await expect(link).toHaveAttribute('aria-disabled', 'true')
+    expect(await link.evaluate((el) => el.tagName)).toBe('SPAN')
+    const calls: string[] = []
+    page.on('request', (r) => {
+      if (r.url().includes('/api/')) calls.push(`${r.method()} ${r.url()}`)
+    })
+    await link.click({ force: true })
+    await page.waitForLoadState('networkidle')
+    expect(calls).toEqual([])
+    // No route mints, lists or redeems an invitation link.
+    for (const res of [
+      await page.request.post(`${VENTURES}/${v.id}/team/invitation-links`),
+      await page.request.post(`${VENTURES}/${v.id}/team/link`),
+      await page.request.get(`${VENTURES}/${v.id}/team/invitations`),
+      await page.request.post(`${VENTURES}/${v.id}/invite-link`),
+    ]) {
+      expect([404, 405], res.url()).toContain(res.status())
+    }
+    expect((await ventureRow(v.id)).team_rows).toBe(0)
+  })
+
+  test('I · accept: the invitee joins only by accepting, at the invited level', async ({
+    page,
+    browser,
+  }) => {
+    await completedAccount(page.request, 'uat2-i-owner')
+    const v = await createVenture(page.request, { type: 'STARTUP', name: 'Nhận UAT' })
+    const invitee = await persona(browser, 'i-invitee', 'Người Nhận UAT')
+    const { membership_id } = await invite(page.request, v.id, {
+      email: invitee.email,
+      role_label: 'Co-founder',
+      permission: 'EDIT',
+    })
+    // Signed in, not yet a member: the venture stays closed to them.
+    expect((await invitee.request.get(`${VENTURES}/${v.id}`)).status()).toBe(404)
+    await invitee.page.goto('/projects', { waitUntil: 'networkidle' })
+    const banner = invitee.page.locator(`[data-invitation="${membership_id}"]`)
+    await expect(banner).toContainText('LỜI MỜI ĐANG CHỜ')
+    await expect(banner).toContainText(
+      'Nhận UAT mời bạn vào đội với vai trò Co-founder · quyền Biên tập',
+    )
+    await banner.getByRole('button', { name: 'Chấp nhận' }).click()
+    await expect(banner).toHaveCount(0)
+    const card = invitee.page.locator(`[data-venture="${v.id}"]`)
+    await expect(card.locator('[data-kind="permission"]')).toHaveText('Biên tập')
+    await expect(card).toContainText('Co-founder')
+    const mine = await (await invitee.request.get('/api/v1/me/ventures')).json()
+    expect(mine.items).toEqual([
+      expect.objectContaining({ id: v.id, relation: 'MEMBER', permission: 'EDIT', can_edit: true }),
     ])
-    expect(await completion(mate.page.request)).toBe(matePercent)
-    const [mateRoles] = await query<{ n: number }>(
-      'SELECT count(*)::int AS n FROM role_assignments WHERE individual_profile_id = $1',
-      [mateIds.profile_id],
+    const [row] = await query<Record<string, unknown>>(
+      `SELECT state::text AS state, profile_id::text AS profile, permission FROM project_members WHERE id = $1`,
+      [membership_id],
     )
-    expect(mateRoles!.n).toBe(0)
-    // The member sees a read-only team and cannot edit the venture.
-    await expect(mate.page.getByRole('button', { name: 'Mời thành viên' })).toHaveCount(0)
+    expect(row).toEqual({ state: 'ACTIVE', profile: invitee.profileId, permission: 'EDIT' })
+    // Biên tập: edits the venture, not the team.
     expect(
       (
-        await mate.page.request.patch(`/api/v1/ventures/${startup}`, { data: { name: 'x' } })
+        await invitee.request.patch(`${VENTURES}/${v.id}`, { data: { name: 'Nhận UAT 2' } })
+      ).status(),
+    ).toBe(200)
+    expect(
+      (
+        await invitee.request.post(`${VENTURES}/${v.id}/team/invitations`, {
+          data: { email: newEmail('i-x') },
+        })
       ).status(),
     ).toBe(403)
-    // PRIVATE: another member cannot fetch the owner's avatar.
-    expect((await mate.page.request.get(avatarUrl)).status()).not.toBe(200)
+    expect(
+      (await (await invitee.request.get('/api/v1/me/venture-invitations')).json()).items,
+    ).toEqual([])
+    await invitee.context.close()
+  })
 
-    // HC-WF02-09 / 10: role edit, then removal (history kept).
-    await page.reload({ waitUntil: 'networkidle' })
-    const row = page.locator('[data-row-kind="ACTIVE_MEMBER"]')
-    await expect(row).toContainText('Thành Viên UAT')
-    await row.getByRole('button', { name: 'Tuỳ chọn' }).click()
-    await page.getByRole('menuitem', { name: 'Sửa vai trò' }).click()
-    await row.locator('input').fill('Cố vấn')
-    await row.getByRole('button', { name: 'Lưu' }).click()
-    await expect(row).toContainText('Cố vấn')
-    await row.getByRole('button', { name: 'Tuỳ chọn' }).click()
-    await page.getByRole('menuitem', { name: 'Gỡ khỏi đội' }).click()
-    await row.getByRole('button', { name: 'Gỡ', exact: true }).click()
-    await expect(page.locator('[data-row-kind="ACTIVE_MEMBER"]')).toHaveCount(0)
-    const [removed] = await query<{ state: string; ended: boolean; label: string }>(
-      `SELECT state::text AS state, ended_at IS NOT NULL AS ended, role_label AS label FROM project_members WHERE id = $1`,
-      [invite!.id],
+  test('J · IDOR: another member can neither read nor change the venture, its team or its invitations', async ({
+    page,
+    browser,
+  }) => {
+    await completedAccount(page.request, 'uat2-j-owner')
+    const v = await createVenture(page.request, { type: 'STARTUP', name: 'Riêng Tư UAT' })
+    const waiting = await invite(page.request, v.id, { email: newEmail('j-waiting') })
+    const other = await persona(browser, 'j-other')
+    const base = `${VENTURES}/${v.id}`
+    for (const res of [
+      await other.request.get(base),
+      await other.request.patch(base, { data: { name: 'x' } }),
+      await other.request.get(`${base}/team`),
+      await other.request.post(`${base}/team/invitations`, { data: { email: newEmail('j-x') } }),
+      await other.request.patch(`${base}/team/${waiting.membership_id}`, {
+        data: { permission: 'EDIT' },
+      }),
+      await other.request.delete(`${base}/team/${waiting.membership_id}`),
+      await other.request.post(`${base}/team/invitations/${waiting.membership_id}/accept`),
+      await other.request.post(`${base}/team/invitations/${waiting.membership_id}/decline`),
+    ]) {
+      expect(res.status(), `${res.url()}`).toBe(404)
+    }
+    for (const route of [
+      `/projects/${v.id}/edit`,
+      `/projects/${v.id}/team`,
+      `/projects/new?venture=${v.id}&step=team`,
+    ]) {
+      expect((await other.page.goto(route))?.status(), route).toBe(404)
+      await expect(other.page.locator('body')).not.toContainText('Riêng Tư UAT')
+    }
+    expect((await (await other.request.get('/api/v1/me/ventures')).json()).items).toEqual([])
+    expect(
+      (await (await other.request.get('/api/v1/me/venture-invitations')).json()).items,
+    ).toEqual([])
+    const [row] = await query<{ state: string; name: string }>(
+      `SELECT m.state::text AS state, p.name FROM project_members m JOIN projects p ON p.id = m.project_id WHERE m.id = $1`,
+      [waiting.membership_id],
     )
-    expect(removed).toEqual({ state: 'REMOVED', ended: true, label: 'Cố vấn' })
-    expect(await relations(mate.page.request)).toEqual([])
-    expect((await mate.page.goto(`/projects/${startup}/team`))?.status()).toBe(404)
-    expect(await completion(page.request)).toBe(percent)
+    expect(row).toEqual({ state: 'PENDING_CONFIRMATION', name: 'Riêng Tư UAT' })
+    await other.context.close()
+  })
 
-    // HC-WF02-11: sessions; revoke another session → enforced at once.
-    const second = await browser.newContext({ baseURL: test.info().project.use.baseURL })
-    const secondPage = await second.newPage()
-    await signIn(secondPage, ownerEmail)
-    await expect(secondPage).toHaveURL('/me')
-    await page.goto('/me/settings', { waitUntil: 'networkidle' })
-    // L11 (TASK 22.3): the session list opens in place from its summary row.
-    await page.locator('[data-card="sessions"]').getByRole('button', { name: 'Xem' }).click()
-    await expect(page.locator('[data-session="current"]')).toHaveCount(1)
-    await expect(page.locator('[data-session="other"]')).toHaveCount(1)
-    const listed = await (await page.request.get('/api/v1/me/sessions')).json()
-    expect(JSON.stringify(listed)).not.toMatch(/token|hash/i)
-    await page.locator('[data-session="other"]').getByRole('button', { name: 'Đăng xuất' }).click()
-    await expect(page.locator('[data-session="other"]')).toHaveCount(0)
-    await secondPage.goto('/me/settings')
-    await expect(secondPage).toHaveURL('/auth')
-    expect((await secondPage.request.get('/api/v1/me/profile')).status()).toBe(401)
-
-    // HC-WF02-12: deletion REQUEST only; nothing else changes; duplicate is canonical.
-    const before = await footprint(owner.account_id, owner.profile_id)
-    const danger = page.locator('[data-card="danger"]')
-    await danger.getByRole('button', { name: 'Gửi yêu cầu' }).click()
-    await danger.getByRole('button', { name: 'Xác nhận gửi yêu cầu' }).click()
-    await expect(page.locator('[data-state="deletion-requested"]')).toBeVisible()
-    const again = await page.request.post('/api/v1/me/account-deletion-request')
-    expect(again.status()).toBe(200)
-    const [requests] = await query<{ n: number }>(
-      'SELECT count(*)::int AS n FROM account_deletion_requests WHERE account_id = $1',
-      [owner.account_id],
-    )
-    expect(requests!.n).toBe(1)
-    expect(await footprint(owner.account_id, owner.profile_id)).toEqual(before)
-    expect(await completion(page.request)).toBe(percent)
-    await page.goto('/me', { waitUntil: 'networkidle' })
-    await expect(page).toHaveURL('/me')
-
-    // Entity invariants for this journey (Audit 2).
-    const [inv] = await query<Record<string, number>>(
-      `SELECT (SELECT count(*)::int FROM project_members m JOIN projects p ON p.id = m.project_id
-                WHERE p.owner_profile_id = $1 AND m.profile_id = $1) AS owner_rows,
-              (SELECT count(*)::int FROM role_assignments WHERE individual_profile_id IN ($1, $2)) AS role_rows,
-              (SELECT count(*)::int FROM (SELECT account_id FROM individual_profiles GROUP BY account_id HAVING count(*) > 1) d) AS dup_profiles,
-              (SELECT count(*)::int FROM (SELECT project_id, profile_id FROM project_members WHERE state = 'ACTIVE' GROUP BY 1, 2 HAVING count(*) > 1) d) AS dup_active,
-              (SELECT count(*)::int FROM projects WHERE owner_profile_id = $1) AS ventures`,
-      [owner.profile_id, mateIds.profile_id],
-    )
-    expect(inv).toEqual({
-      owner_rows: 0,
-      role_rows: 0,
-      dup_profiles: 0,
-      dup_active: 0,
-      ventures: 2,
+  test('K · role spoof: headers, query and body cannot raise a level or reach the platform', async ({
+    page,
+    browser,
+  }) => {
+    const owner = await completedAccount(page.request, 'uat2-k-owner')
+    const v = await createVenture(page.request, { type: 'PROJECT', name: 'Giả Mạo UAT' })
+    const viewer = await persona(browser, 'k-viewer')
+    const editor = await persona(browser, 'k-editor')
+    for (const [who, permission] of [
+      [viewer, 'VIEW'],
+      [editor, 'EDIT'],
+    ] as const) {
+      const { membership_id } = await invite(page.request, v.id, { email: who.email, permission })
+      const accepted = await who.request.post(
+        `${VENTURES}/${v.id}/team/invitations/${membership_id}/accept`,
+      )
+      expect(accepted.status()).toBe(200)
+    }
+    const headers = {
+      'x-role': 'PLATFORM_ADMIN',
+      'x-permission': 'OWNER',
+      'x-profile-id': owner.profileId,
+      'x-account-id': owner.accountId,
+    }
+    const cases: [APIRequestContext, 'post' | 'patch', string, object, number][] = [
+      [viewer.request, 'patch', `${VENTURES}/${v.id}?permission=EDIT`, { name: 'x' }, 403],
+      [editor.request, 'patch', `${VENTURES}/${v.id}`, { owner_role_label: 'Founder' }, 403],
+      [
+        editor.request,
+        'post',
+        `${VENTURES}/${v.id}/team/invitations`,
+        { email: newEmail('k-x'), permission: 'EDIT' },
+        403,
+      ],
+      [
+        page.request,
+        'post',
+        `${VENTURES}/${v.id}/team/invitations`,
+        { email: newEmail('k-y'), permission: 'OWNER' },
+        422,
+      ],
+      [
+        editor.request,
+        'post',
+        VENTURES,
+        { type: 'PROJECT', name: 'x', ...CORE, owner_profile_id: owner.profileId },
+        422,
+      ],
+      [
+        editor.request,
+        'post',
+        VENTURES,
+        { type: 'PROJECT', name: 'x', ...CORE, status: 'ACTIVE' },
+        422,
+      ],
+      [
+        editor.request,
+        'post',
+        VENTURES,
+        { type: 'PROJECT', name: 'x', ...CORE, permission: 'OWNER' },
+        422,
+      ],
+    ]
+    for (const [request, method, url, data, status] of cases) {
+      const res = await request[method](url, { headers, data })
+      expect(res.status(), `${method} ${url} ${JSON.stringify(data)}`).toBe(status)
+    }
+    expect(
+      await (await viewer.request.get(`${VENTURES}/${v.id}`, { headers })).json(),
+    ).toMatchObject({
+      permission: 'VIEW',
+      can_edit: false,
     })
-    const programmesAfter = await query<{ n: number }>(
-      'SELECT (SELECT count(*) FROM programmes)::int + (SELECT count(*) FROM events)::int AS n',
+    for (const who of [viewer, editor]) {
+      expect(await authority(who.request)).toEqual({ capabilities: [], managed_scopes: [] })
+      expect((await who.page.goto('/ops/network'))?.status()).toBe(404)
+    }
+    const [rbac] = await query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM role_assignments WHERE individual_profile_id = ANY($1::uuid[])',
+      [[viewer.profileId, editor.profileId, owner.profileId]],
     )
-    expect(programmesAfter[0]!.n).toBe(programmesBefore[0]!.n)
+    expect(rbac!.n).toBe(0)
+    const levels = await query<{ permission: string }>(
+      `SELECT permission FROM project_members WHERE project_id = $1 AND state = 'ACTIVE' ORDER BY permission`,
+      [v.id],
+    )
+    expect(levels.map((l) => l.permission)).toEqual(['EDIT', 'VIEW'])
+    expect(await ventureRow(v.id)).toMatchObject({ owner: owner.profileId, role: null })
+    for (const who of [viewer, editor]) await who.context.close()
+  })
 
-    await mate.context.close()
-    await second.close()
-    expect(context).toBeTruthy()
+  test('L · pending invitations: listed and shown to the invited address only', async ({
+    page,
+    browser,
+  }) => {
+    const owner = await completedAccount(page.request, 'uat2-l-owner')
+    const v = await createVenture(page.request, { type: 'STARTUP', name: 'Chờ UAT' })
+    const invitee = await persona(browser, 'l-invitee')
+    const bystander = await persona(browser, 'l-bystander')
+    const third = newEmail('l-third')
+    const mine = await invite(page.request, v.id, {
+      email: invitee.email.toUpperCase(),
+      role_label: 'Thành viên',
+      permission: 'VIEW',
+    })
+    await invite(page.request, v.id, { email: third, permission: 'EDIT' })
+
+    const listed = await (await invitee.request.get('/api/v1/me/venture-invitations')).json()
+    expect(listed.items).toEqual([
+      {
+        venture: { id: v.id, name: 'Chờ UAT', type: 'STARTUP' },
+        membership_id: mine.membership_id,
+        role_label: 'Thành viên',
+        permission: 'VIEW',
+        invited_at: expect.any(String),
+      },
+    ])
+    expect(JSON.stringify(listed)).not.toContain(third)
+    await invitee.page.goto('/projects', { waitUntil: 'networkidle' })
+    await expect(invitee.page.locator('[data-invitations] [data-invitation]')).toHaveCount(1)
+    await invitee.page.goto(`/projects/${v.id}/team`, { waitUntil: 'networkidle' })
+    await expect(invitee.page.locator('[data-team-invitation]')).toBeVisible()
+    await expect(invitee.page.locator('body')).not.toContainText(third)
+
+    for (const who of [bystander.request, page.request]) {
+      expect((await (await who.get('/api/v1/me/venture-invitations')).json()).items).toEqual([])
+    }
+    await bystander.page.goto('/projects', { waitUntil: 'networkidle' })
+    await expect(bystander.page.locator('[data-invitations]')).toHaveCount(0)
+    expect((await bystander.page.goto(`/projects/${v.id}/team`))?.status()).toBe(404)
+    for (const kind of ['accept', 'decline']) {
+      const res = await bystander.request.post(
+        `${VENTURES}/${v.id}/team/invitations/${mine.membership_id}/${kind}`,
+      )
+      expect(res.status(), kind).toBe(404)
+    }
+    const [row] = await query<{ state: string }>(
+      'SELECT state::text AS state FROM project_members WHERE id = $1',
+      [mine.membership_id],
+    )
+    expect(row!.state).toBe('PENDING_CONFIRMATION')
+    expect(owner.profileId).toBeTruthy()
+    for (const who of [invitee, bystander]) await who.context.close()
+  })
+
+  test('M · DRAFT is never public: guests and other members never see the venture', async ({
+    page,
+    browser,
+    playwright,
+  }) => {
+    await completedAccount(page.request, 'uat2-m-owner')
+    const name = `Nháp Riêng ${randomUUID().slice(0, 8)}`
+    const v = await createVenture(page.request, {
+      type: 'STARTUP',
+      name,
+      summary: `${name} mô tả`,
+    })
+    expect((await ventureRow(v.id)).status).toBe('DRAFT')
+    // Nothing publishes it: no status from the client, no review route.
+    const publish = await page.request.patch(`${VENTURES}/${v.id}`, { data: { status: 'ACTIVE' } })
+    expect(publish.status()).toBe(422)
+    const review = await page.request.post(`${VENTURES}/${v.id}/submit-for-review`)
+    expect([404, 405]).toContain(review.status())
+    expect((await ventureRow(v.id)).status).toBe('DRAFT')
+
+    const guest = await playwright.request.newContext({ baseURL: test.info().project.use.baseURL })
+    for (const url of [`${VENTURES}/${v.id}`, `${VENTURES}/${v.id}/team`]) {
+      expect((await guest.get(url)).status(), url).toBe(401)
+    }
+    const guestContext: BrowserContext = await browser.newContext({
+      baseURL: test.info().project.use.baseURL,
+    })
+    const guestPage = await guestContext.newPage()
+    watchConsole(guestPage, consoleErrors)
+    await guestPage.goto(`/projects/${v.id}/edit`)
+    await expect(guestPage).toHaveURL('/auth')
+    for (const route of ['/', '/library', '/organizations/chapter-01']) {
+      const res = await guestPage.goto(route, { waitUntil: 'networkidle' })
+      expect(res?.status(), route).toBe(200)
+      await expect(guestPage.locator('body'), route).not.toContainText(name)
+      expect(await guestPage.content(), route).not.toContain(v.id)
+    }
+    const member = await persona(browser, 'm-other')
+    expect((await member.request.get(`${VENTURES}/${v.id}`)).status()).toBe(404)
+    await member.page.goto('/library', { waitUntil: 'networkidle' })
+    await expect(member.page.locator('body')).not.toContainText(name)
+    await guest.dispose()
+    await guestContext.close()
+    await member.context.close()
   })
 })
 
-test.describe('WF02 UAT — alternate and negative paths', () => {
+test.describe('WF02 UAT — guards', () => {
   test('ALT-01 guest: every WF02 route → /auth', async ({ page }) => {
     for (const route of MEMBER_ROUTES) {
       await page.goto(route)
@@ -416,14 +779,15 @@ test.describe('WF02 UAT — alternate and negative paths', () => {
       await page.goto(route)
       await expect(page, route).toHaveURL('/onboarding')
     }
-    const r = await page.request.post('/api/v1/ventures', { data: { type: 'PROJECT', name: 'x' } })
+    const r = await page.request.post(VENTURES, {
+      data: { type: 'PROJECT', name: 'x', ...CORE },
+    })
     expect(r.status()).toBe(403)
   })
 
   test('ALT-03 a used magic link never signs in again', async ({ page, browser }) => {
-    const email = newEmail('used')
-    const token = await signIn(page, email)
-    await onboard(page, 'Link Once')
+    const token = await signIn(page, newEmail('used'))
+    await onboardThroughUi(page, 'Link Once')
     const other: BrowserContext = await browser.newContext({
       baseURL: test.info().project.use.baseURL,
     })
@@ -432,109 +796,5 @@ test.describe('WF02 UAT — alternate and negative paths', () => {
     await expect(p2).not.toHaveURL('/me')
     expect((await p2.request.get('/api/v1/me/profile')).status()).toBe(401)
     await other.close()
-  })
-
-  test('ALT-04 foreign session, venture and membership ids are hidden (IDOR)', async ({
-    page,
-    browser,
-  }) => {
-    const a = newEmail('idor-a')
-    await signIn(page, a)
-    await onboard(page, 'IDOR A')
-    const b = await persona(browser, 'idor-b', 'IDOR B')
-    await onboard(b.page, b.name)
-    const [bSession] = await query<{ id: string }>(
-      `SELECT s.id::text FROM user_sessions s JOIN user_accounts u ON u.id = s.account_id
-        WHERE u.email_normalized = $1 AND s.revoked_at IS NULL LIMIT 1`,
-      [b.email],
-    )
-    expect((await page.request.delete(`/api/v1/me/sessions/${bSession!.id}`)).status()).toBe(404)
-    expect((await b.page.request.get('/api/v1/me/profile')).status()).toBe(200)
-
-    const v = await (
-      await b.page.request.post('/api/v1/ventures', { data: { type: 'STARTUP', name: 'B only' } })
-    ).json()
-    const inv = await (
-      await b.page.request.post(`/api/v1/ventures/${v.id}/team/invitations`, {
-        data: { email: 'someone@example.test' },
-      })
-    ).json()
-    for (const r of [
-      await page.request.get(`/api/v1/ventures/${v.id}`),
-      await page.request.patch(`/api/v1/ventures/${v.id}`, { data: { name: 'x' } }),
-      await page.request.get(`/api/v1/ventures/${v.id}/team`),
-      await page.request.delete(`/api/v1/ventures/${v.id}/team/${inv.membership_id}`),
-      await page.request.post(
-        `/api/v1/ventures/${v.id}/team/invitations/${inv.membership_id}/accept`,
-      ),
-    ]) {
-      expect(r.status()).toBe(404)
-    }
-    // Profile spoofing: authority fields are refused on the own profile.
-    const spoof = await page.request.patch('/api/v1/me/profile', {
-      data: { completion_percent: 100 },
-    })
-    expect(spoof.status()).toBe(422)
-    await b.context.close()
-  })
-
-  test('ALT-05 ARCHIVED venture is read-only on page, API and team', async ({ page }) => {
-    await signIn(page, newEmail('arch'))
-    await onboard(page, 'Archive Owner')
-    const v = await (
-      await page.request.post('/api/v1/ventures', { data: { type: 'PROJECT', name: 'Old' } })
-    ).json()
-    await query(`UPDATE projects SET status = 'ARCHIVED' WHERE id = $1`, [v.id])
-    expect(
-      (await page.request.patch(`/api/v1/ventures/${v.id}`, { data: { name: 'x' } })).status(),
-    ).toBe(409)
-    expect(
-      (
-        await page.request.post(`/api/v1/ventures/${v.id}/team/invitations`, {
-          data: { email: 'late@example.test' },
-        })
-      ).status(),
-    ).toBe(409)
-    await page.goto(`/projects/${v.id}/edit`, { waitUntil: 'networkidle' })
-    await expect(page.locator('[data-state="read-only"]')).toBeVisible()
-    await page.goto(`/projects/${v.id}/team`, { waitUntil: 'networkidle' })
-    await expect(page.getByRole('button', { name: 'Mời thành viên' })).toHaveCount(0)
-  })
-
-  test('ALT-06 decline and cancel paths keep history and grant nothing', async ({
-    page,
-    browser,
-  }) => {
-    await signIn(page, newEmail('dec-owner'))
-    await onboard(page, 'Decline Owner')
-    const v = await (
-      await page.request.post('/api/v1/ventures', { data: { type: 'STARTUP', name: 'Dec' } })
-    ).json()
-    const who = await persona(browser, 'decliner', 'Decliner')
-    await onboard(who.page, who.name)
-    const inv = await (
-      await page.request.post(`/api/v1/ventures/${v.id}/team/invitations`, {
-        data: { email: who.email },
-      })
-    ).json()
-    await who.page.goto(`/projects/${v.id}/team`, { waitUntil: 'networkidle' })
-    await who.page.getByRole('button', { name: 'Từ chối' }).click()
-    await expect(who.page.locator('[data-state="declined"]')).toBeVisible()
-    const cancel = await (
-      await page.request.post(`/api/v1/ventures/${v.id}/team/invitations`, {
-        data: { email: 'gone@example.test' },
-      })
-    ).json()
-    expect(
-      (await page.request.delete(`/api/v1/ventures/${v.id}/team/${cancel.membership_id}`)).status(),
-    ).toBe(200)
-    const rows = await query<{ state: string }>(
-      'SELECT state::text AS state FROM project_members WHERE project_id = $1 ORDER BY invited_at',
-      [v.id],
-    )
-    expect(rows.map((r) => r.state)).toEqual(['REJECTED', 'REMOVED'])
-    expect(await relations(who.page.request)).toEqual([])
-    expect(inv.kind).toBe('PENDING_INVITATION')
-    await who.context.close()
   })
 })

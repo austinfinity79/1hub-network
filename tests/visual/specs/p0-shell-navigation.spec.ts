@@ -3,6 +3,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 import { reach } from '../support/onboarding'
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
+import { VENTURE_CORE } from '../../../src/lib/venture/testing'
 import { writeJsonReport } from '../pixel-qa/report'
 
 /**
@@ -64,7 +65,7 @@ async function login(page: Page, email: string) {
 /** An owned venture of the signed-in member (created once for the crawl). */
 async function ownedVenture(request: APIRequestContext) {
   const r = await request.post('/api/v1/ventures', {
-    data: { type: 'PROJECT', name: `SHELL Dự án ${Date.now()}` },
+    data: { ...VENTURE_CORE, type: 'PROJECT', name: `SHELL Dự án ${Date.now()}` },
   })
   expect(r.status()).toBe(201)
   return ((await r.json()) as { id: string }).id
@@ -267,9 +268,9 @@ test.describe('P0-SHELL journeys', () => {
     await expect(page.locator('[data-action-card="project"]')).toBeVisible()
     await page.locator('[data-nav="create-project"]').click()
     await expect(page).toHaveURL('/projects/new')
-    // TASK 22.3: the L13 wizard's way back without saving is its "Huỷ".
+    // DEC-L2R-D1: the wizard's way back without saving leads to Dự án & startup.
     await page.locator('[data-nav="wizard-cancel"]').click()
-    await expect(page).toHaveURL('/me')
+    await expect(page).toHaveURL('/projects')
     await expect(page.locator('[data-nav="create-project"]')).toHaveAttribute(
       'href',
       '/projects/new',

@@ -2,11 +2,14 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 
 import { closePool, query } from '../../../src/lib/db/client'
 import { auditRevision } from '../pixel-qa/revision'
+import { applyVocabularyFixture } from '../support/onboarding'
+import { createVenture, freshAddress, invite } from '../support/workspace'
 
 /**
  * WF02-S07 — Settings / Sessions / Account Deletion Request (/me/settings).
  * Decisions DEC-WF02-H8, DEC-WF02-S07-G1..G6, DEC-WF02-S07-D1..D3; the page is
- * the corrected L11 ME0 overview subset (TASK 22.3, DEC-L2-D1).
+ * the corrected L11 ME0 overview subset (TASK 22.3, DEC-L2-D1), plus the
+ * pending team invitations row of DEC-L2R-D8, answered on /projects.
  */
 
 const REGION = '20000000-0000-0000-0000-000000000002'
@@ -16,6 +19,11 @@ const SESSIONS = '/api/v1/me/sessions'
 const DELETION = '/api/v1/me/account-deletion-request'
 
 let consoleErrors: string[] = []
+
+test.beforeAll(async () => {
+  // Ventures (the invitations row) need the ACC-07 QA vocabulary.
+  await applyVocabularyFixture()
+})
 
 test.beforeEach(async ({ page }) => {
   consoleErrors = []
@@ -88,6 +96,14 @@ async function otherDevice(playwright: RequestFactory, email: string) {
 }
 
 const sessionsCard = (page: Page) => page.locator('[data-card="sessions"]')
+const invitationsCard = (page: Page) => page.locator('[data-card="invitations"]')
+
+/** Another member, with a request context of its own, owning a new venture. */
+async function inviter(playwright: RequestFactory, label: string) {
+  const request = await playwright.request.newContext({ baseURL: test.info().project.use.baseURL })
+  await completedMember(request, label)
+  return request
+}
 
 /** L11 (TASK 22.3): the session list opens in place from the sessions row. */
 async function openSettings(page: Page) {
@@ -279,6 +295,61 @@ test.describe('WF02-S07 sessions', () => {
   })
 })
 
+test.describe('WF02-S07 invitations (DEC-L2R-D8)', () => {
+  test('LỜI MỜI counts the account’s own pending invitations; "Xem" leads to /projects', async ({
+    page,
+    playwright,
+  }) => {
+    const m = await completedMember(page.request, 's07-inv')
+    await page.goto('/me/settings', { waitUntil: 'networkidle' })
+    const card = invitationsCard(page)
+    await expect(card.getByRole('heading', { level: 2 })).toHaveText('LỜI MỜI')
+    await expect(card).toContainText('Lời mời đang chờ')
+    await expect(card.getByText('không có lời mời nào', { exact: true })).toBeVisible()
+    const view = card.getByRole('link', { name: 'Xem' })
+    await expect(view).toHaveAttribute('href', '/projects')
+    await expect(view).toHaveAttribute('data-nav', 'settings-invitations')
+
+    // Two invitations to this address; one to another address and one this
+    // member sends from its own venture do not count.
+    const other = await inviter(playwright, 's07-inviter')
+    const first = await createVenture(other, { type: 'STARTUP', name: 'S07 Đội một' })
+    const second = await createVenture(other, { type: 'PROJECT', name: 'S07 Đội hai' })
+    const a = await invite(other, first.id, { email: m.email, permission: 'VIEW' })
+    await invite(other, second.id, { email: m.email, permission: 'EDIT' })
+    await invite(other, second.id, { email: freshAddress('s07-else') })
+    const own = await createVenture(page.request, { type: 'PROJECT', name: 'S07 Của tôi' })
+    await invite(page.request, own.id, { email: freshAddress('s07-mate') })
+
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(card.getByText('2 lời mời', { exact: true })).toBeVisible()
+    const listed = await (await page.request.get('/api/v1/me/venture-invitations')).json()
+    expect(listed.items).toHaveLength(2)
+
+    // Another account's settings count only its own.
+    const stranger = await playwright.request.newContext({
+      baseURL: test.info().project.use.baseURL,
+    })
+    await completedMember(stranger, 's07-inv-stranger')
+    const html = await (await stranger.get('/me/settings')).text()
+    expect(html).toContain('không có lời mời nào')
+    expect(html).not.toContain('S07 Đội')
+
+    // Answering one lowers the count.
+    const declined = await page.request.post(
+      `/api/v1/ventures/${first.id}/team/invitations/${a.membership_id}/decline`,
+    )
+    expect(declined.status()).toBe(200)
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(card.getByText('1 lời mời', { exact: true })).toBeVisible()
+
+    await view.click()
+    await expect(page).toHaveURL('/projects')
+    await expect(page.locator('[data-invitation]')).toHaveCount(1)
+    for (const ctx of [other, stranger]) await ctx.dispose()
+  })
+})
+
 test.describe('WF02-S07 deletion request', () => {
   test('15/16/18. confirm → 201; repeat 200 same request; user stays signed in; one audit', async ({
     page,
@@ -362,14 +433,23 @@ test.describe('WF02-S07 pixel QA (corrected L11 ME0 subset)', () => {
     account: 171,
     sessions: 349,
     visibility: 444,
+    invitations: 1637,
     danger: 1803,
   }
   const RIGHT = 1320
 
-  test('1440×900 full page: head, account card, sessions row, visibility, closing card', async ({
+  test('1440×900 full page: head, account card, sessions row, visibility, invitations, closing card', async ({
     page,
+    playwright,
   }) => {
-    await completedMember(page.request, 's07-px')
+    const m = await completedMember(page.request, 's07-px')
+    // The board's "2 lời mời".
+    const other = await inviter(playwright, 's07-px-inviter')
+    for (const name of ['S07 Một', 'S07 Hai']) {
+      const venture = await createVenture(other, { type: 'STARTUP', name })
+      await invite(other, venture.id, { email: m.email })
+    }
+    await other.dispose()
     await page.goto('/me/settings', { waitUntil: 'networkidle' })
     await expect(sessionsCard(page)).toHaveAttribute('aria-busy', 'false')
     await expect(page.locator('[data-visibility]')).toBeVisible()
@@ -385,6 +465,7 @@ test.describe('WF02-S07 pixel QA (corrected L11 ME0 subset)', () => {
     const account = await box('[data-card="account"]')
     const sessions = await box('[data-card="sessions"]')
     const visibility = await box('[data-card="visibility"]')
+    const invitations = await box('[data-card="invitations"] > div')
     const danger = await box('[data-card="danger"]')
     const dx = account.x - REF.title.x
     await auditRevision(page, {
@@ -428,6 +509,19 @@ test.describe('WF02-S07 pixel QA (corrected L11 ME0 subset)', () => {
           dx: visibility.right - RIGHT,
           dy: visibility.y - REF.visibility,
         },
+        // The pending-invitations row, at its own anchor (row top = the rule above it).
+        {
+          name: 'invitations-title',
+          reference: { x: 420, y: 1640, width: 260, height: 36 },
+          dx,
+          dy: invitations.y - REF.invitations,
+        },
+        {
+          name: 'invitations-action',
+          reference: { x: 1230, y: 1640, width: 96, height: 52 },
+          dx: account.right - RIGHT,
+          dy: invitations.y - REF.invitations,
+        },
         {
           name: 'closing-head',
           reference: { x: 400, y: 1797, width: 470, height: 79 },
@@ -444,7 +538,12 @@ test.describe('WF02-S07 pixel QA (corrected L11 ME0 subset)', () => {
         {
           class: 'INTENTIONAL-SCOPE',
           reason:
-            'DEC-L2-D1: Bucket B / Future rows omitted (email change, Google, HUB tags, public URL, view-as, purpose consents, viewer stats, personal log, export, email preferences, invitations, organisations, transfer)',
+            'DEC-L2-D1: Bucket B / Future rows omitted (email change, Google, HUB tags, public URL, view-as, purpose consents, viewer stats, personal log, export, email preferences, organisations, transfer)',
+        },
+        {
+          class: 'INTENTIONAL-SCOPE',
+          reason:
+            'DEC-L2R-D8: "Lời mời đang chờ" is built and compared at its own row; the board card "THÔNG BÁO · LỜI MỜI & TỔ CHỨC" keeps only that row (email preferences and organisations are not built), so its eyebrow reads "LỜI MỜI" and the row is the first of the card',
         },
         {
           class: 'INTENTIONAL-DATA',

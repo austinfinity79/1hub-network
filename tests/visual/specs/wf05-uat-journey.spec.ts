@@ -6,7 +6,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 import { onboardThroughUi } from '../support/onboarding'
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
-import { createVenture } from '../../../src/lib/venture/venture'
+import { seedVenture } from '../../../src/lib/venture/testing'
 import { assertTypography, settle } from '../pixel-qa/capture'
 import { findScreen, loadManifest } from '../pixel-qa/manifest'
 import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
@@ -133,10 +133,10 @@ async function world() {
   const teammate = await person('Thành Viên')
   const invitee = await person('Được Mời')
   const stranger = await person('Người Ngoài')
-  const startup = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Startup UAT' })
-  const project = await createVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án UAT' })
-  const archived = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Lưu trữ UAT' })
-  const foreign = await createVenture(stranger.accountId, { type: 'STARTUP', name: 'Ngoài UAT' })
+  const startup = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Startup UAT' })
+  const project = await seedVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án UAT' })
+  const archived = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Lưu trữ UAT' })
+  const foreign = await seedVenture(stranger.accountId, { type: 'STARTUP', name: 'Ngoài UAT' })
   await query(`UPDATE projects SET status = 'ACTIVE' WHERE id = $1`, [startup.id])
   await query(`UPDATE projects SET status = 'ARCHIVED' WHERE id = $1`, [archived.id])
   // The "Founder" label on an ACTIVE member grants nothing (membership ≠ ownership).
@@ -294,6 +294,9 @@ async function ownerJourney(page: Page, kind: Kind, id: string) {
   await signIn(page, email)
   await onboard(page, `Chủ ${kind.label}`)
   const me = await accountOf(email)
+  // DEC-L2R-D1: /me (FP1-OWN) leads to /projects, whose sidebar holds the demo entry.
+  await page.locator('[data-nav="projects"]').click()
+  await expect(page).toHaveURL('/projects')
   await page.locator('[data-nav="project-demo"]').click()
   await expect(page).toHaveURL('/demo/projects')
   await expect(page.locator('[data-state="ventures-empty"]')).toHaveText(
@@ -314,11 +317,18 @@ async function ownerJourney(page: Page, kind: Kind, id: string) {
     .getByRole('radio', { name: kind.type === 'PROJECT' ? 'Dự án / ý tưởng' : 'Startup' })
     .check()
   await page.locator('#ve-name').fill(name)
+  // DEC-L2R-D4: field, description and stage are required.
+  const picker = page.locator('[aria-controls="ve-domain-list"]')
+  await picker.click()
+  await page.getByRole('button', { name: 'Công nghệ khu vực công', exact: true }).click()
+  await picker.click()
+  await page.locator('#ve-summary').fill('Kết nối nông hộ với người mua.')
+  await page.getByRole('radio', { name: 'Ý tưởng', exact: true }).check({ force: true })
   await page.getByRole('button', { name: 'Tiếp tục · Mời đội ngũ' }).click()
   await expect(page).toHaveURL(/\/projects\/new\?venture=[0-9a-f-]{36}&step=team$/)
   const ventureId = new URL(page.url()).searchParams.get('venture')!
   await page.locator('[data-nav="wizard-exit"]').click()
-  await expect(page).toHaveURL('/me')
+  await expect(page).toHaveURL('/projects')
   log.step(
     page,
     'HP-02',
@@ -482,6 +492,7 @@ test.describe('HC-WF05-03 canonical reuse', () => {
     log.step(page, 'CR-02', 'S02 "Sửa hồ sơ" → WF02 rename → back')
 
     const before = await tables()
+    await page.locator('[data-nav="projects"]').click()
     await page.locator('[data-nav="project-demo"]').click()
     await expect(page.locator(`[data-venture="${w.startup.id}"]`)).toContainText(
       'Startup UAT đổi tên',

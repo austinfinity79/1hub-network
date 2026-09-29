@@ -4,7 +4,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 
 import { closePool, query } from '../../../src/lib/db/client'
 import { PROJECT_DEMO_ENTRY } from '../../../src/lib/member/nav'
-import { createVenture } from '../../../src/lib/venture/venture'
+import { seedVenture } from '../../../src/lib/venture/testing'
 
 /**
  * WF05-T00 — Founder / Project / Startup demo foundation (DEC-WF05-G1..G5,
@@ -78,9 +78,9 @@ async function world() {
   const teammate = await person()
   const invitee = await person()
   const stranger = await person()
-  const startup = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Startup T00' })
-  const project = await createVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án T00' })
-  const archived = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Lưu trữ T00' })
+  const startup = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Startup T00' })
+  const project = await seedVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án T00' })
+  const archived = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Lưu trữ T00' })
   await query(`UPDATE projects SET status = 'ARCHIVED' WHERE id = $1`, [archived.id])
   await query(
     `INSERT INTO project_members (project_id, profile_id, role_label, state, joined_at)
@@ -268,7 +268,8 @@ test.describe('WF05-T00 route and entry contract', () => {
         await page.request.get(`/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}/unknown`)
       ).status(),
     ).toBe(404)
-    for (const url of ['/me', '/me/roles', '/me/privacy', '/me/settings']) {
+    // DEC-L2R-D1: /me is FP1-OWN (no sidebar); /projects carries the entry instead.
+    for (const url of ['/projects', '/me/roles', '/me/privacy', '/me/settings']) {
       await page.goto(url, { waitUntil: 'networkidle' })
       await expect(page.locator('a[href^="/demo/projects"]'), url).toHaveCount(1)
       await expect(page.locator('[data-nav="project-demo"]'), url).toHaveAttribute(
@@ -290,6 +291,9 @@ test.describe('WF05-T00 application store (browser session)', () => {
   }) => {
     const w = await world()
     const before = await fingerprint()
+    const [{ now: startedAt } = { now: new Date() }] = await query<{ now: Date }>(
+      'SELECT now() AS now',
+    )
     await login(page.request, w.owner.email)
     await harness(page)
     await expect(page.locator('[data-demo-notice]')).toContainText('Dữ liệu demo · Internal Alpha')
@@ -382,9 +386,19 @@ test.describe('WF05-T00 application store (browser session)', () => {
     ).not.toBeNull()
     expect((await (await page.request.get('/api/v1/session')).json()).authenticated).toBe(true)
 
-    // Canonical data: only the WF02 rename changed projects; nothing else was written.
+    // Canonical data: only the WF02 rename changed projects and, since DEC-L2R-D9,
+    // wrote its one VENTURE_UPDATED event; nothing else was written.
     state = await fingerprint()
-    expect({ ...state, projects: null }).toEqual({ ...before, projects: null })
+    expect({ ...state, projects: null, audit: null }).toEqual({
+      ...before,
+      projects: null,
+      audit: null,
+    })
+    const written = await query<{ action: string; resource_id: string }>(
+      `SELECT action, resource_id::text FROM audit_events WHERE created_at >= $1 ORDER BY created_at`,
+      [startedAt],
+    )
+    expect(written).toEqual([{ action: 'VENTURE_UPDATED', resource_id: w.startup.id }])
   })
 
   test('an ACTIVE team member reads but cannot start; another actor never reads this store', async ({

@@ -5,7 +5,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
 import { inviteMember } from '../../../src/lib/venture/team'
-import { createVenture } from '../../../src/lib/venture/venture'
+import { seedVenture } from '../../../src/lib/venture/testing'
 import { REPO_ROOT } from '../pixel-qa/paths'
 import { writeJsonReport } from '../pixel-qa/report'
 
@@ -212,7 +212,7 @@ test.describe('REL-SEC cross-workflow actor matrix', () => {
     const owner = await person('Chủ Dự Án IA')
     const teammate = await person('Thành Viên IA')
     const stranger = await person('Người Ngoài IA')
-    const venture = await createVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án IA' })
+    const venture = await seedVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án IA' })
     await query(
       `INSERT INTO project_members (project_id, profile_id, role_label, state, joined_at)
        VALUES ($1, $2, 'Founder', 'ACTIVE', now())`,
@@ -479,10 +479,19 @@ test.describe('REL-RESP responsive sweep', () => {
         key: '[data-nav="start"]',
         certified: false,
       },
+      // DEC-L2R-D1: /me is FP1-OWN (no sidebar); the WF05 demo entry sits in the
+      // sidebar of /projects.
       {
         name: 'member-home',
         who: 'member@example.test',
         url: '/me',
+        key: '[data-nav="create-project"]',
+        certified: false,
+      },
+      {
+        name: 'wf02-projects',
+        who: 'member@example.test',
+        url: '/projects',
         key: '[data-nav="project-demo"]',
         certified: false,
       },
@@ -561,7 +570,7 @@ test.describe('REL-RESP responsive sweep', () => {
     // A venture with a pending invitation, so the team table shows its row action.
     const owner = await person('Chủ Đội IA')
     const invitee = await person('Khách Mời IA')
-    const venture = await createVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án đội IA' })
+    const venture = await seedVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án đội IA' })
     await inviteMember(owner.accountId, venture.id, { email: invitee.email }, 'ia-resp')
     await login(page.request, 'leader@example.test')
     await page.goto(`/ops/org/${CHAPTER_01}/members`)

@@ -4,7 +4,7 @@ import path from 'node:path'
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { createVenture } from '../../../src/lib/venture/venture'
+import { seedVenture } from '../../../src/lib/venture/testing'
 import { assertTypography, settle } from '../pixel-qa/capture'
 import { findScreen, loadManifest } from '../pixel-qa/manifest'
 import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
@@ -84,10 +84,10 @@ async function world() {
   const teammate = await person('WF05 Teammate')
   const invitee = await person('WF05 Invitee')
   const stranger = await person('WF05 Stranger')
-  const startup = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Startup S01' })
-  const project = await createVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án S01' })
-  const archived = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Cũ S01' })
-  const foreign = await createVenture(stranger.accountId, {
+  const startup = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Startup S01' })
+  const project = await seedVenture(owner.accountId, { type: 'PROJECT', name: 'Dự án S01' })
+  const archived = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Cũ S01' })
+  const foreign = await seedVenture(stranger.accountId, {
     type: 'PROJECT',
     name: 'Của người khác',
   })
@@ -109,7 +109,7 @@ async function world() {
 /** A fresh member with exactly one STARTUP (deterministic counts). */
 async function soloOwner(): Promise<Person & { ventureId: string }> {
   const owner = await person('WF05 Solo')
-  const venture = await createVenture(owner.accountId, { type: 'STARTUP', name: 'Startup riêng' })
+  const venture = await seedVenture(owner.accountId, { type: 'STARTUP', name: 'Startup riêng' })
   return { ...owner, ventureId: venture.id }
 }
 
@@ -371,12 +371,13 @@ test.describe('WF05-S01 states, entry and boundaries', () => {
   }) => {
     const solo = await soloOwner()
     await login(page.request, solo.email)
-    await page.goto('/me', { waitUntil: 'networkidle' })
+    // DEC-L2R-D1: /me is FP1-OWN without a sidebar; the MemberShell pages keep the entry.
+    await page.goto('/me/settings', { waitUntil: 'networkidle' })
     const entry = page.locator('[data-nav="project-demo"]')
     await expect(entry).toHaveText('Dự án & Startup · Demo')
     await expect(entry).toHaveAttribute('href', '/demo/projects')
     await expect(entry).not.toHaveAttribute('aria-current', 'page')
-    await expect(page.locator('[aria-current="page"]')).toHaveText('Tổng quan')
+    await expect(page.locator('[aria-current="page"]')).toHaveText('Cài đặt tài khoản')
     await entry.click()
     await expect(page).toHaveURL(URL_)
     await expect(page.locator('[data-nav="project-demo"]')).toHaveAttribute('aria-current', 'page')

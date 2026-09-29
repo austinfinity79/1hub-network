@@ -451,12 +451,13 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
   })
 
   test('legacy screens keep the approved faces (DEC-HD-12 is scoped)', async ({ page }) => {
-    // /auth and the onboarding are revision screens (DEC-L1-D1, DEC-L1R-D7); the
-    // member home next to them stays legacy, so it proves the scope still holds.
+    // /auth, the onboarding (DEC-L1-D1, DEC-L1R-D7) and the member workspace
+    // (DEC-L2R-D11) are revision screens; the profile editor next to them stays
+    // legacy, so it proves the scope still holds.
     expect(
       (await page.request.post('/dev/login', { data: { email: 'member@example.test' } })).ok(),
     ).toBe(true)
-    await page.goto('/me', { waitUntil: 'networkidle' })
+    await page.goto('/me/profile/edit', { waitUntil: 'networkidle' })
     await settle(page)
     const result = await assertTypography(page, APPROVED_FACES)
     expect(result.violations).toEqual([])

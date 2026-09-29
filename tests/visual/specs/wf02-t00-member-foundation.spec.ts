@@ -11,10 +11,14 @@ import { compareSegments, type Rect } from '../pixel-qa/segments'
 /**
  * WF02-T00 — member foundation / network read model.
  *
- * GET /me/network (05 §5.1) over HTTP, the member-shell page guard, the shell's
+ * GET /me/network (05 §5.1) over HTTP, the member page guard, the shell's
  * navigation classification (DEC-WF02-H9) and a SHELL-ONLY harness comparison
- * against the WF02-S01/S03/S04/S07 references. No screen body exists yet, so
- * no screen Pixel PASS is claimed.
+ * against the WF02-S03/S04/S07 references. No screen Pixel PASS is claimed.
+ *
+ * DEC-L2R-D1: /me is FP1-OWN in the workspace profile shell (WF02-S01 spec)
+ * and /projects is ME7 (WF02-S08 spec); both keep the member page guard. The
+ * member shell stays on /me/privacy, /me/roles and /me/settings, where "Hồ sơ
+ * của tôi" leads to /me and "Lời mời" to /projects.
  */
 
 const NETWORK_API = '/api/v1/me/network'
@@ -23,11 +27,12 @@ const COUNTRY = '21000000-0000-0000-0000-000000000001'
 const DOMAIN = '20000000-0000-0000-0000-000000000011'
 const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
 const SHELL_ROUTES = [
-  { path: '/me', active: 'Tổng quan', ref: 'WF02-S01__account-home' },
   { path: '/me/privacy', active: 'Quyền riêng tư & hiển thị', ref: 'WF02-S03__privacy-visibility' },
   { path: '/me/roles', active: 'Vai trò & liên kết', ref: 'WF02-S04__roles-network-links' },
   { path: '/me/settings', active: 'Cài đặt tài khoản', ref: 'WF02-S07__account-settings' },
 ] as const
+/** Every member page, member shell or not, guards the same way. */
+const GUARDED_ROUTES = ['/me', '/projects', ...SHELL_ROUTES.map((route) => route.path)]
 
 let consoleErrors: string[] = []
 
@@ -173,10 +178,10 @@ test.describe('WF02-T00 GET /me/network', () => {
   })
 })
 
-test.describe('WF02-T00 member-shell page guard', () => {
-  for (const route of SHELL_ROUTES) {
-    test(`${route.path}: guest → /auth`, async ({ page }) => {
-      await page.goto(route.path)
+test.describe('WF02-T00 member page guard', () => {
+  for (const route of GUARDED_ROUTES) {
+    test(`${route}: guest → /auth`, async ({ page }) => {
+      await page.goto(route)
       await expect(page).toHaveURL('/auth')
     })
   }
@@ -185,8 +190,8 @@ test.describe('WF02-T00 member-shell page guard', () => {
     page,
   }) => {
     await signIn(page.request)
-    for (const route of SHELL_ROUTES) {
-      await page.goto(route.path)
+    for (const route of GUARDED_ROUTES) {
+      await page.goto(route)
       await expect(page).toHaveURL('/onboarding')
     }
   })
@@ -195,7 +200,7 @@ test.describe('WF02-T00 member-shell page guard', () => {
 test.describe('WF02-T00 member shell', () => {
   test('navigation: frozen routes are links, the rest inert, no counters', async ({ page }) => {
     await completedMember(page.request)
-    await page.goto('/me')
+    await page.goto('/me/settings')
 
     const shell = page.locator('[data-shell="member"]')
     await expect(shell).toBeVisible()
@@ -207,10 +212,11 @@ test.describe('WF02-T00 member shell', () => {
       .getByRole('link')
       .evaluateAll((els) => els.map((el) => [el.textContent, el.getAttribute('href')]))
     expect(links).toEqual([
-      ['Tổng quan', '/me'],
+      ['Hồ sơ của tôi', '/me'],
       ['Hồ sơ cá nhân', '/me/profile/edit'],
       ['Quyền riêng tư & hiển thị', '/me/privacy'],
       ['Cài đặt tài khoản', '/me/settings'],
+      ['Lời mời', '/projects'],
       ['Vai trò & liên kết', '/me/roles'],
     ])
     const inert = await shell
@@ -223,7 +229,6 @@ test.describe('WF02-T00 member shell', () => {
       ['Challenge', 'SPAN', 'true'],
       ['Sự kiện', 'SPAN', 'true'],
       ['', 'SPAN', 'true'],
-      ['Lời mời', 'SPAN', 'true'],
       ['Tổ chức của tôi', 'SPAN', 'true'],
     ])
     // No fabricated counter anywhere in the header.
@@ -235,6 +240,17 @@ test.describe('WF02-T00 member shell', () => {
       const current = page.locator('[aria-current="page"]')
       await expect(current).toHaveCount(1)
       await expect(current).toHaveText(route.active)
+    }
+    // /me is no longer a member-shell screen; the sidebar leads to both workspace entries.
+    for (const [name, href] of [
+      ['Hồ sơ của tôi', '/me'],
+      ['Lời mời', '/projects'],
+    ] as const) {
+      await page.goto('/me/settings')
+      await sidebar.getByRole('link', { name, exact: true }).click()
+      await expect(page).toHaveURL(href)
+      await expect(page.locator('[data-shell="workspace"]')).toBeVisible()
+      await expect(page.locator('[data-shell="member"]')).toHaveCount(0)
     }
   })
 
@@ -298,7 +314,7 @@ test.describe('WF02-T00 member shell', () => {
     }
     writeJsonReport('WF02-T00.shell.json', {
       task: 'WF02-T00',
-      scope: 'member shell header + sidebar only; screen bodies are placeholders',
+      scope: 'member shell header + sidebar only (/me/privacy, /me/roles, /me/settings)',
       intentional: [
         {
           class: 'INTENTIONAL-P0-SCOPE',
@@ -313,6 +329,12 @@ test.describe('WF02-T00 member shell', () => {
         {
           class: 'INTENTIONAL-TYPOGRAPHY-MIGRATION',
           reason: 'text glyphs masked; Be Vietnam Pro contract',
+        },
+        {
+          class: 'INTENTIONAL-NAVIGATION',
+          region: 'sidebar',
+          reason:
+            'DEC-L2R-D1/D8: the first item reads "Hồ sơ của tôi" and "Lời mời" is a link to /projects (text masked); /me left the member shell for FP1-OWN',
         },
       ],
       results: rows,
