@@ -95,6 +95,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **FINAL INTERNAL ALPHA — L1 / L2 + PO freeze + Thảo UAT + Library hotfix: DEPLOYED GREEN** ([report](reports/INTERNAL-ALPHA-L1-L2_deploy.md), [backlog](l1-l2-realign/alpha-backlog.md)). `b3feee7` (tag `internal-alpha-preview-09`) runs on https://1hubnetwork.io.vn; rollback `935fd4a`. Backup `onehub-20260929T100004Z.dump`; migrations 010–012 applied. Integrated build: Library 15 / 15, Thảo UAT PASS 10 / FAIL 0 / DEFERRED 1, route smoke clean; domain smoke 43 / 43, #418 0, 5xx 0, restart verified. Internal Alpha READY; full business completeness NOT READY (ten backlog items).
 
+**HOMEPAGE IMAGE REPLACEMENT: DEPLOYED GREEN** ([report](reports/HOMEPAGE-IMAGES_deploy.md)). `91ba7a8` runs on https://1hubnetwork.io.vn: the event, programme and pipeline cards show the Hub's photos (7 webp, 680 KB); layout and copy unchanged; the Kawai picture has no card. Rollback `b3feee7`.
+
 ## Completed (committed)
 
 | Task | Scope |

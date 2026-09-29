@@ -1,36 +1,35 @@
 # Claude Task Report
 
 ## Task
-FINAL INTERNAL ALPHA — INTEGRATE UAT + LIBRARY HOTFIX + FREEZE + DEPLOY. Full report: [reports/INTERNAL-ALPHA-L1-L2_deploy.md](reports/INTERNAL-ALPHA-L1-L2_deploy.md).
+HOMEPAGE IMAGE REPLACEMENT + DEPLOY. Full report: [reports/HOMEPAGE-IMAGES_deploy.md](reports/HOMEPAGE-IMAGES_deploy.md).
 
 ## Verdict
-**DEPLOYED GREEN.** `b3feee7e354e9692e2eda05f099215c785c59681` runs on https://1hubnetwork.io.vn (Internal Alpha). Full business completeness: NOT READY (see the [Alpha backlog](l1-l2-realign/alpha-backlog.md)).
+**DEPLOYED GREEN.** `91ba7a8de792bb7e382a94050f620c1f61bc8bc5` runs on https://1hubnetwork.io.vn.
 
 ## Scope implemented
-- Committed the Thảo business UAT suite (`da685b3`), cherry-picked the Library layout hotfix (`b6aa0fa` from `c1b60c3`), recorded the Alpha backlog (`b3feee7`), froze and tagged `internal-alpha-preview-09`.
-- Backed up the production database, deployed the exact SHA with the existing tooling (migrations 010–012), smoked the real domain and restarted once.
+- Replaced the homepage event (3), programme (3) and pipeline (1) placeholder art with the Hub's photos, optimised to webp; layout, copy and logic unchanged. The Kawai picture has no card and is not used.
+- Backed up the production database and deployed the exact SHA with the existing tooling.
 
 ## Files changed
-- `tests/uat/**` (UAT suite), `src/components/library/library.module.css`, `tests/visual/specs/public-library.spec.ts`, `docs/implementation/l1-l2-realign/alpha-backlog.md`, `overview.md`, this report, the deploy report, `P0_STATUS.md`.
-- Deploy branch: `docs/deployment/INTERNAL_ALPHA_L1_L2_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md` (`d0af6ea`).
+- `public/home/*.webp` (7), `src/components/landing/landing-activities.tsx`, `src/components/landing/activity-cards.module.css`, `tests/visual/specs/p0-landing.spec.ts`, this report, the deploy report, `P0_STATUS.md`.
+- Deploy branch: `docs/deployment/HOMEPAGE_IMAGES_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md`.
 
 ## Migrations / data
-Production: 010, 011, 012 applied (additive). Backup `onehub-20260929T100004Z.dump`. Smoke rows left: two `@example.test` accounts, two SMOKE ventures, one REMOVED invitation.
+None. Backup `onehub-20260929T101820Z.dump`.
 
 ## Tests
-Integrated build: format, lint, typecheck, build PASS; Library 15 / 15; Thảo UAT 19 / 19 (PASS 10, FAIL 0, DEFERRED 1); route smoke clean at four widths. Domain: 43 / 43 steps; #418 0; 5xx 0; restart verified.
+format, lint, typecheck, build PASS; `p0-landing` 10 / 10; visual 1440 / 390: 7 / 7 pictures, no layout shift, no overflow, #418 0. Domain: `/` and all 14 picture URLs 200; #418 0; 5xx 0.
 
 ## Visual QA
-Library at 1440 unchanged against L15 (pixel suite green); gutter fixed at 45 px and first card at 358 on wide screens, on the domain too.
+H1 pixel: the replaced pictures are masked as an intentional PO difference; every other area within the thresholds.
 
 ## Deviations / blockers
-- The prompt's Library SHA lacked one character; the branch commit `c1b60c3894f28c3dadefdfb9415773dd0845d3f8` was used.
-- A scripted burst of parallel browsers saw a few `ERR_CONNECTION_CLOSED` from the OneShield edge; spaced loads 0 failures; the files return 200.
-- Blocking gaps: 0. Non-blocking: the ten backlog items.
+- The H1 capture does not scroll, so lazy pictures were never in the compared pixels; the mask records the change instead of hiding it.
+- Blocking gaps: 0.
 
 ## Git
-- Branch: `main`; start HEAD `2999c044c39aef66434aabcf08176b0c2bd82b02`; no concurrent change
-- Implementation commits: `da685b3` (UAT), `b6aa0fa` (Library), `b3feee7` (backlog, deployed)
+- Branch: `main`; start HEAD `ced90343d30d080450d49a364e55557947f1b71a`; no concurrent change
+- Implementation commit: `91ba7a8` (deployed)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** (not requested)
@@ -38,4 +37,4 @@ Library at 1440 unchanged against L15 (pixel suite green); gutter fixed at 45 px
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO review of the Internal Alpha on the domain; the backlog items as separate tasks. Not started automatically.
+PO review of the homepage on the domain. Not started automatically.
