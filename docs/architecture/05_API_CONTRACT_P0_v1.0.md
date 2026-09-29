@@ -1292,3 +1292,72 @@ Errors: `ONBOARDING_REQUIREMENTS_MISSING` with field/group details.
 | WF01-S05 (ACC-08) | `GET/PUT /me/onboarding/roles`, `PUT /me/onboarding/stage` |
 | WF01-S07 (ACC-09) | `/legal/current`, `/me/consents*`, `/me/visibility`, `POST /me/onboarding/complete` |
 | WF01-S08 (ACC-10) | read only |
+
+---
+
+# 19. Amendment A2 — personal workspace, venture lifecycle and team (2026-09-29)
+
+Decision record: DEC-L2R in `docs/decisions/DECISION_LOG.md`. Appended like §18 so that the line references above stay valid; where it differs from §5.3 and §5.4, this section applies.
+
+## 19.1 Venture create and update
+
+`POST /ventures` (WF02-S05, PRJ1):
+
+```json
+{
+  "type": "PROJECT",
+  "name": "Kho lạnh chia sẻ",
+  "summary": "Chia sẻ kho lạnh theo giờ cho hộ kinh doanh nông sản nhỏ",
+  "domain_ids": ["dom_..."],
+  "stage_id": "stage_idea",
+  "owner_role_label": "Founder",
+  "region_id": null
+}
+```
+
+Rules:
+- `name`, `summary`, at least one `domain_ids` and `stage_id` are required; `stage_id` is an ACTIVE item of the controlled type `VENTURE_STAGE`;
+- `owner_role_label` is display text (at most 100 characters) and grants nothing, in the venture or on the platform;
+- the owner is the session's profile; owner, profile, status and permission keys are refused (`not_accepted`);
+- every venture starts `DRAFT`; no endpoint publishes it (`submit-for-review` stays absent, §5.3);
+- `Idempotency-Key` is honoured for the operation `venture.create`: the same key and body replay the first `201`; the same key with another body answers `409`.
+
+`PATCH /ventures/{ventureId}` accepts `name`, `summary`, `domain_ids`, `stage_id`, `owner_role_label`, `region_id`. The owner and a member with `EDIT` may update; a member with `VIEW` gets `403 SCOPE_FORBIDDEN`; anyone else `404`. `owner_role_label` is the owner's alone. A required value that is stored cannot be cleared.
+
+Venture DTO adds `stage`, `permission` (`OWNER | EDIT | VIEW`, the viewer's own) and `role_label` (the viewer's own role label). Create and update write audit events with ids, type, status and field names only.
+
+## 19.2 Own ventures and invitations
+
+`GET /me/ventures` (WF02-S08, ME7) returns `{ items, page }`: the ventures the session's profile owns or belongs to as an `ACTIVE` member, owned first, each a venture DTO with `members` and `pending_invitations` (the owner's only; `null` for a member). A pending invitation is not a relation.
+
+`GET /me/venture-invitations` (WF02-S08) returns `{ items, page }`: the `PENDING_CONFIRMATION` invitations sent to the session account's own address, oldest first, each `{ venture: { id, name, type }, membership_id, role_label, permission, invited_at }`. Never another address's invitation, never one to a venture the account owns, never one to an archived venture.
+
+## 19.3 Team
+
+`POST /ventures/{ventureId}/team/invitations`:
+
+```json
+{ "email": "member@example.com", "role_label": "Co-founder", "permission": "EDIT" }
+```
+
+- `permission` is `EDIT` or `VIEW` (default `VIEW`); `OWNER` is ownership and is never given;
+- the invitation is e-mailed inside the same transaction; when the e-mail cannot be sent nothing is created and the answer is `500 INVITATION_EMAIL_DELIVERY_FAILED` (decision code, DEC-L2R-D8);
+- at most 20 pending invitations per venture (`422`, `email: too_many_pending`);
+- sends in the last 24 hours, counted over every state: at most 3 to one address of one venture and 50 by one inviting profile; beyond that `429 INVITATION_RATE_LIMITED` (decision code, DEC-L2R-D13) and nothing is created or sent;
+- nobody joins before accepting (§5.4 unchanged).
+
+`PATCH /ventures/{ventureId}/team/{membershipId}` accepts `role_label` and/or `permission` on an `ACTIVE` member. Team rows carry `permission`; the owner row carries `OWNER` and the owner's role label. Invitation by link is not part of the contract (D-T1).
+
+## 19.4 Profile
+
+`PATCH /me/profile` accepts `education`: a list replaced as a whole, each `{ institution, programme, started_on, ended_on }` with months `YYYY-MM`; `institution` is required; an end needs a start and cannot precede it; at most 20 items. The DTO returns the months.
+
+## 19.5 Endpoint → screen mapping
+
+| Screen | Endpoint(s) |
+|---|---|
+| WF02-S01 (FP1-OWN) | `GET/PATCH /me/profile`, `/me/profile/completion`, `/me/network`, `/me/ventures` |
+| WF02-S05 (PRJ1–PRJ3, editor) | `POST /ventures`, `GET/PATCH /ventures/{id}`, `POST …/team/invitations`, vocabularies |
+| WF02-S06 (team) | `/ventures/{id}/team*` |
+| WF02-S07 (ME0) | as §14, plus `/me/venture-invitations` |
+| WF02-S08 (ME7) | `GET /me/ventures`, `GET /me/venture-invitations`, `POST …/invitations/{id}/accept`, `…/decline` |

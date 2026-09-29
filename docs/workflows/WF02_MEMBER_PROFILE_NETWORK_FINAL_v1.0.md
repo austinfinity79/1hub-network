@@ -5,6 +5,8 @@
 **Goal:** Maintain Individual Profile, visibility, network relationships and the Project/Startup profile owned or managed by the member.  
 **Result:** canonical member and venture data remain reusable by WF05 and later programme flows.
 
+> **Amended 2026-09-29 (TASK 22-L1-L2-SOT-REALIGN, L2).** The BA workbook (WF-02) and the L2 flow board of 28/09 supersede the flow and the screen contracts below where they differ. `/me` is "Hồ sơ của tôi" (FP1-OWN) with in-place editing; `/projects` (WF02-S08, ME7) lists the member's ventures and pending invitations. A venture is created with name, field, description, stage and the creator's role, starts DRAFT and stays visible to its team only; members carry Biên tập or Xem; invitations are e-mailed and joined only by accepting. Source of the current rules: [DEC-L2R](../decisions/DECISION_LOG.md#dec-l2r) and [l2-screen-contracts.md](../implementation/l1-l2-realign/l2-screen-contracts.md). The text below is kept as history.
+
 ## Final flow
 
 ```text

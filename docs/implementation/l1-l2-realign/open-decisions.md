@@ -16,6 +16,14 @@ Points where the workbook, the boards and the approved rules do not give one ans
 
 Still open, contained by their defaults: D-S1, D-H1, D-V1, D-V2, D-T2, D-E1, D-A1.
 
+## State after L2
+| ID | State |
+|---|---|
+| D-P1, D-T1, D-F1 | implemented as answered ([DEC-L2R-D2](../../decisions/DECISION_LOG.md#dec-l2r-d2), [D8](../../decisions/DECISION_LOG.md#dec-l2r-d8), [D11](../../decisions/DECISION_LOG.md#dec-l2r-d11)); the rules of a link invitation remain a human decision |
+| D-T2 | contained default built: three levels, BR-ENT-06 read as "members with Biên tập" ([DEC-L2R-D7](../../decisions/DECISION_LOG.md#dec-l2r-d7)) |
+| D-V1 | **HUMAN BUSINESS DECISION REQUIRED: PUBLIC ELIGIBILITY RULE**; every venture stays DRAFT and team-only ([DEC-L2R-D10](../../decisions/DECISION_LOG.md#dec-l2r-d10)) |
+| D-V2, D-E1, D-S1, D-H1, D-A1 | unchanged, contained by their defaults |
+
 ## Human business decision required
 | ID | Question | Sources | Contained default |
 |---|---|---|---|
