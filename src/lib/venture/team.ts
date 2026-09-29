@@ -123,8 +123,9 @@ const sendLimited = () =>
   new ApiError('INVITATION_RATE_LIMITED', 429, 'Too many invitations sent. Try again later.')
 
 async function actor(exec: Executor, accountId: string) {
-  const [row] = await exec<{ profile_id: string; email: string }>(
-    `SELECT p.id::text AS profile_id, a.email_normalized AS email
+  const [row] = await exec<{ profile_id: string; email: string; name: string | null }>(
+    `SELECT p.id::text AS profile_id, a.email_normalized AS email,
+            coalesce(nullif(trim(p.display_name), ''), nullif(trim(p.full_name), '')) AS name
        FROM user_accounts a JOIN individual_profiles p ON p.account_id = a.id
       WHERE a.id = $1`,
     [accountId],
@@ -399,6 +400,7 @@ export async function inviteMember(
     // Last, inside the transaction: a notice that cannot be sent rolls all of it back.
     await deliver?.({
       to: email,
+      inviter: me.name ?? '',
       venture: { name: venture.name, type: venture.type },
       role_label: roleLabel,
       permission,

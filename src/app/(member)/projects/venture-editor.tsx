@@ -16,8 +16,12 @@ import styles from './venture.module.css'
  *
  * The approved editor header plus ONE canonical form: Loại, Tên, Tóm tắt,
  * Lĩnh vực (DOMAIN), Giai đoạn (VENTURE_STAGE), the owner's own role, Tỉnh /
- * Thành phố (REGION), "Lưu". The A–J navigator, completion count, image
- * upload, "Xem bản public" and "Gửi HUB duyệt" are not rendered (D-V1, D-V2).
+ * Thành phố (REGION), "Lưu". The owner of a venture that is not archived
+ * also sees "Hiển thị": "Công khai" makes a venture whose saved record holds
+ * name, field, description, stage and the owner's role public, with no review
+ * (DEC-PDF-D1); the server checks all of it again. The A–J navigator,
+ * completion count, image upload and "Xem bản public" are not rendered
+ * (no public page exists yet; no field count, DEC-PDF-D3).
  * Type is chosen once at creation (G4). The owner and members with Biên tập
  * edit; Xem reads; an ARCHIVED venture is read-only (G3). The server enforces
  * all of it, and only the owner states the owner's role.
@@ -31,6 +35,7 @@ export type VentureView = {
   name: string
   summary: string
   status: string
+  visibility: 'PRIVATE' | 'PUBLIC'
   region_id: string
   domain_ids: string[]
   stage_id: string
@@ -68,7 +73,39 @@ const COPY = {
   readOnlyMember: 'Bạn có quyền Xem nên chỉ xem được hồ sơ này.',
   stagePlaceholder: 'Chọn giai đoạn',
   rolePlaceholder: 'Không chọn',
+  visibility: 'Hiển thị',
+  private: 'Chỉ đội thấy hồ sơ này.',
+  public: 'Công khai. Bạn đã chọn công khai hồ sơ này.',
+  publishRule:
+    'Công khai khi hồ sơ đã lưu có đủ tên, lĩnh vực, tóm tắt, giai đoạn và vai trò của bạn.',
+  missing: 'Còn thiếu:',
+  publish: 'Công khai',
+  publishFailed: 'Chưa công khai được. Vui lòng thử lại.',
 } as const
+
+/** What "Công khai" needs, named as the form names them (DEC-PDF-D1). */
+const PUBLISH_FIELDS = {
+  name: 'Tên',
+  domain_ids: 'Lĩnh vực',
+  summary: 'Tóm tắt',
+  stage_id: 'Giai đoạn',
+  owner_role_label: 'Vai trò của bạn trong đội',
+} as const
+type PublishField = keyof typeof PUBLISH_FIELDS
+
+type Saved = { name: string; summary: string; domains: number; stage: string; role: string }
+
+const missingOf = (saved: Saved): PublishField[] =>
+  (Object.keys(PUBLISH_FIELDS) as PublishField[]).filter(
+    (field) =>
+      !{
+        name: saved.name.trim(),
+        domain_ids: saved.domains > 0,
+        summary: saved.summary.trim(),
+        stage_id: saved.stage,
+        owner_role_label: saved.role.trim(),
+      }[field],
+  )
 
 const time = () =>
   new Intl.DateTimeFormat('vi-VN', {
@@ -103,6 +140,18 @@ export function VentureEditor({
   const [formError, setFormError] = useState<string>()
   const [saving, setSaving] = useState(false)
   const inFlight = useRef(false)
+  const [status, setStatus] = useState(venture.status)
+  const [visibility, setVisibility] = useState(venture.visibility)
+  const [saved, setSaved] = useState<Saved>({
+    name: venture.name,
+    summary: venture.summary,
+    domains: venture.domain_ids.length,
+    stage: venture.stage_id,
+    role: venture.role_label,
+  })
+  const [publishing, setPublishing] = useState(false)
+  const [publishError, setPublishError] = useState<string>()
+  const missing = missingOf(saved)
 
   const labels = selected
     .map((id) => domains.find((d) => d.id === id)?.label)
@@ -131,12 +180,22 @@ export function VentureEditor({
       ...(owner ? { owner_role_label: role || null } : {}),
     }
     try {
-      const updated = await apiRequest<{ name: string }>(`/ventures/${venture.id}`, {
-        method: 'PATCH',
-        body,
-      })
+      const updated = await apiRequest<{
+        name: string
+        summary: string | null
+        domains: unknown[]
+        stage: { id: string } | null
+        role_label: string | null
+      }>(`/ventures/${venture.id}`, { method: 'PATCH', body })
       setSavedName(updated.name)
       setSavedAt(time())
+      setSaved({
+        name: updated.name,
+        summary: updated.summary ?? '',
+        domains: updated.domains.length,
+        stage: updated.stage?.id ?? '',
+        role: updated.role_label ?? '',
+      })
     } catch (caught) {
       const error = caught as { code?: string; fields?: Record<string, string> } | null
       const mapped: Record<string, string> = {}
@@ -163,13 +222,37 @@ export function VentureEditor({
       </p>
     ) : null
 
-  const status = `${STATUS_LABELS[venture.status] ?? venture.status}${savedAt ? ` · ${COPY.savedAt} ${savedAt}` : ''}`
+  async function onPublish() {
+    if (inFlight.current || missing.length > 0) return
+    inFlight.current = true
+    setPublishing(true)
+    setPublishError(undefined)
+    try {
+      const updated = await apiRequest<{ status: string; visibility: 'PRIVATE' | 'PUBLIC' }>(
+        `/ventures/${venture.id}/publish`,
+        { method: 'POST' },
+      )
+      setStatus(updated.status)
+      setVisibility(updated.visibility)
+    } catch (caught) {
+      const error = caught as { fields?: Record<string, string> } | null
+      const named = Object.keys(error?.fields ?? {})
+        .map((key) => PUBLISH_FIELDS[key as PublishField])
+        .filter(Boolean)
+      setPublishError(named.length ? `${COPY.missing} ${named.join(', ')}.` : COPY.publishFailed)
+    } finally {
+      inFlight.current = false
+      setPublishing(false)
+    }
+  }
+
+  const statusText = `${visibility === 'PUBLIC' ? COPY.publish : (STATUS_LABELS[status] ?? status)}${savedAt ? ` · ${COPY.savedAt} ${savedAt}` : ''}`
 
   return (
     <form className={styles.page} onSubmit={onSubmit} noValidate data-venture-editor>
       <EditorHeader
         title={savedName}
-        status={status}
+        status={statusText}
         actions={
           <>
             {/* P0-SHELL (DEC-P0-SHELL-D5): the team page of this venture. */}
@@ -369,6 +452,42 @@ export function VentureEditor({
             </select>
             {fieldError('region_id')}
           </section>
+
+          {owner && status !== 'ARCHIVED' ? (
+            <section className={styles.field} data-publication={visibility}>
+              <p className={`type-body-sm weight-semibold ${styles.label}`}>{COPY.visibility}</p>
+              {visibility === 'PUBLIC' ? (
+                <p className="type-body-md">{COPY.public}</p>
+              ) : (
+                <>
+                  <p className="type-body-md">{COPY.private}</p>
+                  {hint('ve-publish-hint', COPY.publishRule)}
+                  {missing.length > 0 ? (
+                    <p className={`type-meta-xs ${styles.hint}`} data-publish-missing>
+                      {COPY.missing} {missing.map((field) => PUBLISH_FIELDS[field]).join(', ')}.
+                    </p>
+                  ) : null}
+                  <div className={styles.publish}>
+                    <Button
+                      variant="secondary"
+                      loading={publishing}
+                      disabled={missing.length > 0}
+                      aria-describedby="ve-publish-hint"
+                      onClick={() => void onPublish()}
+                      data-action="publish"
+                    >
+                      {COPY.publish}
+                    </Button>
+                  </div>
+                  {publishError ? (
+                    <p className={`type-meta-xs ${styles.error}`} role="alert">
+                      {publishError}
+                    </p>
+                  ) : null}
+                </>
+              )}
+            </section>
+          ) : null}
         </div>
       </div>
     </form>

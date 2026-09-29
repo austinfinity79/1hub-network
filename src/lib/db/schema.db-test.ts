@@ -145,6 +145,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '010_p0_onboarding_four_stage.sql',
       // TASK 22-L1-L2-SOT-REALIGN (DEC-L2R-D5 / D6 / D7): venture stage, creator role, member level.
       '011_p0_venture_lifecycle.sql',
+      // TASK 22-L1-L2-PO-DECISION-FREEZE (DEC-PDF-D1 / D5 / D6B): visibility, stages, declarations.
+      '012_p0_alpha_decision_freeze.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -444,7 +446,7 @@ describe('TASK 22-L1-L2 venture lifecycle (migration 011)', () => {
     expect(other!.n).toBe(0)
   })
 
-  it('seeds VENTURE_STAGE with the five stages of PRJ1, fixed ids, in order (DEC-L2R-D5)', async () => {
+  it('VENTURE_STAGE is the frozen Alpha list: stable codes, ids of 011, in order (DEC-PDF-D5)', async () => {
     const [type] = await query<{ label: string }>(
       `SELECT label FROM vocabulary_types WHERE code = 'VENTURE_STAGE'`,
     )
@@ -453,27 +455,73 @@ describe('TASK 22-L1-L2 venture lifecycle (migration 011)', () => {
       `SELECT id::text, slug, label, status::text AS status FROM vocabulary_items
         WHERE type_code = 'VENTURE_STAGE' ORDER BY sort_order, label`,
     )
+    const stage = (n: number, slug: string, label: string) => ({
+      id: `23000000-0000-0000-0000-00000000000${n}`,
+      slug,
+      label,
+      status: 'ACTIVE',
+    })
     expect(items).toEqual([
-      { id: '23000000-0000-0000-0000-000000000001', slug: 'idea', label: 'Ý tưởng', status: 'ACTIVE' },
-      {
-        id: '23000000-0000-0000-0000-000000000002',
-        slug: 'prototype',
-        label: 'Prototype',
-        status: 'ACTIVE',
-      },
-      { id: '23000000-0000-0000-0000-000000000003', slug: 'pilot', label: 'Pilot', status: 'ACTIVE' },
-      {
-        id: '23000000-0000-0000-0000-000000000004',
-        slug: 'selling',
-        label: 'Đang bán',
-        status: 'ACTIVE',
-      },
-      {
-        id: '23000000-0000-0000-0000-000000000005',
-        slug: 'scaled',
-        label: 'Đã mở rộng',
-        status: 'ACTIVE',
-      },
+      stage(1, 'IDEA', 'Ý tưởng'),
+      stage(2, 'MVP', 'MVP'),
+      stage(3, 'PILOT', 'Pilot / Thử nghiệm'),
+      stage(4, 'SELLING', 'Đang bán'),
+      stage(5, 'GROWTH', 'Tăng trưởng'),
     ])
+  })
+
+  it('SPECIALIZATION is the frozen Alpha list of eight controlled items (DEC-PDF-D6A)', async () => {
+    const items = await query<{ id: string; label: string }>(
+      `SELECT id::text, label FROM vocabulary_items
+        WHERE type_code = 'SPECIALIZATION' AND status = 'ACTIVE'
+          AND id::text LIKE '22000000-%' ORDER BY sort_order`,
+    )
+    expect(items.map((i) => i.label)).toEqual([
+      'Vận hành',
+      'Công nghệ',
+      'Tài chính',
+      'Luật',
+      'Design',
+      'Marketing',
+      'Product',
+      'Business Development',
+    ])
+    expect(items.map((i) => i.id)).toEqual(
+      [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `22000000-0000-0000-0000-00000000000${n}`),
+    )
+  })
+
+  it('a venture is PRIVATE by default and a DRAFT can never be PUBLIC (DEC-PDF-D1)', async () => {
+    const [column] = await query<{ column_default: string; is_nullable: string }>(
+      `SELECT column_default, is_nullable FROM information_schema.columns
+        WHERE table_name = 'projects' AND column_name = 'visibility'`,
+    )
+    expect(column).toEqual({
+      column_default: "'PRIVATE'::visibility_level",
+      is_nullable: 'NO',
+    })
+    const [owner] = await query<{ id: string }>('SELECT id::text FROM individual_profiles LIMIT 1')
+    await expect(
+      query(
+        `INSERT INTO projects (owner_profile_id, slug, name, status, visibility)
+         VALUES ($1, $2, 'x', 'DRAFT', 'PUBLIC')`,
+        [owner!.id, `schema-draft-public-${Date.now()}`],
+      ),
+    ).rejects.toThrow(/ck_projects_draft_private/)
+    await expect(
+      query(
+        `INSERT INTO projects (owner_profile_id, slug, name, status, visibility)
+         VALUES ($1, $2, 'x', 'ACTIVE', 'NETWORK_ONLY')`,
+        [owner!.id, `schema-network-${Date.now()}`],
+      ),
+    ).rejects.toThrow(/ck_projects_visibility/)
+  })
+
+  it('a membership is not a HUB declaration unless onboarding filed it so (DEC-PDF-D6B)', async () => {
+    const [column] = await query<{ column_default: string; is_nullable: string }>(
+      `SELECT column_default, is_nullable FROM information_schema.columns
+        WHERE table_name = 'community_memberships' AND column_name = 'hub_declaration'`,
+    )
+    expect(column).toEqual({ column_default: 'false', is_nullable: 'NO' })
   })
 })

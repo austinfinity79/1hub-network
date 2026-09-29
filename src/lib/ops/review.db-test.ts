@@ -224,6 +224,58 @@ describe('WF03-S04 membership review (DEC-WF03-G5)', () => {
   })
 })
 
+describe('DEC-PDF-D6B HUB declarations: platform verification only', () => {
+  it('a unit leader neither approves nor rejects a declaration; the admin verifies it; grants nothing', async () => {
+    const declared = await person('declared', 'Khánh Declared')
+    const [d] = await query<{ id: string }>(
+      `INSERT INTO community_memberships
+         (profile_id, organization_id, state, source, claimed_position, hub_declaration)
+       VALUES ($1, $2, 'PENDING_APPROVAL', 'SELF_DECLARED', 'Phó chủ nhiệm', true)
+       RETURNING id::text`,
+      [declared, CHAPTER_01],
+    )
+    const roles = await roleCount()
+    for (const status of ['ACTIVE', 'REJECTED']) {
+      expect(await refusal(reviewMembership(LEADER, CHAPTER_01, d!.id, { status }, rid()))).toEqual(
+        { code: 'SCOPE_FORBIDDEN', status: 403 },
+      )
+    }
+    expect((await row('community_memberships', d!.id)).state).toBe('PENDING_APPROVAL')
+    expect(await audits(d!.id)).toEqual([])
+
+    // The detail offers the review to whoever may decide it, and says why not to the leader.
+    const byLeader = await getMemberDetail(LEADER, CHAPTER_01, declared)
+    expect(byLeader.membership).toMatchObject({ state: 'PENDING_APPROVAL', declaration: true })
+    expect(byLeader.permissions).not.toContain('membership:confirm')
+    expect(byLeader.permissions).toContain('leadership:manage')
+    expect((await getMemberDetail(ADMIN, CHAPTER_01, declared)).permissions).toContain(
+      'membership:confirm',
+    )
+
+    const verified = await reviewMembership(ADMIN, CHAPTER_01, d!.id, { status: 'ACTIVE' }, rid())
+    expect(verified).toMatchObject({
+      state: 'ACTIVE',
+      source_type: 'ORGANIZATION_VERIFIED',
+      declaration: true,
+    })
+    // The stated position stays text: no leadership, no RoleAssignment.
+    expect(
+      await query('SELECT 1 FROM leadership_records WHERE profile_id = $1', [declared]),
+    ).toEqual([])
+    expect(await roleCount()).toBe(roles)
+  })
+
+  it('an ordinary join request stays the unit leader’s to decide', async () => {
+    const asked = await membership(
+      await person('asked', 'Lan Asked'),
+      'PENDING_APPROVAL',
+      CHAPTER_01,
+    )
+    const approved = await reviewMembership(LEADER, CHAPTER_01, asked, { status: 'ACTIVE' }, rid())
+    expect(approved).toMatchObject({ state: 'ACTIVE', declaration: false })
+  })
+})
+
 describe('WF03-S04 leadership (DEC-WF03-G6)', () => {
   let created = ''
 

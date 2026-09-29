@@ -206,6 +206,7 @@ describe('lifecycle transition', () => {
         source: 'SELF_DECLARED',
         claimed_position: null,
         claimed_period: null,
+        hub_declaration: false,
       },
     ])
   })
@@ -218,9 +219,10 @@ const memberships = (accountId: string) =>
     source: string
     claimed_position: string | null
     claimed_period: string | null
+    hub_declaration: boolean
   }>(
     `SELECT m.organization_id::text, m.state::text AS state, m.source, m.claimed_position,
-            m.claimed_period
+            m.claimed_period, m.hub_declaration
        FROM community_memberships m
        JOIN individual_profiles p ON p.id = m.profile_id
       WHERE p.account_id = $1 ORDER BY m.organization_id`,
@@ -244,7 +246,8 @@ describe('HUB units named in stage 3', () => {
     expect(await memberships(accountId)).toEqual([])
 
     await completeOnboarding(accountId, 'req-claims')
-    const pending = { state: 'PENDING_APPROVAL', source: 'SELF_DECLARED' }
+    // DEC-PDF-D6B: a declaration, which only a Platform Admin verifies.
+    const pending = { state: 'PENDING_APPROVAL', source: 'SELF_DECLARED', hub_declaration: true }
     const filed = [
       {
         ...pending,
@@ -309,6 +312,7 @@ describe('HUB units named in stage 3', () => {
         source: 'ORGANIZATION_VERIFIED',
         claimed_position: null,
         claimed_period: null,
+        hub_declaration: false,
       },
       {
         organization_id: CHAPTER_02,
@@ -316,6 +320,7 @@ describe('HUB units named in stage 3', () => {
         source: 'SELF_DECLARED',
         claimed_position: null,
         claimed_period: null,
+        hub_declaration: true,
       },
     ])
   })

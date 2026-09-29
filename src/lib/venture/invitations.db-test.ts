@@ -4,7 +4,8 @@ import { isApiError } from '@/lib/api/errors'
 import { closePool, query } from '@/lib/db/client'
 
 import {
-  invitationSentence,
+  invitationBody,
+  invitationSubject,
   renderInvitationEmail,
   type InvitationNotice,
 } from './invitation-email'
@@ -104,6 +105,7 @@ describe('DEC-L2R-D8 sending', () => {
     expect(seen).toEqual([
       {
         to: mate.email,
+        inviter: 'Inv',
         venture: { name: 'Nông nghiệp số', type: 'STARTUP' },
         role_label: 'Cố vấn',
         permission: 'EDIT',
@@ -359,29 +361,51 @@ describe('DEC-L2R-D8 GET /me/venture-invitations', () => {
   })
 })
 
-describe('DEC-L2R-D8 the message', () => {
+describe('DEC-PDF-D4 the message (approved template)', () => {
   const link = 'https://1hub.network/projects'
 
-  it('names the venture, the role and the level in one sentence (ME7)', () => {
+  it('subject and body are the approved sentences; without a role the body ends at the venture', () => {
+    const venture = { name: 'AgriLink', type: 'STARTUP' }
+    expect(invitationSubject({ venture })).toBe('Bạn được mời tham gia AgriLink trên 1hub.network')
     expect(
-      invitationSentence({
-        venture: { name: 'AgriLink', type: 'STARTUP' },
-        role_label: 'Cố vấn vận hành',
-        permission: 'VIEW',
-      }),
-    ).toBe('AgriLink mời bạn vào đội với vai trò Cố vấn vận hành · quyền Xem')
+      invitationBody({ inviter: 'Đặng Kim Chi', venture, role_label: 'Cố vấn vận hành' }),
+    ).toBe('Đặng Kim Chi mời bạn tham gia AgriLink với vai trò Cố vấn vận hành.')
     expect(
-      invitationSentence({
+      invitationBody({
+        inviter: ' Chi\n Đặng ',
         venture: { name: '  Agri\n Link ', type: 'PROJECT' },
         role_label: null,
-        permission: 'EDIT',
       }),
-    ).toBe('Agri Link mời bạn vào đội · quyền Biên tập')
+    ).toBe('Chi Đặng mời bạn tham gia Agri Link.')
   })
 
-  it('escapes the name in HTML, keeps the subject on one line, carries the link and no token', () => {
+  it('carries the body and "Xem lời mời" only: no level, no id, no token, no extra copy', () => {
     const notice: InvitationNotice = {
       to: 'someone@example.test',
+      inviter: 'Đặng Kim Chi',
+      venture: { name: 'Tracely', type: 'STARTUP' },
+      role_label: 'Co-founder',
+      permission: 'EDIT',
+    }
+    const message = renderInvitationEmail(notice, link)
+    expect(message.subject).toBe('Bạn được mời tham gia Tracely trên 1hub.network')
+    expect(message.text).toBe(
+      `Đặng Kim Chi mời bạn tham gia Tracely với vai trò Co-founder.\n\nXem lời mời: ${link}`,
+    )
+    expect(message.html).toContain('>Xem lời mời</a>')
+    expect(
+      message.html
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim(),
+    ).toBe('Đặng Kim Chi mời bạn tham gia Tracely với vai trò Co-founder. Xem lời mời')
+    expect(`${message.subject}\n${message.text}`).not.toMatch(/Biên tập|quyền|Xem chỉ xem/)
+  })
+
+  it('escapes names in HTML, keeps the subject on one line, carries one link and no token', () => {
+    const notice: InvitationNotice = {
+      to: 'someone@example.test',
+      inviter: '<i>y</i>',
       venture: { name: '<b>x</b>\r\nBcc: victim@example.test', type: 'STARTUP' },
       role_label: 'Dev',
       permission: 'EDIT',
@@ -389,16 +413,13 @@ describe('DEC-L2R-D8 the message', () => {
     const message = renderInvitationEmail(notice, link)
     expect(message.to).toBe('someone@example.test')
     expect(message.subject).toBe(
-      'Lời mời vào đội <b>x</b> Bcc: victim@example.test trên 1hub.network',
+      'Bạn được mời tham gia <b>x</b> Bcc: victim@example.test trên 1hub.network',
     )
     expect(message.subject).not.toMatch(/[\r\n]/)
     expect(message.html).toContain('&lt;b&gt;x&lt;/b&gt;')
+    expect(message.html).toContain('&lt;i&gt;y&lt;/i&gt;')
     expect(message.html).not.toContain('<b>x</b>')
     expect(message.html).toContain(`href="${link}"`)
-    expect(message.text).toContain(
-      '<b>x</b> Bcc: victim@example.test mời bạn vào đội với vai trò Dev · quyền Biên tập.',
-    )
-    expect(message.text).toContain(`Xem lời mời: ${link}`)
     // One link, nothing appended to it, no secret of any kind.
     expect(message.text.match(/https?:\/\/\S+/g)).toEqual([link])
     expect(message.html.match(/https?:\/\/[^"<\s]+/g)).toEqual([link])

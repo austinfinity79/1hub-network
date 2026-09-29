@@ -30,6 +30,8 @@ const COPY = {
   approve: 'Duyệt thành viên',
   reject: 'Từ chối',
   pendingTitle: 'Yêu cầu tham gia đang chờ duyệt',
+  declarationBody:
+    'Người này tự khai báo là thành viên HUB khi đăng ký. Chỉ quản trị nền tảng xác minh khai báo này.',
   pendingBody: (org: string, at: string) =>
     `Gửi lúc ${at}. Duyệt sẽ ghi nhận thành viên ${org} do tổ chức xác nhận; từ chối vẫn giữ yêu cầu trong lịch sử.`,
   orgRole: 'Tổ chức & vai trò',
@@ -314,6 +316,11 @@ export function MemberDetail({
           <div>
             <h2 className={styles.alertTitle}>{COPY.pendingTitle}</h2>
             <p className={styles.alertBody}>{COPY.pendingBody(org, dateTime(m!.requested_at))}</p>
+            {m!.declaration && !canReview ? (
+              <p className={styles.alertBody} data-declaration-note>
+                {COPY.declarationBody}
+              </p>
+            ) : null}
           </div>
         </section>
       ) : null}

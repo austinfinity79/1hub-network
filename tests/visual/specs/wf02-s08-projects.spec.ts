@@ -170,7 +170,7 @@ test.describe('WF02-S08 list', () => {
     const edit = await invitedBy(
       editor,
       me.email,
-      { type: 'PROJECT', name: 'S08 B Biên tập', stage_id: STAGE.prototype },
+      { type: 'PROJECT', name: 'S08 B Biên tập', stage_id: STAGE.mvp },
       { role_label: 'Co-founder', permission: 'EDIT' },
     )
     const viewer = await otherMember(browser, 's08-viewer-owner')
@@ -339,7 +339,7 @@ test.describe('WF02-S08 invitations', () => {
     const { venture, membershipId } = await invitedBy(
       owner,
       me.email,
-      { type: 'STARTUP', name: 'S08 AgriLink', stage_id: STAGE.prototype },
+      { type: 'STARTUP', name: 'S08 AgriLink', stage_id: STAGE.mvp },
       { role_label: 'Cố vấn vận hành', permission: 'VIEW' },
     )
 

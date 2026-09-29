@@ -336,12 +336,12 @@ test.describe('WF02 L2 UAT — business matrix', () => {
     const v = await createThroughWizard(page, {
       type: 'Startup',
       name: 'Giai Đoạn UAT',
-      stage: 'Pilot',
+      stage: 'Pilot / Thử nghiệm',
     })
-    expect(v.stage).toMatchObject({ id: STAGE.pilot, label: 'Pilot' })
+    expect(v.stage).toMatchObject({ id: STAGE.pilot, code: 'PILOT', label: 'Pilot / Thử nghiệm' })
     expect((await ventureRow(v.id)).stage_id).toBe(STAGE.pilot)
     await page.goto(`/projects/new?venture=${v.id}&step=info`, { waitUntil: 'networkidle' })
-    await expect(page.getByRole('radio', { name: 'Pilot', exact: true })).toBeChecked()
+    await expect(page.getByRole('radio', { name: 'Pilot / Thử nghiệm', exact: true })).toBeChecked()
 
     await page.goto(`/projects/${v.id}/edit`, { waitUntil: 'networkidle' })
     await expect(page.locator('#ve-stage')).toHaveValue(STAGE.pilot)
@@ -407,7 +407,7 @@ test.describe('WF02 L2 UAT — business matrix', () => {
   test('G · e-mail invitation: PENDING_CONFIRMATION with role and level, the message in the outbox', async ({
     page,
   }) => {
-    const m = await completedAccount(page.request, 'uat2-g')
+    const m = await completedAccount(page.request, 'uat2-g', { display_name: 'Người Mời G' })
     const v = await createThroughWizard(page, { type: 'Startup', name: 'Mời UAT' })
     const address = newEmail('g-invitee')
     await page.locator('#team-invite-email').fill(address)
@@ -436,8 +436,11 @@ test.describe('WF02 L2 UAT — business matrix', () => {
     )
     expect(mail.status()).toBe(200)
     const { subject, text, link } = await mail.json()
-    expect(subject).toBe('Lời mời vào đội Mời UAT trên 1hub.network')
-    expect(text).toContain('Mời UAT mời bạn vào đội với vai trò Co-founder · quyền Biên tập.')
+    // DEC-PDF-D4: the approved subject and sentence, naming the inviter.
+    expect(subject).toBe('Bạn được mời tham gia Mời UAT trên 1hub.network')
+    expect(text).toBe(
+      `Người Mời G mời bạn tham gia Mời UAT với vai trò Co-founder.\n\nXem lời mời: ${link}`,
+    )
     expect(new URL(link).pathname).toBe('/projects')
     expect(`${text}${link}`).not.toMatch(/token|[0-9a-f]{8}-[0-9a-f]{4}-/i)
     // Nobody joined: the team is the owner alone.

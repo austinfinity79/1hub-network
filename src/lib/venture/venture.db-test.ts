@@ -12,6 +12,7 @@ import {
   createVentureIn,
   getVenture,
   listOwnVentures,
+  publishVenture,
   updateVenture,
 } from './venture'
 
@@ -185,7 +186,8 @@ describe('WF02-S05 create', () => {
         name: `${type} A`,
         summary: 'Truy xuất nguồn gốc nông sản',
         status: 'DRAFT',
-        stage: { id: STAGE_2, label: 'Pilot', status: 'ACTIVE' },
+        visibility: 'PRIVATE',
+        stage: { id: STAGE_2, code: 'PILOT', label: 'Pilot / Thử nghiệm', status: 'ACTIVE' },
         region: null,
         relation: 'OWNER',
         permission: 'OWNER',
@@ -865,6 +867,161 @@ describe('WF02-S05 update and read', () => {
         DOMAIN,
       ]),
     ).rejects.toMatchObject({ code: '23505' })
+  })
+})
+
+describe('DEC-PDF-D1 publication ("Công khai")', () => {
+  const complete = {
+    type: 'STARTUP' as const,
+    name: 'Công khai được',
+    summary: 'Mô tả đủ',
+    domain_ids: [DOMAIN],
+    stage_id: STAGE,
+    owner_role_label: 'Founder',
+  }
+  const published = (id: string) =>
+    query<{ action: string; before_data: unknown; after_data: unknown }>(
+      `SELECT action, before_data, after_data FROM audit_events
+        WHERE resource_id = $1 AND action = 'VENTURE_PUBLISHED'`,
+      [id],
+    )
+
+  it('every new venture is DRAFT and PRIVATE; nothing publishes it but the owner', async () => {
+    const m = await member()
+    const v = await createVenture(m.accountId, complete, RID)
+    expect(v).toMatchObject({ status: 'DRAFT', visibility: 'PRIVATE' })
+    expect(await refusal(updateVenture(m.accountId, v.id, { visibility: 'PUBLIC' }, RID))).toEqual({
+      code: 'PROFILE_VALIDATION_FAILED',
+      status: 422,
+      fields: { visibility: 'not_accepted' },
+    })
+    expect(
+      await refusal(updateVenture(m.accountId, v.id, { status: 'ACTIVE' }, RID)),
+    ).toMatchObject({ status: 422 })
+    expect(await getVenture(m.accountId, v.id)).toMatchObject({
+      status: 'DRAFT',
+      visibility: 'PRIVATE',
+    })
+  })
+
+  it('an incomplete venture cannot be published: 422 names what is missing, nothing changes', async () => {
+    const m = await member()
+    const v = await createVenture(m.accountId, { ...complete, owner_role_label: null }, RID)
+    expect(await refusal(publishVenture(m.accountId, v.id, RID))).toEqual({
+      code: 'PROFILE_VALIDATION_FAILED',
+      status: 422,
+      fields: { owner_role_label: 'required' },
+    })
+    // An older venture without field, description or stage names each of them.
+    const [older] = await query<{ id: string }>(
+      `INSERT INTO projects (type, owner_profile_id, slug, name) VALUES ('PROJECT', $1, $2, 'Cũ')
+       RETURNING id::text`,
+      [m.profileId, `venture-test-older-${Date.now()}`],
+    )
+    expect(await refusal(publishVenture(m.accountId, older!.id, RID))).toEqual({
+      code: 'PROFILE_VALIDATION_FAILED',
+      status: 422,
+      fields: {
+        domain_ids: 'required',
+        summary: 'required',
+        stage_id: 'required',
+        owner_role_label: 'required',
+      },
+    })
+    for (const id of [v.id, older!.id]) {
+      expect(await getVenture(m.accountId, id)).toMatchObject({
+        status: 'DRAFT',
+        visibility: 'PRIVATE',
+      })
+      expect(await published(id)).toEqual([])
+    }
+  })
+
+  it('a complete venture is published by its owner: ACTIVE and PUBLIC once, audited once', async () => {
+    const m = await member()
+    const v = await createVenture(m.accountId, complete, RID)
+    const done = await publishVenture(m.accountId, v.id, 'req-publish')
+    expect(done).toMatchObject({ status: 'ACTIVE', visibility: 'PUBLIC', permission: 'OWNER' })
+    // Again: the same answer, no second event.
+    expect(await publishVenture(m.accountId, v.id, 'req-publish-2')).toEqual(done)
+    expect(await published(v.id)).toEqual([
+      {
+        action: 'VENTURE_PUBLISHED',
+        before_data: { status: 'DRAFT', visibility: 'PRIVATE' },
+        after_data: { status: 'ACTIVE', visibility: 'PUBLIC' },
+      },
+    ])
+    // What made it eligible stays: the creator role cannot be cleared any more.
+    expect(
+      await refusal(updateVenture(m.accountId, v.id, { owner_role_label: null }, RID)),
+    ).toEqual({
+      code: 'PROFILE_VALIDATION_FAILED',
+      status: 422,
+      fields: { owner_role_label: 'required' },
+    })
+    expect(
+      (await updateVenture(m.accountId, v.id, { owner_role_label: 'Co-founder' }, RID)).role_label,
+    ).toBe('Co-founder')
+  })
+
+  it('members cannot publish (403), anyone else gets 404, an archived venture 409', async () => {
+    const owner = await member()
+    const editor = await member()
+    const viewer = await member()
+    const stranger = await member()
+    const v = await createVenture(owner.accountId, complete, RID)
+    await teamRow(v.id, editor, 'EDIT', 'Co-founder')
+    await teamRow(v.id, viewer, 'VIEW', 'Owner')
+    for (const who of [editor, viewer]) {
+      expect(await refusal(publishVenture(who.accountId, v.id, RID))).toEqual({
+        code: 'SCOPE_FORBIDDEN',
+        status: 403,
+        fields: undefined,
+      })
+    }
+    expect(await refusal(publishVenture(stranger.accountId, v.id, RID))).toMatchObject({
+      status: 404,
+    })
+    expect(await getVenture(owner.accountId, v.id)).toMatchObject({ visibility: 'PRIVATE' })
+    await query(`UPDATE projects SET status = 'ARCHIVED' WHERE id = $1`, [v.id])
+    expect(await refusal(publishVenture(owner.accountId, v.id, RID))).toMatchObject({
+      code: 'PROFILE_DEACTIVATED',
+      status: 409,
+    })
+  })
+
+  it('PUBLIC is not a read grant: other members still get 404 (no public venture path exists)', async () => {
+    const owner = await member()
+    const stranger = await member()
+    const v = await createVenture(owner.accountId, complete, RID)
+    await publishVenture(owner.accountId, v.id, RID)
+    expect(await refusal(getVenture(stranger.accountId, v.id))).toMatchObject({ status: 404 })
+    expect(await listOwnVentures(stranger.accountId)).toEqual([])
+  })
+
+  it('each frozen stage is stored by id and answered with its stable code (DEC-PDF-D5)', async () => {
+    const m = await member()
+    const codes: string[] = []
+    for (let n = 1; n <= 5; n++) {
+      const v = await createVenture(
+        m.accountId,
+        { ...complete, name: `Stage ${n}`, stage_id: `23000000-0000-0000-0000-00000000000${n}` },
+        RID,
+      )
+      codes.push(v.stage!.code)
+      const [row] = await query<{ stage_id: string }>(
+        'SELECT stage_id::text FROM projects WHERE id = $1',
+        [v.id],
+      )
+      expect(row!.stage_id).toBe(`23000000-0000-0000-0000-00000000000${n}`)
+    }
+    expect(codes).toEqual(['IDEA', 'MVP', 'PILOT', 'SELLING', 'GROWTH'])
+    // A label or a code is not an id.
+    for (const stage_id of ['PILOT', 'Pilot / Thử nghiệm']) {
+      expect(
+        await refusal(createVenture(m.accountId, { ...complete, stage_id }, RID)),
+      ).toMatchObject({ status: 422 })
+    }
   })
 })
 

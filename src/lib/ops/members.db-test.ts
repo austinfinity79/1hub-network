@@ -139,12 +139,18 @@ describe('WF03-S03 rows (one per person; records stay separate)', () => {
     expect(byKey.active).toEqual({
       profile_id: P.active!.profileId,
       profile: { display_name: 'An Active', headline: 'Kỹ sư' },
-      membership: { state: 'ACTIVE', source_type: 'ORGANIZATION_VERIFIED', since: '2026-02-01' },
+      membership: {
+        state: 'ACTIVE',
+        source_type: 'ORGANIZATION_VERIFIED',
+        declaration: false,
+        since: '2026-02-01',
+      },
       leadership: [{ title: 'Phó chủ nhiệm', state: 'ACTIVE' }],
     })
     expect(byKey.pending!.membership).toEqual({
       state: 'PENDING_APPROVAL',
       source_type: 'SELF_DECLARED',
+      declaration: false,
       since: '2026-09-20',
     })
     expect(byKey.again!.membership!.state).toBe('ACTIVE') // open row wins over the older REJECTED
@@ -161,6 +167,7 @@ describe('WF03-S03 rows (one per person; records stay separate)', () => {
     expect(hidden.membership).toEqual({
       state: 'ACTIVE',
       source_type: 'ORGANIZATION_VERIFIED', // PRESEED is roster-confirmed provenance
+      declaration: false,
       since: '2026-03-01',
     })
     // Search cannot probe a hidden name.

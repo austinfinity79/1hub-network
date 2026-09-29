@@ -146,3 +146,8 @@
   background: var(--hub-primary-soft);
   color: #b91610;
 }
+
+/* "Hiển thị" (DEC-PDF-D1): the owner's "Công khai" below the rule and hint. */
+.publish {
+  margin-top: 0.5rem;
+}

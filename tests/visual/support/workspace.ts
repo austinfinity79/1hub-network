@@ -9,12 +9,13 @@ import { completedAccount, IDS, QA, type Account } from './onboarding'
  * a field for it, so the pixel audits compare like with like.
  */
 
+/** The frozen Alpha stages (DEC-PDF-D5): IDEA, MVP, PILOT, SELLING, GROWTH. */
 export const STAGE = {
   idea: '23000000-0000-0000-0000-000000000001',
-  prototype: '23000000-0000-0000-0000-000000000002',
+  mvp: '23000000-0000-0000-0000-000000000002',
   pilot: '23000000-0000-0000-0000-000000000003',
   selling: '23000000-0000-0000-0000-000000000004',
-  scaled: '23000000-0000-0000-0000-000000000005',
+  growth: '23000000-0000-0000-0000-000000000005',
 } as const
 
 /** The fields POST /ventures requires (DEC-L2R-D4). */
@@ -134,7 +135,7 @@ export async function inviteFromAgriLink(browser: Browser, email: string) {
     const venture = await createVenture(context.request, {
       type: 'STARTUP',
       name: 'AgriLink',
-      stage_id: STAGE.prototype,
+      stage_id: STAGE.mvp,
     })
     const invitation = await invite(context.request, venture.id, {
       email,

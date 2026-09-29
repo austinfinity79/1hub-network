@@ -42,7 +42,13 @@ export type OpsMemberSummaryDTO = {
   profile_id: string
   /** Null when PROFILE_DISCOVERY hides the person from a network viewer. */
   profile: { display_name?: string; avatar_url?: string; headline?: string } | null
-  membership: { state: string; source_type: SourceType | null; since: string | null } | null
+  membership: {
+    state: string
+    source_type: SourceType | null
+    /** Declared in onboarding; only a Platform Admin verifies it (DEC-PDF-D6B). */
+    declaration: boolean
+    since: string | null
+  } | null
   /** ACTIVE leadership titles only; display text, never a permission (G6). */
   leadership: { title: string; state: string }[]
 }
@@ -61,6 +67,7 @@ type MembershipRow = {
   profile_id: string
   state: string
   source: string | null
+  hub_declaration: boolean
   started_at: Date | null
   created_at: Date
 }
@@ -99,7 +106,7 @@ export async function listOrganizationMembers(
   // otherwise the most recent one: one membership fact per person.
   const memberships = await query<MembershipRow>(
     `SELECT DISTINCT ON (profile_id)
-            profile_id::text, state::text AS state, source, started_at, created_at
+            profile_id::text, state::text AS state, source, hub_declaration, started_at, created_at
        FROM community_memberships
       WHERE organization_id = $1
       ORDER BY profile_id, (state IN ('PENDING_APPROVAL', 'ACTIVE')) DESC, created_at DESC, id`,
@@ -194,6 +201,7 @@ export async function listOrganizationMembers(
         ? {
             state: m.state,
             source_type: toSourceType(m.source),
+            declaration: m.hub_declaration,
             since: day(
               m.state === 'PENDING_APPROVAL' ? m.created_at : (m.started_at ?? m.created_at),
             ),

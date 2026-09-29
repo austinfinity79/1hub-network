@@ -41,6 +41,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         name: venture.name,
         summary: venture.summary ?? '',
         status: venture.status,
+        visibility: venture.visibility,
         region_id: venture.region?.id ?? '',
         domain_ids: venture.domains.map((d) => d.id),
         stage_id: venture.stage?.id ?? '',

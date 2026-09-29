@@ -30,6 +30,8 @@ export type MembershipRecordDTO = {
   id: string
   state: string
   source_type: SourceType | null
+  /** Declared by the member in onboarding; only a Platform Admin verifies it (DEC-PDF-D6B). */
+  declaration: boolean
   requested_at: string
   started_at: string | null
   ended_at: string | null
@@ -84,11 +86,12 @@ export async function getMemberDetail(
     id: string
     state: string
     source: string | null
+    hub_declaration: boolean
     created_at: Date
     started_at: Date | null
     ended_at: Date | null
   }>(
-    `SELECT id::text, state::text AS state, source, created_at, started_at, ended_at
+    `SELECT id::text, state::text AS state, source, hub_declaration, created_at, started_at, ended_at
        FROM community_memberships
       WHERE organization_id = $1 AND profile_id = $2
       ORDER BY created_at DESC, id`,
@@ -151,6 +154,7 @@ export async function getMemberDetail(
     id: m.id,
     state: m.state,
     source_type: toSourceType(m.source),
+    declaration: m.hub_declaration,
     requested_at: iso(m.created_at)!,
     started_at: iso(m.started_at),
     ended_at: iso(m.ended_at),
@@ -160,9 +164,15 @@ export async function getMemberDetail(
     records[0] ??
     null
 
+  // A pending HUB declaration is confirmed only platform-wide (DEC-PDF-D6B).
+  const declarationPending = current?.state === 'PENDING_APPROVAL' && current.declaration
   const permissions: Capability[] = []
   for (const c of ['membership:confirm', 'leadership:manage'] as const) {
-    if (await can(actor, c, { scopeType: 'ORGANIZATION', scopeId: org.id })) permissions.push(c)
+    const scope =
+      c === 'membership:confirm' && declarationPending
+        ? ({ scopeType: 'PLATFORM' } as const)
+        : ({ scopeType: 'ORGANIZATION', scopeId: org.id } as const)
+    if (await can(actor, c, scope)) permissions.push(c)
   }
   return {
     organization: org,

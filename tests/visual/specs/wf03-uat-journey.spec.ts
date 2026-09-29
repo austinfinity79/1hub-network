@@ -38,6 +38,8 @@ const AUDIT_CODES = [
   // DEC-L2R-D9: venture create and update.
   'VENTURE_CREATED',
   'VENTURE_UPDATED',
+  // DEC-PDF-D1: the owner's "Công khai".
+  'VENTURE_PUBLISHED',
   'VENTURE_TEAM_INVITED',
   'VENTURE_TEAM_JOINED',
   'VENTURE_TEAM_INVITATION_REJECTED',

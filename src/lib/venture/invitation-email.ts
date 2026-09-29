@@ -11,10 +11,12 @@ import {
 /**
  * WF02 team invitation by e-mail (DEC-L2R-D8; BA row 90, BR-NOT-01).
  *
- * The message tells the invitee that an invitation waits and where to find it.
- * It carries no token: the invitation is accepted by the signed-in account
- * whose address it was sent to, on "Dự án & startup của tôi". The text is built
- * from the sentence ME7 draws and is pending PO copy review (D-E1).
+ * The copy is the PO's approved template (DEC-PDF-D4): the subject, one
+ * sentence naming the inviter, the venture and the role, and "Xem lời mời".
+ * Nothing else is added. The message carries no token and no id: the
+ * invitation is accepted by the signed-in account whose address it was sent
+ * to, on "Dự án & startup của tôi". Without a role the sentence ends at the
+ * venture.
  *
  * Transport as for the sign-in link: Resend when configured; with dev routes
  * on (local / CI only) an in-memory outbox; otherwise delivery fails closed.
@@ -22,12 +24,12 @@ import {
 
 export type InvitationNotice = {
   to: string
+  /** The inviter's display name. */
+  inviter: string
   venture: { name: string; type: string }
   role_label: string | null
   permission: 'EDIT' | 'VIEW'
 }
-
-export const PERMISSION_LABELS = { OWNER: 'Chủ sở hữu', EDIT: 'Biên tập', VIEW: 'Xem' } as const
 
 type Stored = { subject: string; text: string; link: string; at: number }
 
@@ -43,37 +45,37 @@ const escapeHtml = (value: string) =>
 /** One line, so a name can never add a header or a second line to the subject. */
 const oneLine = (value: string) => value.replace(/\s+/g, ' ').trim()
 
-/** "AgriLink mời bạn vào đội với vai trò Cố vấn vận hành · quyền Xem" (ME7). */
-export function invitationSentence(notice: Omit<InvitationNotice, 'to'>): string {
+/** Shown when a profile has no name to give (onboarding requires one). */
+const NO_NAME = 'Một thành viên'
+
+export const INVITATION_CTA = 'Xem lời mời'
+
+export function invitationSubject(notice: Pick<InvitationNotice, 'venture'>): string {
+  return `Bạn được mời tham gia ${oneLine(notice.venture.name)} trên 1hub.network`
+}
+
+/** "Chi Đặng mời bạn tham gia Tracely với vai trò Co-founder." */
+export function invitationBody(notice: Omit<InvitationNotice, 'to' | 'permission'>): string {
+  const inviter = oneLine(notice.inviter) || NO_NAME
   const role = notice.role_label ? ` với vai trò ${oneLine(notice.role_label)}` : ''
-  return `${oneLine(notice.venture.name)} mời bạn vào đội${role} · quyền ${PERMISSION_LABELS[notice.permission]}`
+  return `${inviter} mời bạn tham gia ${oneLine(notice.venture.name)}${role}.`
 }
 
 export function renderInvitationEmail(notice: InvitationNotice, link: string): OutboundEmail {
-  const sentence = `${invitationSentence(notice)}.`
-  const how =
-    'Đăng nhập 1hub.network bằng địa chỉ email này để xem lời mời. Bạn chỉ vào đội sau khi chấp nhận.'
-  const ignore = 'Nếu bạn không biết đội này, hãy bỏ qua email này.'
-  const text = [sentence, '', `Xem lời mời: ${link}`, '', how, ignore].join('\n')
+  const body = invitationBody(notice)
+  const text = [body, '', `${INVITATION_CTA}: ${link}`].join('\n')
   const html = `<!doctype html>
 <html lang="vi">
   <body style="margin:0;padding:24px;background:#efefef;font-family:Arial,Helvetica,sans-serif;color:#170002">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background:#ffffff;border-radius:12px;padding:32px">
-        <tr><td style="font-size:20px;font-weight:600;padding-bottom:12px">Lời mời vào đội</td></tr>
-        <tr><td style="font-size:15px;line-height:22px;padding-bottom:24px">${escapeHtml(sentence)}</td></tr>
-        <tr><td style="padding-bottom:24px"><a href="${escapeHtml(link)}" style="display:inline-block;background:#fc523c;color:#160002;text-decoration:none;font-weight:600;font-size:15px;padding:13px 24px;border-radius:8px">Xem lời mời</a></td></tr>
-        <tr><td style="font-size:13px;line-height:20px;color:#534041">${how} ${ignore}</td></tr>
+        <tr><td style="font-size:15px;line-height:22px;padding-bottom:24px">${escapeHtml(body)}</td></tr>
+        <tr><td><a href="${escapeHtml(link)}" style="display:inline-block;background:#fc523c;color:#160002;text-decoration:none;font-weight:600;font-size:15px;padding:13px 24px;border-radius:8px">${INVITATION_CTA}</a></td></tr>
       </table>
     </td></tr></table>
   </body>
 </html>`
-  return {
-    to: notice.to,
-    subject: `Lời mời vào đội ${oneLine(notice.venture.name)} trên 1hub.network`,
-    html,
-    text,
-  }
+  return { to: notice.to, subject: invitationSubject(notice), html, text }
 }
 
 /** Sends the invitation notice; throws EmailDeliveryError when nothing was sent. */

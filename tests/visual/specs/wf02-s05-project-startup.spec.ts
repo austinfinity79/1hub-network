@@ -227,10 +227,10 @@ test.describe('WF02-S05 PRJ1 create', () => {
     await expect(wizard(page)).toHaveAttribute('data-step', 'info')
     await expect(page.locator('[data-anchor="stage"] label')).toHaveText([
       'Ý tưởng',
-      'Prototype',
-      'Pilot',
+      'MVP',
+      'Pilot / Thử nghiệm',
       'Đang bán',
-      'Đã mở rộng',
+      'Tăng trưởng',
     ])
     await expect(page.locator('[data-anchor="role"] input[type="radio"]')).toHaveCount(3)
     // PRJ1 starts with the first role chosen.
@@ -253,7 +253,7 @@ test.describe('WF02-S05 PRJ1 create', () => {
     await fillStep1(page, {
       domains: ['Logistics'],
       summary: 'Theo dõi bưu kiện.',
-      stage: 'Pilot',
+      stage: 'Pilot / Thử nghiệm',
       role: 'Co-founder',
     })
     await expect(alerts(page)).toHaveCount(0)
@@ -279,7 +279,7 @@ test.describe('WF02-S05 PRJ1 create', () => {
       permission: 'OWNER',
       role_label: 'Co-founder',
       can_edit: true,
-      stage: { id: STAGE.pilot, label: 'Pilot' },
+      stage: { id: STAGE.pilot, code: 'PILOT', label: 'Pilot / Thử nghiệm' },
     })
     await expect(page).toHaveURL(`/projects/new?venture=${v.id}&step=team`)
     // Owner = the session's profile, no team row for it; audit carries ids, type, status only.
@@ -304,7 +304,7 @@ test.describe('WF02-S05 PRJ1 create', () => {
     await expect(page.locator('#ve-name')).toHaveValue('Tracely QA')
     await expect(page.locator('#ve-summary')).toHaveValue('Theo dõi bưu kiện.')
     await expect(page.locator('[aria-controls="ve-domain-list"]')).toHaveText('Logistics')
-    await expect(page.getByRole('radio', { name: 'Pilot', exact: true })).toBeChecked()
+    await expect(page.getByRole('radio', { name: 'Pilot / Thử nghiệm', exact: true })).toBeChecked()
     await expect(page.getByRole('radio', { name: 'Co-founder', exact: true })).toBeChecked()
     await expect(page.getByRole('radio', { name: 'Dự án / ý tưởng', exact: true })).toBeDisabled()
     await expect(page.locator('[data-nav="wizard-cancel"]')).toHaveCount(0)
@@ -589,7 +589,7 @@ test.describe('WF02-S05 PRJ1 create', () => {
       name: 'Nháp QA',
       domains: ['AgriTech'],
       summary: 'Nháp.',
-      stage: 'Prototype',
+      stage: 'MVP',
     })
     const response = posted(page)
     await saveDraft(page).click()
@@ -609,7 +609,7 @@ test.describe('WF02-S05 PRJ1 create', () => {
       name: 'Nháp QA 2',
       status: 'DRAFT',
       type: 'STARTUP',
-      stage_id: STAGE.prototype,
+      stage_id: STAGE.mvp,
       owner_role_label: 'Founder',
     })
   })
@@ -714,8 +714,11 @@ test.describe('WF02-S05 PRJ1 create', () => {
       )
       expect(mail.status()).toBe(200)
       const { subject, text, link } = await mail.json()
-      expect(subject).toBe(`Lời mời vào đội ${name} trên 1hub.network`)
-      expect(text).toContain(`${name} mời bạn vào đội với vai trò Thành viên · quyền Xem.`)
+      // DEC-PDF-D4: the approved subject and sentence; the level is not in the e-mail.
+      expect(subject).toBe(`Bạn được mời tham gia ${name} trên 1hub.network`)
+      expect(text).toContain(` mời bạn tham gia ${name} với vai trò Thành viên.`)
+      expect(text).toContain('Xem lời mời: ')
+      expect(text).not.toContain('quyền')
       expect(new URL(link).pathname).toBe('/projects')
       expect(new URL(link).search).toBe('')
     }
@@ -761,10 +764,10 @@ test.describe('WF02-S05 editor and permissions', () => {
     await expect(page.locator('#ve-stage')).toHaveValue(STAGE.idea)
     await expect(page.locator('#ve-stage option:not([disabled])')).toHaveText([
       'Ý tưởng',
-      'Prototype',
-      'Pilot',
+      'MVP',
+      'Pilot / Thử nghiệm',
       'Đang bán',
-      'Đã mở rộng',
+      'Tăng trưởng',
     ])
     await expect(page.locator('#ve-role')).toHaveValue('Founder')
     await page.locator('#ve-name').fill('Sửa QA 2')
@@ -861,7 +864,7 @@ test.describe('WF02-S05 editor and permissions', () => {
     for (const [who, data] of [
       [editor, { owner_role_label: 'Co-founder' }],
       [viewer, { name: 'Hijack' }],
-      [viewer, { stage_id: STAGE.scaled }],
+      [viewer, { stage_id: STAGE.growth }],
     ] as const) {
       const r = await who.request.patch(url, { data })
       expect(r.status(), JSON.stringify(data)).toBe(403)
@@ -1025,6 +1028,8 @@ test.describe('WF02-S05 editor and permissions', () => {
       'status',
       'summary',
       'type',
+      // DEC-PDF-D1 (API §20.1).
+      'visibility',
     ])
     await owner.context.close()
   })

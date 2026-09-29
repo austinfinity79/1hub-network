@@ -1,3 +1,5 @@
+import { resolveActor } from '@/lib/authz/actor'
+import { can } from '@/lib/authz/authorize'
 import { requireOpsOrg } from '@/lib/ops/guard'
 
 import { MemberList } from './member-list'
@@ -16,11 +18,16 @@ export const dynamic = 'force-dynamic'
 
 export default async function Page({ params }: { params: Promise<{ orgId: string }> }) {
   const { orgId } = await params
-  const { organization, capabilities } = await requireOpsOrg(orgId, 'member:read')
+  const { accountId, organization, capabilities } = await requireOpsOrg(orgId, 'member:read')
+  // DEC-PDF-D6B: a HUB declaration needs `membership:confirm` platform-wide.
+  const canVerifyDeclarations = await can(await resolveActor(accountId), 'membership:confirm', {
+    scopeType: 'PLATFORM',
+  })
   return (
     <MemberList
       organization={organization}
       canReview={capabilities.includes('membership:confirm')}
+      canVerifyDeclarations={canVerifyDeclarations}
     />
   )
 }

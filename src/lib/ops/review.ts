@@ -15,7 +15,9 @@ import { operationalOrganization } from './member-detail'
  *
  * Membership (`membership:confirm`): the two frozen review transitions only —
  * PENDING_APPROVAL → ACTIVE (provenance ORGANIZATION_VERIFIED, started now) or
- * → REJECTED (ended now). Every other move is 409; the API's "where policy
+ * → REJECTED (ended now). A HUB declaration from onboarding (`hub_declaration`)
+ * is decided only with `membership:confirm` held platform-wide, i.e. by a
+ * Platform Admin; a unit's leader cannot verify it (DEC-PDF-D6B). Every other move is 409; the API's "where policy
  * allows" transitions have no frozen policy (DEC-WF03-G5).
  *
  * Leadership (`leadership:manage`): create an ACTIVE LeadershipRecord for a
@@ -81,12 +83,15 @@ export async function reviewMembership(
   if (!UUID.test(membershipId)) throw notFound()
 
   return withTransaction(async (exec) => {
-    const [row] = await exec<{ id: string; state: string }>(
-      `SELECT id::text, state::text AS state FROM community_memberships
+    const [row] = await exec<{ id: string; state: string; hub_declaration: boolean }>(
+      `SELECT id::text, state::text AS state, hub_declaration FROM community_memberships
         WHERE id = $1 AND organization_id = $2 FOR UPDATE`,
       [membershipId, org.id],
     )
     if (!row) throw notFound()
+    if (row.hub_declaration) {
+      await requireCapability(actor, 'membership:confirm', { scopeType: 'PLATFORM' })
+    }
     if (
       row.state !== 'PENDING_APPROVAL' ||
       !(REVIEW_STATES as readonly string[]).includes(target)
@@ -140,6 +145,7 @@ export async function reviewMembership(
       id: updated!.id,
       state: updated!.state,
       source_type: toSourceType(updated!.source),
+      declaration: row.hub_declaration,
       requested_at: iso(updated!.created_at)!,
       started_at: iso(updated!.started_at),
       ended_at: iso(updated!.ended_at),

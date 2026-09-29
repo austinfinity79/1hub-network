@@ -18,7 +18,7 @@ import styles from './wizard.module.css'
  * Chủ sở hữu is the creator's alone. Several addresses may be given at once,
  * each becomes its own invitation. A pending row shows the address only: the
  * server never tells whether an address has an account. Invitation by link is
- * drawn and inert (D-T1). The clauses of the board's three levels about
+ * deferred (DEC-PDF-D2): the board's row is drawn inert, saying so. The clauses of the board's three levels about
  * submissions and ownership transfer are left out: neither exists.
  */
 
@@ -193,7 +193,7 @@ export function WizardTeam({
         <span className={styles.linkOr} aria-hidden="true">
           {COPY.or}
         </span>
-        <Inert reason="NO_P0_SCREEN" label={COPY.copyLink} className={styles.linkCopy}>
+        <Inert reason="FUTURE" label={COPY.copyLink} className={styles.linkCopy}>
           {COPY.copyLink}
         </Inert>
       </div>

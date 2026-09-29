@@ -137,7 +137,9 @@
 
 .pendingTable .head,
 .pendingTable .row {
-  grid-template-columns: minmax(0, 1fr) 10rem auto;
+  /* The action column is at least the two review buttons wide, so a row that
+     only opens (a HUB declaration, DEC-PDF-D6B) keeps the same columns. */
+  grid-template-columns: minmax(0, 1fr) 10rem minmax(10.3125rem, auto);
 }
 
 .head {

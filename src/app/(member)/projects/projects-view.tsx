@@ -16,8 +16,9 @@ import { PERMISSION_LABELS } from './team-copy'
  * ME7 body (DEC-L2R-D1, D7, D8, D10, D11).
  *
  * One card per venture, drawn as the board draws a draft (dashed) or an active
- * one; every venture is DRAFT today, visible to its team only (D-V1). The
- * facts are the server's: type, status, the viewer's level, stage, members.
+ * one. A venture is visible to its team only until its owner makes it public
+ * ("Công khai" in the editor, DEC-PDF-D1). The facts are the server's: type,
+ * status and visibility, the viewer's level, stage, members.
  * Not shown: submissions (L5), "Hồ sơ n/48 trường" (D-V2), "Tạo từ SUB0" and
  * its thin-profile note (L5), public profile links (no public page), and the
  * frame codes of the board. Actions follow the viewer's level: the owner and
@@ -33,6 +34,7 @@ const STATUS_LABELS: Record<string, string> = {
   ACTIVE: 'Đang hoạt động · chỉ đội thấy',
   ARCHIVED: 'Đã lưu trữ',
 }
+const PUBLIC_LABEL = 'Công khai'
 
 const COPY = {
   eyebrow: 'TÀI KHOẢN CỦA TÔI',
@@ -87,7 +89,11 @@ function VentureCard({ venture }: { venture: VentureSummaryDTO }) {
           <span className={styles.chip} data-kind="type" data-type={venture.type}>
             {TYPE_LABELS[venture.type] ?? venture.type}
           </span>
-          {STATUS_LABELS[venture.status] ? (
+          {venture.visibility === 'PUBLIC' ? (
+            <span className={styles.chip} data-kind="status">
+              {PUBLIC_LABEL}
+            </span>
+          ) : STATUS_LABELS[venture.status] ? (
             <span className={styles.chip} data-kind="status">
               {STATUS_LABELS[venture.status]}
             </span>

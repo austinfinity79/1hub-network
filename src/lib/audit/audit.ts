@@ -21,6 +21,8 @@ export type AuditAction =
   // WF02 venture record (DEC-L2R-D9): ids, type, status and field names only.
   | 'VENTURE_CREATED'
   | 'VENTURE_UPDATED'
+  // "Công khai" (DEC-PDF-D1): ids, status and visibility only.
+  | 'VENTURE_PUBLISHED'
   // WF03-S04 membership review / leadership ops (DEC-WF03-G14): ids and states only.
   | 'MEMBERSHIP_APPROVED'
   | 'MEMBERSHIP_REJECTED'

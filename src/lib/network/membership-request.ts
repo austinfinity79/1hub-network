@@ -150,8 +150,9 @@ export async function fileClaimedMemberships(
 
     const [created] = await exec<{ id: string }>(
       `INSERT INTO community_memberships
-         (profile_id, organization_id, state, source, claimed_position, claimed_period)
-       VALUES ($1, $2, 'PENDING_APPROVAL', 'SELF_DECLARED', $3, $4)
+         (profile_id, organization_id, state, source, claimed_position, claimed_period,
+        hub_declaration)
+       VALUES ($1, $2, 'PENDING_APPROVAL', 'SELF_DECLARED', $3, $4, true)
        RETURNING id::text`,
       [input.profileId, org.id, claim.position, claim.period],
     )

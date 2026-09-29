@@ -20,7 +20,8 @@ import { assertSelectable, type VocabularyStatus } from '@/lib/vocabulary/vocabu
  * member. `venture:read` = any of the three, `venture:manage` = OWNER or EDIT,
  * `venture:team_manage` = OWNER. A role label, the creator's included, is
  * display text and grants nothing, here or on the platform. Status starts
- * DRAFT and nothing publishes it (DEC-L2R-D10); DRAFT and ACTIVE are editable,
+ * DRAFT and visibility PRIVATE; only the owner's "Công khai" makes a complete
+ * venture ACTIVE and PUBLIC (DEC-PDF-D1). DRAFT and ACTIVE are editable,
  * ARCHIVED is read-only (G3); `type` is fixed at creation (G4). Never
  * serialised: slug, metadata, owner or member profile ids.
  */
@@ -37,13 +38,31 @@ export const VENTURE_LIMITS = { name: 200, summary: 2000, domains: 10, roleLabel
 
 type Ref = { id: string; label: string; status: VocabularyStatus }
 
+/** A stage carries its stable code (IDEA, MVP, PILOT, SELLING, GROWTH; DEC-PDF-D5). */
+type StageRef = Ref & { code: string }
+
+export type VentureVisibility = 'PRIVATE' | 'PUBLIC'
+
+/**
+ * What "Công khai" needs (DEC-PDF-D1), in the order the editor names them:
+ * name, field, description, stage and the creator's role.
+ */
+export const PUBLISH_REQUIRED = [
+  'name',
+  'domain_ids',
+  'summary',
+  'stage_id',
+  'owner_role_label',
+] as const
+
 export type VentureDTO = {
   id: string
   type: VentureType
   name: string
   summary: string | null
   status: string
-  stage: Ref | null
+  visibility: VentureVisibility
+  stage: StageRef | null
   region: Ref | null
   domains: Ref[]
   relation: 'OWNER' | 'MEMBER'
@@ -161,6 +180,7 @@ type Row = {
   name: string
   summary: string | null
   status: string
+  visibility: VentureVisibility
   region_id: string | null
   stage_id: string | null
   owner_role_label: string | null
@@ -171,7 +191,7 @@ type Row = {
 }
 
 const COLUMNS = `p.id::text, p.type::text AS type, p.name, p.summary, p.status::text AS status,
-            p.region_id::text, p.stage_id::text, p.owner_role_label,
+            p.visibility::text AS visibility, p.region_id::text, p.stage_id::text, p.owner_role_label,
             p.owner_profile_id = $1::uuid AS owner, m.id IS NOT NULL AS member,
             m.permission AS member_permission, m.role_label AS member_role_label`
 
@@ -208,9 +228,19 @@ async function item(exec: Executor, id: string | null): Promise<Ref | null> {
   return row ?? null
 }
 
+async function stageItem(exec: Executor, id: string | null): Promise<StageRef | null> {
+  if (!id) return null
+  const [row] = await exec<StageRef>(
+    `SELECT id::text, slug AS code, label, status::text AS status
+       FROM vocabulary_items WHERE id = $1`,
+    [id],
+  )
+  return row ?? null
+}
+
 async function toDTO(exec: Executor, row: Row): Promise<VentureDTO> {
   const region = await item(exec, row.region_id)
-  const stage = await item(exec, row.stage_id)
+  const stage = await stageItem(exec, row.stage_id)
   const domains = await exec<Ref>(
     `SELECT v.id::text, v.label, v.status::text AS status
        FROM project_domains d JOIN vocabulary_items v ON v.id = d.vocabulary_item_id
@@ -223,6 +253,7 @@ async function toDTO(exec: Executor, row: Row): Promise<VentureDTO> {
     name: row.name,
     summary: row.summary,
     status: row.status,
+    visibility: row.visibility,
     stage,
     region,
     domains,
@@ -375,6 +406,9 @@ export async function updateVenture(
     if ('stage_id' in input && !input.stage_id && row.stage_id)
       throw invalid('stage_id', 'required')
     if (input.domain_ids?.length === 0 && linked.length > 0) throw invalid('domain_ids', 'required')
+    // A public venture keeps what made it eligible (DEC-PDF-D1).
+    if (row.visibility === 'PUBLIC' && 'owner_role_label' in input && !input.owner_role_label)
+      throw invalid('owner_role_label', 'required')
     await validateTaxonomy(exec, input, row.region_id, linked, row.stage_id)
 
     const sets: string[] = []
@@ -404,6 +438,69 @@ export async function updateVenture(
       resourceId: row.id,
       before: { status: row.status },
       after: { status: row.status, fields: Object.keys(input).sort() },
+      requestId,
+    })
+    return toDTO(exec, (await readable(exec, row.id, profileId!))!)
+  })
+}
+
+/**
+ * POST /ventures/{id}/publish — "Công khai" (DEC-PDF-D1). The owner only: a
+ * member gets 403 and anyone else the same 404. The venture must hold a name,
+ * a field, a description, a stage and the creator's role; otherwise 422 names
+ * what is missing and nothing changes. Publishing makes a DRAFT ACTIVE and the
+ * venture PUBLIC in one step; a PUBLIC venture answers as it is. ARCHIVED is
+ * read-only. No review or approval exists in Alpha.
+ */
+export async function publishVenture(
+  accountId: string,
+  ventureId: string,
+  requestId: string,
+): Promise<VentureDTO> {
+  return withTransaction(async (exec) => {
+    const profileId = await profileOf(exec, accountId)
+    const row = profileId ? await readable(exec, ventureId, profileId, true) : null
+    if (!row) throw notFound()
+    if (!row.owner) {
+      throw new ApiError('SCOPE_FORBIDDEN', 403, 'Only the owner makes this venture public.')
+    }
+    if (row.status === 'ARCHIVED') {
+      throw new ApiError('PROFILE_DEACTIVATED', 409, 'This venture is archived and read-only.')
+    }
+    if (row.visibility === 'PUBLIC') return toDTO(exec, row)
+    const [{ domains } = { domains: 0 }] = await exec<{ domains: number }>(
+      'SELECT count(*)::int AS domains FROM project_domains WHERE project_id = $1',
+      [row.id],
+    )
+    const present: Record<(typeof PUBLISH_REQUIRED)[number], boolean> = {
+      name: Boolean(row.name?.trim()),
+      domain_ids: domains > 0,
+      summary: Boolean(row.summary?.trim()),
+      stage_id: Boolean(row.stage_id),
+      owner_role_label: Boolean(row.owner_role_label?.trim()),
+    }
+    const missing = PUBLISH_REQUIRED.filter((field) => !present[field])
+    if (missing.length > 0) {
+      throw new ApiError(
+        'PROFILE_VALIDATION_FAILED',
+        422,
+        'This venture is not complete enough to be public.',
+        Object.fromEntries(missing.map((field) => [field, 'required'])),
+      )
+    }
+    const status = row.status === 'DRAFT' ? 'ACTIVE' : row.status
+    await exec(
+      `UPDATE projects SET status = $2::project_status, visibility = 'PUBLIC', updated_at = now()
+        WHERE id = $1`,
+      [row.id, status],
+    )
+    await writeAudit(exec, {
+      actorAccountId: accountId,
+      action: 'VENTURE_PUBLISHED',
+      resourceType: 'project',
+      resourceId: row.id,
+      before: { status: row.status, visibility: row.visibility },
+      after: { status, visibility: 'PUBLIC' },
       requestId,
     })
     return toDTO(exec, (await readable(exec, row.id, profileId!))!)

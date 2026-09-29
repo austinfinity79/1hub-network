@@ -174,8 +174,10 @@ test.describe('WF02-S06 team journeys (UI)', () => {
     const mail = await outbox(page.request, mate.email)
     expect(mail.status()).toBe(200)
     const { subject, text, link } = await mail.json()
-    expect(subject).toBe(`Lời mời vào đội ${v.name} trên 1hub.network`)
-    expect(text).toContain(`${v.name} mời bạn vào đội với vai trò CTO · quyền Biên tập.`)
+    // DEC-PDF-D4: the approved subject and sentence; the level is not in the e-mail.
+    expect(subject).toBe(`Bạn được mời tham gia ${v.name} trên 1hub.network`)
+    expect(text).toContain(` mời bạn tham gia ${v.name} với vai trò CTO.`)
+    expect(text).not.toContain('quyền')
     expect(new URL(link).pathname).toBe('/projects')
     expect(new URL(link).search).toBe('')
     for (const leak of [/token/i, /[?&](t|k|code)=/, new RegExp(owner.email), /[0-9a-f-]{36}/])

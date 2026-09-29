@@ -124,10 +124,13 @@ function Person({ m }: { m: OpsMemberSummaryDTO }) {
 export function MemberList({
   organization,
   canReview,
+  canVerifyDeclarations,
 }: {
   organization: Pick<OrganizationRefDTO, 'id' | 'name' | 'type'>
   /** UI affordance only; the review call authorizes again (DEC-WF03-S04-D1). */
   canReview: boolean
+  /** A HUB declaration is decided platform-wide only (DEC-PDF-D6B); others open it. */
+  canVerifyDeclarations: boolean
 }) {
   const [state, setState] = useState<State>({ kind: 'loading' })
   const [leaders, setLeaders] = useState<OpsMemberSummaryDTO[] | null>(null)
@@ -293,7 +296,9 @@ export function MemberList({
                         {m.membership?.since ? `${COPY.sent} ${calendar(m.membership.since)}` : '—'}
                       </span>
                       <span role="cell" className={styles.action}>
-                        {pending && canReview ? (
+                        {pending &&
+                        canReview &&
+                        (!m.membership?.declaration || canVerifyDeclarations) ? (
                           <>
                             <button
                               type="button"
