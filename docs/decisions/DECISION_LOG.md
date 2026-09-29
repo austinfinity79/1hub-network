@@ -1284,6 +1284,14 @@ Superseded records (traceable conflicts C-01…C-14 in [conflict-audit.md](../de
 | <a id="dec-auth-email-d3"></a>DEC-AUTH-EMAIL-D3 | **Delivery.** Resend over HTTPS (no SDK), server-only env `RESEND_API_KEY` (secret, server env file only), `EMAIL_FROM` (`1Hub Network <no-reply@1hubnetwork.io.vn>`), `APP_PUBLIC_BASE_URL` (HTTPS; the link is `<base>/auth/callback?token=…`). E-mail "Đăng nhập 1hub.network": one CTA, the 15-minute single-use note, an ignore line. A failed send rolls the token back (request) or retires it (resend) and answers 500 `AUTH_EMAIL_DELIVERY_FAILED`; no success is reported for an unsent e-mail. Logs carry the provider id and the masked address only. Without a key and with dev routes on, the message goes to the local `/dev/outbox`; with neither, delivery fails closed |
 | <a id="dec-auth-email-d4"></a>DEC-AUTH-EMAIL-D4 | **Unchanged operator path.** `issue-login-link.sh` keeps issuing one-time links for `@example.test` review personas through `requestMagicLink`, outside the public endpoint |
 
+## DEC-L4 — 29/09 L4 board re-check (TASK 24.3)
+
+<a id="dec-l4"></a>**Status:** RECORDED 2026-09-29. Inventory: [l4-challenge-inventory.md](../implementation/task-24/l4-challenge-inventory.md).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-l4-d1"></a>DEC-L4-D1 | **No L4 delta.** `Luồng 4 - Challenge Operations.png` (PO, 29/09) draws L28 CH1, the six L29–L34 problem tabs and L35 / L36 — public and participant screens, no operator frame. They stay FUTURE ([DEC-2809](#dec-2809), D4: ALPHA 0 · FUTURE 9); the board is not a promotion. The WF04 operator demo ([DEC-WF04-H1](#dec-wf04-h1)…H5) is unchanged; no scoring, judging, winner or matching logic is added |
+
 ## DEC-L15 — Public Library, static demo (TASK 22-PREVIEW-LIBRARY)
 
 <a id="dec-l15"></a>**Status:** IMPLEMENTED 2026-09-28 on the PO instruction "Homepage → public L2 Thư viện" (`L2-15 Thu vien.zip`) and the PO answers of 28/09; revised the same day by TASK 22-PREVIEW-LIBRARY-FIX (real `startup.json` data, D7; remap to the full "L15 · DIR1 · Thư viện" frame, D8). Reopens [DEC-L2-D1](#dec-l2-d1) for L15 only; HD-A7 (real problem directory) and HD-08 (public ventures and profiles in our database) stay open.
