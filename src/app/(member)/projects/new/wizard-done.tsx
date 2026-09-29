@@ -4,11 +4,12 @@ import type { WizardVenture } from './project-wizard'
 import styles from './wizard.module.css'
 
 /**
- * L13c PRJ3 subset (TASK 22.3, DEC-L2-D4). Facts only from the server: the
- * type, the status (a new venture is DRAFT, readable by its team only), and
- * the pending invitations. One next action, the existing editor. Not rendered:
- * the completeness count and the review-to-public line (Bucket B), and the
- * problem library and public-profile cards (Bucket C).
+ * L13c PRJ3 (DEC-L2R-D10, D11; DEC-L2-D4 for the facts). Facts only from the
+ * server: the type, the status (a new venture is DRAFT, readable by its team
+ * only), and the pending invitations. One next action, the existing editor.
+ * Not rendered: the completeness count (D-V2); the sentence and the card that
+ * promise review and publication, which no rule defines yet (D-V1); the
+ * problem card, whose submission belongs to L5.
  */
 
 const TYPE = { PROJECT: 'Dự án', STARTUP: 'Startup' } as const
@@ -20,7 +21,7 @@ const COPY = {
   pending: 'lời mời đang chờ',
   lede: 'Hồ sơ đang ở trạng thái nháp — chỉ đội của bạn nhìn thấy.',
   title: { PROJECT: 'Hoàn thiện hồ sơ dự án', STARTUP: 'Hoàn thiện hồ sơ startup' },
-  body: 'Cập nhật tên, mô tả, lĩnh vực và tỉnh / thành phố bất cứ lúc nào.',
+  body: 'Cập nhật tên, mô tả, lĩnh vực, giai đoạn và tỉnh / thành phố bất cứ lúc nào.',
   action: 'Hoàn thiện hồ sơ',
 } as const
 

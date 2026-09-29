@@ -19,6 +19,9 @@ Approved pixel references from the corrected Homepage + L1–L6 revision ([audit
 | L13a PRJ1 `/projects/new` step 1 | `L2/L13a__project-create-core__SOURCE.png` | 1440×1385 | `032197acb4f9a5fd53c843feafbf5582aa43875de39628ede6bbe176559eb22f` | `L2.zip` (`6fee10fb…04b9`), `L13a · PRJ1 · Tạo dự án/startup — B1 Thông tin cốt lõi.png`, byte-identical copy | TASK 22.3 |
 | L13b PRJ2 `/projects/new` step 2 | `L2/L13b__project-create-team__SOURCE.png` | 1440×1084 | `42d4b8a10aa71a566b9220887a7220c93252b65c92aa1c08f784323e75644592` | `L2.zip` (`6fee10fb…04b9`), `L13b · PRJ2 · Tạo dự án/startup — B2 Mời đội ngũ.png`, byte-identical copy | TASK 22.3 |
 | L13c PRJ3 `/projects/new` step 3 | `L2/L13c__project-create-done__SOURCE.png` | 1440×912 | `d9eeb249e53e569565eb49d7b8051f95f68bc8295f5a473ef9de40601412f312` | `L2.zip` (`6fee10fb…04b9`), `L13c · PRJ3 · Tạo xong — làm gì tiếp.png`, byte-identical copy | TASK 22.3 |
+| ME7 `/projects` | `L2/ME7__projects__SOURCE.png` | 1440×993 | `31e92faf8a725196e2ae47b8a33ae5d7ebf3e14962da0453fa5acdbd338c4461` | `Luồng 2 · Member Profile & Network Management.png` (PO, 28/09; 16440×5078, `305d75ea…b7d1`), crop x 5520, y 122 | TASK 22-L1-L2-SOT-REALIGN |
+| FP1-OWN `/me` | `L2/FP1-OWN__my-profile__SOURCE.png` | 1440×3762 | `826076d2b29261adf4fa0344df366a854e1e96a2439d673b0f4a9eccf7d85b1c` | `Luồng 1 · Identity & Onboarding.png` (PO, 28/09), crop x 14520, y 120; a WF02 screen drawn on the L1 board | TASK 22-L1-L2-SOT-REALIGN |
+| L12 experience dialog on `/me` | `L2/L12__experience-dialog__SOURCE.png` | 1440×960 | `5c2ed754d0cacea30f2eb4b74792797289f48d629298113437c36dcbdf480011` | the L2 board, crop x 3720, y 120 | TASK 22-L1-L2-SOT-REALIGN |
 | L19 CHP0 `/organizations/:slug` | `L3/L19__chapter-public__SOURCE.png` | 1440×2561 | `39761125371f677381ce4f6e6d6843cb9442ad2b7715d576bbb95fac38040e4c` | `L3.zip` (`180908cd…623c`), `L19 · CHP0 · Trang chapter công khai.png`, byte-identical copy | TASK 22.4 |
 | L20 CHP1 `/ops/org/:orgId` | `L3/L20__chapter-dashboard__SOURCE.png` | 1440×856 | `88f977b2374660dfb5641eb3257e6da63dd36e7469d649512bc0ed84b9754190` | `L3.zip` (`180908cd…623c`), `L20 · CHP1 · Bảng điều khiển chapter.png`, byte-identical copy | TASK 22.4 |
 | L23 CHP4 `/ops/org/:orgId/events` | `L3/L23__chapter-events__SOURCE.png` | 1440×736 | `fd425bd4eb04dbcf43accda5f674af7975580a7f10bee2800600b53a854f4238` | `L3.zip` (`180908cd…623c`), `L23 · CHP4 · Sự kiện của chapter.png`, byte-identical copy | TASK 22.4 |
@@ -29,10 +32,10 @@ Rules:
 - Typography: Space Grotesk where the reference uses it (DEC-HD-12); mono labels keep IBM Plex Mono 500.
 - H1: the organiser block after the programme cards is removed by PO override and not compared; the "Dữ liệu minh hoạ" labels are additions (DEC-H1-R2). The P0-LANDING spec lists both.
 - L1: AUTH1–AUTH4 and ACC-10 came with TASK 22.2 (DEC-L1-D1). ACC-05 … ACC-09 are crops of the L1 flow board, which is the only form the PO supplied them in; the board matches the five older L1 files pixel for pixel at the same positions, so a crop is the frame. The AI-filled state of ACC-06, FP1-OWN and the board's annotation panels are not in the repository: AI suggestion has no provider (D-A1) and FP1-OWN belongs to the L2 run (DEC-L1R).
-- L2: only L11 and L13a–c are Bucket A (DEC-L2-D1). L10, L12, L13, L14, L16, L18 (B) and L17 (C) stay out of the repository. L15 is in since DEC-L15 (`/library`), as the full frame.
+- L2: L11 and L13a–c came with TASK 22.3 (DEC-L2-D1); they match the L2 board of 28/09 at the same positions up to raster noise (at most 6 pixels differ by more than 8 levels), so they stay. ME7, FP1-OWN and the L12 dialog are crops of the boards (DEC-L2R). L15 is in since DEC-L15 (`/library`), as the full frame. FP1 (another member's view), ORGP1, DIR1's other states, EV1, EV2 and NOTI1 stay out.
 - L3: only L19, L20, L23 and L26 are Bucket A (DEC-L3-D1). L21, L22, L24, L25 and L27 stay out of the repository. L26 is drawn 1600 wide; its spec compares components at their own anchors.
 - Never edit or re-export a file here to make a diff pass. A new source revision gets a new file and hash.
 
 ## Related
 - [../README.md](../README.md) — WF01–WF03 baselines
-- [../../../docs/decisions/DECISION_LOG.md](../../../docs/decisions/DECISION_LOG.md) — DEC-HD-12, DEC-H1, DEC-H1-R2, DEC-L1, DEC-L1R, DEC-L2, DEC-L3, DEC-L15
+- [../../../docs/decisions/DECISION_LOG.md](../../../docs/decisions/DECISION_LOG.md) — DEC-HD-12, DEC-H1, DEC-H1-R2, DEC-L1, DEC-L1R, DEC-L2, DEC-L2R, DEC-L3, DEC-L15

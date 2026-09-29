@@ -10,16 +10,17 @@ import { apiRequest } from '@/lib/api/client'
 import styles from './venture.module.css'
 
 /**
- * WF02-S05 — Project/Startup editor for /projects/:id/edit (DEC-WF02-H6/H7,
- * DEC-WF02-S05-G1..G5, DEC-WF02-S05-D1..D3). Creation is the /projects/new
- * wizard since TASK 22.3 (DEC-L2-D2), over the same POST /ventures.
+ * WF02-S05 — Project/Startup editor for /projects/:id/edit (DEC-L2R-D4..D7,
+ * DEC-WF02-S05-G1..G5). Creation is the /projects/new wizard, over the same
+ * POST /ventures.
  *
- * The approved editor header plus ONE canonical form (G1 addendum): Loại,
- * Tên, Tóm tắt, Lĩnh vực (DOMAIN), Tỉnh / Thành phố (REGION), "Lưu". The
- * A–J navigator, required-field bar, completion %, section C, image upload,
- * editorial rules, "Xem bản public" and "Gửi HUB duyệt" are not rendered.
- * Type is chosen once at creation (G4). Only the owner edits, and never an
- * ARCHIVED venture (G3); the server enforces both.
+ * The approved editor header plus ONE canonical form: Loại, Tên, Tóm tắt,
+ * Lĩnh vực (DOMAIN), Giai đoạn (VENTURE_STAGE), the owner's own role, Tỉnh /
+ * Thành phố (REGION), "Lưu". The A–J navigator, completion count, image
+ * upload, "Xem bản public" and "Gửi HUB duyệt" are not rendered (D-V1, D-V2).
+ * Type is chosen once at creation (G4). The owner and members with Biên tập
+ * edit; Xem reads; an ARCHIVED venture is read-only (G3). The server enforces
+ * all of it, and only the owner states the owner's role.
  */
 
 type Option = { id: string; label: string }
@@ -32,8 +33,15 @@ export type VentureView = {
   status: string
   region_id: string
   domain_ids: string[]
+  stage_id: string
+  /** The viewer's role in this venture, display text; the owner's is editable here. */
+  role_label: string
+  permission: 'OWNER' | 'EDIT' | 'VIEW'
   can_edit: boolean
 }
+
+/** The roles PRJ1 offers its creator (DEC-L2R-D6). */
+const OWNER_ROLES = ['Founder', 'Co-founder', 'Thành viên'] as const
 
 const TYPE_LABELS = { PROJECT: 'Dự án', STARTUP: 'Startup' } as const
 const STATUS_LABELS: Record<string, string> = {
@@ -57,7 +65,9 @@ const COPY = {
   invalid: 'Thông tin chưa hợp lệ. Vui lòng kiểm tra lại.',
   failed: 'Chưa lưu được thay đổi. Vui lòng thử lại.',
   readOnlyArchived: 'Dự án đã lưu trữ nên chỉ xem được, không sửa được.',
-  readOnlyMember: 'Chỉ chủ sở hữu mới sửa được thông tin này.',
+  readOnlyMember: 'Bạn có quyền Xem nên chỉ xem được hồ sơ này.',
+  stagePlaceholder: 'Chọn giai đoạn',
+  rolePlaceholder: 'Không chọn',
 } as const
 
 const time = () =>
@@ -71,12 +81,17 @@ export function VentureEditor({
   venture,
   regions,
   domains,
+  stages,
 }: {
   venture: VentureView
   regions: Option[]
   domains: Option[]
+  stages: Option[]
 }) {
   const editable = venture.can_edit
+  const owner = venture.permission === 'OWNER'
+  const [stageId, setStageId] = useState(venture.stage_id)
+  const [role, setRole] = useState(venture.role_label)
   const [name, setName] = useState(venture.name)
   const [summary, setSummary] = useState(venture.summary)
   const [regionId, setRegionId] = useState(venture.region_id)
@@ -106,7 +121,15 @@ export function VentureEditor({
     inFlight.current = true
     setSaving(true)
     setFormError(undefined)
-    const body = { name, summary, region_id: regionId || null, domain_ids: selected }
+    const body = {
+      name,
+      summary,
+      region_id: regionId || null,
+      domain_ids: selected,
+      stage_id: stageId || null,
+      // Only the owner states the owner's role (the server refuses it from anyone else).
+      ...(owner ? { owner_role_label: role || null } : {}),
+    }
     try {
       const updated = await apiRequest<{ name: string }>(`/ventures/${venture.id}`, {
         method: 'PATCH',
@@ -276,6 +299,55 @@ export function VentureEditor({
             ) : null}
             {fieldError('domain_ids')}
           </section>
+
+          <section className={styles.field}>
+            <label htmlFor="ve-stage" className={`type-body-sm weight-semibold ${styles.label}`}>
+              Giai đoạn
+            </label>
+            <select
+              id="ve-stage"
+              className={`type-body-md ${styles.select}`}
+              value={stageId}
+              disabled={!editable}
+              onChange={(e) => setStageId(e.target.value)}
+            >
+              <option value="" disabled>
+                {COPY.stagePlaceholder}
+              </option>
+              {stages.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+            {fieldError('stage_id')}
+          </section>
+
+          {owner ? (
+            <section className={styles.field}>
+              <label htmlFor="ve-role" className={`type-body-sm weight-semibold ${styles.label}`}>
+                Vai trò của bạn trong đội
+              </label>
+              <select
+                id="ve-role"
+                className={`type-body-md ${styles.select}`}
+                value={role}
+                disabled={!editable}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option value="">{COPY.rolePlaceholder}</option>
+                {[
+                  ...OWNER_ROLES,
+                  ...(role && !OWNER_ROLES.includes(role as never) ? [role] : []),
+                ].map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+              {fieldError('owner_role_label')}
+            </section>
+          ) : null}
 
           <section className={styles.field}>
             <label htmlFor="ve-region" className={`type-body-sm weight-semibold ${styles.label}`}>

@@ -10,9 +10,9 @@ import { ProjectWizard, type WizardStep } from './project-wizard'
 
 /**
  * WF02-S05 — /projects/new, create a Project/Startup. Production.
- * Reference (TASK 22.3, L13a–c PRJ1–3 subset):
+ * Reference (L13a–c, PRJ1–3 of the L2 board):
  * design-reference/final/revision/L2/L13{a,b,c}__project-create-*__SOURCE.png
- * Decisions DEC-WF02-S05-G1..G5, DEC-WF02-S06-G1..G9, DEC-L2-D1..D5.
+ * Decisions DEC-L2R-D4..D11; DEC-WF02-S05-G2..G5 and DEC-L2-D5 still hold.
  *
  * Guest → /auth; onboarding not done → its resolver step (DEC-WF02-S05-G2).
  * The three steps sit on this one route (03 route matrix: KEEP). Step 1
@@ -34,9 +34,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const search = await searchParams
   const ventureId = typeof search.venture === 'string' ? search.venture : undefined
   if (ventureId === undefined) {
-    const { regions, domains } = await ventureOptions()
+    const { domains, stages } = await ventureOptions()
     return (
-      <ProjectWizard step="info" venture={null} team={null} regions={regions} domains={domains} />
+      <ProjectWizard step="info" venture={null} team={null} domains={domains} stages={stages} />
     )
   }
   if (!UUID.test(ventureId)) notFound()
@@ -53,7 +53,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   if (!venture.can_edit || !team.can_manage) notFound()
 
   const step = STEPS.find((s) => s === search.step) ?? 'info'
-  const { regions, domains } = await ventureOptions(venture.region, venture.domains)
+  const { domains, stages } = await ventureOptions(venture.region, venture.domains, venture.stage)
   return (
     <ProjectWizard
       step={step}
@@ -63,12 +63,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         name: venture.name,
         summary: venture.summary ?? '',
         status: venture.status,
-        region_id: venture.region?.id ?? '',
+        stage_id: venture.stage?.id ?? '',
+        owner_role_label: venture.role_label ?? '',
         domain_ids: venture.domains.map((d) => d.id),
       }}
       team={team}
-      regions={regions}
       domains={domains}
+      stages={stages}
     />
   )
 }

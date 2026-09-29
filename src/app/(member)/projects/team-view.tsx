@@ -10,17 +10,18 @@ import { apiRequest } from '@/lib/api/client'
 import type { TeamDTO, TeamRow } from '@/lib/venture/team'
 
 import styles from './team.module.css'
+import { inviteFailure, PERMISSION_LABELS, PERMISSION_LEVELS } from './team-copy'
 
 /**
- * WF02-S06 — venture team (DEC-WF02-H7, DEC-WF02-S06-G1..G9).
+ * WF02-S06 — venture team (DEC-L2R-D7, D8; DEC-WF02-S06-G1, G5, G6, G8).
  *
  * One table: the owner row (derived from `owner_profile_id`, never removable),
- * ACTIVE members and, for the owner only, pending invitations. "Quyền" shows
- * the ownership category only ("Chủ sở hữu" / "Thành viên"), never a
- * permission tier (G4). The owner's row menu holds only "Sửa vai trò" and
- * "Gỡ khỏi đội"; a pending invitation can be cancelled. There is no resend:
- * P0 sends no email, and the copy never claims one was sent (G2/G3). A member
- * sees a read-only list with no pending data (G8). The server enforces all of it.
+ * ACTIVE members and, for the owner only, pending invitations. "Quyền" is the
+ * level: Chủ sở hữu (ownership), Biên tập or Xem (set by the owner). The
+ * owner's row menu holds "Sửa vai trò và quyền" and "Gỡ khỏi đội"; a pending
+ * invitation can be cancelled. An invitation is e-mailed and nobody joins
+ * before accepting. A member sees a read-only list with no pending data (G8).
+ * The server enforces all of it.
  */
 
 /** Copy the approved bitmap does not carry; pending PO copy review (DEC-WF02-S06-D). */
@@ -30,11 +31,11 @@ const COPY = {
   pending: 'lời mời chưa nhận',
   invite: 'Mời thành viên',
   profile: 'Hồ sơ dự án',
-  ownerCategory: 'Chủ sở hữu',
-  memberCategory: 'Thành viên',
   notRemovable: 'Không gỡ được',
   menu: 'Tuỳ chọn',
-  editRole: 'Sửa vai trò',
+  editRole: 'Sửa vai trò và quyền',
+  roleField: 'Vai trò',
+  permissionField: 'Quyền',
   remove: 'Gỡ khỏi đội',
   cancelInvite: 'Huỷ lời mời',
   invitedOn: 'lời mời gửi',
@@ -48,20 +49,18 @@ const COPY = {
   inviteEmail: 'Email người được mời',
   inviteRole: 'Vai trò (không bắt buộc)',
   inviteRoleHint: 'Chỉ để hiển thị, không cấp thêm quyền.',
+  invitePermission: 'Quyền',
   inviteNote:
-    'Hệ thống chưa gửi email mời. Hãy báo người được mời đăng nhập bằng đúng email này và mở trang đội để nhận lời mời.',
-  inviteSubmit: 'Tạo lời mời',
+    'Người được mời nhận email và xác nhận trên trang Dự án & startup của họ. Chưa xác nhận thì chưa vào đội.',
+  inviteSubmit: 'Gửi lời mời',
   inviteClose: 'Đóng',
-  created: 'Đã tạo lời mời. Chưa có email nào được gửi.',
-  duplicate: 'Email này đã có một lời mời đang chờ.',
-  invalidEmail: 'Email chưa hợp lệ.',
-  tooLong: 'Vai trò quá dài.',
+  created: 'Đã gửi lời mời.',
   failed: 'Chưa thực hiện được. Vui lòng thử lại.',
   readOnly: 'Chỉ chủ sở hữu mới quản lý được đội. Bạn đang xem danh sách đội.',
   archived: 'Dự án đã lưu trữ nên đội chỉ xem được.',
   noteRoleTitle: 'Vai trò chỉ để hiển thị',
   noteRoleBody:
-    'Chủ sở hữu mời, sửa vai trò và gỡ thành viên · Thành viên xem được danh sách đội nhưng không sửa. Vai trò như CTO hay Cố vấn không cấp thêm quyền.',
+    'Chủ sở hữu mời, đổi quyền và gỡ thành viên · Biên tập sửa hồ sơ · Xem chỉ xem. Vai trò như CTO hay Cố vấn không cấp thêm quyền.',
   noteHistoryTitle: 'Gỡ thành viên không xoá lịch sử',
   noteHistoryBody:
     'Người được gỡ khỏi đội hoặc lời mời đã huỷ vẫn được lưu trong lịch sử của dự án, kèm thời điểm tham gia và kết thúc.',
@@ -90,20 +89,20 @@ const dayMonth = (iso: string) => {
   return `${p.day}/${p.month}`
 }
 
-type ApiFailure = { code?: string; fields?: Record<string, string> } | null
-
 export function TeamView({ team }: { team: TeamDTO }) {
   const router = useRouter()
   const manage = team.can_manage
   const [inviting, setInviting] = useState(false)
   const [email, setEmail] = useState('')
   const [roleLabel, setRoleLabel] = useState('')
+  const [permission, setPermission] = useState<'EDIT' | 'VIEW'>('VIEW')
   const [inviteError, setInviteError] = useState<string>()
   const [notice, setNotice] = useState<string>()
   const [rowError, setRowError] = useState<string>()
   const [menuFor, setMenuFor] = useState<string>()
   const [editFor, setEditFor] = useState<string>()
   const [editValue, setEditValue] = useState('')
+  const [editPermission, setEditPermission] = useState<'EDIT' | 'VIEW'>('VIEW')
   const [confirmFor, setConfirmFor] = useState<string>()
   const [busy, setBusy] = useState(false)
   const inFlight = useRef(false)
@@ -135,24 +134,16 @@ export function TeamView({ team }: { team: TeamDTO }) {
     try {
       await apiRequest(`/ventures/${team.venture.id}/team/invitations`, {
         method: 'POST',
-        body: { email, role_label: roleLabel || null },
+        body: { email, role_label: roleLabel || null, permission },
       })
       setEmail('')
       setRoleLabel('')
+      setPermission('VIEW')
       setInviting(false)
       setNotice(COPY.created)
       router.refresh()
     } catch (caught) {
-      const error = caught as ApiFailure
-      setInviteError(
-        error?.code === 'MEMBERSHIP_INVALID_TRANSITION'
-          ? COPY.duplicate
-          : error?.fields?.role_label
-            ? COPY.tooLong
-            : error?.fields?.email
-              ? COPY.invalidEmail
-              : COPY.failed,
-      )
+      setInviteError(inviteFailure(caught))
     } finally {
       inFlight.current = false
       setBusy(false)
@@ -218,7 +209,7 @@ export function TeamView({ team }: { team: TeamDTO }) {
               run(() =>
                 apiRequest(`${base}/${id}`, {
                   method: 'PATCH',
-                  body: { role_label: editValue || null },
+                  body: { role_label: editValue || null, permission: editPermission },
                 }),
               ).then((ok) => ok && setEditFor(undefined))
             }
@@ -252,6 +243,7 @@ export function TeamView({ team }: { team: TeamDTO }) {
                 onClick={() => {
                   setMenuFor(undefined)
                   setEditValue(row.role_label ?? '')
+                  setEditPermission(row.permission === 'EDIT' ? 'EDIT' : 'VIEW')
                   setEditFor(id)
                 }}
               >
@@ -282,7 +274,7 @@ export function TeamView({ team }: { team: TeamDTO }) {
       return (
         <TextInput
           id={`team-role-${row.membership_id}`}
-          aria-label={COPY.editRole}
+          aria-label={COPY.roleField}
           value={editValue}
           maxLength={100}
           onChange={(e) => setEditValue(e.target.value)}
@@ -290,6 +282,27 @@ export function TeamView({ team }: { team: TeamDTO }) {
       )
     }
     return row.role_label ?? '—'
+  }
+
+  function permissionCell(row: TeamRow) {
+    if (row.kind === 'ACTIVE_MEMBER' && editFor === row.membership_id) {
+      return (
+        <select
+          id={`team-permission-${row.membership_id}`}
+          className={styles.select}
+          aria-label={COPY.permissionField}
+          value={editPermission}
+          onChange={(e) => setEditPermission(e.target.value as 'EDIT' | 'VIEW')}
+        >
+          {PERMISSION_LEVELS.map((level) => (
+            <option key={level.value} value={level.value}>
+              {level.label}
+            </option>
+          ))}
+        </select>
+      )
+    }
+    return PERMISSION_LABELS[row.permission]
   }
 
   return (
@@ -346,7 +359,7 @@ export function TeamView({ team }: { team: TeamDTO }) {
                   type="email"
                   autoComplete="off"
                   value={email}
-                  invalid={inviteError === COPY.invalidEmail}
+                  invalid={Boolean(inviteError)}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </label>
@@ -361,6 +374,23 @@ export function TeamView({ team }: { team: TeamDTO }) {
                   onChange={(e) => setRoleLabel(e.target.value)}
                 />
                 <span className={`type-meta-xs ${styles.hint}`}>{COPY.inviteRoleHint}</span>
+              </label>
+              <label className={styles.inviteField}>
+                <span className={`type-body-sm weight-semibold ${styles.label}`}>
+                  {COPY.invitePermission}
+                </span>
+                <select
+                  id="team-invite-permission"
+                  className={styles.select}
+                  value={permission}
+                  onChange={(e) => setPermission(e.target.value as 'EDIT' | 'VIEW')}
+                >
+                  {PERMISSION_LEVELS.map((level) => (
+                    <option key={level.value} value={level.value}>
+                      {level.label}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
             <p className={`type-meta-xs ${styles.hint}`}>{COPY.inviteNote}</p>
@@ -413,11 +443,7 @@ export function TeamView({ team }: { team: TeamDTO }) {
                   {roleCell(row)}
                 </span>
                 <span role="cell" className={`type-body-sm ${styles.cell}`}>
-                  {row.kind === 'OWNER'
-                    ? COPY.ownerCategory
-                    : row.kind === 'ACTIVE_MEMBER'
-                      ? COPY.memberCategory
-                      : '—'}
+                  {permissionCell(row)}
                 </span>
                 <span role="cell" className={`type-body-sm ${styles.cell}`}>
                   {row.kind === 'ACTIVE_MEMBER'

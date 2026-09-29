@@ -1,6 +1,7 @@
 import { MemberShell } from '@/components/shell/member-shell'
 import { getDeletionRequest } from '@/lib/account/settings'
 import { requireMember } from '@/lib/member/guard'
+import { listOwnInvitations } from '@/lib/venture/team'
 
 import { SettingsView } from './settings-view'
 
@@ -17,11 +18,14 @@ export const dynamic = 'force-dynamic'
 
 export default async function Page() {
   const member = await requireMember()
-  const request = await getDeletionRequest(member.accountId)
+  const [request, invitations] = await Promise.all([
+    getDeletionRequest(member.accountId),
+    listOwnInvitations(member.accountId),
+  ])
   return (
     // L11 (TASK 22.3, DEC-L2-D5): the existing below-desktop shell variant.
     <MemberShell active="settings" member={member} responsive>
-      <SettingsView initialRequest={request} />
+      <SettingsView initialRequest={request} pendingInvitations={invitations.length} />
     </MemberShell>
   )
 }

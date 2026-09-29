@@ -228,12 +228,190 @@
   color: var(--muted);
 }
 
-/* Step 1 — fields. */
+/* Step 1 — the AI block: drawn, inert (D-A1). */
+.ai {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 6.125rem;
+  margin-top: 1.6875rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  background: #160002;
+  color: #ffffff;
+}
+
+.aiBadge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.375rem;
+  height: 1.75rem;
+  padding: 0 0.6875rem;
+  border-radius: 0.875rem;
+  background: var(--hub-primary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  color: #170002;
+}
+
+.spark {
+  width: 0.5rem;
+  height: 0.5rem;
+  fill: #170002;
+}
+
+.aiText {
+  flex: 1;
+  min-width: 0;
+}
+
+.aiTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+
+.aiBody {
+  max-width: 31rem;
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.1875rem;
+  color: #d9d0d0;
+}
+
+.aiAction {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 2.875rem;
+  padding: 0 1.375rem;
+  border: 1px solid #544344;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #ffffff;
+  cursor: default;
+}
+
+/* Step 1 — the three core fields, grouped as the board groups them. */
 .fields {
   display: flex;
   flex-direction: column;
   gap: 1.0625rem;
+  margin-top: 1.75rem;
+  padding: 1.0625rem 1.125rem 1.0625rem;
+  border: 1px dashed #f8c2b8;
+  border-radius: 0.625rem;
+}
+
+/* Step 1 — stage and the creator's role. */
+.stage,
+.role {
   margin-top: 1.875rem;
+}
+
+.labelNote {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--faint);
+}
+
+.segments {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin-top: 0.375rem;
+  overflow: hidden;
+  border: 1px solid var(--control-line);
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+}
+
+.segment {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.625rem;
+  border-left: 1px solid var(--control-line);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+  text-align: center;
+  cursor: pointer;
+}
+
+.segment:first-child {
+  border-left: 0;
+}
+
+.segment[data-checked='true'] {
+  background: var(--ink);
+  color: #ffffff;
+}
+
+.choice {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segment:has(:focus-visible),
+.roleChip:has(:focus-visible) {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-top: 0.375rem;
+}
+
+.roleChip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 2.0625rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: 62.5rem;
+  background: var(--control-fill);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.roleChip[data-checked='true'] {
+  border-color: var(--hub-primary);
+  background: var(--hub-primary);
+  color: var(--ink);
+}
+
+.tick {
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.role .note {
+  margin-top: 0.75rem;
 }
 
 .field {
@@ -264,7 +442,7 @@
   border-radius: 0.5rem;
   background: var(--control-fill)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 5'%3E%3Cpath d='M0 0h8L4 5z' fill='%23534041'/%3E%3C/svg%3E")
-    no-repeat right 1.125rem center / 0.375rem;
+    no-repeat right 1rem center / 0.25rem;
   font: inherit;
   font-size: 0.9375rem;
   color: var(--ink);
@@ -338,7 +516,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-top: 1.75rem;
+  margin-top: 1.6875rem;
   padding-top: 1.375rem;
   border-top: 1px solid var(--line);
 }
@@ -397,17 +575,17 @@
 
 /* Step 2 — invite row and team list. */
 .invite {
-  margin-top: 1.375rem;
+  margin-top: 1.5rem;
 }
 
 .inviteRow .label {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
 }
 
 .inviteRow {
   display: flex;
   align-items: flex-end;
-  gap: 0.6875rem;
+  gap: 0.625rem;
 }
 
 .inviteEmail {
@@ -420,13 +598,19 @@
 .inviteRole {
   display: flex;
   flex-direction: column;
-  width: 13.5rem;
+  width: 9.3125rem;
+}
+
+.invitePermission {
+  display: flex;
+  flex-direction: column;
+  width: 7.875rem;
 }
 
 .inviteRow :global(.ui-button) {
   height: 2.8125rem;
   margin-bottom: 0.0625rem;
-  padding: 0 1.375rem;
+  padding: 0 1.3125rem;
   background: var(--hub-burgundy);
   color: var(--hub-surface);
   font-size: 0.9375rem;
@@ -434,19 +618,80 @@
   white-space: nowrap;
 }
 
-.inviteNote {
-  margin: 1.625rem 0 0;
-  padding: 0.875rem;
-  border-radius: 0.5rem;
+/* Step 2 — invitation by link: drawn, inert (D-T1). */
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4.3125rem;
+  margin-top: 1.625rem;
+  padding: 0 0.8125rem 0 0.875rem;
+  border-radius: 0.625rem;
   background: var(--control-fill);
+}
+
+.linkOr {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.07em;
+  color: var(--faint);
+}
+
+.linkCopy {
+  display: inline-flex;
+  align-items: center;
+  height: 2.8125rem;
+  margin-left: auto;
+  padding: 0 1.375rem;
+  border: 1px solid var(--control-line);
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: default;
+}
+
+/* Step 2 — the three levels. */
+.levels {
+  margin-top: 1.625rem;
+  padding: 0.9375rem 1rem 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: 0.625rem;
+}
+
+.levelsTitle {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.09em;
+  color: var(--accent-strong);
+}
+
+.levels ul {
+  margin: 0.625rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.levels li {
   font-size: 0.8125rem;
-  line-height: 1.25rem;
+  line-height: 1.6875rem;
   color: var(--muted);
 }
 
+.levels strong {
+  font-weight: 500;
+  color: var(--ink);
+}
+
 .teamHead {
-  margin-top: 1.75rem;
-  padding-bottom: 0.1875rem;
+  margin-top: 1.6875rem;
+  padding-bottom: 0;
   border-bottom: 1px solid var(--line);
 }
 
@@ -477,7 +722,7 @@
 }
 
 .avatarOwner {
-  background: var(--hub-burgundy);
+  background: #5c040c;
 }
 
 .person {
@@ -493,7 +738,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: 0.875rem;
 }
 
 .pill {
@@ -683,8 +928,36 @@
     flex-wrap: wrap;
   }
 
-  .inviteRole {
+  .inviteRole,
+  .invitePermission {
     width: 100%;
+  }
+
+  .ai {
+    flex-wrap: wrap;
+    padding: 1rem;
+  }
+
+  .aiText {
+    flex: 1 1 calc(100% - 5rem);
+  }
+
+  .segments {
+    grid-template-columns: 1fr;
+  }
+
+  .segment {
+    border-top: 1px solid var(--control-line);
+    border-left: 0;
+  }
+
+  .segment:first-child {
+    border-top: 0;
+  }
+
+  .linkRow {
+    flex-wrap: wrap;
+    padding-block: 0.75rem;
   }
 
   .inviteEmail {

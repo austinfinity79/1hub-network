@@ -21,6 +21,14 @@
 
 .form {
   width: 53.75rem;
+  max-width: 100%;
+}
+
+/* Below desktop the form takes the width it has (L2 responsive: 1024 / 768 / 390). */
+@media (max-width: 767px) {
+  .body {
+    padding: 1.25rem 1rem 3rem;
+  }
 }
 
 .notice {

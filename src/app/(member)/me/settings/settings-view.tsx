@@ -24,10 +24,11 @@ import styles from './settings.module.css'
  * Rows: the login email (read-only), the sessions (revoke one, revoke all,
  * opened in place), the discovery visibility and the Terms / Privacy status
  * (both changed on /me/privacy, the existing WF02-S03 screen), and the
- * account-deletion REQUEST behind a confirmation. Not rendered (Bucket B /
- * Future): email change, Google link, HUB tags, public URL, "view as",
- * purpose consents, viewer statistics, personal log, export, email
- * preferences, invitations and organisations, ownership transfer.
+ * account-deletion REQUEST behind a confirmation, and the pending team
+ * invitations sent to the account's address, answered on /projects
+ * (DEC-L2R-D8). Not rendered (Future): email change, Google link, HUB tags,
+ * public URL, "view as", purpose consents, viewer statistics, personal log,
+ * export, email preferences, organisations, ownership transfer.
  */
 
 type Loaded<T> = { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; value: T }
@@ -58,6 +59,10 @@ const COPY = {
   hidden: 'đang ẩn',
   change: 'Đổi',
   data: 'QUYỀN RIÊNG TƯ DỮ LIỆU',
+  invitations: 'LỜI MỜI',
+  pending: 'Lời mời đang chờ',
+  pendingUnit: 'lời mời',
+  noPending: 'không có lời mời nào',
   consent: 'Điều khoản & lịch sử đồng ý',
   consentOk: 'đã đồng ý phiên bản hiện hành',
   consentNew: 'có phiên bản mới cần đồng ý',
@@ -162,7 +167,14 @@ const loadConsent = async (): Promise<boolean> => {
   return missingDocuments(currentStatus(current.documents, consents.items)).length === 0
 }
 
-export function SettingsView({ initialRequest }: { initialRequest: DeletionRequestDTO | null }) {
+export function SettingsView({
+  initialRequest,
+  pendingInvitations,
+}: {
+  initialRequest: DeletionRequestDTO | null
+  /** Read on the server for the session's own address (DEC-L2R-D8). */
+  pendingInvitations: number
+}) {
   const [email, setEmail] = useState('')
   const [sessions, setSessions] = useState<Loaded<SessionDTO[]>>({ kind: 'loading' })
   const [open, setOpen] = useState(false)
@@ -369,6 +381,21 @@ export function SettingsView({ initialRequest }: { initialRequest: DeletionReque
           summary={summaryOf(consent, (ok) => (ok ? COPY.consentOk : COPY.consentNew))}
           action={
             <Link href="/me/privacy" className={styles.action} data-nav="settings-consent">
+              {COPY.view}
+              <Arrow />
+            </Link>
+          }
+        />
+      </Card>
+
+      <Card card="invitations" eyebrow={COPY.invitations}>
+        <Row
+          title={COPY.pending}
+          summary={
+            pendingInvitations > 0 ? `${pendingInvitations} ${COPY.pendingUnit}` : COPY.noPending
+          }
+          action={
+            <Link href="/projects" className={styles.action} data-nav="settings-invitations">
               {COPY.view}
               <Arrow />
             </Link>

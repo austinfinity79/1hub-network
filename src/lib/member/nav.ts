@@ -62,12 +62,13 @@ export type SidebarItem = NavItem & { key: SidebarKey | null }
 
 /** "Tài khoản của tôi" sidebar, in the approved order. */
 export const SIDEBAR_NAV: readonly SidebarItem[] = [
-  { key: 'overview', label: 'Tổng quan', kind: 'LINK', href: '/me' },
+  // DEC-L2R-D1: /me is "Hồ sơ của tôi" (FP1-OWN).
+  { key: 'overview', label: 'Hồ sơ của tôi', kind: 'LINK', href: '/me' },
   { key: 'profile', label: 'Hồ sơ cá nhân', kind: 'LINK', href: '/me/profile/edit' },
   { key: 'privacy', label: 'Quyền riêng tư & hiển thị', kind: 'LINK', href: '/me/privacy' },
   { key: 'settings', label: 'Cài đặt tài khoản', kind: 'LINK', href: '/me/settings' },
-  // No screen owns invitations in P0 (DEC-WF02-H10).
-  { key: null, label: 'Lời mời', kind: 'INERT', reason: 'NO_P0_SCREEN' },
+  // DEC-L2R-D8: pending invitations are answered on "Dự án & startup của tôi".
+  { key: null, label: 'Lời mời', kind: 'LINK', href: '/projects' },
   { key: 'roles', label: 'Vai trò & liên kết', kind: 'LINK', href: '/me/roles' },
   // No frozen route; organisation links live on S01/S04 content.
   { key: null, label: 'Tổ chức của tôi', kind: 'INERT', reason: 'NO_P0_SCREEN' },

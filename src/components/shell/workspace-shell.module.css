@@ -1,0 +1,292 @@
+/*
+ * FP1-OWN and ME7 — the chrome of the L2 workspace frames, measured on the
+ * boards at 1440x900 DPR1 (px / 16 = rem). Corrected Design Revision screens,
+ * so the text is Space Grotesk (DEC-HD-12) through a re-pointed --font-ui.
+ */
+
+.root {
+  --font-ui: 'Space Grotesk', 'Be Vietnam Pro', system-ui, sans-serif;
+  --ink: #170002;
+  --muted: #534041;
+  --faint: #8e7677;
+  --accent-strong: #b91610;
+  --line: #e3dddd;
+
+  min-height: 100vh;
+  background: var(--hub-canvas);
+  color: var(--ink);
+  font-family: var(--font-ui);
+}
+
+/* FP1-OWN: 60px dark band, content on the 1200px column. */
+.dark {
+  background: #160002;
+  color: #f2e6e6;
+}
+
+.darkInner {
+  display: flex;
+  align-items: center;
+  width: 75rem;
+  max-width: 100%;
+  height: 3.75rem;
+  margin: 0 auto;
+}
+
+.wordmarkWide {
+  margin: 0;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.375rem;
+  letter-spacing: 0.055em;
+  color: #ffffff;
+}
+
+.nav {
+  display: flex;
+  gap: 2rem;
+  margin-left: 1.9375rem;
+}
+
+.navItem {
+  font-size: 0.9375rem;
+  line-height: 1.25rem;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.dark .navItem {
+  font-size: 0.875rem;
+  color: #c9afaf;
+}
+
+.dark .navItem[data-current='true'] {
+  color: var(--hub-primary);
+}
+
+.navItem[aria-disabled='true'] {
+  cursor: default;
+}
+
+.navItem:focus-visible,
+.sideItem:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 0.9375rem;
+  margin-left: auto;
+}
+
+.lang {
+  font-size: 0.8125rem;
+  line-height: 1rem;
+  color: #9c8f8f;
+  cursor: default;
+}
+
+.memberName {
+  font-size: 0.9375rem;
+  line-height: 1.25rem;
+}
+
+.avatar {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #402e30;
+}
+
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ME7: 64px light band and a rule; navigation centred on the page. */
+.light {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 4.0625rem;
+  padding: 0 2.75rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--hub-surface);
+}
+
+.wordmark {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.375rem;
+}
+
+.navCentre {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  gap: 1.875rem;
+  transform: translateX(-50%);
+}
+
+.light .navItem {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.light .account {
+  gap: 0.75rem;
+}
+
+.light .avatar {
+  width: 1.875rem;
+  height: 1.875rem;
+  background: #cfc5c5;
+}
+
+.light .memberName {
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.body {
+  display: flex;
+  gap: 2rem;
+  width: 75rem;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 2.5rem 0 4rem;
+}
+
+.sidebar {
+  flex: 0 0 13.75rem;
+}
+
+.sideList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sideItem {
+  display: flex;
+  align-items: center;
+  height: 2.375rem;
+  margin-bottom: 0.25rem;
+  padding: 0 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.sideItem[data-current='true'] {
+  background: var(--hub-surface);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.sideItem[aria-disabled='true'] {
+  cursor: default;
+}
+
+.demoEntry {
+  margin-top: 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  padding: 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.07em;
+  color: var(--faint);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Below the desktop column the chrome keeps every entry reachable. */
+@media (max-width: 1279px) {
+  .darkInner {
+    padding: 0 1.5rem;
+  }
+
+  .body {
+    padding: 2rem 1.5rem 4rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .navCentre {
+    position: static;
+    margin-left: 1.5rem;
+    transform: none;
+  }
+
+  .sidebar {
+    flex-basis: 11.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .darkInner,
+  .light {
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    height: auto;
+    min-height: 3.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .nav,
+  .navCentre {
+    order: 3;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .memberName {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .body {
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem 1rem 5rem;
+  }
+
+  .sidebar {
+    flex: none;
+  }
+
+  .sideList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .sideItem {
+    margin-bottom: 0;
+  }
+
+  .demoEntry {
+    margin-top: 1rem;
+  }
+}

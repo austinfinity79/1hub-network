@@ -33,9 +33,10 @@ describe('M0-T03 frozen route manifest', () => {
   const contractRoutes = parseContractRoutes()
 
   it('parses the expected shape of the contract', () => {
-    // 26 screens, 27 routes: WF02-S05 declares two; DEC-L1R added WF01-S09 and S10.
-    expect(new Set(contractRoutes.map((r) => r.screenId)).size).toBe(26)
-    expect(contractRoutes).toHaveLength(27)
+    // 27 screens, 28 routes: WF02-S05 declares two; DEC-L1R added WF01-S09 and S10,
+    // DEC-L2R added WF02-S08.
+    expect(new Set(contractRoutes.map((r) => r.screenId)).size).toBe(27)
+    expect(contractRoutes).toHaveLength(28)
   })
 
   it('covers every contract route exactly once, with no extras', () => {
@@ -70,7 +71,7 @@ describe('M0-T03 frozen route manifest', () => {
       '/auth/error',
     ])
     expect(routesInGroup('onboarding')).toHaveLength(6)
-    expect(routesInGroup('member')).toHaveLength(8)
+    expect(routesInGroup('member')).toHaveLength(9)
     expect(routesInGroup('ops')).toHaveLength(8)
   })
 

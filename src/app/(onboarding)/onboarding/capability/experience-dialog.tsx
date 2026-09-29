@@ -43,18 +43,30 @@ function toMonth(text: string): string | null {
   return match ? `${match[2]}-${match[1]!.padStart(2, '0')}` : null
 }
 
+/**
+ * A save that answers with a promise keeps the dialog open until the server
+ * stored it (FP1-OWN); a plain save closes it at once (the L1 stage keeps the
+ * list and saves it later).
+ */
+type Outcome = void | Promise<boolean>
+
 export function ExperienceDialog({
   record,
   onSave,
   onDelete,
   onClose,
+  saving = false,
+  error,
 }: {
   /** The record being edited, or null for a new one. */
   record: ExperienceRecord | null
-  onSave: (record: ExperienceRecord) => void
+  onSave: (record: ExperienceRecord) => Outcome
   /** Present only when an existing record is edited. */
-  onDelete?: () => void
+  onDelete?: () => Outcome
   onClose: () => void
+  saving?: boolean
+  /** The server's refusal, shown in the dialog that is still open. */
+  error?: string
 }) {
   const ids = useId()
   const dialog = useRef<HTMLDialogElement>(null)
@@ -75,6 +87,10 @@ export function ExperienceDialog({
 
   // Closing through the element hands the focus back to the control that opened it.
   const close = () => dialog.current?.close()
+  const closeWhenStored = (outcome: Outcome) => {
+    if (outcome) void outcome.then((stored) => stored && close())
+    else close()
+  }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -89,14 +105,15 @@ export function ExperienceDialog({
     else if (ended && started && ended < started) next.to = MESSAGES.order
     setErrors(next)
     if (Object.keys(next).length > 0) return
-    close()
-    onSave({
-      title: title.trim(),
-      organization_name: organization.trim(),
-      started_on: started ?? '',
-      ended_on: ended ?? '',
-      description: description.trim(),
-    })
+    closeWhenStored(
+      onSave({
+        title: title.trim(),
+        organization_name: organization.trim(),
+        started_on: started ?? '',
+        ended_on: ended ?? '',
+        description: description.trim(),
+      }),
+    )
   }
 
   return (
@@ -158,7 +175,7 @@ export function ExperienceDialog({
           </div>
         </div>
 
-        <div className={stage.grid2}>
+        <div className={`${stage.grid2} ${styles.dialogGrid}`}>
           <div className={stage.field}>
             <label className={stage.label} htmlFor={id('from')}>
               Từ
@@ -235,6 +252,12 @@ export function ExperienceDialog({
           </div>
         </div>
 
+        {error ? (
+          <p className={stage.error} role="alert">
+            {error}
+          </p>
+        ) : null}
+
         <hr className={`${stage.rule} ${styles.dialogEnd}`} />
 
         <div className={styles.dialogFoot}>
@@ -242,10 +265,8 @@ export function ExperienceDialog({
             <button
               type="button"
               className={styles.delete}
-              onClick={() => {
-                close()
-                onDelete()
-              }}
+              disabled={saving}
+              onClick={() => closeWhenStored(onDelete())}
             >
               Xoá mục này
             </button>
@@ -255,7 +276,9 @@ export function ExperienceDialog({
           <Button variant="secondary" onClick={close}>
             Huỷ
           </Button>
-          <Button type="submit">Lưu</Button>
+          <Button type="submit" loading={saving}>
+            Lưu
+          </Button>
         </div>
       </form>
     </dialog>

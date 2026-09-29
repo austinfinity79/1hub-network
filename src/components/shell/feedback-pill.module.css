@@ -1,0 +1,43 @@
+/* The "Góp ý" pill of the corrected boards, measured on the L1 and L2 frames. */
+.feedback {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 10;
+  font-family: 'Space Grotesk', 'Be Vietnam Pro', system-ui, sans-serif;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5625rem;
+  height: 2.875rem;
+  padding: 0 1.125rem 0 1rem;
+  border-radius: 1.4375rem;
+  background: #170002;
+  box-shadow: 0 0.75rem 1.75rem rgb(22 0 2 / 30%);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: default;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 0.3125rem;
+  background: var(--hub-primary);
+  color: #170002;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  .feedback {
+    right: 1rem;
+    bottom: 1rem;
+  }
+}

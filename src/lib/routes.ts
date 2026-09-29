@@ -68,6 +68,8 @@ export const FROZEN_ROUTES: readonly FrozenRoute[] = [
   r('WF02-S05', 'WF02', 'member', '/projects/:id/edit'),
   r('WF02-S06', 'WF02', 'member', '/projects/:id/team'),
   r('WF02-S07', 'WF02', 'member', '/me/settings'),
+  // DEC-L2R-D1: "Dự án & startup của tôi" (ME7).
+  r('WF02-S08', 'WF02', 'member', '/projects'),
 
   // WF03 — HUB / Chapter / CLB Operations
   r('WF03-S01', 'WF03', 'ops', '/ops/network'),

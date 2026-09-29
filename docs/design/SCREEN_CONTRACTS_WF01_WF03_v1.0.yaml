@@ -189,20 +189,21 @@ workflows:
     screens:
     - id: WF02-S01
       route: /me
-      source: ME0
+      source: FP1-OWN
       reads:
       - UserAccount
       - IndividualProfile
-      - Membership
-      - Leadership
-      - Invitations
-      writes: []
+      - ProjectStartup
+      writes:
+      - IndividualProfile
       actions:
-      - open_profile
-      - open_privacy
-      - open_roles
-      - open_project
+      - edit_profile
+      - edit_experience
+      - edit_education
       - open_settings
+      - open_project
+      notes:
+      - 'DEC-L2R-D1/D2: owner profile view (L1 board FP1-OWN); sections without a data source are not drawn.'
     - id: WF02-S02
       route: /me/profile/edit
       source: PRO2
@@ -270,6 +271,23 @@ workflows:
       - invite_member
       - change_role
       - remove_member_if_allowed
+    - id: WF02-S08
+      route: /projects
+      source: ME7
+      reads:
+      - ProjectStartup
+      - TeamMembership
+      - Invitations
+      writes:
+      - TeamMembership
+      actions:
+      - create_project
+      - open_project
+      - open_team
+      - accept_invitation
+      - decline_invitation
+      notes:
+      - 'DEC-L2R-D1/D8: ventures the account owns or belongs to, and the pending invitations sent to its own address.'
     - id: WF02-S07
       route: /me/settings
       source: ME4

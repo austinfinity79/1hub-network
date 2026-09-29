@@ -13,7 +13,8 @@ import { ventureOptions } from '../../venture-options'
  *
  * Guest → /auth; onboarding not done → its resolver step. The venture is read
  * with the same rule as GET /ventures/{id}: owner or ACTIVE member, anyone
- * else gets the same 404. Only the owner of a non-archived venture edits.
+ * else gets the same 404. The owner and members with Biên tập edit a
+ * non-archived venture; Xem reads (DEC-L2R-D7).
  */
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     if (isApiError(error) && error.status === 404) notFound()
     throw error
   }
-  const { regions, domains } = await ventureOptions(venture.region, venture.domains)
+  const { regions, domains, stages } = await ventureOptions(
+    venture.region,
+    venture.domains,
+    venture.stage,
+  )
   return (
     <VentureEditor
       venture={{
@@ -38,10 +43,14 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         status: venture.status,
         region_id: venture.region?.id ?? '',
         domain_ids: venture.domains.map((d) => d.id),
+        stage_id: venture.stage?.id ?? '',
+        role_label: venture.role_label ?? '',
+        permission: venture.permission,
         can_edit: venture.can_edit,
       }}
       regions={regions}
       domains={domains}
+      stages={stages}
     />
   )
 }
