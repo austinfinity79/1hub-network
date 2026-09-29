@@ -1321,6 +1321,14 @@ Superseded records (traceable conflicts C-01…C-14 in [conflict-audit.md](../de
 | <a id="dec-l5-d5"></a>DEC-L5-D5 | **SUB0 fields.** The frame's name, domain and one-line summary, plus stage (the canonical venture requires it, [DEC-L2R-D4](#dec-l2r-d4)) and the type choice when asked (D1); domain from the DOMAIN vocabulary, not free text |
 | <a id="dec-l5-d6"></a>DEC-L5-D6 | **Not rendered** (no approved data or rule): the Problem target and its brief, S1–S6 word limits, uploads, the milestone table, the support checklist, the countdown and timeline dates, the commitment checkboxes, profile completion, the application code and e-mail, "editable until the deadline". The frames stay the layout baseline |
 
+## DEC-L6 — 29/09 L6 board re-check (TASK 24.5)
+
+<a id="dec-l6"></a>**Status:** RECORDED 2026-09-30. Inventory: [l6-ecosystem-inventory.md](../implementation/task-24/l6-ecosystem-inventory.md), features: [l6-ecosystem-features.md](../implementation/task-24/l6-ecosystem-features.md).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-l6-d1"></a>DEC-L6-D1 | **No L6 screen; matching deferred.** `Luồng 6 · Ecosystem Data & Matching.png` (PO, 29/09) is pixel-identical to the corrected 28/09 L46–L54 (WS1 workroom, EV1 event detail, SP1-T2/T3/T4/T6 startup tabs, ADM15 organisation approval, ADM17 account list, SYS1 system status). None is a public directory, search or form, so [DEC-2809-D7](#dec-2809-d7) holds: ALPHA 0 · FUTURE 9; the board is not a promotion. No discovery page, filter, preview or CTA is added without a frame, and the existing discovery layer (`/library`, `/organizations/:slug`) is unchanged. **MATCHING ENGINE: DEFERRED** — no approved algorithm, ranking, weighting, fit score, recommendation or verification contract; jury scores (L46), the distance hint (L52) and the HUB approval badge (L48–L51) are not rendered anywhere. PUBLIC ventures still grant no read ([DEC-PDF-D1](#dec-pdf-d1)); a future public venture page or directory needs its own frame and decision |
+
 ## DEC-L15 — Public Library, static demo (TASK 22-PREVIEW-LIBRARY)
 
 <a id="dec-l15"></a>**Status:** IMPLEMENTED 2026-09-28 on the PO instruction "Homepage → public L2 Thư viện" (`L2-15 Thu vien.zip`) and the PO answers of 28/09; revised the same day by TASK 22-PREVIEW-LIBRARY-FIX (real `startup.json` data, D7; remap to the full "L15 · DIR1 · Thư viện" frame, D8). Reopens [DEC-L2-D1](#dec-l2-d1) for L15 only; HD-A7 (real problem directory) and HD-08 (public ventures and profiles in our database) stay open.

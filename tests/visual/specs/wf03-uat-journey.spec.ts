@@ -56,6 +56,9 @@ const AUDIT_CODES = [
   'EVENT_UPDATED',
   'EVENT_PUBLISHED',
   'EVENT_CANCELLED',
+  // DEC-L5-D3 (TASK 24.4): the server-side programme application.
+  'APPLICATION_DRAFT_CREATED',
+  'APPLICATION_SUBMITTED',
 ]
 
 let consoleErrors: string[] = []

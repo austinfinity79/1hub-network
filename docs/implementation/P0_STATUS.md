@@ -113,6 +113,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 24.4 — L5 STARTUP JOURNEY: GREEN (local, not pushed, not deployed)** ([report](reports/TASK-24.4_l5-startup-closure.md), [inventory](task-24/l5-startup-inventory.md), [contract](task-24/l5-startup-contract.md), [DEC-L5-D1…D6](../decisions/DECISION_LOG.md#dec-l5-d1)). Programme applications on the server (migration 013): SUB0 quick team → form → review → submitted, owner only, SUBMITTED final; L37–L43 pixel-audited; the WF05 session application and its S03 / S04 screens replaced, old paths redirect. STOP checkpoint before 24.5.
 
+**TASK 24.5 — L6 ECOSYSTEM DATA & MATCHING: GREEN, no in-scope screen (local, not pushed, not deployed)** ([report](reports/TASK-24.5_l6-ecosystem-closure.md), [inventory](task-24/l6-ecosystem-inventory.md), [features](task-24/l6-ecosystem-features.md), [DEC-L6-D1](../decisions/DECISION_LOG.md#dec-l6-d1)). The 29/09 L6 board equals the frozen L46–L54: ALPHA 0 · FUTURE 9; matching DEFERRED; the discovery layer passes the L6 privacy, IDOR, spoof and runtime checks. STOP checkpoint before the TASK 24 final combined smoke.
+
 ## Completed (committed)
 
 | Task | Scope |
