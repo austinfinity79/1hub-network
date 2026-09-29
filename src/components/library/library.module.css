@@ -391,10 +391,13 @@
   scroll-margin-top: 12px;
 }
 
+/* L15 at 1440: a 249px filter column, a 45px gutter, the results take the
+   rest (1018px there). The gutter is fixed, so a wider screen widens the
+   results, never the space between them and the filters. */
 .directory {
   display: grid;
-  grid-template-columns: 249px 1018px;
-  justify-content: space-between;
+  grid-template-columns: 249px minmax(0, 1fr);
+  column-gap: 45px;
 }
 
 .facets {
@@ -589,9 +592,10 @@
   outline-offset: 3px;
 }
 
+/* Three equal columns of the results width: 324px each at 1440 (L15). */
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 324px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 23px;
   margin-top: 24px !important;
 }

@@ -213,6 +213,73 @@ test.describe('PUBLIC-LIBRARY functional', () => {
   })
 })
 
+test.describe('PUBLIC-LIBRARY layout: filters and results', () => {
+  /** L15 and the 29/09 Startup / Nhà sáng lập frames at 1440: 64 · 249 · 45 · 1018 · 64. */
+  const box = async (page: Page, selector: string) => {
+    const b = (await page.locator(selector).first().boundingBox())!
+    return { left: Math.round(b.x), right: Math.round(b.x + b.width), width: Math.round(b.width) }
+  }
+
+  test('the gutter stays 45px at 1440 and wider; three equal columns; sort on the results edge', async ({
+    page,
+  }) => {
+    for (const width of [1440, 1728, 1920]) {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto('/library', { waitUntil: 'networkidle' })
+      for (const name of [/^Bài toán/, /^Startup/, /^Nhà sáng lập/]) {
+        await page.getByRole('tab', { name }).click()
+        await expect(cards(page).first()).toBeVisible()
+        const facets = await box(page, '[data-anchor="facets"]')
+        const grid = await box(page, '[data-anchor="grid"]')
+        const sort = await box(page, 'label:has-text("Sắp xếp:")')
+        const columns = await cards(page).evaluateAll((els) =>
+          els.slice(0, 3).map((e) => Math.round(e.getBoundingClientRect().width)),
+        )
+        const where = `${width} ${name}`
+        expect(facets, where).toMatchObject({ left: 64, width: 249 })
+        expect(grid.left - facets.right, `${where} gutter`).toBe(45)
+        expect(grid.right, `${where} right edge`).toBe(width - 64)
+        expect(sort.right, `${where} sort`).toBe(grid.right)
+        expect(new Set(columns).size, `${where} equal columns`).toBe(1)
+        expect(columns[0], `${where} column`).toBe(Math.round((width - 128 - 249 - 45 - 46) / 3))
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0)
+      }
+    }
+    // At 1440 the columns are the frames' own: 358, 705, 1052, each 324 wide.
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/library', { waitUntil: 'networkidle' })
+    expect(
+      await cards(page).evaluateAll((els) =>
+        els.slice(0, 3).map((e) => {
+          const b = e.getBoundingClientRect()
+          return [Math.round(b.x), Math.round(b.width)]
+        }),
+      ),
+    ).toEqual([
+      [358, 324],
+      [705, 324],
+      [1052, 324],
+    ])
+  })
+
+  test('below 1440 the narrower layouts are unchanged and nothing overflows', async ({ page }) => {
+    for (const [width, facetsWidth, firstCard] of [
+      [1280, 220, 320],
+      [1024, 220, 320],
+      [768, 0, 20],
+      [390, 0, 20],
+    ] as const) {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto('/library', { waitUntil: 'networkidle' })
+      await expect(cards(page).first()).toBeVisible()
+      const first = await box(page, '[data-anchor="grid"] > li')
+      expect(first.left, `${width} first card`).toBe(firstCard)
+      if (facetsWidth) expect((await box(page, '[data-anchor="facets"]')).width).toBe(facetsWidth)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0)
+    }
+  })
+})
+
 test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => {
   test('A–F: header, hero, heading, search, metrics, tab bar', async ({ page }) => {
     await page.goto('/library')
