@@ -33,11 +33,22 @@ export type Hub = {
   since: string
   /** Dashed outline: a network of a different kind (HUB Business). */
   dashed?: boolean
+  /** Current HUB lead, where approved (PO, 29/09); the others keep the placeholder. */
+  lead?: { name: string; photo: PhotoAsset }
 }
 
 /** Section 05 order, clockwise from the top (HN), as drawn in the pack. */
 export const HUBS: Hub[] = [
-  { code: 'HN', short: 'HN', region: 'TP. HÀ NỘI', since: '2021' },
+  {
+    code: 'HN',
+    short: 'HN',
+    region: 'TP. HÀ NỘI',
+    since: '2021',
+    lead: {
+      name: 'Le Phuong Thao',
+      photo: about('humans/le-phuong-thao.webp', 'Chân dung Le Phuong Thao', '50% 22%'),
+    },
+  },
   { code: 'HCM', short: 'HCM', region: 'TP. HỒ CHÍ MINH', since: '2023' },
   { code: 'DN', short: 'ĐN', region: 'TP. ĐÀ NẴNG', since: '2024' },
   { code: 'SG', short: 'SG', region: 'SINGAPORE', since: '2024' },

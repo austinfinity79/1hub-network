@@ -946,6 +946,12 @@
   color: var(--red);
 }
 
+.orgPanelName {
+  margin-top: 8px !important;
+  font-size: 19px;
+  line-height: 26px;
+}
+
 .orgPanelFacts {
   display: grid;
   grid-template-columns: auto 1fr;

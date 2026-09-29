@@ -208,9 +208,15 @@ export function OrgDiagram() {
 
       <aside className={styles.orgPanel} aria-live="polite">
         <div className={styles.orgPanelPhoto}>
-          <Photo caption={`ẢNH · CHÂN DUNG · TRƯỞNG HUB ${panelRegion(hub.region)}`} tone="warm" />
+          <Photo
+            caption={`ẢNH · CHÂN DUNG · TRƯỞNG HUB ${panelRegion(hub.region)}`}
+            tone="warm"
+            photo={hub.lead?.photo ?? null}
+            sizes="300px"
+          />
         </div>
         <p className={styles.orgPanelRole}>TRƯỞNG HUB</p>
+        {hub.lead ? <p className={styles.orgPanelName}>{hub.lead.name}</p> : null}
         <dl className={styles.orgPanelFacts}>
           <dt>HUB</dt>
           <dd>{hub.short}</dd>
