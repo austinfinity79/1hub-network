@@ -32,11 +32,11 @@ TASK 24.2 screen inventory and SOT delta for `Luông 3 - CLB Operations.png` (PO
 | removed / expired authority | `authz` ignores expired, not-started and non-ACTIVE assignments |
 | onboarding declaration ≠ membership | DEC-PDF-D6B test: the declared position stays text, no leadership, no RoleAssignment |
 
-## Human decisions (open)
+## Human decisions (closed by the PO, 29/09)
 | # | Decision |
 |---|---|
-| L3-H1 | Promote any of L21, L22, L24, L25 (summit landing, registrations with export, regional judging, mail campaigns) out of FUTURE; each needs a model and rules (registration, scoring and advancement, an email provider) |
-| L3-H2 | Promote L27 leader handover (two signatures, 7-day expiry, BR-CHP-03 / 04) out of FUTURE |
+| L3-H1 | L21, L22, L24, L25 stay FUTURE — [DEC-2909-L3H1](../../decisions/DECISION_LOG.md#dec-2909-l3h1) |
+| L3-H2 | L27 stays FUTURE — [DEC-2909-L3H2](../../decisions/DECISION_LOG.md#dec-2909-l3h2) |
 
 ## Related
 - [l2-library-delta.md](l2-library-delta.md) · [../reports/TASK-24.2_l3-clb-closure.md](../reports/TASK-24.2_l3-clb-closure.md)

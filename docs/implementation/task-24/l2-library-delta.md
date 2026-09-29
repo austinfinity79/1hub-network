@@ -13,7 +13,7 @@ TASK 24.1 precheck, SOT delta matrix and contract freeze for `/library`, from `L
 ## SOT delta matrix — Startup card (L15b)
 | Element | Source (`startup.json`, DEC-L15-D7) | Rendered |
 |---|---|---|
-| square mark with initials, name, stage pill | name 72/72, stage 65/72 | yes (stage as written; none → no pill) |
+| square mark with initials, name, stage pill | name 72/72, stage 65/72 | yes (Alpha stage label, DEC-2909-L2H2; unmapped → no pill) |
 | ✓ HUB-verified mark | none | hidden |
 | "N thành viên · city" | members 72/72; no city | "N thành viên" |
 | tagline, domain chips | 72/72, 70/72 | yes |
@@ -41,14 +41,14 @@ TASK 24.1 precheck, SOT delta matrix and contract freeze for `/library`, from `L
 | "Tìm nhanh" per tab | Đang gọi vốn, Tìm pilot, Tìm đồng sáng lập, Mở nhận cố vấn, Kỹ thuật, Hà Nội … | unchanged data-backed chips (need / openness / place have no data) |
 | Sort "Hoạt động gần nhất" | no activity data | existing sorts kept |
 
-## Human decisions (open)
+## Human decisions (closed by the PO, 29/09)
 | # | Decision |
 |---|---|
-| H1 | Show the self-declared programmes (D7 excludes them) on the Startup card? |
-| H2 | Map `startup.json` stages (Ideation … Scale-up) to the venture stages Ý tưởng / MVP / Pilot / Đang bán / Tăng trưởng (DEC-PDF-D5)? |
-| H3 | Source for need, openness, city, verification, badges and expertise (the startup spreadsheet has city sheets and private contacts; not approved) |
-| H4 | Founder facets while the designed groups have no data |
-| H5 | "Xem hồ sơ" / "Theo dõi" / "Kết nối" destinations once profiles, follow and connect exist |
+| H1 | programme history stays out — [DEC-2909-L2H1](../../decisions/DECISION_LOG.md#dec-2909-l2h1) |
+| H2 | stages mapped to IDEA / MVP / PILOT / SELLING / GROWTH where deterministic, else unmapped — [DEC-2909-L2H2](../../decisions/DECISION_LOG.md#dec-2909-l2h2) (implemented) |
+| H3 | no spreadsheet source: no location, needs or openness — [DEC-2909-L2H3](../../decisions/DECISION_LOG.md#dec-2909-l2h3) |
+| H4 | only data-backed founder filters — [DEC-2909-L2H4](../../decisions/DECISION_LOG.md#dec-2909-l2h4) |
+| H5 | founder CTAs stay disabled for external records — [DEC-2909-L2H5](../../decisions/DECISION_LOG.md#dec-2909-l2h5) |
 
 ## Related
 - [../l1-l2-realign/alpha-backlog.md](../l1-l2-realign/alpha-backlog.md) — item 10

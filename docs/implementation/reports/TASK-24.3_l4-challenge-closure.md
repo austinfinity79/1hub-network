@@ -23,5 +23,9 @@ One Programme / Challenge aggregate with subtype; DRAFT → PUBLISHED in the ses
 ## Pixel
 Not applicable: no approved L4 frame, and the WF04 operator demo claims no pixel parity (DEC-WF04-H1). P0 / P1 / P2 = 0.
 
+
+## PO freeze
+Open questions L4-H1 / L4-H2 were closed by the PO on 29/09 ([DEC-2909](../../decisions/DECISION_LOG.md#dec-2909)): L28–L36 stay FUTURE; no real operator product in Alpha.
+
 ## Related
 - [TASK-24.2_l3-clb-closure.md](TASK-24.2_l3-clb-closure.md) · [WF04_COMPLETION_AUDIT.md](WF04_COMPLETION_AUDIT.md)

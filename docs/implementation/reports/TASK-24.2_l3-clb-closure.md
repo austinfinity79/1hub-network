@@ -38,5 +38,9 @@ Membership stays WF03: a self-filed join (WF02-S04, "Xin vào …" on L19) is PE
 
 P0 0, P1 0, P2 0.
 
+
+## PO freeze
+Open questions L3-H1 / L3-H2 were closed by the PO on 29/09 ([DEC-2909](../../decisions/DECISION_LOG.md#dec-2909)): the five frames stay FUTURE.
+
 ## Related
 - [TASK-24.1_l2-library-delta.md](TASK-24.1_l2-library-delta.md) · [TASK-22.4_l3-chapter-wf03.md](TASK-22.4_l3-chapter-revision.md)

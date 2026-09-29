@@ -109,6 +109,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 24.3 — L4 CHALLENGE OPERATIONS: GREEN, no in-scope delta (local, not pushed, not deployed)** ([report](reports/TASK-24.3_l4-challenge-closure.md), [inventory](task-24/l4-challenge-inventory.md), [DEC-L4-D1](../decisions/DECISION_LOG.md#dec-l4-d1)). The 29/09 L4 board draws only public / participant screens, all FUTURE; the WF04 operator demo is unchanged and verified. STOP checkpoint before 24.4.
 
+**TASK 24 PO FREEZE (29/09)** ([DEC-2909](../decisions/DECISION_LOG.md#dec-2909)): L2-H1…H5, L3-H1…H2, L4-H1…H2 CLOSED. Implemented: startup stages on the Alpha vocabulary in the Library (L2-H2); the rest confirm the current state.
+
 ## Completed (committed)
 
 | Task | Scope |

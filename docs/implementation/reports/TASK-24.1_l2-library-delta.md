@@ -37,5 +37,9 @@ Sources unchanged: problem dataset (47), `startup.json` (72 startups, 84 founder
 
 P0 0, P1 0, P2 0. P3 / design inconsistencies: the L15b / L15c tab bar leaves the inactive "Bài toán" bold (L15 style kept); single-word marks drawn both "Tr" and "CR" (the lead "Tr" followed). Intentional: data-omitted sections, so the grid starts 37 px above the frame's.
 
+
+## PO freeze
+Open questions H1–H5 were closed by the PO on 29/09 ([DEC-2909](../../decisions/DECISION_LOG.md#dec-2909)); H2 is implemented (startup stages on the Alpha vocabulary).
+
 ## Related
 - [../task-24/l2-library-delta.md](../task-24/l2-library-delta.md) · [LIBRARY-DATA_deploy.md](LIBRARY-DATA_deploy.md)

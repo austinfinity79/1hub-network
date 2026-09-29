@@ -23,11 +23,11 @@ The board holds **no operator-side frame** (no dashboard, configuration, applica
 ## Current L4 implementation (unchanged)
 WF04 operator demo: one canonical Programme / Challenge aggregate (subtype), read-only `GET /api/v1/demo/programmes[/{id}]` scoped by `programme:read`, operator edits in the browser session only (no database or audit writes), `/demo/programmes` guarded server-side. No scoring, winner, judging, matching or recommendation logic exists or is added.
 
-## Human decisions (open)
+## Human decisions (closed by the PO, 29/09)
 | # | Decision |
 |---|---|
-| L4-H1 | Promote any of L28–L36 out of FUTURE; each needs its entity and rules (Problem, Q&A, Updates, public submitted-teams list, Summit, EventRegistration) |
-| L4-H2 | A drawn operator-side L4 (real persistence for programme set-up, applicant management, review) to replace the session demo |
+| L4-H1 | L28–L36 stay FUTURE, participant-side reference only — [DEC-2909-L4H1](../../decisions/DECISION_LOG.md#dec-2909-l4h1) |
+| L4-H2 | no real operator-side Challenge product in Alpha — [DEC-2909-L4H2](../../decisions/DECISION_LOG.md#dec-2909-l4h2) |
 
 ## Related
 - [l3-clb-inventory.md](l3-clb-inventory.md) · [../reports/TASK-24.3_l4-challenge-closure.md](../reports/TASK-24.3_l4-challenge-closure.md)
