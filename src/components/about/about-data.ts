@@ -111,7 +111,12 @@ export const MISSIONS = [
     title: 'Xây dựng nền tảng dữ liệu đổi mới sáng tạo Việt Nam',
     caption: 'ẢNH · NỀN TẢNG DỮ LIỆU',
     tone: 'dark',
-    photo: null,
+    // The frame is wider than the picture: keep the whole map, north included, in the crop.
+    photo: about(
+      'about-data-platform-vietnam.webp',
+      'Bản đồ Việt Nam kết nối trong mạng lưới dữ liệu số',
+      'center 30%',
+    ),
   },
 ] as const
 
