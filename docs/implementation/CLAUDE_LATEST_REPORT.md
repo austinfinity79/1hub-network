@@ -1,43 +1,46 @@
 # Claude Task Report
 
 ## Task
-HOTFIX FAVICON — DEPLOY TO VPS. Full report: [reports/TASK-22-FAVICON-HOTFIX_favicon-hotfix.md](reports/TASK-22-FAVICON-HOTFIX_favicon-hotfix.md).
+TASK 22-L1-L2-SOT-REALIGN — L1 CLOSURE (WF01 business flow + Figma correction). Full report: [reports/TASK-22-L1-SOT-REALIGN_l1-closure.md](reports/TASK-22-L1-SOT-REALIGN_l1-closure.md). Evidence: [l1-l2-realign/l1-closure.md](l1-l2-realign/l1-closure.md).
 
 ## Verdict
-**DEPLOYED GREEN (favicon). Overall release NOT READY.** `935fd4ada12160f744d87c64bcf17409309401a0` (tag `internal-alpha-preview-08`) runs on https://1hubnetwork.io.vn. The edge blockers (HTTP/3, Referrer-Policy, health check) remain.
+**GREEN for L1.** Local only: not pushed, not deployed. L2 not started.
 
 ## Scope implemented
-- `src/app/icon.png` replaced by the supplied 32 × 32 file, byte for byte (sha256 `654523e7ca1b…`).
-- Freeze, backup, deploy of the exact SHA; domain verification in a fresh browser context.
+- Open sign-up through the verified one-time link; token, expiry, single use, rate limits and cookie unchanged.
+- Onboarding ACC-05 → ACC-06 basic → ACC-07 capability → ACC-08 role → ACC-09 review → ACC-10 → `/me`, with a server resolver and resume on every stage.
+- A declared role or HUB position grants nothing: the named unit gets a `PENDING_APPROVAL` / `SELF_DECLARED` membership request; no approval flow was invented.
+- Google control and AI blocks drawn as the board draws them; neither fakes a result.
 
 ## Files changed
-- Product: `src/app/icon.png` (commit `935fd4a`).
-- Docs: this report, `reports/TASK-22-FAVICON-HOTFIX_favicon-hotfix.md`, `INTERNAL_ALPHA_PREVIEW_RELEASE.md`, `P0_STATUS.md`.
+- Product: `src/app/(onboarding)/onboarding/**`, onboarding shell, `inert.tsx`, `guard.ts`, `roles.ts`, `auth/account.ts`, `routes.ts`, AUTH1 focus ring, screen contracts YAML, references ACC-05…ACC-09 (commit `d0ca155`); business and data in `5fcbae1`.
+- Tests: `tests/visual/support/onboarding.ts`, WF01 specs, QA vocabulary fixture, specs of other workflows moved to the new helpers (commit `551b8e6`).
+- Docs: decision log (DEC-L1R, superseded marks), API contract §18, WF01 workflow and contract notes, UAT matrix, `l1-l2-realign/`, `P0_STATUS.md`, this report.
 
 ## Migrations / data
-None. Migrate 9 × skip. Backup `onehub-20260928T164551Z.dump`. DB row counts unchanged.
+`010_p0_onboarding_four_stage.sql` (additive, in `5fcbae1`); none added since. Local and test database only. Taxonomy rows (COUNTRY 1, SPECIALIZATION 8) wait for PO approval before any deploy.
 
 ## Tests
-format, lint, typecheck, build PASS; unit 257 / 257; targeted specs 73 / 73.
+format, lint, typecheck, build PASS; unit 258 / 258; database and API 406 / 406; WF01 188 / 188; UAT 14 / 14; regression gate GREEN by the PO rule of 2026-09-29 (WF01 188, auth and security 46, landing 10, shell 14, WF02 102, WF03 69, WF04 115, WF05 66, About and Library 13; 0 product failures); runtime #418 0, 5xx 0, broken assets 0, console errors 0.
 
 ## Visual QA
-Not a screen change. Every page links `/icon.png?18acfe949f7832f0`; the asset is 200 `image/png` with the new bytes on all three edge nodes and decodes 32 × 32 in a fresh browser context. #418 0, 5xx 0.
+ACC-05…ACC-10 at 1440 × 900 DPR 1: P0 / P1 / P2 = 0, P3 = 1 recorded (order of two role chips in the ACC-09 preview). Typography 0 violations. Responsive 1440 / 1024 / 768 / 390: 28 / 28. No baseline overwritten.
 
 ## Deviations / blockers
-- The prompt's path `/mnt/data/favicon-32x32(1).png` does not exist here; the newest `favicon-32x32.png` (package `favicon_io (1).zip`, also on the Desktop) was used.
-- The supplied image has black corner pixels instead of transparent ones; used as supplied.
-- The bare `/icon.png` is still served from the edge cache with the previous icon on two nodes; pages do not link to it. Purge it in the OneShield panel.
-- The tab icon was not checked by eye; confirm in a private window.
-- Blocking gaps for this task: 0. Release blockers unchanged: EDGE-H3-POST-RESEND; external: Referrer-Policy, monitor endpoint.
+- ROLE and REVIEW are two screens (stage 3, stage 4), as the workbook and the board draw them.
+- Human business decisions: D-H1 HUB verification authority; D-S1 specialisation list.
+- External: Google OAuth client (configuration blocker); AI provider (optional capability).
+- Pre-commit review: no security finding; 2 major data-loss defects (typed skill, browser Back) and 4 minor ones reproduced by tests and fixed before the commit.
+- Blocking gaps for L1: 0.
 
 ## Git
-- Branch: `main`; start HEAD `63123ce`, checked again before each commit
-- Implementation commit: `935fd4ada12160f744d87c64bcf17409309401a0`
+- Branch: `main`; start HEAD `5fcbae187b126978bcc77eabdc4565a1f13660af`, compared again before each commit
+- Implementation commit: `5fcbae1`, `d0ca155`, `551b8e6`
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
-- Push status: **PASS** (2026-09-28, on PO request): `main`, `deploy/vps-foundation` and the tag `internal-alpha-preview-08` pushed fast-forward, no force; every remote ref compared with the local one. This report's own commit is pushed with them
-- Remote HEAD: `63123cea23d29286e032c101a07f42eb289ee652` before this push
+- Push status: **NOT RUN** (the task forbids a push)
+- Remote HEAD: `53599925f5aef6abf20127e293611e4f758f898b` (tracking ref), not changed by this task
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-The OneShield changes (HTTP/3 off, Referrer-Policy, health check path, purge `/icon.png`), then the auth transport re-test. Not started automatically.
+TASK 22-L1-L2-SOT-REALIGN — L2 implementation, after the PO's review of L1. Not started automatically.

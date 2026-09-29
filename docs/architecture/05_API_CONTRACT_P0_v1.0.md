@@ -1200,3 +1200,95 @@ The following are intentionally deferred to the next task, **DB Schema v1**, and
 - literal legal document version strings.
 
 The API resource semantics above are frozen independently of those physical choices.
+
+---
+
+# 18. Amendment A1 — four-stage onboarding and open sign-up (2026-09-29)
+
+Decision record: DEC-L1R in `docs/decisions/DECISION_LOG.md`. This section is appended so that the line references to the sections above stay valid; where it differs from §4, this section applies. No error code is added.
+
+## 18.1 Sign-up
+
+`POST /auth/magic-link` follows §4.1 as written: one flow for first-time creation and returning login, and no disclosure of whether an account exists. The invite-only overlay of DEC-AUTH-EMAIL-D1 (403 for an address that is not provisioned) is withdrawn. The account is created when the link is consumed, never by the request.
+
+## 18.2 Onboarding state
+
+`GET /me/onboarding` reports the first incomplete step of the four-stage flow:
+
+```json
+{
+  "completed": false,
+  "current_step": "BASIC",
+  "intent": null
+}
+```
+
+`current_step` is one of `INTRO`, `BASIC`, `CAPABILITY`, `ROLE`, `REVIEW`, or `null` once completed. `POST /auth/magic-link/consume` returns the same value as `onboarding.next_step`. `PUT /me/onboarding/intent` stays as in §4.2; no screen calls it and the state above does not depend on it.
+
+### PUT `/me/onboarding/stage`
+
+Maps: **WF01-S10** (ACC-07) and **WF01-S05** (ACC-08).
+
+```json
+{
+  "completed": "CAPABILITY"
+}
+```
+
+`completed` is `CAPABILITY` or `ROLE`. The server records the time once; a stage can be passed only when every stage before it is. Any other field is refused. Response `200` returns the onboarding state.
+
+Errors: `PROFILE_VALIDATION_FAILED`, `ONBOARDING_REQUIREMENTS_MISSING`.
+
+## 18.3 Own profile
+
+`GET /me/profile` also returns `full_name`, `country`, `phone`, `specializations`, and for each experience record `started_on`, `ended_on` (months, `"YYYY-MM"`) and `description`. `PATCH /me/profile` also accepts `full_name`, `country_id`, `phone`, `specialization_ids` (at most five) and the three experience fields. `phone` and `full_name` are returned by this resource only, to the owner.
+
+The limit of five items over `domain_ids` and `skill_ids` together is withdrawn.
+
+Errors: `PROFILE_VALIDATION_FAILED`, `VOCABULARY_ITEM_INACTIVE`, `PROFILE_DEACTIVATED`.
+
+`GET /vocabularies/{type}` also serves `COUNTRY` and `SPECIALIZATION`.
+
+## 18.4 Declared roles
+
+### GET `/me/onboarding/roles`
+
+### PUT `/me/onboarding/roles`
+
+Maps: **WF01-S05** (ACC-08).
+
+```json
+{
+  "roles": ["HUB_MEMBER", "INNOVATOR"],
+  "hub_claims": [
+    {"organization_id": "org_...", "position": "Phó trưởng chapter", "period": "2024 – nay"}
+  ]
+}
+```
+
+Rules:
+- `roles` is a subset of `HUB_MEMBER`, `INNOVATOR`, `STARTUP_FOUNDER`, `ORGANIZATION_REPRESENTATIVE`, `INVESTOR_REPRESENTATIVE`, `INNOVATION_ENTHUSIAST`;
+- `hub_claims` needs `HUB_MEMBER`, names requestable organizations only, one claim per organization;
+- the call replaces the declaration as a whole and works only while onboarding is open;
+- a declaration creates no membership, leadership, RoleAssignment, capability or managed scope.
+
+Response `200`: the stored declaration, each claim with its organization reference.
+
+Errors: `PROFILE_VALIDATION_FAILED`, `PROFILE_DEACTIVATED`.
+
+## 18.5 Complete onboarding
+
+`POST /me/onboarding/complete` is sent by **WF01-S07** (ACC-09). The minimum of §4.6 is extended: full name, display name, country, region, stages `CAPABILITY` and `ROLE` passed, and acceptance of both current documents. On the first completion each `hub_claims` entry becomes a `CommunityMembership` in `PENDING_APPROVAL` with source `SELF_DECLARED`; an organization where a membership already stands is skipped.
+
+Errors: `ONBOARDING_REQUIREMENTS_MISSING` with field/group details.
+
+## 18.6 Endpoint → screen mapping
+
+| Screen | Endpoint(s) |
+|---|---|
+| WF01-S09 (ACC-05) | `GET /me/onboarding` |
+| WF01-S06 (ACC-06) | `GET/PATCH /me/profile`, avatar, vocabularies |
+| WF01-S10 (ACC-07) | `GET/PATCH /me/profile`, vocabularies, `PUT /me/onboarding/stage` |
+| WF01-S05 (ACC-08) | `GET/PUT /me/onboarding/roles`, `PUT /me/onboarding/stage` |
+| WF01-S07 (ACC-09) | `/legal/current`, `/me/consents*`, `/me/visibility`, `POST /me/onboarding/complete` |
+| WF01-S08 (ACC-10) | read only |

@@ -29,6 +29,8 @@ Production screens follow the Design Pixel SOT, the screen contract and `design-
 ## E. Targeted testing
 During a task: affected unit, affected DB/API, target Playwright, target pixel, direct dependencies. **Full** workflow/phase regression when a workflow closes, a migration has broad impact, the auth/security foundation changes, a shared global primitive changes, or for a release candidate.
 
+**Amendment of 2026-09-29 (PO, acceleration rule).** The full protected regression runs only when shared auth, session or RBAC infrastructure changed materially, or when a targeted smoke reveals a regression. A closure such as L1 uses: its own workflow in full; auth, security, token and session in full; its pixel and responsive checks in full; P0-LANDING and P0-SHELL by targeted smoke; WF02 by impacted-route smoke; WF03, WF04 and WF05 by one or two representative cases each; About and Library by route, render and navigation smoke; build, typecheck, unit and database tests as before. When all of these pass, the regression gate is GREEN.
+
 ## F. Targeted pixel
 | Change | Pixel scope |
 |---|---|

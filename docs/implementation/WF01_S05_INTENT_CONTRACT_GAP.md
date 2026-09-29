@@ -1,5 +1,7 @@
 # WF01 S05 Intent Contract Gap
 
+> **SUPERSEDED 2026-09-29 by [DEC-L1R](../decisions/DECISION_LOG.md#dec-l1r) (TASK 22-L1-L2-SOT-REALIGN).** The purpose step left the onboarding. `/onboarding/purpose` now holds stage 3, "Vai trò trong hệ sinh thái" (ACC-08); the intent endpoint stays as contracted and no screen calls it. Current contracts: [l1-screen-contracts.md](l1-l2-realign/l1-screen-contracts.md). The text below is kept as history.
+
 **Status: HUMAN APPROVED — P0** (2026-09-26). The gap recorded before WF01-S05 was resolved by
 decisions DEC-WF01-S05-D1..D6; `/onboarding/purpose` is implemented against them.
 

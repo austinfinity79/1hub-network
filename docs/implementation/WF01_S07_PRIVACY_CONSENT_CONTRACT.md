@@ -1,5 +1,7 @@
 # WF01 S07 Privacy Consent Contract
 
+> **SUPERSEDED 2026-09-29 by [DEC-L1R](../decisions/DECISION_LOG.md#dec-l1r) (TASK 22-L1-L2-SOT-REALIGN).** `/onboarding/privacy` now holds stage 4, "Rà soát và hoàn tất" (ACC-09). The discovery switch and the one acknowledgement with two consent records stay, as two separate controls; "Hoàn tất hồ sơ" completes onboarding. Current contracts: [l1-screen-contracts.md](l1-l2-realign/l1-screen-contracts.md). The text below is kept as history.
+
 **Status: HUMAN APPROVED — P0** (2026-09-26). The audit's open questions H1–H8 were resolved as [DEC-WF01-S07-D1..D8](../decisions/DECISION_LOG.md#dec-wf01-s07-d1). This contract is implemented by WF01-S07.
 
 **Release blocker `PRODUCTION_LEGAL_CONTENT_REQUIRED`:** real Terms and Privacy text and versions are release content. Locally, clearly marked non-production fixtures are served (`content/legal-fixtures`). No placeholder prose ships as policy.

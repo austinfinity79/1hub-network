@@ -1,5 +1,7 @@
 # WF01 S06 Profile Field Contract
 
+> **SUPERSEDED 2026-09-29 by [DEC-L1R](../decisions/DECISION_LOG.md#dec-l1r) (TASK 22-L1-L2-SOT-REALIGN).** `/onboarding/profile` now holds stage 1, "Thông tin cơ bản" (ACC-06): full name, display name, country and province are required; fields, specialisations and skills moved to stage 2 (ACC-07). Current contracts: [l1-screen-contracts.md](l1-l2-realign/l1-screen-contracts.md). The text below is kept as history.
+
 **Status: HUMAN APPROVED — P0** (2026-09-26). The audit's open questions H1–H6 were resolved as [DEC-WF01-S06-D1..D6](../decisions/DECISION_LOG.md#dec-wf01-s06-d1). This contract is implemented by WF01-S06.
 
 Sources:

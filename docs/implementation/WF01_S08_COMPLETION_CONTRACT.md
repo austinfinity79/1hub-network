@@ -1,5 +1,7 @@
 # WF01 S08 Completion Contract
 
+> **SUPERSEDED 2026-09-29 by [DEC-L1R](../decisions/DECISION_LOG.md#dec-l1r) (TASK 22-L1-L2-SOT-REALIGN).** `/onboarding/complete` (ACC-10) completes nothing any more: completion is the explicit action of stage 4, and needs the stage 1 fields and both passed stages as well. Current contracts: [l1-screen-contracts.md](l1-l2-realign/l1-screen-contracts.md). The text below is kept as history.
+
 **Status: HUMAN APPROVED — P0** (2026-09-26). The audit's H1–H8 were resolved as [DEC-WF01-S08-D1..D8](../decisions/DECISION_LOG.md#dec-wf01-s08-d1). Implemented by WF01-S08.
 
 ## 1. Completion trigger
