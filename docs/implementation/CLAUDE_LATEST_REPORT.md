@@ -1,38 +1,35 @@
 # Claude Task Report
 
 ## Task
-LIBRARY DATA UPDATE + DEPLOY. Full report: [reports/LIBRARY-DATA_deploy.md](reports/LIBRARY-DATA_deploy.md).
+ABOUT IMAGE HOTFIX + DEPLOY. Full report: [reports/ABOUT-IMAGE_deploy.md](reports/ABOUT-IMAGE_deploy.md).
 
 ## Verdict
-**DEPLOYED GREEN.** `2c6cc4ac4f42df252d81afc467ec541c622a07af` runs on https://1hubnetwork.io.vn.
+**DEPLOYED GREEN.** `ec33ee258acb1d5d832c211d6efb1732e6cde8c4` runs on https://1hubnetwork.io.vn.
 
 ## Scope implemented
-- "Bài toán" runs on the supplied problem dataset (47 records) through a server-side adapter; facets, counts and search derive from it; the demo fixture is removed; missing prize, deadline, team count and logo render nothing invented.
-- Public source labels removed from all three Library tabs ([DEC-L15-D9](../decisions/DECISION_LOG.md#dec-l15-d9)).
+- `/about` mission 03 shows the supplied Vietnam network picture (1600 × 900 webp, 160 KB, from a 1.6 MB PNG) instead of the labelled placeholder; layout, frame and animation unchanged.
 - Deployed the exact SHA with the existing tooling; no database change.
 
 ## Files changed
-- `src/lib/library/dir-bai-toan.json`, `problem-adapter.ts`, `problem-adapter.test.ts`, `problem-source.ts`; `src/components/library/library-client.tsx`, `library-model.ts`, `library.tsx`, `library.module.css`; `library-data.ts` deleted; `src/app/(public)/library/page.tsx`; `.prettierignore`; `tests/visual/specs/public-library.spec.ts`.
-- Docs: `DECISION_LOG.md` (DEC-L15-D9), this report, the deploy report, `P0_STATUS.md`. Deploy branch: `LIBRARY_DATA_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md`.
+- `public/about/about-data-platform-vietnam.webp`, `src/components/about/about-data.ts`.
+- Docs: this report, the deploy report, `P0_STATUS.md`. Deploy branch: `ABOUT_IMAGE_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md`.
 
 ## Migrations / data
-None. Backup `onehub-20260929T104837Z.dump` by procedure.
+None. Backup `onehub-20260929T110300Z.dump` by procedure.
 
 ## Tests
-format, lint, typecheck, build PASS; unit 17 / 17; `public-library` 16 / 16; 1440 / 1024 / 768 / 390 clean on all tabs, locally and on the domain.
+format, lint, typecheck, build PASS; `/about` at 1440 / 1024 / 768 / 390 locally and on the domain: picture loaded, fills the frame, no caption, no broken image, no overflow, #418 0, console 0, CLS 0 on the domain.
 
 ## Visual QA
-Layout unchanged (gutter 45, columns 358 / 705 / 1052, cards 324 × 431). Card rows now checked by geometry, not pixels (record colours and text).
+Whole map in the crop at 1440, 1024 and 390; at 768 the 4 : 1 frame keeps the north and centre and cuts the southern tip.
 
 ## Deviations / blockers
-- The dataset was read from `~/Downloads/dir-bai-toan.json`; `/mnt/data` does not exist on this machine.
-- Prize hidden on all 47 (`giai_thuong` null), including the 17 whose display reads "Đang đàm phán".
-- Hero "Tìm nhanh" chip "AI" matches no problem tag (the data says "Dữ liệu & AI"); chips unchanged.
+- The file was delivered as `~/Downloads/anh-03 .png` (a space before the extension; an identical `anh-03  copy.png` sits beside it).
 - Blocking gaps: 0.
 
 ## Git
-- Branch: `main`; start HEAD `c448885567aec8f11446e30afb494a9210964fc8`; no concurrent change
-- Implementation commit: `2c6cc4a` (deployed)
+- Branch: `main`; start HEAD `3eecbede164120d3f540ae789ec125a0c53fcd70`; no concurrent change
+- Implementation commit: `ec33ee2` (deployed)
 - Report/final commit: the commit containing this report
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** (not requested)
@@ -40,4 +37,4 @@ Layout unchanged (gutter 45, columns 358 / 705 / 1052, cards 324 × 431). Card r
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO review of `/library` on the domain. Not started automatically.
+PO review of `/about` on the domain. Not started automatically.

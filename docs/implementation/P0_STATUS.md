@@ -99,6 +99,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **LIBRARY DATA UPDATE: DEPLOYED GREEN** ([report](reports/LIBRARY-DATA_deploy.md), [DEC-L15-D9](../decisions/DECISION_LOG.md#dec-l15-d9)). `2c6cc4a` runs on https://1hubnetwork.io.vn: "Bài toán" shows the supplied problem dataset (47), facets and counts from the records, nothing invented for missing values; no Library tab names a data source. Rollback `91ba7a8`.
 
+**ABOUT IMAGE HOTFIX: DEPLOYED GREEN** ([report](reports/ABOUT-IMAGE_deploy.md)). `ec33ee2` runs on https://1hubnetwork.io.vn: `/about` mission 03 shows the Vietnam network picture instead of the placeholder; layout unchanged. Rollback `2c6cc4a`.
+
 ## Completed (committed)
 
 | Task | Scope |
