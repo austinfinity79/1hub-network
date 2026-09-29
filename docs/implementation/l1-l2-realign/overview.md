@@ -48,10 +48,10 @@ Details: [frame-inventory.md](frame-inventory.md).
 
 No deploy and no push in this task. The PO chose to receive L1 first: this run ends after phase 2 with the L1 tests, pixel audit and protected regression; phases 3 and 4 follow in the next run.
 
-State: L1 closed at `5d8cf56` ([l1-closure.md](l1-closure.md)). L2 (phases 3, 4 and its part of 5): [l2-closure.md](l2-closure.md).
+State: L1 closed at `5d8cf56` ([l1-closure.md](l1-closure.md)). L2 (phases 3, 4 and its part of 5): [l2-closure.md](l2-closure.md). PO decisions of 2026-09-29 applied: [po-decision-freeze.md](po-decision-freeze.md).
 
 ## Related
 - [frame-inventory.md](frame-inventory.md) · [l1-delta-matrix.md](l1-delta-matrix.md) · [l2-delta-matrix.md](l2-delta-matrix.md) · [open-decisions.md](open-decisions.md)
 - [l1-screen-contracts.md](l1-screen-contracts.md) · [l1-conflict-record.md](l1-conflict-record.md) · [l1-closure.md](l1-closure.md) · [l1-regression-gate.md](l1-regression-gate.md)
-- [l2-delta-team.md](l2-delta-team.md) · [l2-screen-contracts.md](l2-screen-contracts.md) · [l2-closure.md](l2-closure.md)
+- [l2-delta-team.md](l2-delta-team.md) · [l2-screen-contracts.md](l2-screen-contracts.md) · [l2-closure.md](l2-closure.md) · [po-decision-freeze.md](po-decision-freeze.md)
 - [../../design-revision/05_BUSINESS_API_DATA_CONFLICT_MATRIX.md](../../design-revision/05_BUSINESS_API_DATA_CONFLICT_MATRIX.md) — the earlier HD register

@@ -7,6 +7,8 @@
 
 > **Amended 2026-09-29 (TASK 22-L1-L2-SOT-REALIGN).** The BA workbook and the L1 flow board of 28/09 supersede the happy path and the screen contracts of WF01-S05 … S08 below. Current flow: AUTH → ACC-05 intro → ACC-06 basic information → ACC-07 capability and field → ACC-08 ecosystem role → ACC-09 review and finish → ACC-10 → `/me`. Sign-up is open to any valid e-mail through the verified magic link. Source of the current rules: [DEC-L1R](../decisions/DECISION_LOG.md#dec-l1r) and [l1-screen-contracts.md](../implementation/l1-l2-realign/l1-screen-contracts.md). The text below is kept as history.
 
+> **PO decision freeze 2026-09-29 ([DEC-PDF](../decisions/DECISION_LOG.md#dec-pdf)).** Specialisation is the frozen list of eight controlled items (D6A). A HUB unit or position named in ACC-08 is a self-declared request that stays pending until a Platform Admin verifies it; a Chapter or CLB leader cannot, and a declaration grants nothing (D6B). No verification screen exists yet: the Platform Admin uses the existing ops member review. Onboarding never waits for it.
+
 ## Final happy path
 
 ```text

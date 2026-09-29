@@ -7,6 +7,8 @@
 
 > **Amended 2026-09-29 (TASK 22-L1-L2-SOT-REALIGN, L2).** The BA workbook (WF-02) and the L2 flow board of 28/09 supersede the flow and the screen contracts below where they differ. `/me` is "Hồ sơ của tôi" (FP1-OWN) with in-place editing; `/projects` (WF02-S08, ME7) lists the member's ventures and pending invitations. A venture is created with name, field, description, stage and the creator's role, starts DRAFT and stays visible to its team only; members carry Biên tập or Xem; invitations are e-mailed and joined only by accepting. Source of the current rules: [DEC-L2R](../decisions/DECISION_LOG.md#dec-l2r) and [l2-screen-contracts.md](../implementation/l1-l2-realign/l2-screen-contracts.md). The text below is kept as history.
 
+> **PO decision freeze 2026-09-29 ([DEC-PDF](../decisions/DECISION_LOG.md#dec-pdf)).** A venture is DRAFT and PRIVATE until its owner chooses "Công khai" in the editor; the server requires name, field, description, stage and the creator's role, and publishing makes it ACTIVE and PUBLIC without review (D1). Team invitation is by e-mail only; invitation by link is deferred (D2). Profile completion stays the server's frozen groups, never a field count (D3). The invitation e-mail uses the approved copy (D4). Stages are IDEA, MVP, PILOT, SELLING, GROWTH (D5).
+
 ## Final flow
 
 ```text

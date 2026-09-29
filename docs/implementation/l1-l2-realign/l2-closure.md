@@ -73,6 +73,8 @@ Privilege regressions: 0.
 | D-S1, D-H1 | specialisation list, HUB verification (from L1) | human business decisions |
 | VENTURE_STAGE | the five stage items | PO approval before any deploy |
 
+All seven were closed by the PO on 2026-09-29 ([DEC-PDF](../../decisions/DECISION_LOG.md#dec-pdf), [po-decision-freeze.md](po-decision-freeze.md)); D-A1 and invitation by link are deferred.
+
 ## Related
 - [overview.md](overview.md) · [l2-delta-matrix.md](l2-delta-matrix.md) · [l2-delta-team.md](l2-delta-team.md) · [l2-screen-contracts.md](l2-screen-contracts.md) · [l2-regression-gate.md](l2-regression-gate.md) · [open-decisions.md](open-decisions.md)
 - [../WF02_UAT_MATRIX.md](../WF02_UAT_MATRIX.md) · [../reports/TASK-22-L2-SOT-REALIGN_l2-closure.md](../reports/TASK-22-L2-SOT-REALIGN_l2-closure.md)

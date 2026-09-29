@@ -1357,7 +1357,31 @@ Venture DTO adds `stage`, `permission` (`OWNER | EDIT | VIEW`, the viewer's own)
 | Screen | Endpoint(s) |
 |---|---|
 | WF02-S01 (FP1-OWN) | `GET/PATCH /me/profile`, `/me/profile/completion`, `/me/network`, `/me/ventures` |
-| WF02-S05 (PRJ1–PRJ3, editor) | `POST /ventures`, `GET/PATCH /ventures/{id}`, `POST …/team/invitations`, vocabularies |
+| WF02-S05 (PRJ1–PRJ3, editor) | `POST /ventures`, `GET/PATCH /ventures/{id}`, `POST /ventures/{id}/publish` (§20), `POST …/team/invitations`, vocabularies |
 | WF02-S06 (team) | `/ventures/{id}/team*` |
 | WF02-S07 (ME0) | as §14, plus `/me/venture-invitations` |
 | WF02-S08 (ME7) | `GET /me/ventures`, `GET /me/venture-invitations`, `POST …/invitations/{id}/accept`, `…/decline` |
+
+---
+
+# 20. Amendment A3 — Alpha PO decision freeze (2026-09-29)
+
+Source: [DEC-PDF](../decisions/DECISION_LOG.md#dec-pdf). Additive; nothing above changes except where named.
+
+## 20.1 Venture publication
+
+`POST /ventures/{ventureId}/publish` — no body. The owner only (`403 SCOPE_FORBIDDEN` for a member, the same `404` for anyone else, `401` for a guest). The venture must hold `name`, at least one of `domain_ids`, `summary`, `stage_id` and the creator's `owner_role_label`; otherwise `422 PROFILE_VALIDATION_FAILED` with each missing field as `required`, and nothing changes. `ARCHIVED` is `409`. Success is `200` with the venture: `status` `ACTIVE` (a `DRAFT` becomes `ACTIVE`), `visibility` `PUBLIC`; a public venture answers as it is. Audited as `VENTURE_PUBLISHED`. No review, approval or moderation step exists; `submit-for-review` stays absent (§5.3). `PATCH /ventures/{id}` refuses `visibility` and `status`, and a public venture keeps its `owner_role_label`.
+
+The venture DTO gains `visibility` (`PRIVATE` | `PUBLIC`) and `stage.code`. PUBLIC is the owner's choice recorded on the record; no public venture read path exists in P0, so a PUBLIC venture is still read only by its team.
+
+## 20.2 Stages
+
+`stage_id` references one `VENTURE_STAGE` item; the stable codes are `IDEA`, `MVP`, `PILOT`, `SELLING`, `GROWTH` (labels Ý tưởng, MVP, Pilot / Thử nghiệm, Đang bán, Tăng trưởng). A code or a label is not accepted in place of the id.
+
+## 20.3 Invitation e-mail
+
+The approved copy: subject "Bạn được mời tham gia {venture} trên 1hub.network"; body "{inviter} mời bạn tham gia {venture} với vai trò {role}." (without a role the sentence ends at the venture); call to action "Xem lời mời" to `/projects`. No token, id or level in the message. Invitation by link is deferred and has no endpoint.
+
+## 20.4 HUB declarations
+
+A membership filed from the onboarding declaration carries `declaration: true` in the ops DTOs (§8.3). `PATCH /ops/organizations/{orgId}/memberships/{membershipId}` decides such a membership only with `membership:confirm` held platform-wide (Platform Admin); an organization-scoped holder gets `403 SCOPE_FORBIDDEN` and nothing changes. The member detail's `permissions` follow the same rule. Ordinary join requests are unchanged.

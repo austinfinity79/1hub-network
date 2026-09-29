@@ -9,10 +9,10 @@ Automated in `tests/visual/specs/wf02-uat-journey.spec.ts` (Playwright, 1440×90
 | B | Create Project | PRJ1 names the five required fields and sends nothing; then DRAFT PROJECT, owner = the session's profile, no team row; ME7 shows "Chủ sở hữu" | PASS |
 | C | Create Startup | as B for STARTUP | PASS |
 | D | Duplicate | double click → one POST; the same `Idempotency-Key` again → the same id; refresh, "Quay lại", "Lưu nháp", browser Back → still one venture | PASS |
-| E | Stage | Pilot stored and shown after reload; changed to "Đang bán" in the editor; ME7 shows it | PASS |
+| E | Stage | PILOT ("Pilot / Thử nghiệm") stored by id and answered with its code; changed to "Đang bán" in the editor; ME7 shows it (DEC-PDF-D5) | PASS |
 | F | Creator role | Co-founder stored and shown in the wizard, the editor and the owner row; 0 role assignments, leadership or community memberships; session capabilities `[]`; `/ops/network` 404; "Thành viên" as own role is still OWNER | PASS |
-| G | E-mail invitation | PRJ2 → PENDING_CONFIRMATION with EDIT and Co-founder, no profile; the outbox message names venture, role and level, links to `/projects`, carries no token | PASS |
-| H | Link invitation | NOT SUPPORTED BY CONTRACT (D-T1): "Sao chép link" is inert, pressing it sends nothing; link paths answer 404 / 405 | PASS |
+| G | E-mail invitation | PRJ2 → PENDING_CONFIRMATION with EDIT and Co-founder, no profile; the outbox message is the approved copy (inviter, venture, role, "Xem lời mời" to `/projects`), no level, no token (DEC-PDF-D4) | PASS |
+| H | Link invitation | DEFERRED (DEC-PDF-D2): "Sao chép link" is inert with the reason "Tính năng giai đoạn sau", pressing it sends nothing; link paths answer 404 / 405 | PASS |
 | I | Accept | ME7 banner → "Chấp nhận" → ACTIVE at the invited level EDIT; `/me/ventures` MEMBER / EDIT; the member may update the venture (200) and may not invite (403) | PASS |
 | J | IDOR | another member gets 404 on the venture, team and invitation APIs and pages; the venture name does not leak | PASS |
 | K | Role spoof | `x-role`, `x-permission`, `x-profile-id` headers, query values and body `permission: OWNER`, `owner_profile_id`, `status` → 403 or 422; level unchanged; RBAC rows 0 | PASS |
@@ -37,6 +37,8 @@ The 2026-09-26 journey (HC-WF02-01…12, ALT-04…06) is retired from this file;
 | HC-05, 06 create; ALT-05 archived | `wf02-s05-project-startup`, B, C |
 | HC-07…10 team; ALT-04, 06 | `wf02-s06-venture-team`, `wf02-s08-projects`, G, I, J |
 | HC-11 sessions, HC-12 deletion | `wf02-s07-settings` |
+
+Publication (DEC-PDF-D1) is covered by `pdf-alpha-decisions.spec.ts`: an incomplete venture refused, the owner's "Công khai" from the editor, members 403, others 404, guests 401, and neither DRAFT nor PUBLIC reaching `/`, `/library` or a public organization page.
 
 **Not automated:** a failed provider send (`INVITATION_EMAIL_DELIVERY_FAILED`) needs a broken transport; real-inbox delivery belongs to the deployed domain.
 

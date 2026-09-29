@@ -24,6 +24,18 @@ Still open, contained by their defaults: D-S1, D-H1, D-V1, D-V2, D-T2, D-E1, D-A
 | D-V1 | **HUMAN BUSINESS DECISION REQUIRED: PUBLIC ELIGIBILITY RULE**; every venture stays DRAFT and team-only ([DEC-L2R-D10](../../decisions/DECISION_LOG.md#dec-l2r-d10)) |
 | D-V2, D-E1, D-S1, D-H1, D-A1 | unchanged, contained by their defaults |
 
+## PO decision freeze 2026-09-29
+| ID | State |
+|---|---|
+| D-V1 | CLOSED: the owner's "Công khai" on a complete venture ([DEC-PDF-D1](../../decisions/DECISION_LOG.md#dec-pdf-d1)) |
+| D-T1 | CLOSED: e-mail only; invitation by link DEFERRED ([D2](../../decisions/DECISION_LOG.md#dec-pdf-d2)) |
+| D-V2 | CLOSED: no field count; group completion stays ([D3](../../decisions/DECISION_LOG.md#dec-pdf-d3)) |
+| D-E1 | CLOSED: approved e-mail copy ([D4](../../decisions/DECISION_LOG.md#dec-pdf-d4)) |
+| VENTURE_STAGE | CLOSED: IDEA, MVP, PILOT, SELLING, GROWTH ([D5](../../decisions/DECISION_LOG.md#dec-pdf-d5)) |
+| D-S1 | CLOSED: the eight items frozen ([D6A](../../decisions/DECISION_LOG.md#dec-pdf-d6a)) |
+| D-H1 | CLOSED: Platform Admin verifies; leaders do not ([D6B](../../decisions/DECISION_LOG.md#dec-pdf-d6b)) |
+| D-G1, D-A1 | DEFERRED (external) |
+
 ## Human business decision required
 | ID | Question | Sources | Contained default |
 |---|---|---|---|
