@@ -17,3 +17,6 @@ src/styles/fonts.css
 
 # Tooling/instruction artifact from another agent tool; not product source (WF01-S01 approved decision 1)
 AGENTS.md
+
+# Supplied Library problem dataset, kept byte-identical so it can be replaced as delivered
+src/lib/library/dir-bai-toan.json

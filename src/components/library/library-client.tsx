@@ -3,12 +3,11 @@
 import { useRouter } from 'next/navigation'
 import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
+import type { LibraryProblem } from '@/lib/library/problem-adapter'
 import type { StartupDirectory } from '@/lib/library/startup-adapter'
 
 import { Cta } from '../landing/landing-parts'
-import { PROBLEMS, QUICK } from './library-data'
 import {
-  CATEGORY_LABEL,
   facetCount,
   founderTab,
   matches,
@@ -26,9 +25,10 @@ import styles from './library.module.css'
 /**
  * TASK 22-PREVIEW-LIBRARY(-FIX) — the interactive part of /library: the hero
  * search, the entity tabs and the directory (DEC-L15). "Bài toán" runs on the
- * labelled DEMO FIXTURE; "Startup" and "Nhà sáng lập" on startup.json as read
- * by the server (DEC-L15-D7). Search, facets, chips, sort and paging run in
- * the browser; every remote string is rendered as text, never as HTML.
+ * problem dataset, "Startup" and "Nhà sáng lập" on startup.json, both read by
+ * the server (DEC-L15-D7, LIBRARY DATA UPDATE); the page names no source.
+ * Search, facets, chips, sort and paging run in the browser; every data string
+ * is rendered as text, never as HTML.
  */
 
 const ENTITIES: Array<{ key: Entity; label: string }> = [
@@ -44,24 +44,26 @@ const PLACEHOLDER: Record<Entity, string> = {
 }
 
 const PAGE_SIZE = 9
-const OPEN_COUNT = PROBLEMS.filter((p) => p.stage === 'OPEN').length
 const EMPTY: Record<Entity, Filters> = { PROBLEM: {}, STARTUP: {}, FOUNDER: {} }
 
 export function LibraryBrowser({
   header,
+  problems,
   directory,
 }: {
   header: ReactNode
+  problems: LibraryProblem[]
   directory: StartupDirectory
 }) {
   const tabs = useMemo<Record<Entity, TabModel>>(
     () => ({
-      PROBLEM: problemTab(),
+      PROBLEM: problemTab(problems),
       STARTUP: startupTab(directory),
       FOUNDER: founderTab(directory),
     }),
-    [directory],
+    [problems, directory],
   )
+  const openCount = problems.filter((p) => p.stage === 'dang_mo_nop').length
   const [entity, setEntity] = useState<Entity>('PROBLEM')
   const [draft, setDraft] = useState('')
   const [query, setQuery] = useState('')
@@ -171,22 +173,22 @@ export function LibraryBrowser({
         </form>
         <div className={styles.quick} role="group" aria-label="Tìm nhanh theo lĩnh vực">
           <span className={styles.quickLabel}>Tìm nhanh:</span>
-          {QUICK.map((d) => (
+          {tab.quick.map((d) => (
             <button
-              key={d}
+              key={d.value}
               type="button"
               className={styles.quickChip}
-              aria-pressed={(current.domain ?? []).includes(d)}
-              onClick={() => toggle('domain', d)}
+              aria-pressed={(current.domain ?? []).includes(d.value)}
+              onClick={() => toggle('domain', d.value)}
             >
-              {CATEGORY_LABEL[d]}
+              {d.label}
             </button>
           ))}
         </div>
         <dl className={styles.metrics} data-anchor="metrics">
           <div>
             <dt>bài toán đang mở</dt>
-            <dd>{OPEN_COUNT}</dd>
+            <dd>{openCount}</dd>
           </div>
           <div>
             <dt>startup</dt>
@@ -197,9 +199,6 @@ export function LibraryBrowser({
             <dd>{count('FOUNDER')}</dd>
           </div>
         </dl>
-        <p className={styles.metricsNote}>
-          Bài toán: dữ liệu minh hoạ · Startup, nhà sáng lập: startup.1hub.cloud
-        </p>
       </section>
 
       <div className={styles.tabs} role="tablist" aria-label="Loại hồ sơ" data-anchor="tabs">
@@ -258,7 +257,7 @@ function SourceError() {
     <div className={styles.soon} data-anchor="source-error" role="status">
       <p className={styles.soonTitle}>Chưa tải được danh bạ</p>
       <p className={styles.soonText}>
-        Nguồn startup.1hub.cloud đang không phản hồi. Vui lòng thử lại sau ít phút.
+        Danh bạ tạm thời chưa phản hồi. Vui lòng thử lại sau ít phút.
       </p>
       <button type="button" className={styles.more} onClick={() => router.refresh()}>
         Thử lại
@@ -354,11 +353,7 @@ function Directory({
                 Xoá tất cả
               </button>
             </div>
-          ) : (
-            <span className={styles.demoTag}>
-              {tab.source === 'DEMO' ? 'Dữ liệu minh hoạ' : 'Nguồn: startup.1hub.cloud'}
-            </span>
-          )}
+          ) : null}
           <p className={styles.count} aria-live="polite">
             {list.length} {tab.noun}
           </p>

@@ -1,0 +1,2073 @@
+{
+  "_meta": {
+    "mo_ta": "Dữ liệu thẻ bài toán cho DIR1 · Thư viện — tab Bài toán (/thu-vien/bai-toan). Tên trường theo 00-ENTITY-MODEL.md (problem + trường hệ thống + trường bìa BR-P-13).",
+    "ngay_xuat": "2026-09-29",
+    "so_bai_toan": 47,
+    "anh_xa_the_DIR1": {
+      "ten": "tiêu đề thẻ",
+      "owner_org.ten / logo_url": "dòng đơn vị đặt bài + logo tròn",
+      "giai_doan_hien_thi": "chip trạng thái góc phải",
+      "giai_thuong_hien_thi": "chip giải thưởng cạnh tiêu đề",
+      "mo_ta_ngan": "đoạn mô tả",
+      "thoi_gian_hien_thi": "chip thời gian (Còn N ngày / Mở ngày…)",
+      "so_doi_du_kien": "chip số đội",
+      "bia_dai_mau_id": "dải màu nền thẻ (1–6)"
+    },
+    "bo_loc_DIR1": {
+      "LĨNH VỰC": "tags.linh_vuc",
+      "GIAI ĐOẠN": "giai_doan (sap_dien_ra|dang_mo_nop|dang_cham|cong_bo)",
+      "ĐỊA BÀN": "tags.dia_ban"
+    },
+    "can_bo_sung_truoc_khi_public": [
+      "giai_thuong",
+      "han_nop / mo_nop_tu",
+      "so_doi_du_kien",
+      "owner_org.logo_url",
+      "tags.linh_vuc là analyst gán — cần HUB duyệt"
+    ],
+    "ghi_chu_top10": "10 đề bài Top 10 là đề bài con tách từ 30 bài toán QĐ 1193 — liên kết qua bai_toan_goc_id; don_vi_de_xuat_goc lấy từ mục 1.1 của từng file."
+  },
+  "challenges": [
+    {
+      "id": "ha-noi-30-bai-toan-lon-2026",
+      "ten": "30 bài toán lớn của Thủ đô 2026–2030 (đợt 1)",
+      "owner_org_id": "ubnd-tp-ha-noi",
+      "giai_doan": "sap_dien_ra",
+      "so_bai_toan": 30
+    },
+    {
+      "id": "ha-noi-top10-de-demo-2026",
+      "ten": "Top 10 đề bài dễ demo, dễ ra tiền (lọc từ 30 bài toán Hà Nội)",
+      "owner_org_id": "ubnd-tp-ha-noi",
+      "giai_doan": "sap_dien_ra",
+      "so_bai_toan": 10
+    },
+    {
+      "id": "mobifone-ioc-tay-ho-2026",
+      "ten": "MobiFone × HUB · IOC Phường Tây Hồ",
+      "owner_org_id": "mobifone",
+      "giai_doan": "sap_dien_ra",
+      "so_bai_toan": 7
+    }
+  ],
+  "problems": [
+    {
+      "id": "hn-1193-01",
+      "slug": "01-un-tac-giao-thong",
+      "ma": "Bài 01",
+      "ten": "Giải quyết ùn tắc giao thông đô thị trong điều kiện hạn chế quỹ đất",
+      "ten_ngan": "Ùn tắc giao thông",
+      "mo_ta_ngan": "Đất giao thông tăng chỉ 0,35%/năm trong khi phương tiện tăng 4–5%/năm.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "I",
+        "ten": "Điểm nghẽn đô thị kéo dài"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Giao thông"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 1,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-02",
+      "slug": "02-trat-tu-ve-sinh-do-thi",
+      "ma": "Bài 02",
+      "ten": "Xác lập trật tự, kỷ cương & vệ sinh đô thị bằng quản trị hiện đại, giám sát tự động",
+      "ten_ngan": "Trật tự & vệ sinh đô thị",
+      "mo_ta_ngan": "Quản lý lòng đường, vỉa hè, vệ sinh còn thủ công; tái chế rác ~10%.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "I",
+        "ten": "Điểm nghẽn đô thị kéo dài"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Đô thị & hạ tầng",
+          "Môi trường"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 1,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-03",
+      "slug": "03-phat-thai-net-zero",
+      "ma": "Bài 03",
+      "ten": "Kiểm soát nguồn phát thải & phục hồi môi trường (mục tiêu Net Zero)",
+      "ten_ngan": "Phát thải & Net Zero",
+      "mo_ta_ngan": "Phát thải từ giao thông, công nghiệp, làng nghề; giám sát phân tán, chưa định danh nguồn.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "I",
+        "ten": "Điểm nghẽn đô thị kéo dài"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Môi trường",
+          "Năng lượng"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 1,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-04",
+      "slug": "04-ngap-ung-do-thi",
+      "ma": "Bài 04",
+      "ten": "Giải quyết ngập úng đô thị trong điều kiện biến đổi khí hậu",
+      "ten_ngan": "Ngập úng đô thị",
+      "mo_ta_ngan": "Hạ tầng thoát nước chưa theo kịp đô thị hóa & mưa cực đoan.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "I",
+        "ten": "Điểm nghẽn đô thị kéo dài"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Môi trường",
+          "Đô thị & hạ tầng"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 1,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-05",
+      "slug": "05-an-toan-thuc-pham",
+      "ma": "Bài 05",
+      "ten": "Kiểm soát & bảo đảm an toàn thực phẩm trên địa bàn Thủ đô",
+      "ten_ngan": "An toàn thực phẩm",
+      "mo_ta_ngan": "Trên 81.000 cơ sở thực phẩm; sản xuất tại chỗ đáp ứng ~60% nhu cầu.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "I",
+        "ten": "Điểm nghẽn đô thị kéo dài"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Y tế",
+          "Nông nghiệp"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 1,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-06",
+      "slug": "06-do-thi-nen-da-tang",
+      "ma": "Bài 06",
+      "ten": "Quản trị & khai thác tài nguyên không gian đô thị đa tầng (Đô thị nén)",
+      "ten_ngan": "Đô thị nén đa tầng",
+      "mo_ta_ngan": "Mật độ dân số cao, quỹ đất khan hiếm; thiếu khung định danh quyền không gian đa tầng.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "II",
+        "ten": "Không gian đô thị"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Đô thị & hạ tầng"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 2,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-07",
+      "slug": "07-hanh-lang-bay-utm",
+      "ma": "Bài 07",
+      "ten": "Thiết lập hành lang bay & hệ thống quản lý bay (kinh tế không gian tầm thấp)",
+      "ten_ngan": "Hành lang bay UTM",
+      "mo_ta_ngan": "Không gian tầm thấp thành tài nguyên mới (UAV, logistics hàng không đô thị), thiếu quản lý bay.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "II",
+        "ten": "Không gian đô thị"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Logistics",
+          "Hàng không & UAV"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 2,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-08",
+      "slug": "08-ha-tang-do-thi-xanh",
+      "ma": "Bài 08",
+      "ten": "Tái thiết & phát triển hạ tầng đô thị xanh, thông minh, bền vững",
+      "ten_ngan": "Hạ tầng đô thị xanh",
+      "mo_ta_ngan": "Hạ tầng chưa theo kịp đô thị hóa; tái thiết dự kiến ~70% diện tích nội đô.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "II",
+        "ten": "Không gian đô thị"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Đô thị & hạ tầng",
+          "Môi trường"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 2,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-09",
+      "slug": "09-so-hoa-dat-dai-bds",
+      "ma": "Bài 09",
+      "ten": "Số hóa & quản trị minh bạch tài nguyên đất đai & thị trường BĐS",
+      "ten_ngan": "Số hóa đất đai & BĐS",
+      "mo_ta_ngan": "Dữ liệu đất đai phân tán, thiếu minh bạch; thị trường BĐS dễ biến động bất thường.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "II",
+        "ten": "Không gian đô thị"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Dữ liệu & AI",
+          "Quản trị công"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 2,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-10",
+      "slug": "10-quan-tri-phuc-vu",
+      "ma": "Bài 10",
+      "ten": "Đổi mới mô hình quản trị Thủ đô theo hướng phục vụ (dịch vụ công toàn trình)",
+      "ten_ngan": "Quản trị phục vụ",
+      "mo_ta_ngan": "Dịch vụ công trực tuyến toàn trình chưa đạt kỳ vọng, chưa cá thể hóa.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Quản trị công"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-11",
+      "slug": "11-mo-hinh-tang-truong-tfp",
+      "ma": "Bài 11",
+      "ten": "Xác lập & vận hành mô hình tăng trưởng mới dựa TFP & kinh tế tri thức",
+      "ten_ngan": "Mô hình tăng trưởng TFP",
+      "mo_ta_ngan": "Dư địa tăng vốn/lao động cạn; tăng trưởng phải đến từ TFP & tri thức.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Kinh tế & chính sách"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-12",
+      "slug": "12-kinh-te-du-lieu-so",
+      "ma": "Bài 12",
+      "ten": "Đưa kinh tế dữ liệu thành động lực tăng trưởng chủ đạo (kinh tế số)",
+      "ten_ngan": "Kinh tế dữ liệu / số",
+      "mo_ta_ngan": "Dữ liệu chưa được coi là tài nguyên sản xuất chính thức.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Dữ liệu & AI"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-13",
+      "slug": "13-make-in-hanoi",
+      "ma": "Bài 13",
+      "ten": "Xây dựng hệ sinh thái kinh tế nền tảng \"Make in Hanoi\" bền vững & tự chủ",
+      "ten_ngan": "\"Make in Hanoi\"",
+      "mo_ta_ngan": "Kinh tế nền tảng rời rạc, phụ thuộc nền tảng xuyên biên giới → rủi ro chủ quyền dữ liệu.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Nền tảng số"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-14",
+      "slug": "14-cong-nghiep-van-hoa",
+      "ma": "Bài 14",
+      "ten": "Chuyển hóa giá trị Thăng Long – Hà Nội thành động lực qua công nghiệp văn hóa",
+      "ten_ngan": "Công nghiệp văn hóa",
+      "mo_ta_ngan": "Di sản chủ yếu là \"di tích tĩnh\"; cần tái thiết giá trị.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Văn hóa & du lịch"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-15",
+      "slug": "15-du-lich-kinh-te-dem",
+      "ma": "Bài 15",
+      "ten": "Phát triển du lịch thông minh & kinh tế đêm",
+      "ten_ngan": "Du lịch & kinh tế đêm",
+      "mo_ta_ngan": "Kinh tế đêm & du lịch số chưa khai thác đồng bộ.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Văn hóa & du lịch"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-16",
+      "slug": "16-logistics-thong-minh",
+      "ma": "Bài 16",
+      "ten": "Xây dựng hệ thống logistics thông minh & trung tâm trung chuyển liên vùng",
+      "ten_ngan": "Logistics thông minh",
+      "mo_ta_ngan": "Đầu mối trung chuyển Vùng Thủ đô; chi phí logistics ~16.8% GDP (cao hơn 10–11% khu vực).",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Logistics"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-17",
+      "slug": "17-nong-nghiep-cnc",
+      "ma": "Bài 17",
+      "ten": "Phát triển nông nghiệp công nghệ cao gắn với kinh tế sinh thái",
+      "ten_ngan": "Nông nghiệp CNC",
+      "mo_ta_ngan": "Còn diện tích nông nghiệp lớn; cần gắn công nghệ cao với kinh tế sinh thái & tuần hoàn.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Nông nghiệp"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-18",
+      "slug": "18-cong-nghiep-cnc",
+      "ma": "Bài 18",
+      "ten": "Tái định hình công nghiệp hóa theo hướng công nghệ cao & sản xuất thông minh",
+      "ten_ngan": "Công nghiệp CNC",
+      "mo_ta_ngan": "Công nghiệp còn tập trung ngành truyền thống, giá trị gia tăng thấp.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Công nghiệp & sản xuất"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-19",
+      "slug": "19-tai-chinh-fintech",
+      "ma": "Bài 19",
+      "ten": "Xây dựng Hà Nội thành trung tâm tài chính & dịch vụ chất lượng cao quốc tế",
+      "ten_ngan": "Tài chính & FinTech",
+      "mo_ta_ngan": "Hệ thống tài chính chưa đạt tầm khu vực; cần khu thương mại tự do & dịch vụ tài chính mới.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Tài chính số"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-20",
+      "slug": "20-ktnn-dan-dat-kttn",
+      "ma": "Bài 20",
+      "ten": "Kinh tế nhà nước dẫn dắt & kinh tế tư nhân là động lực quan trọng",
+      "ten_ngan": "KTNN dẫn dắt – KTTN",
+      "mo_ta_ngan": "Liên kết chuỗi giá trị giữa hai khu vực còn rời rạc.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Kinh tế & chính sách"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-21",
+      "slug": "21-nang-suat-cds-cho-sme",
+      "ma": "Bài 21",
+      "ten": "Tăng năng suất lao động & chuyển đổi số toàn diện cho mạng lưới SME",
+      "ten_ngan": "Năng suất & CĐS cho SME",
+      "mo_ta_ngan": "SME chiếm tỷ trọng áp đảo nhưng rào cản tài chính/công nghệ; thiếu AI \"vừa tầm\".",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Chuyển đổi số SME",
+          "Dữ liệu & AI"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-22",
+      "slug": "22-nhan-tai-toan-cau",
+      "ma": "Bài 22",
+      "ten": "Thu hút & trọng dụng nhân tài toàn cầu, nhà khoa học đầu ngành",
+      "ten_ngan": "Nhân tài toàn cầu",
+      "mo_ta_ngan": "Cơ chế chưa đủ cạnh tranh quốc tế để thu hút & giữ chân nhân tài.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Nhân lực"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-23",
+      "slug": "23-04-cong-nghe-chien-luoc",
+      "ma": "Bài 23",
+      "ten": "Làm chủ 04 sản phẩm công nghệ chiến lược ưu tiên",
+      "ten_ngan": "04 công nghệ chiến lược",
+      "mo_ta_ngan": "Cần tự chủ công nghệ lõi để thoát bẫy gia công.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Công nghệ chiến lược"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-24",
+      "slug": "24-digital-twin-do-thi",
+      "ma": "Bài 24",
+      "ten": "Ứng dụng Bản sao số (Digital Twin) vào quản trị đô thị & phát triển kinh tế",
+      "ten_ngan": "Digital Twin đô thị",
+      "mo_ta_ngan": "Quản lý đô thị thiếu mô phỏng & dự báo chính sách dựa trên dữ liệu thực.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Dữ liệu & AI",
+          "Đô thị & hạ tầng"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-25",
+      "slug": "25-dmst-khoi-nghiep",
+      "ma": "Bài 25",
+      "ten": "Phát triển hệ sinh thái đổi mới sáng tạo & khởi nghiệp (Hòa Lạc)",
+      "ten_ngan": "ĐMST & khởi nghiệp",
+      "mo_ta_ngan": "Kết nối nghiên cứu – thị trường yếu; nhiều kết quả chưa thương mại hóa.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "III",
+        "ten": "Kiến tạo tăng trưởng, làm chủ công nghệ"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Đổi mới sáng tạo & khởi nghiệp"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-26",
+      "slug": "26-phao-dai-du-lieu",
+      "ma": "Bài 26",
+      "ten": "\"Pháo đài dữ liệu\" & hệ thống an ninh thông minh của Thủ đô",
+      "ten_ngan": "\"Pháo đài dữ liệu\"",
+      "mo_ta_ngan": "Dữ liệu & hệ thống số tăng nhanh → rủi ro an ninh mạng, rò rỉ dữ liệu.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "IV",
+        "ten": "An ninh, an sinh, phát triển bền vững"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "An ninh mạng"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 4,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-27",
+      "slug": "27-an-sinh-xa-hoi-so",
+      "ma": "Bài 27",
+      "ten": "Vận hành hệ thống an sinh xã hội đa tầng, hiện đại trên nền tảng dữ liệu lớn",
+      "ten_ngan": "An sinh xã hội số",
+      "mo_ta_ngan": "Các tầng hỗ trợ an sinh rời rạc; dữ liệu đối tượng chưa tích hợp đầy đủ.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "IV",
+        "ten": "An ninh, an sinh, phát triển bền vững"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "An sinh xã hội",
+          "Dữ liệu & AI"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 4,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-28",
+      "slug": "28-giao-duc-y-te",
+      "ma": "Bài 28",
+      "ten": "Đưa giáo dục & y tế Thủ đô đạt chuẩn quốc tế trên nền tảng công nghệ số",
+      "ten_ngan": "Giáo dục & y tế",
+      "mo_ta_ngan": "Chênh lệch chất lượng giáo dục – y tế; thiếu nhân lực chuyên sâu.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "IV",
+        "ten": "An ninh, an sinh, phát triển bền vững"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Giáo dục",
+          "Y tế"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 4,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-29",
+      "slug": "29-kinh-te-xanh-tuan-hoan",
+      "ma": "Bài 29",
+      "ten": "Phát triển kinh tế xanh, kinh tế tuần hoàn thành động lực tăng trưởng",
+      "ten_ngan": "Kinh tế xanh & tuần hoàn",
+      "mo_ta_ngan": "Mô hình kinh tế xanh/tuần hoàn còn rời rạc, thiếu nền tảng dữ liệu.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "IV",
+        "ten": "An ninh, an sinh, phát triển bền vững"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Môi trường",
+          "Năng lượng"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 4,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-1193-30",
+      "slug": "30-lao-dong-gia-hoa",
+      "ma": "Bài 30",
+      "ten": "Quản trị lao động hiện đại & thích ứng già hóa dân số",
+      "ten_ngan": "Lao động & già hóa",
+      "mo_ta_ngan": "\"Dân số vàng\" dự kiến kết thúc ~2036; cần thích ứng & phổ cập kỹ năng số.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "challenge_id": "ha-noi-30-bai-toan-lon-2026",
+      "nhom": {
+        "ma": "IV",
+        "ten": "An ninh, an sinh, phát triển bền vững"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "—",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Lao động & xã hội"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 4,
+      "bia_anh_url": null,
+      "nguon": "QĐ 1193/QĐ-UBND · 30 bài toán lớn của Thủ đô, giai đoạn 2026–2030 (đợt 1)"
+    },
+    {
+      "id": "hn-top10-01",
+      "slug": "top10-01-truy-xuat-canh-bao-attp-bang-qr",
+      "ma": "Top 01",
+      "ten": "Ứng dụng số truy xuất & cảnh báo ATTP theo chuỗi cung ứng",
+      "ten_ngan": "Truy xuất & cảnh báo ATTP bằng QR",
+      "mo_ta_ngan": "Cấp tem QR theo lô, ghi nhật ký từng chặng và cảnh báo, thu hồi khi có sự cố an toàn thực phẩm.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [
+        "Học viện Cảnh sát nhân dân",
+        "ĐH Y Hà Nội"
+      ],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-05",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Y tế",
+          "Nông nghiệp"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "vài quận nội thành Hà Nội (thí điểm)",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 1,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/01-truy-xuat-attp-qr.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "hn-top10-02",
+      "slug": "top10-02-on-chain-analytics-tai-san-ma-hoa",
+      "ma": "Top 02",
+      "ten": "Ứng dụng quản trị, truy vết, phân tích & đánh giá dữ liệu người dùng tài sản mã hóa",
+      "ten_ngan": "On-chain analytics tài sản mã hoá",
+      "mo_ta_ngan": "Truy vết, phân tích dữ liệu ví và giao dịch tài sản mã hoá phục vụ tuân thủ, chống rửa tiền.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [
+        "Đại học Bách khoa Hà Nội"
+      ],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-19",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Tài chính số",
+          "Dữ liệu & AI"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "Việt Nam (khách B2B) → khu vực",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 2,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/02-onchain-analytics-tai-san-ma-hoa.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "hn-top10-03",
+      "slug": "top10-03-tro-ly-ai-hoc-tap-ca-nhan-hoa",
+      "ma": "Top 03",
+      "ten": "Trợ lý AI học tập cá nhân hóa cho học sinh phổ thông (kèm trợ giảng cho giáo viên)",
+      "ten_ngan": "Trợ lý AI học tập cá nhân hoá",
+      "mo_ta_ngan": "Trợ lý AI dựa trên LLM cho học sinh phổ thông, kèm công cụ trợ giảng cho giáo viên.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [
+        "Trường ĐH Thủ đô Hà Nội",
+        "Sở GD&ĐT Hà Nội"
+      ],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-28",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Giáo dục",
+          "Dữ liệu & AI"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "Hà Nội (thí điểm) → toàn quốc",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/03-tro-ly-ai-hoc-tap.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "hn-top10-04",
+      "slug": "top10-04-tro-ly-ai-ban-hang-cho-sme",
+      "ma": "Top 04",
+      "ten": "Trợ lý AI bán hàng & vận hành cho hộ kinh doanh / SME",
+      "ten_ngan": "Trợ lý AI bán hàng cho SME",
+      "mo_ta_ngan": "Trợ lý AI bán hàng và vận hành vừa túi tiền cho hộ kinh doanh, doanh nghiệp nhỏ.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [
+        "Viện Khoa học Pháp lý và Phát triển Doanh nghiệp, Hiệp hội DNVVN Việt Nam"
+      ],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-21",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Chuyển đổi số SME",
+          "Dữ liệu & AI"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "Hà Nội (thí điểm) → toàn quốc",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 4,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/04-tro-ly-ai-sme.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "hn-top10-05",
+      "slug": "top10-05-gian-hang-so-lang-nghe",
+      "ma": "Top 05",
+      "ten": "Nền tảng số quảng bá & bán sản phẩm làng nghề (antenna shop online) gắn du lịch di sản",
+      "ten_ngan": "Gian hàng số làng nghề",
+      "mo_ta_ngan": "Nền tảng quảng bá và bán sản phẩm làng nghề trực tuyến, gắn với du lịch di sản.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [
+        "Trường Đại học Xây dựng"
+      ],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-14",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Văn hóa & du lịch",
+          "Thương mại điện tử"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "Hà Nội (thí điểm) → toàn quốc/xuất khẩu",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 1,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/05-gian-hang-so-lang-nghe.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "hn-top10-06",
+      "slug": "top10-06-toi-uu-tuyen-giao-hang-chang-cuoi",
+      "ma": "Top 06",
+      "ten": "SaaS tối ưu tuyến giao hàng chặng cuối cho SME & shop online",
+      "ten_ngan": "Tối ưu tuyến giao hàng chặng cuối",
+      "mo_ta_ngan": "SaaS tối ưu tuyến giao hàng chặng cuối cho SME và shop bán online tự giao.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [
+        "Sở Xây dựng",
+        "Viện Phát triển bền vững kinh tế địa phương VN–ASEAN"
+      ],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-16",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Logistics"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "Hà Nội (thí điểm) → liên tỉnh",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 2,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/06-toi-uu-tuyen-last-mile.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "hn-top10-07",
+      "slug": "top10-07-app-du-lich-ban-do-kinh-te-dem",
+      "ma": "Top 07",
+      "ten": "App du lịch thông minh + bản đồ kinh tế đêm cho Hà Nội",
+      "ten_ngan": "App du lịch & bản đồ kinh tế đêm",
+      "mo_ta_ngan": "App khám phá Hà Nội bản địa hoá cho du khách, kèm bản đồ hoạt động về đêm.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-15",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Văn hóa & du lịch"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "Hà Nội",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 3,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/07-app-du-lich-thong-minh.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "hn-top10-08",
+      "slug": "top10-08-cong-minh-bach-gia-bat-dong-san",
+      "ma": "Top 08",
+      "ten": "Cổng minh bạch giá bất động sản + công cụ định giá tham khảo",
+      "ten_ngan": "Cổng minh bạch giá bất động sản",
+      "mo_ta_ngan": "Tra cứu mặt bằng giá thật và công cụ định giá tham khảo cho người mua nhà.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [
+        "Đại học Kinh tế Quốc dân"
+      ],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-09",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Dữ liệu & AI",
+          "Bất động sản"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "Hà Nội",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 4,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/08-minh-bach-gia-bds.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "hn-top10-09",
+      "slug": "top10-09-app-diem-do-xe-thong-minh",
+      "ma": "Top 09",
+      "ten": "App tìm & đặt điểm đỗ xe thông minh (gồm bãi tư/nhà dân nhàn rỗi)",
+      "ten_ngan": "App điểm đỗ xe thông minh",
+      "mo_ta_ngan": "Tìm và đặt chỗ đỗ xe, gồm cả bãi tư và chỗ nhàn rỗi của nhà dân.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [
+        "Trường Đại học Giao thông vận tải"
+      ],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-01",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Giao thông"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "Hà Nội",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 1,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/09-app-do-xe-thong-minh.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "hn-top10-10",
+      "slug": "top10-10-san-vat-lieu-tai-che",
+      "ma": "Top 10",
+      "ten": "Nền tảng số trao đổi vật liệu tái chế / quản lý chất thải tuần hoàn",
+      "ten_ngan": "Sàn vật liệu tái chế",
+      "mo_ta_ngan": "Sàn khớp cung – cầu vật liệu tái chế và chất thải cho kinh tế tuần hoàn.",
+      "owner_org": {
+        "id": "ubnd-tp-ha-noi",
+        "ten": "UBND TP. Hà Nội",
+        "logo_url": null
+      },
+      "don_vi_de_xuat_goc": [
+        "Đại học Kinh tế Quốc dân",
+        "Sở Xây dựng"
+      ],
+      "challenge_id": "ha-noi-top10-de-demo-2026",
+      "bai_toan_goc_id": "hn-1193-29",
+      "nhom": {
+        "ma": "TOP10",
+        "ten": "Top 10 đề bài dễ demo, dễ ra tiền"
+      },
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Môi trường"
+        ],
+        "dia_ban": [
+          "Hà Nội"
+        ]
+      },
+      "khu_vuc": "Hà Nội",
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 2,
+      "bia_anh_url": null,
+      "nguon": "dau-bai-top10/10-san-vat-lieu-tai-che.md · /Analysis_Bis 19/08/2026"
+    },
+    {
+      "id": "mobifone-bt01",
+      "slug": "mobifone-bt01-nen-tang-ioc-loi-quan-ly-su-kien",
+      "ma": "BT01",
+      "ten": "Xây dựng nền tảng IOC lõi đa tenant (quản lý sự kiện + workflow + engine cảnh báo), kiểm chứng tại sandbox Tây Hồ",
+      "ten_ngan": "Nền tảng IOC lõi & quản lý sự kiện",
+      "mo_ta_ngan": "Điều phối tại chính quyền cơ sở còn phụ thuộc điện thoại/tin nhắn, khó truy vết vòng đời.",
+      "owner_org": {
+        "id": "mobifone",
+        "ten": "Tổng công ty Viễn thông MobiFone",
+        "logo_url": null
+      },
+      "challenge_id": "mobifone-ioc-tay-ho-2026",
+      "nhom": {
+        "ma": "IOC",
+        "ten": "Sandbox IOC Phường Tây Hồ"
+      },
+      "dong_san_pham": "IOC-as-a-Service (đa tenant, cấu hình nhanh)",
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Đô thị & hạ tầng",
+          "Nền tảng số"
+        ],
+        "dia_ban": [
+          "Hà Nội",
+          "Phường Tây Hồ"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 5,
+      "bia_anh_url": null,
+      "nguon": "Đầu bài MobiFone × HUB · daubai-ioc-tayho\\daubai-01-nen-tang-ioc-loi.md (tách từ Đề án IOC Phường Tây Hồ)"
+    },
+    {
+      "id": "mobifone-bt02",
+      "slug": "mobifone-bt02-du-lieu-dung-chung-digital-twin",
+      "ma": "BT02",
+      "ten": "Xây dựng kho dữ liệu dùng chung + GIS/Digital Twin template hóa, kiểm chứng tại sandbox Tây Hồ",
+      "ten_ngan": "Dữ liệu dùng chung & Digital Twin",
+      "mo_ta_ngan": "Dữ liệu chính quyền phân tán ngành dọc, chưa gắn cùng mã sự kiện & vị trí GIS.",
+      "owner_org": {
+        "id": "mobifone",
+        "ten": "Tổng công ty Viễn thông MobiFone",
+        "logo_url": null
+      },
+      "challenge_id": "mobifone-ioc-tay-ho-2026",
+      "nhom": {
+        "ma": "IOC",
+        "ten": "Sandbox IOC Phường Tây Hồ"
+      },
+      "dong_san_pham": "Data/Digital Twin platform (template hóa để nhân bản nhanh)",
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Dữ liệu & AI",
+          "Đô thị & hạ tầng"
+        ],
+        "dia_ban": [
+          "Hà Nội",
+          "Phường Tây Hồ"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 5,
+      "bia_anh_url": null,
+      "nguon": "Đầu bài MobiFone × HUB · daubai-ioc-tayho\\daubai-02-du-lieu-digital-twin.md (tách từ Đề án IOC Phường Tây Hồ)"
+    },
+    {
+      "id": "mobifone-bt03",
+      "slug": "mobifone-bt03-tuyen-smart-poles",
+      "ma": "BT03",
+      "ten": "Chuẩn hóa reference design tuyến Smart Poles (A/B/C) tích hợp 5G small cell + Edge, kiểm chứng trên sandbox Trích Sài–Nguyễn Đình Thi",
+      "ten_ngan": "Tuyến Smart Poles",
+      "mo_ta_ngan": "Thiết bị đô thị do nhiều đơn vị quản lý, thiếu chuẩn & dashboard sức khỏe thống nhất.",
+      "owner_org": {
+        "id": "mobifone",
+        "ten": "Tổng công ty Viễn thông MobiFone",
+        "logo_url": null
+      },
+      "challenge_id": "mobifone-ioc-tay-ho-2026",
+      "nhom": {
+        "ma": "IOC",
+        "ten": "Sandbox IOC Phường Tây Hồ"
+      },
+      "dong_san_pham": "Smart Pole reference design + BOM chuẩn (A/B/C) để nhân bản",
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Viễn thông & hạ tầng số",
+          "Đô thị & hạ tầng"
+        ],
+        "dia_ban": [
+          "Hà Nội",
+          "Tuyến Trích Sài – Nguyễn Đình Thi"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 5,
+      "bia_anh_url": null,
+      "nguon": "Đầu bài MobiFone × HUB · daubai-ioc-tayho\\daubai-03-smart-poles-tuyen.md (tách từ Đề án IOC Phường Tây Hồ)"
+    },
+    {
+      "id": "mobifone-bt04",
+      "slug": "mobifone-bt04-5g-private-network-edge-ai",
+      "ma": "BT04",
+      "ten": "Triển khai 5G + Private Network + MEC/Edge & Edge AI làm dịch vụ nền cho IOC, kiểm chứng SLA tại sandbox",
+      "ten_ngan": "5G Private Network + Edge AI",
+      "mo_ta_ngan": "Dữ liệu video/cảm biến thời gian thực cần độ trễ thấp, băng thông lớn, liên tục khi mất kết nối.",
+      "owner_org": {
+        "id": "mobifone",
+        "ten": "Tổng công ty Viễn thông MobiFone",
+        "logo_url": null
+      },
+      "challenge_id": "mobifone-ioc-tay-ho-2026",
+      "nhom": {
+        "ma": "IOC",
+        "ten": "Sandbox IOC Phường Tây Hồ"
+      },
+      "dong_san_pham": "★ LÕI — Connectivity + 5G Private Network + MEC/Edge (dịch vụ định kỳ)",
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Viễn thông & hạ tầng số",
+          "Dữ liệu & AI"
+        ],
+        "dia_ban": [
+          "Hà Nội",
+          "Tuyến Trích Sài – Nguyễn Đình Thi"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 5,
+      "bia_anh_url": null,
+      "nguon": "Đầu bài MobiFone × HUB · daubai-ioc-tayho\\daubai-04-5g-edge-ai.md (tách từ Đề án IOC Phường Tây Hồ)"
+    },
+    {
+      "id": "mobifone-bt05",
+      "slug": "mobifone-bt05-sensor-aqi-canh-bao-ngap",
+      "ma": "BT05",
+      "ten": "Xây dựng gói AIoT môi trường (AQI + mực nước/ngập) tích hợp IOC, kiểm chứng tại sandbox Tây Hồ",
+      "ten_ngan": "Sensor AQI & cảnh báo ngập",
+      "mo_ta_ngan": "Chưa có cảnh báo sớm & mô phỏng vùng ảnh hưởng khi mưa lớn/ngập.",
+      "owner_org": {
+        "id": "mobifone",
+        "ten": "Tổng công ty Viễn thông MobiFone",
+        "logo_url": null
+      },
+      "challenge_id": "mobifone-ioc-tay-ho-2026",
+      "nhom": {
+        "ma": "IOC",
+        "ten": "Sandbox IOC Phường Tây Hồ"
+      },
+      "dong_san_pham": "Gói AIoT môi trường (sensor + kết nối + phân tích) bán kèm IOC",
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Môi trường",
+          "IoT"
+        ],
+        "dia_ban": [
+          "Hà Nội",
+          "Phường Tây Hồ"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 6,
+      "bia_anh_url": null,
+      "nguon": "Đầu bài MobiFone × HUB · daubai-ioc-tayho\\daubai-05-moi-truong-aqi-ngap.md (tách từ Đề án IOC Phường Tây Hồ)"
+    },
+    {
+      "id": "mobifone-bt06",
+      "slug": "mobifone-bt06-drone-giam-sat-trat-tu-do-thi",
+      "ma": "BT06",
+      "ten": "Thí điểm Drone-as-a-Service giám sát trật tự đô thị (qua 5G/Dock/Edge/IOC), sandbox tuyến Trích Sài–Nguyễn Đình Thi",
+      "ten_ngan": "Drone giám sát trật tự đô thị",
+      "mo_ta_ngan": "Xác minh & tuần tra tốn nhân lực; một số khu vực khó tiếp cận.",
+      "owner_org": {
+        "id": "mobifone",
+        "ten": "Tổng công ty Viễn thông MobiFone",
+        "logo_url": null
+      },
+      "challenge_id": "mobifone-ioc-tay-ho-2026",
+      "nhom": {
+        "ma": "IOC",
+        "ten": "Sandbox IOC Phường Tây Hồ"
+      },
+      "dong_san_pham": "Drone-as-a-Service (Drone+Dock+5G+Edge+IOC) — dịch vụ có điều kiện pháp lý",
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "Hàng không & UAV",
+          "Đô thị & hạ tầng"
+        ],
+        "dia_ban": [
+          "Hà Nội",
+          "Tuyến Trích Sài – Nguyễn Đình Thi"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 6,
+      "bia_anh_url": null,
+      "nguon": "Đầu bài MobiFone × HUB · daubai-ioc-tayho\\daubai-06-drone.md (tách từ Đề án IOC Phường Tây Hồ)"
+    },
+    {
+      "id": "mobifone-bt07",
+      "slug": "mobifone-bt07-tich-hop-lien-cap-attt-soc",
+      "ma": "BT07",
+      "ten": "Xây dựng cổng tích hợp liên cấp chuẩn + dịch vụ ATTT/SOC vận hành 24/7, kiểm chứng tích hợp IOC phường ↔ IOC Thành phố tại sandbox",
+      "ten_ngan": "Tích hợp liên cấp & ATTT/SOC",
+      "mo_ta_ngan": "IOC phường phải là nút cấp cơ sở, không \"ốc đảo dữ liệu\", vận hành được khi mất kết nối.",
+      "owner_org": {
+        "id": "mobifone",
+        "ten": "Tổng công ty Viễn thông MobiFone",
+        "logo_url": null
+      },
+      "challenge_id": "mobifone-ioc-tay-ho-2026",
+      "nhom": {
+        "ma": "IOC",
+        "ten": "Sandbox IOC Phường Tây Hồ"
+      },
+      "dong_san_pham": "Cổng tích hợp chuẩn + Managed Operations/SOC (dịch vụ định kỳ 24/7)",
+      "giai_doan": "sap_dien_ra",
+      "giai_doan_hien_thi": "Sắp diễn ra",
+      "trang_thai": "nhap",
+      "giai_thuong": null,
+      "giai_thuong_hien_thi": "Đang đàm phán",
+      "han_nop": null,
+      "mo_nop_tu": null,
+      "thoi_gian_hien_thi": "Chưa mở nhận giải pháp",
+      "so_doi_du_kien": null,
+      "so_submission": 0,
+      "tags": {
+        "linh_vuc": [
+          "An ninh mạng",
+          "Viễn thông & hạ tầng số"
+        ],
+        "dia_ban": [
+          "Hà Nội",
+          "Phường Tây Hồ ↔ TP. Hà Nội"
+        ]
+      },
+      "pham_vi": "toan_quoc",
+      "bia_loai": "dai_mau",
+      "bia_dai_mau_id": 6,
+      "bia_anh_url": null,
+      "nguon": "Đầu bài MobiFone × HUB · daubai-ioc-tayho\\daubai-07-tich-hop-lien-cap-attt.md (tách từ Đề án IOC Phường Tây Hồ)"
+    }
+  ]
+}

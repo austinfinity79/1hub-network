@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import type { LandingEntry } from '@/lib/landing/entry'
+import type { LibraryProblem } from '@/lib/library/problem-adapter'
 import type { StartupDirectory } from '@/lib/library/startup-adapter'
 
 import { Cta } from '../landing/landing-parts'
@@ -12,10 +13,11 @@ import styles from './library.module.css'
  * visitor (DEC-L15-D1). Reference: "L15 · DIR1 · Thư viện" (1440 × 2470),
  * rebuilt as HTML/CSS; the reference PNG stays a QA source.
  *
- * "Bài toán" runs on a labelled DEMO FIXTURE (DEC-L15-D2); "Startup" and "Nhà
- * sáng lập" show the public startup.json directory read by the server
- * (DEC-L15-D7). No API or database of ours is read beyond the visitor's own
- * entry point. Destinations outside the preview are inert with a reason
+ * "Bài toán" shows the supplied problem dataset (LIBRARY DATA UPDATE, replacing
+ * the DEC-L15-D2 demo fixture); "Startup" and "Nhà sáng lập" show the public
+ * startup.json directory read by the server (DEC-L15-D7). No data source is
+ * named on the page. No API or database of ours is read beyond the visitor's
+ * own entry point. Destinations outside the preview are inert with a reason
  * (`Cta`, DEC-P0-SHELL-D2).
  */
 
@@ -58,14 +60,20 @@ function LibraryHeader({ entry }: { entry: LandingEntry }) {
 
 export function Library({
   entry,
+  problems,
   directory,
 }: {
   entry: LandingEntry
+  problems: LibraryProblem[]
   directory: StartupDirectory
 }) {
   return (
     <div className={styles.page} data-screen="PUBLIC-LIBRARY" data-entry={entry.kind}>
-      <LibraryBrowser header={<LibraryHeader entry={entry} />} directory={directory} />
+      <LibraryBrowser
+        header={<LibraryHeader entry={entry} />}
+        problems={problems}
+        directory={directory}
+      />
       <div className={styles.feedback} data-anchor="feedback">
         <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Góp ý" className={styles.feedbackPill}>
           <span className={styles.feedbackIcon} aria-hidden="true">

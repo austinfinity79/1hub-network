@@ -1,14 +1,44 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
 import { expect, test, type Page } from '@playwright/test'
 
+import { REPO_ROOT } from '../pixel-qa/paths'
 import { auditRevision } from '../pixel-qa/revision'
 
 /**
  * TASK 22-PREVIEW-LIBRARY(-FIX) — the public Library (/library), L15 DIR1
- * (DEC-L15-D1..D7). "Bài toán" runs on a labelled DEMO FIXTURE; "Startup" and
- * "Nhà sáng lập" show startup.json as read by the server. The homepage "Mạng
- * lưới đổi mới sáng tạo" opens it. Pixel QA compares the full 1440 × 2470
- * reference (A header … L load more).
+ * (DEC-L15-D1..D7). "Bài toán" runs on the supplied problem dataset (LIBRARY
+ * DATA UPDATE); "Startup" and "Nhà sáng lập" show startup.json as read by the
+ * server; no tab names a data source. The homepage "Mạng lưới đổi mới sáng
+ * tạo" opens it. Pixel QA compares the full 1440 × 2470 reference (A header …
+ * L load more).
  */
+
+type Problem = {
+  ten: string
+  ten_ngan: string
+  mo_ta_ngan: string
+  owner_org: { ten: string }
+  giai_doan: string
+  giai_thuong: unknown
+  giai_thuong_hien_thi: string
+  tags: { linh_vuc: string[]; dia_ban: string[] }
+}
+/** Expectations derive from the shipped dataset, never from fixed numbers. */
+const PROBLEMS: Problem[] = JSON.parse(
+  readFileSync(path.join(REPO_ROOT, 'src/lib/library/dir-bai-toan.json'), 'utf8'),
+).problems
+const withDomain = (d: string) => PROBLEMS.filter((p) => p.tags.linh_vuc.includes(d)).length
+const fold = (t: string) =>
+  t
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase()
+/** Public wording that names where Library data comes from ("nguồn" alone is ordinary content). */
+const SOURCE_WORDS =
+  /dữ liệu minh hoạ|startup\.1hub|nguồn dữ liệu|nguồn:|source data|demo fixture/iu
 
 const REFERENCE = 'design-reference/final/revision/L2/L15__library__SOURCE.png'
 /** Reference anchors measured once on the 1440 × 2470 frame. */
@@ -44,6 +74,17 @@ const top = async (page: Page, selector: string) =>
   Math.round(
     (await page.locator(selector).first().boundingBox())!.y +
       (await page.evaluate(() => window.scrollY)),
+  )
+/**
+ * Data-driven text left out of the pixel audit: the facet values with their
+ * counts. Checkboxes, group titles and the toolbar stay compared.
+ */
+const dataAreas = (page: Page) =>
+  page.locator('[data-anchor="facets"] label > span').evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect()
+      return { x: r.x - 2, y: r.y + scrollY - 2, width: r.width + 4, height: r.height + 4 }
+    }),
   )
 const hideFeedback = (page: Page) =>
   page.addStyleTag({ content: '[data-anchor="feedback"] { display: none !important; }' })
@@ -85,37 +126,55 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     await expect(page.locator('[data-cta="login"]')).toHaveAttribute('href', '/auth')
   })
 
-  test('Bài toán: labelled demo fixture, inert CTAs, derived counts', async ({ page }) => {
+  test('Bài toán: every dataset record, inert CTAs, derived counts, no invented values', async ({
+    page,
+  }) => {
+    const total = PROBLEMS.length
     await page.goto('/library')
-    await expect(page.getByText('Dữ liệu minh hoạ', { exact: true })).toBeVisible()
-    await expect(cards(page)).toHaveCount(6)
-    await expect(count(page)).toHaveText('6 bài toán')
-    expect(await tabCount(page, /Bài toán/)).toBe(6)
+    await expect(cards(page)).toHaveCount(Math.min(9, total))
+    await expect(count(page)).toHaveText(`${total} bài toán`)
+    expect(await tabCount(page, /Bài toán/)).toBe(total)
     const metrics = page.locator('[data-anchor="metrics"] dd')
-    await expect(metrics.first()).toHaveText('4')
+    await expect(metrics.first()).toHaveText(
+      String(PROBLEMS.filter((p) => p.giai_doan === 'dang_mo_nop').length),
+    )
     const startups = await tabCount(page, /Startup/)
     const founders = await tabCount(page, /Nhà sáng lập/)
     expect(startups).toBeGreaterThan(0)
     expect(founders).toBeGreaterThan(0)
     await expect(metrics.nth(1)).toHaveText(String(startups))
     await expect(metrics.nth(2)).toHaveText(String(founders))
-    const cta = cards(page).first().getByText('Xem bài toán')
+    const cta = cards(page).first().locator('[data-cta-kind="INERT"]')
     await expect(cta).toHaveAttribute('aria-disabled', 'true')
-    await expect(cards(page).locator('h2')).toHaveText([
-      'Giảm hao hụt trong chặng giao cuối',
-      'Dự báo nhu cầu kho theo mùa vụ',
-      'Định tuyến xe tải liên tỉnh',
-      'Truy xuất nguồn gốc nông sản',
-      'Chấm điểm tín dụng hộ kinh doanh',
-      'Quản lý hàng hoàn theo thời gian thực',
-    ])
+    // Every record is reachable through "Xem thêm", in the dataset order.
+    while (await page.locator('[data-anchor="more"]').isVisible())
+      await page.locator('[data-anchor="more"]').click()
+    await expect(cards(page).locator('h2')).toHaveText(PROBLEMS.map((p) => p.ten))
+    await expect(cards(page).first().locator('[class*="org"]').last()).toHaveText(
+      PROBLEMS[0]!.owner_org.ten,
+    )
+    // No prize, team or deadline is invented: only supplied prizes show.
+    const prizes = PROBLEMS.filter(
+      (p) => p.giai_thuong !== null && !/^[\s—–-]*$/.test(p.giai_thuong_hien_thi),
+    )
+    await expect(page.locator('[data-anchor="grid"] [class*="prize"]')).toHaveCount(prizes.length)
+    const grid = await page.locator('[data-anchor="grid"]').innerText()
+    expect(grid).not.toMatch(/Còn \d+ ngày|\d+ đội|triệu/)
+  })
+
+  test('no tab names a data source', async ({ page }) => {
+    await page.goto('/library')
+    for (const name of [/^Bài toán/, /^Startup/, /^Nhà sáng lập/]) {
+      await page.getByRole('tab', { name }).click()
+      await expect(cards(page).first()).toBeVisible()
+      expect(await page.locator('body').innerText(), `${name}`).not.toMatch(SOURCE_WORDS)
+    }
   })
 
   test('Startup: real startup.json records, paging, safe external links', async ({ page }) => {
     await page.goto('/library')
     await page.getByRole('tab', { name: /Startup/ }).click()
     const total = await tabCount(page, /Startup/)
-    await expect(page.getByText('Nguồn: startup.1hub.cloud')).toBeVisible()
     await expect(cards(page)).toHaveCount(Math.min(9, total))
     await expect(count(page)).toHaveText(`${total} startup`)
     if (total > 9) {
@@ -146,25 +205,59 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     expect(await page.locator('[data-section="directory"]').innerText()).not.toMatch(CONTACT)
   })
 
-  test('filters: multi-select, chips, zero kept, clear all, empty state', async ({ page }) => {
+  test('filters: built from the dataset, multi-select, chips, zero kept, clear all', async ({
+    page,
+  }) => {
     await page.goto('/library')
     const facets = page.getByRole('complementary', { name: 'Bộ lọc' })
-    await facets.getByRole('checkbox', { name: /Logistics/ }).check()
-    await expect(count(page)).toHaveText('4 bài toán')
-    await facets.getByRole('checkbox', { name: /Đang mở nộp/ }).check()
-    await expect(count(page)).toHaveText('3 bài toán')
-    await expect(page.getByRole('button', { name: 'Bỏ lọc Logistics' })).toBeVisible()
-    await expect(facets.locator('label', { hasText: 'Giáo dục' })).toHaveAttribute(
-      'data-empty',
-      'true',
+    const group = (title: string) => facets.locator('fieldset', { hasText: title })
+    // Every domain and area value, with its count, comes from the records.
+    const facetCounts = async (title: string) =>
+      Object.fromEntries(
+        await group(title)
+          .locator('label')
+          .evaluateAll((ls) =>
+            ls.map((l) => [
+              l.querySelector('[class*="facetLabel"]')!.textContent,
+              Number(l.querySelector('[class*="facetCount"]')!.textContent),
+            ]),
+          ),
+      )
+    const tally = (pick: (p: Problem) => string[]) =>
+      PROBLEMS.flatMap(pick).reduce<Record<string, number>>(
+        (m, v) => ({ ...m, [v]: (m[v] ?? 0) + 1 }),
+        {},
+      )
+    expect(await facetCounts('LĨNH VỰC')).toEqual(tally((p) => p.tags.linh_vuc))
+    expect(await facetCounts('ĐỊA BÀN')).toEqual(tally((p) => p.tags.dia_ban))
+    const stages = await facetCounts('GIAI ĐOẠN')
+    expect(Object.keys(stages)).toEqual(['Đang mở nộp', 'Sắp diễn ra', 'Đang chấm', 'Đã công bố'])
+    const byStage = (code: string) => PROBLEMS.filter((p) => p.giai_doan === code).length
+    expect(Object.values(stages)).toEqual(
+      ['dang_mo_nop', 'sap_dien_ra', 'dang_cham', 'cong_bo'].map(byStage),
     )
-    await page.getByRole('button', { name: 'Bỏ lọc Đang mở nộp' }).click()
-    await expect(count(page)).toHaveText('4 bài toán')
-    await facets.getByRole('checkbox', { name: /Logistics/ }).uncheck()
-    await facets.getByRole('checkbox', { name: /Y tế/ }).check()
-    await expect(page.getByText('Không có bài toán nào khớp bộ lọc.')).toBeVisible()
+
+    const logistics = withDomain('Logistics')
+    await facets.getByRole('checkbox', { name: /^Logistics/ }).check()
+    await expect(count(page)).toHaveText(`${logistics} bài toán`)
+    await facets.getByRole('checkbox', { name: /^Giao thông/ }).check()
+    await expect(count(page)).toHaveText(
+      `${PROBLEMS.filter((p) => p.tags.linh_vuc.some((d) => ['Logistics', 'Giao thông'].includes(d))).length} bài toán`,
+    )
+    await expect(page.getByRole('button', { name: 'Bỏ lọc Logistics' })).toBeVisible()
+    await page.getByRole('button', { name: 'Bỏ lọc Giao thông' }).click()
+    await expect(count(page)).toHaveText(`${logistics} bài toán`)
+    const empty = Object.entries(stages).find(([, n]) => n === 0)
+    if (empty) {
+      await expect(group('GIAI ĐOẠN').locator('label', { hasText: empty[0] })).toHaveAttribute(
+        'data-empty',
+        'true',
+      )
+      await facets.getByRole('checkbox', { name: new RegExp(`^${empty[0]}`) }).check()
+      await expect(page.getByText('Không có bài toán nào khớp bộ lọc.')).toBeVisible()
+    }
     await page.getByRole('button', { name: 'Xoá tất cả', exact: true }).click()
-    await expect(cards(page)).toHaveCount(6)
+    await expect(count(page)).toHaveText(`${PROBLEMS.length} bài toán`)
   })
 
   test('search, quick filters and sort run in the browser', async ({ page }) => {
@@ -175,15 +268,32 @@ test.describe('PUBLIC-LIBRARY functional', () => {
       'aria-pressed',
       'true',
     )
-    await expect(cards(page)).toHaveCount(1)
+    await expect(count(page)).toHaveText(`${withDomain('Nông nghiệp')} bài toán`)
     await quick.getByRole('button', { name: 'Nông nghiệp' }).click()
+    // Search runs accent-free over title, short title, summary, organisation and domains.
     const search = page.getByRole('search')
-    await search.getByRole('searchbox').fill('tin dung')
-    await search.getByRole('button', { name: 'Tìm kiếm' }).click()
-    await expect(cards(page).locator('h2')).toHaveText(['Chấm điểm tín dụng hộ kinh doanh'])
+    const found = (q: string) =>
+      PROBLEMS.filter((p) =>
+        fold(q)
+          .split(/\s+/)
+          .every((w) =>
+            fold(
+              [p.ten, p.ten_ngan, p.mo_ta_ngan, p.owner_org.ten, ...p.tags.linh_vuc].join(' '),
+            ).includes(w),
+          ),
+      )
+    for (const q of ['un tac giao thong', 'mobifone', 'du lieu ai']) {
+      await search.getByRole('searchbox').fill(q)
+      await search.getByRole('button', { name: 'Tìm kiếm' }).click()
+      const expected = found(q)
+      expect(expected.length, q).toBeGreaterThan(0)
+      await expect(count(page)).toHaveText(`${expected.length} bài toán`)
+      await expect(cards(page).first().locator('h2')).toHaveText(expected[0]!.ten)
+    }
     await search.getByRole('searchbox').fill('')
+    // No prize in the data: "Giải thưởng cao nhất" keeps the dataset order.
     await page.getByRole('combobox', { name: 'Sắp xếp' }).selectOption('PRIZE')
-    await expect(cards(page).first().locator('h2')).toHaveText('Chấm điểm tín dụng hộ kinh doanh')
+    await expect(cards(page).first().locator('h2')).toHaveText(PROBLEMS[0]!.ten)
     await page.getByRole('combobox', { name: 'Tìm trong' }).selectOption('STARTUP')
     await expect(page.getByRole('tab', { name: /Startup/ })).toHaveAttribute(
       'aria-selected',
@@ -324,8 +434,9 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
     await page.goto('/library')
     await hideFeedback(page)
     const facets = page.getByRole('complementary', { name: 'Bộ lọc' })
-    await facets.getByRole('checkbox', { name: /Logistics/ }).check()
-    await facets.getByRole('checkbox', { name: /Đang mở nộp/ }).check()
+    // The pack draws three cards; Logistics gives three in the dataset too.
+    await facets.getByRole('checkbox', { name: /^Logistics/ }).check()
+    await expect(cards(page)).toHaveCount(Math.min(3, withDomain('Logistics')))
     const body = await top(page, '[data-section="directory"]')
     expect(body).toBe(REF.body)
     const grid = (await cards(page).first().boundingBox())!
@@ -339,7 +450,7 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
       {
         class: 'content',
         reason:
-          "Demo fixture (DEC-L15-D2): neutral sector labels instead of company names; facet counts are the fixture's; the drawn filter state gives 3 cards",
+          'Problem dataset (LIBRARY DATA UPDATE): facet values and counts are the data, not the pack’s; the drawn state is three Logistics cards. Card surfaces (colour band per record, text, chips) are data too, so card rows are checked by geometry instead of pixels',
       },
     ]
     await auditRevision(page, {
@@ -349,27 +460,22 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
       segments: [
         { name: 'G-facets', reference: { x: 56, y: 893, width: 270, height: 560 }, dy: 0 },
         { name: 'K-toolbar', reference: { x: 350, y: 897, width: 1040, height: 44 }, dy: 0 },
-        { name: 'I-cards-row-1', reference: { x: 350, y: 951, width: 1036, height: 445 }, dy: 0 },
       ],
-      // Facet counts are fixture data (the pack draws 12, 8, 5 …).
-      exclude: [{ x: 290, y: 925, width: 30, height: 400 }],
+      exclude: await dataAreas(page),
       intentional,
     })
+    // I: three rows as drawn — same columns and card size, 23 px gaps, row 3 where the pack has it.
     await page.getByRole('button', { name: 'Xoá tất cả', exact: true }).click()
-    const row2 = await top(page, '[data-anchor="grid"] > li:nth-child(4)')
-    await auditRevision(page, {
-      name: 'PUBLIC-LIBRARY.L15-directory-row-2',
-      reference: REFERENCE,
-      full: true,
-      segments: [
-        {
-          name: 'I-cards-row-2-vs-3',
-          reference: { x: 350, y: REF.row3 - 7, width: 1036, height: 445 },
-          dy: row2 - REF.row3,
-        },
-      ],
-      intentional,
-    })
+    const boxes = await cards(page).evaluateAll((els) =>
+      els.slice(0, 9).map((e) => {
+        const b = e.getBoundingClientRect()
+        return { x: Math.round(b.x), y: Math.round(b.y + scrollY), size: `${b.width}x${b.height}` }
+      }),
+    )
+    expect(boxes.map((b) => b.x)).toEqual([358, 705, 1052, 358, 705, 1052, 358, 705, 1052])
+    expect(new Set(boxes.map((b) => b.size))).toEqual(new Set(['324x431']))
+    expect(boxes[3]!.y - boxes[0]!.y).toBe(431 + 23)
+    expect(boxes[6]!.y).toBe(REF.row3)
   })
 
   test('L: load more and page end (Startup tab, three rows as drawn)', async ({ page }) => {
