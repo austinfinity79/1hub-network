@@ -42,6 +42,31 @@
   overflow: hidden;
 }
 
+/* The Hub's own pictures (29/09) fill the art, the programme card and the
+   browser frame; the gradients below stay underneath while they load. */
+.photo {
+  object-fit: cover;
+}
+
+.art[data-photo] > .photo,
+.programme[data-photo] > .photo {
+  z-index: -2;
+}
+
+.art[data-photo],
+.programme[data-photo] {
+  isolation: isolate;
+}
+
+/* A light shade keeps the white tag readable on any picture. */
+.art[data-photo]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to bottom, rgb(22 0 2 / 38%) 0%, rgb(22 0 2 / 0%) 45%);
+}
+
 /* One ramp (coral, red, door, ink), fitted to the reference per card. */
 .art[data-tone='ember'] {
   background: linear-gradient(140deg, #fc523c 12.8%, #b91610 49.4%, #5c040c 86%, #160002 122.5%);
@@ -140,6 +165,7 @@
 
 /* ---------- Programme cards ---------- */
 .programme {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -148,7 +174,22 @@
   height: 560px;
   padding: 28px;
   border-radius: 32px;
+  overflow: hidden;
   color: #ffffff;
+}
+
+/* The card's own bottom shade, over the picture, keeps the white text readable. */
+.programme[data-photo]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to bottom,
+    rgb(22 0 2 / 25%) 0%,
+    rgb(22 0 2 / 10%) 31%,
+    rgb(22 0 2 / 86%) 100%
+  );
 }
 
 .programme[data-tone='ember'] {
@@ -281,25 +322,9 @@
   color: var(--pink);
 }
 
-.browserNote {
+.browserView {
   position: absolute;
-  left: 12px;
-  bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  line-height: 16px;
-  letter-spacing: 0.1em;
-  color: #ffffff;
-}
-
-.browserMark {
-  width: 12px;
-  height: 4px;
-  border: 1px solid var(--pink);
+  inset: 43px 0 0;
 }
 
 .fundMeta {

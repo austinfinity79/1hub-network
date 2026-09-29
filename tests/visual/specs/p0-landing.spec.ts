@@ -425,6 +425,19 @@ async function demoLabels(page: Page): Promise<Rect[]> {
   )
 }
 
+/**
+ * Intentional replacement of the reference: the event, programme and pipeline
+ * pictures are the Hub's own photos (PO, 29/09) where H1 draws placeholders.
+ */
+async function photos(page: Page): Promise<Rect[]> {
+  return page.locator('[data-photo]').evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect()
+      return { x: r.x, y: r.y + window.scrollY, width: r.width, height: r.height }
+    }),
+  )
+}
+
 test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
   test('typography: Space Grotesk where the reference uses it, approved mono, no fallback', async ({
     page,
@@ -489,8 +502,8 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
         .evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY))
       segments.push({ name: s.name, reference: s.rect, dy: top - s.refTop })
     }
-    // The added labels are masked in capture coordinates, like text.
-    const labels = await demoLabels(page)
+    // The added labels and the replaced pictures are masked in capture coordinates, like text.
+    const labels = [...(await demoLabels(page)), ...(await photos(page))]
     const mask = [...(await textRects(page)), ...labels]
     const results = compareSegments(reference, actual, segments, mask, {
       diffPath: resolveOutputPath('diff', 'P0-LANDING.H1.segments.diff.png'),
@@ -509,6 +522,7 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
       intentional_differences: [
         'organiser block after the programme cards removed (PO override, DEC-H1-R2-D1)',
         '"Dữ liệu minh hoạ" labels on events, programmes, pipeline and the partner matrix (DEC-H1-R2-D2)',
+        'event, programme and pipeline pictures replaced by the Hub photos (PO, 29/09)',
       ],
       segments: report,
     })

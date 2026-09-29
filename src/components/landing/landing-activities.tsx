@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { ReactNode } from 'react'
 
 import { Arrow, Cta } from './landing-parts'
@@ -9,7 +10,9 @@ import cards from './activity-cards.module.css'
  * Homepage activity rails, in reference order: events, programmes, investment
  * pipeline (DEC-H1-R2). The cards are the reference's illustrative content,
  * shown verbatim under a visible "Dữ liệu minh hoạ" label; none of them has a
- * destination yet, so every card action is inert.
+ * destination yet, so every card action is inert. The pictures are the Hub's
+ * own (supplied 29/09) in `public/home/`, cropped by the card; the gradient of
+ * each card stays underneath while a picture loads.
  */
 
 function Head({
@@ -50,6 +53,7 @@ const EVENTS = [
     title: 'HUB Demo Day 2026',
     text: 'Ngày hội trình diễn sản phẩm của startup trong mạng lưới.',
     tone: 'ember',
+    image: '/home/event-hub-demo-day.webp',
   },
   {
     day: '20',
@@ -59,6 +63,7 @@ const EVENTS = [
     title: 'Final Pitch — Open Innovation',
     text: 'Vòng chung kết các bài toán đổi mới sáng tạo mở, hội đồng chấm trực tiếp.',
     tone: 'dusk',
+    image: '/home/event-final-pitch-open-innovation.webp',
   },
   {
     day: '10',
@@ -68,6 +73,7 @@ const EVENTS = [
     title: 'Founders & Mentors Night',
     text: 'Buổi kết nối giữa founder trong mạng lưới và đội ngũ cố vấn chuyên môn.',
     tone: 'wine',
+    image: '/home/event-founders-mentors-night.webp',
   },
 ]
 
@@ -82,7 +88,14 @@ export function Events() {
       <Rail label="Sự kiện" rest={0.5056}>
         {EVENTS.map((e) => (
           <li key={e.title} className={cards.event}>
-            <div className={cards.art} data-tone={e.tone}>
+            <div className={cards.art} data-tone={e.tone} data-photo>
+              <Image
+                src={e.image}
+                alt=""
+                fill
+                sizes="(max-width: 767px) 84vw, 432px"
+                className={cards.photo}
+              />
               <span className={cards.date}>
                 <span className={cards.day}>{e.day}</span>
                 <span className={cards.month}>{e.month}</span>
@@ -115,6 +128,7 @@ const PROGRAMMES = [
     organiser: 'APEC',
     field: 'Đa lĩnh vực',
     tone: 'ember',
+    image: '/home/programme-apec-innovation-challenge.webp',
   },
   {
     status: 'MỞ',
@@ -124,6 +138,7 @@ const PROGRAMMES = [
     organiser: 'Ngân hàng Nhà nước',
     field: 'Công nghệ tài chính',
     tone: 'dusk',
+    image: '/home/programme-fintech-challenge-vietnam.webp',
   },
   {
     status: 'ĐANG DIỄN RA',
@@ -133,6 +148,7 @@ const PROGRAMMES = [
     organiser: 'Honda Việt Nam',
     field: 'Logistics',
     tone: 'glow',
+    image: '/home/programme-honda-challenge.webp',
   },
 ]
 
@@ -150,7 +166,14 @@ export function Programmes() {
       />
       <Rail label="Chương trình" rest={0.455}>
         {PROGRAMMES.map((p) => (
-          <li key={p.title} className={cards.programme} data-tone={p.tone}>
+          <li key={p.title} className={cards.programme} data-tone={p.tone} data-photo>
+            <Image
+              src={p.image}
+              alt=""
+              fill
+              sizes="(max-width: 767px) 84vw, 480px"
+              className={cards.photo}
+            />
             <p className={cards.pills}>
               <span className={cards.status} data-tone={p.statusTone}>
                 {p.status}
@@ -194,9 +217,15 @@ export function Pipeline() {
         <li className={cards.fund}>
           <div className={cards.browser} aria-hidden="true">
             <span className={cards.browserBar}>ihub.ventures</span>
-            <span className={cards.browserNote}>
-              <span className={cards.browserMark} />
-              ẢNH CHỤP TRANG CHỦ IHUB.VENTURES · CHỜ ẢNH THẬT
+            <span className={cards.browserView} data-photo>
+              <Image
+                src="/home/pipeline-ihub-ventures.webp"
+                alt=""
+                fill
+                sizes="(max-width: 767px) 84vw, 584px"
+                className={cards.photo}
+                style={{ objectPosition: 'top center' }}
+              />
             </span>
           </div>
           <p className={cards.fundMeta}>TRANG QUỸ</p>
