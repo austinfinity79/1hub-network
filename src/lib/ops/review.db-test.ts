@@ -1,6 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { isApiError } from '@/lib/api/errors'
+import { resolveActor } from '@/lib/authz/actor'
+import { can, type ResourceScope } from '@/lib/authz/authorize'
+import { CAPABILITIES } from '@/lib/authz/matrix'
+import { deriveCapabilities } from '@/lib/authz/session-authz'
 import { closePool, query } from '@/lib/db/client'
 
 import { getMemberDetail } from './member-detail'
@@ -273,6 +277,42 @@ describe('DEC-PDF-D6B HUB declarations: platform verification only', () => {
     )
     const approved = await reviewMembership(LEADER, CHAPTER_01, asked, { status: 'ACTIVE' }, rid())
     expect(approved).toMatchObject({ state: 'ACTIVE', declaration: false })
+  })
+})
+
+describe('TASK 24.2 a review decision grants no authority', () => {
+  it('approved and rejected applicants hold no capability in the unit, elsewhere or on the platform', async () => {
+    const approved = await person('granted', 'Minh Granted')
+    const rejected = await person('refused', 'Nga Refused')
+    const a = await membership(approved, 'PENDING_APPROVAL', CHAPTER_01)
+    const r = await membership(rejected, 'PENDING_APPROVAL', CHAPTER_01)
+    const waiting = await membership(
+      await person('waiting', 'Oanh Waiting'),
+      'PENDING_APPROVAL',
+      CHAPTER_01,
+    )
+    const roles = await roleCount()
+    await reviewMembership(LEADER, CHAPTER_01, a, { status: 'ACTIVE' }, rid())
+    await reviewMembership(LEADER, CHAPTER_01, r, { status: 'REJECTED' }, rid())
+    expect(await roleCount()).toBe(roles)
+    const scopes: ResourceScope[] = [
+      { scopeType: 'ORGANIZATION', scopeId: CHAPTER_01 },
+      { scopeType: 'ORGANIZATION', scopeId: CHAPTER_02 },
+      { scopeType: 'PLATFORM' },
+    ]
+    for (const key of ['granted', 'refused']) {
+      const actor = await resolveActor(P[key]!.accountId)
+      expect(deriveCapabilities(actor)).toEqual([])
+      for (const capability of CAPABILITIES)
+        for (const scope of scopes)
+          expect(await can(actor, capability, scope), `${key} ${capability}`).toBe(false)
+      // Nor can the new member decide requests, their own unit's included.
+      expect(
+        await refusal(
+          reviewMembership(P[key]!.accountId, CHAPTER_01, waiting, { status: 'REJECTED' }, rid()),
+        ),
+      ).toEqual({ code: 'SCOPE_FORBIDDEN', status: 403 })
+    }
   })
 })
 

@@ -105,6 +105,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 24.1 — L2 LIBRARY DELTA: GREEN (local, not pushed, not deployed)** ([report](reports/TASK-24.1_l2-library-delta.md), [delta](task-24/l2-library-delta.md), [DEC-L15-D10…D13](../decisions/DECISION_LOG.md#dec-l15-d10)). Startup and Nhà sáng lập tabs on the white-card frames with the data the sources hold; Bài toán unchanged. STOP checkpoint before 24.2.
 
+**TASK 24.2 — L3 CLB OPERATIONS: GREEN (local, not pushed, not deployed)** ([report](reports/TASK-24.2_l3-clb-closure.md), [inventory](task-24/l3-clb-inventory.md), [DEC-L3-D6](../decisions/DECISION_LOG.md#dec-l3-d6)). The 29/09 L3 board matches the built chapter screens pixel for pixel; L21, L22, L24, L25, L27 stay FUTURE. STOP checkpoint before 24.3.
+
 ## Completed (committed)
 
 | Task | Scope |
