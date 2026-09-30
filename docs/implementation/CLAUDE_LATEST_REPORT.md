@@ -1,10 +1,10 @@
 # Claude Task Report
 
 ## Task
-ALPHA INTERACTION GAP FIX — PO DECISION FREEZE + P1/P2 CLOSURE. Report: [reports/ALPHA-INTERACTION-GAP-FIX.md](reports/ALPHA-INTERACTION-GAP-FIX.md); decisions: [DEC-AIG](../decisions/DECISION_LOG.md#dec-aig).
+ALPHA INTERACTION GAP FIX — PO DECISION FREEZE + P1/P2 CLOSURE, with the FINAL CLOSURE (hero search copy, stale `/me/ventures` contract test). Report: [reports/ALPHA-INTERACTION-GAP-FIX.md](reports/ALPHA-INTERACTION-GAP-FIX.md); decisions: [DEC-AIG](../decisions/DECISION_LOG.md#dec-aig).
 
 ## Verdict
-**GREEN, not deployed.** P1 20 → 0, P2 31 → 0. Every changed item ends in one outcome (navigation, hidden, or non-clickable). Production still runs `ff052d7`. STOP.
+**GREEN, not deployed. READY FOR PRE-DEPLOY REVIEW.** P1 20 → 0, P2 31 → 0. Every changed item ends in one outcome (navigation, hidden, or non-clickable). Hero search reads "Tìm kiếm trong Thư viện". No known failing test. Production still runs `ff052d7`. STOP.
 
 ## Scope implemented
 - Public nav labels, hero search → `/library?q=`, guest return to venture creation (BD-02 rule, browser side), ihub.ventures link, account and workspace menu routes, "Hồ sơ đăng ký" → L5 entry.
@@ -21,7 +21,7 @@ None. No API or schema change.
 ## Tests / build
 format, lint, typecheck, unit 259/259, build: PASS. New spec 9/9; affected specs and protected smoke L1, L2, L3, L5: PASS. Runtime: #418 0, 5xx 0, broken assets 0, console 0.
 
-Extra sweep (WF03, WF04, API): 205 PASS, 1 pre-existing FAIL (`api-contract` still expects `/me/ventures` → 404; shipped since `c9c7cb5`, no API change here).
+Extra sweep (WF03, WF04, API): 205 PASS; its one stale test (`api-contract` expected `/me/ventures` → 404) now follows contract 05 §5.3 (guest 401, session 200 `{ items, page }`). Final closure: targeted 28/28, regression 78/78.
 
 ## Visual QA
 No baseline changed. Intentional deviations recorded in the specs (landing "Chi tiết" strip, Library L15b / L15c action row, onboarding "Góp ý" segment); all other segments within thresholds.
@@ -32,11 +32,11 @@ No baseline changed. Intentional deviations recorded in the specs (landing "Chi 
 
 ## Git
 - Branch: `main`; start HEAD `ebdf632`; no concurrent change
-- Implementation commit: `fix(interactions): close alpha P1 P2 action gaps` (implementation and report in one commit)
-- Report/final commit: same commit
+- Implementation commit: `b5937ce` `fix(interactions): close alpha P1 P2 action gaps`
+- Report/final commit: `fix(interactions): close alpha search copy and stale contract test` (final closure)
 - Remote: `origin`
 - Push status: NOT RUN (task: do not push)
-- Remote HEAD: `d4c62d4` (`ebdf632` and this commit are local only)
+- Remote HEAD: `d4c62d4` (`ebdf632`, `b5937ce` and the final commit are local only)
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task

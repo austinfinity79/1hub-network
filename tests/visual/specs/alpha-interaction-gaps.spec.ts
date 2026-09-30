@@ -65,6 +65,10 @@ test.describe('homepage search → /library?q=', () => {
     })
     const hero = page.getByRole('search', { name: 'Tìm trong Thư viện' })
     const input = hero.getByRole('searchbox')
+    // PO decision (DEC-AIG-D10): the copy names the real scope, the Library.
+    await expect(input).toHaveAttribute('placeholder', 'Tìm kiếm trong Thư viện')
+    await expect(input).toHaveAccessibleName('Tìm kiếm trong Thư viện')
+    await expect(page.getByText('Tìm kiếm chương trình, sự kiện')).toHaveCount(0)
     await expect(input).toBeEnabled()
     await expect(input).not.toHaveAttribute('aria-disabled')
 

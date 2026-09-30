@@ -1495,6 +1495,7 @@ Superseded records (history kept in place, each row marked):
 | <a id="dec-aig-d7"></a>DEC-AIG-D7 | **"Góp ý":** hidden for Alpha on every screen; no feedback form, API or e-mail workaround. |
 | <a id="dec-aig-d8"></a>DEC-AIG-D8 | **Library card actions:** only a real destination is drawn (the record's own website, new tab). "Theo dõi", "Kết nối", "Xem bài toán" / "Theo dõi bài toán" and a "Xem hồ sơ" without a website are not drawn; a founder's startup row without a website is plain content. The homepage's illustrative "Chi tiết" actions follow the same rule (hidden; the event card keeps the line's space so its picture keeps the approved size). |
 | <a id="dec-aig-d9"></a>DEC-AIG-D9 | **Account menus:** "Thư viện" → `/library`, "Tổ chức của tôi" → `/me/roles` (as ME7 already did). "Truy cập ihub.ventures" opens `https://ihub.ventures` in a new tab (28/09 CTA map). |
+| <a id="dec-aig-d10"></a>DEC-AIG-D10 | **Homepage search copy (PO, final).** The hero placeholder and accessible name read "Tìm kiếm trong Thư viện", the scope the search really has (`/library?q=`). Behaviour unchanged; no global search. |
 
 Superseded in part: [DEC-P0-SHELL-D2](#dec-p0-shell-d2) for the items above (inert with a reason); D-F1 ("Góp ý" drawn and inert, DEC-L2R-D11); DEC-WF01-S08-D6 (single exit `/me`) when a return path exists. The other inert items of the register (P3, D) are unchanged.
 

@@ -12,7 +12,8 @@ import styles from './landing.module.css'
  * keyword opens the public Library at `/library?q=<keyword>`, where the
  * Library's own search applies it. No global, AI or matching search and no
  * request of its own. An empty keyword navigates nowhere. Without script the
- * form still sends `q` to `/library` by GET.
+ * form still sends `q` to `/library` by GET. The copy names that scope
+ * ("Tìm kiếm trong Thư viện", PO decision DEC-AIG-D10).
  */
 export function HeroSearch({ arrow }: { arrow: ReactNode }) {
   const router = useRouter()
@@ -44,8 +45,8 @@ export function HeroSearch({ arrow }: { arrow: ReactNode }) {
         type="search"
         name="q"
         maxLength={LIBRARY_QUERY_MAX}
-        aria-label="Tìm kiếm chương trình, sự kiện"
-        placeholder="Tìm kiếm chương trình, sự kiện"
+        aria-label="Tìm kiếm trong Thư viện"
+        placeholder="Tìm kiếm trong Thư viện"
       />
       <button className={styles.searchButton} type="submit" aria-label="Tìm kiếm">
         {arrow}

@@ -484,6 +484,16 @@ async function removedActions(page: Page): Promise<Rect[]> {
     )
 }
 
+/** Intentional copy change (PO decision DEC-AIG-D10): the hero search placeholder names the Library. */
+async function searchCopy(page: Page): Promise<Rect[]> {
+  return page.locator('[data-cta="hero-search"] input').evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect()
+      return { x: r.x, y: r.y + window.scrollY, width: r.width, height: r.height }
+    }),
+  )
+}
+
 test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
   test('typography: Space Grotesk where the reference uses it, approved mono, no fallback', async ({
     page,
@@ -553,6 +563,7 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
       ...(await demoLabels(page)),
       ...(await photos(page)),
       ...(await removedActions(page)),
+      ...(await searchCopy(page)),
     ]
     const mask = [...(await textRects(page)), ...labels]
     const results = compareSegments(reference, actual, segments, mask, {
@@ -574,6 +585,7 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
         '"Dữ liệu minh hoạ" labels on events, programmes, pipeline and the partner matrix (DEC-H1-R2-D2)',
         'event, programme and pipeline pictures replaced by the Hub photos (PO, 29/09)',
         'no "Chi tiết" action on the event and programme cards (PO decision, Alpha interaction gap fix 30/09)',
+        'hero search placeholder "Tìm kiếm trong Thư viện" (PO decision DEC-AIG-D10)',
       ],
       segments: report,
     })

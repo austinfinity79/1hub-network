@@ -75,11 +75,10 @@ test.describe('M0-T05 API surface discipline', () => {
     // (wf03-s06-organization-profile.spec.ts), WF03-S08 GET/POST …/relationships and
     // …/relationships/{id}/close (wf03-s08-organization-relationships.spec.ts), WF03-S07
     // events (wf03-s07-event-management.spec.ts), WF03-S09 GET /organizations/by-slug/{slug}
-    // (wf03-s09-public-organization.spec.ts). Other
-    // business endpoints still belong to later screens; answering now would be
-    // scope leakage.
+    // (wf03-s09-public-organization.spec.ts), and WF02-S08 GET /me/ventures (asserted
+    // below; wf02-s08-projects.spec.ts). Other business endpoints still belong to
+    // later screens; answering now would be scope leakage.
     for (const path of [
-      '/me/ventures',
       '/ops/organizations/10000000-0000-0000-0000-000000000101/programmes',
       '/ops/feedback',
       '/vocabularies/STARTUP_STAGE',
@@ -87,6 +86,26 @@ test.describe('M0-T05 API surface discipline', () => {
       const response = await request.get(`${BASE}${path}`)
       expect(response.status(), `${path} should not be implemented yet`).toBe(404)
     }
+  })
+
+  test('GET /me/ventures is implemented as contracted: a session gets { items, page }', async ({
+    request,
+  }) => {
+    // Contract 05 §5.3 and 05:1331 (listOwnVentures, WF02-S01 / WF02-S08).
+    const guest = await request.get(`${BASE}/me/ventures`)
+    expect(guest.status()).toBe(401)
+    const body = (await guest.json()) as { error: { code: string; request_id: string } }
+    expect(body.error.code).toBe('UNCONTRACTED_UNAUTHENTICATED')
+    expect(body.error.request_id).toMatch(/^req_/)
+
+    expect(
+      (await request.post('/dev/login', { data: { email: 'member@example.test' } })).ok(),
+    ).toBe(true)
+    const own = await request.get(`${BASE}/me/ventures`)
+    expect(own.status()).toBe(200)
+    const list = (await own.json()) as { items: unknown[]; page: unknown }
+    expect(Array.isArray(list.items)).toBe(true)
+    expect(list.page).toBeTruthy()
   })
 
   test('auth endpoints exist but reject the wrong method', async ({ request }) => {
