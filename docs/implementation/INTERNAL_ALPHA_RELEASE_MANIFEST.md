@@ -8,6 +8,7 @@ Deploy EXACTLY the release SHA with the deploy tooling SHA below; never a branch
 | Field | Value |
 |---|---|
 | **Release SHA** (app, `main`) | **`ff052d70fe418cb092bd5e33fcc03ee712c76d14`** — TASK 24.1–24.5 on top of `c02cdd9`; product code identical to `db25d95` (`ff052d7` adds the RC responsive smoke only) |
+| GitHub | `main` and `deploy/vps-foundation` pushed 2026-09-30; tag **`internal-alpha-2026-09-30`** → `ff052d70fe418cb092bd5e33fcc03ee712c76d14` ([release sync](reports/INTERNAL-ALPHA-RC_release-sync.md)) |
 | **Deploy tooling SHA** (`deploy/vps-foundation`) | **`4519a84f045b663fc82c688516bc5e1483f22fc3`** (on `origin`) |
 | **Rollback SHA** | **`c02cdd9ba4ab6b84bf87a569c02c608cc62804a0`** — live on https://1hubnetwork.io.vn (server `state/current` and `app/.env`, read 2026-09-30); its image is kept, so `rollback.sh` needs no rebuild. Schema-safe: 013 only adds tables that `c02cdd9` never reads |
 | Runtime | Node 22, pnpm via corepack, PostgreSQL 17 (`postgres:17.6-alpine`), the Next patch in `patches/` |
