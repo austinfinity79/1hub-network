@@ -1,6 +1,6 @@
 # Internal Alpha Release Manifest
 
-**Status: INTERNAL ALPHA RC — GREEN** (frozen 2026-09-30 by TASK 24 FINAL; [freeze report](reports/TASK-24-FINAL_release-freeze.md)). Functional QA: PASS. Pixel QA: PASS on the individual flow closures (24.1–24.5). Automated UAT: PASS. Human / team UAT: **PENDING**. Deployment: **NOT RUN** — waiting for the PO decision [DEP-1](#dep-1).
+**Status: INTERNAL ALPHA — DEPLOYED GREEN** on https://1hubnetwork.io.vn since 2026-09-30 01:58 UTC ([deploy report](reports/INTERNAL-ALPHA-RC_deploy.md)); RC frozen by TASK 24 FINAL ([freeze report](reports/TASK-24-FINAL_release-freeze.md)). Functional QA: PASS. Pixel QA: PASS on the individual flow closures (24.1–24.5). Automated UAT: PASS; domain smoke 35 / 35. Human / team UAT: **PENDING**. [DEP-1](#dep-1): **CLOSED** (PO option A).
 
 Deploy EXACTLY the release SHA with the deploy tooling SHA below; never a branch name or HEAD at deploy time (CLAUDE.md §14). The previous RC (`9c61458`, 28/09) and its hotfixes up to `c02cdd9` are superseded.
 
@@ -15,13 +15,14 @@ Deploy EXACTLY the release SHA with the deploy tooling SHA below; never a branch
 | Seed | never on a production deploy. Production was seeded once; it holds the fixture organisations and a DRAFT "Demo Challenge", **not** the PUBLISHED programme `d4000000-…01` nor any application form |
 | Scope | Homepage, About, Library (L2), L1, L2, L3 (chapter / CLB), WF04 operator demo (L4, no FUTURE frame), L5 Startup Journey (server applications), L6: no screen (DEC-L6-D1) |
 
-## <a id="dep-1"></a>DEP-1 — production programme data (PO decision before deploying)
+## <a id="dep-1"></a>DEP-1 — production programme data (CLOSED 2026-09-30, option A)
 | Item | Detail |
 |---|---|
 | Finding | From this release, the L5 journey and the WF05 list / detail "Chương trình đang mở" read `programme_application_forms`. The live `c02cdd9` shows the WF04 fixture programme from code. After the deploy, without data, production shows **no open programme** and no "Đăng ký" |
 | Option A (recommended) | After the migrate, apply once the seed's L5 block alone: programme `d4000000-…01` "Chương trình ươm tạo (demo)" under the existing `chapter-01`, and its form (two questions, TEAM + STARTUP). Idempotent (`ON CONFLICT`); touches `programmes` and `programme_application_forms` only (verified on a copy of the `c02cdd9` schema) |
 | Option B | Deploy without data: L5 stays dark in production until a programme is configured |
 | Not allowed | running the full seed on production (dev personas) |
+| Result | applied after 013: programme `d4000000-…01` PUBLISHED under `chapter-01` + its form; re-applied identical; no other row changed ([deploy report](reports/INTERNAL-ALPHA-RC_deploy.md)) |
 
 ## Commands (from the deploy worktree at `4519a84`)
 | Step | Command |

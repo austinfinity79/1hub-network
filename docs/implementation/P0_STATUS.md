@@ -117,6 +117,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 24 FINAL — INTERNAL ALPHA RC: GREEN, frozen at `ff052d70fe418cb092bd5e33fcc03ee712c76d14`** ([report](reports/TASK-24-FINAL_release-freeze.md), [manifest](INTERNAL_ALPHA_RELEASE_MANIFEST.md)). Combined smoke, security, fresh / upgrade migration, build and runtime PASS; rollback `c02cdd9`. Not pushed, not deployed: deployment waits for the PO decision DEP-1 (production programme data).
 
+**INTERNAL ALPHA RC: DEPLOYED GREEN** ([report](reports/INTERNAL-ALPHA-RC_deploy.md)). `ff052d70fe418cb092bd5e33fcc03ee712c76d14` runs on https://1hubnetwork.io.vn since 2026-09-30 01:58 UTC; migration 013 applied; DEP-1 closed (L5 programme + application form only); domain smoke 35 / 35, #418 0, 5xx 0. Rollback `c02cdd9`. Human / team UAT pending.
+
 ## Completed (committed)
 
 | Task | Scope |

@@ -1,39 +1,37 @@
 # Claude Task Report
 
 ## Task
-TASK 24 FINAL — combined release smoke and freeze of one exact Internal Alpha SHA. Full report: [reports/TASK-24-FINAL_release-freeze.md](reports/TASK-24-FINAL_release-freeze.md); manifest: [INTERNAL_ALPHA_RELEASE_MANIFEST.md](INTERNAL_ALPHA_RELEASE_MANIFEST.md).
+DEP-1 CLOSURE + DEPLOY EXACT FINAL RELEASE SHA. Full report: [reports/INTERNAL-ALPHA-RC_deploy.md](reports/INTERNAL-ALPHA-RC_deploy.md); freeze: [reports/TASK-24-FINAL_release-freeze.md](reports/TASK-24-FINAL_release-freeze.md); manifest: [INTERNAL_ALPHA_RELEASE_MANIFEST.md](INTERNAL_ALPHA_RELEASE_MANIFEST.md).
 
 ## Verdict
-**INTERNAL ALPHA RC — GREEN**, frozen at `ff052d70fe418cb092bd5e33fcc03ee712c76d14`. Functional QA PASS; pixel QA PASS on the 24.1–24.5 closures; automated UAT PASS; human / team UAT PENDING. STOP before deployment.
+**INTERNAL ALPHA — DEPLOYED GREEN.** `ff052d70fe418cb092bd5e33fcc03ee712c76d14` on https://1hubnetwork.io.vn; DEP-1 CLOSED. Human / team UAT pending. STOP.
 
 ## Scope implemented
-- Verify and freeze only. One test added: `release-rc-responsive.spec.ts` (RC responsive smoke, 4 widths).
+- Backup, deploy of the exact frozen SHA, migration 013, DEP-1 data (the L5 programme + application form only), domain smoke, records. No code change.
 
 ## Files changed
-- `tests/visual/specs/release-rc-responsive.spec.ts` (commit `ff052d7`); docs: manifest, freeze report, this report, `P0_STATUS.md`.
+- `main`: deploy report, manifest, `P0_STATUS.md`, this report. `deploy/vps-foundation`: `INTERNAL_ALPHA_RC_DEPLOYMENT.md`, `VPS_DEPLOYMENT.md` (`dc2ae21`).
 
 ## Migrations / data
-None added. Chain `001`→`013` verified fresh and as an upgrade from `c02cdd9`; production holds `001`→`012`.
+`013_p0_applications.sql` applied on production; DEP-1: programme `d4000000-…01` PUBLISHED under `chapter-01` + its form, idempotent, no other row changed. Backup `onehub-20260930T015416Z.dump`.
 
 ## Tests
-format, lint, typecheck, production build PASS; unit 252 / 252; impacted DB / API 214 / 214; UAT L1 / L2 19 / 19; visual 92 / 92 (release, homepage, Library, WF03 UAT + S04, WF04 UAT, WF05 UAT, L5, L6, RC responsive).
+Domain smoke 35 / 35 (public, auth, `/me`, Library, L3, L5 journey with double submit, cross-user refusals); runtime #418 0, 5xx 0, broken assets 0.
 
 ## Visual QA
-Not rerun (no product code change since the closures). Responsive smoke at 1440 / 1024 / 768 / 390 PASS.
+Not rerun (same code as the frozen RC).
 
 ## Deviations / blockers
-- DEP-1 (deployment, data): production has no PUBLISHED programme with an application form; the PO chooses to apply the seed's L5 block once (A) or deploy with L5 dark (B).
-- Code blockers: 0.
+- None. Smoke data left: two `smoke-rc-…@example.test` accounts, one DRAFT venture, one SUBMITTED application.
 
 ## Git
-- Branch: `main`; start HEAD `db25d952ba3a6c723be018f28cbd1ec5aaccd24e`; no concurrent change
-- Release SHA (frozen): `ff052d70fe418cb092bd5e33fcc03ee712c76d14`
-- Report/final commit: `docs(release): freeze the Internal Alpha RC ff052d7` (docs only, after the release SHA)
-- Rollback SHA: `c02cdd9ba4ab6b84bf87a569c02c608cc62804a0` (live)
+- Branch: `main`; release SHA `ff052d70fe418cb092bd5e33fcc03ee712c76d14`; start HEAD `39489f5`; no concurrent change
+- Report/final commit: `docs(release): report the Internal Alpha RC deployment of ff052d7`
+- Deploy branch record: `dc2ae21` on `deploy/vps-foundation`
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
-- Push status: **NOT RUN** (task says do not push)
-- Remote HEAD: `2b59f2259755ae124cea555a19f049a981790627`; local `main` is ahead of it
+- Push status: **NOT RUN** (not required by the task)
+- Remote HEAD: `2b59f2259755ae124cea555a19f049a981790627` (`main`), `4519a84` (`deploy/vps-foundation`); local branches are ahead
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO decision on DEP-1, then deploy exactly `ff052d70fe418cb092bd5e33fcc03ee712c76d14` to 1hubnetwork.io.vn.
+Human / team UAT on the deployed release.
