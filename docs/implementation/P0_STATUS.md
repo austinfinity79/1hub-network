@@ -115,6 +115,8 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **TASK 24.5 — L6 ECOSYSTEM DATA & MATCHING: GREEN, no in-scope screen (local, not pushed, not deployed)** ([report](reports/TASK-24.5_l6-ecosystem-closure.md), [inventory](task-24/l6-ecosystem-inventory.md), [features](task-24/l6-ecosystem-features.md), [DEC-L6-D1](../decisions/DECISION_LOG.md#dec-l6-d1)). The 29/09 L6 board equals the frozen L46–L54: ALPHA 0 · FUTURE 9; matching DEFERRED; the discovery layer passes the L6 privacy, IDOR, spoof and runtime checks. STOP checkpoint before the TASK 24 final combined smoke.
 
+**TASK 24 FINAL — INTERNAL ALPHA RC: GREEN, frozen at `ff052d70fe418cb092bd5e33fcc03ee712c76d14`** ([report](reports/TASK-24-FINAL_release-freeze.md), [manifest](INTERNAL_ALPHA_RELEASE_MANIFEST.md)). Combined smoke, security, fresh / upgrade migration, build and runtime PASS; rollback `c02cdd9`. Not pushed, not deployed: deployment waits for the PO decision DEP-1 (production programme data).
+
 ## Completed (committed)
 
 | Task | Scope |

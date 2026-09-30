@@ -1,39 +1,39 @@
 # Claude Task Report
 
 ## Task
-TASK 24 — L2 DELTA + L3 → L6 SEQUENTIAL REALIGNMENT, step 24.5 (L6 Ecosystem Data & Matching). Full report: [reports/TASK-24.5_l6-ecosystem-closure.md](reports/TASK-24.5_l6-ecosystem-closure.md); earlier: [24.1](reports/TASK-24.1_l2-library-delta.md), [24.2](reports/TASK-24.2_l3-clb-closure.md), [24.3](reports/TASK-24.3_l4-challenge-closure.md), [24.4](reports/TASK-24.4_l5-startup-closure.md).
+TASK 24 FINAL — combined release smoke and freeze of one exact Internal Alpha SHA. Full report: [reports/TASK-24-FINAL_release-freeze.md](reports/TASK-24-FINAL_release-freeze.md); manifest: [INTERNAL_ALPHA_RELEASE_MANIFEST.md](INTERNAL_ALPHA_RELEASE_MANIFEST.md).
 
 ## Verdict
-**24.5 GREEN (no in-scope screen) — STOP CHECKPOINT.** Next: TASK 24 final combined smoke, when authorised.
+**INTERNAL ALPHA RC — GREEN**, frozen at `ff052d70fe418cb092bd5e33fcc03ee712c76d14`. Functional QA PASS; pixel QA PASS on the 24.1–24.5 closures; automated UAT PASS; human / team UAT PENDING. STOP before deployment.
 
 ## Scope implemented
-- L6 inventory and feature classes: the 29/09 board is pixel-identical to the frozen L46–L54, all FUTURE (DEC-2809-D7, DEC-L6-D1); MATCHING ENGINE DEFERRED.
-- L6 privacy / security / runtime spec over the existing discovery layer.
+- Verify and freeze only. One test added: `release-rc-responsive.spec.ts` (RC responsive smoke, 4 widths).
 
 ## Files changed
-- Docs (inventory, features, report, DEC-L6-D1, status); `l6-discovery-privacy.spec.ts` (new); `wf03-uat-journey.spec.ts` (the two approved L5 audit codes).
+- `tests/visual/specs/release-rc-responsive.spec.ts` (commit `ff052d7`); docs: manifest, freeze report, this report, `P0_STATUS.md`.
 
 ## Migrations / data
-None.
+None added. Chain `001`→`013` verified fresh and as an upgrade from `c02cdd9`; production holds `001`→`012`.
 
 ## Tests
-L6 spec 4 / 4 (33 privacy checks, 0 leaks; IDOR / spoof matrix; 24 future routes 404; 13 runtime loads clean); smoke UAT L1 / L2 19 / 19, WF01 UAT + Library + L3 + L4 + L5 + homepage 73 / 73; format, lint, typecheck PASS.
+format, lint, typecheck, production build PASS; unit 252 / 252; impacted DB / API 214 / 214; UAT L1 / L2 19 / 19; visual 92 / 92 (release, homepage, Library, WF03 UAT + S04, WF04 UAT, WF05 UAT, L5, L6, RC responsive).
 
 ## Visual QA
-Not applicable (no L6 screen built; no baseline added). P0–P3 = 0.
+Not rerun (no product code change since the closures). Responsive smoke at 1440 / 1024 / 768 / 390 PASS.
 
 ## Deviations / blockers
-- Shared regression fixed: WF03 UAT audit-code allowlist lacked the L5 codes of DEC-L5-D3 (test list only).
-- Blockers: 0.
+- DEP-1 (deployment, data): production has no PUBLISHED programme with an application form; the PO chooses to apply the seed's L5 block once (A) or deploy with L5 dark (B).
+- Code blockers: 0.
 
 ## Git
-- Branch: `main`; start HEAD `14dade5d2bb5d2d9fce62d7b24e0ef6cb145d166`; no concurrent change
-- Implementation commit: `feat(wf06): align ecosystem discovery with latest workflow`
-- Report/final commit: the same commit
+- Branch: `main`; start HEAD `db25d952ba3a6c723be018f28cbd1ec5aaccd24e`; no concurrent change
+- Release SHA (frozen): `ff052d70fe418cb092bd5e33fcc03ee712c76d14`
+- Report/final commit: `docs(release): freeze the Internal Alpha RC ff052d7` (docs only, after the release SHA)
+- Rollback SHA: `c02cdd9ba4ab6b84bf87a569c02c608cc62804a0` (live)
 - Remote: `origin` (github.com:austinfinity79/1hub-network)
 - Push status: **NOT RUN** (task says do not push)
 - Remote HEAD: `2b59f2259755ae124cea555a19f049a981790627`; local `main` is ahead of it
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-TASK 24 final combined smoke, after the checkpoint.
+PO decision on DEP-1, then deploy exactly `ff052d70fe418cb092bd5e33fcc03ee712c76d14` to 1hubnetwork.io.vn.
