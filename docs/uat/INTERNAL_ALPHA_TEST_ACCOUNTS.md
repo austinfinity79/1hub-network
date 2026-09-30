@@ -31,7 +31,7 @@ Accounts for the [self-review guide](INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md) on **h
 | Demo Event · Demo Draft Event | PUBLISHED · DRAFT (Chapter 01) | the published one is on `/organizations/chapter-01` |
 
 ## Other accounts you may see (do not use)
-`preview-demo*`, `preview03-*`, `preview04-*`, `final05-*`, `final07-*`, `smoke-alpha09-*`, `smoke-rc-*` on `@example.test` are earlier operator test runs. Their data are not UAT fixtures; the operator clears them. Five real-address accounts exist (testers and the operator); they are not listed.
+`preview-demo*`, `preview03-*`, `preview04-*`, `final05-*`, `final07-*`, `smoke-alpha09-*` on `@example.test` are earlier operator test runs (the `smoke-rc-*` accounts were removed on 30/09). Their data are not UAT fixtures; the operator clears them. Five real-address accounts exist (testers and the operator); they are not listed.
 
 ## Related
 - [INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md) · [INTERNAL_ALPHA_UAT_CHECKLIST.csv](INTERNAL_ALPHA_UAT_CHECKLIST.csv)

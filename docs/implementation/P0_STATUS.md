@@ -119,7 +119,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 **INTERNAL ALPHA RC: DEPLOYED GREEN** ([report](reports/INTERNAL-ALPHA-RC_deploy.md)). `ff052d70fe418cb092bd5e33fcc03ee712c76d14` runs on https://1hubnetwork.io.vn since 2026-09-30 01:58 UTC; migration 013 applied; DEP-1 closed (L5 programme + application form only); domain smoke 35 / 35, #418 0, 5xx 0. Rollback `c02cdd9`. Human / team UAT pending.
 
-**RELEASE SYNC (30/09)** ([report](reports/INTERNAL-ALPHA-RC_release-sync.md)): `main` and `deploy/vps-foundation` pushed; tag `internal-alpha-2026-09-30` → `ff052d7`. Smoke-data cleanup identified (33 rows) and backed up, not run pending approval. Team UAT pack: [docs/uat](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md).
+**RELEASE SYNC (30/09)** ([report](reports/INTERNAL-ALPHA-RC_release-sync.md)): `main` and `deploy/vps-foundation` pushed; tag `internal-alpha-2026-09-30` → `ff052d7`. Smoke data (33 rows) removed with PO approval after a backup; programme and form intact. Team UAT pack: [docs/uat](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md).
 
 ## Completed (committed)
 

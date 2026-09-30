@@ -1,6 +1,6 @@
 # INTERNAL-ALPHA-RC Release Sync
 
-**POST-DEPLOY RELEASE SYNC: GitHub synced and tagged; smoke-data cleanup IDENTIFIED, NOT RUN (awaiting approval).** Production still runs `ff052d70fe418cb092bd5e33fcc03ee712c76d14` (deploy: [INTERNAL-ALPHA-RC_deploy.md](INTERNAL-ALPHA-RC_deploy.md)). Team UAT pack: [../../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](../../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md).
+**POST-DEPLOY RELEASE SYNC: GitHub synced and tagged; smoke data removed (PO approval, 02:29 UTC).** Production still runs `ff052d70fe418cb092bd5e33fcc03ee712c76d14` (deploy: [INTERNAL-ALPHA-RC_deploy.md](INTERNAL-ALPHA-RC_deploy.md)). Team UAT pack: [../../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](../../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md).
 
 ## Release state (2026-09-30)
 | Item | Value |
@@ -40,11 +40,14 @@ Total 33 rows: audit 9, application 1, venture field 1, venture 1, analytics 6, 
 
 | Step | State |
 |---|---|
-| Backup | `/opt/1hub-network/shared/backups/onehub-20260930T021349Z.dump` (142 567 bytes, sha256 `3dda033be1409f949dbc69d84f0eaec0763c5afd0004504ffa6fffb170ee361b`) |
-| Deletion | **NOT RUN.** A guarded script is prepared: one transaction, identity re-check, each `DELETE` by exact id with its expected row count, any mismatch rolls everything back. The session's permission guard refused the production `DELETE`; it runs only with explicit approval (or by the operator) |
-| Preserved | programme `d4000000-…01` (PUBLISHED) and its form; `chapter-01`; review personas; the earlier `smoke-alpha09-*`, `preview*`, `final0*` runs (not in the known list); Library data |
+| First backup | `/opt/1hub-network/shared/backups/onehub-20260930T021349Z.dump` (142 567 bytes, sha256 `3dda033be1409f949dbc69d84f0eaec0763c5afd0004504ffa6fffb170ee361b`) |
+| Approval | the first attempt was refused by the session's permission guard; the PO then approved explicitly ("đồng ý xoá dữ liệu smoke") |
+| Backup before delete | `/opt/1hub-network/shared/backups/onehub-20260930T022914Z.dump` (142 567 bytes, sha256 `eaea5dcff0ad8601580f1ba060dc742a4e6c800cecfb73d0ad288e77afe2b791`); inventory re-checked: unchanged |
+| Deletion | **DONE**: one transaction, identity re-check, each `DELETE` by exact id with its expected row count (a mismatch would roll everything back) → "33 rows deleted as expected" |
+| After | accounts 20 → 18, profiles 15 → 13, ventures 9 → 8, applications 1 → 0, consents −4, audit −9, sessions −2, sign-in requests −2, analytics −6, idempotency −3; the core-data hash equals the state right after DEP-1 (`faa5eb91…`); 0 smoke rows left, 0 orphans, 0 duplicate accounts / profiles, 0 DRAFT-and-PUBLIC ventures |
+| Preserved | programme `d4000000-…01` (PUBLISHED) and its form (verified after the delete); `chapter-01`; review personas; the earlier `smoke-alpha09-*`, `preview*`, `final0*` runs (not in the known list); Library data |
 
-## Domain sanity after the sync
+## Domain sanity after the sync and the cleanup
 `/`, `/about`, `/library`, `/auth`, `/organizations/chapter-01` 200; `/me` and `/programmes/d4000000-…01/apply` → `/auth` as expected; `/api/v1/session` 200. #418 0, 5xx 0 (browser and Nginx), broken assets 0, console errors 0.
 
 ## Related

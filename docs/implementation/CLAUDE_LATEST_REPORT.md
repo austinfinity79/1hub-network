@@ -4,11 +4,11 @@
 POST-DEPLOY RELEASE SYNC + TEST DATA CLEANUP + TEAM UAT PACK. Sync record: [reports/INTERNAL-ALPHA-RC_release-sync.md](reports/INTERNAL-ALPHA-RC_release-sync.md); UAT pack: [../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md).
 
 ## Verdict
-Internal Alpha stays **DEPLOYED GREEN** on `ff052d70fe418cb092bd5e33fcc03ee712c76d14`. GitHub synced and tagged. Team UAT pack ready. Smoke-data cleanup identified and backed up but **not run**: the production `DELETE` needs explicit approval. STOP.
+Internal Alpha stays **DEPLOYED GREEN** on `ff052d70fe418cb092bd5e33fcc03ee712c76d14`. GitHub synced and tagged. Team UAT pack ready. Smoke data removed with PO approval (33 rows, backup first). STOP.
 
 ## Scope implemented
 - Release state verified; secret scan; push of `main` and `deploy/vps-foundation`; annotated tag `internal-alpha-2026-09-30` on the deployed SHA.
-- Smoke records identified exactly (2 accounts, 2 profiles, 1 venture, 1 application, 33 rows with dependents); backup taken; deletion prepared, not executed.
+- Smoke records identified exactly (2 accounts, 2 profiles, 1 venture, 1 application, 33 rows with dependents); backup taken; deleted after the PO's explicit approval; integrity verified.
 - Team UAT / PO self-review pack in `docs/uat/` (guide, accounts, 8 journeys / 35 cases, CSV checklist); the 28/09 pack marked superseded.
 
 ## Files changed
@@ -16,13 +16,13 @@ Internal Alpha stays **DEPLOYED GREEN** on `ff052d70fe418cb092bd5e33fcc03ee712c7
 - UAT pack: `docs/uat/*` (new guide, accounts, checklist CSV, `journeys/j1…j8`; stubs redirected); banners on the 28/09 pack in `docs/implementation/`.
 
 ## Migrations / data
-None. Production data unchanged by this task (the cleanup did not run).
+No migration. Production: the 33 smoke rows removed; programme, form and all other data unchanged (hash equals the post-DEP-1 state).
 
 ## Tests
 Domain sanity: 7 routes as expected; #418 0, 5xx 0, broken assets 0, console 0. No code change, no redeploy.
 
 ## Deviations / blockers
-- Cleanup of the 33 smoke rows waits for approval (backup `onehub-20260930T021349Z.dump`).
+- Cleanup ran after approval (backup `onehub-20260930T022914Z.dump`).
 - Personas needing provisioning: ACTIVE venture member (made in UAT J3-04); CLB-level leader (only if a CLB-scope test is wanted).
 
 ## Git
@@ -32,4 +32,4 @@ Domain sanity: 7 routes as expected; #418 0, 5xx 0, broken assets 0, console 0. 
 - Working tree: clean after the commits, except the untracked `AGENTS.md`
 
 ## Recommended next task
-TEAM-UAT-01 on https://1hubnetwork.io.vn; the cleanup once approved.
+TEAM-UAT-01 on https://1hubnetwork.io.vn.
