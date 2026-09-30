@@ -9,9 +9,10 @@ import styles from './landing.module.css'
  * TASK 22.1 — shared pieces of the corrected public homepage (H1).
  *
  * A call to action is either a real destination (a route that exists, an
- * in-page section, or the visitor's own entry point) or INERT: it keeps its
- * place in the approved layout, never navigates and says why on hover and to
- * assistive technology (DEC-P0-SHELL-D2 reasons). No `href="#"`, no script URL.
+ * in-page section, an approved external site opened in a new tab, or the
+ * visitor's own entry point) or INERT: it keeps its place in the approved
+ * layout, never navigates and says why on hover and to assistive technology
+ * (DEC-P0-SHELL-D2 reasons). No `href="#"`, no script URL.
  */
 
 export type InertReason = keyof typeof INERT_REASONS
@@ -49,6 +50,18 @@ export function Cta({
   cta?: string
 }) {
   if ('href' in action) {
+    if (action.href.startsWith('https://'))
+      return (
+        <a
+          href={action.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={className}
+          data-cta={cta}
+        >
+          {children}
+        </a>
+      )
     return action.href.startsWith('#') ? (
       <a href={action.href} className={className} data-cta={cta}>
         {children}
@@ -68,6 +81,19 @@ export function Cta({
       title={reason}
       aria-label={`${label} — ${reason}`}
     >
+      {children}
+    </span>
+  )
+}
+
+/**
+ * PO decision (Alpha interaction gap fix, 30/09): a public navigation item with
+ * no approved destination is plain text. It is not a link and not a disabled
+ * control, and carries no "coming soon" tooltip.
+ */
+export function NavLabel({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <span className={className} data-nav-kind="LABEL">
       {children}
     </span>
   )

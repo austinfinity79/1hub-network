@@ -448,13 +448,12 @@ test.describe('WF01-S06 pixel QA (ACC-06)', () => {
           reference: { x: 270, y: 1450, width: 900, height: 230 },
           dy: (await at('rule')) - REF.ruleTop,
         },
-        { name: 'feedback', reference: { x: 1290, y: 810, width: 150, height: 90 }, dy: 0 },
       ],
       intentional: [
         {
           class: 'INTENTIONAL-SCOPE',
           reason:
-            'D-A1: no AI provider is configured, so the AI block is drawn and has nothing to press; D-F1: "Góp ý" is drawn and inert',
+            'D-A1: no AI provider is configured, so the AI block is drawn and has nothing to press; "Góp ý" is hidden for Alpha (PO decision 30/09), so its pill is not compared',
         },
       ],
     })

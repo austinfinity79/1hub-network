@@ -40,7 +40,6 @@ export type Item = {
   row: { mark: string; name: string; note: string | null; href: string | null } | null
   cta: { label: string; href: string | null }
   /** White card: the outlined second button (inert: no follow / connect contract). */
-  secondary: string | null
   facets: Record<string, string[]>
   /** Folded text the search runs on. */
   text: string
@@ -172,7 +171,6 @@ export function problemTab(problems: LibraryProblem[]): TabModel {
     sub: null,
     chips: [],
     row: null,
-    secondary: null,
     cta: {
       label: p.stage === 'sap_dien_ra' ? 'Theo dõi bài toán' : 'Xem bài toán',
       href: null,
@@ -236,7 +234,6 @@ function startupItem(s: LibraryStartup): Item {
     row: null,
     // The D7 card link: the startup's own website, or inert without one.
     cta: { label: 'Xem hồ sơ', href: s.website },
-    secondary: 'Theo dõi',
     facets: { domain: s.categories, stage: [stage] },
     text: fold(
       [s.name, s.tagline ?? '', s.product ?? '', ...s.domains, ...s.founderNames].join(' '),
@@ -270,7 +267,6 @@ function founderItem(f: LibraryFounder): Item {
       href: first.website,
     },
     cta: { label: 'Xem hồ sơ', href: null },
-    secondary: 'Kết nối',
     facets: { domain: f.categories },
     text: fold([f.name, f.role, ...f.startups.map((s) => s.name)].join(' ')),
     sort: { rank: 0, days: 0, prize: 0, name: f.name },

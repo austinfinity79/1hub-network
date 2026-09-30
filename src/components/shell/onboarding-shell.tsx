@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 
-import { Inert } from '@/components/onboarding/inert'
 import { HomeLink } from '@/components/shell/home-link'
 
 import styles from './onboarding-shell.module.css'
@@ -22,7 +21,7 @@ type Props = {
  * Header + canvas shared by the onboarding screens ACC-05 … ACC-10 of the L1
  * board (DEC-L1R-D7): wordmark, a caption over four progress bars, and one
  * action. The bars are presentation only and never gate navigation; the page
- * guards do. "Góp ý" floats over every screen and is inert (D-F1).
+ * guards do. "Góp ý" is hidden for Alpha (PO decision 30/09; no feedback channel).
  */
 export function OnboardingShell({ stage, caption, action, children }: Props) {
   return (
@@ -55,14 +54,6 @@ export function OnboardingShell({ stage, caption, action, children }: Props) {
         <div className={styles.action}>{action}</div>
       </header>
       <main className={styles.main}>{children}</main>
-      <div className={styles.feedback} data-anchor="feedback">
-        <Inert reason="NO_P0_SCREEN" label="Góp ý" className={styles.feedbackPill}>
-          <span className={styles.feedbackIcon} aria-hidden="true">
-            !
-          </span>
-          Góp ý
-        </Inert>
-      </div>
     </div>
   )
 }

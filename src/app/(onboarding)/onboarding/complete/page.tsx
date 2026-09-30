@@ -11,9 +11,11 @@ import { getOnboardingState, routeFor } from '@/lib/onboarding/state'
 import { getProfileCompletion } from '@/lib/profile/completion'
 
 import styles from './complete.module.css'
+import { OnboardingExit } from './onboarding-exit'
 
 /**
- * ACC-10 — /onboarding/complete. Next: WF02-S01 /me.
+ * ACC-10 — /onboarding/complete. Next: WF02-S01 /me, or the path the member
+ * signed in to return to (BD-02 return-to rule, `onboarding-exit.tsx`).
  * Reference: design-reference/final/revision/L1/ACC-10__onboarding-complete__SOURCE.png
  * Decisions DEC-L1R-D6, D7; DEC-WF01-S08-D5..D7 still hold.
  *
@@ -69,15 +71,7 @@ export default async function Page() {
   ]
 
   return (
-    <OnboardingShell
-      stage={5}
-      caption="HỒ SƠ ĐÃ HOÀN TẤT"
-      action={
-        <Link href="/me" data-nav="exit-me">
-          Vào Tài khoản của tôi
-        </Link>
-      }
-    >
+    <OnboardingShell stage={5} caption="HỒ SƠ ĐÃ HOÀN TẤT" action={<OnboardingExit />}>
       <div className={styles.card} data-screen="ACC-10">
         <Surface as="section">
           <div className={styles.done} aria-hidden="true">

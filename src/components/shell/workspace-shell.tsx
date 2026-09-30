@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-import { FeedbackPill } from '@/components/shell/feedback-pill'
 import { HomeLink } from '@/components/shell/home-link'
 import type { MemberIdentity } from '@/lib/member/guard'
 import { INERT_REASONS, OPS_ENTRY, PROJECT_DEMO_ENTRY, type NavItem } from '@/lib/member/nav'
@@ -23,8 +22,8 @@ import styles from './workspace-shell.module.css'
  * What the member shell promises stays: the wordmark leads home
  * (DEC-P0-SHELL-D1), an account with an ops scope gets "Vận hành tổ chức"
  * (D3), items without a screen are inert with a reason (D2), and the WF05 demo
- * entry sits under its own group label (DEC-WF05-G2). "Góp ý" is drawn and
- * inert (D-F1).
+ * entry sits under its own group label (DEC-WF05-G2). "Góp ý" is hidden for
+ * Alpha (PO decision 30/09; no feedback channel).
  */
 
 type Member = Pick<MemberIdentity, 'displayName' | 'avatarUrl'> & { opsAccess?: boolean }
@@ -119,7 +118,6 @@ export function ProfileShell({ member, children }: { member: Member; children: R
         </div>
       </header>
       {children}
-      <FeedbackPill />
     </div>
   )
 }
@@ -181,7 +179,6 @@ export function WorkspaceShell({
         </aside>
         <main className={styles.main}>{children}</main>
       </div>
-      <FeedbackPill />
     </div>
   )
 }

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 
 import { Inert } from '@/components/onboarding/inert'
-import { FeedbackPill } from '@/components/shell/feedback-pill'
 import { HomeLink } from '@/components/shell/home-link'
 import { Button, Notice, Surface, TextInput } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
@@ -557,7 +556,6 @@ export function ProjectWizard({
           <Surface as="section">{body}</Surface>
         </div>
       </main>
-      <FeedbackPill />
     </div>
   )
 }

@@ -267,9 +267,15 @@ test.describe('WF02-S08 list', () => {
     ).toEqual([
       ['Hồ sơ của tôi', '/me', null],
       ['Dự án & startup', '/projects', 'page'],
+      // PO decision (Alpha interaction gap fix): applications live on the L5 entry.
+      ['Hồ sơ đăng ký', '/demo/projects', null],
       ['Tổ chức của tôi', '/me/roles', null],
       ['Cài đặt', '/me/settings', null],
     ])
+    // PO decision: "Mạng lưới" is the public Library.
+    await expect(
+      shell.locator('header').getByRole('link', { name: 'Mạng lưới', exact: true }),
+    ).toHaveAttribute('href', '/library')
     const inert = shell.locator('[data-nav-kind="INERT"]')
     expect(
       await inert.evaluateAll((els) =>
@@ -278,16 +284,14 @@ test.describe('WF02-S08 list', () => {
     ).toEqual([
       ['Chương trình', 'SPAN', 'true'],
       ['Sự kiện', 'SPAN', 'true'],
-      ['Mạng lưới', 'SPAN', 'true'],
-      ['Hồ sơ đăng ký', 'SPAN', 'true'],
     ])
     for (const item of await inert.all()) {
       await expect(item).toHaveAttribute('aria-label', /— .+/)
       await item.click()
       await expect(page).toHaveURL('/projects')
     }
-    const feedback = page.locator('[data-cta-kind="INERT"][aria-label^="Góp ý — "]')
-    await expect(feedback).toHaveAttribute('aria-disabled', 'true')
+    // "Góp ý" is hidden for Alpha (PO decision 30/09; no feedback channel).
+    await expect(page.getByText('Góp ý')).toHaveCount(0)
     await expect(shell.locator('[data-nav="project-demo"]')).toHaveAttribute(
       'href',
       '/demo/projects',
@@ -300,6 +304,7 @@ test.describe('WF02-S08 list', () => {
 
     for (const [name, href] of [
       ['Hồ sơ của tôi', '/me'],
+      ['Hồ sơ đăng ký', '/demo/projects'],
       ['Tổ chức của tôi', '/me/roles'],
       ['Cài đặt', '/me/settings'],
     ] as const) {

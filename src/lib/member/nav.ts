@@ -8,8 +8,8 @@ import { PROJECT_DEMO_PATH } from '@/lib/project-demo/routes'
  * Every item the approved WF02 shell draws (ME0, ME2, ME6, ME4 references) is
  * listed here and classified once:
  *
- * - LINK: its destination is a frozen P0 Production route (Screen Contracts),
- *   so it is interactive. `nav.test.ts` fails if a LINK target is not frozen.
+ * - LINK: its destination is a frozen P0 Production route (Screen Contracts) or
+ *   the public Library, so it is interactive. `nav.test.ts` fails otherwise.
  * - INERT: the destination is Demo/Future or has no screen at all. It keeps its
  *   visual presence for Pixel fidelity but never navigates, carries no count
  *   and claims nothing; it renders `aria-disabled`.
@@ -49,9 +49,12 @@ export const PROJECT_DEMO_ENTRY = {
   visible: true,
 } as const
 
-/** Header product nav: Library, Challenge and Events have no P0 Production screen. */
+/**
+ * Header product nav. Thư viện opens the public Library (PO decision, Alpha
+ * interaction gap fix 30/09); Challenge and Events have no P0 Production screen.
+ */
 export const HEADER_NAV: readonly NavItem[] = [
-  { label: 'Thư viện', kind: 'INERT', reason: 'NO_P0_SCREEN' },
+  { label: 'Thư viện', kind: 'LINK', href: '/library' },
   { label: 'Challenge', kind: 'INERT', reason: 'FUTURE' },
   { label: 'Sự kiện', kind: 'INERT', reason: 'FUTURE' },
 ]
@@ -70,8 +73,9 @@ export const SIDEBAR_NAV: readonly SidebarItem[] = [
   // DEC-L2R-D8: pending invitations are answered on "Dự án & startup của tôi".
   { key: null, label: 'Lời mời', kind: 'LINK', href: '/projects' },
   { key: 'roles', label: 'Vai trò & liên kết', kind: 'LINK', href: '/me/roles' },
-  // No frozen route; organisation links live on S01/S04 content.
-  { key: null, label: 'Tổ chức của tôi', kind: 'INERT', reason: 'NO_P0_SCREEN' },
+  // The member's organisations are the memberships and leadership of WF02-S04,
+  // as in the workspace sidebar (PO decision, Alpha interaction gap fix 30/09).
+  { key: null, label: 'Tổ chức của tôi', kind: 'LINK', href: '/me/roles' },
 ]
 
 /** True when `href` is a frozen P0 route of the member group. */

@@ -51,7 +51,6 @@ describe('startupTab', () => {
       summary: 'Truy vết chuỗi giao vận.',
       chips: ['Logistics', 'AgriTech', 'Dữ liệu'],
       cta: { label: 'Xem hồ sơ', href: 'https://tracely.example.vn/' },
-      secondary: 'Theo dõi',
       row: null,
     })
     // No city, verification, needs or programmes: nothing of the kind is in the source.
@@ -83,7 +82,6 @@ describe('founderTab', () => {
       sub: 'Co-Founder · Tracely',
       chips: [],
       cta: { label: 'Xem hồ sơ', href: null },
-      secondary: 'Kết nối',
     })
     expect(chi.row).toEqual({
       mark: 'Tr',

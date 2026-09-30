@@ -27,6 +27,18 @@
 
 Severity of B / C / E / F (instances): **P0 0 · P1 20 · P2 31 · P3 141**. No broken link, no 5xx, no dead form: every submit either acts or explains what is missing.
 
+## Alpha gap fix (30/09, DEC-AIG)
+The PO froze decisions for every P1 / P2 item and four F items ([DEC-AIG](../decisions/DECISION_LOG.md#dec-aig)); the register's "Alpha fix status" column records each outcome.
+
+| Severity | Before (instances) | FIXED | HIDDEN_FOR_ALPHA | DISABLED_FOR_ALPHA (non-clickable) | Remaining |
+|---|---|---|---|---|---|
+| P1 | 20 | 0 | 10 | 10 | **0** |
+| P2 | 31 | 19 | 12 | 0 | **0** |
+| P3 | 141 | 6 | 50 | 10 | 75 (unchanged inert items, outside the fix scope) |
+| D | 37 | — | — | — | 37 DEFERRED_FUTURE |
+
+The audit below describes the build before the fix (`ff052d7`).
+
 ## What works (A)
 All L1–L5 core journeys: sign-in, Google explaining it is not enabled, onboarding stages and uploads, profile and privacy, venture create / edit / publish rules, team invite / accept / remove, membership request, leader approve / reject / member detail / events / profile, the WF04 session demo, the L5 quick team, form, review, submit and read-only view; Library search (submit filters 47 → 3), tabs, facets, sort, "Xem thêm", external record links; every footer / legal link. Member-shell FUTURE items are dimmed with their reason (DEC-P0-SHELL-D2).
 

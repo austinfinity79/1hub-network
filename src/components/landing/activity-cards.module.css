@@ -19,6 +19,12 @@
   box-shadow: inset 0 0 0 1px rgb(22 0 2 / 50%);
 }
 
+/* No "Chi tiết" action for Alpha (PO decision 30/09): its 28 px line (8 px gap and a
+   20 px row) stays reserved, so the picture keeps the approved size. */
+.event {
+  padding-bottom: 51px;
+}
+
 .asset {
   width: 420px;
 }
@@ -267,20 +273,6 @@
 
 .facts dd {
   margin: 0;
-}
-
-.programmeMore {
-  display: inline-flex;
-  align-items: center;
-  gap: 11px;
-  height: 44px;
-  margin-top: 14px;
-  padding: 0 24px;
-  border-radius: 999px;
-  background: var(--coral);
-  color: var(--ink);
-  font-size: 15px;
-  font-weight: 500;
 }
 
 /* ---------- Pipeline cards ---------- */

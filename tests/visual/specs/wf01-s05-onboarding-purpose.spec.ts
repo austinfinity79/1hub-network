@@ -386,13 +386,12 @@ test.describe('WF01-S05 pixel QA (ACC-08)', () => {
           reference: { x: 270, y: 985, width: 900, height: 180 },
           dy: (await at('rule')) - REF.ruleTop,
         },
-        { name: 'feedback', reference: { x: 1290, y: 810, width: 150, height: 90 }, dy: 0 },
       ],
       intentional: [
         {
           class: 'INTENTIONAL-SCOPE',
           reason:
-            'D-A1: no AI provider, so the "AI đề xuất" mark on a suggested role is not drawn; D-F1: "Góp ý" is drawn and inert',
+            'D-A1: no AI provider, so the "AI đề xuất" mark on a suggested role is not drawn; "Góp ý" is hidden for Alpha (PO decision 30/09), so its pill is not compared',
         },
       ],
     })

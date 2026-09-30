@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AuthCard } from '@/components/shell/auth-card'
 import { apiRequest } from '@/lib/api/client'
 import { isApiError } from '@/lib/api/errors'
+import { rememberReturnPath, takeReturnPath } from '@/lib/auth/return-path'
 
 import styles from './callback.module.css'
 
@@ -18,7 +19,9 @@ import styles from './callback.module.css'
  * - The link is /auth/callback?token=<opaque> (D7). The token is read from the
  *   address bar and removed from it BEFORE the request is sent, is never
  *   stored, logged or rendered, and the page sends no Referer (page metadata).
- * - SUCCESS shows briefly while navigating to onboarding or the account home.
+ * - SUCCESS shows briefly while navigating to onboarding or the account home,
+ *   or, for a finished account that came with a safe `?redirect=` on /auth,
+ *   back to that path (BD-02 return-to rule, `lib/auth/return-path.ts`).
  * - EXPIRED and USED are recorded as ?status=expired|used, so a refresh keeps
  *   the state without the token. The page is static and reads the query only
  *   in the browser, so the token never appears in server-rendered HTML. Their action returns to /auth for a fresh request (D1);
@@ -34,7 +37,7 @@ import styles from './callback.module.css'
 
 export type TerminalStatus = 'expired' | 'used'
 type State = 'processing' | 'success' | TerminalStatus
-type Destination = 'onboarding' | 'account'
+type Destination = 'onboarding' | 'account' | 'return'
 
 type ConsumeResponse = {
   result: 'SUCCESS'
@@ -100,9 +103,14 @@ export function CallbackScreen({ expiresInMinutes }: Props) {
 
     apiRequest<ConsumeResponse>('/auth/magic-link/consume', { method: 'POST', body: { token } })
       .then((res) => {
-        setDestination(res.onboarding.completed ? 'account' : 'onboarding')
+        // BD-02 return-to rule: onboarding comes first and carries the path in
+        // this tab; a finished account goes straight back to it.
+        const back = takeReturnPath(window.localStorage)
+        if (back && !res.onboarding.completed) rememberReturnPath(window.sessionStorage, back)
+        const returning = back !== null && res.onboarding.completed
+        setDestination(returning ? 'return' : res.onboarding.completed ? 'account' : 'onboarding')
         setState('success')
-        router.replace(nextRoute(res.onboarding))
+        router.replace(returning ? back : nextRoute(res.onboarding))
       })
       .catch((error: unknown) => {
         const code = isApiError(error) ? error.code : undefined
@@ -155,7 +163,9 @@ function Success({ destination }: { destination: Destination }) {
       <p className={`${styles.body} ${styles.bodyWrap}`}>
         {destination === 'onboarding'
           ? 'Bạn sẽ được chuyển đến bước hoàn thiện hồ sơ cá nhân'
-          : 'Bạn sẽ được chuyển đến Tài khoản của tôi'}
+          : destination === 'return'
+            ? 'Bạn sẽ được chuyển về trang bạn đã chọn'
+            : 'Bạn sẽ được chuyển đến Tài khoản của tôi'}
       </p>
       <span role="status" className={`${styles.action} ${styles.actionMuted}`}>
         Đang chuyển hướng...

@@ -2,12 +2,13 @@ import Link from 'next/link'
 
 import type { LandingEntry } from '@/lib/landing/entry'
 
-import { INERT_REASONS } from '@/lib/member/nav'
+import { authWithReturn } from '@/lib/auth/return-path'
 
+import { HeroSearch } from './hero-search'
 import { Events, Pipeline, Programmes } from './landing-activities'
 import { Community } from './landing-community'
 import { AllInOne, Closing, Network } from './landing-network'
-import { Arrow, Cta, type Action } from './landing-parts'
+import { Arrow, Cta, NavLabel, type Action } from './landing-parts'
 import { Opportunities, Pain, Solution } from './landing-story'
 import styles from './landing.module.css'
 
@@ -25,7 +26,8 @@ import styles from './landing.module.css'
  * `landing-parts.tsx`). Nothing here reads member, count or private data.
  */
 
-const FUTURE = INERT_REASONS.FUTURE
+/** The canonical venture creation (WF02-S05). */
+const STARTUP_CREATE_PATH = '/projects/new'
 
 export type LandingLinks = {
   /** The visitor's own entry point: /auth for a guest, the onboarding resolver's route otherwise. */
@@ -53,6 +55,9 @@ export function Landing({
     network: hubSlug ? `/organizations/${hubSlug}` : null,
   }
   const member = entryLabel(entry)
+  // PO decision (30/09): a guest signs in first and returns to venture creation.
+  const startupHref =
+    entry.kind === 'GUEST' ? authWithReturn(STARTUP_CREATE_PATH) : STARTUP_CREATE_PATH
   const network: Action = links.network ? { href: links.network } : { inert: 'NO_P0_SCREEN' }
 
   return (
@@ -71,12 +76,8 @@ export function Landing({
             <Cta action={{ href: '/about' }} label="Về HUB Network">
               Về HUB Network
             </Cta>
-            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Chương trình">
-              Chương trình
-            </Cta>
-            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Sự kiện">
-              Sự kiện
-            </Cta>
+            <NavLabel>Chương trình</NavLabel>
+            <NavLabel>Sự kiện</NavLabel>
             <Cta action={{ href: '/library' }} label="Mạng lưới đổi mới sáng tạo" cta="network-bar">
               Mạng lưới đổi mới sáng tạo
             </Cta>
@@ -107,34 +108,9 @@ export function Landing({
               Nơi những nhà sáng lập và giải pháp đổi mới sáng tạo tiềm năng được tìm thấy và kết
               nối với đúng cơ hội.
             </p>
-            <div className={`${styles.search} ${styles.inert}`} role="search" title={FUTURE}>
-              <span className={styles.searchLabel} aria-hidden="true">
-                TÌM
-              </span>
-              <input
-                className={styles.searchInput}
-                type="search"
-                disabled
-                aria-disabled="true"
-                title={FUTURE}
-                data-cta-kind="INERT"
-                aria-label={`Tìm kiếm chương trình, sự kiện — ${FUTURE}`}
-                placeholder="Tìm kiếm chương trình, sự kiện"
-              />
-              <button
-                className={styles.searchButton}
-                type="button"
-                disabled
-                aria-disabled="true"
-                title={FUTURE}
-                data-cta-kind="INERT"
-                aria-label={`Tìm kiếm — ${FUTURE}`}
-              >
-                <Arrow />
-              </button>
-            </div>
+            <HeroSearch arrow={<Arrow />} />
             <div className={styles.heroActions}>
-              <Link href="/projects/new" className={styles.heroPrimary} data-cta="startup">
+              <Link href={startupHref} className={styles.heroPrimary} data-cta="startup">
                 Tạo hồ sơ startup của bạn <Arrow />
               </Link>
               <a href="#co-hoi" className={styles.heroGhost} data-cta="opportunities">
@@ -188,12 +164,8 @@ export function Landing({
             </p>
           </div>
           <FooterColumn title="KHÁM PHÁ">
-            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Chương trình">
-              Chương trình
-            </Cta>
-            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Sự kiện">
-              Sự kiện
-            </Cta>
+            <NavLabel>Chương trình</NavLabel>
+            <NavLabel>Sự kiện</NavLabel>
           </FooterColumn>
           <FooterColumn title="MẠNG LƯỚI ĐMST">
             <Cta action={{ inert: 'FUTURE' }} label="Giải pháp & Startup">

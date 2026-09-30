@@ -786,14 +786,13 @@ test.describe('WF02-S01 navigation', () => {
       await item.click()
       await expect(page).toHaveURL('/me')
     }
-    // The cover pencil and "Góp ý" are drawn and inert (D-P1, D-F1).
-    for (const label of ['Ảnh bìa', 'Góp ý']) {
-      const control = page.locator(`[data-cta-kind="INERT"][aria-label^="${label} — "]`)
-      await expect(control, label).toHaveCount(1)
-      await expect(control).toHaveAttribute('aria-disabled', 'true')
-      await control.click()
-      await expect(page).toHaveURL('/me')
-    }
+    // The cover pencil is drawn and inert (D-P1); "Góp ý" is hidden for Alpha (PO decision 30/09).
+    const cover = page.locator('[data-cta-kind="INERT"][aria-label^="Ảnh bìa — "]')
+    await expect(cover).toHaveCount(1)
+    await expect(cover).toHaveAttribute('aria-disabled', 'true')
+    await cover.click()
+    await expect(page).toHaveURL('/me')
+    await expect(page.getByText('Góp ý')).toHaveCount(0)
     await expect(header).toContainText('Kim Chi Đặng')
     await expect(page.locator('[data-nav="ops-entry"]')).toHaveCount(0)
 

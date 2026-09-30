@@ -979,8 +979,7 @@
   padding-top: 16px;
 }
 
-.pcardPrimary,
-.pcardSecondary {
+.pcardPrimary {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -989,36 +988,19 @@
   font-weight: 500;
 }
 
-/* L15b and L15c draw a 44 px primary and a 47 px outlined button, top-aligned. */
+/* L15b and L15c draw a 44 px primary button. */
 .pcardPrimary {
   height: 44px;
-}
-
-.pcardSecondary {
-  height: 47px;
-  border-radius: 24px;
 }
 
 .pcard[data-kind='FOUNDER'] .pcardHead {
   gap: 14px;
 }
 
-.pcard[data-kind='FOUNDER'] .pcardSecondary {
-  padding: 0 16px;
-}
-
 .pcardPrimary {
   flex: 1;
   background: var(--ink);
   color: #ffffff;
-}
-
-.pcardSecondary {
-  flex: none;
-  padding: 0 18px;
-  border: 1.5px solid var(--ink);
-  background: #ffffff;
-  color: var(--ink);
 }
 
 .more {
@@ -1061,42 +1043,6 @@
   font-size: 14px;
   line-height: 20px;
   color: var(--muted);
-}
-
-/* -------------------------------------------------------------- Feedback */
-
-.feedback {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 20;
-}
-
-.feedbackPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  height: 46px;
-  padding: 0 22px 0 14px;
-  border-radius: 23px;
-  background: #170002;
-  box-shadow: 0 12px 28px rgb(22 0 2 / 35%);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.feedbackIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
-  background: var(--coral);
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 700;
 }
 
 /* ------------------------------------------------------------ Responsive */
@@ -1262,10 +1208,5 @@
   .card {
     height: auto;
     min-height: 380px;
-  }
-
-  .feedback {
-    right: 16px;
-    bottom: 16px;
   }
 }

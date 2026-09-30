@@ -218,18 +218,22 @@ test.describe('WF02-T00 member shell', () => {
       ['Cài đặt tài khoản', '/me/settings'],
       ['Lời mời', '/projects'],
       ['Vai trò & liên kết', '/me/roles'],
+      // PO decision (Alpha interaction gap fix): the organisations are WF02-S04's.
+      ['Tổ chức của tôi', '/me/roles'],
     ])
+    // PO decision: "Thư viện" in the header opens the public Library.
+    await expect(
+      shell.locator('header').getByRole('link', { name: 'Thư viện', exact: true }),
+    ).toHaveAttribute('href', '/library')
     const inert = await shell
       .locator('[data-nav-kind="INERT"]')
       .evaluateAll((els) =>
         els.map((el) => [el.textContent, el.tagName, el.getAttribute('aria-disabled')]),
       )
     expect(inert).toEqual([
-      ['Thư viện', 'SPAN', 'true'],
       ['Challenge', 'SPAN', 'true'],
       ['Sự kiện', 'SPAN', 'true'],
       ['', 'SPAN', 'true'],
-      ['Tổ chức của tôi', 'SPAN', 'true'],
     ])
     // No fabricated counter anywhere in the header.
     expect(await shell.locator('header').innerText()).not.toMatch(/\d/)

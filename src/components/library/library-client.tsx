@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import type { LibraryProblem } from '@/lib/library/problem-adapter'
+import { LIBRARY_QUERY_MAX } from '@/lib/library/query'
 import type { StartupDirectory } from '@/lib/library/startup-adapter'
 
-import { Cta } from '../landing/landing-parts'
 import {
   facetCount,
   founderTab,
@@ -50,10 +50,13 @@ export function LibraryBrowser({
   header,
   problems,
   directory,
+  initialQuery,
 }: {
   header: ReactNode
   problems: LibraryProblem[]
   directory: StartupDirectory
+  /** The keyword from `?q=`, applied as a submitted search on the first tab. */
+  initialQuery: string
 }) {
   const tabs = useMemo<Record<Entity, TabModel>>(
     () => ({
@@ -65,8 +68,8 @@ export function LibraryBrowser({
   )
   const openCount = problems.filter((p) => p.stage === 'dang_mo_nop').length
   const [entity, setEntity] = useState<Entity>('PROBLEM')
-  const [draft, setDraft] = useState('')
-  const [query, setQuery] = useState('')
+  const [draft, setDraft] = useState(initialQuery)
+  const [query, setQuery] = useState(initialQuery)
   const [filters, setFilters] = useState<Record<Entity, Filters>>(EMPTY)
   const [sorts, setSorts] = useState<Record<Entity, SortOption['key']>>({
     PROBLEM: 'DEADLINE',
@@ -161,7 +164,7 @@ export function LibraryBrowser({
             aria-label="Từ khoá"
             placeholder={PLACEHOLDER[entity]}
             value={draft}
-            maxLength={120}
+            maxLength={LIBRARY_QUERY_MAX}
             onChange={(e) => {
               setDraft(e.target.value)
               if (e.target.value === '') setQuery('')
@@ -429,6 +432,7 @@ function Card({ item }: { item: Item }) {
             <span key={i}>{m}</span>
           ))}
         </p>
+        {/* PO decision (30/09): a card action with no destination is not drawn. */}
         {item.cta.href ? (
           <a
             href={item.cta.href}
@@ -439,17 +443,13 @@ function Card({ item }: { item: Item }) {
           >
             {item.cta.label}
           </a>
-        ) : (
-          <Cta action={{ inert: 'NO_P0_SCREEN' }} label={item.cta.label} className={styles.cardCta}>
-            {item.cta.label}
-          </Cta>
-        )}
+        ) : null}
       </article>
     </li>
   )
 }
 
-/** Opens the record's own website in a new tab, or stays inert when it has none. */
+/** Opens the record's own website in a new tab; without one it is plain content, not a control. */
 function OutLink({
   href,
   label,
@@ -463,12 +463,7 @@ function OutLink({
   className: string | undefined
   children: ReactNode
 }) {
-  if (!href)
-    return (
-      <Cta action={{ inert: 'NO_P0_SCREEN' }} label={label} className={className}>
-        {children}
-      </Cta>
-    )
+  if (!href) return <span className={className}>{children}</span>
   return (
     <a
       href={href}
@@ -526,25 +521,20 @@ function ProfileCard({ item }: { item: Item }) {
             {item.row.note ? <span className={styles.pcardRowNote}>{item.row.note}</span> : null}
           </OutLink>
         ) : null}
-        <div className={styles.pcardActions}>
-          <OutLink
-            href={item.cta.href}
-            label={item.cta.label}
-            title={item.title}
-            className={styles.pcardPrimary}
-          >
-            {item.cta.label}
-          </OutLink>
-          {item.secondary ? (
-            <Cta
-              action={{ inert: 'FUTURE' }}
-              label={`${item.secondary} ${item.title}`}
-              className={styles.pcardSecondary}
+        {/* PO decision (30/09): no profile page, follow or connection exists for a
+            directory record, so only the record's own website is offered. */}
+        {item.cta.href ? (
+          <div className={styles.pcardActions}>
+            <OutLink
+              href={item.cta.href}
+              label={item.cta.label}
+              title={item.title}
+              className={styles.pcardPrimary}
             >
-              {item.secondary}
-            </Cta>
-          ) : null}
-        </div>
+              {item.cta.label}
+            </OutLink>
+          </div>
+        ) : null}
       </article>
     </li>
   )

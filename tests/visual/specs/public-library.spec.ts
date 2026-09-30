@@ -86,8 +86,6 @@ const dataAreas = (page: Page) =>
       return { x: r.x - 2, y: r.y + scrollY - 2, width: r.width + 4, height: r.height + 4 }
     }),
   )
-const hideFeedback = (page: Page) =>
-  page.addStyleTag({ content: '[data-anchor="feedback"] { display: none !important; }' })
 
 test.describe('PUBLIC-LIBRARY functional', () => {
   test('guests reach /library directly, on refresh and from the homepage', async ({ page }) => {
@@ -109,7 +107,7 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     expect(apiCalls, 'the Library reads no API of ours').toEqual([])
   })
 
-  test('header: Thư viện is current, other destinations are inert with a reason', async ({
+  test('header: Thư viện is current, the items without a destination are plain labels', async ({
     page,
   }) => {
     await page.goto('/library')
@@ -118,15 +116,18 @@ test.describe('PUBLIC-LIBRARY functional', () => {
       'aria-current',
       'page',
     )
+    // PO decision (Alpha interaction gap fix): not a link, not a disabled control, no tooltip.
+    await expect(nav.getByRole('link')).toHaveCount(1)
     for (const label of ['Chương trình', 'Sự kiện', 'Tin tức']) {
       const item = nav.getByText(label, { exact: true })
-      await expect(item).toHaveAttribute('aria-disabled', 'true')
-      await expect(item).toHaveAttribute('title', /chưa có trong phiên bản này/i)
+      await expect(item).toHaveAttribute('data-nav-kind', 'LABEL')
+      await expect(item).not.toHaveAttribute('aria-disabled')
+      await expect(item).not.toHaveAttribute('title')
     }
     await expect(page.locator('[data-cta="login"]')).toHaveAttribute('href', '/auth')
   })
 
-  test('Bài toán: every dataset record, inert CTAs, derived counts, no invented values', async ({
+  test('Bài toán: every dataset record, no dead CTA, derived counts, no invented values', async ({
     page,
   }) => {
     const total = PROBLEMS.length
@@ -144,8 +145,8 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     expect(founders).toBeGreaterThan(0)
     await expect(metrics.nth(1)).toHaveText(String(startups))
     await expect(metrics.nth(2)).toHaveText(String(founders))
-    const cta = cards(page).first().locator('[data-cta-kind="INERT"]')
-    await expect(cta).toHaveAttribute('aria-disabled', 'true')
+    // PO decision (Alpha interaction gap fix): a problem has no page, so its card draws no action.
+    await expect(cards(page).locator('a, button, [aria-disabled]')).toHaveCount(0)
     // Every record is reachable through "Xem thêm", in the dataset order.
     while (await page.locator('[data-anchor="more"]').isVisible())
       await page.locator('[data-anchor="more"]').click()
@@ -189,14 +190,17 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     await expect(facets.getByText('ĐỊA BÀN')).toHaveCount(0)
     await facets.getByRole('checkbox', { name: /^MVP/ }).check()
     await expect(cards(page).first().locator('[class*="pcardStage"]')).toHaveText('MVP')
-    // DEC-L15-D11: the white card; "Xem hồ sơ" is the website or inert, "Theo dõi" inert.
+    // DEC-L15-D11: the white card. PO decision (Alpha interaction gap fix): "Xem hồ sơ" is
+    // drawn only as the startup's own website; "Theo dõi" is never drawn (no follow exists).
     const first = cards(page).first()
     await expect(first).toHaveAttribute('data-kind', 'STARTUP')
     await expect(first.locator('[class*="pcardSub"]')).toHaveText(/^\d+ thành viên$/)
-    const view = first.getByText('Xem hồ sơ')
-    if ((await view.getAttribute('href')) === null)
-      await expect(view).toHaveAttribute('aria-disabled', 'true')
-    await expect(first.getByText('Theo dõi')).toHaveAttribute('aria-disabled', 'true')
+    await expect(cards(page).getByText('Theo dõi', { exact: true })).toHaveCount(0)
+    await expect(cards(page).locator('[aria-disabled]')).toHaveCount(0)
+    for (const view of await cards(page).getByText('Xem hồ sơ', { exact: true }).all()) {
+      expect(await view.evaluate((n) => n.tagName)).toBe('A')
+      await expect(view).toHaveAttribute('target', '_blank')
+    }
     // Nothing the source lacks is drawn: no verified mark, city, needs or programmes.
     const text = await page.locator('[data-section="directory"]').innerText()
     expect(text).not.toMatch(CONTACT)
@@ -214,13 +218,22 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     await expect(cards(page)).toHaveCount(Math.min(9, total))
     const names = await cards(page).locator('h2').allInnerTexts()
     expect(new Set(names).size).toBe(names.length)
-    // DEC-L15-D12: name, "role · startup", the startup row; "Xem hồ sơ" and "Kết nối" inert.
+    // DEC-L15-D12: name, "role · startup", the startup row. PO decision (Alpha interaction gap
+    // fix): a founder has no profile page or connection, so no "Xem hồ sơ" / "Kết nối"; the
+    // startup row links its website or is plain text.
     const first = cards(page).first()
     await expect(first).toHaveAttribute('data-kind', 'FOUNDER')
     await expect(first.locator('[class*="pcardSub"]')).toHaveText(/ · /)
     await expect(first.locator('[class*="pcardRowName"]')).not.toBeEmpty()
-    await expect(first.getByText('Xem hồ sơ')).toHaveAttribute('aria-disabled', 'true')
-    await expect(first.getByText('Kết nối')).toHaveAttribute('aria-disabled', 'true')
+    await expect(cards(page).getByText(/^(Xem hồ sơ|Kết nối)$/)).toHaveCount(0)
+    await expect(cards(page).locator('[aria-disabled]')).toHaveCount(0)
+    for (const row of await cards(page)
+      .locator('[class*="pcardRow"]:not([class*="pcardRow"] *)')
+      .all()) {
+      const tag = await row.evaluate((n) => n.tagName)
+      expect(['A', 'SPAN']).toContain(tag)
+      if (tag === 'A') await expect(row).toHaveAttribute('target', '_blank')
+    }
     const text = await page.locator('[data-section="directory"]').innerText()
     expect(text).not.toMatch(CONTACT)
     expect(text).not.toMatch(/ĐANG MỞ CHO|Đang mở cho|Đề nghị kết nối/)
@@ -336,11 +349,10 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     expect(overflow).toBe(0)
   })
 
-  test('the floating "Góp ý" is visible and inert', async ({ page }) => {
+  test('"Góp ý" is hidden for Alpha (PO decision; no feedback channel)', async ({ page }) => {
     await page.goto('/library')
-    const fb = page.locator('[data-anchor="feedback"] [data-cta-kind="INERT"]')
-    await expect(fb).toHaveText(/Góp ý/)
-    await expect(fb).toHaveAttribute('aria-disabled', 'true')
+    await expect(page.locator('[data-anchor="feedback"]')).toHaveCount(0)
+    await expect(page.getByText('Góp ý')).toHaveCount(0)
   })
 })
 
@@ -414,7 +426,6 @@ test.describe('PUBLIC-LIBRARY layout: filters and results', () => {
 test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => {
   test('A–F: header, hero, heading, search, metrics, tab bar', async ({ page }) => {
     await page.goto('/library')
-    await hideFeedback(page)
     // B: the hero ends where the reference's tab bar starts.
     expect(await top(page, '[data-anchor="tabs"]')).toBe(REF.tabs)
     const numbers = await page.locator('[data-anchor="metrics"] > div').evaluateAll((cols) =>
@@ -453,7 +464,6 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
 
   test('G–K: sidebar, toolbar, grid and cards (Bài toán, filtered as drawn)', async ({ page }) => {
     await page.goto('/library')
-    await hideFeedback(page)
     const facets = page.getByRole('complementary', { name: 'Bộ lọc' })
     // The pack draws three cards; Logistics gives three in the dataset too.
     await facets.getByRole('checkbox', { name: /^Logistics/ }).check()
@@ -502,7 +512,6 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
   // L15 draws the Bài toán tab; Startup and Nhà sáng lập have their own frames (L15b, L15c).
   test('L: load more and page end (Bài toán tab, three rows as drawn)', async ({ page }) => {
     await page.goto('/library')
-    await hideFeedback(page)
     test.skip((await tabCount(page, /Bài toán/)) <= 9, 'needs more than one page of problems')
     const more = page.locator('[data-anchor="more"]')
     const box = (await more.boundingBox())!
@@ -535,18 +544,19 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
    * TASK 24.1 — Startup (L15b) and Nhà sáng lập (L15c), DEC-L15-D10…D13. The records'
    * text, marks, stages and chip values are data, and the sections the source lacks
    * (verified mark, city, needs, programmes, badges, expertise, openness, the note above
-   * the grid) are not drawn, so card rows are checked by geometry and the card chrome
-   * that holds no data (the action buttons) is compared at its own anchor.
+   * the grid) are not drawn, so card rows are checked by geometry. PO decision (Alpha
+   * interaction gap fix 30/09): the card actions without a destination ("Theo dõi",
+   * "Kết nối", a "Xem hồ sơ" without a website) are not drawn, so the action row of the
+   * frames is no longer compared; a drawn "Xem hồ sơ" keeps the frame's 44 px height.
    */
-  for (const [tab, file, kind, buttonTop, height, widths] of [
-    ['Startup', 'L2/L15b__library-startup__SOURCE.png', 'STARTUP', 1346, 44, [175, 98]],
-    ['Nhà sáng lập', 'L2/L15c__library-founder__SOURCE.png', 'FOUNDER', 1350, 44, [190, 83]],
+  for (const [tab, file, kind] of [
+    ['Startup', 'L2/L15b__library-startup__SOURCE.png', 'STARTUP'],
+    ['Nhà sáng lập', 'L2/L15c__library-founder__SOURCE.png', 'FOUNDER'],
   ] as const) {
     test(`${kind}: hero, tab bar, card geometry and chrome match ${file.split('/')[1]}`, async ({
       page,
     }) => {
       await page.goto('/library')
-      await hideFeedback(page)
       await page.getByRole('tab', { name: new RegExp(`^${tab}`) }).click()
       await expect(cards(page).first()).toHaveAttribute('data-kind', kind)
       const boxes = await cards(page).evaluateAll((els) =>
@@ -557,14 +567,12 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
         }),
       )
       expect(boxes).toEqual([358, 705, 1052].map((x) => [x, 324, '18px', 'rgb(227, 221, 221)']))
-      const primary = (await cards(page).first().locator('[class*="pcardPrimary"]').boundingBox())!
-      const secondary = (await cards(page)
-        .first()
-        .locator('[class*="pcardSecondary"]')
-        .boundingBox())!
-      expect(Math.round(primary.height)).toBe(height)
-      expect(Math.abs(Math.round(primary.width) - widths[0])).toBeLessThanOrEqual(3)
-      expect(Math.abs(Math.round(secondary.width) - widths[1])).toBeLessThanOrEqual(3)
+      const primaries = cards(page).locator('[class*="pcardPrimary"]')
+      if (kind === 'FOUNDER') await expect(primaries).toHaveCount(0)
+      for (const primary of await primaries.all()) {
+        expect(await primary.evaluate((n) => n.tagName)).toBe('A')
+        expect(Math.round((await primary.boundingBox())!.height)).toBe(44)
+      }
       const scroll = await page.evaluate(() => window.scrollY)
       // The founder placeholder keeps its text: the frame's promises expertise search (no data).
       const query = (await page.getByRole('searchbox').boundingBox())!
@@ -578,13 +586,6 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
         full: true,
         segments: [
           { name: 'D-search', reference: { x: 250, y: 420, width: 940, height: 105 }, dy: 0 },
-          {
-            name: 'I-card-actions',
-            // The buttons only: in L15b the first row clips its cards 5 px under them.
-            reference: { x: 375, y: buttonTop - 4, width: 290, height: 47 + 4 },
-            dx: Math.round(primary.x) - 379,
-            dy: Math.round(primary.y + scroll) - buttonTop,
-          },
         ],
         exclude: placeholder,
         intentional: [
@@ -598,27 +599,13 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
             reason:
               'The tab bar keeps the L15 style (checked in A–F): L15b / L15c draw the active tab regular with a coral count and leave the inactive "Bài toán" bold, a copy of L15',
           },
+          {
+            class: 'INTENTIONAL-SCOPE',
+            reason:
+              'PO decision (Alpha interaction gap fix 30/09): "Theo dõi", "Kết nối" and a "Xem hồ sơ" without a website are not drawn; "Góp ý" is hidden for Alpha',
+          },
         ],
       })
     })
   }
-
-  test('floating feedback matches the reference', async ({ page }) => {
-    await page.goto('/library')
-    const pill = (await page
-      .locator('[data-anchor="feedback"] [data-cta-kind="INERT"]')
-      .boundingBox())!
-    await auditRevision(page, {
-      name: 'PUBLIC-LIBRARY.L15-feedback',
-      reference: REFERENCE,
-      segments: [
-        {
-          name: 'pill',
-          reference: { x: 1330, y: 835, width: 72, height: 35 },
-          dx: Math.round(pill.x) - 1312,
-          dy: Math.round(pill.y) - 830,
-        },
-      ],
-    })
-  })
 })

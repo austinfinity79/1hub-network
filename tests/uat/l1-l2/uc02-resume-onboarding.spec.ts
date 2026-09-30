@@ -81,20 +81,18 @@ test('UC02 · exceptions · entering through a CTA resumes the open stage; progr
   await expect(page.getByRole('checkbox', { name: 'Logistics', exact: true })).not.toBeChecked()
   expect(await identity(email)).toMatchObject({ accounts: 1, profiles: 1 })
 
-  // Programme and event CTAs are inert in Alpha: nothing leads a guest from a
-  // programme or an event into onboarding, and no return address is carried.
+  // Programme and event have no public page in Alpha: the header items are plain
+  // labels (PO decision 30/09), so nothing leads from them into onboarding.
   await page.goto('/', { waitUntil: 'networkidle' })
+  const nav = page.getByRole('navigation', { name: 'Trang chủ' })
   for (const label of ['Chương trình', 'Sự kiện']) {
-    const cta = page.locator('[data-cta-kind="INERT"]', { hasText: label }).first()
-    await expect(cta).toHaveAttribute('aria-disabled', 'true')
-    await expect(cta).not.toHaveAttribute('href', /.+/)
+    await expect(nav.getByText(label, { exact: true })).toHaveAttribute('data-nav-kind', 'LABEL')
+    await expect(nav.getByRole('link', { name: label, exact: true })).toHaveCount(0)
   }
   gap(
     'NOT APPLICABLE',
-    'Entry from a programme / event CTA: those CTAs are inert in Alpha (no public programme or event page in L1 / L2).',
+    'Entry from a programme / event CTA: no public programme or event page in L1 / L2; the header items are plain labels.',
   )
-  gap(
-    'PRODUCT GAP',
-    'Return to the CTA target after sign-in / onboarding is not built (the link always returns to the resolver; DEC-2809-D1 approved it for later).',
-  )
+  // The guest return to "Tạo hồ sơ startup" after sign-in / onboarding (BD-02 rule) is
+  // covered by tests/visual/specs/alpha-interaction-gaps.spec.ts.
 })

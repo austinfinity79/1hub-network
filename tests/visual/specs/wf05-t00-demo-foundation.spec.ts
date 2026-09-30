@@ -245,7 +245,12 @@ test.describe('WF05-T00 route and entry contract', () => {
     // DEC-L2R-D1: /me is FP1-OWN (no sidebar); /projects carries the entry instead.
     for (const url of ['/projects', '/me/roles', '/me/privacy', '/me/settings']) {
       await page.goto(url, { waitUntil: 'networkidle' })
-      await expect(page.locator('a[href^="/demo/projects"]'), url).toHaveCount(1)
+      // On /projects the ME7 sidebar's "Hồ sơ đăng ký" leads there too (PO decision 30/09).
+      await expect(page.locator('a[href^="/demo/projects"]'), url).toHaveText(
+        url === '/projects'
+          ? ['Hồ sơ đăng ký', PROJECT_DEMO_ENTRY.label]
+          : [PROJECT_DEMO_ENTRY.label],
+      )
       await expect(page.locator('[data-nav="project-demo"]'), url).toHaveAttribute(
         'href',
         '/demo/projects',

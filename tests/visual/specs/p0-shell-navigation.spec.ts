@@ -32,11 +32,14 @@ type Row = {
   target: string
   status: number
   final: string
-  result: 'WORKING' | 'IN_PAGE' | 'DISABLED'
+  result: 'WORKING' | 'IN_PAGE' | 'EXTERNAL' | 'DISABLED'
   reason?: string
 }
 
 const matrix: Row[] = []
+
+/** External sites a page may open (PO decision, Alpha interaction gap fix 30/09). */
+const APPROVED_EXTERNAL = ['https://ihub.ventures']
 let consoleErrors: string[] = []
 
 test.beforeEach(async ({ page }) => {
@@ -100,6 +103,22 @@ async function crawl(page: Page, persona: Persona, source: string) {
         status: 200,
         final: href,
         result: 'IN_PAGE',
+      })
+      continue
+    }
+    // The one approved external destination (28/09 CTA map) opens in a new tab.
+    if (APPROVED_EXTERNAL.includes(href)) {
+      const out = page.locator(`a[href="${href}"]`)
+      await expect(out).toHaveAttribute('target', '_blank')
+      await expect(out).toHaveAttribute('rel', 'noopener noreferrer')
+      matrix.push({
+        persona,
+        source,
+        label,
+        target: href,
+        status: 0,
+        final: href,
+        result: 'EXTERNAL',
       })
       continue
     }

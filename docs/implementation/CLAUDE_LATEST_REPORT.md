@@ -1,35 +1,43 @@
 # Claude Task Report
 
 ## Task
-POST-DEPLOY RELEASE SYNC + TEST DATA CLEANUP + TEAM UAT PACK. Sync record: [reports/INTERNAL-ALPHA-RC_release-sync.md](reports/INTERNAL-ALPHA-RC_release-sync.md); UAT pack: [../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md).
+ALPHA INTERACTION GAP FIX — PO DECISION FREEZE + P1/P2 CLOSURE. Report: [reports/ALPHA-INTERACTION-GAP-FIX.md](reports/ALPHA-INTERACTION-GAP-FIX.md); decisions: [DEC-AIG](../decisions/DECISION_LOG.md#dec-aig).
 
 ## Verdict
-Internal Alpha stays **DEPLOYED GREEN** on `ff052d70fe418cb092bd5e33fcc03ee712c76d14`. GitHub synced and tagged. Team UAT pack ready. Smoke data removed with PO approval (33 rows, backup first). STOP.
+**GREEN, not deployed.** P1 20 → 0, P2 31 → 0. Every changed item ends in one outcome (navigation, hidden, or non-clickable). Production still runs `ff052d7`. STOP.
 
 ## Scope implemented
-- Release state verified; secret scan; push of `main` and `deploy/vps-foundation`; annotated tag `internal-alpha-2026-09-30` on the deployed SHA.
-- Smoke records identified exactly (2 accounts, 2 profiles, 1 venture, 1 application, 33 rows with dependents); backup taken; deleted after the PO's explicit approval; integrity verified.
-- Team UAT / PO self-review pack in `docs/uat/` (guide, accounts, 8 journeys / 35 cases, CSV checklist); the 28/09 pack marked superseded.
+- Public nav labels, hero search → `/library?q=`, guest return to venture creation (BD-02 rule, browser side), ihub.ventures link, account and workspace menu routes, "Hồ sơ đăng ký" → L5 entry.
+- Hidden for Alpha: "Góp ý", homepage "Chi tiết", Library "Theo dõi" / "Kết nối" / problem and profile actions without a destination. Plain text: About phone, founder startup row without a website.
 
 ## Files changed
-- Release sync: this report, the sync report, manifest, `P0_STATUS.md`.
-- UAT pack: `docs/uat/*` (new guide, accounts, checklist CSV, `journeys/j1…j8`; stubs redirected); banners on the 28/09 pack in `docs/implementation/`.
+- App: landing (`landing.tsx`, `landing-parts.tsx`, `landing-activities.tsx`, `hero-search.tsx`, CSS), About, Library (page, `library.tsx`, `library-client.tsx`, model, CSS), auth entry and callback, ACC-10 exit, shells (member / workspace nav, onboarding and workspace shells, wizard), `feedback-pill` removed; new `lib/auth/return-path.ts`, `lib/library/query.ts`.
+- Tests: new `alpha-interaction-gaps.spec.ts`, unit tests for the two libs; affected specs updated to the decisions.
+- Docs: DECISION_LOG (DEC-AIG), gap register (status columns), audit summary, J7 note, this report.
 
 ## Migrations / data
-No migration. Production: the 33 smoke rows removed; programme, form and all other data unchanged (hash equals the post-DEP-1 state).
+None. No API or schema change.
 
-## Tests
-Domain sanity: 7 routes as expected; #418 0, 5xx 0, broken assets 0, console 0. No code change, no redeploy.
+## Tests / build
+format, lint, typecheck, unit 259/259, build: PASS. New spec 9/9; affected specs and protected smoke L1, L2, L3, L5: PASS. Runtime: #418 0, 5xx 0, broken assets 0, console 0.
+
+Extra sweep (WF03, WF04, API): 205 PASS, 1 pre-existing FAIL (`api-contract` still expects `/me/ventures` → 404; shipped since `c9c7cb5`, no API change here).
+
+## Visual QA
+No baseline changed. Intentional deviations recorded in the specs (landing "Chi tiết" strip, Library L15b / L15c action row, onboarding "Góp ý" segment); all other segments within thresholds.
 
 ## Deviations / blockers
-- Cleanup ran after approval (backup `onehub-20260930T022914Z.dump`).
-- Personas needing provisioning: ACTIVE venture member (made in UAT J3-04); CLB-level leader (only if a CLB-scope test is wanted).
+- Return path not stored with the magic-link request: another browser or device lands on the usual destination.
+- Two minimal copies: callback "Bạn sẽ được chuyển về trang bạn đã chọn"; ACC-10 exit "Tiếp tục" (only with a return path).
 
 ## Git
-- Branch: `main`; start HEAD `b81eb95`; no concurrent change
-- Commits: `docs/release: sync deployed internal alpha release`, `docs(uat): add internal alpha self-review test pack`
-- Remote: `origin`; push: `main` and `deploy/vps-foundation` pushed, then the two doc commits pushed; tag `internal-alpha-2026-09-30` → `ff052d7`
-- Working tree: clean after the commits, except the untracked `AGENTS.md`
+- Branch: `main`; start HEAD `ebdf632`; no concurrent change
+- Implementation commit: `fix(interactions): close alpha P1 P2 action gaps` (implementation and report in one commit)
+- Report/final commit: same commit
+- Remote: `origin`
+- Push status: NOT RUN (task: do not push)
+- Remote HEAD: `d4c62d4` (`ebdf632` and this commit are local only)
+- Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-TEAM-UAT-01 on https://1hubnetwork.io.vn.
+PO review of the fix, then push and deploy of the exact SHA when approved.

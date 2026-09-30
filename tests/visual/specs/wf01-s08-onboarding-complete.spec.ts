@@ -349,11 +349,13 @@ test.describe('WF01-S08 pixel QA (ACC-10)', () => {
           reference: { x: 352, y: 684, width: 36, height: 34 },
           dy: info - REF.infoTop,
         },
-        // The frame is drawn 897px high, so its pill sits 3px higher than in a 900px viewport.
-        { name: 'feedback', reference: { x: 1290, y: 807, width: 150, height: 90 }, dy: 3 },
       ],
       exclude,
       intentional: [
+        {
+          class: 'INTENTIONAL-SCOPE',
+          reason: '"Góp ý" is hidden for Alpha (PO decision 30/09), so its pill is not compared',
+        },
         {
           class: 'INTENTIONAL-BUSINESS',
           reason:

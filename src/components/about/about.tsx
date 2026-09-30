@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import type { LandingEntry } from '@/lib/landing/entry'
 
-import { Arrow, Cta, type Action } from '../landing/landing-parts'
+import { Arrow, Cta, NavLabel, type Action } from '../landing/landing-parts'
 import landing from '../landing/landing.module.css'
 
 import {
@@ -97,12 +97,8 @@ export function About({
               <Link href="/about" className={styles.navActive} aria-current="page">
                 Về HUB Network
               </Link>
-              <Cta action={later} label="Chương trình">
-                Chương trình
-              </Cta>
-              <Cta action={later} label="Sự kiện">
-                Sự kiện
-              </Cta>
+              <NavLabel>Chương trình</NavLabel>
+              <NavLabel>Sự kiện</NavLabel>
               <Cta action={network} label="Mạng lưới đổi mới sáng tạo">
                 Mạng lưới đổi mới sáng tạo
               </Cta>
@@ -486,9 +482,8 @@ export function About({
             <Cta action={later} label="global@1hub.network">
               global@1hub.network
             </Cta>
-            <Cta action={later} label="0936 966 001">
-              0936 966 001
-            </Cta>
+            {/* PO decision (30/09): no approved tel: action, so the number is plain text. */}
+            <span>0936 966 001</span>
           </FooterColumn>
         </div>
         <p className={styles.footerMark} aria-hidden="true">

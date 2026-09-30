@@ -60,13 +60,17 @@ test.describe('P0-LANDING behaviour', () => {
     for (const cta of ['primary-bar', 'login', 'primary'])
       await expect(page.locator(`[data-cta="${cta}"]`)).toHaveAttribute('href', '/auth')
     await expect(page.locator('[data-cta="primary-bar"]')).toHaveText('Tạo tài khoản')
-    await expect(page.locator('[data-cta="startup"]')).toHaveAttribute('href', '/projects/new')
+    // PO decision (Alpha interaction gap fix): a guest signs in, then returns to venture creation.
+    await expect(page.locator('[data-cta="startup"]')).toHaveAttribute(
+      'href',
+      '/auth?redirect=%2Fprojects%2Fnew',
+    )
     await expect(page.locator('[data-cta="opportunities"]')).toHaveAttribute('href', '#co-hoi')
     await expect(page.locator('body')).not.toContainText('Foundation bootstrap')
     await page.reload()
     await expect(page).toHaveURL('/')
     await page.locator('[data-cta="startup"]').click()
-    await expect(page).toHaveURL('/auth')
+    await expect(page).toHaveURL('/auth?redirect=%2Fprojects%2Fnew')
     await page.goto('/')
     await page.locator('[data-cta="primary-bar"]').click()
     await expect(page).toHaveURL('/auth')
@@ -83,6 +87,9 @@ test.describe('P0-LANDING behaviour', () => {
       await expect(page.locator(`[data-cta="${cta}"]`)).toHaveText(/Vào tài khoản của tôi/)
     await page.locator('[data-cta="primary-bar"]').click()
     await expect(page).toHaveURL('/me')
+    // A member goes straight to the canonical venture creation.
+    await page.goto('/')
+    await expect(page.locator('[data-cta="startup"]')).toHaveAttribute('href', '/projects/new')
     // A new account that has not finished onboarding is sent to its resolver step.
     await page.context().clearCookies()
     await login(page, `landing-${Date.now()}@example.test`)
@@ -98,7 +105,7 @@ test.describe('P0-LANDING behaviour', () => {
     expect((await hrefs(page)).filter((h) => h.startsWith('/ops'))).toEqual([])
   })
 
-  test('links: every href is a real route or an in-page section; the rest is inert with a reason', async ({
+  test('links: every href is a real route, an in-page section or the approved external site; the rest is inert or plain text', async ({
     page,
     request,
   }) => {
@@ -114,6 +121,13 @@ test.describe('P0-LANDING behaviour', () => {
         expect(href.toLowerCase(), 'no script URL').not.toContain('javascript:')
         if (href.startsWith('#')) {
           await expect(page.locator(href), href).toHaveCount(1)
+          continue
+        }
+        // The one external destination, frozen by the 28/09 CTA map, opens in a new tab.
+        if (href === 'https://ihub.ventures') {
+          const out = page.locator(`[data-screen="P0-LANDING"] a[href="${href}"]`)
+          await expect(out).toHaveAttribute('target', '_blank')
+          await expect(out).toHaveAttribute('rel', 'noopener noreferrer')
           continue
         }
         expect(href.startsWith('/'), `internal only: ${href}`).toBe(true)
@@ -133,15 +147,30 @@ test.describe('P0-LANDING behaviour', () => {
       )
     // Inert CTAs never navigate and always say why.
     const inert = page.locator('[data-screen="P0-LANDING"] [data-cta-kind="INERT"]')
-    expect(await inert.count()).toBeGreaterThan(15)
+    // PO decisions (Alpha interaction gap fix) removed eleven of them; the rest stay inert.
+    expect(await inert.count()).toBeGreaterThan(10)
     for (const el of await inert.all()) {
       await expect(el).toHaveAttribute('aria-disabled', 'true')
       await expect(el).toHaveAttribute('title', /chưa có trong phiên bản này/i)
       expect(await el.evaluate((n) => n.tagName)).not.toBe('A')
       expect(await el.locator('a').count()).toBe(0)
     }
+    // PO decisions (Alpha interaction gap fix): Chương trình / Sự kiện are plain labels,
+    // the card "Chi tiết" actions are not drawn, and the hero search is live (→ /library?q=).
+    const labels = page.locator('[data-screen="P0-LANDING"] [data-nav-kind="LABEL"]')
+    await expect(labels).toHaveText(['Chương trình', 'Sự kiện', 'Chương trình', 'Sự kiện'])
+    for (const el of await labels.all()) {
+      expect(await el.evaluate((n) => n.tagName)).toBe('SPAN')
+      await expect(el).not.toHaveAttribute('aria-disabled')
+      await expect(el).not.toHaveAttribute('title')
+    }
+    await expect(
+      page.locator('[data-screen="P0-LANDING"] :is(a, button, [data-cta-kind="INERT"])', {
+        hasText: /^Chi tiết/,
+      }),
+    ).toHaveCount(0)
     const search = page.locator('[role="search"] input')
-    await expect(search).toBeDisabled()
+    await expect(search).toBeEnabled()
   })
 
   test('content: approved copy only; PO removals gone; illustrative blocks labelled', async ({
@@ -438,6 +467,23 @@ async function photos(page: Page): Promise<Rect[]> {
   )
 }
 
+/**
+ * Intentional removal (PO decision, Alpha interaction gap fix 30/09): the event
+ * and programme cards draw no "Chi tiết" action, so the strip under each card's
+ * last line, where H1 draws it, is excluded.
+ */
+async function removedActions(page: Page): Promise<Rect[]> {
+  return page
+    .locator('[data-section="events"] li, [data-section="programmes"] li')
+    .evaluateAll((els) =>
+      els.map((el) => {
+        const card = el.getBoundingClientRect()
+        const last = el.lastElementChild!.getBoundingClientRect()
+        return { x: card.x, y: last.bottom + window.scrollY, width: card.width, height: 72 }
+      }),
+    )
+}
+
 test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
   test('typography: Space Grotesk where the reference uses it, approved mono, no fallback', async ({
     page,
@@ -503,7 +549,11 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
       segments.push({ name: s.name, reference: s.rect, dy: top - s.refTop })
     }
     // The added labels and the replaced pictures are masked in capture coordinates, like text.
-    const labels = [...(await demoLabels(page)), ...(await photos(page))]
+    const labels = [
+      ...(await demoLabels(page)),
+      ...(await photos(page)),
+      ...(await removedActions(page)),
+    ]
     const mask = [...(await textRects(page)), ...labels]
     const results = compareSegments(reference, actual, segments, mask, {
       diffPath: resolveOutputPath('diff', 'P0-LANDING.H1.segments.diff.png'),
@@ -523,6 +573,7 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
         'organiser block after the programme cards removed (PO override, DEC-H1-R2-D1)',
         '"Dữ liệu minh hoạ" labels on events, programmes, pipeline and the partner matrix (DEC-H1-R2-D2)',
         'event, programme and pipeline pictures replaced by the Hub photos (PO, 29/09)',
+        'no "Chi tiết" action on the event and programme cards (PO decision, Alpha interaction gap fix 30/09)',
       ],
       segments: report,
     })

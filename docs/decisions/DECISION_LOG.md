@@ -1480,6 +1480,24 @@ Superseded records (history kept in place, each row marked):
 | [DEC-L2R-D11](#dec-l2r-d11) "Hồ sơ n/48 trường" not shown | the reason: it is no rule | D3 |
 | [DEC-L1R-D5](#dec-l1r-d5) the unit decides a declared membership | who decides | D6B |
 
+## DEC-AIG — Alpha interaction gap fix (PO decision freeze, 30/09)
+
+<a id="dec-aig"></a>**Status:** IMPLEMENTED 2026-09-30 on the PO's decisions of the same day, closing the P1 / P2 gaps of the [interaction contract audit](../uat/INTERACTION_CONTRACT_AUDIT.md). Outcome per item: [INTERACTION_GAP_REGISTER.csv](../uat/INTERACTION_GAP_REGISTER.csv) ("Alpha fix" columns). Test: `tests/visual/specs/alpha-interaction-gaps.spec.ts`.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-aig-d1"></a>DEC-AIG-D1 | **Public nav without a destination.** "Chương trình", "Sự kiện" (and "Tin tức" in the Library header) on `/`, `/about`, `/library` are plain text labels: no link, no disabled control, no "coming soon" tooltip, no invented route. |
+| <a id="dec-aig-d2"></a>DEC-AIG-D2 | **"Tạo hồ sơ startup của bạn".** A member goes to `/projects/new`; a guest to `/auth?redirect=/projects/new`, and after the e-mailed link back to `/projects/new` (onboarding first; ACC-10's exit then continues there). BD-02 return-to rule, browser side: a safe same-origin path kept in localStorage for an hour; not stored with the magic-link request, so another browser or device lands on the usual destination. |
+| <a id="dec-aig-d3"></a>DEC-AIG-D3 | **"Hồ sơ đăng ký"** (ME7 sidebar) → `/demo/projects`, the L5 entry listing the member's ventures and applications. No new dashboard. |
+| <a id="dec-aig-d4"></a>DEC-AIG-D4 | **"Mạng lưới"** (ME7 header) → `/library`. |
+| <a id="dec-aig-d5"></a>DEC-AIG-D5 | **Homepage search** → `/library?q=<keyword>`, applied by the Library's own search (DEC-L15); empty keyword navigates nowhere. No global, AI or matching search, no new endpoint. |
+| <a id="dec-aig-d6"></a>DEC-AIG-D6 | **About phone number:** plain text; no `tel:` action. |
+| <a id="dec-aig-d7"></a>DEC-AIG-D7 | **"Góp ý":** hidden for Alpha on every screen; no feedback form, API or e-mail workaround. |
+| <a id="dec-aig-d8"></a>DEC-AIG-D8 | **Library card actions:** only a real destination is drawn (the record's own website, new tab). "Theo dõi", "Kết nối", "Xem bài toán" / "Theo dõi bài toán" and a "Xem hồ sơ" without a website are not drawn; a founder's startup row without a website is plain content. The homepage's illustrative "Chi tiết" actions follow the same rule (hidden; the event card keeps the line's space so its picture keeps the approved size). |
+| <a id="dec-aig-d9"></a>DEC-AIG-D9 | **Account menus:** "Thư viện" → `/library`, "Tổ chức của tôi" → `/me/roles` (as ME7 already did). "Truy cập ihub.ventures" opens `https://ihub.ventures` in a new tab (28/09 CTA map). |
+
+Superseded in part: [DEC-P0-SHELL-D2](#dec-p0-shell-d2) for the items above (inert with a reason); D-F1 ("Góp ý" drawn and inert, DEC-L2R-D11); DEC-WF01-S08-D6 (single exit `/me`) when a return path exists. The other inert items of the register (P3, D) are unchanged.
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

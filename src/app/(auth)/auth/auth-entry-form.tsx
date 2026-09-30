@@ -9,6 +9,7 @@ import { apiRequest } from '@/lib/api/client'
 import { isApiError } from '@/lib/api/errors'
 import { isPlausibleEmail, normalizeEmail } from '@/lib/auth/email'
 import { savePendingRequest, type MagicLinkRequestAccepted } from '@/lib/auth/pending-request'
+import { RETURN_PATH_PARAM, rememberReturnPath, safeReturnPath } from '@/lib/auth/return-path'
 
 import styles from './auth-entry.module.css'
 
@@ -82,6 +83,11 @@ export function AuthEntryForm() {
       })
       // Hand the public 202 DTO to WF01-S02; the token never reaches the browser.
       savePendingRequest(window.sessionStorage, accepted)
+      // BD-02: keep a safe `?redirect=` for the callback; a plain entry forgets any earlier one.
+      rememberReturnPath(
+        window.localStorage,
+        safeReturnPath(new URLSearchParams(window.location.search).get(RETURN_PATH_PARAM)),
+      )
       router.push('/auth/check-email')
       // Stay disabled while navigating, so the request cannot be repeated.
     } catch (error) {

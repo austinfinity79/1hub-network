@@ -4,7 +4,7 @@ import type { LandingEntry } from '@/lib/landing/entry'
 import type { LibraryProblem } from '@/lib/library/problem-adapter'
 import type { StartupDirectory } from '@/lib/library/startup-adapter'
 
-import { Cta } from '../landing/landing-parts'
+import { Cta, NavLabel } from '../landing/landing-parts'
 import { LibraryBrowser } from './library-client'
 import styles from './library.module.css'
 
@@ -17,8 +17,10 @@ import styles from './library.module.css'
  * the DEC-L15-D2 demo fixture); "Startup" and "Nhà sáng lập" show the public
  * startup.json directory read by the server (DEC-L15-D7). No data source is
  * named on the page. No API or database of ours is read beyond the visitor's
- * own entry point. Destinations outside the preview are inert with a reason
- * (`Cta`, DEC-P0-SHELL-D2).
+ * own entry point. Header items with no destination are plain labels, and a
+ * card action with no destination is not drawn (PO decisions, Alpha
+ * interaction gap fix 30/09); "Góp ý" is hidden for Alpha. `?q=` from the
+ * homepage search opens the page with that keyword applied.
  */
 
 function entryLabel(entry: LandingEntry): string {
@@ -36,15 +38,9 @@ function LibraryHeader({ entry }: { entry: LandingEntry }) {
         <Link href="/library" className={styles.navActive} aria-current="page">
           Thư viện
         </Link>
-        <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Chương trình">
-          Chương trình
-        </Cta>
-        <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Sự kiện">
-          Sự kiện
-        </Cta>
-        <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Tin tức">
-          Tin tức
-        </Cta>
+        <NavLabel>Chương trình</NavLabel>
+        <NavLabel>Sự kiện</NavLabel>
+        <NavLabel>Tin tức</NavLabel>
       </nav>
       <div className={styles.barRight}>
         <Cta action={{ inert: 'FUTURE' }} label="VN · EN" className={styles.lang}>
@@ -62,10 +58,13 @@ export function Library({
   entry,
   problems,
   directory,
+  query = '',
 }: {
   entry: LandingEntry
   problems: LibraryProblem[]
   directory: StartupDirectory
+  /** The keyword the page opens with (`?q=`, homepage search); empty for none. */
+  query?: string
 }) {
   return (
     <div className={styles.page} data-screen="PUBLIC-LIBRARY" data-entry={entry.kind}>
@@ -73,15 +72,8 @@ export function Library({
         header={<LibraryHeader entry={entry} />}
         problems={problems}
         directory={directory}
+        initialQuery={query}
       />
-      <div className={styles.feedback} data-anchor="feedback">
-        <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Góp ý" className={styles.feedbackPill}>
-          <span className={styles.feedbackIcon} aria-hidden="true">
-            !
-          </span>
-          Góp ý
-        </Cta>
-      </div>
     </div>
   )
 }

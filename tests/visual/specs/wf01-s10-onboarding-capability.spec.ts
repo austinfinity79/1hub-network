@@ -475,10 +475,13 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
           reference: { x: 270, y: 1345, width: 900, height: 180 },
           dy: (await at('rule')) - REF.ruleTop,
         },
-        { name: 'feedback', reference: { x: 1290, y: 810, width: 150, height: 90 }, dy: 0 },
       ],
       exclude,
       intentional: [
+        {
+          class: 'INTENTIONAL-SCOPE',
+          reason: '"Góp ý" is hidden for Alpha (PO decision 30/09), so its pill is not compared',
+        },
         {
           class: 'INTENTIONAL-SCOPE',
           reason:

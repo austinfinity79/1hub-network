@@ -234,11 +234,6 @@
   opacity: 1;
 }
 
-.searchInput:disabled,
-.searchButton:disabled {
-  cursor: default;
-}
-
 .searchButton {
   display: grid;
   place-items: center;

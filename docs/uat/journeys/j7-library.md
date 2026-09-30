@@ -61,7 +61,7 @@ Journey 7 — the public Library (`/library`): tabs Bài toán, Startup, Nhà s�
 | Expected route | stays (external links open a new tab) |
 | Expected data / state | none |
 | Permission | public |
-| Negative | founder actions on external records are disabled by design; there is no internal startup or founder detail page (FUTURE) |
+| Negative | no "Theo dõi", "Kết nối" or profile action is drawn on external records (DEC-AIG-D8); there is no internal startup or founder detail page (FUTURE) |
 | Reset | none |
 | Result | ☐ PASS ☐ FAIL |
 | Notes | Known limitation: Startup / Nhà sáng lập come from the startup directory source, not from member ventures |

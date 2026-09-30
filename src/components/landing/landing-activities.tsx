@@ -9,8 +9,11 @@ import cards from './activity-cards.module.css'
 /**
  * Homepage activity rails, in reference order: events, programmes, investment
  * pipeline (DEC-H1-R2). The cards are the reference's illustrative content,
- * shown verbatim under a visible "Dữ liệu minh hoạ" label; none of them has a
- * destination yet, so every card action is inert. The pictures are the Hub's
+ * shown verbatim under a visible "Dữ liệu minh hoạ" label. An event or
+ * programme card has no destination yet, so it draws no "Chi tiết" action (PO
+ * decision, Alpha interaction gap fix 30/09); the fund card opens
+ * https://ihub.ventures (28/09 CTA map); deck and data room stay inert with
+ * their reason. The pictures are the Hub's
  * own (supplied 29/09) in `public/home/`, cropped by the card; the gradient of
  * each card stays underneath while a picture loads.
  */
@@ -105,13 +108,6 @@ export function Events() {
             <p className={cards.meta}>{e.meta}</p>
             <h3 className={cards.cardTitle}>{e.title}</h3>
             <p className={cards.cardText}>{e.text}</p>
-            <Cta
-              action={{ inert: 'NO_P0_SCREEN' }}
-              label={`Chi tiết — ${e.title}`}
-              className={cards.more}
-            >
-              Chi tiết <Arrow />
-            </Cta>
           </li>
         ))}
       </Rail>
@@ -189,13 +185,6 @@ export function Programmes() {
               <dt>HẠN ĐĂNG KÝ</dt>
               <dd>chưa công bố</dd>
             </dl>
-            <Cta
-              action={{ inert: 'NO_P0_SCREEN' }}
-              label={`Chi tiết — ${p.title}`}
-              className={cards.programmeMore}
-            >
-              Chi tiết <Arrow />
-            </Cta>
           </li>
         ))}
       </Rail>
@@ -232,9 +221,10 @@ export function Pipeline() {
           <h3 className={cards.fundTitle}>iHUB Ventures</h3>
           <p className={cards.fundText}>Mô tả quỹ · chờ nội dung chính thức</p>
           <Cta
-            action={{ inert: 'FUTURE' }}
+            action={{ href: 'https://ihub.ventures' }}
             label="Truy cập ihub.ventures"
             className={cards.fundMore}
+            cta="ihub-ventures"
           >
             Truy cập ihub.ventures <Arrow className={cards.out} />
           </Cta>

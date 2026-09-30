@@ -1,3 +1,5 @@
+import { PROJECT_DEMO_PATH } from '@/lib/project-demo/routes'
+
 import type { NavItem } from './nav'
 
 /**
@@ -20,11 +22,11 @@ export const PROFILE_HEADER_NAV: readonly (NavItem & { current?: boolean })[] = 
   { label: 'Tin tức', kind: 'INERT', reason: 'NO_P0_SCREEN' },
 ]
 
-/** Header of ME7 ("Dự án & startup của tôi"). */
+/** Header of ME7 ("Dự án & startup của tôi"). "Mạng lưới" is the public Library (PO decision 30/09). */
 export const WORKSPACE_HEADER_NAV: readonly NavItem[] = [
   { label: 'Chương trình', kind: 'INERT', reason: 'NO_P0_SCREEN' },
   { label: 'Sự kiện', kind: 'INERT', reason: 'NO_P0_SCREEN' },
-  { label: 'Mạng lưới', kind: 'INERT', reason: 'NO_P0_SCREEN' },
+  { label: 'Mạng lưới', kind: 'LINK', href: '/library' },
 ]
 
 export type WorkspaceKey = 'profile' | 'projects' | 'organizations' | 'settings'
@@ -35,8 +37,9 @@ export type WorkspaceItem = NavItem & { key: WorkspaceKey | null }
 export const WORKSPACE_SIDEBAR: readonly WorkspaceItem[] = [
   { key: 'profile', label: 'Hồ sơ của tôi', kind: 'LINK', href: '/me' },
   { key: 'projects', label: 'Dự án & startup', kind: 'LINK', href: '/projects' },
-  // Applications are Luồng 5; no production screen owns them.
-  { key: null, label: 'Hồ sơ đăng ký', kind: 'INERT', reason: 'FUTURE' },
+  // Applications are Luồng 5: the member's ventures and their programme
+  // applications are listed on the L5 entry (PO decision, Alpha interaction gap fix 30/09).
+  { key: null, label: 'Hồ sơ đăng ký', kind: 'LINK', href: PROJECT_DEMO_PATH },
   // The member's organisations are the memberships and leadership of WF02-S04.
   { key: 'organizations', label: 'Tổ chức của tôi', kind: 'LINK', href: '/me/roles' },
   { key: 'settings', label: 'Cài đặt', kind: 'LINK', href: '/me/settings' },

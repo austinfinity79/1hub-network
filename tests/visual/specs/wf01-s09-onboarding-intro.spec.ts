@@ -90,7 +90,9 @@ test.describe('WF01-S09 functional and security', () => {
     await expect(page).toHaveURL('/me')
   })
 
-  test('the AI block and "Góp ý" are drawn and start nothing', async ({ page }) => {
+  test('the AI block is drawn and starts nothing; "Góp ý" is hidden for Alpha', async ({
+    page,
+  }) => {
     await signInFresh(page.request, 's09')
     const requests: string[] = []
     page.on('request', (r) => {
@@ -102,10 +104,10 @@ test.describe('WF01-S09 functional and security', () => {
       'Hoàn thiện hồ sơ nhanh hơn với AI',
     )
     await expect(ai.locator('a, button, input')).toHaveCount(0)
-    const feedback = page.locator('[data-anchor="feedback"] [data-cta-kind="INERT"]')
-    await expect(feedback).toHaveAttribute('aria-disabled', 'true')
-    await expect(feedback).toHaveAttribute('title', /Chưa có trong phiên bản này/)
-    await feedback.click()
+    // PO decision (Alpha interaction gap fix 30/09): no feedback channel, so no "Góp ý".
+    await expect(page.locator('[data-anchor="feedback"]')).toHaveCount(0)
+    await expect(page.getByText('Góp ý')).toHaveCount(0)
+    await ai.click()
     await expect(page).toHaveURL('/onboarding')
     expect(requests).toEqual([])
   })
@@ -168,14 +170,12 @@ test.describe('WF01-S09 pixel QA (ACC-05)', () => {
           reference: { x: 300, y: 790, width: 840, height: 150 },
           dy: footer - REF.footerTop,
         },
-        // The frame is drawn 906px high, so its pill sits 6px lower than in a 900px viewport.
-        { name: 'feedback', reference: { x: 1290, y: 816, width: 150, height: 90 }, dy: -6 },
       ],
       intentional: [
         {
           class: 'INTENTIONAL-SCOPE',
           reason:
-            'D-A1: no AI provider is configured, so the AI block is drawn and has nothing to press; D-F1: "Góp ý" is drawn and inert',
+            'D-A1: no AI provider is configured, so the AI block is drawn and has nothing to press; "Góp ý" is hidden for Alpha (PO decision 30/09), so its pill is not compared',
         },
       ],
     })
