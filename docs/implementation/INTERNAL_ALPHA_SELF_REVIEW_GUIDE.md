@@ -1,5 +1,7 @@
 # Internal Alpha Self Review Guide
 
+> **SUPERSEDED** for the deployed release `ff052d7` (2026-09-30) by the pack in [`docs/uat/`](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md). This page describes the 28/09 release `9c61458` (WF05 applications in the browser session, no e-mail provider) and is kept for history.
+
 The main guide for the PO and the team: review **https://1hubnetwork.io.vn** from the browser, without code, database or API knowledge.
 - Release `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` (deployed GREEN).
 - This guide prepares the review; it does not record a result. **Team UAT: PENDING.**

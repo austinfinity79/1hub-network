@@ -1,5 +1,7 @@
 # Internal Alpha Test Accounts
 
+> **SUPERSEDED** for the deployed release `ff052d7` (2026-09-30) by the pack in [`docs/uat/`](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md). This page describes the 28/09 release `9c61458` (WF05 applications in the browser session, no e-mail provider) and is kept for history.
+
 Review site: **https://1hubnetwork.io.vn**, release `9c614585ca61fe2e4c957f28d7cc5c78fafe7bc0` (Task 20, deployed GREEN; rollback `0a2df094b941f6d0f0fc87cdb7767b2e92272198`).
 - Every account is a **review persona** on `@example.test`; nothing here is a real person.
 - There are **no passwords**.

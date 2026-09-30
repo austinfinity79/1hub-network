@@ -1,5 +1,7 @@
 # Internal Alpha Test Data Reset
 
+> **SUPERSEDED** for the deployed release `ff052d7` (2026-09-30) by the pack in [`docs/uat/`](../uat/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md). This page describes the 28/09 release `9c61458` (WF05 applications in the browser session, no e-mail provider) and is kept for history.
+
 The review data are the deterministic seed plus whatever earlier reviews created. Names such as "Fixture …", "Demo …" or "(demo)" are test data, not copy defects. Accounts: [INTERNAL_ALPHA_TEST_ACCOUNTS.md](INTERNAL_ALPHA_TEST_ACCOUNTS.md).
 
 ## Test data inventory

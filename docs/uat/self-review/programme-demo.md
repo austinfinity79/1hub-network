@@ -1,8 +1,8 @@
 # Programme Demo
 
-**Moved.** The post-deploy Internal Alpha test pack now lives in `docs/implementation/`: [this flow](../../implementation/internal-alpha/programme-demo.md).
+**Moved.** The Internal Alpha test pack for the deployed release (`ff052d7`, 2026-09-30) lives in `docs/uat/`: [J5 programme](../journeys/j5-programme.md).
 
-This file is kept only so that older links still resolve. The previous content (test pack `2d19cad`) is in git history.
+This file is kept only so that older links still resolve. Earlier packs are in git history (`2d19cad`, `5b1343c`).
 
 ## Related
-- [INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](../../implementation/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md) — Internal Alpha self-review guide
+- [J5 programme](../journeys/j5-programme.md)

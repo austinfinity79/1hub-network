@@ -1,8 +1,8 @@
 # Internal Alpha UAT Results Template
 
-**Moved.** The post-deploy Internal Alpha test pack now lives in `docs/implementation/`: [checklist, verdict and notes](../implementation/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md#self-review-checklist).
+**Moved.** The Internal Alpha test pack for the deployed release (`ff052d7`, 2026-09-30) lives in `docs/uat/`: [checklist with result and notes columns](INTERNAL_ALPHA_UAT_CHECKLIST.csv).
 
-This file is kept only so that older links still resolve. The previous content (test pack `2d19cad`) is in git history.
+This file is kept only so that older links still resolve. Earlier packs are in git history (`2d19cad`, `5b1343c`).
 
 ## Related
-- [INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md](../implementation/INTERNAL_ALPHA_SELF_REVIEW_GUIDE.md) — Internal Alpha self-review guide
+- [checklist with result and notes columns](INTERNAL_ALPHA_UAT_CHECKLIST.csv)
