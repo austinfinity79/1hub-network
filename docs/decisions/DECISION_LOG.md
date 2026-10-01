@@ -1371,6 +1371,15 @@ Superseded records (traceable conflicts C-01…C-14 in [conflict-audit.md](../de
 | <a id="dec-legal-v1-d5"></a>DEC-LEGAL-V1-D5 | **One combined acceptance link (PO, 01/10).** Where the member accepts the documents (onboarding stage 4; the `/me/privacy` re-acceptance when both are due) the statement carries one link, "Điều khoản sử dụng & Chính sách quyền riêng tư", to `/legal/terms` (current version, DEC-LEGAL-D2). The documents stay separate: the reader shows a two-item switcher (`/legal/terms`, `/legal/privacy`). When only one document is due, `/me/privacy` names that document alone. Footers, the per-document "Đọc" links and `/auth` (no notice, DEC-L1R-D2) are unchanged. The versions being accepted stay on the statement as data (`data-legal-versions`) |
 | <a id="dec-legal-v1-d6"></a>DEC-LEGAL-V1-D6 | **Re-consent (PO, 01/10).** `p0-2026-09` is retired. A `p0-2026-09` acceptance is kept as history and never migrated or copied to `v1.0`; the member is asked again by the existing flow, the acceptance writes one new `v1.0` record (repeat = 200, no new row), and the prompt does not return |
 
+## DEC-MSHELL — Member shell on mobile (P1 hotfix)
+
+<a id="dec-mshell"></a>**Status:** IMPLEMENTED 2026-10-01 on the PO's P1 hotfix task after the production smoke of `78f21f2` (local commit; not pushed, not deployed). Root cause: the shell's below-desktop adaptation was opt-in (`responsive`, WF05-S01) and only `/me/settings` and `/demo/projects` used it, so `/me/privacy` and `/me/roles` kept the 64 px gutters, 250 px sidebar and 26 px gap at any width and their content column collapsed to 0 px on a phone.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-mshell-d1"></a>DEC-MSHELL-D1 | **Shared fix.** The existing adaptation is the member shell's default; the `responsive` opt-in is removed. Below 1024 px the gutters narrow; below 768 px the header wraps and the sidebar stacks above the content (the WF05-S01 pattern, no drawer, no new navigation). At 1024 px and wider nothing changes |
+| <a id="dec-mshell-d2"></a>DEC-MSHELL-D2 | **`/me/roles` rows below 768 px.** The measured four-column row (210 px name column, right-aligned trust text) stacks: name, then chip and role, then the trust line, left-aligned. Same content and order; the 1440 grid is unchanged |
+
 ## DEC-H1-R2 — Homepage aligned to the latest export (TASK 22-HOMEPAGE-FINAL-ALIGN)
 
 <a id="dec-h1-r2"></a>**Status:** IMPLEMENTED 2026-09-28 on the PO task and the PO answers of 28/09. Reference: `design-reference/final/revision/H1/H1__homepage-r2__SOURCE.png` (1440 × 12853). Supersedes [DEC-H1-D2](#dec-h1-d2) (HD-01 omissions) and the CTA map of [DEC-H1-D3](#dec-h1-d3) for `/`; D1, D4 and D6 of DEC-H1 stay.

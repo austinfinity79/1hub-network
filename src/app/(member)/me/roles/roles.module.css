@@ -159,3 +159,25 @@
 .notice {
   margin-top: 0.75rem;
 }
+
+/* Below 768px (P1 mobile hotfix, DEC-MSHELL-D2): the 210px name column and the
+   right-aligned trust text no longer fit beside each other, so a row stacks:
+   name, then chip and role, then the trust line. Content and order unchanged;
+   1440 keeps the measured grid above. */
+@media (max-width: 767px) {
+  .row {
+    grid-template-columns: auto 1fr;
+    row-gap: 0.5rem;
+  }
+
+  .name,
+  .trust {
+    grid-column: 1 / -1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .trust {
+    text-align: left;
+  }
+}

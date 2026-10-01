@@ -24,7 +24,7 @@ export default async function Page() {
   ])
   return (
     // L11 (TASK 22.3, DEC-L2-D5): the existing below-desktop shell variant.
-    <MemberShell active="settings" member={member} responsive>
+    <MemberShell active="settings" member={member}>
       <SettingsView initialRequest={request} pendingInvitations={invitations.length} />
     </MemberShell>
   )

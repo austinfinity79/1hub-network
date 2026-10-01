@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 export default async function ProjectDemoLayout({ children }: { children: React.ReactNode }) {
   const { member, actorKey } = await requireProjectDemo()
   return (
-    <MemberShell active="project-demo" member={member} responsive>
+    <MemberShell active="project-demo" member={member}>
       <ProjectDemoProvider actorKey={actorKey}>
         <div data-demo="projects">{children}</div>
       </ProjectDemoProvider>
