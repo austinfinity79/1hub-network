@@ -16,7 +16,7 @@ export default async function ProjectDemoLayout({ children }: { children: React.
   if (!(await hasMemberSession())) return children
   const { member } = await requireProjectDemo()
   return (
-    <MemberShell active="project-demo" member={member} responsive>
+    <MemberShell active="project-demo" member={member}>
       <ProjectDemoProvider>
         <div data-demo="projects">{children}</div>
       </ProjectDemoProvider>

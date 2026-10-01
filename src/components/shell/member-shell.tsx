@@ -19,11 +19,6 @@ type Props = {
   /** The sidebar entry of the current screen. */
   active: SidebarKey | typeof PROJECT_DEMO_ENTRY.key
   member: Pick<MemberIdentity, 'displayName' | 'avatarUrl'> & { opsAccess?: boolean }
-  /**
-   * WF05-S01: adapt below 1024px instead of keeping the desktop frame. Opt-in
-   * (the WF05 demo only); the WF02 member screens keep their frame.
-   */
-  responsive?: boolean
   children: ReactNode
 }
 
@@ -52,10 +47,10 @@ function Inert({ item, className }: { item: NavItem; className?: string }) {
  * P0 Production destination are inert, and the notification bell shows no
  * counter (no canonical notification source, DEC-WF02-H9/H10).
  */
-export function MemberShell({ active, member, responsive = false, children }: Props) {
+export function MemberShell({ active, member, children }: Props) {
   const demoCurrent = active === PROJECT_DEMO_ENTRY.key
   return (
-    <div className={`${styles.root} ${responsive ? styles.responsive : ''}`} data-shell="member">
+    <div className={styles.root} data-shell="member">
       <header className={styles.header}>
         <p className={`type-section-sm ${styles.wordmark}`}>
           <HomeLink>HUB NETWORK</HomeLink>

@@ -151,25 +151,26 @@
   margin-top: 1.75rem;
 }
 
-/* WF05-S01: opt-in adaptation below desktop (the WF05 demo and, since TASK
-   22.3, the L11 settings overview; the other WF02 member screens keep the
-   desktop frame). 1440 is unchanged. */
+/* Below desktop every member screen adapts (WF05-S01 pattern, made the shell
+   default by the P1 mobile hotfix, DEC-MSHELL-D1): narrower gutters below
+   1024px, then the sidebar stacks above the content below 768px instead of
+   keeping its 250px column. 1440 is unchanged. */
 @media (max-width: 1023px) {
-  .responsive .header {
+  .header {
     padding: 0 1.5rem;
   }
 
-  .responsive .body {
+  .body {
     padding: 1.5rem 1.5rem 3rem;
   }
 
-  .responsive .sidebar {
+  .sidebar {
     flex-basis: 13rem;
   }
 }
 
 @media (max-width: 767px) {
-  .responsive .header {
+  .header {
     flex-wrap: wrap;
     gap: 0.5rem 1rem;
     height: auto;
@@ -177,7 +178,7 @@
     padding: 0.75rem 1rem;
   }
 
-  .responsive .productNav {
+  .productNav {
     order: 3;
     flex-wrap: wrap;
     gap: 0.25rem 1.25rem;
@@ -185,18 +186,18 @@
     margin-left: 0;
   }
 
-  .responsive .memberName {
+  .memberName {
     min-width: 0;
     overflow-wrap: anywhere;
   }
 
-  .responsive .body {
+  .body {
     flex-direction: column;
     gap: 1.25rem;
     padding: 1.25rem 1rem 3rem;
   }
 
-  .responsive .sidebar {
+  .sidebar {
     flex: none;
   }
 }
