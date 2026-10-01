@@ -1528,6 +1528,27 @@ Superseded in part: [DEC-P0-SHELL-D2](#dec-p0-shell-d2) for the items above (ine
 
 Superseded in part: [DEC-P0-SHELL-D2](#dec-p0-shell-d2) and the About report's "inert with a reason" for the items above (they now also look unavailable); M0-T03's "no navigation" on the 404 page.
 
+## DEC-W4P — WF04 production contract (WF04-PROD-01, PO, 01/10)
+
+<a id="dec-w4p"></a>**Status:** FROZEN 2026-10-01 for implementation after PO approval of the [WF04 production contract](../implementation/reports/WF04_PRODUCTION_CONTRACT.md) (input: [gap matrix](../implementation/reports/WF04_PRODUCTION_GAP_MATRIX.md)). Supersessions are listed in the contract §18; earlier records stay as written.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-w4p-d01"></a>DEC-W4P-D01 | **Scope.** WF04 is production-hardened, limited to the approved current WF04 behaviour; future boards are not promoted (contract §1–§2). |
+| <a id="dec-w4p-d02"></a>DEC-W4P-D02 | **No new role.** Create, edit, publish, close (when decided) and Challenge management use existing roles: `HUB_COMMUNITY_LEADER` with an ACTIVE assignment for the owning organization (exact, no inheritance) and `PLATFORM_ADMIN`, through a new capability `programme:manage` of the matrix's existing shape. `PROGRAMME_ORGANIZER` stays inactive (A03 §4); SOT:161 is not contradicted. |
+| <a id="dec-w4p-d03"></a>DEC-W4P-D03 | **One owning organization** (`programmes.organization_id`, NOT NULL, HUB / CHAPTER / CLB, immutable). No multi-organization authorization; co-host names are content only. |
+| <a id="dec-w4p-d04"></a>DEC-W4P-D04 | **Reuse canonical entities**: one Programme aggregate; no V2 or duplicate Programme, Challenge, Problem, Application or Event model. |
+| <a id="dec-w4p-d05"></a>DEC-W4P-D05 | **Application**: WF04 writes only the canonical registration form `programme_application_forms`; applications stay the L5 model (API §21). Demo / canonical conflicts go to the PO (contract Q3, Q5). |
+| <a id="dec-w4p-d06"></a>DEC-W4P-D06 | **Challenge "Bài toán" = option A**: problem statements are child content of the Programme aggregate (FRZ D1), stored in `programmes.metadata.challenge`; not related to the Library's static problem file (DEC-L15-D9); no new table. |
+| <a id="dec-w4p-d07"></a>DEC-W4P-D07 | **Event boundary**: WF04 reads events through `events.programme_id` only; no event writes, lifecycle copy or WF03 change (writes: contract Q1). |
+| <a id="dec-w4p-d08"></a>DEC-W4P-D08 | **UI**: the approved WF04 screens are the baseline; only loading, empty, validation, API error (including 409), permission denied and disabled states may be added. |
+| <a id="dec-w4p-d09"></a>DEC-W4P-D09 | **Fixtures**: zero production dependency; fixtures and the deterministic seed stay for tests and local demo. |
+| <a id="dec-w4p-d10"></a>DEC-W4P-D10 | **Public surface**: v1 adds no public programme list, detail or CTA; members reach PUBLISHED programmes only through the existing L5 apply flow. |
+| <a id="dec-w4p-t"></a>DEC-W4P-T1…T11 | **Technical** (no PO decision needed): server-side authorization on every write; canonical DB persistence; refresh / relogin / restart keep state; duplicate state changes handled (Idempotency-Key `programme.create`, `programme.publish`); invalid transitions rejected server-side (409); IDOR, role spoofing and cross-organization writes rejected; zero production fixture dependency; migrations support fresh DB, upgrade and a rollback / recovery note; audit with the existing convention (`PROGRAMME_CREATED`, `PROGRAMME_UPDATED`, `PROGRAMME_REGISTRATION_UPDATED`, `PROGRAMME_PUBLISHED`); malformed ids return the canonical 404, never 500; regression for fresh DB, migration, restart, authorization, malformed ids, console / hydration / 5xx. |
+| <a id="dec-w4p-c"></a>DEC-W4P-C1…C6 | **Contract choices**: C1 `programme_status` enum DRAFT / PUBLISHED / CLOSED / ARCHIVED aligns the DB with SOT:209-210 (closes gap D1; transitions to CLOSED / ARCHIVED stay open, Q2); C2 stages in `programmes.metadata.journey`; C3 canonical API `/api/v1/programmes` (A04:234) as API Amendment A5, the demo API leaves production; C4 publish = SOT + technical rules only, the CHALLENGE problem rule is demo-only (Q7); C5 content edits allowed in DRAFT and PUBLISHED as in the demo, type and owner never, no unpublish; C6 the production row `d4…0001` becomes an ordinary Chapter 01 programme pending Q8. |
+
+Open (contract §19): BLOCKING none; NON_BLOCKING Q1–Q10; DEFERRED as listed in contract §2.
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 
