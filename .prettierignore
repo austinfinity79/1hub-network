@@ -5,6 +5,8 @@ pnpm-lock.yaml
 next-env.d.ts
 
 # Frozen SOT pack — never reformat
+# Verbatim legal text (DEC-LEGAL, DEC-LEGAL-V1): Prettier would change the source spacing
+content/legal/
 docs/
 db/
 design-reference/

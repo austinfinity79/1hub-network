@@ -20,12 +20,38 @@ function contentDir(): string | null {
   return devRoutesEnabled() ? path.resolve(process.cwd(), 'content/legal-fixtures') : null
 }
 
+/**
+ * One source paragraph. Release files may mark the document title (`# `), its
+ * metadata line (`> `) and section headings (`## `); unmarked blocks are body
+ * text, so older plain files render exactly as before. The markers are layout
+ * only: the text after them is the verbatim source.
+ */
+export type LegalBlock =
+  { kind: 'title' | 'meta' | 'text'; text: string } | { kind: 'heading'; text: string; id: string }
+
 export type LegalContent = {
   title: string
   version: string
   effective_at: Date
   current: boolean
   paragraphs: string[]
+  blocks: LegalBlock[]
+}
+
+/** "## 3. Tài khoản …" → id "muc-3"; other headings get a positional id. */
+export function toBlocks(paragraphs: string[]): LegalBlock[] {
+  let headings = 0
+  return paragraphs.map((p) => {
+    if (p.startsWith('## ')) {
+      headings += 1
+      const text = p.slice(3).trim()
+      const no = /^(\d+)\./.exec(text)?.[1]
+      return { kind: 'heading', text, id: `muc-${no ?? headings}` }
+    }
+    if (p.startsWith('# ')) return { kind: 'title', text: p.slice(2).trim() }
+    if (p.startsWith('> ')) return { kind: 'meta', text: p.slice(2).trim() }
+    return { kind: 'text', text: p }
+  })
 }
 
 export async function readLegalContent(contentUri: string): Promise<LegalContent | null> {
@@ -47,14 +73,16 @@ export async function readLegalContent(contentUri: string): Promise<LegalContent
     () => null,
   )
   if (text === null) return null
+  const paragraphs = text
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
   return {
     title: doc.title,
     version: doc.version,
     effective_at: doc.effective_at,
     current: doc.current,
-    paragraphs: text
-      .split(/\n\s*\n/)
-      .map((p) => p.trim())
-      .filter(Boolean),
+    paragraphs,
+    blocks: toBlocks(paragraphs),
   }
 }

@@ -1358,6 +1358,17 @@ Superseded records (traceable conflicts C-01…C-14 in [conflict-audit.md](../de
 | <a id="dec-legal-d1"></a>DEC-LEGAL-D1 | **Source and split.** The approved text is "Điều khoản sử dụng và Chính sách quyền riêng tư", Phiên bản 1.5 (24/09/2026, 1Hub Holding), copied verbatim into `content/legal/`: the opening block and Phần A for `TERMS_ACCEPTANCE`, Phần B for `PRIVACY_DATA_PROCESSING`, under the current version `p0-2026-09` (no DB change). Production sets `LEGAL_CONTENT_DIR=content/legal`; dev / test servers keep the fixtures. Source hash and conversion rules: [content/legal/README.md](../../content/legal/README.md) |
 | <a id="dec-legal-d2"></a>DEC-LEGAL-D2 | **Address without a version.** `/legal/<kind>` (e.g. `/legal/terms`, `/legal/privacy`) answers 307 to the current document's `content_url`; 404 when no current document matches. The login notice on `/auth` stays plain text (approved AUTH1) |
 
+## DEC-LEGAL-V1 — Legal documents v1.0 (iHub)
+
+<a id="dec-legal-v1"></a>**Status:** IMPLEMENTED 2026-10-01 on the PO decisions of 01/10 (local commit; not deployed). Supersedes the *content* of DEC-LEGAL-D1 from the v1.0 effective date; DEC-LEGAL-D2 (version-less `/legal/<kind>`) and the mechanism are unchanged.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-legal-v1-d1"></a>DEC-LEGAL-V1-D1 | **Source.** "Điều khoản sử dụng 1hub.network" and "Chính sách quyền riêng tư 1hub.network", Bản dự thảo v1.0, Ngày soạn 29/09/2026 (`…_du_thao_v1.0 (1).docx`), operated by CÔNG TY TNHH VƯỜN ƯƠM KHỞI NGHIỆP SÁNG TẠO QUỐC GIA IHUB. Two separate documents, copied verbatim to `content/legal/<TYPE>.v1.0.md` |
+| <a id="dec-legal-v1-d2"></a>DEC-LEGAL-V1-D2 | **Only approved edits.** "Ngày hiệu lực [CẦN XÁC NHẬN]" → "Ngày hiệu lực 01/10/2026" (both); "[EMAIL HỖ TRỢ]" → "global@1hub.network" (terms §13). No other wording changes |
+| <a id="dec-legal-v1-d3"></a>DEC-LEGAL-V1-D3 | **New version, option (a).** Migration `014_p0_legal_v1_0.sql` adds `v1.0` rows effective 2026-10-01 00:00 Asia/Ho_Chi_Minh and marks the existing `p0-2026-09` rows retired at that time (history; their pages read "không còn hiệu lực"). Accounts that accepted `p0-2026-09` see "có phiên bản mới cần đồng ý" and accept again; onboarding of completed accounts is not reopened |
+| <a id="dec-legal-v1-d4"></a>DEC-LEGAL-V1-D4 | **Presentation.** Release files may mark the title (`# `), metadata line (`> `) and section headings (`## `); the reader renders them as h1, meta and anchored h2 (`#muc-N`). Plain files render as before. Link labels stay the document row titles |
+
 ## DEC-H1-R2 — Homepage aligned to the latest export (TASK 22-HOMEPAGE-FINAL-ALIGN)
 
 <a id="dec-h1-r2"></a>**Status:** IMPLEMENTED 2026-09-28 on the PO task and the PO answers of 28/09. Reference: `design-reference/final/revision/H1/H1__homepage-r2__SOURCE.png` (1440 × 12853). Supersedes [DEC-H1-D2](#dec-h1-d2) (HD-01 omissions) and the CTA map of [DEC-H1-D3](#dec-h1-d3) for `/`; D1, D4 and D6 of DEC-H1 stay.

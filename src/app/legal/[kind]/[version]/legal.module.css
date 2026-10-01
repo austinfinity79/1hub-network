@@ -11,4 +11,20 @@
 
 .paragraph {
   margin: 1rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.heading {
+  margin: 2rem 0 0;
+  scroll-margin-top: 1.5rem;
+}
+
+.anchor {
+  color: inherit;
+  text-decoration: none;
+}
+
+.anchor:hover,
+.anchor:focus-visible {
+  text-decoration: underline;
 }

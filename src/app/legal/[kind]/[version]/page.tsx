@@ -22,20 +22,37 @@ export default async function Page({
   const content = await readLegalContent(`/legal/${kind}/${version}`)
   if (!content) notFound()
 
+  // The release file may carry its own title and metadata line (verbatim from
+  // the source); otherwise the document row's title and version are shown.
+  const title = content.blocks.find((b) => b.kind === 'title')?.text ?? content.title
+  const meta = content.blocks.find((b) => b.kind === 'meta')?.text ?? `Phiên bản ${content.version}`
+
   return (
     <PageContainer>
       <div className={styles.page}>
         <Surface as="article">
-          <h1 className="type-heading-2">{content.title}</h1>
+          <h1 className="type-heading-2">{title}</h1>
           <p className={`type-meta-xs ${styles.meta}`}>
-            Phiên bản {content.version}
+            {meta}
             {content.current ? null : ' · không còn hiệu lực'}
           </p>
-          {content.paragraphs.map((text, i) => (
-            <p key={i} className={`type-body-md ${styles.paragraph}`}>
-              {text}
-            </p>
-          ))}
+          {content.blocks.map((block, i) => {
+            if (block.kind === 'title' || block.kind === 'meta') return null
+            if (block.kind === 'heading') {
+              return (
+                <h2 key={i} id={block.id} className={`type-subtitle ${styles.heading}`}>
+                  <a href={`#${block.id}`} className={styles.anchor}>
+                    {block.text}
+                  </a>
+                </h2>
+              )
+            }
+            return (
+              <p key={i} className={`type-body-md ${styles.paragraph}`}>
+                {block.text}
+              </p>
+            )
+          })}
         </Surface>
       </div>
     </PageContainer>

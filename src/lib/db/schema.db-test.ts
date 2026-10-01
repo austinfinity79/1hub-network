@@ -148,6 +148,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       // TASK 22-L1-L2-PO-DECISION-FREEZE (DEC-PDF-D1 / D5 / D6B): visibility, stages, declarations.
       '012_p0_alpha_decision_freeze.sql',
       '013_p0_applications.sql',
+      // DEC-LEGAL-V1: legal documents v1.0 (new version rows, effective 2026-10-01).
+      '014_p0_legal_v1_0.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
