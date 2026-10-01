@@ -1,7 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
+
+import { Notice } from '@/components/ui'
 
 import { APPLICANT_LABEL, TEAM_ROLE_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
 import { formatEventWhen } from '@/lib/programme-demo/event-time'
@@ -9,20 +11,22 @@ import { formatDemoDateRange } from '@/lib/programme-demo/format'
 import { orderedStages } from '@/lib/programme-demo/journey'
 import { programmeEvents } from '@/lib/programme-demo/programme-events'
 import { demoRoutes, type SetupStep } from '@/lib/programme-demo/routes'
-import type { ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
+import type { ProgrammeDetailDTO } from '@/lib/programme/types'
+import type { ProgrammeScreen } from '@/lib/programme/view'
 
 import buttons from './demo-buttons.module.css'
 import styles from './journey.module.css'
-import { SetupScreen } from './setup-screen'
+import { Confirm, SetupScreen, type Send } from './setup-screen'
 import { EventStatusPill, ProgrammeStatusPill } from './status-pill'
 
 /**
- * WF04-S08 — programme detail / manage (DEC-WF04-S08-D1..D3). One page for
- * PROGRAMME and CHALLENGE (the CHALLENGE adds its problem statements), from
- * the actor's session copy or the fixture: identity, status, owner, time,
- * summary, and summaries of the journey, events, registration and team, each
- * linking to its built setup step. Lifecycle is shown, never changed here
- * (publishing is S07); no metric, application count, funnel or public link.
+ * WF04-S08 — programme detail / manage (DEC-WF04-S08-D1..D3; WF04-PROD-04).
+ * One page for PROGRAMME and CHALLENGE (the CHALLENGE adds its problem
+ * statements), from the canonical API: identity, status, owner, time, summary,
+ * and summaries of the journey, events, registration and team, each linking to
+ * its setup step while the programme can be edited. Publishing is S07; closing
+ * a PUBLISHED programme is here (DEC-W4P-D12), after an inline confirmation.
+ * No metric, application count, funnel or public link.
  */
 
 const COPY = {
@@ -30,7 +34,15 @@ const COPY = {
   reviewDraft: 'Rà soát & xuất bản',
   review: 'Rà soát',
   draft: 'Chưa công khai. Rà soát rồi xuất bản khi đã sẵn sàng.',
-  published: 'Đang công khai trong bản demo.',
+  published: 'Đang công khai.',
+  closedText: 'Đã đóng: không nhận đăng ký mới và không chỉnh sửa được.',
+  archivedText: 'Đã lưu trữ.',
+  close: 'Đóng chương trình',
+  closeConfirm: (name: string) =>
+    `Đóng “${name}”? Chương trình sẽ không nhận đăng ký mới và không chỉnh sửa được nữa.`,
+  closeYes: 'Đóng',
+  closeNo: 'Huỷ',
+  closedNow: 'Đã đóng chương trình.',
   overview: 'Thông tin chung',
   type: 'Loại',
   owner: 'Đơn vị chủ trì',
@@ -52,17 +64,10 @@ const COPY = {
   noTime: 'Chưa có thời gian',
 } as const
 
-export function ProgrammeDetail({
-  id,
-  server,
-}: {
-  id: string
-  server: ProgrammeDemoDetailDTO | null
-}) {
+export function ProgrammeDetail({ id, initial }: { id: string; initial: ProgrammeDetailDTO }) {
   return (
     <SetupScreen
-      id={id}
-      server={server}
+      initial={initial}
       screen="WF04-S08"
       actions={(detail) => (
         <div className={buttons.group}>
@@ -75,15 +80,15 @@ export function ProgrammeDetail({
           </Link>
           <Link
             href={demoRoutes.setup(id, 'review')}
-            className={`weight-medium ${detail.programme.status === 'DRAFT' ? buttons.primary : buttons.secondary}`}
+            className={`weight-medium ${detail.actions.publish ? buttons.primary : buttons.secondary}`}
             data-nav="detail-review"
           >
-            {detail.programme.status === 'DRAFT' ? COPY.reviewDraft : COPY.review}
+            {detail.actions.publish ? COPY.reviewDraft : COPY.review}
           </Link>
         </div>
       )}
     >
-      {({ detail }) => <DetailBody detail={detail} />}
+      {({ detail, send }) => <DetailBody detail={detail} send={send} />}
     </SetupScreen>
   )
 }
@@ -93,12 +98,15 @@ function Card({
   name,
   title,
   step,
+  editable,
   children,
 }: {
   programmeId: string
   name: string
   title: string
   step: SetupStep
+  /** Links to the setup step only while the server allows edits. */
+  editable: boolean
   children: ReactNode
 }) {
   return (
@@ -107,45 +115,99 @@ function Card({
         <h2 id={`detail-${name}`} className={`weight-semibold ${styles.cardTitle}`}>
           {title}
         </h2>
-        <Link
-          href={demoRoutes.setup(programmeId, step)}
-          className={`weight-medium ${styles.editLink}`}
-          data-manage={step}
-        >
-          {COPY.manage}
-        </Link>
+        {editable ? (
+          <Link
+            href={demoRoutes.setup(programmeId, step)}
+            className={`weight-medium ${styles.editLink}`}
+            data-manage={step}
+          >
+            {COPY.manage}
+          </Link>
+        ) : null}
       </header>
       <div className={`type-body-sm ${styles.cardBody}`}>{children}</div>
     </section>
   )
 }
 
-function DetailBody({ detail }: { detail: ProgrammeDemoDetailDTO }) {
+const STATUS_TEXT: Record<ProgrammeScreen['programme']['status'], string> = {
+  DRAFT: COPY.draft,
+  PUBLISHED: COPY.published,
+  CLOSED: COPY.closedText,
+  ARCHIVED: COPY.archivedText,
+}
+
+function DetailBody({ detail, send }: { detail: ProgrammeScreen; send: Send }) {
   const { programme, organization, registration } = detail
   const stages = orderedStages(detail)
   const events = programmeEvents(detail)
   const problems = detail.problem_statements ?? []
-  const draft = programme.status === 'DRAFT'
+  const editable = detail.actions.edit
+  const [confirming, setConfirming] = useState(false)
+  const [closing, setClosing] = useState(false)
+  const [closedNow, setClosedNow] = useState(false)
+  // One key per close intent: a retried click replays instead of failing.
+  const closeKey = useRef(`close-${crypto.randomUUID()}`)
+
+  async function close() {
+    if (closing) return
+    setClosing(true)
+    const outcome = await send({
+      path: `/programmes/${encodeURIComponent(programme.id)}/close`,
+      method: 'POST',
+      idempotencyKey: closeKey.current,
+    })
+    setClosing(false)
+    setConfirming(false)
+    setClosedNow(outcome.ok)
+  }
 
   return (
     <>
       <div className={styles.status} data-detail-status={programme.status}>
         <ProgrammeStatusPill status={programme.status} />
-        <p className={`type-body-sm ${styles.statusText}`}>{draft ? COPY.draft : COPY.published}</p>
+        <p className={`type-body-sm ${styles.statusText}`}>{STATUS_TEXT[programme.status]}</p>
+        {detail.actions.close && !confirming ? (
+          <button
+            type="button"
+            className={`weight-medium ${buttons.secondary}`}
+            onClick={() => setConfirming(true)}
+            data-action="close-programme"
+          >
+            {COPY.close}
+          </button>
+        ) : null}
       </div>
+      {detail.actions.close && confirming ? (
+        <Confirm
+          text={COPY.closeConfirm(programme.name)}
+          yes={COPY.closeYes}
+          no={COPY.closeNo}
+          busy={closing}
+          onYes={close}
+          onNo={() => setConfirming(false)}
+        />
+      ) : null}
+      {closedNow ? (
+        <div className={styles.saved} data-state="closed-now">
+          <Notice>{COPY.closedNow}</Notice>
+        </div>
+      ) : null}
 
       <section className={styles.card} aria-labelledby="detail-overview" data-detail="overview">
         <header className={styles.cardHead}>
           <h2 id="detail-overview" className={`weight-semibold ${styles.cardTitle}`}>
             {COPY.overview}
           </h2>
-          <Link
-            href={demoRoutes.setup(programme.id, 'basic')}
-            className={`weight-medium ${styles.editLink}`}
-            data-manage="basic"
-          >
-            {COPY.edit}
-          </Link>
+          {editable ? (
+            <Link
+              href={demoRoutes.setup(programme.id, 'basic')}
+              className={`weight-medium ${styles.editLink}`}
+              data-manage="basic"
+            >
+              {COPY.edit}
+            </Link>
+          ) : null}
         </header>
         {(
           [
@@ -164,7 +226,13 @@ function DetailBody({ detail }: { detail: ProgrammeDemoDetailDTO }) {
       </section>
 
       <div className={styles.detailGrid}>
-        <Card programmeId={programme.id} name="journey" title={COPY.journey} step="journey">
+        <Card
+          editable={editable}
+          programmeId={programme.id}
+          name="journey"
+          title={COPY.journey}
+          step="journey"
+        >
           {COPY.stages(stages.length)}
           {stages.length > 0 ? (
             <ol>
@@ -182,7 +250,13 @@ function DetailBody({ detail }: { detail: ProgrammeDemoDetailDTO }) {
         </Card>
 
         {programme.type === 'CHALLENGE' ? (
-          <Card programmeId={programme.id} name="problems" title={COPY.problems} step="journey">
+          <Card
+            editable={editable}
+            programmeId={programme.id}
+            name="problems"
+            title={COPY.problems}
+            step="journey"
+          >
             {COPY.problemsCount(problems.length)}
             {problems.length > 0 ? (
               <ul>
@@ -194,7 +268,13 @@ function DetailBody({ detail }: { detail: ProgrammeDemoDetailDTO }) {
           </Card>
         ) : null}
 
-        <Card programmeId={programme.id} name="events" title={COPY.events} step="events">
+        <Card
+          editable={editable}
+          programmeId={programme.id}
+          name="events"
+          title={COPY.events}
+          step="events"
+        >
           {COPY.eventsCount(events.length)}
           {events.length > 0 ? (
             <ul>
@@ -213,6 +293,7 @@ function DetailBody({ detail }: { detail: ProgrammeDemoDetailDTO }) {
         </Card>
 
         <Card
+          editable={editable}
           programmeId={programme.id}
           name="registration"
           title={COPY.registration}
@@ -225,7 +306,13 @@ function DetailBody({ detail }: { detail: ProgrammeDemoDetailDTO }) {
           {COPY.questions(registration.questions.length)}
         </Card>
 
-        <Card programmeId={programme.id} name="team" title={COPY.team} step="team">
+        <Card
+          editable={editable}
+          programmeId={programme.id}
+          name="team"
+          title={COPY.team}
+          step="team"
+        >
           {COPY.members(detail.team.length)}
           {detail.team.length > 0 ? (
             <ul>

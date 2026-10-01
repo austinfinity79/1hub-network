@@ -25,6 +25,8 @@ export type ProgrammeType = (typeof PROGRAMME_TYPES)[number]
 export const PROGRAMME_LIFECYCLE = ['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED'] as const
 export const PROGRAMME_DEMO_STATUSES = ['DRAFT', 'PUBLISHED'] as const
 export type ProgrammeDemoStatus = (typeof PROGRAMME_DEMO_STATUSES)[number]
+/** WF04-PROD-04: the stored lifecycle the screens render (CLOSED approved; ARCHIVED read only). */
+export type ProgrammeLifecycleStatus = (typeof PROGRAMME_LIFECYCLE)[number]
 
 /** SOT §12: exactly one primary applicant of these kinds. */
 export const APPLICANT_TYPES = ['INDIVIDUAL', 'TEAM', 'STARTUP'] as const
@@ -51,7 +53,7 @@ export type ProgrammeDTO = {
   slug: string
   name: string
   summary: string | null
-  status: ProgrammeDemoStatus
+  status: ProgrammeLifecycleStatus
   starts_at: string | null
   ends_at: string | null
   created_at: string

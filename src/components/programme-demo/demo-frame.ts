@@ -15,12 +15,19 @@ export type DemoFrameCopy = Record<
 >
 
 export type DemoFrame = {
-  /** Clears this demo's browser-session state only. */
-  reset: () => void
   flash: string | null
   setFlash: (message: string | null) => void
-  copy: DemoFrameCopy
-}
+} & (
+  | {
+      notice?: true
+      /** Clears this demo's browser-session state only. */
+      reset: () => void
+      copy: DemoFrameCopy
+    }
+  // WF04-PROD-04: the production WF04 screens keep the frame without the demo
+  // notice and reset (contract §16); WF05 stays a demo.
+  | { notice: false }
+)
 
 export const DemoFrameContext = createContext<DemoFrame | null>(null)
 

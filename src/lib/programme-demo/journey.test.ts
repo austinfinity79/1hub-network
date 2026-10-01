@@ -13,8 +13,8 @@ import {
   updateStage,
   validateStage,
 } from './journey'
-import { publishReadiness } from './readiness'
 import type { ProgrammeDemoDetail } from './types'
+import { publishChecks, type ProgrammeScreen } from '@/lib/programme/view'
 
 const now = new Date('2026-09-27T05:00:00.000Z')
 const copy = (id: string) => structuredClone(demoFixture(id)!) as ProgrammeDemoDetail
@@ -190,17 +190,31 @@ describe('WF04-S03 problem statements (CHALLENGE only)', () => {
     expect(p).not.toHaveProperty('problem_statements')
   })
 
-  it('H5 is unchanged: stages are never required; a CHALLENGE needs one problem statement', () => {
+  it('stages and problem statements are never publish prerequisites (contract §8, Q7)', () => {
     const p = copy(DEMO_PROGRAMME_ID)
     p.programme.status = 'DRAFT'
     p.stages = []
-    expect(publishReadiness(p, 'ALL').every((c) => c.ok)).toBe(true)
+    expect(publishChecks(screenOf(p)).every((c) => c.ok)).toBe(true)
     let c = copy(DEMO_CHALLENGE_ID)
     for (const pr of [...c.problem_statements!]) c = ok(removeProblem(c, pr.id, now))
-    expect(
-      publishReadiness(c, 'ALL')
-        .filter((x) => !x.ok)
-        .map((x) => x.item),
-    ).toEqual(['problems'])
+    // DEC-W4P-D12 supersedes the demo H5 rule: a CHALLENGE without problems still passes.
+    expect(publishChecks(screenOf(c)).every((x) => x.ok)).toBe(true)
   })
+})
+
+const screenOf = <
+  T extends Omit<ProgrammeScreen, 'actions' | 'owner_archived' | 'form' | 'organization'>,
+>(
+  detail: T,
+): ProgrammeScreen => ({
+  organization: {
+    id: '10000000-0000-0000-0000-000000000101',
+    slug: 'chapter-01',
+    name: 'Chapter 01',
+    type: 'CHAPTER',
+  },
+  ...detail,
+  actions: { edit: true, registration: true, publish: true, close: false },
+  owner_archived: false,
+  form: null,
 })

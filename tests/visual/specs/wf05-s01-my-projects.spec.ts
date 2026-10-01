@@ -23,7 +23,7 @@ import { compareSegments, type Rect, type SegmentResult } from '../pixel-qa/segm
 const URL_ = '/demo/projects'
 const API = '/api/v1/demo/projects'
 const PROGRAMME = 'd4000000-0000-0000-0000-000000000001'
-const CHALLENGE = 'd4000000-0000-0000-0000-000000000002'
+const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
 const ACTUAL = path.join(REPO_ROOT, 'tests/visual/actual')
 
 type Person = { accountId: string; profileId: string; email: string }
@@ -250,20 +250,30 @@ test.describe('WF05-S01 my projects / startups', () => {
 })
 
 test.describe('WF05-S01 open programmes', () => {
-  test('8/9/10/11. only PUBLISHED fixtures, read only; the DRAFT Challenge and ops session drafts never appear', async ({
+  test('8/9/10/11. only PUBLISHED programmes with a form, read only; an operator DRAFT never appears', async ({
     page,
     browser,
     baseURL,
   }) => {
-    const before = await fingerprint()
-    // An operator publishes the DRAFT Challenge in their own demo session (WF04).
+    // WF04-PROD-04: an operator's DRAFT Challenge with a registration form is a
+    // canonical row now (it was a browser-session draft); unpublished, WF05
+    // never lists it.
     const ops = await browser.newContext({ baseURL })
-    const opsPage = await ops.newPage()
-    await login(opsPage.request, 'leader@example.test')
-    await opsPage.goto(`/demo/programmes/${CHALLENGE}/setup/review`, { waitUntil: 'networkidle' })
-    await opsPage.locator('[data-action="publish"]').click()
-    await expect(opsPage).toHaveURL(`/demo/programmes/${CHALLENGE}`)
+    await login(ops.request, 'leader@example.test')
+    const draft = await ops.request.post('/api/v1/programmes', {
+      data: { type: 'CHALLENGE', organization_id: CHAPTER_01, name: 'Thử thách đổi mới (nháp)' },
+    })
+    expect(draft.status()).toBe(201)
+    const draftId = ((await draft.json()) as { programme: { id: string } }).programme.id
+    const form = await ops.request.put(`/api/v1/programmes/${draftId}/registration`, {
+      data: {
+        applicant_types: ['STARTUP'],
+        questions: [{ id: 'q-a', prompt: 'Câu hỏi', required: true, step: 1 }],
+      },
+    })
+    expect(form.status()).toBe(200)
     await ops.close()
+    const before = await fingerprint()
 
     await login(page.request, 'member@example.test')
     await open(page)
@@ -291,6 +301,9 @@ test.describe('WF05-S01 open programmes', () => {
       [PROGRAMME, 'PUBLISHED'],
     ])
     expect(await fingerprint()).toEqual(before)
+    await query('DELETE FROM programme_application_forms WHERE programme_id = $1', [draftId])
+    await query('DELETE FROM audit_events WHERE resource_id = $1', [draftId])
+    await query('DELETE FROM programmes WHERE id = $1', [draftId])
   })
 
   test('9. a PUBLISHED Challenge renders as a Challenge (response shaped by the API)', async ({

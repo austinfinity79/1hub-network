@@ -1,15 +1,14 @@
 import { ProgrammeBasicEdit } from '@/components/programme-demo/programme-basic-edit'
-import { requireDemoProgrammeRoute } from '@/lib/programme-demo/guard'
+import { requireProgrammeRoute } from '@/lib/programme/guard'
 
 /**
- * WF04-S08 — /demo/programmes/:id/setup/basic: basic information of an
- * existing programme (DEC-WF04-S02-D3, DEC-WF04-S08-D2). Same resolution as
- * S03 (DEC-WF04-S03-D2).
+ * WF04-S08 — basic information (/demo/programmes/:id/setup/basic). The programme is read on the
+ * server with the actor's scope: unknown, malformed or out of scope → 404.
  */
 export const dynamic = 'force-dynamic'
 
 export default async function ProgrammeBasicPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { server } = await requireDemoProgrammeRoute(id)
-  return <ProgrammeBasicEdit id={id} server={server} />
+  const { detail } = await requireProgrammeRoute(id)
+  return <ProgrammeBasicEdit id={detail.programme.id} initial={detail} />
 }

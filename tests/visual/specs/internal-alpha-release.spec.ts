@@ -253,7 +253,7 @@ test.describe('REL-SEC cross-workflow actor matrix', () => {
       'api:venture-ia': `/api/v1/ventures/${venture.id}`,
       'api:ops-ch01-members': `/api/v1/ops/organizations/${CHAPTER_01}/members`,
       'api:ops-ch02-members': `/api/v1/ops/organizations/${CHAPTER_02}/members`,
-      'api:demo-programmes': '/api/v1/demo/programmes',
+      'api:programmes': '/api/v1/programmes',
       'api:demo-projects-seed': `/api/v1/demo/projects/${SEED_VENTURE}`,
       'api:me-applications': '/api/v1/me/applications',
     }
@@ -348,7 +348,7 @@ test.describe('REL-SEC cross-workflow actor matrix', () => {
         'wf04-detail',
       ])
         expect(at(actor, n), `${actor} ${n}`).not.toBe('200')
-      for (const n of ['api:ops-ch01-members', 'api:ops-ch02-members', 'api:demo-programmes'])
+      for (const n of ['api:ops-ch01-members', 'api:ops-ch02-members', 'api:programmes'])
         expect(['401', '403', '404'], `${actor} ${n}`).toContain(at(actor, n))
     }
     const leader = 'pending invitee (seed venture) + Chapter 01 leader'

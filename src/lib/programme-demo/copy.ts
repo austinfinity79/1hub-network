@@ -1,4 +1,9 @@
-import type { ApplicantType, ApplicationStatus, ProgrammeDemoStatus, ProgrammeType } from './types'
+import type {
+  ApplicantType,
+  ApplicationStatus,
+  ProgrammeLifecycleStatus,
+  ProgrammeType,
+} from './types'
 
 /** WF04 demo copy shared by the demo screens (pending PO copy review). */
 export const DEMO_COPY = {
@@ -14,9 +19,12 @@ export const DEMO_COPY = {
 } as const
 
 /** Same wording as the WF03 event lifecycle labels. */
-export const STATUS_LABEL: Record<ProgrammeDemoStatus, string> = {
+export const STATUS_LABEL: Record<ProgrammeLifecycleStatus, string> = {
   DRAFT: 'Bản nháp',
   PUBLISHED: 'Đang công khai',
+  // WF04-PROD-04 (DEC-W4P-D12): close is approved; ARCHIVED is only ever read (D11).
+  CLOSED: 'Đã đóng',
+  ARCHIVED: 'Đã lưu trữ',
 }
 
 export const TYPE_LABEL: Record<ProgrammeType, string> = {

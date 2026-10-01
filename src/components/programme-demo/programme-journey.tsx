@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 
 import { TextInput } from '@/components/ui'
 import { formatDemoDateRange } from '@/lib/programme-demo/format'
@@ -20,11 +20,9 @@ import {
   type StageInput,
 } from '@/lib/programme-demo/journey'
 import { demoRoutes } from '@/lib/programme-demo/routes'
-import type {
-  ProblemStatementDTO,
-  ProgrammeDemoDetailDTO,
-  ProgrammeStageDTO,
-} from '@/lib/programme-demo/types'
+import type { ProblemStatementDTO, ProgrammeStageDTO } from '@/lib/programme-demo/types'
+import type { ProgrammeDetailDTO } from '@/lib/programme/types'
+import type { ProgrammeScreen } from '@/lib/programme/view'
 
 import buttons from './demo-buttons.module.css'
 import form from './programme-form.module.css'
@@ -56,7 +54,7 @@ const COPY = {
   datesHint: 'Không bắt buộc. Theo ngày tại Việt Nam.',
   saveStage: 'Lưu giai đoạn',
   problems: 'Bài toán',
-  problemsHint: 'Challenge cần ít nhất một bài toán trước khi công khai.',
+  problemsHint: 'Các bài toán của challenge này.',
   noProblems: 'Chưa có bài toán nào.',
   addProblem: 'Thêm bài toán',
   problemTitle: 'Tên bài toán',
@@ -84,17 +82,10 @@ type Editing =
 
 const newId = () => crypto.randomUUID()
 
-export function ProgrammeJourney({
-  id,
-  server,
-}: {
-  id: string
-  server: ProgrammeDemoDetailDTO | null
-}) {
+export function ProgrammeJourney({ id, initial }: { id: string; initial: ProgrammeDetailDTO }) {
   return (
     <SetupScreen
-      id={id}
-      server={server}
+      initial={initial}
       step="journey"
       screen="WF04-S03"
       back={{ href: demoRoutes.list(), label: COPY.back, nav: 'journey-back' }}
@@ -105,12 +96,14 @@ export function ProgrammeJourney({
   )
 }
 
-function JourneyBody({ detail, apply: store }: { detail: ProgrammeDemoDetailDTO; apply: Apply }) {
+function JourneyBody({ detail, apply: store }: { detail: ProgrammeScreen; apply: Apply }) {
   const [editing, setEditing] = useState<Editing>(null)
   const challenge = detail.programme.type === 'CHALLENGE'
-  /** One atomic edit; the open editor closes when it is stored. */
-  const apply: Apply = (result) => {
-    const outcome = store(result)
+  // Read only when the server says so (closed / archived programme or owner).
+  const editable = detail.actions.edit
+  /** One atomic edit, persisted by the server; the open editor closes when it is saved. */
+  const apply: Apply = async (result) => {
+    const outcome = await store(result)
     if (outcome.ok) setEditing(null)
     return outcome
   }
@@ -161,7 +154,8 @@ function JourneyBody({ detail, apply: store }: { detail: ProgrammeDemoDetailDTO;
                           .join(' · ') || '—'}
                       </p>
                     </div>
-                    {editing?.kind === 'stage-remove' && editing.id === stage.id ? (
+                    {!editable ? null : editing?.kind === 'stage-remove' &&
+                      editing.id === stage.id ? (
                       <Confirm
                         text={COPY.removeStage(stage.name)}
                         onYes={() => apply(removeStage(detail, stage.id, now()))}
@@ -215,7 +209,7 @@ function JourneyBody({ detail, apply: store }: { detail: ProgrammeDemoDetailDTO;
             ))}
           </ol>
         )}
-        {editing?.kind === 'stage-add' ? (
+        {!editable ? null : editing?.kind === 'stage-add' ? (
           <div className={styles.footer}>
             <StageEditor
               onCancel={() => setEditing(null)}
@@ -270,7 +264,8 @@ function JourneyBody({ detail, apply: store }: { detail: ProgrammeDemoDetailDTO;
                           <p className={`type-meta-xs ${styles.meta}`}>{problem.summary}</p>
                         ) : null}
                       </div>
-                      {editing?.kind === 'problem-remove' && editing.id === problem.id ? (
+                      {!editable ? null : editing?.kind === 'problem-remove' &&
+                        editing.id === problem.id ? (
                         <Confirm
                           text={COPY.removeProblem(problem.title)}
                           onYes={() => apply(removeProblem(detail, problem.id, now()))}
@@ -304,23 +299,25 @@ function JourneyBody({ detail, apply: store }: { detail: ProgrammeDemoDetailDTO;
               ))}
             </ul>
           )}
-          <div className={styles.footer}>
-            {editing?.kind === 'problem-add' ? (
-              <ProblemEditor
-                onCancel={() => setEditing(null)}
-                onSave={(input) => apply(addProblem(detail, input, { id: newId(), now: now() }))}
-              />
-            ) : (
-              <button
-                type="button"
-                className={`weight-medium ${buttons.secondary}`}
-                onClick={() => setEditing({ kind: 'problem-add' })}
-                data-action="add-problem"
-              >
-                {COPY.addProblem}
-              </button>
-            )}
-          </div>
+          {!editable ? null : (
+            <div className={styles.footer}>
+              {editing?.kind === 'problem-add' ? (
+                <ProblemEditor
+                  onCancel={() => setEditing(null)}
+                  onSave={(input) => apply(addProblem(detail, input, { id: newId(), now: now() }))}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className={`weight-medium ${buttons.secondary}`}
+                  onClick={() => setEditing({ kind: 'problem-add' })}
+                  data-action="add-problem"
+                >
+                  {COPY.addProblem}
+                </button>
+              )}
+            </div>
+          )}
         </section>
       ) : null}
     </>
@@ -333,7 +330,7 @@ function StageEditor({
   onCancel,
 }: {
   initial?: ProgrammeStageDTO
-  onSave: (input: StageInput) => { ok: boolean; errors?: StageErrors }
+  onSave: (input: StageInput) => Promise<{ ok: boolean; errors?: StageErrors }>
   onCancel: () => void
 }) {
   const [input, setInput] = useState<StageInput>({
@@ -351,9 +348,16 @@ function StageEditor({
       [field === 'starts_on' || field === 'ends_on' ? 'dates' : field]: undefined,
     }))
   }
-  function submit(event: FormEvent<HTMLFormElement>) {
+  const [busy, setBusy] = useState(false)
+  const inFlight = useRef(false)
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const result = onSave(input)
+    if (inFlight.current) return
+    inFlight.current = true
+    setBusy(true)
+    const result = await onSave(input)
+    inFlight.current = false
+    setBusy(false)
     if (!result.ok && result.errors) setErrors(result.errors)
   }
   return (
@@ -432,6 +436,8 @@ function StageEditor({
         <button
           type="submit"
           className={`weight-medium ${buttons.primary}`}
+          disabled={busy}
+          aria-busy={busy || undefined}
           data-action="save-stage"
         >
           {COPY.saveStage}
@@ -450,7 +456,7 @@ function ProblemEditor({
   onCancel,
 }: {
   initial?: ProblemStatementDTO
-  onSave: (input: ProblemInput) => { ok: boolean; errors?: ProblemErrors }
+  onSave: (input: ProblemInput) => Promise<{ ok: boolean; errors?: ProblemErrors }>
   onCancel: () => void
 }) {
   const [input, setInput] = useState<ProblemInput>({
@@ -459,9 +465,16 @@ function ProblemEditor({
   })
   const [errors, setErrors] = useState<ProblemErrors>({})
   const key = initial?.id ?? 'new'
-  function submit(event: FormEvent<HTMLFormElement>) {
+  const [busy, setBusy] = useState(false)
+  const inFlight = useRef(false)
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const result = onSave(input)
+    if (inFlight.current) return
+    inFlight.current = true
+    setBusy(true)
+    const result = await onSave(input)
+    inFlight.current = false
+    setBusy(false)
     if (!result.ok && result.errors) setErrors(result.errors)
   }
   return (
@@ -508,6 +521,8 @@ function ProblemEditor({
         <button
           type="submit"
           className={`weight-medium ${buttons.primary}`}
+          disabled={busy}
+          aria-busy={busy || undefined}
           data-action="save-problem"
         >
           {COPY.saveProblem}

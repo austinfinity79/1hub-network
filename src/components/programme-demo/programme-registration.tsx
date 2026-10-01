@@ -3,31 +3,30 @@
 import { useRef, useState, type FormEvent } from 'react'
 
 import { Notice, TextInput } from '@/components/ui'
-import { APPLICANT_LABEL, APPLICATION_STATUS_LABEL } from '@/lib/programme-demo/copy'
-import {
-  registrationConfigured,
-  updateRegistration,
-  type RegistrationErrors,
-  type RegistrationInput,
-} from '@/lib/programme-demo/registration'
+import { APPLICANT_LABEL } from '@/lib/programme-demo/copy'
+import { registrationConfigured } from '@/lib/programme-demo/registration'
 import { demoRoutes } from '@/lib/programme-demo/routes'
 import {
-  APPLICANT_TYPES,
-  APPLICATION_STATUSES,
-  type ProgrammeDemoDetailDTO,
-} from '@/lib/programme-demo/types'
+  REGISTRATION_APPLICANT_TYPES,
+  type ProgrammeDetailDTO,
+  type RegistrationQuestionDTO,
+} from '@/lib/programme/types'
+import type { ProgrammeScreen } from '@/lib/programme/view'
 
 import buttons from './demo-buttons.module.css'
 import styles from './journey.module.css'
 import form from './programme-form.module.css'
-import { SetupScreen, type Apply } from './setup-screen'
+import { SetupScreen, type Send } from './setup-screen'
 
 /**
- * WF04-S05 — registration configuration (DEC-WF04-S05-D1..D3). CONFIGURATION
- * DEMO: who may apply (INDIVIDUAL / TEAM / STARTUP) and the programme's own
- * questions, saved to the actor's session copy; the profile-reuse rule of
- * SOT §12 stated; application counts shown read-only. No registration or
- * application engine, no open / close switch, period or eligibility rule.
+ * WF04-S05 — registration configuration (DEC-WF04-S05-D1..D3; WF04-PROD-04).
+ * The canonical form WF05 reads (`PUT /programmes/{id}/registration`): who may
+ * apply (TEAM / STARTUP — the canonical applicant types; INDIVIDUAL is not one,
+ * PO decision 4) and the programme's own questions. Each question keeps the
+ * `required` and `step` the server stores; a new question would need them and
+ * no default is approved (contract Q3), so adding one is unavailable. Once an
+ * application exists the form is read only (PO decision 3). The
+ * profile-reuse rule of SOT §12 is stated. No application count (Q5).
  * Back → events; "Tiếp theo" opens WF04-S06 (DEC-WF04-S06-D3).
  */
 
@@ -39,13 +38,14 @@ const COPY = {
   configure: 'Cấu hình đăng ký',
   empty: 'Chưa cấu hình đăng ký.',
   who: 'Ai được đăng ký',
-  whoHint: 'Một người đăng ký chính cho mỗi hồ sơ: cá nhân, đội hoặc startup.',
+  whoHint: 'Một người đăng ký chính cho mỗi hồ sơ: đội hoặc startup.',
   nobody: 'Chưa chọn.',
   questions: 'Câu hỏi riêng của chương trình',
   questionsHint: 'Không bắt buộc. Chỉ hỏi điều hồ sơ chưa có.',
   noQuestions: 'Chưa có câu hỏi.',
   question: (n: number) => `Câu hỏi ${n}`,
   addQuestion: 'Thêm câu hỏi',
+  addUnavailable: 'Chưa thêm được câu hỏi mới trong bản này.',
   removeQuestion: 'Xoá',
   reuse:
     'Hồ sơ cá nhân và hồ sơ dự án / startup được dùng lại từ hồ sơ sẵn có; người đăng ký chỉ trả lời thêm các câu hỏi riêng của chương trình.',
@@ -53,39 +53,41 @@ const COPY = {
   cancel: 'Huỷ',
   saved: 'Đã lưu cấu hình đăng ký.',
   blank: 'Câu hỏi không được để trống.',
-  invalidType: 'Loại người đăng ký không hợp lệ.',
-  counts: 'Hồ sơ đăng ký',
-  countsHint: 'Số liệu minh hoạ cho bản demo, không phải hồ sơ thật.',
-  noCounts: 'Chưa có hồ sơ nào.',
+  typesRequired: 'Chọn ít nhất một loại người đăng ký.',
+  locked: 'Đã có hồ sơ đăng ký nên cấu hình này không thay đổi được.',
 } as const
 
 export function ProgrammeRegistration({
   id,
-  server,
+  initial,
 }: {
   id: string
-  server: ProgrammeDemoDetailDTO | null
+  initial: ProgrammeDetailDTO
 }) {
   return (
     <SetupScreen
-      id={id}
-      server={server}
+      initial={initial}
       step="registration"
       screen="WF04-S05"
       back={{ href: demoRoutes.setup(id, 'events'), label: COPY.back, nav: 'registration-back' }}
       next={demoRoutes.setup(id, 'team')}
     >
-      {({ detail, apply }) => <RegistrationBody detail={detail} apply={apply} />}
+      {({ detail, send }) => <RegistrationBody detail={detail} send={send} />}
     </SetupScreen>
   )
 }
 
-function RegistrationBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; apply: Apply }) {
+type Draft = { applicant_types: string[]; questions: RegistrationQuestionDTO[] }
+type DraftErrors = { applicant_types?: 'required'; questions?: number[] }
+
+function RegistrationBody({ detail, send }: { detail: ProgrammeScreen; send: Send }) {
   const [editing, setEditing] = useState(false)
   const [saved, setSaved] = useState(false)
-  const { registration, application_counts } = detail
+  const { registration } = detail
   const configured = registrationConfigured(detail)
-  const counts = APPLICATION_STATUSES.filter((s) => (application_counts[s] ?? 0) > 0)
+  // The server decides: an editable programme with no application yet.
+  const changeable = detail.actions.registration
+  const locked = detail.actions.edit && !changeable
 
   return (
     <>
@@ -106,7 +108,7 @@ function RegistrationBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; a
             </h2>
             <p className={`type-meta-xs ${styles.cardHint}`}>{COPY.hint}</p>
           </div>
-          {!editing && configured ? (
+          {!editing && configured && changeable ? (
             <button
               type="button"
               className={`weight-medium ${styles.textAction}`}
@@ -120,20 +122,29 @@ function RegistrationBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; a
             </button>
           ) : null}
         </header>
+        {locked ? (
+          <div className={styles.footer} data-state="registration-locked">
+            <Notice>{COPY.locked}</Notice>
+          </div>
+        ) : null}
         {editing ? (
           <RegistrationEditor
             initial={{
-              applicant_types: registration.applicant_types,
-              questions: registration.questions,
+              applicant_types: detail.form?.applicant_types ?? [],
+              questions: detail.form?.questions ?? [],
             }}
             onCancel={() => setEditing(false)}
-            onSave={(input) => {
-              const outcome = apply(updateRegistration(detail, input, new Date()))
+            onSave={async (draft) => {
+              const outcome = await send({
+                path: `/programmes/${encodeURIComponent(detail.programme.id)}/registration`,
+                method: 'PUT',
+                body: draft,
+              })
               if (outcome.ok) {
                 setEditing(false)
                 setSaved(true)
               }
-              return outcome
+              return outcome.ok
             }}
           />
         ) : configured ? (
@@ -174,7 +185,7 @@ function RegistrationBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; a
             <p className="type-body-sm">{COPY.empty}</p>
           </div>
         )}
-        {!editing && !configured ? (
+        {!editing && !configured && changeable ? (
           <div className={styles.footer}>
             <button
               type="button"
@@ -193,35 +204,6 @@ function RegistrationBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; a
           <Notice>{COPY.reuse}</Notice>
         </div>
       </section>
-
-      <section
-        className={styles.card}
-        aria-labelledby="registration-counts"
-        data-application-counts
-      >
-        <header className={styles.cardHead}>
-          <div>
-            <h2 id="registration-counts" className={`weight-semibold ${styles.cardTitle}`}>
-              {COPY.counts}
-            </h2>
-            <p className={`type-meta-xs ${styles.cardHint}`}>{COPY.countsHint}</p>
-          </div>
-        </header>
-        {counts.length > 0 ? (
-          <ul className={styles.counts} aria-label={COPY.counts}>
-            {counts.map((s) => (
-              <li key={s} className={styles.count} data-count-status={s}>
-                <p className={`weight-semibold ${styles.countValue}`}>{application_counts[s]}</p>
-                <p className={`type-meta-xs ${styles.countLabel}`}>{APPLICATION_STATUS_LABEL[s]}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className={`type-body-sm ${styles.empty}`} data-state="counts-empty">
-            {COPY.noCounts}
-          </p>
-        )}
-      </section>
     </>
   )
 }
@@ -231,24 +213,33 @@ function RegistrationEditor({
   onSave,
   onCancel,
 }: {
-  initial: RegistrationInput
-  onSave: (input: RegistrationInput) => { ok: boolean; errors?: RegistrationErrors }
+  initial: Draft
+  onSave: (draft: Draft) => Promise<boolean>
   onCancel: () => void
 }) {
   const [types, setTypes] = useState<string[]>(initial.applicant_types)
-  const [questions, setQuestions] = useState<string[]>(initial.questions)
-  const [errors, setErrors] = useState<RegistrationErrors>({})
+  const [questions, setQuestions] = useState<RegistrationQuestionDTO[]>(initial.questions)
+  const [errors, setErrors] = useState<DraftErrors>({})
   const [saving, setSaving] = useState(false)
   const inFlight = useRef(false)
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (inFlight.current) return
+    const found: DraftErrors = {}
+    if (types.length === 0) found.applicant_types = 'required'
+    const blank = questions.flatMap((q, i) => (q.prompt.trim() ? [] : [i]))
+    if (blank.length > 0) found.questions = blank
+    setErrors(found)
+    if (Object.keys(found).length > 0) return
     inFlight.current = true
     setSaving(true)
-    const result = onSave({ applicant_types: types, questions })
-    if (!result.ok) {
-      if (result.errors) setErrors(result.errors)
+    const ok = await onSave({
+      // Canonical order, each once.
+      applicant_types: REGISTRATION_APPLICANT_TYPES.filter((t) => types.includes(t)),
+      questions: questions.map((q) => ({ ...q, prompt: q.prompt.trim() })),
+    })
+    if (!ok) {
       inFlight.current = false
       setSaving(false)
     }
@@ -265,7 +256,7 @@ function RegistrationEditor({
         <legend className={`type-body-sm weight-semibold ${form.label}`}>{COPY.who}</legend>
         <p className={`type-meta-xs ${form.hint}`}>{COPY.whoHint}</p>
         <div className={styles.checks}>
-          {APPLICANT_TYPES.map((t) => (
+          {REGISTRATION_APPLICANT_TYPES.map((t) => (
             <label key={t} className={`type-body-md ${styles.check}`}>
               <input
                 type="checkbox"
@@ -286,7 +277,7 @@ function RegistrationEditor({
         </div>
         {errors.applicant_types ? (
           <p className={`type-meta-xs ${form.error}`} role="alert" data-error="applicant_types">
-            {COPY.invalidType}
+            {COPY.typesRequired}
           </p>
         ) : null}
       </fieldset>
@@ -296,18 +287,20 @@ function RegistrationEditor({
         {questions.map((q, i) => {
           const blank = errors.questions?.includes(i)
           return (
-            <div key={i} className={styles.questionRow} data-question-row={i}>
+            <div key={q.id} className={styles.questionRow} data-question-row={i}>
               <div>
                 <label htmlFor={`rq-${i}`} className={`type-body-sm ${form.dateLabel}`}>
                   {COPY.question(i + 1)}
                 </label>
                 <TextInput
                   id={`rq-${i}`}
-                  value={q}
+                  value={q.prompt}
                   invalid={Boolean(blank)}
                   onChange={(e) => {
                     const value = e.target.value
-                    setQuestions((current) => current.map((x, j) => (j === i ? value : x)))
+                    setQuestions((current) =>
+                      current.map((x, j) => (j === i ? { ...x, prompt: value } : x)),
+                    )
                     setErrors((x) => ({ ...x, questions: x.questions?.filter((j) => j !== i) }))
                   }}
                 />
@@ -340,7 +333,11 @@ function RegistrationEditor({
           <button
             type="button"
             className={`weight-medium ${buttons.secondary}`}
-            onClick={() => setQuestions((current) => [...current, ''])}
+            disabled
+            aria-disabled="true"
+            title={COPY.addUnavailable}
+            aria-label={`${COPY.addQuestion} — ${COPY.addUnavailable}`}
+            data-nav-kind="INERT"
             data-action="add-question"
           >
             {COPY.addQuestion}

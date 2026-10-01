@@ -9,9 +9,9 @@ import {
   type BasicInfoInput,
 } from './basic-info'
 import { formatDemoDateRange } from './format'
-import { publishReadiness } from './readiness'
 import { DEMO_CHALLENGE_ID, demoFixture, isDemoFixtureId } from './fixtures'
 import type { ProgrammeDemoDetail } from './types'
+import { publishChecks, type ProgrammeScreen } from '@/lib/programme/view'
 
 const CHAPTER_01 = {
   id: '10000000-0000-0000-0000-000000000101',
@@ -124,15 +124,12 @@ describe('WF04-S02 new draft', () => {
     expect(draft).not.toHaveProperty('problem_statements')
   })
 
-  it('a new CHALLENGE is not yet publishable (no problem statement); a PROGRAMME is (H5)', () => {
+  it('a new CHALLENGE and a new PROGRAMME pass the production checklist (no problem rule, Q7)', () => {
+    // DEC-W4P-D12 supersedes the demo H5 rule "a CHALLENGE needs a problem statement".
     const challenge = buildDraft(valid, CHAPTER_01, { id, now })
-    expect(
-      publishReadiness(challenge, [CHAPTER_01.id])
-        .filter((c) => !c.ok)
-        .map((c) => c.item),
-    ).toEqual(['problems'])
+    expect(publishChecks(screenOf(challenge)).every((c) => c.ok)).toBe(true)
     const programme = buildDraft({ ...valid, type: 'PROGRAMME' }, CHAPTER_01, { id, now })
-    expect(publishReadiness(programme, [CHAPTER_01.id]).every((c) => c.ok)).toBe(true)
+    expect(publishChecks(screenOf(programme)).every((c) => c.ok)).toBe(true)
   })
 })
 
@@ -191,4 +188,21 @@ describe('WF04-S08 basic information edit', () => {
     })
     expect(JSON.stringify(d)).toBe(before)
   })
+})
+
+const screenOf = <
+  T extends Omit<ProgrammeScreen, 'actions' | 'owner_archived' | 'form' | 'organization'>,
+>(
+  detail: T,
+): ProgrammeScreen => ({
+  organization: {
+    id: '10000000-0000-0000-0000-000000000101',
+    slug: 'chapter-01',
+    name: 'Chapter 01',
+    type: 'CHAPTER',
+  },
+  ...detail,
+  actions: { edit: true, registration: true, publish: true, close: false },
+  owner_archived: false,
+  form: null,
 })

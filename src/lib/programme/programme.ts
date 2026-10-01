@@ -24,6 +24,7 @@ import {
   readStages,
 } from './rules'
 import type {
+  ProgrammeActions,
   ProgrammeDetailDTO,
   ProgrammeDTO,
   ProgrammeEventDTO,
@@ -68,6 +69,9 @@ const OPERATIONAL = OPS_ORGANIZATION_TYPES.map((t) => `'${t}'`).join(', ')
 const forbidden = () =>
   new ApiError('SCOPE_FORBIDDEN', 403, 'You do not have access to this resource.')
 const conflict = (message: string) => new ApiError('MEMBERSHIP_INVALID_TRANSITION', 409, message)
+// PO decision 1 of WF04-PROD-04 (DEC-W4P-D13): an archived owner keeps its programmes readable only.
+const archivedOwner = () =>
+  conflict('The owning organization is archived; its programmes are read only.')
 
 type Row = {
   id: string
@@ -85,11 +89,13 @@ type Row = {
   org_slug: string
   org_name: string
   org_type: string
+  org_status: string
 }
 
 const COLUMNS = `p.id::text, p.organization_id::text, p.programme_type::text AS type, p.slug,
   p.name, p.summary, p.status::text AS status, p.starts_at, p.ends_at, p.metadata,
-  p.created_at, p.updated_at, o.slug AS org_slug, o.name AS org_name, o.type::text AS org_type`
+  p.created_at, p.updated_at, o.slug AS org_slug, o.name AS org_name, o.type::text AS org_type,
+  o.status::text AS org_status`
 
 const FROM = `FROM programmes p
   JOIN organizations o ON o.id = p.organization_id AND o.type::text IN (${OPERATIONAL})`
@@ -139,6 +145,7 @@ const scopeOf = (row: Row) => ({ scopeType: 'ORGANIZATION' as const, scopeId: ro
 async function manageable(exec: Executor, actor: Actor, id: string): Promise<Row> {
   const row = await load(exec, id, true)
   if (!row || !(await can(actor, MANAGE, scopeOf(row)))) throw notFound()
+  if (row.org_status === 'ARCHIVED') throw archivedOwner()
   return row
 }
 
@@ -184,7 +191,31 @@ type EventRow = Omit<ProgrammeEventDTO, 'starts_at' | 'ends_at' | 'created_at' |
   updated_at: Date
 }
 
-async function detailOf(exec: Executor, row: Row): Promise<ProgrammeDetailDTO> {
+/**
+ * What the actor may do next, computed here so the screens never re-derive a
+ * rule (API 05 §16 item 8): `programme:manage` on the owner, an owner that is
+ * not ARCHIVED, the lifecycle, and for the form no application yet (Q3).
+ */
+async function actionsOf(exec: Executor, row: Row, actor: Actor): Promise<ProgrammeActions> {
+  const manage = row.org_status !== 'ARCHIVED' && (await can(actor, MANAGE, scopeOf(row)))
+  const edit = manage && EDITABLE.includes(row.status)
+  const used = edit
+    ? (
+        await exec<{ one: number }>(
+          'SELECT 1 AS one FROM applications WHERE programme_id = $1 LIMIT 1',
+          [row.id],
+        )
+      ).length > 0
+    : false
+  return {
+    edit,
+    registration: edit && !used,
+    publish: manage && row.status === 'DRAFT',
+    close: manage && row.status === 'PUBLISHED',
+  }
+}
+
+async function detailOf(exec: Executor, row: Row, actor: Actor): Promise<ProgrammeDetailDTO> {
   const events = await exec<EventRow>(
     `SELECT id::text, organization_id::text, programme_id::text, slug, name, summary, starts_at,
             ends_at, location_text, status::text AS status, created_at, updated_at
@@ -205,11 +236,13 @@ async function detailOf(exec: Executor, row: Row): Promise<ProgrammeDetailDTO> {
       updated_at: iso(e.updated_at)!,
     })),
     registration: registrationOf(await formOf(exec, row.id)),
+    owner_archived: row.org_status === 'ARCHIVED',
+    actions: await actionsOf(exec, row, actor),
   }
 }
 
-async function reload(exec: Executor, id: string): Promise<ProgrammeDetailDTO> {
-  return detailOf(exec, (await load(exec, id))!)
+async function reload(exec: Executor, id: string, actor: Actor): Promise<ProgrammeDetailDTO> {
+  return detailOf(exec, (await load(exec, id))!, actor)
 }
 
 function audit(
@@ -264,7 +297,7 @@ export async function getProgramme(accountId: string, id: string): Promise<Progr
   const actor = await entryActor(accountId)
   const row = await load(query, id)
   if (!row || !(await can(actor, READ, scopeOf(row)))) throw notFound()
-  return detailOf(query, row)
+  return detailOf(query, row, actor)
 }
 
 // ----------------------------------------------------------------- writes
@@ -301,11 +334,14 @@ export async function createProgramme(
       scopeType: 'ORGANIZATION',
       scopeId: fields.organization_id,
     })
-    const [owner] = await tx<{ id: string }>(
-      `SELECT id::text FROM organizations WHERE id = $1 AND type::text IN (${OPERATIONAL})`,
+    const [owner] = await tx<{ id: string; status: string }>(
+      `SELECT id::text, status::text AS status FROM organizations
+        WHERE id = $1 AND type::text IN (${OPERATIONAL})`,
       [fields.organization_id],
     )
     if (!owner) throw invalid('organization_id', 'invalid')
+    if (owner.status === 'ARCHIVED')
+      throw conflict('An archived organization cannot own a new programme.')
     const [created] = await tx<{ id: string }>(
       `INSERT INTO programmes
          (organization_id, programme_type, slug, name, summary, starts_at, ends_at, status, metadata)
@@ -323,7 +359,7 @@ export async function createProgramme(
     )
     const row = (await load(tx, created!.id))!
     await audit(tx, accountId, 'PROGRAMME_CREATED', row, requestId, null, { status: 'DRAFT' })
-    return detailOf(tx, row)
+    return detailOf(tx, row, actor)
   })
 }
 
@@ -371,7 +407,7 @@ export async function updateProgramme(
         changed.push('problem_statements')
       metadata.challenge = challengeOf(fields.problem_statements)
     }
-    if (changed.length === 0) return detailOf(tx, row)
+    if (changed.length === 0) return detailOf(tx, row, actor)
 
     await tx(
       `UPDATE programmes SET name = $2, summary = $3, starts_at = $4, ends_at = $5,
@@ -388,7 +424,7 @@ export async function updateProgramme(
       { status: row.status },
       { status: row.status, changed_fields: changed },
     )
-    return reload(tx, row.id)
+    return reload(tx, row.id, actor)
   })
 }
 
@@ -416,7 +452,7 @@ export async function putProgrammeRegistration(
       JSON.stringify(form.applicant_types) === JSON.stringify(input.applicant_types) &&
       JSON.stringify(readQuestions(form.questions)) === JSON.stringify(input.questions)
     )
-      return detailOf(tx, row)
+      return detailOf(tx, row, actor)
 
     const [used] = await tx<{ one: number }>(
       'SELECT 1 AS one FROM applications WHERE programme_id = $1 LIMIT 1',
@@ -443,7 +479,7 @@ export async function putProgrammeRegistration(
       { status: row.status, version: form?.version ?? null },
       { status: row.status, version },
     )
-    return reload(tx, row.id)
+    return reload(tx, row.id, actor)
   })
 }
 
@@ -474,7 +510,7 @@ async function transition(
       throw new ApiError('PROFILE_VALIDATION_FAILED', 422, 'Programme validation failed.', failing)
     await tx(`UPDATE programmes SET status = $2, updated_at = now() WHERE id = $1`, [row.id, t.to])
     await audit(tx, accountId, t.action, row, requestId, { status: t.from }, { status: t.to })
-    return reload(tx, row.id)
+    return reload(tx, row.id, actor)
   })
 }
 
@@ -536,5 +572,22 @@ export function closeProgramme(
     body,
     requestId,
     exec,
+  )
+}
+
+/**
+ * The organizations a new programme may be owned by: those the actor holds
+ * `programme:manage` for, operational (HUB / CHAPTER / CLB) and not ARCHIVED
+ * (DEC-W4P-D13). Computed from the actor's assignments only; sorted by name.
+ */
+export async function programmeOwnerOptions(accountId: string): Promise<OrganizationRefDTO[]> {
+  const scope = organizationScope(await entryActor(accountId), MANAGE)
+  if (scope.kind === 'SOME' && scope.organizationIds.length === 0) return []
+  return query<OrganizationRefDTO>(
+    `SELECT id::text, slug, name, type::text AS type FROM organizations
+      WHERE type::text IN (${OPERATIONAL}) AND status::text <> 'ARCHIVED'
+        ${scope.kind === 'ALL' ? '' : 'AND id = ANY($1::uuid[])'}
+      ORDER BY name, id`,
+    scope.kind === 'ALL' ? [] : [scope.organizationIds],
   )
 }

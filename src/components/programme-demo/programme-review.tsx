@@ -9,19 +9,19 @@ import { APPLICANT_LABEL, TEAM_ROLE_LABEL, TYPE_LABEL } from '@/lib/programme-de
 import { formatDemoDateRange } from '@/lib/programme-demo/format'
 import { orderedStages } from '@/lib/programme-demo/journey'
 import { programmeEvents } from '@/lib/programme-demo/programme-events'
-import {
-  publishProgramme,
-  publishReadiness,
-  type OrganizationAllowance,
-  type ReadinessItem,
-} from '@/lib/programme-demo/readiness'
 import { demoRoutes, type SetupStep } from '@/lib/programme-demo/routes'
-import type { ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
+import type { ProgrammeDetailDTO } from '@/lib/programme/types'
+import {
+  failingItems,
+  publishChecks,
+  type ProgrammeScreen,
+  type PublishItem,
+} from '@/lib/programme/view'
 
 import buttons from './demo-buttons.module.css'
-import { useProgrammeDemo } from './demo-store'
+import { useDemoFrame } from './demo-frame'
 import styles from './journey.module.css'
-import { SetupScreen, type Apply } from './setup-screen'
+import { SetupScreen, type Send } from './setup-screen'
 import { ProgrammeStatusPill } from './status-pill'
 
 /**
@@ -64,81 +64,76 @@ const COPY = {
   pass: '✓ Đạt',
   fail: '✗ Còn thiếu',
   publish: 'Xuất bản',
-  publishHint: 'Chương trình sẽ ở trạng thái đang công khai trong bản demo.',
+  publishHint: 'Chương trình sẽ ở trạng thái đang công khai.',
   blocked: 'Hoàn thành các mục còn thiếu để xuất bản.',
-  published: 'Đã xuất bản. Chương trình đang công khai trong bản demo.',
+  published: 'Đã xuất bản. Chương trình đang công khai.',
   toDetail: 'Xem chi tiết',
   publishedFlash: (name: string) => `Đã xuất bản “${name}”.`,
 } as const
 
-const ITEM_LABEL: Record<ReadinessItem, string> = {
+/** Contract §8 only (REQUIRED / TECHNICALLY REQUIRED); no demo rule (Q7, DEC-W4P-D12). */
+const ITEM_LABEL: Record<PublishItem, string> = {
   name: 'Có tên chương trình',
   type: 'Loại là Chương trình hoặc Challenge',
   owner: 'Đơn vị chủ trì thuộc phạm vi bạn vận hành',
   dates: 'Thời gian hợp lệ (kết thúc không trước bắt đầu)',
-  problems: 'Challenge có ít nhất một bài toán',
 }
 
 /** Where a missing item is fixed (type and owner cannot change after creation). */
-const ITEM_STEP: Partial<Record<ReadinessItem, SetupStep>> = {
+const ITEM_STEP: Partial<Record<PublishItem, SetupStep>> = {
   name: 'basic',
   dates: 'basic',
-  problems: 'journey',
 }
 
-export function ProgrammeReview({
-  id,
-  server,
-}: {
-  id: string
-  server: ProgrammeDemoDetailDTO | null
-}) {
+export function ProgrammeReview({ id, initial }: { id: string; initial: ProgrammeDetailDTO }) {
   return (
     <SetupScreen
-      id={id}
-      server={server}
+      initial={initial}
       step="review"
       screen="WF04-S07"
       back={{ href: demoRoutes.setup(id, 'team'), label: COPY.back, nav: 'review-back' }}
       next={demoRoutes.detail(id)}
     >
-      {({ detail, apply, allowance }) => (
-        <ReviewBody detail={detail} apply={apply} allowance={allowance} />
-      )}
+      {({ detail, send }) => <ReviewBody detail={detail} send={send} />}
     </SetupScreen>
   )
 }
 
-function ReviewBody({
-  detail,
-  apply,
-  allowance,
-}: {
-  detail: ProgrammeDemoDetailDTO
-  apply: Apply
-  allowance: OrganizationAllowance
-}) {
+function ReviewBody({ detail, send }: { detail: ProgrammeScreen; send: Send }) {
   const router = useRouter()
-  const { setFlash } = useProgrammeDemo()
+  const { setFlash } = useDemoFrame()
   const [publishing, setPublishing] = useState(false)
   const [justPublished, setJustPublished] = useState(false)
+  // Items the server refused on the last publish (422), shown on the checklist.
+  const [refused, setRefused] = useState<PublishItem[]>([])
   const inFlight = useRef(false)
+  // One key per publish intent: a retry of the same click replays, never double-publishes.
+  const publishKey = useRef(`publish-${crypto.randomUUID()}`)
+  const editable = detail.actions.edit
   const { programme, organization, registration } = detail
   const id = programme.id
   const challenge = programme.type === 'CHALLENGE'
-  const checks = publishReadiness(detail, allowance)
+  const checks = publishChecks(detail).map((c) => ({
+    ...c,
+    ok: c.ok && !refused.includes(c.item),
+  }))
   const missing = checks.filter((c) => !c.ok)
   const draft = programme.status === 'DRAFT'
   const stages = orderedStages(detail)
   const events = programmeEvents(detail)
   const problems = detail.problem_statements ?? []
 
-  function publish() {
-    if (inFlight.current || !draft || missing.length > 0) return
+  async function publish() {
+    if (inFlight.current || !draft || missing.length > 0 || !detail.actions.publish) return
     inFlight.current = true
     setPublishing(true)
-    const outcome = apply(publishProgramme(detail, allowance, new Date()))
+    const outcome = await send({
+      path: `/programmes/${encodeURIComponent(id)}/publish`,
+      method: 'POST',
+      idempotencyKey: publishKey.current,
+    })
     setPublishing(false)
+    setRefused(failingItems(outcome.fields))
     if (outcome.ok) {
       setJustPublished(true)
       // DEC-WF04-S08-D3: the detail page is the post-publish destination.
@@ -151,7 +146,7 @@ function ReviewBody({
     <div className={styles.reviewRow} data-review={key}>
       <p className={`type-body-sm weight-semibold ${styles.reviewLabel}`}>{label}</p>
       <div className={`type-body-sm ${styles.reviewValue}`}>{value}</div>
-      {step ? (
+      {step && editable ? (
         <Link
           href={demoRoutes.setup(id, step)}
           className={`weight-medium ${styles.editLink}`}
@@ -314,7 +309,7 @@ function ReviewBody({
                 {c.ok ? COPY.pass : COPY.fail}
               </span>
               <p className={`type-body-sm ${styles.checkLabel}`}>{ITEM_LABEL[c.item]}</p>
-              {!c.ok && ITEM_STEP[c.item] ? (
+              {!c.ok && editable && ITEM_STEP[c.item] ? (
                 <Link
                   href={demoRoutes.setup(id, ITEM_STEP[c.item]!)}
                   className={`weight-medium ${styles.editLink}`}
@@ -338,8 +333,10 @@ function ReviewBody({
               <button
                 type="button"
                 className={`weight-medium ${buttons.primary}`}
-                disabled={missing.length > 0 || publishing}
-                aria-disabled={missing.length > 0 || publishing ? 'true' : undefined}
+                disabled={missing.length > 0 || publishing || !detail.actions.publish}
+                aria-disabled={
+                  missing.length > 0 || publishing || !detail.actions.publish ? 'true' : undefined
+                }
                 aria-busy={publishing || undefined}
                 title={missing.length > 0 ? COPY.blocked : undefined}
                 onClick={publish}

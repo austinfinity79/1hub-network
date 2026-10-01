@@ -11,7 +11,8 @@ import {
 } from '@/lib/programme-demo/basic-info'
 import { TYPE_LABEL } from '@/lib/programme-demo/copy'
 import { demoRoutes } from '@/lib/programme-demo/routes'
-import type { ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
+import type { ProgrammeDetailDTO } from '@/lib/programme/types'
+import type { ProgrammeScreen } from '@/lib/programme/view'
 
 import buttons from './demo-buttons.module.css'
 import styles from './journey.module.css'
@@ -47,17 +48,10 @@ const COPY = {
   invalid: 'Thông tin chưa hợp lệ.',
 } as const
 
-export function ProgrammeBasicEdit({
-  id,
-  server,
-}: {
-  id: string
-  server: ProgrammeDemoDetailDTO | null
-}) {
+export function ProgrammeBasicEdit({ id, initial }: { id: string; initial: ProgrammeDetailDTO }) {
   return (
     <SetupScreen
-      id={id}
-      server={server}
+      initial={initial}
       step="basic"
       screen="WF04-S08-BASIC"
       back={{ href: demoRoutes.detail(id), label: COPY.back, nav: 'basic-back' }}
@@ -68,7 +62,9 @@ export function ProgrammeBasicEdit({
   )
 }
 
-function BasicBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; apply: Apply }) {
+function BasicBody({ detail, apply }: { detail: ProgrammeScreen; apply: Apply }) {
+  // Read only when the server says so (closed / archived programme or owner).
+  const editable = detail.actions.edit
   const [input, setInput] = useState<BasicInfoInput>(() => basicInfoOf(detail))
   const [errors, setErrors] = useState<BasicInfoErrors>({})
   const [saved, setSaved] = useState(false)
@@ -84,12 +80,12 @@ function BasicBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; apply: A
     setSaved(false)
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (inFlight.current) return
+    if (inFlight.current || !editable) return
     inFlight.current = true
     setSaving(true)
-    const outcome = apply(updateBasicInfo(detail, input, new Date()))
+    const outcome = await apply(updateBasicInfo(detail, input, new Date()))
     if (!outcome.ok && outcome.errors) setErrors(outcome.errors)
     setSaved(outcome.ok)
     inFlight.current = false
@@ -143,6 +139,7 @@ function BasicBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; apply: A
             id="be-name"
             value={input.name}
             invalid={Boolean(errors.name)}
+            disabled={!editable}
             onChange={(e) => update('name', e.target.value)}
           />
           {error(errors.name ? COPY.required : undefined, 'name')}
@@ -157,6 +154,7 @@ function BasicBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; apply: A
             className={`ui-input ${form.textarea}`}
             rows={3}
             value={input.summary}
+            disabled={!editable}
             onChange={(e) => update('summary', e.target.value)}
           />
         </section>
@@ -179,6 +177,7 @@ function BasicBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; apply: A
                 type="date"
                 value={input.starts_on}
                 invalid={errors.dates === 'invalid'}
+                disabled={!editable}
                 onChange={(e) => update('starts_on', e.target.value)}
               />
             </div>
@@ -191,6 +190,7 @@ function BasicBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; apply: A
                 type="date"
                 value={input.ends_on}
                 invalid={Boolean(errors.dates)}
+                disabled={!editable}
                 onChange={(e) => update('ends_on', e.target.value)}
               />
             </div>
@@ -200,17 +200,19 @@ function BasicBody({ detail, apply }: { detail: ProgrammeDemoDetailDTO; apply: A
             'dates',
           )}
         </fieldset>
-        <div className={styles.editorActions}>
-          <button
-            type="submit"
-            className={`weight-medium ${buttons.primary}`}
-            disabled={saving}
-            aria-busy={saving || undefined}
-            data-action="save-basic"
-          >
-            {COPY.save}
-          </button>
-        </div>
+        {editable ? (
+          <div className={styles.editorActions}>
+            <button
+              type="submit"
+              className={`weight-medium ${buttons.primary}`}
+              disabled={saving}
+              aria-busy={saving || undefined}
+              data-action="save-basic"
+            >
+              {COPY.save}
+            </button>
+          </div>
+        ) : null}
       </form>
     </section>
   )

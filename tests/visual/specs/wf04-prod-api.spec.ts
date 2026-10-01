@@ -424,7 +424,15 @@ test.describe('WF04-PROD-03 programme API — response shape and leakage', () =>
       expect(text, secret).not.toContain(secret)
     const body = JSON.parse(text) as Record<string, unknown>
     expect(Object.keys(body).sort()).toEqual(
-      ['events', 'organization', 'programme', 'registration', 'stages'].sort(),
+      [
+        'actions',
+        'events',
+        'organization',
+        'owner_archived',
+        'programme',
+        'registration',
+        'stages',
+      ].sort(),
     )
   })
 

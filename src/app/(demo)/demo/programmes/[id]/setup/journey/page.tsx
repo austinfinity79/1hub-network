@@ -1,10 +1,9 @@
 import { ProgrammeJourney } from '@/components/programme-demo/programme-journey'
-import { requireDemoProgrammeRoute } from '@/lib/programme-demo/guard'
+import { requireProgrammeRoute } from '@/lib/programme/guard'
 
 /**
- * WF04-S03 — /demo/programmes/:id/setup/journey. The id is resolved on the
- * server (malformed → 404; fixture → read with the actor's scope, else 404);
- * a session draft is looked up in the actor's own browser store.
+ * WF04-S03 — structure and journey (/demo/programmes/:id/setup/journey). The programme is read on the
+ * server with the actor's scope: unknown, malformed or out of scope → 404.
  */
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +13,6 @@ export default async function ProgrammeJourneyPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const { server } = await requireDemoProgrammeRoute(id)
-  return <ProgrammeJourney id={id} server={server} />
+  const { detail } = await requireProgrammeRoute(id)
+  return <ProgrammeJourney id={detail.programme.id} initial={detail} />
 }

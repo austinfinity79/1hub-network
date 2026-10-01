@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState, type FormEvent } from 'react'
 
 import { Notice, TextInput } from '@/components/ui'
+import { apiRequest } from '@/lib/api/client'
+import { isApiError } from '@/lib/api/errors'
+import { authWithReturn } from '@/lib/auth/return-path'
 import type { OrganizationRefDTO } from '@/lib/ops/organizations'
 import {
-  buildDraft,
+  dayToInstant,
   validateBasicInfo,
   type BasicInfoErrors,
   type BasicInfoField,
@@ -16,21 +19,23 @@ import {
 import { TYPE_LABEL } from '@/lib/programme-demo/copy'
 import { demoRoutes } from '@/lib/programme-demo/routes'
 import { PROGRAMME_TYPES } from '@/lib/programme-demo/types'
+import type { ProgrammeDetailDTO } from '@/lib/programme/types'
 
 import buttons from './demo-buttons.module.css'
 import { DemoPage } from './demo-page'
-import { useProgrammeDemo } from './demo-store'
+import { useDemoFrame } from './demo-frame'
 import styles from './programme-form.module.css'
 
 /**
- * WF04-S02 — create a demo Programme / Challenge (DEC-WF04-H1..H5,
- * DEC-WF04-S02-D1..D4).
+ * WF04-S02 — create a Programme / Challenge (DEC-WF04-H1..H5,
+ * DEC-WF04-S02-D1..D4; WF04-PROD-04).
  *
  * Basic information only, the canonical Programme fields: Loại (chosen once),
- * Tên, Tóm tắt, Đơn vị chủ trì (from the server-computed scope), Thời gian.
- * "Lưu" validates, then stores ONE new DRAFT in this browser session's demo
- * store — never the database — and continues to the journey step (WF04-S03)
- * with a one-off confirmation (DEC-WF04-S03-D3).
+ * Tên, Tóm tắt, Đơn vị chủ trì (the server-computed options: organizations
+ * the actor manages, never an ARCHIVED one, DEC-W4P-D13), Thời gian. "Lưu"
+ * validates, then creates ONE DRAFT through `POST /api/v1/programmes` (one
+ * Idempotency-Key per form, so a retried click creates nothing more) and
+ * continues to the journey step (WF04-S03) with a one-off confirmation.
  */
 
 const COPY = {
@@ -53,6 +58,7 @@ const COPY = {
   end: 'Ngày kết thúc',
   created: (name: string) => `Đã tạo bản nháp “${name}”.`,
   failed: 'Chưa lưu được bản nháp. Vui lòng thử lại.',
+  refused: 'Chưa tạo được chương trình cho đơn vị này.',
 } as const
 
 const MESSAGES: Record<BasicInfoField, Partial<Record<string, string>>> = {
@@ -68,9 +74,22 @@ const MESSAGES: Record<BasicInfoField, Partial<Record<string, string>>> = {
   },
 }
 
+/** Server validation fields (422) as the form's own errors. */
+function serverErrors(fields: Record<string, string> | undefined): BasicInfoErrors {
+  const errors: BasicInfoErrors = {}
+  for (const [field, reason] of Object.entries(fields ?? {})) {
+    if (field === 'name') errors.name = 'required'
+    else if (field === 'type') errors.type = 'invalid'
+    else if (field === 'organization_id') errors.organization_id = 'invalid'
+    else if (field === 'starts_at' || field === 'ends_at')
+      errors.dates = reason === 'before_start' ? 'order' : 'invalid'
+  }
+  return errors
+}
+
 export function ProgrammeCreate({ owners }: { owners: OrganizationRefDTO[] }) {
   const router = useRouter()
-  const { save, setFlash } = useProgrammeDemo()
+  const { setFlash } = useDemoFrame()
   const [input, setInput] = useState<BasicInfoInput>({
     type: '',
     name: '',
@@ -80,9 +99,11 @@ export function ProgrammeCreate({ owners }: { owners: OrganizationRefDTO[] }) {
     organization_id: owners.length === 1 ? owners[0]!.id : '',
   })
   const [errors, setErrors] = useState<BasicInfoErrors>({})
-  const [failed, setFailed] = useState(false)
+  const [failed, setFailed] = useState<false | 'retry' | 'refused'>(false)
   const [saving, setSaving] = useState(false)
   const inFlight = useRef(false)
+  // One key per form: a retry of the same draft replays instead of creating another.
+  const createKey = useRef(`create-${crypto.randomUUID()}`)
 
   const update = (field: keyof BasicInfoInput, value: string) => {
     setInput((current) => ({ ...current, [field]: value }))
@@ -92,7 +113,7 @@ export function ProgrammeCreate({ owners }: { owners: OrganizationRefDTO[] }) {
     setFailed(false)
   }
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (inFlight.current) return
     const found = validateBasicInfo(input, owners)
@@ -101,16 +122,35 @@ export function ProgrammeCreate({ owners }: { owners: OrganizationRefDTO[] }) {
     if (Object.keys(found).length > 0) return
     inFlight.current = true
     setSaving(true)
-    const owner = owners.find((o) => o.id === input.organization_id)!
-    const draft = buildDraft(input, owner, { id: crypto.randomUUID(), now: new Date() })
-    if (!save(draft, true)) {
+    try {
+      const created = await apiRequest<ProgrammeDetailDTO>('/programmes', {
+        method: 'POST',
+        idempotencyKey: createKey.current,
+        body: {
+          type: input.type,
+          organization_id: input.organization_id,
+          name: input.name.trim(),
+          summary: input.summary.trim() || null,
+          starts_at: dayToInstant(input.starts_on, 'start'),
+          ends_at: dayToInstant(input.ends_on, 'end'),
+        },
+      })
+      setFlash(COPY.created(created.programme.name))
+      router.push(demoRoutes.setup(created.programme.id, 'journey'))
+    } catch (error) {
       inFlight.current = false
       setSaving(false)
-      setFailed(true)
-      return
+      if (isApiError(error) && error.status === 401) {
+        window.location.assign(authWithReturn(window.location.pathname))
+        return
+      }
+      if (isApiError(error) && error.status === 422) {
+        setErrors(serverErrors(error.fields))
+        return
+      }
+      // 403 / 409: the server refused this owner (out of scope, archived).
+      setFailed(isApiError(error) && error.status < 500 ? 'refused' : 'retry')
     }
-    setFlash(COPY.created(draft.programme.name))
-    router.push(demoRoutes.setup(draft.programme.id, 'journey'))
   }
 
   const error = (field: BasicInfoField) => {
@@ -158,7 +198,7 @@ export function ProgrammeCreate({ owners }: { owners: OrganizationRefDTO[] }) {
         >
           {failed ? (
             <div className={styles.notice} data-state="save-failed">
-              <Notice tone="error">{COPY.failed}</Notice>
+              <Notice tone="error">{failed === 'refused' ? COPY.refused : COPY.failed}</Notice>
             </div>
           ) : null}
           {owners.length === 0 ? (

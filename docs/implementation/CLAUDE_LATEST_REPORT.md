@@ -1,41 +1,43 @@
 # Claude Task Report
 
 ## Task
-WF04-PROD-03 — API / RBAC / validation / idempotency hardening. API: [05 §22 amendment A5](../architecture/05_API_CONTRACT_P0_v1.0.md); decisions: [DEC-W4P-D12](../decisions/DECISION_LOG.md#dec-w4p-d12); task report: [reports/WF04-PROD-03_api-rbac-hardening.md](reports/WF04-PROD-03_api-rbac-hardening.md).
+WF04-PROD-04 — WF04 frontend fixture → real API. Decisions: [DEC-W4P-D13](../decisions/DECISION_LOG.md#dec-w4p-d13); task report: [reports/WF04-PROD-04_frontend-api.md](reports/WF04-PROD-04_frontend-api.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE, local only.** Canonical `/api/v1/programmes*` on the PROD-02 persistence; no migration, table, role, UI or frontend change. Not pushed, not deployed; PROD-04 not started. STOP.
+**PASS_WITH_EVIDENCE, local only.** The approved WF04 screens read and write `/api/v1/programmes*`; WF04 runtime fixture dependency 0. Not pushed, not deployed; PROD-05 not started. STOP.
 
 ## Scope implemented
-- Capability `programme:manage` (leader of exactly the owning org, platform admin) in matrix code, document and test.
-- `GET /programmes`, `POST /programmes`, `GET|PATCH /programmes/{id}`, `PUT /programmes/{id}/registration`, `POST /programmes/{id}/publish`, `POST /programmes/{id}/close`.
-- Lifecycle DRAFT → PUBLISHED → CLOSED only; ARCHIVED never written; publish rules of contract §8 only.
-- Challenge problems in `metadata.challenge` (CHALLENGE only); stages in `metadata.journey`; no generic metadata write.
-- Registration writes the canonical WF05 form (TEAM / STARTUP, per-question `required` / `step`), version bump, refused once applications exist.
-- Idempotency-Key for `programme.create` / `publish` / `close`; audit `PROGRAMME_CREATED|UPDATED|REGISTRATION_UPDATED|PUBLISHED|CLOSED`.
+- Pages read the canonical programme on the server (`requireProgrammeRoute`); every change goes through the API and the screen shows the server's answer (no optimistic state).
+- List, create (Idempotency-Key), basic edit, journey stages, Challenge problems, registration (TEAM / STARTUP), publish, close (S08, inline confirmation).
+- States: loading, empty, API error with retry, validation (422), conflict (409, re-read), same 404, read only / disabled from server `actions`.
+- PO decisions: archived owner → no write (server 409, UI read only); events read only; form locked after an application; INDIVIDUAL not offered; no new publish rule; ARCHIVED compatibility only.
+- Demo notice, reset, session store, demo API, demo guard and demo read model removed from the runtime; `fixtures.ts` kept for tests.
 
 ## Files changed
-- New: `src/lib/programme/{types,rules,programme,request}.ts`, `src/app/api/v1/programmes/**` (5 route files), tests `src/lib/programme/rules.test.ts`, `src/lib/programme/programme.db-test.ts`, `tests/visual/specs/wf04-prod-api.spec.ts`.
-- Changed: `src/lib/authz/matrix.ts`, `src/lib/api/idempotency.ts`, `src/lib/audit/audit.ts`; tests `authz.db-test.ts`, `idempotency.db-test.ts`, `contract.test.ts` (counts).
-- Docs: API contract §22 (A5), DECISION_LOG (DEC-W4P-D12), capability matrix, WF04 contract §5 / §6 / §12 / §14 / §19, task report, this report.
+- Backend (existing endpoints): `lib/programme/programme.ts`, `types.ts` (`actions`, `owner_archived`, archived-owner 409, `programmeOwnerOptions`).
+- New: `lib/programme/{view,guard}.ts`, `components/programme-demo/programme-provider.tsx`, `[id]/error.tsx`, `tests/visual/support/programmes.ts`.
+- Changed: 10 WF04 pages + layout, 12 WF04 components (shared `DemoPage` notice made optional; WF05 unchanged), `lib/programme-demo/{types,copy}.ts`.
+- Removed: 2 demo API routes, `lib/programme-demo/{guard,read-model,session-store,readiness}.ts` (+ their tests), `demo-store.tsx`.
+- Tests: 11 WF04 specs rewritten (60), `read.db-test.ts` (rewritten), `programme.db-test.ts` (+4), 3 unit tests; REL-SEC, P0-SHELL, WF05-S01 updated.
+- Docs: API §22 (A5 additions), DECISION_LOG (D13), WF04 contract (PROD-04 status), task report, this report.
 
 ## Migrations / data
-None. DB changes beyond migration 015: none.
+None.
 
 ## Tests / build
-format, lint, typecheck PASS; unit 35 files / 326; build PASS; DB 34 files / 505; HTTP API spec 8/8; protected visual / API 61 specs 696/696 on the final build; UAT 19/19; 5xx 0, console errors 0.
+format, lint, typecheck PASS; unit 33 files / 307; build PASS; DB 34 files / 509; WF04 specs 60/60; protected regression 62 specs / 637 on the final build; UAT 19/19; 5xx 0, console / hydration errors 0.
 
 ## Visual QA
-No UI change; no baseline touched.
+No baseline changed; ADM5 primitives still compared on S01 / S02 (pass); the demo notice is gone by contract §16; WF04 pixel reference method stays Q9 (PROD-06).
 
 ## Deviations / blockers
-- Field refusals use the ops convention (422 `PROFILE_VALIDATION_FAILED`, `not_accepted` / `immutable`), replacing contract §12's "400" wording (D12).
-- Undecodable `%` escapes are refused with 400 by the Next.js router before the handler; every other malformed id is the canonical 404.
-- Open for the PO: create under an ARCHIVED organization; Q1, Q3 (edits after applications, INDIVIDUAL), Q4–Q6, Q8–Q10. WF05 follow-up: lock the form read on application create (reviewer L1).
+- Adding a registration question is unavailable: it needs `required` and `step`, and Q3(b) has no approved default.
+- A close button + inline confirmation was added on S08 (approved transition, no prior visual).
+- Routes and the OpsShell label "Demo · Internal Alpha" stay (Q6).
 
 ## Git
-- Branch: `feat/wf04-prod-hardening`; start HEAD `2a77a1e`; no concurrent change
-- Implementation commit: `feat(wf04): programme API, RBAC and lifecycle (WF04-PROD-03)`
+- Branch: `feat/wf04-prod-hardening`; start HEAD `e0dc779`; no concurrent change
+- Implementation commit: `feat(wf04): screens on the programme API (WF04-PROD-04)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -43,4 +45,4 @@ No UI change; no baseline touched.
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO review of PROD-03; then WF04-PROD-04 (frontend fixture → API) once Q4–Q6 are answered.
+PO review of PROD-04; Q3(b) decision for operator questions; then WF04-PROD-05 (functional / security QA).

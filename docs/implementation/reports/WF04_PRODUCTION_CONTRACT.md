@@ -163,6 +163,8 @@ FROZEN (D09): production runtime reads no fixture (`src/lib/programme-demo/fixtu
 ## 16. Required Production States
 Only these may be added to the approved screens (D08): loading; empty; validation (server 400 / 422 mapped to fields and checklist); API error with retry (including a 409 such as already published); permission denied (the existing 404 pattern for operator routes); disabled (in-flight, publish blocked). Removed: the "Dữ liệu demo · Internal Alpha" notice, "Đặt lại demo" and "(demo)" copy. No visual redesign.
 
+PROD-04 status (DEC-W4P-D13): the screens read and write `/api/v1/programmes*`; the demo notice, reset, session store, demo API and demo read model left the runtime (fixtures remain for tests). States in use: list loading / empty / error with retry; validation (client and server 422); save error with retry; conflict (409, re-read); the same 404; disabled or read only (closed or archived programme, archived owner, form with applications, "Tạo mới" without an owner, a new registration question — Q3(b)). S04 is read only (no event write), S06 shows its empty state (Q4), no application counts (Q5); routes stay `/demo/programmes/*` (Q6) and the OpsShell group label "Demo · Internal Alpha" stays with them. A close action (button + inline confirmation) is added on S08 for the approved transition.
+
 ## 17. Test Acceptance Criteria
 | Area | Must pass |
 |---|---|

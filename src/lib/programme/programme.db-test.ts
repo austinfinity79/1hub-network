@@ -18,6 +18,7 @@ import {
   listProgrammes,
   publishProgramme,
   putProgrammeRegistration,
+  programmeOwnerOptions,
   updateProgramme,
 } from './programme'
 
@@ -193,8 +194,10 @@ describe('WF04-PROD-03 reads: canonical rows, owner-scoped, no fixture', () => {
     const challenge = await getProgramme(LEADER, SEED_CHALLENGE)
     expect(Object.keys(challenge).sort()).toEqual(
       [
+        'actions',
         'events',
         'organization',
+        'owner_archived',
         'problem_statements',
         'programme',
         'registration',
@@ -512,7 +515,12 @@ describe('WF04-PROD-03 lifecycle: DRAFT → PUBLISHED → CLOSED, nothing else',
 
   it('never writes ARCHIVED: no transition, route or SQL reaches it (DEC-W4P-D11)', () => {
     const service = readFileSync(join(process.cwd(), 'src/lib/programme/programme.ts'), 'utf8')
-    expect(service).not.toMatch(/'ARCHIVED'/)
+    // The only transitions are to PUBLISHED and CLOSED; no programme row is set ARCHIVED.
+    expect([...service.matchAll(/to: '(\w+)'/g)].map((m) => m[1])).toEqual(['PUBLISHED', 'CLOSED'])
+    expect(service).not.toMatch(/UPDATE programmes[^`]*ARCHIVED/)
+    // 'ARCHIVED' appears only for the owning organization's lifecycle (DEC-W4P-D13).
+    for (const line of service.split('\n').filter((l) => l.includes("'ARCHIVED'")))
+      expect(line, line).toMatch(/org_status|owner\.status|status::text <> 'ARCHIVED'/)
     const routes = readdirSync(join(process.cwd(), 'src/app/api/v1/programmes/[programmeId]'))
     expect(routes.sort()).toEqual(['close', 'publish', 'registration', 'route.ts'])
   })
@@ -607,5 +615,97 @@ describe('WF04-PROD-03 registration: the canonical WF05 form, versioned', () => 
       [application.id],
     )
     expect(stored!.status).toBe('DRAFT')
+  })
+})
+
+describe('WF04-PROD-04 server-computed actions and the archived owner (DEC-W4P-D13)', () => {
+  it('derives the next actions from the lifecycle, the owner and the form', async () => {
+    const { id } = await draft()
+    const actions = async () => (await getProgramme(LEADER, id)).actions
+    expect(await actions()).toEqual({ edit: true, registration: true, publish: true, close: false })
+    await publishProgramme(LEADER, id, undefined, rid())
+    expect(await actions()).toEqual({ edit: true, registration: true, publish: false, close: true })
+    await closeProgramme(LEADER, id, undefined, rid())
+    expect(await actions()).toEqual({
+      edit: false,
+      registration: false,
+      publish: false,
+      close: false,
+    })
+  })
+
+  it('locks the registration action once an application exists', async () => {
+    const { id } = await draft()
+    await putProgrammeRegistration(
+      LEADER,
+      id,
+      {
+        applicant_types: ['STARTUP'],
+        questions: [{ id: 'q-a', prompt: 'A?', required: true, step: 1 }],
+      },
+      rid(),
+    )
+    await publishProgramme(LEADER, id, undefined, rid())
+    await createApplication(MEMBER, { venture_id: VENTURE, programme_id: id }, rid())
+    expect((await getProgramme(LEADER, id)).actions).toEqual({
+      edit: true,
+      registration: false,
+      publish: false,
+      close: true,
+    })
+  })
+
+  it('keeps an archived owner’s programme readable and refuses every write and a new one', async () => {
+    const [org] = await query<{ id: string }>(
+      `INSERT INTO organizations (type, slug, name, status) VALUES ('CLB', $1, 'CLB lưu trữ', 'PUBLISHED') RETURNING id::text`,
+      [`prod04-archived-${Date.now()}`],
+    )
+    try {
+      const { id } = await draft(ADMIN, { organization_id: org!.id })
+      expect((await programmeOwnerOptions(ADMIN)).map((o) => o.id)).toContain(org!.id)
+      await query(`UPDATE organizations SET status = 'ARCHIVED' WHERE id = $1`, [org!.id])
+
+      const detail = await getProgramme(ADMIN, id)
+      expect(detail.owner_archived).toBe(true)
+      expect(detail.actions).toEqual({
+        edit: false,
+        registration: false,
+        publish: false,
+        close: false,
+      })
+      expect((await programmeOwnerOptions(ADMIN)).map((o) => o.id)).not.toContain(org!.id)
+      expect(await refusal(updateProgramme(ADMIN, id, { name: 'x' }, rid()))).toEqual(CONFLICT)
+      expect(await refusal(publishProgramme(ADMIN, id, undefined, rid()))).toEqual(CONFLICT)
+      expect(
+        await refusal(
+          putProgrammeRegistration(ADMIN, id, { applicant_types: ['TEAM'], questions: [] }, rid()),
+        ),
+      ).toEqual(CONFLICT)
+      expect(
+        await refusal(
+          createProgramme(
+            ADMIN,
+            { type: 'PROGRAMME', organization_id: org!.id, name: 'Mới' },
+            rid(),
+          ),
+        ),
+      ).toEqual(CONFLICT)
+      expect(await statusOf(id)).toBe('DRAFT')
+    } finally {
+      await query(
+        'DELETE FROM audit_events WHERE resource_id IN (SELECT id FROM programmes WHERE organization_id = $1)',
+        [org!.id],
+      )
+      await query('DELETE FROM programmes WHERE organization_id = $1', [org!.id])
+      await query('DELETE FROM organizations WHERE id = $1', [org!.id])
+    }
+  })
+
+  it('offers only the organizations the actor manages as owners', async () => {
+    expect((await programmeOwnerOptions(LEADER)).map((o) => o.id)).toEqual([CHAPTER_01])
+    expect(await programmeOwnerOptions(MEMBER)).toEqual([])
+    const all = (await programmeOwnerOptions(ADMIN)).map((o) => o.id)
+    expect(all).toEqual(expect.arrayContaining([HUB, CHAPTER_01, CHAPTER_02]))
+    expect(all).not.toContain(COMPANY)
   })
 })

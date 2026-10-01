@@ -1,7 +1,6 @@
-import { createHash } from 'node:crypto'
 import path from 'node:path'
 
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
 import { assertTypography, settle } from '../pixel-qa/capture'
@@ -10,29 +9,34 @@ import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
 import { decodePng, readPng } from '../pixel-qa/png'
 import { writeJsonReport } from '../pixel-qa/report'
 import { compareSegments, type Rect } from '../pixel-qa/segments'
+import {
+  ADMIN,
+  CHAPTER_01,
+  LEADER,
+  auditActions,
+  cleanupProgrammes,
+  clubWithLeader,
+  expectNoOverflow,
+  login,
+  programmeRow,
+  routes,
+  track,
+  watchConsole,
+} from '../support/programmes'
 
 /**
- * WF04-S02 — create a demo Programme / Challenge (DEC-WF04-S02-D1..D4):
- * canonical basic information only, owner from the server-side scope, one
- * session DRAFT per save, no database / audit write, then the journey step
- * (S03) with a one-off confirmation.
+ * WF04-S02 → WF04-PROD-04 — create through `POST /api/v1/programmes`
+ * (rewritten from the demo create spec, contract §17): one DRAFT row and one
+ * audit event, client and server validation, one row per double click
+ * (Idempotency-Key), owner options from the server (never ARCHIVED,
+ * DEC-W4P-D13), safe refusals, responsive and the approved primitives.
  */
 
-const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
-const CHAPTER_02 = '10000000-0000-0000-0000-000000000102'
-const LEADER_ACCOUNT = '30000000-0000-0000-0000-000000000002'
-const ADMIN_ACCOUNT = '30000000-0000-0000-0000-000000000003'
 const ACTUAL = path.join(REPO_ROOT, 'tests/visual/actual')
-
-const people: string[] = []
 let consoleErrors: string[] = []
 
 test.beforeEach(async ({ page }) => {
-  consoleErrors = []
-  page.on('console', (m) => {
-    if (m.type() === 'error' && !/status of (4\d\d)/.test(m.text())) consoleErrors.push(m.text())
-  })
-  page.on('pageerror', (e) => consoleErrors.push(e.message))
+  consoleErrors = watchConsole(page)
   await page.context().clearCookies()
 })
 
@@ -41,415 +45,210 @@ test.afterEach(() => {
 })
 
 test.afterAll(async () => {
-  await query('DELETE FROM role_assignments WHERE individual_profile_id = ANY($1::uuid[])', [
-    people,
-  ])
+  await cleanupProgrammes()
   await closePool()
 })
 
-async function login(request: APIRequestContext, email: string) {
-  expect((await request.post('/dev/login', { data: { email } })).ok()).toBe(true)
-}
-
-async function person(role: { code: string; scopeType: string; scopeId: string | null }) {
-  const email = `wf04-s02-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`
-  const [a] = await query<{ id: string }>(
-    `INSERT INTO user_accounts (email, email_normalized, status) VALUES ($1, $1, 'ACTIVE') RETURNING id::text`,
-    [email],
-  )
-  const [p] = await query<{ id: string }>(
-    `INSERT INTO individual_profiles (account_id, display_name, status, purpose_step_completed_at, onboarding_completed_at)
-     VALUES ($1, 'WF04 S02', 'ACTIVE', now(), now()) RETURNING id::text`,
-    [a!.id],
-  )
-  people.push(p!.id)
-  await query(
-    `INSERT INTO role_assignments (individual_profile_id, role_code, scope_type, scope_id, state) VALUES ($1, $2, $3, $4, 'ACTIVE')`,
-    [p!.id, role.code, role.scopeType, role.scopeId],
-  )
-  return { email, account: a!.id }
-}
-
-const storeKey = (account: string) =>
-  `hub.wf04-demo.v1.${createHash('sha256').update(`wf04-demo:${account}`).digest('hex').slice(0, 16)}`
-
-async function stored(page: Page, account: string) {
-  const raw = await page.evaluate((k) => sessionStorage.getItem(k), storeKey(account))
-  return raw
-    ? (JSON.parse(raw) as {
-        created: string[]
-        programmes: Record<
-          string,
-          { programme: Record<string, unknown>; organization: { id: string } }
-        >
-      })
-    : null
-}
-
-async function snapshot() {
-  const [row] = await query<Record<string, string>>(
-    `SELECT (SELECT count(*) FROM programmes)::text AS programmes,
-            (SELECT max(updated_at)::text FROM programmes) AS programmes_at,
-            (SELECT count(*) FROM events)::text AS events,
-            (SELECT count(*) FROM audit_events)::text AS audit,
-            (SELECT count(*) FROM analytics_events)::text AS analytics`,
-  )
-  return row
-}
-
-const JOURNEY = /\/demo\/programmes\/[0-9a-f-]{36}\/setup\/journey$/
-const form = (page: Page) => page.locator('[data-programme-form]')
-
-/** After a save: the journey step of the new draft, then back to the list. */
-async function backToList(page: Page) {
-  await expect(page).toHaveURL(JOURNEY)
-  await expect(page.locator('[data-screen="WF04-S03"]')).toBeVisible()
-  await page.locator('[data-nav="journey-back"]').click()
-  await expect(page).toHaveURL('/demo/programmes')
-}
 const save = (page: Page) => page.locator('[data-demo-save]')
-const rows = (page: Page) => page.locator('[data-programme-row]')
 
 async function openCreate(page: Page) {
-  await page.goto('/demo/programmes/new', { waitUntil: 'networkidle' })
-  await expect(page.locator('[data-screen="WF04-S02"]')).toBeVisible()
+  await page.goto(routes.create)
+  await expect(page.locator('[data-programme-form]')).toBeVisible()
 }
 
 async function fill(
   page: Page,
-  v: {
-    type?: 'Chương trình' | 'Challenge'
-    name?: string
-    summary?: string
-    start?: string
-    end?: string
-  },
+  values: { type?: string; name?: string; summary?: string; start?: string; end?: string },
 ) {
-  if (v.type) await page.getByRole('radio', { name: v.type }).check()
-  if (v.name !== undefined) await page.getByLabel('Tên', { exact: true }).fill(v.name)
-  if (v.summary !== undefined) await page.getByLabel('Tóm tắt').fill(v.summary)
-  if (v.start !== undefined) await page.getByLabel('Ngày bắt đầu').fill(v.start)
-  if (v.end !== undefined) await page.getByLabel('Ngày kết thúc').fill(v.end)
+  if (values.type) await page.getByRole('radio', { name: values.type, exact: true }).check()
+  if (values.name !== undefined) await page.getByLabel('Tên', { exact: true }).fill(values.name)
+  if (values.summary !== undefined)
+    await page.getByLabel('Tóm tắt', { exact: true }).fill(values.summary)
+  if (values.start !== undefined) await page.getByLabel('Ngày bắt đầu').fill(values.start)
+  if (values.end !== undefined) await page.getByLabel('Ngày kết thúc').fill(values.end)
 }
 
-async function cells(page: Page) {
-  return rows(page).evaluateAll((els) =>
-    els.map((el) => [...el.querySelectorAll('[role="cell"]')].map((c) => c.textContent)),
-  )
-}
+const idFrom = (page: Page) => new URL(page.url()).pathname.split('/')[3]!
 
-test.describe('WF04-S02 create', () => {
-  test('S01 → Tạo mới → S02; a PROGRAMME is created as a session DRAFT and listed first', async ({
+test.describe('WF04-S02 create (canonical row)', () => {
+  test('a PROGRAMME is created as a DRAFT row of the leader’s organization, audited, then the journey opens', async ({
     page,
   }) => {
-    const before = await snapshot()
-    await login(page.request, 'leader@example.test')
-    await page.goto('/demo/programmes', { waitUntil: 'networkidle' })
-    await page.locator('[data-demo-create]').click()
-    await expect(page).toHaveURL('/demo/programmes/new')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Chương trình / challenge mới')
-    await expect(page.locator('[data-demo-notice]')).toHaveCount(1)
-    // Owner from the server-side scope: exactly Chapter 01, read-only.
+    await login(page.request, LEADER)
+    await openCreate(page)
     await expect(page.locator('#pc-owner')).toHaveText('Chapter 01')
-    await expect(page.locator('select#pc-owner')).toHaveCount(0)
-    // Only the canonical basic information: no taxonomy or future fields.
-    const labels = await form(page).locator('legend, label[for]').allTextContents()
-    expect(labels).toEqual([
-      'Loại',
-      'Tên',
-      'Tóm tắt',
-      'Đơn vị chủ trì',
-      'Thời gian',
-      'Ngày bắt đầu',
-      'Ngày kết thúc',
-    ])
-    expect(await form(page).innerText()).not.toMatch(/Lĩnh vực|Tỉnh|nhà đầu tư|chấm|Bài toán/i)
-
     await fill(page, {
       type: 'Chương trình',
-      name: '  Chương trình kết nối (demo)  ',
-      summary: 'Một chương trình mới.',
+      name: '  Ươm tạo mùa thu  ',
+      summary: 'Ba tháng đồng hành.',
       start: '2026-10-01',
       end: '2026-12-31',
     })
     await save(page).click()
-    // DEC-WF04-S03-D3: a save continues to the journey step with the confirmation.
-    await expect(page).toHaveURL(JOURNEY)
-    await expect(page.locator('[data-screen="WF04-S03"]')).toHaveAttribute(
-      'data-programme-type',
-      'PROGRAMME',
+    await expect(page).toHaveURL(/\/setup\/journey$/)
+    const id = idFrom(page)
+    track(id)
+    await expect(page.locator('[data-state="flash"]')).toContainText(
+      'Đã tạo bản nháp “Ươm tạo mùa thu”.',
     )
-    await expect(page.locator('[data-state="flash"]')).toHaveText(
-      'Đã tạo bản nháp “Chương trình kết nối (demo)”.',
-    )
-    await page.locator('[data-nav="journey-back"]').click()
-    await expect(page).toHaveURL('/demo/programmes')
-    await expect(rows(page)).toHaveCount(3)
-    expect((await cells(page))[0]).toEqual([
-      'Chương trình kết nối (demo)',
-      'Chapter 01',
-      'Chương trình',
-      '01/10/2026 – 31/12/2026',
-      '—',
-      'Bản nháp',
-    ])
-    await expect(page.locator('[data-demo-meta]')).toHaveText('2 chương trình · 1 challenge')
-    const state = (await stored(page, LEADER_ACCOUNT))!
-    expect(state.created).toHaveLength(1)
-    const draft = state.programmes[state.created[0]!]!
-    expect(draft.programme).toMatchObject({
-      type: 'PROGRAMME',
+
+    const row = await programmeRow(id)
+    expect(row).toMatchObject({
       status: 'DRAFT',
-      organization_id: CHAPTER_01,
-      name: 'Chương trình kết nối (demo)',
-      summary: 'Một chương trình mới.',
+      name: 'Ươm tạo mùa thu',
+      summary: 'Ba tháng đồng hành.',
     })
-    expect(String(draft.programme.id)).not.toMatch(/^d40/)
-    expect(draft).not.toHaveProperty('problem_statements')
-    expect(JSON.stringify(state)).not.toMatch(/@|token|cookie|30000000-/)
-
-    // Refresh keeps it; the one-off confirmation is gone.
-    await page.reload({ waitUntil: 'networkidle' })
-    await expect(rows(page)).toHaveCount(3)
-    await expect(page.locator('[data-state="flash"]')).toHaveCount(0)
-    // Reset removes it and restores the two fixtures.
-    await page.locator('[data-demo-reset="start"]').click()
-    await page.locator('[data-demo-reset="confirm"]').click()
-    await expect(rows(page)).toHaveCount(2)
-    expect((await cells(page)).map((c) => c[0])).toEqual([
-      'Chương trình ươm tạo (demo)',
-      'Thử thách đổi mới (demo)',
-    ])
-    expect((await (await page.request.get('/api/v1/session')).json()).authenticated).toBe(true)
-    expect(await snapshot()).toEqual(before)
-  })
-
-  test('a CHALLENGE with only the required fields; optional summary and dates stay empty', async ({
-    page,
-  }) => {
-    await login(page.request, 'leader@example.test')
-    await openCreate(page)
-    await fill(page, { type: 'Challenge', name: 'Thử thách tối giản' })
-    await save(page).click()
-    await backToList(page)
-    await expect(rows(page)).toHaveCount(3)
-    expect((await cells(page))[0]).toEqual([
-      'Thử thách tối giản',
-      'Chapter 01',
-      'Challenge',
-      '—',
-      '0',
-      'Bản nháp',
-    ])
-    const state = (await stored(page, LEADER_ACCOUNT))!
-    const draft = state.programmes[state.created[0]!]!
-    expect(draft.programme).toMatchObject({
-      type: 'CHALLENGE',
-      summary: null,
-      starts_at: null,
-      ends_at: null,
-    })
-    expect(draft).toHaveProperty('problem_statements', [])
-    // A new, clean session starts from the fixtures only.
-    const fresh = await page.context().newPage()
-    await fresh.goto('/demo/programmes', { waitUntil: 'networkidle' })
-    await expect(fresh.locator('[data-programme-row]')).toHaveCount(2)
-    await fresh.close()
-  })
-
-  test('validation: required, blank name, date order, cleared on correction; nothing is stored', async ({
-    page,
-  }) => {
-    await login(page.request, 'leader@example.test')
-    await openCreate(page)
-    await save(page).click()
-    await expect(page).toHaveURL('/demo/programmes/new')
-    await expect(page.locator('[data-error="type"]')).toHaveText('Trường này là bắt buộc.')
-    await expect(page.locator('[data-error="name"]')).toHaveText('Trường này là bắt buộc.')
-    await expect(page.getByLabel('Tên', { exact: true })).toHaveAttribute('aria-invalid', 'true')
-    await expect(page.locator('[data-error="organization_id"]')).toHaveCount(0)
-
-    await fill(page, { type: 'Challenge', name: '   ', start: '2026-12-01', end: '2026-11-01' })
-    await expect(page.locator('[data-error="type"]')).toHaveCount(0)
-    await save(page).click()
-    await expect(page.locator('[data-error="name"]')).toHaveText('Trường này là bắt buộc.')
-    await expect(page.locator('[data-error="dates"]')).toHaveText(
-      'Ngày kết thúc phải từ ngày bắt đầu trở đi.',
+    expect(row!.starts_at!.toISOString()).toBe('2026-09-30T17:00:00.000Z')
+    expect(row!.ends_at!.toISOString()).toBe('2026-12-31T16:59:00.000Z')
+    expect(await auditActions(id)).toEqual(['PROGRAMME_CREATED'])
+    const [owner] = await query<{ organization_id: string; programme_type: string }>(
+      'SELECT organization_id::text, programme_type::text FROM programmes WHERE id = $1',
+      [id],
     )
-    await fill(page, { name: 'Tên hợp lệ' })
+    expect(owner).toEqual({ organization_id: CHAPTER_01, programme_type: 'PROGRAMME' })
+
+    // Refresh and a direct route load the persisted row.
+    await page.reload()
+    await expect(page.locator('[data-screen="WF04-S03"] h1')).toHaveText('Ươm tạo mùa thu')
+    await page.goto(routes.list)
+    await expect(page.locator(`[data-programme-row="${id}"]`)).toBeVisible()
+  })
+
+  test('validation: required fields and date order are checked before any request', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    await openCreate(page)
+    let posts = 0
+    page.on('request', (r) => {
+      if (r.method() === 'POST' && r.url().endsWith('/api/v1/programmes')) posts += 1
+    })
+    await save(page).click()
+    await expect(page.locator('[data-error="type"]')).toBeVisible()
+    await expect(page.locator('[data-error="name"]')).toBeVisible()
+    await fill(page, { type: 'Challenge', name: '   ', start: '2026-12-02', end: '2026-12-01' })
+    await save(page).click()
+    await expect(page.locator('[data-error="name"]')).toBeVisible()
+    await expect(page.locator('[data-error="dates"]')).toContainText(
+      'Ngày kết thúc phải từ ngày bắt đầu',
+    )
+    await fill(page, { name: 'Đã sửa', end: '2026-12-03' })
     await expect(page.locator('[data-error="name"]')).toHaveCount(0)
-    await fill(page, { end: '2026-12-01' })
-    await expect(page.locator('[data-error="dates"]')).toHaveCount(0)
-    expect(await stored(page, LEADER_ACCOUNT)).toBeNull()
-    await page.locator('[data-nav="programme-cancel"]').click()
-    await expect(page).toHaveURL('/demo/programmes')
-    await expect(rows(page)).toHaveCount(2)
+    expect(posts).toBe(0)
+    await expect(page).toHaveURL(/\/new$/)
   })
 
-  test('an invalid type value is rejected; a double click creates exactly one draft', async ({
-    page,
-  }) => {
-    await login(page.request, 'leader@example.test')
+  test('a double click creates exactly one programme', async ({ page }) => {
+    await login(page.request, LEADER)
     await openCreate(page)
-    await fill(page, { name: 'Loại giả' })
-    await page.evaluate(() => {
-      const radio = document.querySelector<HTMLInputElement>('input[name="programme-type"]')!
-      radio.value = 'SUMMIT'
-    })
-    // A controlled radio whose value was tampered with never shows as checked.
-    await page.getByRole('radio', { name: 'Chương trình' }).click()
-    await save(page).click()
-    await expect(page.locator('[data-error="type"]')).toHaveText('Loại không hợp lệ.')
-    expect(await stored(page, LEADER_ACCOUNT)).toBeNull()
-
-    await openCreate(page)
-    await fill(page, { type: 'Challenge', name: 'Nhấn hai lần' })
+    const name = `Nhấp đúp ${Date.now()}`
+    await fill(page, { type: 'Challenge', name })
     await save(page).dblclick()
-    await backToList(page)
-    const state = (await stored(page, LEADER_ACCOUNT))!
-    expect(state.created).toHaveLength(1)
-    await expect(rows(page)).toHaveCount(3)
+    await expect(page).toHaveURL(/\/setup\/journey$/)
+    track(idFrom(page))
+    const [count] = await query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM programmes WHERE name = $1',
+      [name],
+    )
+    expect(count!.n).toBe(1)
   })
 
-  test('save error: a refused write shows a safe message, stores nothing, and retry succeeds', async ({
+  test('a refused or failed create shows a safe message, writes nothing, and a retry creates once', async ({
     page,
   }) => {
-    await login(page.request, 'leader@example.test')
+    await login(page.request, LEADER)
     await openCreate(page)
-    await fill(page, { type: 'Chương trình', name: 'Lưu lỗi' })
-    await page.evaluate(() => {
-      const original = Storage.prototype.setItem
-      ;(window as unknown as { __restore: () => void }).__restore = () => {
-        Storage.prototype.setItem = original
-      }
-      Storage.prototype.setItem = () => {
-        throw new DOMException('quota', 'QuotaExceededError')
-      }
+    const name = `Thử lại ${Date.now()}`
+    await fill(page, { type: 'Chương trình', name })
+    let answer: 409 | 500 | null = 409
+    await page.route('**/api/v1/programmes', async (route) => {
+      if (route.request().method() === 'POST' && answer) {
+        const status = answer
+        await route.fulfill({
+          status,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            error: { code: 'X', message: 'internal detail', request_id: 'req_x' },
+          }),
+        })
+      } else await route.continue()
     })
     await save(page).click()
-    await expect(page).toHaveURL('/demo/programmes/new')
-    await expect(page.locator('[data-state="save-failed"]')).toHaveText(
+    await expect(page.locator('[data-state="save-failed"]')).toContainText(
+      'Chưa tạo được chương trình cho đơn vị này.',
+    )
+    answer = 500
+    await save(page).click()
+    await expect(page.locator('[data-state="save-failed"]')).toContainText(
       'Chưa lưu được bản nháp. Vui lòng thử lại.',
     )
-    expect(await page.locator('main').innerText()).not.toMatch(/quota|DOMException|sessionStorage/i)
-    await expect(save(page)).toBeEnabled()
-    expect(await stored(page, LEADER_ACCOUNT)).toBeNull()
-    await page.evaluate(() => (window as unknown as { __restore: () => void }).__restore())
+    await expect(page.locator('main')).not.toContainText('internal detail')
+    const [none] = await query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM programmes WHERE name = $1',
+      [name],
+    )
+    expect(none!.n).toBe(0)
+    answer = null
     await save(page).click()
-    await backToList(page)
-    await expect(rows(page)).toHaveCount(3)
+    await expect(page).toHaveURL(/\/setup\/journey$/)
+    track(idFrom(page))
+    const [one] = await query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM programmes WHERE name = $1',
+      [name],
+    )
+    expect(one!.n).toBe(1)
+    // The mocked 500 is the browser's own resource log (4xx logs are ignored).
+    const mocked = consoleErrors.filter((e) => /status of 500/.test(e))
+    expect(mocked).toHaveLength(1)
+    consoleErrors.splice(
+      0,
+      consoleErrors.length,
+      ...consoleErrors.filter((e) => !mocked.includes(e)),
+    )
   })
 })
 
-test.describe('WF04-S02 owner and authorization', () => {
-  test('platform admin chooses the owner from every operational organization; an injected one is refused', async ({
-    page,
-  }) => {
-    await login(page.request, 'ops@example.test')
+test.describe('WF04-S02 owner options (server scope, DEC-W4P-D13)', () => {
+  test('platform admin chooses among active HUB / CHAPTER / CLB only', async ({ page }) => {
+    const club = await clubWithLeader()
+    const archived = await clubWithLeader()
+    await archived.archive()
+    const [company] = await query<{ id: string }>(
+      `SELECT id::text FROM organizations WHERE type::text NOT IN ('HUB', 'CHAPTER', 'CLB') LIMIT 1`,
+    )
+    await login(page.request, ADMIN)
     await openCreate(page)
-    const select = page.locator('select#pc-owner')
-    const options = await select.locator('option').allTextContents()
-    expect(options[0]).toBe('Chọn đơn vị')
-    const ops = await query<{ name: string }>(
-      `SELECT name FROM organizations WHERE type::text IN ('HUB', 'CHAPTER', 'CLB') ORDER BY name, id`,
-    )
-    expect(options.slice(1)).toEqual(ops.map((o) => o.name))
-    for (const name of ['Chapter 01', 'Chapter 02', 'HUB Network']) expect(options).toContain(name)
-    await fill(page, { type: 'Challenge', name: 'Challenge của admin' })
-    await save(page).click()
-    await expect(page.locator('[data-error="organization_id"]')).toHaveText(
-      'Trường này là bắt buộc.',
-    )
-    await page.evaluate(() => {
-      const option = document.createElement('option')
-      option.value = '99999999-0000-4000-8000-000000000000'
-      option.textContent = 'Tổ chức giả'
-      document.querySelector('select#pc-owner')!.append(option)
-    })
-    await select.selectOption('99999999-0000-4000-8000-000000000000')
-    await save(page).click()
-    await expect(page.locator('[data-error="organization_id"]')).toHaveText(
-      'Đơn vị chủ trì không hợp lệ.',
-    )
-    expect(await stored(page, ADMIN_ACCOUNT)).toBeNull()
-    await select.selectOption({ label: 'Chapter 02' })
-    await expect(page.locator('[data-error="organization_id"]')).toHaveCount(0)
-    await save(page).click()
-    await backToList(page)
-    await expect(rows(page)).toHaveCount(3)
-    expect((await cells(page))[0]!.slice(0, 3)).toEqual([
-      'Challenge của admin',
-      'Chapter 02',
-      'Challenge',
-    ])
+    const options = await page
+      .locator('#pc-owner option')
+      .evaluateAll((o) => (o as HTMLOptionElement[]).map((x) => x.value).filter(Boolean))
+    expect(options).toContain(CHAPTER_01)
+    expect(options).toContain(club.id)
+    expect(options).not.toContain(archived.id)
+    if (company) expect(options).not.toContain(company.id)
   })
 
-  test('query / header scope spoofing does not change the owner or grant access', async ({
+  test('a leader whose only organization is ARCHIVED sees the unavailable state; nothing can be saved', async ({
     page,
   }) => {
-    await login(page.request, 'leader@example.test')
-    await page.goto(`/demo/programmes/new?orgId=${CHAPTER_02}&organization_id=${CHAPTER_02}`, {
-      waitUntil: 'networkidle',
-    })
-    await expect(page.locator('#pc-owner')).toHaveText('Chapter 01')
-
-    await page.context().clearCookies()
-    await login(page.request, 'member@example.test')
-    await page.setExtraHTTPHeaders({ 'x-role': 'PLATFORM_ADMIN', 'x-organization-id': CHAPTER_01 })
-    expect((await page.goto(`/demo/programmes/new?orgId=${CHAPTER_01}`))?.status()).toBe(404)
-  })
-
-  test('guest → /auth; incomplete → resolver; member, PROGRAMME_ORGANIZER label → 404; foreign leader owns only its org', async ({
-    page,
-  }) => {
-    await page.goto('/demo/programmes/new')
-    await expect(page).toHaveURL('/auth')
-    await login(page.request, `wf04-s02-incomplete-${Date.now()}@example.test`)
-    await page.goto('/demo/programmes/new')
-    await expect(page).toHaveURL('/onboarding')
-    for (const who of [
-      'member@example.test',
-      (
-        await person({
-          code: 'PROGRAMME_ORGANIZER',
-          scopeType: 'ORGANIZATION',
-          scopeId: CHAPTER_01,
-        })
-      ).email,
-      (await person({ code: 'PROGRAMME_ORGANIZER', scopeType: 'PLATFORM', scopeId: null })).email,
-    ]) {
-      await page.context().clearCookies()
-      await login(page.request, who)
-      expect((await page.goto('/demo/programmes/new'))?.status(), who).toBe(404)
-    }
-    await page.context().clearCookies()
-    const foreign = await person({
-      code: 'HUB_COMMUNITY_LEADER',
-      scopeType: 'ORGANIZATION',
-      scopeId: CHAPTER_02,
-    })
-    await login(page.request, foreign.email)
+    const club = await clubWithLeader()
+    await club.archive()
+    await login(page.request, club.leader)
     await openCreate(page)
-    await expect(page.locator('#pc-owner')).toHaveText('Chapter 02')
-    const html = await (await page.request.get('/demo/programmes/new')).text()
-    expect(html).not.toContain(CHAPTER_01)
-    expect(html).not.toMatch(/@example\.test|30000000-/)
+    await expect(page.locator('[data-state="no-owner"]')).toBeVisible()
+    await expect(save(page)).toBeDisabled()
   })
 })
 
-test.describe('WF04-S02 responsive basics', () => {
+test.describe('WF04-S02 responsive and visual QA', () => {
   test('768 / 390: no page overflow; fields and "Lưu" reachable', async ({ page }) => {
-    await login(page.request, 'leader@example.test')
+    await login(page.request, LEADER)
     for (const [width, height] of [
       [768, 1024],
       [390, 844],
     ] as const) {
       await page.setViewportSize({ width, height })
       await openCreate(page)
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - window.innerWidth,
-      )
-      expect(overflow, `${width}px page overflow`).toBe(0)
+      await expectNoOverflow(page, `${width}px`)
       for (const label of ['Tên', 'Ngày kết thúc']) {
         const field = page.getByLabel(label, { exact: true })
         await field.scrollIntoViewIfNeeded()
@@ -460,39 +259,11 @@ test.describe('WF04-S02 responsive basics', () => {
       await page.screenshot({ path: path.join(ACTUAL, `wf04-s02-${width}.png`), fullPage: true })
     }
   })
-})
 
-async function textRects(page: Page): Promise<Rect[]> {
-  return page.evaluate(() => {
-    const rects: { x: number; y: number; width: number; height: number }[] = []
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-    while (walker.nextNode()) {
-      if (!walker.currentNode.textContent!.trim()) continue
-      const range = document.createRange()
-      range.selectNodeContents(walker.currentNode)
-      for (const r of range.getClientRects())
-        rects.push({ x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 })
-    }
-    for (const input of document.querySelectorAll('input, textarea')) {
-      const r = input.getBoundingClientRect()
-      rects.push({ x: r.x + 12, y: r.y + 12, width: r.width - 24, height: r.height - 24 })
-    }
-    return rects
-  })
-}
-
-test.describe('WF04-S02 visual QA (approved primitives; no WF04 bitmap)', () => {
-  test('1440×900 default, validation and filled: typography; input and header match the approved sources', async ({
-    page,
-  }) => {
-    await login(page.request, 'leader@example.test')
+  test('1440×900: typography; input and header match the approved sources', async ({ page }) => {
+    await login(page.request, LEADER)
     await openCreate(page)
     await settle(page)
-    expect((await assertTypography(page)).violations).toEqual([])
-    await page.screenshot({ path: path.join(ACTUAL, 'wf04-s02-default-1440x900.png') })
-    await save(page).click()
-    await expect(page.locator('[data-error="name"]')).toBeVisible()
-    await page.screenshot({ path: path.join(ACTUAL, 'wf04-s02-validation-1440x900.png') })
     await fill(page, {
       type: 'Challenge',
       name: 'Thử thách mẫu',
@@ -500,20 +271,32 @@ test.describe('WF04-S02 visual QA (approved primitives; no WF04 bitmap)', () => 
       start: '2026-10-01',
       end: '2026-12-31',
     })
-    await expect(page.locator('[data-error="name"]')).toHaveCount(0)
     const typography = await assertTypography(page)
     expect(typography.violations).toEqual([])
     await page.screenshot({ path: path.join(ACTUAL, 'wf04-s02-filled-1440x900.png') })
     const actual = decodePng(await page.screenshot())
-
     const { screens } = loadManifest()
     const s02 = readPng(path.join(REPO_ROOT, findScreen(screens, 'WF02-S02').viewport_baseline))
     const adm5 = readPng(path.join(REPO_ROOT, findScreen(screens, 'WF03-S05').full_page_baseline!))
     const name = (await page.getByLabel('Tên', { exact: true }).boundingBox())!
     const nx = Math.round(name.x) - 64
     const ny = Math.round(name.y) - 140
-    const mask = await textRects(page)
-    // WF02-S02 input: 64..923 × 140..191, #e3dddd on the #efefef canvas.
+    const mask: Rect[] = await page.evaluate(() => {
+      const rects: { x: number; y: number; width: number; height: number }[] = []
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+      while (walker.nextNode()) {
+        if (!walker.currentNode.textContent!.trim()) continue
+        const range = document.createRange()
+        range.selectNodeContents(walker.currentNode)
+        for (const r of range.getClientRects())
+          rects.push({ x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 })
+      }
+      for (const input of document.querySelectorAll('input, textarea')) {
+        const r = input.getBoundingClientRect()
+        rects.push({ x: r.x + 12, y: r.y + 12, width: r.width - 24, height: r.height - 24 })
+      }
+      return rects
+    })
     const inputs = compareSegments(
       s02,
       actual,
@@ -557,9 +340,9 @@ test.describe('WF04-S02 visual QA (approved primitives; no WF04 bitmap)', () => 
       name_input: name,
       intentional: [
         {
-          class: 'INTENTIONAL-DEMO',
+          class: 'INTENTIONAL',
           reason:
-            'DEC-WF04-H1 / S02-D1: WF02-S02/S05 field language inside the demo frame; header "Huỷ" / "Lưu" in the ADM5 button family; no WF04 pixel parity claimed',
+            'DEC-WF04-H1 / S02-D1: WF02-S02/S05 field language; WF04-PROD-04 removes the demo notice (contract §16); pixel reference method is contract Q9 (PROD-06)',
         },
       ],
       typography,

@@ -1,52 +1,82 @@
 'use client'
 
 import Link from 'next/link'
-import { Fragment, useState, type ReactNode } from 'react'
+import { Fragment, useCallback, useRef, useState, type ReactNode } from 'react'
 
 import { Notice } from '@/components/ui'
+import { apiRequest } from '@/lib/api/client'
+import { isApiError } from '@/lib/api/errors'
+import { authWithReturn } from '@/lib/auth/return-path'
 import { INERT_REASONS } from '@/lib/member/nav'
 import { STATUS_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
 import type { EditResult } from '@/lib/programme-demo/journey'
-import type { OrganizationAllowance } from '@/lib/programme-demo/readiness'
 import { demoRoutes, type SetupStep } from '@/lib/programme-demo/routes'
-import { effectiveDetail, inAllowance } from '@/lib/programme-demo/session-store'
-import type { ProgrammeDemoDetail, ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
+import type { ProgrammeDemoDetail } from '@/lib/programme-demo/types'
+import type { ProgrammeDetailDTO } from '@/lib/programme/types'
+import { patchFor, toScreen, type ProgrammeScreen } from '@/lib/programme/view'
 
 import buttons from './demo-buttons.module.css'
 import { DemoPage } from './demo-page'
-import { useProgrammeDemo } from './demo-store'
 import styles from './journey.module.css'
 import { SetupStepper } from './setup-stepper'
 
 /**
- * WF04 — the frame of every setup step (DEC-WF04-S03-D2/D3, DEC-WF04-S04-D3):
- * resolves the programme (the server fixture or the actor's session draft,
- * inside the actor's allowance), shows loading / not-found / a read error with
- * "Thử lại" (DEC-WF04-S06-D2), the header with back / next, the stepper, and a
- * save error with "Thử lại". `apply` stores
- * one atomic edit of the session copy; nothing reaches the server. "Đặt lại
- * demo" re-mounts the step body and drops a pending retry, so no open editor
- * or failed save outlives the reset.
+ * WF04 — the frame of every setup step and the detail page (DEC-WF04-S03-D2/D3,
+ * S04-D3; WF04-PROD-04). The programme comes from the server-rendered page
+ * (`GET /programmes/{id}` semantics, the actor's scope); every change goes to
+ * the canonical API and the screen shows what the server returns, never an
+ * optimistic copy. One request at a time.
+ *
+ * States: read only (closed or archived programme, archived owner — the
+ * server's `actions`), a save error with "Thử lại" (same request, same
+ * Idempotency-Key), invalid data (422), a conflict (409: the programme is
+ * re-read and the reason shown), not found (404 / 403), and an expired session
+ * (401: back through sign-in to this page).
  */
 
 export type Applied<E> = { ok: boolean; errors?: E }
-export type Apply = <E>(result: EditResult<E> | { ok: false; reason: string }) => Applied<E>
+/** One edit the screen computed with the shared rules; persisted through PATCH. */
+export type Apply = <E>(
+  result: EditResult<E> | { ok: false; reason: string },
+) => Promise<Applied<E>>
+export type SendRequest = {
+  path: string
+  method: 'PATCH' | 'PUT' | 'POST'
+  body?: unknown
+  idempotencyKey?: string
+}
+export type Sent = { ok: boolean; fields?: Record<string, string> }
+/** A direct request (registration, publish, close) whose answer replaces the screen's data. */
+export type Send = (request: SendRequest) => Promise<Sent>
+
+type Failure = { kind: 'retry'; request: SendRequest } | { kind: 'invalid' } | { kind: 'conflict' }
 
 const COPY = {
   next: 'Tiếp theo',
-  loading: 'Đang tải…',
   missingTitle: 'Không tìm thấy chương trình',
-  missing: 'Không tìm thấy chương trình này trong bản demo của bạn.',
+  missing: 'Không tìm thấy chương trình này hoặc bạn không còn quyền xem.',
   toList: 'Về danh sách',
   failed: 'Chưa lưu được thay đổi. Vui lòng thử lại.',
-  readFailedTitle: 'Chưa tải được dữ liệu',
-  readFailed: 'Trình duyệt chưa cho đọc dữ liệu demo của phiên này.',
+  invalid: 'Chưa lưu được: dữ liệu chưa hợp lệ.',
+  conflict:
+    'Chưa lưu được vì chương trình vừa thay đổi (ví dụ đã xuất bản hoặc đã đóng). Dữ liệu mới nhất đã được tải lại.',
   retry: 'Thử lại',
+  closed: 'Chương trình đã đóng nên chỉ xem được.',
+  archived: 'Chương trình đã lưu trữ nên chỉ xem được.',
+  ownerArchived: 'Đơn vị chủ trì đã ngừng hoạt động nên chương trình chỉ xem được.',
 } as const
 
+/** Why the programme is read only, or null when it can be edited. */
+export function readOnlyReason(detail: ProgrammeScreen): string | null {
+  if (detail.actions.edit) return null
+  if (detail.owner_archived) return COPY.ownerArchived
+  if (detail.programme.status === 'CLOSED') return COPY.closed
+  if (detail.programme.status === 'ARCHIVED') return COPY.archived
+  return null
+}
+
 export function SetupScreen({
-  id,
-  server,
+  initial,
   step,
   screen,
   back,
@@ -54,8 +84,7 @@ export function SetupScreen({
   actions,
   children,
 }: {
-  id: string
-  server: ProgrammeDemoDetailDTO | null
+  initial: ProgrammeDetailDTO
   /** The setup step; none on the detail page (no stepper). */
   step?: SetupStep
   screen: string
@@ -63,57 +92,77 @@ export function SetupScreen({
   /** The next step's route, or null while it is not built (disabled with its reason). */
   next?: string | null
   /** Replaces the back / next pair (the detail page's own actions). */
-  actions?: (detail: ProgrammeDemoDetailDTO) => ReactNode
-  children: (context: {
-    detail: ProgrammeDemoDetailDTO
-    apply: Apply
-    allowance: OrganizationAllowance
-  }) => ReactNode
+  actions?: (detail: ProgrammeScreen, send: Send) => ReactNode
+  children: (context: { detail: ProgrammeScreen; apply: Apply; send: Send }) => ReactNode
 }) {
-  const { state, allowance, ready, save, readFailed, reread, generation } = useProgrammeDemo()
-  const [failedSave, setFailedSave] = useState<{
-    copy: ProgrammeDemoDetailDTO
-    generation: number
-  } | null>(null)
-  // A save that failed before a reset is not retried over the reset state.
-  const retry = failedSave?.generation === generation ? failedSave.copy : null
+  const [detail, setDetail] = useState<ProgrammeScreen>(() => toScreen(initial))
+  const [failure, setFailure] = useState<Failure | null>(null)
+  const [missing, setMissing] = useState(false)
   // A successful retry re-mounts the step body, so the editor that failed closes.
   const [epoch, setEpoch] = useState(0)
+  const pending = useRef(false)
+  const path = `/programmes/${encodeURIComponent(initial.programme.id)}`
 
-  if (!ready) {
-    return (
-      <div data-screen={screen}>
-        <DemoPage title={COPY.loading}>
-          <p className="type-body-sm" data-state="setup-loading">
-            {COPY.loading}
-          </p>
-        </DemoPage>
-      </div>
-    )
+  const refresh = useCallback(async () => {
+    try {
+      setDetail(toScreen(await apiRequest<ProgrammeDetailDTO>(path)))
+    } catch (error) {
+      if (isApiError(error) && (error.status === 404 || error.status === 403)) setMissing(true)
+    }
+  }, [path])
+
+  const send: Send = useCallback(
+    async (request) => {
+      if (pending.current) return { ok: false }
+      pending.current = true
+      try {
+        const response = await apiRequest<ProgrammeDetailDTO>(request.path, {
+          method: request.method,
+          body: request.body,
+          idempotencyKey: request.idempotencyKey,
+        })
+        setDetail(toScreen(response))
+        setFailure(null)
+        return { ok: true }
+      } catch (error) {
+        if (!isApiError(error) || error.status >= 500) {
+          setFailure({ kind: 'retry', request })
+          return { ok: false }
+        }
+        if (error.status === 401) {
+          window.location.assign(authWithReturn(window.location.pathname))
+          return { ok: false }
+        }
+        if (error.status === 404 || error.status === 403) {
+          setMissing(true)
+          return { ok: false }
+        }
+        if (error.status === 409) {
+          await refresh()
+          setFailure({ kind: 'conflict' })
+          return { ok: false }
+        }
+        setFailure({ kind: 'invalid' })
+        return { ok: false, fields: error.fields }
+      } finally {
+        pending.current = false
+      }
+    },
+    [refresh],
+  )
+
+  const apply: Apply = async (result) => {
+    if (!result.ok) {
+      return 'errors' in result && result.reason === 'invalid'
+        ? { ok: false, errors: result.errors }
+        : { ok: false }
+    }
+    const body = patchFor(detail, result.detail as ProgrammeDemoDetail)
+    if (Object.keys(body).length === 0) return { ok: true }
+    return { ok: (await send({ path, method: 'PATCH', body })).ok }
   }
 
-  if (readFailed) {
-    return (
-      <div data-screen={screen}>
-        <DemoPage title={COPY.readFailedTitle}>
-          <div className={styles.missing} role="alert" data-state="setup-read-failed">
-            <p className="type-body-sm">{COPY.readFailed}</p>
-            <button
-              type="button"
-              className={`weight-medium ${buttons.secondary}`}
-              onClick={reread}
-              data-action="reread"
-            >
-              {COPY.retry}
-            </button>
-          </div>
-        </DemoPage>
-      </div>
-    )
-  }
-
-  const detail = effectiveDetail(state, id, server ?? undefined)
-  if (!detail || !inAllowance(detail, allowance)) {
+  if (missing) {
     return (
       <div data-screen={screen}>
         <DemoPage title={COPY.missingTitle}>
@@ -129,27 +178,7 @@ export function SetupScreen({
   }
 
   const { programme, organization } = detail
-  const store = (copy: ProgrammeDemoDetailDTO) => {
-    if (save(copy)) {
-      setFailedSave(null)
-      return true
-    }
-    setFailedSave({ copy, generation })
-    return false
-  }
-  const apply: Apply = (result) => {
-    if (!result.ok) {
-      return 'errors' in result && result.reason === 'invalid'
-        ? { ok: false, errors: result.errors }
-        : { ok: false }
-    }
-    const copy: ProgrammeDemoDetailDTO = {
-      ...(result.detail as ProgrammeDemoDetail),
-      organization,
-      demo: true,
-    }
-    return { ok: store(copy) }
-  }
+  const readOnly = readOnlyReason(detail)
 
   return (
     <div data-screen={screen} data-programme-type={programme.type}>
@@ -158,7 +187,7 @@ export function SetupScreen({
         meta={`${TYPE_LABEL[programme.type]} · ${STATUS_LABEL[programme.status]} · ${organization.name}`}
         actions={
           actions ? (
-            actions(detail)
+            actions(detail, send)
           ) : (
             <div className={buttons.group}>
               {back ? (
@@ -197,7 +226,13 @@ export function SetupScreen({
             <SetupStepper current={step} />
           </div>
         ) : null}
-        {retry ? (
+        {/* The detail page states the lifecycle in its own status block. */}
+        {readOnly && step ? (
+          <div className={styles.notice} data-state="read-only">
+            <Notice>{readOnly}</Notice>
+          </div>
+        ) : null}
+        {failure?.kind === 'retry' ? (
           <div
             className={`${styles.notice} ${styles.failed}`}
             role="alert"
@@ -207,8 +242,8 @@ export function SetupScreen({
             <button
               type="button"
               className={`weight-medium ${buttons.secondary}`}
-              onClick={() => {
-                if (store(retry)) setEpoch((e) => e + 1)
+              onClick={async () => {
+                if ((await send(failure.request)).ok) setEpoch((e) => e + 1)
               }}
               data-action="retry"
             >
@@ -216,7 +251,18 @@ export function SetupScreen({
             </button>
           </div>
         ) : null}
-        <Fragment key={`${generation}.${epoch}`}>{children({ detail, apply, allowance })}</Fragment>
+        {failure?.kind === 'invalid' || failure?.kind === 'conflict' ? (
+          <div
+            className={`${styles.notice} ${styles.failed}`}
+            role="alert"
+            data-state={failure.kind === 'invalid' ? 'save-invalid' : 'save-conflict'}
+          >
+            <Notice tone="error">
+              {failure.kind === 'invalid' ? COPY.invalid : COPY.conflict}
+            </Notice>
+          </div>
+        ) : null}
+        <Fragment key={epoch}>{children({ detail, apply, send })}</Fragment>
       </DemoPage>
     </div>
   )
@@ -229,12 +275,14 @@ export function Confirm({
   no,
   onYes,
   onNo,
+  busy,
 }: {
   text: string
   yes: string
   no: string
   onYes: () => void
   onNo: () => void
+  busy?: boolean
 }) {
   return (
     <div className={styles.confirm} role="group" aria-label={text} data-confirm>
@@ -243,6 +291,8 @@ export function Confirm({
         type="button"
         className={`weight-medium ${buttons.primary}`}
         onClick={onYes}
+        disabled={busy}
+        aria-busy={busy || undefined}
         data-confirm="yes"
       >
         {yes}

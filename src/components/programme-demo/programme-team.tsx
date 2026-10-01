@@ -2,15 +2,18 @@
 
 import { TEAM_ROLE_LABEL } from '@/lib/programme-demo/copy'
 import { demoRoutes } from '@/lib/programme-demo/routes'
-import type { ProgrammeDemoDetailDTO } from '@/lib/programme-demo/types'
+import type { ProgrammeDetailDTO } from '@/lib/programme/types'
+import type { ProgrammeScreen } from '@/lib/programme/view'
 
 import styles from './journey.module.css'
 import { SetupScreen } from './setup-screen'
 import pill from './status-pill.module.css'
 
 /**
- * WF04-S06 — operating team (DEC-WF04-H2, DEC-WF04-S06-D1..D3). DISPLAY ONLY:
- * the programme's team rows from the fixture / session copy — display name
+ * WF04-S06 — operating team (DEC-WF04-H2, DEC-WF04-S06-D1..D3). DISPLAY ONLY.
+ * WF04-PROD-04: the canonical model has no programme team source in v1
+ * (contract Q4, deferred), so the list is empty; when one exists the rows are
+ * display name
  * and the PROGRAMME_ORGANIZER display label, nothing else. No invite, add,
  * remove, role or permission control: this page changes no RoleAssignment,
  * membership, leadership or profile, and a label grants nothing. Back →
@@ -26,17 +29,10 @@ const COPY = {
   role: 'Vai trò',
 } as const
 
-export function ProgrammeTeam({
-  id,
-  server,
-}: {
-  id: string
-  server: ProgrammeDemoDetailDTO | null
-}) {
+export function ProgrammeTeam({ id, initial }: { id: string; initial: ProgrammeDetailDTO }) {
   return (
     <SetupScreen
-      id={id}
-      server={server}
+      initial={initial}
       step="team"
       screen="WF04-S06"
       back={{ href: demoRoutes.setup(id, 'registration'), label: COPY.back, nav: 'team-back' }}
@@ -47,7 +43,7 @@ export function ProgrammeTeam({
   )
 }
 
-function TeamBody({ detail }: { detail: ProgrammeDemoDetailDTO }) {
+function TeamBody({ detail }: { detail: ProgrammeScreen }) {
   const team = detail.team
   return (
     <section className={styles.card} aria-labelledby="operating-team" data-operating-team>

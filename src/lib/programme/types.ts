@@ -77,6 +77,20 @@ export type ProgrammeSummaryDTO = ProgrammeDTO & {
   counts: { stages: number; events: number; problem_statements: number | null }
 }
 
+/**
+ * What the caller may do next, computed by the server (API 05 §16 item 8) so a
+ * screen never re-derives a rule. False for every action on a programme whose
+ * owning organization is ARCHIVED (DEC-W4P-D13).
+ */
+export type ProgrammeActions = {
+  /** Basic fields, stages, problem statements: DRAFT or PUBLISHED. */
+  edit: boolean
+  /** The registration form: editable and no application yet (Q3). */
+  registration: boolean
+  publish: boolean
+  close: boolean
+}
+
 export type ProgrammeDetailDTO = {
   programme: ProgrammeDTO
   organization: OrganizationRefDTO
@@ -86,4 +100,7 @@ export type ProgrammeDetailDTO = {
   events: ProgrammeEventDTO[]
   /** Null until a registration form is configured. */
   registration: ProgrammeRegistrationDTO | null
+  /** The owning organization is ARCHIVED: the programme is read only. */
+  owner_archived: boolean
+  actions: ProgrammeActions
 }

@@ -25,6 +25,7 @@ export function DemoPage({
   actions?: ReactNode
   children?: ReactNode
 }) {
+  const { notice } = useDemoFrame()
   return (
     <div className={styles.page} data-demo-page>
       <header className={styles.header}>
@@ -39,7 +40,7 @@ export function DemoPage({
         {actions}
       </header>
       <div className={styles.body}>
-        <DemoNotice />
+        {notice === false ? null : <DemoNotice />}
         <DemoFlash />
         {children ? <div className={styles.content}>{children}</div> : null}
       </div>
@@ -49,9 +50,11 @@ export function DemoPage({
 
 /** "Dữ liệu demo" + reset with an inline confirmation (the WF02 settings pattern). */
 export function DemoNotice() {
-  const { reset, copy } = useDemoFrame()
+  const frame = useDemoFrame()
   const [confirming, setConfirming] = useState(false)
   const [done, setDone] = useState(false)
+  if (frame.notice === false) return null
+  const { reset, copy } = frame
   return (
     <section className={styles.notice} aria-label={copy.noticeEyebrow} data-demo-notice>
       <div className={styles.noticeText}>
