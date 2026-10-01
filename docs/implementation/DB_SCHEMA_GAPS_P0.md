@@ -24,7 +24,8 @@ Evidence is a **live PostgreSQL 17.6 introspection**, not a documentation readin
 | `membership_state` | PENDING_APPROVAL, ACTIVE, REJECTED, WITHDRAWN, SUSPENDED, ALUMNI | **new in 002** |
 | `leadership_state` | ACTIVE, ALUMNI, REVOKED | **new in 002** |
 | `record_state` | PENDING_APPROVAL, ACTIVE, REJECTED, CLOSED | unchanged, still used by 4 tables |
-| `publication_status` | DRAFT, PUBLISHED, ARCHIVED | unchanged, still used by organizations and programmes |
+| `publication_status` | DRAFT, PUBLISHED, ARCHIVED | unchanged, still used by organizations; programmes moved to `programme_status` in 015 |
+| `programme_status` | DRAFT, PUBLISHED, CLOSED, ARCHIVED | **new in 015** (WF04-PROD-02); CLOSED added, ARCHIVED carried over for compatibility only, DEFERRED (DEC-W4P-D11) |
 | `org_type` | HUB, CHAPTER, CLB, COMPANY, FUND, PARTNER |
 | `project_status` | DRAFT, ACTIVE, ARCHIVED |
 | `project_type` | PROJECT, STARTUP |
@@ -110,7 +111,7 @@ Clean, no action needed: `visibility_level`, `consent_type`, `programme_type`, `
 
 | # | Gap | Source |
 |---|---|---|
-| D1 | `programme_status` missing CLOSED | SOT:210 |
+| D1 | `programme_status` missing CLOSED — **RESOLVED by 015** (WF04-PROD-02, DEC-W4P-D11) | SOT:210 |
 | D2 | `org_type` missing SCHOOL | SOT:88 |
 | D3 | feedback `RECEIVED` not in enum | API:690 vs migration |
 | D4 | vocabulary `code` vs `slug` naming | API:723 vs migration |

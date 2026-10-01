@@ -53,7 +53,7 @@ Existing roles only (A03 §4 P0: `HUB_COMMUNITY_LEADER`, `PLATFORM_ADMIN`). D02 
 | Create | DENY | DENY | ALLOW for an owning org in scope (`programme:manage`) | ALLOW (HUB / CHAPTER / CLB) |
 | Edit (basic, journey, problems, registration) | DENY | DENY | ALLOW (`programme:manage`) | ALLOW |
 | Publish | DENY | DENY | ALLOW (`programme:manage`) | ALLOW |
-| Close / archive | DENY | DENY | same actor when decided (Q2) | same actor when decided (Q2) |
+| Close (archive DEFERRED, DEC-W4P-D11) | DENY | DENY | same actor when decided (Q2) | same actor when decided (Q2) |
 | Challenge manage (problem statements) | DENY | DENY | ALLOW (`programme:manage`, CHALLENGE only) | ALLOW |
 | Apply / register | DENY 401 | owner of an eligible venture (API §21, relation rule) | as member | as member |
 | Read applications | DENY | own only (API §21) | DENY (HD-A13) | DENY (HD-A13) |
@@ -65,8 +65,8 @@ Every write re-checks session, onboarding DONE, `programme:manage` on the stored
 |---|---|---|---|---|---|---|
 | DRAFT | SOT:209-210 | §8.4 DTO `status` | `publication_status` (M001:12) | demo create | S02, S07, UAT | Yes |
 | PUBLISHED | yes | §8.4, §21 (apply needs it) | yes | demo publish | S07, S08, UAT | Yes |
-| CLOSED | yes | none (DEC-L5-D3 cites "programme closed" 409; §21 returns 404 for non-PUBLISHED) | **missing** (gap D1 DEFERRED) | constant only (`types.ts:25`) | none | Yes in the DB enum (aligns SOT); transition Q2 |
-| ARCHIVED | yes | none | yes | constant only | none | Yes in the DB enum; transition Q2 |
+| CLOSED | yes | none (DEC-L5-D3 cites "programme closed" 409; §21 returns 404 for non-PUBLISHED) | `programme_status` (M015, PROD-02; was missing, gap D1) | constant only (`types.ts:25`) | DB only (PROD-02) | Yes, approved P0 state (DEC-W4P-D11); transition Q2 |
+| ARCHIVED | yes | none | yes since M001 (`publication_status`), carried over by M015 for compatibility only | constant only | none | **DEFERRED** (DEC-W4P-D11): not approved for this release; no transition, API, UI or filtering |
 
 | From | To | Actor | Rule | API | Persistence |
 |---|---|---|---|---|---|
@@ -74,7 +74,9 @@ Every write re-checks session, onboarding DONE, `programme:manage` on the stored
 | DRAFT | PUBLISHED | `programme:manage` on the owning org | §8 publish rules; atomic, row-locked; repeat → 409 | `POST /api/v1/programmes/{id}/publish` | status, audit `PROGRAMME_PUBLISHED` |
 | PUBLISHED | DRAFT | — | no transition in SOT or demo: always 409 | — | — |
 | PUBLISHED | CLOSED | (D02 actor) | MISSING_BUSINESS_DECISION (Q2) | — | — |
-| CLOSED / PUBLISHED / DRAFT | ARCHIVED | (D02 actor) | MISSING_BUSINESS_DECISION (Q2) | — | — |
+| CLOSED / PUBLISHED / DRAFT | ARCHIVED | — | DEFERRED (DEC-W4P-D11) | — | — |
+
+PO lifecycle clarification of 02/10 ([DEC-W4P-D11](../../decisions/DECISION_LOG.md#dec-w4p-d11)): CLOSED is approved for P0; **ARCHIVED = DEFERRED**. ARCHIVED stays in the DB only because the column has accepted it since M001; it is not added for WF04 and nothing writes or reads it.
 
 Edits in DRAFT and PUBLISHED are allowed as in the approved demo (basic, journey, problems); type and owner never. Registration edits on a programme that already has applications: Q3.
 
@@ -107,7 +109,7 @@ FROZEN (D07): the approved relationship is `events.programme_id` (SOT §4, DB M0
 | Relation | Table / key | Cardinality | Ownership | Visibility | Migration |
 |---|---|---|---|---|---|
 | Organization → Programme | `programmes.organization_id` → `organizations.id` | 1 – * | owning org | operator: `programme:read` | NOT NULL + check (PROD-02) |
-| Programme status | `programmes.status` | 1 | aggregate | as programme | new `programme_status` enum DRAFT / PUBLISHED / CLOSED / ARCHIVED (PROD-02; `publication_status` stays for organizations) |
+| Programme status | `programmes.status` | 1 | aggregate | as programme | new `programme_status` enum DRAFT / PUBLISHED / CLOSED; ARCHIVED only carried over from `publication_status` for compatibility, DEFERRED (DEC-W4P-D11) (M015; `publication_status` stays for organizations) |
 | Programme dates | `starts_at`, `ends_at` | 1 | aggregate | as programme | CHECK `ends_at >= starts_at` when both set (PROD-02) |
 | Programme → stages | `programmes.metadata.journey` `{schema_version 1, stages [{id, position, name, summary, starts_on, ends_on}]}` | 1 – * | aggregate | operator | none |
 | Challenge → problem statements | `programmes.metadata.challenge` `{schema_version 1, problem_statements [{id, title, summary}]}` | 1 – * | aggregate (CHALLENGE only) | operator | none |
@@ -132,7 +134,7 @@ Proposed **Amendment A5** to `05_API_CONTRACT_P0` (supersedes §15 for the v1 sc
 | Registration | WF05 reads the form only | `programme_application_forms` | write + version bump; Q3 mapping | Yes: `PUT /programmes/{id}/registration` |
 | Publish | none | `publishProgramme` checklist as §8 | row lock, state check, Idempotency-Key `programme.publish`, audit | Yes: `POST /programmes/{id}/publish` |
 | Events (read) | WF03 `GET /ops/organizations/{orgId}/events` (standalone only) | EventDTO | none: included read-only in the detail | No |
-| Events (write), close / archive, team | — | — | — | Q1, Q2, Q4 |
+| Events (write), close, team | — | — | — | Q1, Q2, Q4 (archive DEFERRED, DEC-W4P-D11) |
 | Unit list (WF03-S05) | `GET /ops/organizations/{orgId}/programmes` (contract, no handler) | — | stays FUTURE (DEC-WF03-G12) | No |
 | Demo API | `/api/v1/demo/programmes*` | — | removed from production runtime (D09); test / local only | — |
 
@@ -204,7 +206,7 @@ Historical records are not rewritten; each row is a proposal the owner applies w
 | # | Decision | Class | Must be decided before |
 |---|---|---|---|
 | Q1 | S04 programme events: extend the WF03 event service to accept `programme_id` under a WF04 scope rule (changes a protected WF03 rule), or keep S04 read-only in v1 (removes its add / edit / delete) | NON_BLOCKING | PROD-03 |
-| Q2 | Close and archive in v1: PUBLISHED → CLOSED, → ARCHIVED, discarding a DRAFT (no demo behaviour exists) | NON_BLOCKING | PROD-03 |
+| Q2 | Close in v1: actor and rules of PUBLISHED → CLOSED (the CLOSED state is approved, DEC-W4P-D11), discarding a DRAFT (no demo behaviour exists); archive is DEFERRED | NON_BLOCKING | PROD-03 |
 | Q3 | Registration mapping: `required` and `step` for operator questions; INDIVIDUAL (default canonical TEAM / STARTUP); question edits once applications exist | NON_BLOCKING | PROD-03 |
 | Q4 | S06 content without a programme role: read-only list of the owning org's leaders, or an empty / hidden step | NON_BLOCKING | PROD-04 |
 | Q5 | Operator application counts (DRAFT / SUBMITTED aggregates) or none (HD-A13) | NON_BLOCKING | PROD-04 |
@@ -219,7 +221,7 @@ DEFERRED: §2 list.
 ## 20. PROD-02 → PROD-07 execution plan
 | Task | Objective | Depends on | STOP gate |
 |---|---|---|---|
-| PROD-02 DB / persistence | migration `015_p0_programme_production.sql`: `programme_status` enum (DRAFT, PUBLISHED, CLOSED, ARCHIVED) and `programmes.status` converted with existing values; `organization_id` NOT NULL after a data check; `ends_at >= starts_at` CHECK; documented `metadata.journey` / `metadata.challenge` schema (no table); test data through the API or a test-only seed block (never production); schema DB tests; rollback note | PO approval of this contract | any existing row violating a new constraint; any WF03 / WF05 table touched |
+| PROD-02 DB / persistence | migration `015_p0_programme_production.sql`: `programme_status` enum (DRAFT, PUBLISHED, CLOSED; ARCHIVED only carried over for compatibility, DEFERRED, DEC-W4P-D11) and `programmes.status` converted with existing values; `organization_id` NOT NULL after a data check; `ends_at >= starts_at` CHECK; documented `metadata.journey` / `metadata.challenge` schema (no table); test data through the API or a test-only seed block (never production); schema DB tests; rollback note | PO approval of this contract | any existing row violating a new constraint; any WF03 / WF05 table touched |
 | PROD-03 API / RBAC / validation | A5 endpoints; `programme:manage` in matrix doc, code, test; audit and idempotency (§14); server rules from `basic-info`, `journey`, `registration`, `readiness`; malformed-id 404; Q1 / Q2 / Q3 / Q7 applied | PROD-02, Q1–Q3, Q7, Q10 | WF01–WF03 regression not green |
 | PROD-04 Frontend fixture → API | screens read / write the API; demo frame, reset and session store removed; §16 states; Q4–Q6 | PROD-03 | any approved-UI change beyond §16 |
 | PROD-05 Functional / security QA | §17 rows; rewritten "nothing written" specs; WF05 suite | PROD-04 | any 5xx, #418, authz or IDOR failure |

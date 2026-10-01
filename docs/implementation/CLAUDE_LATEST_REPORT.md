@@ -1,41 +1,44 @@
 # Claude Task Report
 
 ## Task
-P3 UX CLEANUP — CLOSE BD-01 ONLY. Decision: [DEC-P3UX-D5](../decisions/DECISION_LOG.md#dec-p3ux-d5); batch report: [reports/P3-INTERACTION-UX-CLEANUP.md](reports/P3-INTERACTION-UX-CLEANUP.md); registry: [reports/INTERACTION_ACTION_REGISTRY.md](reports/INTERACTION_ACTION_REGISTRY.md).
+WF04-PROD-02 — DB / persistence hardening. Contract: [WF04_PRODUCTION_CONTRACT.md](reports/WF04_PRODUCTION_CONTRACT.md); PO lifecycle decision: [DEC-W4P-D11](../decisions/DECISION_LOG.md#dec-w4p-d11); task report: [reports/WF04-PROD-02_db-persistence-hardening.md](reports/WF04-PROD-02_db-persistence-hardening.md).
 
 ## Verdict
-**GREEN, not deployed.** One auth surface: `/auth` heading "Đăng nhập & đăng ký". MISLEADING_UI 3 → 0; WRONG_* 0; BROKEN 0. Production still runs `be5c0cc`. STOP.
+**GREEN, local only.** Migration 015 gives the canonical Programme aggregate its production persistence foundation; no runtime, API, UI, seed or production change. Not pushed, not deployed; PROD-03 not started. STOP.
 
 ## Scope implemented
-- `auth-entry-form.tsx`: the heading reads "Đăng nhập & đăng ký". "Tạo tài khoản" and "Đăng nhập" keep `/auth`.
-- Not changed: e-mail authentication, magic link, callback, session, onboarding, account creation; no `/signup`, `/login` alias or mode parameter.
+- `programme_status` (DRAFT, PUBLISHED, CLOSED, ARCHIVED): CLOSED added (approved); ARCHIVED carried over from `publication_status` (present since M001) for compatibility only, DEFERRED.
+- `programmes.organization_id` NOT NULL (the one owning organization; FK of 001 reused).
+- `ck_programmes_dates` (end ≥ start when both set); `ck_programmes_metadata` (documented `journey` / `challenge` shape, `challenge` on CHALLENGE only, no cardinality rule).
+- Data check that STOPS the whole migration on any row it cannot carry; identity status mapping, no coercion.
 
 ## Files changed
-- App: `src/app/(auth)/auth/auth-entry-form.tsx`.
-- Tests: `wf01-s01-auth-entry.spec.ts` (heading; AUTH1 pixel excludes the heading text, intentional copy), `alpha-interaction-gaps.spec.ts` (+1 BD-01 test).
-- Docs: DECISION_LOG (DEC-P3UX-D5), registry (md + csv), batch report, this report.
+- Migration: `db/migrations/015_p0_programme_production.sql` (new).
+- Tests: `src/lib/db/programme-persistence.db-test.ts` (new, 21), `src/lib/db/schema.db-test.ts` (ledger + 015).
+- Docs: contract §5, §6, §11, §12, §19, §20 (ARCHIVED = DEFERRED); DECISION_LOG (DEC-W4P-D11, C1); `DB_SCHEMA_GAPS_P0.md` (D1 resolved, enum table); task report; this report.
 
 ## Migrations / data
-None.
+`015_p0_programme_production.sql`, one transaction, writes no row. Local dev DB upgraded 013 → 014 → 015 with every row digest identical (18 applications kept). Production DB not touched.
 
 ## Tests / build
-format, lint, typecheck, unit 259/259, build: PASS. Auth and interaction specs 166/166 (WF01 S01–S04, e-mail magic link, L1 UAT journey, interaction 15, landing, auth session, shell routes, console health, typography); UAT L1–L2 19/19 (sign-up, sign-in, onboarding). Targeted re-audit: `/auth`, `/auth?redirect=`, `/`, `/about`. Runtime: hydration 0, console 0.
+format, lint, typecheck PASS; unit 34 files / 263; build PASS; DB suite 33 files / 483 (new 21); visual WF01–WF05 55 specs / 613; UAT 19/19; PostgreSQL restart check PASS. No failure, no flaky test.
 
 ## Visual QA
-No baseline changed; AUTH1 records the heading as intentional copy and compares the card around it. The heading fits on one line at 1440 and 390.
+No UI change; no baseline touched; the 613 visual tests pass unchanged.
 
 ## Deviations / blockers
-- The submit button keeps "Gửi liên kết đăng nhập" (only the heading was in scope).
-- Remaining MISSING_BUSINESS_DECISION: "Triển khai chương trình" (4 elements), untouched.
+- None blocking. ARCHIVED stays in the column domain because it pre-dates WF04 (PO rule: preserve, report, do not create).
+- Not encoded in the DB (no frozen basis for this phase): owner type HUB / CHAPTER / CLB and owner / type immutability (PROD-03 service); CHALLENGE ≥ 1 problem, required dates / stages / form (Q7).
+- Compatibility-only runtime changes: none.
 
 ## Git
-- Branch: `main`; start HEAD `351bcc8`; no concurrent change
-- Implementation commit: `fix(auth): one auth surface names both intents (BD-01)`
+- Branch: `feat/wf04-prod-hardening` (from `b4463e2`); start HEAD `b4463e2`; no concurrent change
+- Implementation commit: `feat(wf04): programme persistence foundation, migration 015 (WF04-PROD-02)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
-- Remote HEAD: `be5c0cc`
+- Remote HEAD: `78f21f2` (production also `78f21f2`)
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-Integration with legal v1.0.
+PO review of PROD-02; then WF04-PROD-03 (API / RBAC / validation) once Q1–Q3, Q7, Q10 are answered.
