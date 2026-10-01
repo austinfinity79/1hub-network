@@ -28,3 +28,25 @@
 .anchor:focus-visible {
   text-decoration: underline;
 }
+
+.switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 0 0 1rem;
+}
+
+.switch {
+  color: var(--unresolved-fg-muted);
+  text-decoration: none;
+}
+
+.switch:hover,
+.switch:focus-visible {
+  text-decoration: underline;
+}
+
+.switch[aria-current='page'] {
+  color: inherit;
+  font-weight: 600;
+}

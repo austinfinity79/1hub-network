@@ -232,18 +232,41 @@ test.describe('WF01-S07 functional and security', () => {
     })
   })
 
-  test('the documents open by their current version', async ({ page }) => {
+  test('one combined link opens the current documents (DEC-LEGAL-V1-D5)', async ({ page }) => {
     await signInFresh(page.request, 's07')
     await reach(page.request, 'REVIEW')
     await openReview(page)
     const { documents } = await (await page.request.get('/api/v1/legal/current')).json()
+    // One entry point, exact label, version-less route to the current terms.
     const links = page.locator('[data-legal] a')
-    await expect(links).toHaveCount(2)
-    for (const doc of documents) {
-      const link = page.locator('[data-legal]').getByRole('link', { name: doc.title })
-      await expect(link).toHaveAttribute('href', doc.content_url)
-      await expect(link).toHaveAttribute('target', '_blank')
-      expect((await page.request.get(doc.content_url)).status()).toBe(200)
+    await expect(links).toHaveCount(1)
+    const link = links.first()
+    await expect(link).toHaveText('Điều khoản sử dụng & Chính sách quyền riêng tư')
+    await expect(link).toHaveAttribute('href', '/legal/terms')
+    await expect(link).toHaveAttribute('target', '_blank')
+    // The statement still names the exact versions being accepted.
+    await expect(page.locator('[data-legal-versions]')).toHaveAttribute(
+      'data-legal-versions',
+      documents.map((d: { type: string; version: string }) => `${d.type}:${d.version}`).join(' '),
+    )
+    // Both documents stay separate and reachable from the reader.
+    const reader = await page.context().newPage()
+    try {
+      await reader.goto('/legal/terms')
+      const terms = documents.find((d: { type: string }) => d.type === 'TERMS_ACCEPTANCE')
+      const privacy = documents.find((d: { type: string }) => d.type === 'PRIVACY_DATA_PROCESSING')
+      await expect(reader).toHaveURL(terms.content_url)
+      const switcher = reader.locator('[data-legal-switcher]')
+      await expect(switcher.getByRole('link', { name: 'Điều khoản sử dụng' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+      await switcher.getByRole('link', { name: 'Chính sách quyền riêng tư' }).click()
+      await expect(reader).toHaveURL(privacy.content_url)
+      await reader.goBack()
+      await expect(reader).toHaveURL(terms.content_url)
+    } finally {
+      await reader.close()
     }
   })
 
@@ -373,7 +396,10 @@ test.describe('WF01-S07 functional and security', () => {
       ).toBeVisible()
       await expect(page).toHaveURL('/onboarding/privacy')
       await expect(agree(page)).not.toBeChecked()
-      await expect(page.locator('[data-legal]')).toContainText('Điều khoản (bản mới)')
+      await expect(page.locator('[data-legal-versions]')).toHaveAttribute(
+        'data-legal-versions',
+        new RegExp(`TERMS_ACCEPTANCE:${version}( |$)`),
+      )
       expect(await stored(accountId)).toMatchObject({ status: 'DRAFT', completed: null })
     } finally {
       await query('UPDATE legal_documents SET retired_at = now() WHERE version = $1', [version])
@@ -401,7 +427,10 @@ test.describe('WF01-S07 functional and security', () => {
       await expect(page).toHaveURL('/onboarding/privacy')
       await expect(agree(page)).toBeEnabled()
       await expect(agree(page)).not.toBeChecked()
-      await expect(page.locator('[data-legal]')).toContainText('Điều khoản (bản mới hơn)')
+      await expect(page.locator('[data-legal-versions]')).toHaveAttribute(
+        'data-legal-versions',
+        new RegExp(`TERMS_ACCEPTANCE:${version}( |$)`),
+      )
       expect(await stored(accountId)).toMatchObject({ status: 'DRAFT', completed: null })
       // Agreeing to the new version completes.
       await agree(page).check({ force: true })

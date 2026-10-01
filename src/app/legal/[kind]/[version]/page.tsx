@@ -13,6 +13,14 @@ import styles from './legal.module.css'
  */
 export const dynamic = 'force-dynamic'
 
+// The two documents stay separate; the reader links both so the one combined
+// acceptance link (DEC-LEGAL-V1-D5) reaches either. Version-less routes always
+// resolve to the current version (DEC-LEGAL-D2).
+const DOCUMENTS = [
+  { kind: 'terms', label: 'Điều khoản sử dụng' },
+  { kind: 'privacy', label: 'Chính sách quyền riêng tư' },
+] as const
+
 export default async function Page({
   params,
 }: {
@@ -30,6 +38,18 @@ export default async function Page({
   return (
     <PageContainer>
       <div className={styles.page}>
+        <nav className={styles.switcher} aria-label="Văn bản pháp lý" data-legal-switcher>
+          {DOCUMENTS.map((doc) => (
+            <a
+              key={doc.kind}
+              href={`/legal/${doc.kind}`}
+              className={`type-body-sm ${styles.switch}`}
+              aria-current={doc.kind === kind ? 'page' : undefined}
+            >
+              {doc.label}
+            </a>
+          ))}
+        </nav>
         <Surface as="article">
           <h1 className="type-heading-2">{title}</h1>
           <p className={`type-meta-xs ${styles.meta}`}>

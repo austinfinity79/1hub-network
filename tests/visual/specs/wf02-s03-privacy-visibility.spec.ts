@@ -284,6 +284,11 @@ test.describe('WF02-S03 state matrix', () => {
       try {
         await page.reload({ waitUntil: 'networkidle' })
         await expect(card(page, 'legal').locator('[data-accepted="false"]')).toHaveCount(2)
+        // Both due: one combined link (DEC-LEGAL-V1-D5).
+        const links = page.locator('[data-reaccept] a')
+        await expect(links).toHaveCount(1)
+        await expect(links).toHaveText('Điều khoản sử dụng & Chính sách quyền riêng tư')
+        await expect(links).toHaveAttribute('href', '/legal/terms')
         await acceptCurrent(page.request, 'TERMS_ACCEPTANCE')
         await page.reload({ waitUntil: 'networkidle' })
         await expect(card(page, 'legal').locator('[data-accepted="false"]')).toHaveCount(1)

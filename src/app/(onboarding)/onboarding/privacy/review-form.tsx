@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useId, useRef, useState, type FormEvent } from 'react'
 
+import { CombinedLegalLink } from '@/components/legal/combined-legal-link'
 import { Button, Notice, Surface } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
 
@@ -286,20 +287,15 @@ export function ReviewForm({
                   </svg>
                 </span>
                 <span>
-                  <span className={styles.confirmTitle}>
-                    Tôi đồng ý với{' '}
-                    {terms ? (
-                      <a href={terms.content_url} target="_blank" rel="noopener">
-                        {terms.title}
-                      </a>
-                    ) : null}{' '}
-                    và{' '}
-                    {privacy ? (
-                      <a href={privacy.content_url} target="_blank" rel="noopener">
-                        {privacy.title}
-                      </a>
-                    ) : null}
-                    .
+                  {/* One combined entry point (DEC-LEGAL-V1-D5); the versions being
+                      accepted stay visible to tests and support as data. */}
+                  <span
+                    className={styles.confirmTitle}
+                    data-legal-versions={[terms, privacy]
+                      .map((d) => (d ? `${d.type}:${d.version}` : ''))
+                      .join(' ')}
+                  >
+                    Tôi đồng ý với <CombinedLegalLink />.
                   </span>
                   <span id={id('legal-help')} className={styles.confirmBody}>
                     Bấm vào tên văn bản để đọc toàn văn. Hồ sơ được kích hoạt sau khi bạn đồng ý với

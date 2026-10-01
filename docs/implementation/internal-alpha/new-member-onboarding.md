@@ -20,7 +20,7 @@
 | 4 | Fill "Họ và tên", "Chức danh hiện tại"; choose "Tỉnh / thành phố" from the list; one chip under "Chuyên môn · chọn tối đa 5" | Province and expertise come only from lists (no free typing) | same |
 | 5 | "Tiếp tục" | "Ai được thấy gì" (step 3 of 3); preview card "THẺ CỦA BẠN TRONG THƯ VIỆN" with your name, title, province, expertise | `/onboarding/privacy` |
 | 6 | Toggle "Hiện thẻ của tôi trong Thư viện" off, then on | The switch changes visibility only; the consent box is separate | same |
-| 7 | Leave "Tôi đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư." unticked → "Xong, vào HUB" | Stays on step 3; cannot finish without consent | same |
+| 7 | Leave "Tôi đồng ý với Điều khoản sử dụng & Chính sách quyền riêng tư." unticked → "Xong, vào HUB" | Stays on step 3; cannot finish without consent | same |
 | 8 | Tick the consent box → "Xong, vào HUB" | "Xong. Giờ làm gì?" | `/onboarding/complete` |
 | 9 | "Vào 1hub.network" | "Tài khoản của tôi" with "Hồ sơ hoàn thiện NN % · còn thiếu …" | `/me` |
 | 10 | Refresh; then open https://1hubnetwork.io.vn/onboarding/purpose | Returns to "Tài khoản của tôi"; onboarding does not repeat | `/me` |

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { CombinedLegalLink } from '@/components/legal/combined-legal-link'
 import { Button, Notice, Surface } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
 
@@ -256,14 +257,17 @@ export function PrivacyView() {
                 />
                 <span>
                   {COPY.reacceptLead}{' '}
-                  {missing.map((doc, i) => (
-                    <span key={doc.type}>
-                      {i > 0 ? ' và ' : ''}
-                      <a href={doc.content_url} target="_blank" rel="noopener">
+                  {/* Both documents due: the one combined entry point
+                      (DEC-LEGAL-V1-D5). Only one due: that document alone. */}
+                  {missing.length > 1 ? (
+                    <CombinedLegalLink />
+                  ) : (
+                    missing.map((doc) => (
+                      <a key={doc.type} href={doc.content_url} target="_blank" rel="noopener">
                         {doc.title}
                       </a>
-                    </span>
-                  ))}
+                    ))
+                  )}
                   .
                 </span>
               </label>
