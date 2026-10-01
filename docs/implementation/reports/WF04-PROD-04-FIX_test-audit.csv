@@ -1,0 +1,116 @@
+old_spec,index,old_test,class,coverage_now
+wf04-t00-demo-foundation.spec.ts,1,"1/7/8/9. platform admin: both fixtures, deterministic, canonical, programme-linked events",REPLACED_BY_PRODUCTION_TEST,wf04-prod-api list/detail; read.db-test admin reads canonical rows
+wf04-t00-demo-foundation.spec.ts,2,2. the Chapter 01 leader reads both fixtures (owning organization in scope),REPLACED_BY_PRODUCTION_TEST,read.db-test leader; S01 content
+wf04-t00-demo-foundation.spec.ts,3,3/4. guest 401 / page → /auth; ordinary member 403 / 404 / page 404,REPLACED_BY_PRODUCTION_TEST,T00 area guard; wf04-prod-api 401/403/404
+wf04-t00-demo-foundation.spec.ts,4,5/6. foreign organization and spoofed scope are denied; labels grant nothing,REPLACED_BY_PRODUCTION_TEST,wf04-prod-api IDOR + spoof; read.db-test labels grant nothing; T00 guard
+wf04-t00-demo-foundation.spec.ts,5,mutation methods do not exist and cannot change the fixture,OBSOLETE_DEMO,demo API was read only; writes now exist by contract (A5)
+wf04-t00-demo-foundation.spec.ts,6,"14. responses carry no contact, account, session or token data",REPLACED_BY_PRODUCTION_TEST,wf04-prod-api leakage; read.db-test no account data
+wf04-t00-demo-foundation.spec.ts,7,"10. WF03 standalone events are unchanged: no demo event, all programme_id NULL",REPLACED_BY_PRODUCTION_TEST,read.db-test WF03 events stay programme_id NULL
+wf04-t00-demo-foundation.spec.ts,8,11/12/13. refresh keeps a session draft; reset restores the fixture; no DB / audit write; login kept,OBSOLETE_DEMO,"session draft, reset"
+wf04-t00-demo-foundation.spec.ts,9,a store written by another actor is not read (per-actor key),OBSOLETE_DEMO,per-actor session store key
+wf04-t00-demo-foundation.spec.ts,10,"the frame: title, ""Dữ liệu demo"" notice; only on demo surfaces; unbuilt routes are 404",STILL_VALID_AND_MISSING,"RESTORED T00 ""unbuilt WF04 routes and any public programme page are the ordinary 404""; notice removal: T00 frame test"
+wf04-t00-demo-foundation.spec.ts,11,"15. shown to ops actors in every OpsShell context, current on the demo; never for members",STILL_VALID_AND_MISSING,"RESTORED T00 ""the entry shows in every OpsShell context, is current on WF04 pages, and never for members"""
+wf04-t00-demo-foundation.spec.ts,12,"16. WF03 ops routes are unchanged: same nav, S05 stays the unlinked FUTURE route",REPLACED_BY_PRODUCTION_TEST,wf03-t00 (no programmes nav) + shell-routes (S05 placeholder)
+wf04-t00-demo-foundation.spec.ts,13,1440×900: typography; header band and demo notice match the approved ADM5 primitives,REPLACED_BY_PRODUCTION_TEST,S02 header band/rule; adm5Primitives on S03-S08 (demo notice part obsolete)
+wf04-s01-programme-list.spec.ts,1,"1-6/12. both fixtures, canonical labels, status, owner, dates, fixed order, no duplicates",REPLACED_BY_PRODUCTION_TEST,S01 canonical rows test
+wf04-s01-programme-list.spec.ts,2,"rows open the detail page (DEC-WF04-S08-D3); ""Tạo mới"" opens S02 (DEC-WF04-S02-D3)",REPLACED_BY_PRODUCTION_TEST,S01 row opens detail / Tạo mới
+wf04-s01-programme-list.spec.ts,3,"loading, then populated",REPLACED_BY_PRODUCTION_TEST,S01 loading
+wf04-s01-programme-list.spec.ts,4,"error: no raw payload, only a retry that recovers",REPLACED_BY_PRODUCTION_TEST,S01 API error + retry
+wf04-s01-programme-list.spec.ts,5,empty: a leader with no in-scope demo sees the scoped empty state,REPLACED_BY_PRODUCTION_TEST,S01 empty
+wf04-s01-programme-list.spec.ts,6,"9-11. session changes survive refresh, never duplicate; reset restores the fixture; nothing written",OBSOLETE_DEMO,"session changes, reset"
+wf04-s01-programme-list.spec.ts,7,"1/2/8/9. admin and in-scope leader succeed; no PII, token, cookie or session data",REPLACED_BY_PRODUCTION_TEST,wf04-prod-api list/detail leakage
+wf04-s01-programme-list.spec.ts,8,3/4/5/6/7. foreign scope hidden; member and guest denied; x-role / orgId / client state grant nothing,REPLACED_BY_PRODUCTION_TEST,S01 foreign hidden; T00 guard + spoof; wf04-prod-api spoof
+wf04-s01-programme-list.spec.ts,9,"10/11. loading the list writes no programme, event, audit or analytics row",REPLACED_BY_PRODUCTION_TEST,read.db-test reading writes nothing
+wf04-s01-programme-list.spec.ts,10,"768 / 390: no page overflow; notice, reset and the table stay reachable",REPLACED_BY_PRODUCTION_TEST,S01 768/390
+wf04-s01-programme-list.spec.ts,11,"1440×900: typography; table card, head, row rule and pills match ADM5",REPLACED_BY_PRODUCTION_TEST,S01 ADM5 primitives
+wf04-s02-programme-create.spec.ts,1,S01 → Tạo mới → S02; a PROGRAMME is created as a session DRAFT and listed first,REPLACED_BY_PRODUCTION_TEST,S02 create DRAFT row + list
+wf04-s02-programme-create.spec.ts,2,a CHALLENGE with only the required fields; optional summary and dates stay empty,REPLACED_BY_PRODUCTION_TEST,programme.db-test create CHALLENGE; S02 double click CHALLENGE
+wf04-s02-programme-create.spec.ts,3,"validation: required, blank name, date order, cleared on correction; nothing is stored",REPLACED_BY_PRODUCTION_TEST,S02 validation before any request
+wf04-s02-programme-create.spec.ts,4,an invalid type value is rejected; a double click creates exactly one draft,REPLACED_BY_PRODUCTION_TEST,rules.test type invalid; S02 double click
+wf04-s02-programme-create.spec.ts,5,"save error: a refused write shows a safe message, stores nothing, and retry succeeds",REPLACED_BY_PRODUCTION_TEST,S02 refused / failed create + retry
+wf04-s02-programme-create.spec.ts,6,platform admin chooses the owner from every operational organization; an injected one is refused,REPLACED_BY_PRODUCTION_TEST,S02 owner options; programme.db-test injected owner 403
+wf04-s02-programme-create.spec.ts,7,query / header scope spoofing does not change the owner or grant access,REPLACED_BY_PRODUCTION_TEST,T00 spoof; owner options computed on the server
+wf04-s02-programme-create.spec.ts,8,"guest → /auth; incomplete → resolver; member, PROGRAMME_ORGANIZER label → 404; foreign leader owns only its org",REPLACED_BY_PRODUCTION_TEST,T00 guard; REL-SEC onboarding → resolver; owner options DB test
+wf04-s02-programme-create.spec.ts,9,"768 / 390: no page overflow; fields and ""Lưu"" reachable",REPLACED_BY_PRODUCTION_TEST,S02 768/390
+wf04-s02-programme-create.spec.ts,10,"1440×900 default, validation and filled: typography; input and header match the approved sources",REPLACED_BY_PRODUCTION_TEST,S02 typography + input/header primitives
+wf04-s03-programme-journey.spec.ts,1,"1/2. fixtures render in stored order; frame, stepper, back and a disabled next",STILL_VALID_AND_MISSING,"RESTORED S03 ""the setup frame: the stepper marks the current step; back and next chain every step""; order: S03 stages test"
+wf04-s03-programme-journey.spec.ts,2,"3-11. add, edit, remove, move, boundaries, empty, refresh, reset; nothing written",STILL_VALID_AND_MISSING,"RESTORED S03 ""move boundaries""; add/edit/move/remove/refresh: S03 stages test"
+wf04-s03-programme-journey.spec.ts,3,"12. an invalid edit changes nothing (blank name, reversed dates)",REPLACED_BY_PRODUCTION_TEST,S03 invalid stage never sent
+wf04-s03-programme-journey.spec.ts,4,13-16. CHALLENGE add / edit / remove / empty; PROGRAMME never shows them; reset restores,REPLACED_BY_PRODUCTION_TEST,S03 CHALLENGE problems; PROGRAMME has none
+wf04-s03-programme-journey.spec.ts,5,17/18. S02 → S03: a new PROGRAMME and a new CHALLENGE enter the journey empty,REPLACED_BY_PRODUCTION_TEST,S02 create → journey; S03 empty state
+wf04-s03-programme-journey.spec.ts,6,in-scope ids work directly; malformed / unknown fixture ids 404; random ids show nothing,REPLACED_BY_PRODUCTION_TEST,S03 404 test
+wf04-s03-programme-journey.spec.ts,7,"foreign organization, member, guest, label and header spoofing are refused",REPLACED_BY_PRODUCTION_TEST,S03 foreign 404; T00 route × actor matrix
+wf04-s03-programme-journey.spec.ts,8,platform admin edits any fixture; HTML and store carry no contact or session data,REPLACED_BY_PRODUCTION_TEST,programme.db-test admin writes; wf04-prod-api leakage
+wf04-s03-programme-journey.spec.ts,9,768 / 390: no page overflow; stage controls reachable,REPLACED_BY_PRODUCTION_TEST,S03 768/390
+wf04-s03-programme-journey.spec.ts,10,"1440×900 Programme, Challenge, empty and editing: typography; header, card and input primitives",STILL_VALID_AND_MISSING,"RESTORED S03 typography + ADM5 primitives (Challenge, empty)"
+wf04-s04-programme-events.spec.ts,1,"1-4/13-16. fixtures of this programme only, S07 order, frame; S03 → S04 → back; next safe",REPLACED_BY_PRODUCTION_TEST,S04 linked events + navigation
+wf04-s04-programme-events.spec.ts,2,"5-12. add, edit, remove a draft, validation, empty; refresh and reset; nothing written",OBSOLETE_DEMO,event writes removed (PO decision 2)
+wf04-s04-programme-events.spec.ts,3,"only this programme’s events render or change, even with a tampered session copy",REPLACED_BY_PRODUCTION_TEST,S04 only the linked event (tampered session part obsolete)
+wf04-s04-programme-events.spec.ts,4,"save error: a refused write shows ""Thử lại""; retry stores it once and closes the editor",OBSOLETE_DEMO,event save retry: no event writes
+wf04-s04-programme-events.spec.ts,5,S02 → S03 → S04: a new draft has no events yet and can add one,REPLACED_BY_PRODUCTION_TEST,S04 empty state (add part obsolete)
+wf04-s04-programme-events.spec.ts,6,in scope works; malformed / unknown fixture 404; random or WF03 event ids reveal nothing,REPLACED_BY_PRODUCTION_TEST,T00 route × actor matrix; S03/S08 404 (same guard)
+wf04-s04-programme-events.spec.ts,7,"foreign organization, member, guest, label and header spoofing are refused",REPLACED_BY_PRODUCTION_TEST,T00 route × actor matrix
+wf04-s04-programme-events.spec.ts,8,no contact or session data in the page or the store,REPLACED_BY_PRODUCTION_TEST,wf04-prod-api leakage
+wf04-s04-programme-events.spec.ts,9,"768 / 390: no page overflow; list, back, next, edit and time fields usable",REPLACED_BY_PRODUCTION_TEST,S04 768/390
+wf04-s04-programme-events.spec.ts,10,"1440×900 Programme populated / empty and Challenge: typography; header, card, pill primitives",STILL_VALID_AND_MISSING,RESTORED S04 typography + ADM5 primitives + event pill
+wf04-s05-programme-registration.spec.ts,1,1/2/3/10/12-15. both fixtures render; S04 → S05 → back; next safe; counts read-only,REPLACED_BY_PRODUCTION_TEST,"S05 render + S04 navigation (counts: Q5, removed)"
+wf04-s05-programme-registration.spec.ts,2,"4-9/11. edit, validate, save atomically; refresh; reset; counts unchanged; no row written",REPLACED_BY_PRODUCTION_TEST,S05 edit keeps id/required/step; refresh
+wf04-s05-programme-registration.spec.ts,3,"not configured: a new draft starts empty, is configured, and survives refresh",REPLACED_BY_PRODUCTION_TEST,S05 configure → version 1 → refresh
+wf04-s05-programme-registration.spec.ts,4,"save error: ""Thử lại"" stores the configuration once and closes the editor",STILL_VALID_AND_MISSING,"RESTORED S05 ""a failed save shows Thử lại; the retry stores the form once"""
+wf04-s05-programme-registration.spec.ts,5,admin in scope; malformed / unknown 404; random ids reveal nothing; a choice grants nothing,REPLACED_BY_PRODUCTION_TEST,T00 route × actor matrix; guard
+wf04-s05-programme-registration.spec.ts,6,"foreign organization, guest, label and header spoofing are refused",REPLACED_BY_PRODUCTION_TEST,T00 route × actor matrix
+wf04-s05-programme-registration.spec.ts,7,no contact or session data in the page or the store,REPLACED_BY_PRODUCTION_TEST,wf04-prod-api leakage
+wf04-s05-programme-registration.spec.ts,8,"768 / 390: no page overflow; editor, back and next reachable",REPLACED_BY_PRODUCTION_TEST,S05 768/390
+wf04-s05-programme-registration.spec.ts,9,"1440×900 configured, validation and not configured: typography; header, card, input primitives",STILL_VALID_AND_MISSING,"RESTORED S05 typography + ADM5 primitives (empty, configured, editing)"
+wf04-s06-programme-team.spec.ts,1,"1-4/9-13. both teams, deterministic rows, display only; S05 → S06 → back; next safe",REPLACED_BY_PRODUCTION_TEST,S06 display only + navigation (rows: Q4)
+wf04-s06-programme-team.spec.ts,2,5/7/8. empty for a new draft; refresh; reset restores the fixture team,REPLACED_BY_PRODUCTION_TEST,S06 empty state (reset part obsolete)
+wf04-s06-programme-team.spec.ts,3,"6. error + retry: an unreadable session store shows ""Thử lại""; nothing is written meanwhile",OBSOLETE_DEMO,unreadable session store
+wf04-s06-programme-team.spec.ts,4,admin in scope; malformed / unknown 404; random ids reveal nothing,REPLACED_BY_PRODUCTION_TEST,T00 route × actor matrix
+wf04-s06-programme-team.spec.ts,5,"foreign organization, member, guest, labels and header spoofing are refused; labels grant nothing",REPLACED_BY_PRODUCTION_TEST,T00 route × actor matrix; read.db-test labels
+wf04-s06-programme-team.spec.ts,6,"privacy: only the fixture team, no directory, contact or session data",REPLACED_BY_PRODUCTION_TEST,S06 no rows; wf04-prod-api leakage
+wf04-s06-programme-team.spec.ts,7,"768 / 390: no page overflow; rows, back and next reachable; a long role label wraps",REPLACED_BY_PRODUCTION_TEST,"S06 768/390 (role label: no rows, Q4)"
+wf04-s06-programme-team.spec.ts,8,"1440×900 populated and empty: typography; header, card, pill primitives",STILL_VALID_AND_MISSING,RESTORED S06 typography + ADM5 primitives (empty)
+wf04-s07-programme-review.spec.ts,1,"1/11-15. PUBLISHED Programme: summary, complete checklist, no publish / unpublish; S06 → S07 → back",STILL_VALID_AND_MISSING,"RESTORED S07 ""the summary reflects the programme""; published state: S07 published test"
+wf04-s07-programme-review.spec.ts,2,3/5-10. Challenge: ready → publish once; double click safe; refresh keeps PUBLISHED; reset restores DRAFT,REPLACED_BY_PRODUCTION_TEST,S07 publish + double click; S08 reload
+wf04-s07-programme-review.spec.ts,3,"2/4/5. incomplete: a new Challenge without Bài toán, and a Programme with reversed dates, cannot publish",REPLACED_BY_PRODUCTION_TEST,"S07 blank name (problem rule superseded, D12; reversed dates impossible, M015)"
+wf04-s07-programme-review.spec.ts,4,"error: a refused write keeps DRAFT; ""Thử lại"" publishes once",STILL_VALID_AND_MISSING,"RESTORED S07 ""a failed publish keeps DRAFT; Thử lại publishes once with the same key"""
+wf04-s07-programme-review.spec.ts,5,admin publishes in scope; malformed / unknown 404; random ids reveal nothing,REPLACED_BY_PRODUCTION_TEST,programme.db-test admin publish; T00 matrix
+wf04-s07-programme-review.spec.ts,6,"foreign organization, member, guest, labels and header spoofing cannot review or publish",REPLACED_BY_PRODUCTION_TEST,T00 route × actor matrix; wf04-prod-api
+wf04-s07-programme-review.spec.ts,7,no contact or session data in the page or the store,REPLACED_BY_PRODUCTION_TEST,wf04-prod-api leakage
+wf04-s07-programme-review.spec.ts,8,"768 / 390: no page overflow; checklist, publish, back reachable",REPLACED_BY_PRODUCTION_TEST,S07 768/390
+wf04-s07-programme-review.spec.ts,9,"1440×900 incomplete, ready and published: typography; header and card primitives",STILL_VALID_AND_MISSING,"RESTORED S07 ADM5 primitives (ready, incomplete, published)"
+wf04-s08-programme-detail.spec.ts,1,"1/4-8. PUBLISHED Programme: identity, status, overview and every summary",STILL_VALID_AND_MISSING,"RESTORED S08 ""a PUBLISHED Challenge summarises its stage, problem and registration"""
+wf04-s08-programme-detail.spec.ts,2,"2/3/9. DRAFT Challenge: status, Bài toán and a review-and-publish action",REPLACED_BY_PRODUCTION_TEST,S08 seed Challenge DRAFT
+wf04-s08-programme-detail.spec.ts,3,10. S01 rows → S08 for the Programme and the Challenge,REPLACED_BY_PRODUCTION_TEST,S01 row opens detail
+wf04-s08-programme-detail.spec.ts,4,11/13/14. S07 publish → S08 with a one-off confirmation; refresh keeps it; reset restores,REPLACED_BY_PRODUCTION_TEST,S07 publish → detail + flash; S08 reload
+wf04-s08-programme-detail.spec.ts,5,12/16. every action is real: manage links open their built step; no dead or inert control,STILL_VALID_AND_MISSING,"RESTORED S08 ""every manage link opens its built step"""
+wf04-s08-programme-detail.spec.ts,6,15. direct refresh on the detail and the basic edit,REPLACED_BY_PRODUCTION_TEST,T00 frame direct loads of every route
+wf04-s08-programme-detail.spec.ts,7,17. no public exposure: no /programmes page; guests are sent to sign in,STILL_VALID_AND_MISSING,RESTORED T00 public programme page 404; guest → /auth: T00 guard
+wf04-s08-programme-detail.spec.ts,8,a new draft: S02 create → S03 stage → S04 event → S05 registration → S08,REPLACED_BY_PRODUCTION_TEST,wf04-uat-journey (event part obsolete)
+wf04-s08-programme-detail.spec.ts,9,type and owner are read-only; name and dates are validated; a save shows on the detail,STILL_VALID_AND_MISSING,"RESTORED S08 basic information: read-only type/owner, validation, save on detail"
+wf04-s08-programme-detail.spec.ts,10,"S07 ""Sửa"" on a missing date item opens the basic step, which fixes it",STILL_VALID_AND_MISSING,"RESTORED S08 review ""Sửa"" opens basic and fixes the name"
+wf04-s08-programme-detail.spec.ts,11,"save error: ""Thử lại"" stores the edit once",STILL_VALID_AND_MISSING,RESTORED S08 basic save error + retry
+wf04-s08-programme-detail.spec.ts,12,"error + retry: an unreadable session store shows ""Thử lại""; no raw error",OBSOLETE_DEMO,unreadable session store
+wf04-s08-programme-detail.spec.ts,13,not found: random id shows the missing state; malformed and unknown fixture ids 404,REPLACED_BY_PRODUCTION_TEST,S08 404 test
+wf04-s08-programme-detail.spec.ts,14,admin and leader in scope; orgId spoof is ignored,REPLACED_BY_PRODUCTION_TEST,S08 / T00 matrix; spoof
+wf04-s08-programme-detail.spec.ts,15,"foreign organization, foreign programme, member, guest, labels and header spoofing are refused",REPLACED_BY_PRODUCTION_TEST,S08 foreign 404; T00 matrix
+wf04-s08-programme-detail.spec.ts,16,another account does not see the leader session copy,OBSOLETE_DEMO,another account and the session copy
+wf04-s08-programme-detail.spec.ts,17,"viewing, editing, publishing and resetting write nothing to the database or audit",OBSOLETE_DEMO,demo wrote nothing; production writes by design (reads: read.db-test)
+wf04-s08-programme-detail.spec.ts,18,"no contact, token or session data in the page or the store",REPLACED_BY_PRODUCTION_TEST,wf04-prod-api leakage
+wf04-s08-programme-detail.spec.ts,19,"768 / 390: cards stack, no page overflow, actions and status reachable",REPLACED_BY_PRODUCTION_TEST,S08 768/390
+wf04-s08-programme-detail.spec.ts,20,1440×900 Programme DRAFT / PUBLISHED and Challenge DRAFT / PUBLISHED: typography; header and card primitives,STILL_VALID_AND_MISSING,"RESTORED S08 typography + ADM5 primitives (DRAFT, PUBLISHED, basic)"
+wf04-uat-journey.spec.ts,1,HP-P01..P23: create → journey → events → registration → team → review → publish → detail → list → reset,REPLACED_BY_PRODUCTION_TEST,wf04-uat-journey; S02/S03/S05/S07
+wf04-uat-journey.spec.ts,2,"HP-C01..C16: Challenge with Bài toán, blocked then published, detail, refresh, reset",REPLACED_BY_PRODUCTION_TEST,"wf04-uat-journey (blocked-without-problem part superseded, D12)"
+wf04-uat-journey.spec.ts,3,HP-D01..D05: S02 → S03 → leave at S04 → S01 shows the DRAFT → reopen resumes the saved data,REPLACED_BY_PRODUCTION_TEST,S02 list shows the DRAFT; S03 reload
+wf04-uat-journey.spec.ts,4,"6 actors × every WF04 route and API, spoofed headers and orgId; no data change, no leak",STILL_VALID_AND_MISSING,"RESTORED T00 ""6 actors × every WF04 route, plain and with spoofed headers"""
+wf04-uat-journey.spec.ts,5,membership and leadership alone grant no Programme capability,REPLACED_BY_PRODUCTION_TEST,read.db-test membership / leadership grant nothing
+wf04-uat-journey.spec.ts,6,NEG-10/11: an invalid type and an invalid applicant type are refused; nothing stored,REPLACED_BY_PRODUCTION_TEST,rules.test + wf04-prod-api: type and INDIVIDUAL invalid
+wf04-uat-journey.spec.ts,7,"NEG-12/14/15: invalid stage, event date range and registration are refused; nothing stored",REPLACED_BY_PRODUCTION_TEST,S03 invalid stage; S05 types required (event part obsolete)
+wf04-uat-journey.spec.ts,8,NEG-13: an event is never moved to or created for another programme,OBSOLETE_DEMO,event writes removed
+wf04-uat-journey.spec.ts,9,NEG-16/17: incomplete publish is blocked; a double publish transitions once,REPLACED_BY_PRODUCTION_TEST,S07 blank name; double click
+wf04-uat-journey.spec.ts,10,NEG-18: direct load and refresh work on every WF04 route (fixtures and a session draft),REPLACED_BY_PRODUCTION_TEST,T00 frame direct loads
+wf04-uat-journey.spec.ts,11,"NEG-19: reset during modified state closes open editors, drops a pending retry and restores the fixtures",OBSOLETE_DEMO,reset
+wf04-uat-journey.spec.ts,12,NEG-20: no public Programme page and no unbuilt demo route,STILL_VALID_AND_MISSING,RESTORED T00 404 for unbuilt routes and public pages
+wf04-uat-journey.spec.ts,13,every control on every route of a session draft leads to a built screen; back works at every step,STILL_VALID_AND_MISSING,RESTORED S03 setup frame chain + S08 manage links
+wf04-uat-journey.spec.ts,14,"demo events live only in the session, linked to their programme; WF03 events and APIs never see them",REPLACED_BY_PRODUCTION_TEST,read.db-test WF03 boundary; S04 read only
+wf04-uat-journey.spec.ts,15,"11 screens at 1440×900: typography and header primitives; 768 / 390: no overflow, key action reachable",STILL_VALID_AND_MISSING,RESTORED typography + ADM5 primitives on S03-S08

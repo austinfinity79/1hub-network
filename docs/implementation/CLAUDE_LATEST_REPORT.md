@@ -1,43 +1,36 @@
 # Claude Task Report
 
 ## Task
-WF04-PROD-04 — WF04 frontend fixture → real API. Decisions: [DEC-W4P-D13](../decisions/DECISION_LOG.md#dec-w4p-d13); task report: [reports/WF04-PROD-04_frontend-api.md](reports/WF04-PROD-04_frontend-api.md).
+WF04-PROD-04-FIX — close the PROD-04 scope deviations. Decision: [DEC-W4P-D14](../decisions/DECISION_LOG.md#dec-w4p-d14); audit: [reports/WF04-PROD-04-FIX_test-audit.md](reports/WF04-PROD-04-FIX_test-audit.md) (+ `.csv`, 115 rows); PROD-04 report: [reports/WF04-PROD-04_frontend-api.md](reports/WF04-PROD-04_frontend-api.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE, local only.** The approved WF04 screens read and write `/api/v1/programmes*`; WF04 runtime fixture dependency 0. Not pushed, not deployed; PROD-05 not started. STOP.
+**PASS_WITH_EVIDENCE, local only.** Unapproved close UI 0; close API unchanged; coverage gap 0; runtime fixture dependency 0; Q3(b) unavailable on screen. Not pushed, not deployed; PROD-05 not started. STOP.
 
 ## Scope implemented
-- Pages read the canonical programme on the server (`requireProgrammeRoute`); every change goes through the API and the screen shows the server's answer (no optimistic state).
-- List, create (Idempotency-Key), basic edit, journey stages, Challenge problems, registration (TEAM / STARTUP), publish, close (S08, inline confirmation).
-- States: loading, empty, API error with retry, validation (422), conflict (409, re-read), same 404, read only / disabled from server `actions`.
-- PO decisions: archived owner → no write (server 409, UI read only); events read only; form locked after an application; INDIVIDUAL not offered; no new publish rule; ARCHIVED compatibility only.
-- Demo notice, reset, session store, demo API, demo guard and demo read model removed from the runtime; `fixtures.ts` kept for tests.
+- FIX 1: the S08 "Đóng chương trình" button, its confirmation and message are removed; `Confirm` returns to its PROD-03 form. `POST /programmes/{id}/close` and the lifecycle are untouched; a closed programme renders read only.
+- FIX 2: the 115 replaced demo tests are classified: 12 OBSOLETE_DEMO, 80 REPLACED_BY_PRODUCTION_TEST, 23 STILL_VALID_AND_MISSING — all 23 restored as 19 production tests (route 404s, OpsShell entry, route × actor matrix, move boundaries, setup frame chain, registration and publish retries, review summary, published detail, manage links, basic information, ADM5 primitives on S03–S08). The rewrite is recorded as pulled forward from PROD-05.
+- Q3(b): DEFERRED / NEED PO DECISION BEFORE PROD-07; "Thêm câu hỏi" stays disabled; no default invented.
 
 ## Files changed
-- Backend (existing endpoints): `lib/programme/programme.ts`, `types.ts` (`actions`, `owner_archived`, archived-owner 409, `programmeOwnerOptions`).
-- New: `lib/programme/{view,guard}.ts`, `components/programme-demo/programme-provider.tsx`, `[id]/error.tsx`, `tests/visual/support/programmes.ts`.
-- Changed: 10 WF04 pages + layout, 12 WF04 components (shared `DemoPage` notice made optional; WF05 unchanged), `lib/programme-demo/{types,copy}.ts`.
-- Removed: 2 demo API routes, `lib/programme-demo/{guard,read-model,session-store,readiness}.ts` (+ their tests), `demo-store.tsx`.
-- Tests: 11 WF04 specs rewritten (60), `read.db-test.ts` (rewritten), `programme.db-test.ts` (+4), 3 unit tests; REL-SEC, P0-SHELL, WF05-S01 updated.
-- Docs: API §22 (A5 additions), DECISION_LOG (D13), WF04 contract (PROD-04 status), task report, this report.
+- App: `components/programme-demo/programme-detail.tsx` (close UI removed), `setup-screen.tsx` (`Confirm` busy prop removed).
+- Tests: `tests/visual/support/programmes.ts` (ADM5 primitive helper), WF04 specs T00, S03, S04, S05, S06, S07, S08, UAT.
+- Docs: DECISION_LOG (D14), WF04 contract (§16 close note, §19 Q3, §20 PROD-05), PROD-04 report, audit `.md` + `.csv`, this report.
 
 ## Migrations / data
-None.
+None. API contract unchanged.
 
 ## Tests / build
-format, lint, typecheck PASS; unit 33 files / 307; build PASS; DB 34 files / 509; WF04 specs 60/60; protected regression 62 specs / 637 on the final build; UAT 19/19; 5xx 0, console / hydration errors 0.
+format, lint, typecheck PASS; unit 33 files / 307; build PASS; DB 34 files / 509; WF04 specs 79 (T00 8, S01 8, S02 8, S03 11, S04 4, S05 7, S06 3, S07 10, S08 11, UAT 1, API 8); protected regression 62 specs / 656 on the final build; UAT 19/19; 5xx 0, console / hydration errors 0.
 
 ## Visual QA
-No baseline changed; ADM5 primitives still compared on S01 / S02 (pass); the demo notice is gone by contract §16; WF04 pixel reference method stays Q9 (PROD-06).
+No baseline changed; ADM5 primitives (header band / rule, card edges, pills) compared again on S01–S08, all within threshold; pixel reference method stays Q9.
 
 ## Deviations / blockers
-- Adding a registration question is unavailable: it needs `required` and `step`, and Q3(b) has no approved default.
-- A close button + inline confirmation was added on S08 (approved transition, no prior visual).
-- Routes and the OpsShell label "Demo · Internal Alpha" stay (Q6).
+None. Open for the PO: a close control on screen (design decision); Q3(b) before PROD-07.
 
 ## Git
-- Branch: `feat/wf04-prod-hardening`; start HEAD `e0dc779`; no concurrent change
-- Implementation commit: `feat(wf04): screens on the programme API (WF04-PROD-04)`
+- Branch: `feat/wf04-prod-hardening`; start HEAD `6e99d15`; no concurrent change
+- Implementation commit: `fix(wf04): no close control on screen; restore WF04 test coverage (WF04-PROD-04-FIX)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -45,4 +38,4 @@ No baseline changed; ADM5 primitives still compared on S01 / S02 (pass); the dem
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO review of PROD-04; Q3(b) decision for operator questions; then WF04-PROD-05 (functional / security QA).
+PO final review of PROD-04; then WF04-PROD-05 (functional / security QA).

@@ -8,6 +8,7 @@ import { REPO_ROOT } from '../pixel-qa/paths'
 import {
   CHAPTER_02,
   LEADER,
+  adm5Primitives,
   call,
   cleanupProgrammes,
   createProgramme,
@@ -273,5 +274,75 @@ test.describe('WF04-S03 read only, authorization and responsive', () => {
     await settle(page)
     expect((await assertTypography(page)).violations).toEqual([])
     await page.screenshot({ path: path.join(ACTUAL, 'wf04-s03-1440x900.png'), fullPage: true })
+  })
+})
+
+test.describe('WF04-S03 restored coverage (WF04-PROD-04-FIX)', () => {
+  test('move boundaries: the first stage cannot move up, the last cannot move down', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    const { programme } = await createProgramme(page.request)
+    await call(page.request, 'patch', `/${programme.id}`, {
+      stages: [{ name: 'Một' }, { name: 'Hai' }, { name: 'Ba' }],
+    })
+    await page.goto(routes.setup(programme.id, 'journey'))
+    await expect(stages(page).first().locator('[data-move="up"]')).toBeDisabled()
+    await expect(stages(page).first().locator('[data-move="down"]')).toBeEnabled()
+    await expect(stages(page).last().locator('[data-move="down"]')).toBeDisabled()
+    await expect(stages(page).nth(1).locator('[data-move="up"]')).toBeEnabled()
+    await stages(page).last().locator('[data-move="up"]').click()
+    await expect(stages(page)).toHaveText([/Một/, /Ba/, /Hai/])
+    expect((await storedStages(programme.id)).map((s) => s.name)).toEqual(['Một', 'Ba', 'Hai'])
+  })
+
+  test('the setup frame: the stepper marks the current step; back and next chain every step', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    const { programme } = await createProgramme(page.request)
+    const id = programme.id
+    const chain: [string, string, string | null][] = [
+      // [step, back target, next target]
+      ['basic', routes.detail(id), routes.setup(id, 'journey')],
+      ['journey', routes.list, routes.setup(id, 'events')],
+      ['events', routes.setup(id, 'journey'), routes.setup(id, 'registration')],
+      ['registration', routes.setup(id, 'events'), routes.setup(id, 'team')],
+      ['team', routes.setup(id, 'registration'), routes.setup(id, 'review')],
+      ['review', routes.setup(id, 'team'), routes.detail(id)],
+    ]
+    for (const [step, back, next] of chain) {
+      await page.goto(routes.setup(id, step))
+      const current = page.locator('[aria-current="step"]')
+      await expect(current, step).toHaveCount(1)
+      await expect(current, step).toHaveAttribute('data-step', step)
+      await page.locator(`[data-nav="${step}-back"]`).click()
+      await expect(page, `${step} back`).toHaveURL(new RegExp(`${back}$`))
+      await page.goto(routes.setup(id, step))
+      await page.locator('[data-setup-next]').click()
+      await expect(page, `${step} next`).toHaveURL(new RegExp(`${next}$`))
+    }
+  })
+
+  test('1440×900 populated, empty and Challenge: typography and ADM5 primitives', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    const { programme } = await createProgramme(page.request, { type: 'CHALLENGE' })
+    await call(page.request, 'patch', `/${programme.id}`, {
+      stages: [{ name: 'Ươm tạo', starts_on: '2026-11-01', ends_on: '2026-11-30' }],
+      problem_statements: [{ title: 'Giảm hao hụt chặng cuối' }],
+    })
+    await page.goto(routes.setup(programme.id, 'journey'))
+    await adm5Primitives(page, 'WF04-S03', 'challenge', '[data-journey-stages]', '[data-stage-id]')
+    const empty = await createProgramme(page.request)
+    await page.goto(routes.setup(empty.programme.id, 'journey'))
+    await adm5Primitives(
+      page,
+      'WF04-S03',
+      'empty',
+      '[data-journey-stages]',
+      '[data-state="stages-empty"]',
+    )
   })
 })

@@ -3,10 +3,14 @@ import path from 'node:path'
 import { expect, test } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { REPO_ROOT } from '../pixel-qa/paths'
+import { findScreen, loadManifest } from '../pixel-qa/manifest'
+import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
+import { decodePng, readPng } from '../pixel-qa/png'
+import { compareSegments } from '../pixel-qa/segments'
 import {
   ADMIN,
   LEADER,
+  adm5Primitives,
   SEED_CHALLENGE,
   SEED_EVENT,
   cleanupProgrammes,
@@ -14,6 +18,7 @@ import {
   expectNoOverflow,
   login,
   routes,
+  textMask,
   watchConsole,
 } from '../support/programmes'
 
@@ -93,5 +98,50 @@ test.describe('WF04-S04 linked events, read only', () => {
       await expectNoOverflow(page, `${width}px`)
       await page.screenshot({ path: path.join(ACTUAL, `wf04-s04-${width}.png`), fullPage: true })
     }
+  })
+})
+
+test.describe('WF04-S04 visual QA (restored by WF04-PROD-04-FIX)', () => {
+  test('1440×900 linked and empty: typography, ADM5 primitives and the event pill', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    await page.goto(routes.setup(SEED_CHALLENGE, 'events'))
+    await adm5Primitives(page, 'WF04-S04', 'linked', '[data-programme-events]', '[data-event-id]')
+    const reference = readPng(
+      path.join(REPO_ROOT, findScreen(loadManifest().screens, 'WF03-S05').full_page_baseline!),
+    )
+    const pill = (await page.locator('[data-event-id] [data-status]').boundingBox())!
+    const px = Math.round(pill.x)
+    const py = Math.round(pill.y)
+    // The DRAFT event pill is the ADM5 neutral pill (1311 × 198); curved corners masked.
+    const results = compareSegments(
+      reference,
+      decodePng(await page.screenshot()),
+      [
+        {
+          name: 'event-pill-cap',
+          reference: { x: 1308, y: 195, width: 12, height: 28 },
+          dx: px - 1311,
+          dy: py - 198,
+        },
+      ],
+      [
+        ...(await textMask(page)),
+        { x: px, y: py, width: 9, height: 7 },
+        { x: px, y: py + 14, width: 9, height: 8 },
+      ],
+      { diffPath: resolveOutputPath('diff', 'WF04-S04.pill.diff.png') },
+    )
+    for (const r of results) expect(r.outside_ratio, `${r.name} drift`).toBeLessThan(0.002)
+    const { programme } = await createProgramme(page.request)
+    await page.goto(routes.setup(programme.id, 'events'))
+    await adm5Primitives(
+      page,
+      'WF04-S04',
+      'empty',
+      '[data-programme-events]',
+      '[data-state="events-empty"]',
+    )
   })
 })

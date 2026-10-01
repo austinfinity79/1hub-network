@@ -11,7 +11,7 @@
 | Programme detail | PASS | server-rendered from the service; same 404 (real HTTP 404) |
 | Create/edit | PASS | `POST` (Idempotency-Key, double click → 1 row), `PATCH` stages / problems / basic, persisted and re-read |
 | Publish | PASS | `POST …/publish`; checklist = contract §8 only; double click → 1 publish; conflict re-read |
-| Close | PASS | S08 close + inline confirmation → CLOSED, audited once, read only after |
+| Close | PASS (API only) | the S08 close control was removed by WF04-PROD-04-FIX (no approved slot, DEC-W4P-D14); `POST …/close` stays and a closed programme renders read only |
 | Archived org behavior | PASS | server 409 on every write and create; no enabled write flow; still readable |
 | Challenge | PASS | `metadata.challenge` through PATCH; no second store; PROGRAMME has none |
 | Application/Form | PASS | canonical form via `PUT …/registration`; TEAM / STARTUP only; locked once an application exists; WF05 apply handoff and close → 404 |
@@ -52,6 +52,9 @@
 | protected regression (62 specs) | 637/637: WF01 188, WF02 170, WF03 69, WF04 60, WF05 38, L5 13, L6 4, auth / authz 21, shell 50, responsive 4, API contract 9, release 7, console 4 |
 | UAT | 19/19 |
 | fixed during the task | an `[id]/loading.tsx` made unknown ids a soft 404 (status 200); removed, ids are real 404 again |
+
+## Follow-up
+WF04-PROD-04-FIX removed the unapproved close control and audited this rewrite: [WF04-PROD-04-FIX_test-audit.md](WF04-PROD-04-FIX_test-audit.md).
 
 ## Related
 - [WF04_PRODUCTION_CONTRACT.md](WF04_PRODUCTION_CONTRACT.md) · [WF04-PROD-03_api-rbac-hardening.md](WF04-PROD-03_api-rbac-hardening.md) · [../CLAUDE_LATEST_REPORT.md](../CLAUDE_LATEST_REPORT.md)

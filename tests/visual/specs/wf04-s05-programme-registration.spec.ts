@@ -7,6 +7,7 @@ import { REPO_ROOT } from '../pixel-qa/paths'
 import {
   LEADER,
   MEMBER,
+  adm5Primitives,
   SEED_VENTURE,
   call,
   cleanupProgrammes,
@@ -174,5 +175,82 @@ test.describe('WF04-S05 registration (canonical form)', () => {
       await expect(save(page)).toBeInViewport()
       await page.screenshot({ path: path.join(ACTUAL, `wf04-s05-${width}.png`), fullPage: true })
     }
+  })
+})
+
+test.describe('WF04-S05 restored coverage (WF04-PROD-04-FIX)', () => {
+  test('a failed save shows "Thử lại"; the retry stores the form once and closes the editor', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    const { programme } = await createProgramme(page.request)
+    await page.goto(routes.setup(programme.id, 'registration'))
+    let fail = true
+    await page.route(`**/api/v1/programmes/${programme.id}/registration`, async (route) => {
+      if (fail) {
+        fail = false
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: '{"error":{"code":"X","message":"m","request_id":"r"}}',
+        })
+      } else await route.continue()
+    })
+    await page.locator('[data-action="configure-registration"]').click()
+    await page.locator('input[name="applicant-type"][value="TEAM"]').check()
+    await save(page).click()
+    await expect(page.locator('[data-state="save-failed"]')).toBeVisible()
+    expect(await form(programme.id)).toBeUndefined()
+    await page.locator('[data-action="retry"]').click()
+    await expect(page.locator('[data-state="save-failed"]')).toHaveCount(0)
+    await expect(page.locator('[data-registration-editor]')).toHaveCount(0)
+    await expect(page.locator('[data-applicant-type="TEAM"]')).toBeVisible()
+    expect(await form(programme.id)).toEqual({
+      applicant_types: ['TEAM'],
+      questions: [],
+      version: 1,
+    })
+    const mocked = consoleErrors.filter((e) => /status of 500/.test(e))
+    expect(mocked).toHaveLength(1)
+    consoleErrors.splice(
+      0,
+      consoleErrors.length,
+      ...consoleErrors.filter((e) => !mocked.includes(e)),
+    )
+  })
+
+  test('1440×900 configured, editing and not configured: typography and ADM5 primitives', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    const { programme } = await createProgramme(page.request)
+    await page.goto(routes.setup(programme.id, 'registration'))
+    await adm5Primitives(
+      page,
+      'WF04-S05',
+      'empty',
+      '[data-registration-config]',
+      '[data-state="registration-empty"]',
+    )
+    await call(page.request, 'put', `/${programme.id}/registration`, {
+      applicant_types: ['TEAM', 'STARTUP'],
+      questions: [{ id: 'q-a', prompt: 'Vấn đề?', required: true, step: 1 }],
+    })
+    await page.reload()
+    await adm5Primitives(
+      page,
+      'WF04-S05',
+      'configured',
+      '[data-registration-config]',
+      '[data-summary="applicant-types"]',
+    )
+    await page.locator('[data-action="edit-registration"]').click()
+    await adm5Primitives(
+      page,
+      'WF04-S05',
+      'editing',
+      '[data-registration-config]',
+      '[data-registration-editor]',
+    )
   })
 })

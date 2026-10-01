@@ -8,6 +8,7 @@ import { REPO_ROOT } from '../pixel-qa/paths'
 import {
   ADMIN,
   CHAPTER_01,
+  CHAPTER_02,
   LEADER,
   MEMBER,
   SEED_CHALLENGE,
@@ -156,6 +157,106 @@ test.describe('WF04 runtime fixture dependency = 0 (contract §15)', () => {
       )
       expect(source, file).not.toMatch(/\bsessionStorage\b|\blocalStorage\b|DEMO_PROGRAMMES/)
       expect(source, file).not.toMatch(/\/api\/v1\/demo\/programmes|'\/demo\/programmes'\)/)
+    }
+  })
+})
+
+test.describe('WF04 route boundaries and the OpsShell entry (restored by WF04-PROD-04-FIX)', () => {
+  test('unbuilt WF04 routes and any public programme page are the ordinary 404', async ({
+    page,
+  }) => {
+    for (const email of [null, LEADER]) {
+      await page.context().clearCookies()
+      if (email) await login(page.request, email)
+      for (const path of ['/programmes', `/programmes/${SEED_PROGRAMME}`]) {
+        expect((await page.goto(path))?.status(), `${email ?? 'guest'} ${path}`).toBe(404)
+      }
+    }
+    for (const path of [
+      routes.setup(SEED_CHALLENGE, 'unknown'),
+      `${routes.detail(SEED_CHALLENGE)}/edit`,
+      `${routes.detail(SEED_CHALLENGE)}/applications`,
+      '/demo/programmes/new/setup/basic',
+    ]) {
+      expect((await page.goto(path))?.status(), path).toBe(404)
+    }
+  })
+
+  test('the entry shows in every OpsShell context, is current on WF04 pages, and never for members', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    const entry = page.locator('[data-nav="programme-demo"]')
+    for (const path of ['/ops/network', `/ops/org/${CHAPTER_01}`]) {
+      await page.goto(path)
+      await expect(entry, path).toBeVisible()
+      await expect(entry, path).not.toHaveAttribute('aria-current', 'page')
+    }
+    for (const path of [
+      routes.list,
+      routes.detail(SEED_CHALLENGE),
+      routes.setup(SEED_CHALLENGE, 'journey'),
+    ]) {
+      await page.goto(path)
+      await expect(entry, path).toHaveAttribute('aria-current', 'page')
+    }
+    await page.context().clearCookies()
+    await login(page.request, MEMBER)
+    await page.goto('/me')
+    await expect(entry).toHaveCount(0)
+  })
+})
+
+test.describe('WF04 route × actor matrix (restored SEC-WF04-01)', () => {
+  test('6 actors × every WF04 route, plain and with spoofed headers: server scope only', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000)
+    const steps = ['basic', 'journey', 'events', 'registration', 'team', 'review']
+    const scoped = [
+      routes.detail(SEED_CHALLENGE),
+      ...steps.map((s) => routes.setup(SEED_CHALLENGE, s)),
+    ]
+    const all = [routes.list, routes.create, ...scoped]
+    const organizer = await person({
+      code: 'PROGRAMME_ORGANIZER',
+      scopeType: 'PLATFORM',
+      scopeId: null,
+    })
+    const otherLeader = await person({
+      code: 'HUB_COMMUNITY_LEADER',
+      scopeType: 'ORGANIZATION',
+      scopeId: CHAPTER_02,
+    })
+    const expected: [string | null, (path: string) => number | 'auth'][] = [
+      [null, () => 'auth'],
+      [MEMBER, () => 404],
+      [organizer, () => 404],
+      [otherLeader, (path) => (scoped.includes(path) ? 404 : 200)],
+      [LEADER, () => 200],
+      [ADMIN, () => 200],
+    ]
+    for (const spoofed of [false, true]) {
+      await page.setExtraHTTPHeaders(
+        spoofed
+          ? {
+              'x-role': 'PLATFORM_ADMIN',
+              'x-scope-type': 'PLATFORM',
+              'x-organization-id': CHAPTER_01,
+            }
+          : {},
+      )
+      for (const [email, expect200] of expected) {
+        await page.context().clearCookies()
+        if (email) await login(page.request, email)
+        for (const path of all) {
+          const response = await page.goto(path)
+          const want = expect200(path)
+          const label = `${email ?? 'guest'}${spoofed ? ' (spoofed)' : ''} ${path}`
+          if (want === 'auth') expect(new URL(page.url()).pathname, label).toBe('/auth')
+          else expect(response?.status(), label).toBe(want)
+        }
+      }
     }
   })
 })

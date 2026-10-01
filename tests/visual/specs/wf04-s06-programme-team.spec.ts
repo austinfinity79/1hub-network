@@ -6,6 +6,7 @@ import { closePool, query } from '../../../src/lib/db/client'
 import { REPO_ROOT } from '../pixel-qa/paths'
 import {
   LEADER,
+  adm5Primitives,
   SEED_PROGRAMME,
   cleanupProgrammes,
   createProgramme,
@@ -78,5 +79,19 @@ test.describe('WF04-S06 operating team (Q4 deferred)', () => {
       await expectNoOverflow(page, `${width}px`)
       await page.screenshot({ path: path.join(ACTUAL, `wf04-s06-${width}.png`), fullPage: true })
     }
+  })
+})
+
+test.describe('WF04-S06 visual QA (restored by WF04-PROD-04-FIX)', () => {
+  test('1440×900 empty team: typography and ADM5 primitives', async ({ page }) => {
+    await login(page.request, LEADER)
+    await page.goto(routes.setup(SEED_PROGRAMME, 'team'))
+    await adm5Primitives(
+      page,
+      'WF04-S06',
+      'empty',
+      '[data-operating-team]',
+      '[data-state="team-empty"]',
+    )
   })
 })

@@ -275,14 +275,12 @@ export function Confirm({
   no,
   onYes,
   onNo,
-  busy,
 }: {
   text: string
   yes: string
   no: string
   onYes: () => void
   onNo: () => void
-  busy?: boolean
 }) {
   return (
     <div className={styles.confirm} role="group" aria-label={text} data-confirm>
@@ -291,8 +289,6 @@ export function Confirm({
         type="button"
         className={`weight-medium ${buttons.primary}`}
         onClick={onYes}
-        disabled={busy}
-        aria-busy={busy || undefined}
         data-confirm="yes"
       >
         {yes}

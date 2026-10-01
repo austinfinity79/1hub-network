@@ -8,6 +8,7 @@ import { REPO_ROOT } from '../pixel-qa/paths'
 import {
   CHAPTER_01,
   LEADER,
+  adm5Primitives,
   SEED_PROGRAMME,
   auditActions,
   call,
@@ -182,5 +183,119 @@ test.describe('WF04-S07 responsive and typography', () => {
     await settle(page)
     expect((await assertTypography(page)).violations).toEqual([])
     await page.screenshot({ path: path.join(ACTUAL, 'wf04-s07-1440x900.png'), fullPage: true })
+  })
+})
+
+test.describe('WF04-S07 restored coverage (WF04-PROD-04-FIX)', () => {
+  test('the summary reflects the programme: basic, journey, problems, events, registration, team', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    const { programme } = await createProgramme(page.request, {
+      type: 'CHALLENGE',
+      name: 'Rà soát đầy đủ',
+      summary: 'Tóm tắt rà soát.',
+      starts_at: '2026-11-01T00:00:00+07:00',
+      ends_at: '2026-12-15T23:59:00+07:00',
+    })
+    await call(page.request, 'patch', `/${programme.id}`, {
+      stages: [{ name: 'Ươm tạo' }, { name: 'Demo day' }],
+      problem_statements: [{ title: 'Bài toán rà soát' }],
+    })
+    await call(page.request, 'put', `/${programme.id}/registration`, {
+      applicant_types: ['STARTUP'],
+      questions: [{ id: 'q-a', prompt: 'Vấn đề?', required: true, step: 1 }],
+    })
+    await page.goto(routes.setup(programme.id, 'review'))
+    const row = (key: string) => page.locator(`[data-review="${key}"]`)
+    await expect(row('basic')).toContainText('Challenge · Rà soát đầy đủ')
+    await expect(row('basic')).toContainText('Chapter 01')
+    await expect(row('basic')).toContainText('01/11/2026 – 15/12/2026')
+    await expect(row('basic')).toContainText('Tóm tắt rà soát.')
+    await expect(row('journey')).toContainText('2 giai đoạn')
+    await expect(row('journey')).toContainText('Demo day')
+    await expect(row('problems')).toContainText('Bài toán rà soát')
+    await expect(row('events')).toContainText('0 sự kiện')
+    await expect(row('registration')).toContainText('Startup · 1 câu hỏi riêng')
+    await expect(row('team')).toContainText('0 thành viên')
+    await row('journey').locator('[data-edit="journey"]').click()
+    await expect(page).toHaveURL(new RegExp(`${routes.setup(programme.id, 'journey')}$`))
+  })
+
+  test('a failed publish keeps DRAFT; "Thử lại" publishes once with the same key', async ({
+    page,
+  }) => {
+    await login(page.request, LEADER)
+    const { programme } = await createProgramme(page.request)
+    await page.goto(routes.setup(programme.id, 'review'))
+    let fail = true
+    const keys: (string | null)[] = []
+    await page.route(`**/api/v1/programmes/${programme.id}/publish`, async (route) => {
+      keys.push(route.request().headers()['idempotency-key'] ?? null)
+      if (fail) {
+        fail = false
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: '{"error":{"code":"X","message":"m","request_id":"r"}}',
+        })
+      } else await route.continue()
+    })
+    await publish(page).click()
+    await expect(page.locator('[data-state="save-failed"]')).toBeVisible()
+    expect((await programmeRow(programme.id))!.status).toBe('DRAFT')
+    await page.locator('[data-action="retry"]').click()
+    await expect(page.locator('[data-publish-state]')).toHaveAttribute(
+      'data-publish-state',
+      'published',
+    )
+    expect((await programmeRow(programme.id))!.status).toBe('PUBLISHED')
+    expect(
+      (await auditActions(programme.id)).filter((a) => a === 'PROGRAMME_PUBLISHED'),
+    ).toHaveLength(1)
+    expect(keys).toHaveLength(2)
+    expect(keys[0]).toBeTruthy()
+    expect(keys[1]).toBe(keys[0])
+    const mocked = consoleErrors.filter((e) => /status of 500/.test(e))
+    expect(mocked).toHaveLength(1)
+    consoleErrors.splice(
+      0,
+      consoleErrors.length,
+      ...consoleErrors.filter((e) => !mocked.includes(e)),
+    )
+  })
+
+  test('1440×900 ready, incomplete and published: ADM5 primitives', async ({ page }) => {
+    await login(page.request, LEADER)
+    const { programme } = await createProgramme(page.request, { type: 'CHALLENGE' })
+    await page.goto(routes.setup(programme.id, 'review'))
+    await adm5Primitives(
+      page,
+      'WF04-S07',
+      'ready',
+      '[data-review-summary]',
+      '[data-review="basic"]',
+    )
+    const [blank] = await query<{ id: string }>(
+      `INSERT INTO programmes (organization_id, programme_type, slug, name) VALUES ($1, 'PROGRAMME', $2, '   ') RETURNING id::text`,
+      [CHAPTER_01, `wf04-s07-vis-${Date.now()}`],
+    )
+    track(blank!.id)
+    await page.goto(routes.setup(blank!.id, 'review'))
+    await adm5Primitives(
+      page,
+      'WF04-S07',
+      'incomplete',
+      '[data-review-summary]',
+      '[data-review="basic"]',
+    )
+    await page.goto(routes.setup(SEED_PROGRAMME, 'review'))
+    await adm5Primitives(
+      page,
+      'WF04-S07',
+      'published',
+      '[data-review-summary]',
+      '[data-review="basic"]',
+    )
   })
 })

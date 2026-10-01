@@ -19,8 +19,8 @@ import {
  * API and database (rewritten from the demo UAT journey, contract §17): a
  * leader creates a Challenge, sets its journey, problem and registration,
  * publishes it; a member reaches it through the existing WF05 apply flow; the
- * form locks once an application exists; the leader closes the Challenge and
- * it no longer accepts applications. Every step survives a refresh.
+ * form locks once an application exists; the leader closes the Challenge (API
+ * only, no close control on screen) and it no longer accepts applications. Every step survives a refresh.
  */
 
 let consoleErrors: string[] = []
@@ -112,12 +112,14 @@ test('UAT-WF04: create → configure → publish → WF05 apply → form locked 
   await login(page.request, LEADER)
   await page.goto(routes.setup(id, 'registration'))
   await expect(page.locator('[data-state="registration-locked"]')).toBeVisible()
+  // Closing has no approved control (WF04-PROD-04-FIX): the leader closes through the API.
   await page.goto(routes.detail(id))
-  await page.locator('[data-action="close-programme"]').click()
-  await page.locator('[data-confirm="yes"]').click()
-  await expect(page.locator('[data-detail-status]')).toHaveAttribute('data-detail-status', 'CLOSED')
+  await expect(page.locator('[data-action="close-programme"]')).toHaveCount(0)
+  const closed = await page.request.post(`/api/v1/programmes/${id}/close`)
+  expect(closed.status()).toBe(200)
   await page.reload()
   await expect(page.locator('[data-detail-status]')).toHaveAttribute('data-detail-status', 'CLOSED')
+  await expect(page.locator('[data-manage]')).toHaveCount(0)
 
   // 7. Closed: no new application; the existing draft is kept, unchanged.
   await page.context().clearCookies()

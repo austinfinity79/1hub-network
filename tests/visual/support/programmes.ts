@@ -1,6 +1,14 @@
+import path from 'node:path'
+
 import { expect, type APIRequestContext, type Page } from '@playwright/test'
 
 import { query } from '../../../src/lib/db/client'
+import { assertTypography, settle } from '../pixel-qa/capture'
+import { findScreen, loadManifest } from '../pixel-qa/manifest'
+import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
+import { decodePng, readPng } from '../pixel-qa/png'
+import { writeJsonReport } from '../pixel-qa/report'
+import { compareSegments, type Rect } from '../pixel-qa/segments'
 
 /**
  * WF04-PROD-04 — shared fixtures of the WF04 specs. Programmes are created
@@ -189,4 +197,91 @@ export async function cleanupProgrammes() {
 /** Registers a programme created outside `createProgramme` (e.g. through the UI) for cleanup. */
 export function track(id: string) {
   created.programmes.push(id)
+}
+
+/** Text glyphs and input interiors, masked so only chrome is compared. */
+export async function textMask(page: Page): Promise<Rect[]> {
+  return page.evaluate(() => {
+    const rects: { x: number; y: number; width: number; height: number }[] = []
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    while (walker.nextNode()) {
+      if (!walker.currentNode.textContent!.trim()) continue
+      const range = document.createRange()
+      range.selectNodeContents(walker.currentNode)
+      for (const r of range.getClientRects())
+        rects.push({ x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 })
+    }
+    for (const input of document.querySelectorAll('input, textarea')) {
+      const r = input.getBoundingClientRect()
+      rects.push({ x: r.x + 12, y: r.y + 12, width: r.width - 24, height: r.height - 24 })
+    }
+    return rects
+  })
+}
+
+/**
+ * Approved-primitive visual QA of a WF04 screen at 1440×900 (no WF04 bitmap
+ * exists; pixel method is contract Q9): typography, the ADM5 header band and
+ * rule, and the ADM5 card's top and left edges (WF03-S05 full baseline, card
+ * at 248 × 99). `edge` is an element inside the card whose white area holds
+ * the 40px left-edge slice (as the old demo specs used the first row).
+ */
+export async function adm5Primitives(
+  page: Page,
+  screen: string,
+  name: string,
+  card: string,
+  edge: string,
+) {
+  await settle(page)
+  const typography = await assertTypography(page)
+  expect(typography.violations, `${screen} ${name} typography`).toEqual([])
+  const reference = readPng(
+    path.join(REPO_ROOT, findScreen(loadManifest().screens, 'WF03-S05').full_page_baseline!),
+  )
+  const actual = decodePng(await page.screenshot())
+  const box = (await page.locator(card).first().boundingBox())!
+  const inner = (await page.locator(edge).first().boundingBox())!
+  const cx = Math.round(box.x) - 248
+  const cy = Math.round(box.y) - 99
+  const ry = Math.round(inner.y) + 4 - 140
+  const results = compareSegments(
+    reference,
+    actual,
+    [
+      { name: `${name}-header-band`, reference: { x: 500, y: 4, width: 600, height: 66 }, dy: 0 },
+      { name: `${name}-header-rule`, reference: { x: 500, y: 72, width: 600, height: 6 }, dy: 0 },
+      {
+        name: `${name}-card-top`,
+        reference: { x: 300, y: 95, width: 800, height: 8 },
+        dx: cx,
+        dy: cy,
+      },
+      {
+        name: `${name}-card-left`,
+        reference: { x: 244, y: 140, width: 10, height: 40 },
+        dx: cx,
+        dy: ry,
+      },
+    ],
+    await textMask(page),
+    { diffPath: resolveOutputPath('diff', `${screen}.${name}.diff.png`) },
+  )
+  writeJsonReport(`${screen}.${name}.primitives.json`, {
+    screen_id: screen,
+    reference_compared:
+      'WF03-S05 (ADM5) full baseline: header band, header rule, card top and left edges',
+    approved_wf04_bitmap: null,
+    intentional: [
+      {
+        class: 'INTENTIONAL',
+        reason:
+          'DEC-WF04-H1: ADM5 card chrome; WF04-PROD-04 removed the demo notice (contract §16); data is canonical; pixel reference method is contract Q9 (PROD-06)',
+      },
+    ],
+    typography,
+    segments: results,
+    product_pixel_pass_claimed: false,
+  })
+  for (const r of results) expect(r.outside_ratio, `${screen} ${r.name} drift`).toBeLessThan(0.002)
 }

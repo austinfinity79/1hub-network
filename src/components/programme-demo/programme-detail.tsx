@@ -1,9 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef, useState, type ReactNode } from 'react'
-
-import { Notice } from '@/components/ui'
+import type { ReactNode } from 'react'
 
 import { APPLICANT_LABEL, TEAM_ROLE_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
 import { formatEventWhen } from '@/lib/programme-demo/event-time'
@@ -16,7 +14,7 @@ import type { ProgrammeScreen } from '@/lib/programme/view'
 
 import buttons from './demo-buttons.module.css'
 import styles from './journey.module.css'
-import { Confirm, SetupScreen, type Send } from './setup-screen'
+import { SetupScreen } from './setup-screen'
 import { EventStatusPill, ProgrammeStatusPill } from './status-pill'
 
 /**
@@ -24,9 +22,11 @@ import { EventStatusPill, ProgrammeStatusPill } from './status-pill'
  * One page for PROGRAMME and CHALLENGE (the CHALLENGE adds its problem
  * statements), from the canonical API: identity, status, owner, time, summary,
  * and summaries of the journey, events, registration and team, each linking to
- * its setup step while the programme can be edited. Publishing is S07; closing
- * a PUBLISHED programme is here (DEC-W4P-D12), after an inline confirmation.
- * No metric, application count, funnel or public link.
+ * its setup step while the programme can be edited. Publishing is S07. Closing
+ * (DEC-W4P-D12) is API-only: the approved design has no close control, so
+ * none is drawn until a PO / design decision (WF04-PROD-04-FIX); a closed
+ * programme is shown read only. No metric, application count, funnel or
+ * public link.
  */
 
 const COPY = {
@@ -37,12 +37,6 @@ const COPY = {
   published: 'Đang công khai.',
   closedText: 'Đã đóng: không nhận đăng ký mới và không chỉnh sửa được.',
   archivedText: 'Đã lưu trữ.',
-  close: 'Đóng chương trình',
-  closeConfirm: (name: string) =>
-    `Đóng “${name}”? Chương trình sẽ không nhận đăng ký mới và không chỉnh sửa được nữa.`,
-  closeYes: 'Đóng',
-  closeNo: 'Huỷ',
-  closedNow: 'Đã đóng chương trình.',
   overview: 'Thông tin chung',
   type: 'Loại',
   owner: 'Đơn vị chủ trì',
@@ -88,7 +82,7 @@ export function ProgrammeDetail({ id, initial }: { id: string; initial: Programm
         </div>
       )}
     >
-      {({ detail, send }) => <DetailBody detail={detail} send={send} />}
+      {({ detail }) => <DetailBody detail={detail} />}
     </SetupScreen>
   )
 }
@@ -137,62 +131,19 @@ const STATUS_TEXT: Record<ProgrammeScreen['programme']['status'], string> = {
   ARCHIVED: COPY.archivedText,
 }
 
-function DetailBody({ detail, send }: { detail: ProgrammeScreen; send: Send }) {
+function DetailBody({ detail }: { detail: ProgrammeScreen }) {
   const { programme, organization, registration } = detail
   const stages = orderedStages(detail)
   const events = programmeEvents(detail)
   const problems = detail.problem_statements ?? []
   const editable = detail.actions.edit
-  const [confirming, setConfirming] = useState(false)
-  const [closing, setClosing] = useState(false)
-  const [closedNow, setClosedNow] = useState(false)
-  // One key per close intent: a retried click replays instead of failing.
-  const closeKey = useRef(`close-${crypto.randomUUID()}`)
-
-  async function close() {
-    if (closing) return
-    setClosing(true)
-    const outcome = await send({
-      path: `/programmes/${encodeURIComponent(programme.id)}/close`,
-      method: 'POST',
-      idempotencyKey: closeKey.current,
-    })
-    setClosing(false)
-    setConfirming(false)
-    setClosedNow(outcome.ok)
-  }
 
   return (
     <>
       <div className={styles.status} data-detail-status={programme.status}>
         <ProgrammeStatusPill status={programme.status} />
         <p className={`type-body-sm ${styles.statusText}`}>{STATUS_TEXT[programme.status]}</p>
-        {detail.actions.close && !confirming ? (
-          <button
-            type="button"
-            className={`weight-medium ${buttons.secondary}`}
-            onClick={() => setConfirming(true)}
-            data-action="close-programme"
-          >
-            {COPY.close}
-          </button>
-        ) : null}
       </div>
-      {detail.actions.close && confirming ? (
-        <Confirm
-          text={COPY.closeConfirm(programme.name)}
-          yes={COPY.closeYes}
-          no={COPY.closeNo}
-          busy={closing}
-          onYes={close}
-          onNo={() => setConfirming(false)}
-        />
-      ) : null}
-      {closedNow ? (
-        <div className={styles.saved} data-state="closed-now">
-          <Notice>{COPY.closedNow}</Notice>
-        </div>
-      ) : null}
 
       <section className={styles.card} aria-labelledby="detail-overview" data-detail="overview">
         <header className={styles.cardHead}>
