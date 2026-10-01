@@ -13,6 +13,10 @@ import styles from './landing.module.css'
  * visitor's own entry point) or INERT: it keeps its place in the approved
  * layout, never navigates and says why on hover and to assistive technology
  * (DEC-P0-SHELL-D2 reasons). No `href="#"`, no script URL.
+ *
+ * PO P3 cleanup (01/10): an inert CTA is drawn visibly disabled (the disabled
+ * pattern of the UI primitives), and a planned capability that stays visible
+ * carries a visible "Sắp có" (`soon`) instead of relying on the tooltip.
  */
 
 export type InertReason = keyof typeof INERT_REASONS
@@ -41,6 +45,7 @@ export function Cta({
   children,
   label,
   cta,
+  soon,
 }: {
   action: Action
   className?: string
@@ -48,6 +53,8 @@ export function Cta({
   /** Accessible name when `children` is not plain text. */
   label: string
   cta?: string
+  /** Inert only: a planned capability that stays visible shows "Sắp có". */
+  soon?: boolean
 }) {
   if ('href' in action) {
     if (action.href.startsWith('https://'))
@@ -82,6 +89,11 @@ export function Cta({
       aria-label={`${label} — ${reason}`}
     >
       {children}
+      {soon ? (
+        <span className={styles.soon} aria-hidden="true">
+          Sắp có
+        </span>
+      ) : null}
     </span>
   )
 }

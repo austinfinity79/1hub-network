@@ -157,7 +157,7 @@ export function About({
               >
                 Tham gia HUB Network <Arrow />
               </Cta>
-              <Cta action={later} label="Kết nối hợp tác" className={styles.btnLine}>
+              <Cta action={later} label="Kết nối hợp tác" className={styles.btnLine} soon>
                 Kết nối hợp tác
               </Cta>
             </div>
@@ -332,7 +332,7 @@ export function About({
             <Cta action={network} label="Khám phá các HUB Chapter" className={styles.btnInk}>
               Khám phá các HUB Chapter <Arrow />
             </Cta>
-            <Cta action={later} label="Khám phá các câu lạc bộ" className={styles.btnLineInk}>
+            <Cta action={later} label="Khám phá các câu lạc bộ" className={styles.btnLineInk} soon>
               Khám phá các câu lạc bộ <Arrow />
             </Cta>
           </div>
@@ -435,7 +435,7 @@ export function About({
               >
                 Tham gia HUB Network <Arrow />
               </Cta>
-              <Cta action={later} label="Kết nối hợp tác" className={styles.btnLine}>
+              <Cta action={later} label="Kết nối hợp tác" className={styles.btnLine} soon>
                 Kết nối hợp tác
               </Cta>
             </div>
@@ -479,9 +479,8 @@ export function About({
             ))}
           </FooterColumn>
           <FooterColumn title="LIÊN HỆ">
-            <Cta action={later} label="global@1hub.network">
-              global@1hub.network
-            </Cta>
+            {/* PO P3 cleanup: contact text, no mail action approved (as the phone below). */}
+            <span>global@1hub.network</span>
             {/* PO decision (30/09): no approved tel: action, so the number is plain text. */}
             <span>0936 966 001</span>
           </FooterColumn>

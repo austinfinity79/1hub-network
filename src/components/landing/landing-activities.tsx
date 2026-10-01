@@ -12,8 +12,8 @@ import cards from './activity-cards.module.css'
  * shown verbatim under a visible "Dữ liệu minh hoạ" label. An event or
  * programme card has no destination yet, so it draws no "Chi tiết" action (PO
  * decision, Alpha interaction gap fix 30/09); the fund card opens
- * https://ihub.ventures (28/09 CTA map); deck and data room stay inert with
- * their reason. The pictures are the Hub's
+ * https://ihub.ventures (28/09 CTA map); deck and data room are visibly
+ * disabled with "Sắp có" (PO P3 cleanup). The pictures are the Hub's
  * own (supplied 29/09) in `public/home/`, cropped by the card; the gradient of
  * each card stays underneath while a picture loads.
  */
@@ -238,7 +238,7 @@ export function Pipeline() {
           <p className={cards.meta}>DECK</p>
           <h3 className={cards.cardTitle}>Deck giới thiệu</h3>
           <p className={cards.cardText}>Tên và phiên bản deck · chờ cập nhật</p>
-          <Cta action={{ inert: 'FUTURE' }} label="Xem deck" className={cards.more}>
+          <Cta action={{ inert: 'FUTURE' }} label="Xem deck" className={cards.more} soon>
             Xem deck <Arrow />
           </Cta>
         </li>
@@ -251,7 +251,7 @@ export function Pipeline() {
           <p className={cards.cardText}>
             Tài liệu mở theo quyền truy cập; mọi lượt xem được ghi nhật ký.
           </p>
-          <Cta action={{ inert: 'FUTURE' }} label="Yêu cầu truy cập" className={cards.more}>
+          <Cta action={{ inert: 'FUTURE' }} label="Yêu cầu truy cập" className={cards.more} soon>
             Yêu cầu truy cập <Arrow />
           </Cta>
         </li>

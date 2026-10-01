@@ -139,6 +139,7 @@ export function Network() {
               action={{ inert: 'FUTURE' }}
               label="Khám phá mạng lưới"
               className={styles.doorLink}
+              soon
             >
               Khám phá mạng lưới <Arrow />
             </Cta>
@@ -190,7 +191,13 @@ export function Closing({ network }: { network: Action }) {
           <div key={c.title} className={styles.closingCol}>
             <h3 className={styles.closingColTitle}>{c.title}</h3>
             <p className={styles.closingColText}>{c.text}</p>
-            <Cta action={c.action} label={c.label} className={styles.closingLink} cta={c.cta}>
+            <Cta
+              action={c.action}
+              label={c.label}
+              className={styles.closingLink}
+              cta={c.cta}
+              soon={'inert' in c.action}
+            >
               {c.label} <Arrow />
             </Cta>
           </div>

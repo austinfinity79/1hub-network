@@ -586,6 +586,7 @@ test.describe('P0-LANDING visual QA (corrected Homepage reference H1)', () => {
         'event, programme and pipeline pictures replaced by the Hub photos (PO, 29/09)',
         'no "Chi tiết" action on the event and programme cards (PO decision, Alpha interaction gap fix 30/09)',
         'hero search placeholder "Tìm kiếm trong Thư viện" (PO decision DEC-AIG-D10)',
+        'inert out-of-scope CTAs drawn disabled (opacity 0.55) with a visible "Sắp có" on planned capabilities; the footer e-mail is text (PO P3 cleanup, 01/10)',
       ],
       segments: report,
     })

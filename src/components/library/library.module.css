@@ -506,6 +506,11 @@
   cursor: pointer;
 }
 
+/* The keyword chip: display only, no click affordance (PO P3 cleanup). */
+.chipStatic {
+  cursor: default;
+}
+
 .clear,
 .clearLight {
   border: 0;

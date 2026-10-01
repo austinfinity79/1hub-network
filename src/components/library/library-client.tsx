@@ -340,7 +340,10 @@ function Directory({
           {active.length || query ? (
             <div className={styles.chips}>
               <span className={styles.chipsLabel}>Đang lọc:</span>
-              {query ? <span className={styles.chip}>“{query}”</span> : null}
+              {/* Display only (PO P3 cleanup): the keyword is not removable here. */}
+              {query ? (
+                <span className={`${styles.chip} ${styles.chipStatic}`}>“{query}”</span>
+              ) : null}
               {active.map(([group, value]) => (
                 <button
                   key={`${group}-${value}`}

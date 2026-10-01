@@ -203,9 +203,8 @@ export function Landing({
             ))}
           </FooterColumn>
           <FooterColumn title="LIÊN HỆ">
-            <Cta action={{ inert: 'NO_P0_SCREEN' }} label="global@1hub.network">
-              global@1hub.network
-            </Cta>
+            {/* PO P3 cleanup: contact text, no mail action approved (as the About phone). */}
+            <span>global@1hub.network</span>
             <Cta action={{ inert: 'NO_P0_SCREEN' }} label="Mạng xã hội">
               Mạng xã hội
             </Cta>

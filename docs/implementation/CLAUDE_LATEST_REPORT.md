@@ -1,43 +1,41 @@
 # Claude Task Report
 
 ## Task
-ALPHA INTERACTION GAP FIX — PO DECISION FREEZE + P1/P2 CLOSURE, with the FINAL CLOSURE (hero search copy, stale `/me/ventures` contract test). Report: [reports/ALPHA-INTERACTION-GAP-FIX.md](reports/ALPHA-INTERACTION-GAP-FIX.md); decisions: [DEC-AIG](../decisions/DECISION_LOG.md#dec-aig).
+P3 INTERACTION UX CLEANUP — PRE-UAT SAFE BATCH. Report: [reports/P3-INTERACTION-UX-CLEANUP.md](reports/P3-INTERACTION-UX-CLEANUP.md); decisions: [DEC-P3UX](../decisions/DECISION_LOG.md#dec-p3ux); registry: [reports/INTERACTION_ACTION_REGISTRY.md](reports/INTERACTION_ACTION_REGISTRY.md).
 
 ## Verdict
-**GREEN, not deployed. READY FOR PRE-DEPLOY REVIEW.** P1 20 → 0, P2 31 → 0. Every changed item ends in one outcome (navigation, hidden, or non-clickable). Hero search reads "Tìm kiếm trong Thư viện". No known failing test. Production still runs `ff052d7`. STOP.
+**GREEN except D5 (stopped), not deployed.** NO_ACTION 93 → 0 on measured evidence; WRONG_* 0; BROKEN 0. Production still runs `be5c0cc`. STOP.
 
 ## Scope implemented
-- Public nav labels, hero search → `/library?q=`, guest return to venture creation (BD-02 rule, browser side), ihub.ventures link, account and workspace menu routes, "Hồ sơ đăng ký" → L5 entry.
-- Hidden for Alpha: "Góp ý", homepage "Chi tiết", Library "Theo dõi" / "Kết nối" / problem and profile actions without a destination. Plain text: About phone, founder startup row without a website.
+- D1 member / workspace header inert items dimmed; D2 / D3 homepage and About inert CTAs drawn disabled, "Sắp có" on planned capabilities, e-mail as text; D4 Library keyword chip display only; D6 404 "Về trang chủ"; D7 closing CTAs.
+- D5 (BD-01 sign-up copy) stopped: no approved sign-up copy (AUTH1 has the login frame only).
 
 ## Files changed
-- App: landing (`landing.tsx`, `landing-parts.tsx`, `landing-activities.tsx`, `hero-search.tsx`, CSS), About, Library (page, `library.tsx`, `library-client.tsx`, model, CSS), auth entry and callback, ACC-10 exit, shells (member / workspace nav, onboarding and workspace shells, wizard), `feedback-pill` removed; new `lib/auth/return-path.ts`, `lib/library/query.ts`.
-- Tests: new `alpha-interaction-gaps.spec.ts`, unit tests for the two libs; affected specs updated to the decisions.
-- Docs: DECISION_LOG (DEC-AIG), gap register (status columns), audit summary, J7 note, this report.
+- App: `landing-parts.tsx` (`Cta` `soon`), `landing.module.css`, `landing.tsx`, `landing-activities.tsx`, `landing-network.tsx`, `about.tsx`, `library-client.tsx`, `library.module.css`, `member-shell.module.css`, `workspace-shell.module.css`, `not-found.tsx`.
+- Tests: `alpha-interaction-gaps.spec.ts` (+5), `p0-landing.spec.ts` (intentional note).
+- Docs: DECISION_LOG (DEC-P3UX), interaction action registry (md + csv, after state), this report.
 
 ## Migrations / data
-None. No API or schema change.
+None in the repository. The local test DB was reset to the seed (`db:reset`, local only).
 
 ## Tests / build
-format, lint, typecheck, unit 259/259, build: PASS. New spec 9/9; affected specs and protected smoke L1, L2, L3, L5: PASS. Runtime: #418 0, 5xx 0, broken assets 0, console 0.
-
-Extra sweep (WF03, WF04, API): 205 PASS; its one stale test (`api-contract` expected `/me/ventures` → 404) now follows contract 05 §5.3 (guest 401, session 200 `{ items, page }`). Final closure: targeted 28/28, regression 78/78.
+format, lint, typecheck, unit 259/259, build: PASS. Interaction spec 14/14; affected specs 210/210; L1 / L2 / L3 / L5 smoke and UAT L1–L2 19/19 PASS on a fresh local DB; re-audit of 18 affected states. Runtime: hydration 0, console 0, 5xx 0, broken links 0.
 
 ## Visual QA
-No baseline changed. Intentional deviations recorded in the specs (landing "Chi tiết" strip, Library L15b / L15c action row, onboarding "Góp ý" segment); all other segments within thresholds.
+No baseline changed; the disabled look and the "Sắp có" pills are recorded as intentional in the landing report; thresholds pass. Desktop 1440 and mobile 390 screenshots reviewed.
 
 ## Deviations / blockers
-- Return path not stored with the magic-link request: another browser or device lands on the usual destination.
-- Two minimal copies: callback "Bạn sẽ được chuyển về trang bạn đã chọn"; ACC-10 exit "Tiếp tục" (only with a return path).
+- D5: needs the sign-up copy, or approval of "Đăng nhập" for both intents.
+- Remaining MISSING_BUSINESS_DECISION: "Triển khai chương trình" (4 elements).
 
 ## Git
-- Branch: `main`; start HEAD `ebdf632`; no concurrent change
-- Implementation commit: `b5937ce` `fix(interactions): close alpha P1 P2 action gaps`
-- Report/final commit: `fix(interactions): close alpha search copy and stale contract test` (final closure)
+- Branch: `main`; start HEAD `be5c0cc`; no concurrent change
+- Implementation commit: `fix(interactions): P3 UX cleanup of inert controls` (code, tests, decisions, registry and reports in one commit)
+- Report/final commit: same commit
 - Remote: `origin`
-- Push status: NOT RUN (task: do not push)
-- Remote HEAD: `d4c62d4` (`ebdf632`, `b5937ce` and the final commit are local only)
+- Push status: NOT RUN (task: local commit only)
+- Remote HEAD: `be5c0cc`
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO review of the fix, then push and deploy of the exact SHA when approved.
+PO review of the P3 batch and the D5 copy decision.

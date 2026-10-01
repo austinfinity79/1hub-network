@@ -68,6 +68,9 @@
 
 .navItem[aria-disabled='true'] {
   cursor: default;
+  /* Reads as unavailable beside a working link (DEC-P0-SHELL-D2; the disabled
+     pattern of the UI primitives). PO P3 cleanup, 01/10. */
+  opacity: 0.55;
 }
 
 .navItem:focus-visible,

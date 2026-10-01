@@ -48,6 +48,25 @@
 
 .inert {
   cursor: default;
+  /* PO P3 cleanup: visibly disabled, the disabled pattern of the UI primitives. */
+  opacity: 0.55;
+}
+
+/* "Sắp có" on a planned capability: the pill of the "Dữ liệu minh hoạ" label,
+   in the colour of the item it marks. */
+.soon {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 14px;
+  letter-spacing: 0.11em;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .arrow {

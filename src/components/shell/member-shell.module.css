@@ -42,6 +42,12 @@
   cursor: default;
 }
 
+/* An inert item reads as unavailable beside a working link (DEC-P0-SHELL-D2;
+   the disabled pattern of the UI primitives). PO P3 cleanup, 01/10. */
+.productNav .productItem[aria-disabled='true'] {
+  opacity: 0.55;
+}
+
 /* P0-SHELL: the ops entry, only for accounts with an ops scope (not on the
    approved member references, whose persona has none). */
 .opsEntry {

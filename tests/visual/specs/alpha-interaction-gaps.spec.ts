@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { closePool } from '../../../src/lib/db/client'
 import { completedAccount, reach, watchConsole } from '../support/onboarding'
@@ -287,6 +287,7 @@ test.describe('runtime on the changed screens', () => {
       `/library?q=${encodeURIComponent(KEYWORD)}`,
       '/auth?redirect=%2Fprojects%2Fnew',
       '/onboarding',
+      '/khong-ton-tai',
     ])
       await visit(url)
     await login(page, 'member@example.test')
@@ -294,5 +295,159 @@ test.describe('runtime on the changed screens', () => {
       await visit(url)
     expect(bad).toEqual([])
     expect(errors.filter((e) => /#418|hydrat/i.test(e))).toEqual([])
+  })
+})
+
+/** opacity, cursor, tag, href, tabindex of an element. */
+const look = (l: Locator) =>
+  l.evaluate((n) => {
+    const cs = getComputedStyle(n)
+    return [
+      Number(cs.opacity),
+      cs.cursor,
+      n.tagName,
+      n.getAttribute('href'),
+      n.getAttribute('tabindex'),
+    ] as const
+  })
+
+test.describe('P3 UX cleanup: what cannot be clicked no longer looks clickable', () => {
+  test('member and workspace headers: inert items are dimmed beside the working link', async ({
+    page,
+  }) => {
+    await login(page, 'member@example.test')
+    const cases = [
+      ['/me/settings', 'Thư viện', ['Challenge', 'Sự kiện']],
+      ['/projects', 'Mạng lưới', ['Chương trình', 'Sự kiện']],
+    ] as const
+    for (const [url, live, inert] of cases) {
+      await page.goto(url, { waitUntil: 'networkidle' })
+      const header = page.locator('header').first()
+      const link = header.getByRole('link', { name: live, exact: true })
+      expect((await look(link))[0], `${url} ${live}`).toBe(1)
+      await link.focus()
+      await expect(link).toBeFocused()
+      for (const label of inert) {
+        const item = header.locator('[data-nav-kind="INERT"]', { hasText: label })
+        const [opacity, cursor, tag, href, tabindex] = await look(item)
+        expect(opacity, `${url} ${label}`).toBeLessThan(0.6)
+        expect([cursor, tag, href, tabindex]).toEqual(['default', 'SPAN', null, null])
+        await item.click()
+        await expect(page).toHaveURL(url)
+      }
+    }
+  })
+
+  test('homepage and About: planned CTAs say "Sắp có", inert items are dimmed, contacts are text', async ({
+    page,
+  }) => {
+    const soon = (label: string) =>
+      page.locator('[data-cta-kind="INERT"]', { hasText: label }).filter({ hasText: 'Sắp có' })
+    const plainEmail = async () => {
+      const email = page.getByText('global@1hub.network', { exact: true })
+      await expect(email).toHaveCount(1)
+      expect(await email.evaluate((n) => [n.tagName, n.getAttribute('aria-disabled')])).toEqual([
+        'SPAN',
+        null,
+      ])
+      await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0)
+    }
+    for (const [url, planned] of [
+      [
+        '/',
+        [
+          ['Xem deck', 1],
+          ['Yêu cầu truy cập', 1],
+          ['Khám phá mạng lưới', 2],
+          ['Triển khai chương trình', 1],
+        ],
+      ],
+      [
+        '/about',
+        [
+          ['Kết nối hợp tác', 2],
+          ['Khám phá các câu lạc bộ', 1],
+        ],
+      ],
+    ] as const) {
+      await page.goto(url, { waitUntil: 'networkidle' })
+      const inert = page.locator('[data-cta-kind="INERT"]')
+      expect(await inert.count(), url).toBeGreaterThan(5)
+      for (const el of await inert.all()) {
+        const [opacity, cursor, tag, href] = await look(el)
+        expect(opacity, `${url} ${await el.getAttribute('aria-label')}`).toBeLessThan(0.6)
+        expect([cursor, tag, href]).toEqual(['default', 'SPAN', null])
+      }
+      for (const [label, n] of planned) await expect(soon(label), `${url} ${label}`).toHaveCount(n)
+      await plainEmail()
+      await inert.first().click()
+      await expect(page).toHaveURL(url)
+    }
+    // "Khám phá cơ hội" keeps its in-page action; working links stay at full strength.
+    await page.goto('/', { waitUntil: 'networkidle' })
+    const opportunities = page.locator('[data-cta="closing-opportunities"]')
+    await expect(opportunities).toHaveAttribute('href', '#co-hoi')
+    expect((await look(opportunities))[0]).toBe(1)
+    await opportunities.click()
+    await expect(page).toHaveURL('/#co-hoi')
+  })
+
+  test('Library keyword chip is display only; the facet chips keep their remove action', async ({
+    page,
+  }) => {
+    await page.goto('/library?q=giao%20th%C3%B4ng', { waitUntil: 'networkidle' })
+    const chip = page.locator('[class*="chips"] span', { hasText: '“giao thông”' })
+    const [, cursor, tag, href, tabindex] = await look(chip)
+    expect([cursor, tag, href, tabindex]).toEqual(['default', 'SPAN', null, null])
+    const count = page.locator('[data-section="directory"] [aria-live="polite"]')
+    const before = await count.innerText()
+    await chip.click()
+    await expect(page).toHaveURL('/library?q=giao%20th%C3%B4ng')
+    await expect(count).toHaveText(before)
+    await page
+      .getByRole('complementary', { name: 'Bộ lọc' })
+      .getByRole('checkbox', { name: /^Logistics/ })
+      .check()
+    const facet = page.getByRole('button', { name: /^Bỏ lọc / }).first()
+    expect((await look(facet))[1]).toBe('pointer')
+    await facet.click()
+    await expect(page.getByRole('button', { name: /^Bỏ lọc / })).toHaveCount(0)
+  })
+
+  test('404: "Về trang chủ" leads home, by keyboard too; Back still works', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' })
+    const res = await page.goto('/khong-ton-tai', { waitUntil: 'networkidle' })
+    expect(res?.status()).toBe(404)
+    const home = page.getByRole('link', { name: 'Về trang chủ' })
+    await expect(home).toHaveAttribute('href', '/')
+    await page.keyboard.press('Tab')
+    await expect(home).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL('/')
+    await page.goBack()
+    await expect(page).toHaveURL('/khong-ton-tai')
+    await page.goBack()
+    await expect(page).toHaveURL('/')
+  })
+
+  test('mobile 390: the "Sắp có" labels fit; no horizontal scroll', async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
+    const page = await ctx.newPage()
+    watchConsole(page, errors)
+    for (const url of ['/', '/about', '/library?q=giao%20th%C3%B4ng', '/khong-ton-tai']) {
+      await page.goto(url, { waitUntil: 'networkidle' })
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      )
+      expect(overflow, url).toBe(0)
+    }
+    await page.goto('/about', { waitUntil: 'networkidle' })
+    for (const pill of await page
+      .locator('[data-cta-kind="INERT"] > span[aria-hidden="true"]')
+      .all()) {
+      const box = (await pill.boundingBox())!
+      expect(box.x + box.width).toBeLessThanOrEqual(390)
+    }
+    await ctx.close()
   })
 })

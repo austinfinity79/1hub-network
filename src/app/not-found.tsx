@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import { PageContainer } from '@/components/shell/page-container'
 
 /**
@@ -5,7 +7,8 @@ import { PageContainer } from '@/components/shell/page-container'
  *
  * Next.js ships an unstyled default; this replaces it with the project's
  * typography and colour tokens. No product copy is invented beyond naming the
- * condition, and no navigation is offered because no approved screen exists yet.
+ * condition. PO P3 cleanup (01/10): one recovery action, "Về trang chủ" → `/`,
+ * with the existing button primitive; browser Back is untouched.
  */
 export default function NotFound() {
   return (
@@ -16,6 +19,11 @@ export default function NotFound() {
         </p>
         <h1 className="type-heading-2 mt-2">Không tìm thấy trang</h1>
         <p className="type-body-md mt-2">Đường dẫn này không tồn tại.</p>
+        <p className="mt-6">
+          <Link href="/" className="ui-button" data-variant="primary" data-nav="not-found-home">
+            Về trang chủ
+          </Link>
+        </p>
       </section>
     </PageContainer>
   )
