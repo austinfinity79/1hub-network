@@ -1501,7 +1501,7 @@ Superseded in part: [DEC-P0-SHELL-D2](#dec-p0-shell-d2) for the items above (ine
 
 ## DEC-P3UX — P3 interaction UX cleanup (PO, 01/10)
 
-<a id="dec-p3ux"></a>**Status:** IMPLEMENTED 2026-10-01 except D5, on the PO's decisions after the [interaction action registry](../implementation/reports/INTERACTION_ACTION_REGISTRY.md). No new route, destination or behaviour.
+<a id="dec-p3ux"></a>**Status:** IMPLEMENTED 2026-10-01 (D5 on the PO's final BD-01 decision of the same day), on the PO's decisions after the [interaction action registry](../implementation/reports/INTERACTION_ACTION_REGISTRY.md). No new route, destination or behaviour.
 
 | ID | Decision |
 |---|---|
@@ -1509,7 +1509,7 @@ Superseded in part: [DEC-P0-SHELL-D2](#dec-p0-shell-d2) for the items above (ine
 | <a id="dec-p3ux-d2"></a>DEC-P3UX-D2 | **Homepage out-of-scope CTAs** are drawn disabled; a planned capability that stays visible carries a visible "Sắp có" ("Xem deck", "Yêu cầu truy cập", "Khám phá mạng lưới" in the two doors, "Triển khai chương trình" in the closing section). The contact e-mail is plain text. No href, `#`, dummy route or toast. |
 | <a id="dec-p3ux-d3"></a>DEC-P3UX-D3 | **About** follows D2: inert items disabled; "Kết nối hợp tác" and "Khám phá các câu lạc bộ" carry "Sắp có"; the e-mail is plain text. |
 | <a id="dec-p3ux-d4"></a>DEC-P3UX-D4 | **Library keyword chip** ("Đang lọc") is display only: no pointer, no click. A remove-keyword action is deferred. |
-| <a id="dec-p3ux-d5"></a>DEC-P3UX-D5 | **"Tạo tài khoản" / BD-01** — NOT IMPLEMENTED: BD-01 says `mode=signup` changes copy only, but no sign-up copy is approved (AUTH1 has one frame, "Đăng nhập" / "Gửi liên kết đăng nhập"). Needs the copy, or approval of "Đăng nhập" for both intents. |
+| <a id="dec-p3ux-d5"></a>DEC-P3UX-D5 | **BD-01, final (PO):** one auth surface, canonical `/auth`, for both sign-in and first-time sign-up; its heading reads "Đăng nhập & đăng ký". "Tạo tài khoản" and "Đăng nhập" both open `/auth`. No `/signup`, no `/login` alias, no mode parameter, no separate flow or backend; magic link, callback, session and onboarding unchanged. Supersedes BD-01's `/login` alias and `mode=signup`, and the CTA map's `/login?mode=signup` row. |
 | <a id="dec-p3ux-d6"></a>DEC-P3UX-D6 | **404** offers "Về trang chủ" → `/` with the existing button primitive; Back unchanged. |
 | <a id="dec-p3ux-d7"></a>DEC-P3UX-D7 | **Closing section:** "Khám phá cơ hội" keeps `#co-hoi`; "Triển khai chương trình" has no destination, is drawn disabled with "Sắp có", and stays a missing business decision. |
 

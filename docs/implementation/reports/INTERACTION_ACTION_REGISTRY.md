@@ -8,22 +8,23 @@ Total interactive elements: **1351** (965 element groups; 74 page states + 4 tab
 
 | Status | Before cleanup | After cleanup | Groups (after) |
 |---|---:|---:|---:|
-| PASS | 1215 | 1219 | 878 |
+| PASS | 1215 | 1222 | 880 |
 | NO_ACTION | 93 | 0 | 0 |
 | WRONG_ACTION | 0 | 0 | 0 |
 | WRONG_ROUTE | 0 | 0 | 0 |
 | WRONG_EXTERNAL_LINK | 0 | 0 | 0 |
-| MISLEADING_UI | 3 | 3 | 2 |
+| MISLEADING_UI | 3 | 0 | 0 |
 | MISSING_BUSINESS_DECISION | 8 | 4 | 2 |
 | INTENTIONAL_NON_CLICKABLE | 13 | 18 | 14 |
 | DEFERRED | 19 | 107 | 69 |
 | BROKEN | 0 | 0 | 0 |
 
-Issues (every status except PASS, INTENTIONAL_NON_CLICKABLE, DEFERRED): **7 elements, 2 distinct findings**. Severity: P0 0 · P1 0 · P2 0 · P3 2.
+Issues (every status except PASS, INTENTIONAL_NON_CLICKABLE, DEFERRED): **4 elements, 1 distinct finding(s)**. Severity: P0 0 · P1 0 · P2 0 · P3 1.
 
 | Method | What |
 |---|---|
 | Inventory | local production build of `be5c0cc` with the deterministic seed; links, buttons, tabs, menus, inputs, selects, disclosures, focusable regions, pointer-cursor elements, `aria-disabled` items, Library tab states |
+| Re-audit (BD-01) | `/auth`, `/auth?redirect=`, `/` (guest, member), `/about` inventoried and probed again: heading "Đăng nhập & đăng ký", both entries → `/auth` (200) |
 | Re-audit (P3 cleanup) | the 18 affected page states (`/`, `/about`, `/library` states, the account and workspace shells, the 404 pages) inventoried and probed again; every inert item clicked and measured (opacity, cursor, focus); unaffected states keep the first run |
 | Behaviour | every non-link control clicked on a fresh load (navigation, request, dialog, state, feedback); every internal href fetched with the persona's session; external hrefs fetched; anchors resolved; 83 inert items and plain labels clicked one by one (all: nothing) |
 | Checked by hand | 5 About footer anchors (the automated click is blocked by the sticky reveal footer; a user click at the page end scrolls to `#su-menh`), the file choosers ("Tải ảnh lên", "Đổi ảnh": open), the Library keyword chip, the 404 pages, the account-shell look of inert vs working items (computed colour and class) |
@@ -58,7 +59,7 @@ Every finding below is P3: the element is secondary, a workaround exists, and no
 
 ### Changed by the P3 UX cleanup (01/10)
 
-PO decisions D1–D7 of the P3 cleanup. D5 (BD-01 sign-up copy) is **not implemented**: no approved sign-up copy exists (see C).
+PO decisions D1–D7 of the P3 cleanup; D5 closed by the PO's final BD-01 decision (one auth surface, heading "Đăng nhập & đăng ký").
 
 | Screen | Element | Before | After | Classification | Evidence |
 |---|---|---|---|---|---|
@@ -75,7 +76,7 @@ PO decisions D1–D7 of the P3 cleanup. D5 (BD-01 sign-up copy) is **not impleme
 | `/library` (all states) | "VN · EN" | inert, barely dimmed | disabled look | NO_ACTION → DEFERRED | shared `Cta` `.inert` |
 | `/library?q=…` | keyword chip `“…”` | pointer cursor, looked removable | display only (cursor default); no remove action added | NO_ACTION → INTENTIONAL_NON_CLICKABLE | `.chipStatic`; spec "Library keyword chip" |
 | 404 pages | "Về trang chủ" | no control at all | link → `/` (`ui-button` primary); Back unchanged | MISSING_BUSINESS_DECISION → PASS | spec "404": keyboard Tab + Enter → `/`, Back → 404 |
-| `/`, `/about` (guest) | "Tạo tài khoản" | → `/auth` ("Đăng nhập") | unchanged: D5 stopped | MISLEADING_UI (kept) | see C |
+| `/auth` (+ every entry: "Tạo tài khoản", "Đăng nhập") | heading | "Đăng nhập" | "Đăng nhập & đăng ký"; same `/auth`, no new route, mode or flow | MISLEADING_UI → PASS (BD-01) | targeted re-audit of `/auth`, `/`, `/about`; spec "BD-01" |
 
 ### A. Elements with no action
 
@@ -87,7 +88,7 @@ PO decisions D1–D7 of the P3 cleanup. D5 (BD-01 sign-up copy) is **not impleme
 
 | # | Screen | Workflow | Element label | Actual action | Expected action | Actual route | Expected route | Evidence | Severity |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | /, /about | Homepage | Tạo tài khoản (MISLEADING_UI) | → /auth (200) | "Tạo tài khoản" opens the sign-up wording of the same magic-link entry (`/login?mode=signup`, copy only) | `/auth` | `/login?mode=signup` (BD-01) | click → /auth, whose heading is "Đăng nhập"; open sign-up means the same form creates the account (DEC-L1R-D1), but the screen never says so | P3 |
+| — | — | — | none (the BD-01 "Tạo tài khoản" copy issue is closed) | — | — | — | — | — | — |
 
 No WRONG_ACTION, WRONG_ROUTE, WRONG_EXTERNAL_LINK or BROKEN element: every internal link answers < 400 for its persona, every external link answers, every anchor resolves.
 
@@ -98,7 +99,6 @@ Grouped by the decision the PO has to take; every element is in the CSV.
 | # | Screen | Element | Why unclear | Current SOT evidence | Missing decision |
 |---|---|---|---|---|---|
 | 1 | `/` closing + footer | "Triển khai chương trình" (disabled, "Sắp có" in the closing section) | programme creation is WF04 demo only; the proposed `/login?redirect=/programmes/create` needs BD-06 / HD-A4 | homepage-cta-map closing row (proposed); PO P3 cleanup D7 keeps it open | destination (or keep "Sắp có") |
-| 2 | `/`, `/about` (guest) | "Tạo tài khoản" → `/auth` (BD-01, D5 stopped) | BD-01 says `mode=signup` "changes copy only" but no sign-up copy is approved: AUTH1 ("Đăng nhập & đăng ký") has one frame, with "Đăng nhập" / "Gửi liên kết đăng nhập" only | backend-deltas BD-01; homepage-cta-map frozen row; AUTH1__auth-entry__SOURCE.png | the sign-up heading / button copy (and whether `/login` becomes an alias), or approve "Đăng nhập" for both |
 
 ### D. Intentional non-clickable items
 
@@ -155,11 +155,10 @@ Grouped by the decision the PO has to take; every element is in the CSV.
 
 ## Homepage
 
-Elements: PASS 99 · MISLEADING_UI 3 · MISSING_BUSINESS_DECISION 4 · INTENTIONAL_NON_CLICKABLE 10 · DEFERRED 66
+Elements: PASS 102 · MISSING_BUSINESS_DECISION 4 · INTENTIONAL_NON_CLICKABLE 10 · DEFERRED 66
 
 | Label | Page / route | Source | Actual | Expected | Classification | Evidence | Next step |
 |---|---|---|---|---|---|---|---|
-| Tạo tài khoản ×3 | /, /about | `src/components/about/about.tsx · src/components/landing/landing.tsx` | → /auth (200) | "Tạo tài khoản" opens the sign-up wording of the same magic-link entry (`/login?mode=signup`, copy only) | MISLEADING_UI P3 | click → /auth, whose heading is "Đăng nhập"; open sign-up means the same form creates the account (DEC-L1R-D1), but the screen never says so | build BD-01 (`/login` alias, `mode=signup` copy) or approve the "Đăng nhập" wording |
 | Triển khai chương trình ×4 | / | `src/components/landing/landing.tsx` | nothing | no approved destination yet (PO P3 cleanup D7 keeps it here); drawn disabled with "Sắp có" in the closing section | MISSING_BUSINESS_DECISION P3 | opacity 0.55, cursor default, not focusable; click → nothing (2 checked); visible "Sắp có" | PO: destination for "Triển khai chương trình" |
 
 ## Navigation

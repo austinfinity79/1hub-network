@@ -1,36 +1,36 @@
 # Claude Task Report
 
 ## Task
-P3 INTERACTION UX CLEANUP — PRE-UAT SAFE BATCH. Report: [reports/P3-INTERACTION-UX-CLEANUP.md](reports/P3-INTERACTION-UX-CLEANUP.md); decisions: [DEC-P3UX](../decisions/DECISION_LOG.md#dec-p3ux); registry: [reports/INTERACTION_ACTION_REGISTRY.md](reports/INTERACTION_ACTION_REGISTRY.md).
+P3 UX CLEANUP — CLOSE BD-01 ONLY. Decision: [DEC-P3UX-D5](../decisions/DECISION_LOG.md#dec-p3ux-d5); batch report: [reports/P3-INTERACTION-UX-CLEANUP.md](reports/P3-INTERACTION-UX-CLEANUP.md); registry: [reports/INTERACTION_ACTION_REGISTRY.md](reports/INTERACTION_ACTION_REGISTRY.md).
 
 ## Verdict
-**GREEN except D5 (stopped), not deployed.** NO_ACTION 93 → 0 on measured evidence; WRONG_* 0; BROKEN 0. Production still runs `be5c0cc`. STOP.
+**GREEN, not deployed.** One auth surface: `/auth` heading "Đăng nhập & đăng ký". MISLEADING_UI 3 → 0; WRONG_* 0; BROKEN 0. Production still runs `be5c0cc`. STOP.
 
 ## Scope implemented
-- D1 member / workspace header inert items dimmed; D2 / D3 homepage and About inert CTAs drawn disabled, "Sắp có" on planned capabilities, e-mail as text; D4 Library keyword chip display only; D6 404 "Về trang chủ"; D7 closing CTAs.
-- D5 (BD-01 sign-up copy) stopped: no approved sign-up copy (AUTH1 has the login frame only).
+- `auth-entry-form.tsx`: the heading reads "Đăng nhập & đăng ký". "Tạo tài khoản" and "Đăng nhập" keep `/auth`.
+- Not changed: e-mail authentication, magic link, callback, session, onboarding, account creation; no `/signup`, `/login` alias or mode parameter.
 
 ## Files changed
-- App: `landing-parts.tsx` (`Cta` `soon`), `landing.module.css`, `landing.tsx`, `landing-activities.tsx`, `landing-network.tsx`, `about.tsx`, `library-client.tsx`, `library.module.css`, `member-shell.module.css`, `workspace-shell.module.css`, `not-found.tsx`.
-- Tests: `alpha-interaction-gaps.spec.ts` (+5), `p0-landing.spec.ts` (intentional note).
-- Docs: DECISION_LOG (DEC-P3UX), interaction action registry (md + csv, after state), this report.
+- App: `src/app/(auth)/auth/auth-entry-form.tsx`.
+- Tests: `wf01-s01-auth-entry.spec.ts` (heading; AUTH1 pixel excludes the heading text, intentional copy), `alpha-interaction-gaps.spec.ts` (+1 BD-01 test).
+- Docs: DECISION_LOG (DEC-P3UX-D5), registry (md + csv), batch report, this report.
 
 ## Migrations / data
-None in the repository. The local test DB was reset to the seed (`db:reset`, local only).
+None.
 
 ## Tests / build
-format, lint, typecheck, unit 259/259, build: PASS. Interaction spec 14/14; affected specs 210/210; L1 / L2 / L3 / L5 smoke and UAT L1–L2 19/19 PASS on a fresh local DB; re-audit of 18 affected states. Runtime: hydration 0, console 0, 5xx 0, broken links 0.
+format, lint, typecheck, unit 259/259, build: PASS. Auth and interaction specs 166/166 (WF01 S01–S04, e-mail magic link, L1 UAT journey, interaction 15, landing, auth session, shell routes, console health, typography); UAT L1–L2 19/19 (sign-up, sign-in, onboarding). Targeted re-audit: `/auth`, `/auth?redirect=`, `/`, `/about`. Runtime: hydration 0, console 0.
 
 ## Visual QA
-No baseline changed; the disabled look and the "Sắp có" pills are recorded as intentional in the landing report; thresholds pass. Desktop 1440 and mobile 390 screenshots reviewed.
+No baseline changed; AUTH1 records the heading as intentional copy and compares the card around it. The heading fits on one line at 1440 and 390.
 
 ## Deviations / blockers
-- D5: needs the sign-up copy, or approval of "Đăng nhập" for both intents.
-- Remaining MISSING_BUSINESS_DECISION: "Triển khai chương trình" (4 elements).
+- The submit button keeps "Gửi liên kết đăng nhập" (only the heading was in scope).
+- Remaining MISSING_BUSINESS_DECISION: "Triển khai chương trình" (4 elements), untouched.
 
 ## Git
-- Branch: `main`; start HEAD `be5c0cc`; no concurrent change
-- Implementation commit: `fix(interactions): P3 UX cleanup of inert controls` (code, tests, decisions, registry and reports in one commit)
+- Branch: `main`; start HEAD `351bcc8`; no concurrent change
+- Implementation commit: `fix(auth): one auth surface names both intents (BD-01)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -38,4 +38,4 @@ No baseline changed; the disabled look and the "Sắp có" pills are recorded as
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO review of the P3 batch and the D5 copy decision.
+Integration with legal v1.0.

@@ -450,4 +450,21 @@ test.describe('P3 UX cleanup: what cannot be clicked no longer looks clickable',
     }
     await ctx.close()
   })
+
+  test('BD-01: "Tạo tài khoản" and "Đăng nhập" open the one auth surface, which names both intents', async ({
+    page,
+    request,
+  }) => {
+    for (const url of ['/', '/about']) {
+      for (const name of ['Tạo tài khoản', 'Đăng nhập']) {
+        await page.goto(url, { waitUntil: 'networkidle' })
+        await page.getByRole('link', { name, exact: true }).first().click()
+        await expect(page, `${url} ${name}`).toHaveURL('/auth')
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Đăng nhập & đăng ký')
+      }
+    }
+    // No separate sign-up route, alias or mode.
+    for (const path of ['/signup', '/login', '/dang-ky'])
+      expect((await request.get(path)).status(), path).toBe(404)
+  })
 })

@@ -18,7 +18,9 @@ import styles from './auth-entry.module.css'
  * the L1 board (TASK 22-L1-L2-SOT-REALIGN, DEC-L1R-D1 / D2).
  *
  * Sign-up is open: any valid address moves on to WF01-S02 and receives the
- * link by e-mail; the account exists only once that link is used.
+ * link by e-mail; the account exists only once that link is used. One surface
+ * serves both intents, so the heading names both (BD-01, PO 01/10): no
+ * separate sign-up route, mode or flow.
  *
  * "Tiếp tục với Google" is drawn as in AUTH1. No OAuth client is configured
  * (GET /api/v1/auth/providers returns an empty list), so pressing it starts no
@@ -107,7 +109,7 @@ export function AuthEntryForm() {
   return (
     <AuthCard>
       <div className={styles.stack}>
-        <h1 className={styles.title}>Đăng nhập</h1>
+        <h1 className={styles.title}>Đăng nhập &amp; đăng ký</h1>
 
         <div className={styles.providers}>
           <button

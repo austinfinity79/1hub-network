@@ -42,7 +42,8 @@ const submit = (page: Page) => page.getByRole('button', { name: 'Gửi liên k�
 test.describe('WF01-S01 functional', () => {
   test('/auth resolves the implemented screen, not the placeholder', async ({ page }) => {
     await open(page)
-    await expect(page.getByRole('heading', { level: 1, name: 'Đăng nhập' })).toBeVisible()
+    // BD-01 (PO 01/10): one auth surface for sign-in and first-time sign-up.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Đăng nhập & đăng ký')
     await expect(page.locator('[data-route-group="auth"]')).toHaveCount(1)
     await expect(page.locator('[data-route-placeholder]')).toHaveCount(0)
     await expect(page.getByText('HUB NETWORK', { exact: true })).toBeVisible()
@@ -201,6 +202,7 @@ test.describe('WF01-S01 pixel QA (corrected AUTH1)', () => {
     const card = await topOf(page, '[data-ui="surface"]')
     const google = await topOf(page, '[data-provider="google"]')
     const input = await topOf(page, 'input[type="email"]')
+    const heading = (await page.getByRole('heading', { level: 1 }).boundingBox())!
     await auditRevision(page, {
       name: 'WF01-S01.AUTH1',
       reference: 'design-reference/final/revision/L1/AUTH1__auth-entry__SOURCE.png',
@@ -235,7 +237,21 @@ test.describe('WF01-S01 pixel QA (corrected AUTH1)', () => {
           dy: input - REF.inputTop,
         },
       ],
+      // The heading text is the PO's BD-01 copy, not AUTH1's "Đăng nhập".
+      exclude: [
+        {
+          x: heading.x - 4,
+          y: heading.y - 4,
+          width: heading.width + 8,
+          height: heading.height + 8,
+        },
+      ],
       intentional: [
+        {
+          class: 'INTENTIONAL-COPY',
+          reason:
+            'BD-01 (PO 01/10): one auth surface for both intents, so the heading reads "Đăng nhập & đăng ký" where AUTH1 draws "Đăng nhập"; its text box is excluded, the card around it is compared',
+        },
         {
           class: 'INTENTIONAL-BUSINESS-CONFIG',
           reason:

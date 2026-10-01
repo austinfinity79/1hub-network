@@ -5,11 +5,11 @@
 ## Result
 | Classification | Before | After |
 |---|---:|---:|
-| PASS | 1215 | 1219 |
+| PASS | 1215 | 1222 |
 | NO_ACTION | 93 | 0 |
 | WRONG_ACTION | 0 | 0 |
 | WRONG_ROUTE | 0 | 0 |
-| MISLEADING_UI | 3 | 3 |
+| MISLEADING_UI | 3 | 0 |
 | MISSING_BUSINESS_DECISION | 8 | 4 |
 | INTENTIONAL_NON_CLICKABLE | 13 | 18 |
 | DEFERRED | 19 | 107 |
@@ -24,7 +24,7 @@ NO_ACTION reaches 0 on evidence, not by relabelling: every former NO_ACTION item
 | D2 | shared `Cta` inert variant: opacity 0.55; new `soon` prop draws a visible "Sắp có" (the "Dữ liệu minh hoạ" pill); "Sắp có" on "Xem deck", "Yêu cầu truy cập", both door "Khám phá mạng lưới", closing "Triển khai chương trình"; footer e-mail as text |
 | D3 | About through the same `Cta`; "Sắp có" on "Kết nối hợp tác" ×2 and "Khám phá các câu lạc bộ"; e-mail as text |
 | D4 | Library keyword chip: `.chipStatic` (cursor default); no remove action |
-| D5 | **not implemented** — see blockers |
+| D5 | BD-01 (PO final): `/auth` heading "Đăng nhập & đăng ký"; both entries keep `/auth`; no new route, mode or flow (follow-up commit) |
 | D6 | `not-found.tsx`: "Về trang chủ" → `/` (`ui-button` primary) |
 | D7 | closing "Khám phá cơ hội" unchanged; "Triển khai chương trình" disabled + "Sắp có", still a missing decision |
 
@@ -46,7 +46,7 @@ One run showed `wf03-uat-journey` NEG-WF03 failing on a duplicated `MEMBERSHIP_A
 Pixel: no baseline changed; the landing report records the disabled look and the "Sắp có" pills as intentional; all thresholds pass.
 
 ## Blockers / deviations
-- **D5 stopped:** BD-01 says `mode=signup` "changes copy only", but no sign-up copy is approved — AUTH1 ("Đăng nhập & đăng ký") has one frame with "Đăng nhập" / "Gửi liên kết đăng nhập" only. Needed: the sign-up heading and button copy (and whether `/login` becomes an alias), or approval of "Đăng nhập" for both intents.
+- D5 was stopped in the first commit (no approved sign-up copy) and closed by the PO's final BD-01 decision: heading "Đăng nhập & đăng ký"; the submit button keeps "Gửi liên kết đăng nhập"; AUTH1 pixel test excludes the heading text box and records the copy as intentional.
 - The `/me` header items (DEFERRED) dim with the same shared rule.
 - Footer "Chương trình" / "Sự kiện" stay plain labels at full strength (DEC-AIG-D1), unchanged.
 
