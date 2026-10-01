@@ -110,13 +110,17 @@ describe('M0-T05 idempotency', () => {
     const bullets = [...section.matchAll(/^-\s+(.+?);?$/gm)].map((m) => m[1]!)
 
     expect(bullets).toHaveLength(7)
-    // The seven of 05:56-63, `venture.create` of amendment A2 (05 §19) and the
-    // two application operations of amendment A4 (05 §21).
-    expect(IDEMPOTENT_OPERATIONS).toHaveLength(10)
+    // The seven of 05:56-63, `venture.create` of amendment A2 (05 §19), the
+    // two application operations of amendment A4 (05 §21) and the three
+    // programme operations of amendment A5 (05 §22).
+    expect(IDEMPOTENT_OPERATIONS).toHaveLength(13)
     expect(CONTRACT.split('# 19. Amendment A2')[1]).toContain('venture.create')
     const a4 = CONTRACT.split('# 21. Amendment A4')[1] ?? ''
     expect(a4).toContain('application.create')
     expect(a4).toContain('application.submit')
+    const a5 = CONTRACT.split('# 22. Amendment A5')[1] ?? ''
+    for (const operation of ['programme.create', 'programme.publish', 'programme.close'])
+      expect(a5).toContain(operation)
   })
 })
 

@@ -41,6 +41,13 @@ export type AuditAction =
   // L5 application (DEC-L5-D3): ids and statuses only, never answers.
   | 'APPLICATION_DRAFT_CREATED'
   | 'APPLICATION_SUBMITTED'
+  // WF04 programmes (DEC-W4P-D12, contract §14): ids, type, statuses, versions and
+  // field names only, never free text.
+  | 'PROGRAMME_CREATED'
+  | 'PROGRAMME_UPDATED'
+  | 'PROGRAMME_REGISTRATION_UPDATED'
+  | 'PROGRAMME_PUBLISHED'
+  | 'PROGRAMME_CLOSED'
 
 export async function writeAudit(
   exec: Executor,

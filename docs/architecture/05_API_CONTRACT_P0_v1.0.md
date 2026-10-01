@@ -1404,3 +1404,23 @@ Source: [DEC-L5](../decisions/DECISION_LOG.md#dec-l5). Additive; supersedes §15
 ## 21.2 Rules
 The application references the venture and the programme and stores only its answers; the snapshot (`schema_version` 1: programme, questions, answers, venture, team without e-mails or account ids, `submitted_at`) is written once. Audit: `APPLICATION_DRAFT_CREATED`, `APPLICATION_SUBMITTED` (ids and statuses, never answers). No uploads, application code or e-mail.
 
+
+---
+
+# 22. Amendment A5 — WF04 programmes, production v1 (2026-10-02)
+
+Source: [DEC-W4P](../decisions/DECISION_LOG.md#dec-w4p) (D02, D11, D12) and the [WF04 production contract](../implementation/reports/WF04_PRODUCTION_CONTRACT.md) §4–§14. Additive; supersedes §15 for WF04 creation, configuration, publication and closing only (judging, review and the WF03-S05 unit list stay out). Session required; onboarding DONE (else `403 SCOPE_FORBIDDEN`). Authority is `programme:read` / `programme:manage` on the programme's stored owning organization (`HUB_COMMUNITY_LEADER` of exactly that organization, or `PLATFORM_ADMIN`); nothing in a header, query or body names a role or a scope. An unknown, malformed or out-of-scope id gets the same `404`.
+
+## 22.1 Endpoints
+| Call | Rule |
+|---|---|
+| `GET /programmes` | the programmes of every organization the caller holds `programme:read` for; list envelope (`limit` 200, no cursor); none anywhere → `403 SCOPE_FORBIDDEN`. No public list in v1 |
+| `POST /programmes` `{type, organization_id, name, summary?, starts_at?, ends_at?}` | `programme:manage` on `organization_id` (else `403 SCOPE_FORBIDDEN`; an unknown organization looks the same); owner HUB / CHAPTER / CLB; `201` with the DRAFT detail. Idempotent: `programme.create` |
+| `GET /programmes/{id}` | `programme:read`; `{programme, organization, stages, problem_statements (CHALLENGE only), events (linked, read only), registration (form or null)}` |
+| `PATCH /programmes/{id}` `{name?, summary?, starts_at?, ends_at?, stages?, problem_statements?}` | `programme:manage`; DRAFT or PUBLISHED (else `409`); lists replace the stored list; `type` and `organization_id` are `immutable`, any other key `not_accepted`; `problem_statements` on a PROGRAMME → `not_challenge` |
+| `PUT /programmes/{id}/registration` `{applicant_types, questions}` | `programme:manage`; DRAFT or PUBLISHED; applicant types TEAM / STARTUP (≥ 1); each question `{id?, prompt, required, step 1–4}`; a change bumps `version`; refused with `409` once an application exists |
+| `POST /programmes/{id}/publish` | no body; DRAFT → PUBLISHED; rules: name, end ≥ start (all failing fields at once, `422`); not DRAFT → `409`. Idempotent: `programme.publish` |
+| `POST /programmes/{id}/close` | no body; PUBLISHED → CLOSED; otherwise `409`. Idempotent: `programme.close` |
+
+## 22.2 Rules
+Errors use existing codes only: `422 PROFILE_VALIDATION_FAILED` with `fields` (reasons `required`, `invalid`, `too_long`, `too_many`, `duplicate`, `before_start`, `not_accepted`, `immutable`, `not_challenge`, `empty`), `409 MEMBERSHIP_INVALID_TRANSITION`, `403 SCOPE_FORBIDDEN`, and for 401, 404 and an idempotency conflict the existing gap codes of the implementation (no code is added). The Idempotency-Key is honoured when sent and a missing key is processed (provisional rule I5). Stages are `metadata.journey` and problem statements `metadata.challenge` (`schema_version` 1); no other metadata key is writable. A stage, problem or question sent without an `id` gets one derived from its position and content, so a retried replacement writes the same list; a client keeps an item's identity by sending its `id` back. ARCHIVED has no endpoint (DEFERRED, DEC-W4P-D11); events are never written here. Audit: `PROGRAMME_CREATED`, `PROGRAMME_UPDATED` (field names), `PROGRAMME_REGISTRATION_UPDATED` (versions), `PROGRAMME_PUBLISHED`, `PROGRAMME_CLOSED`, with ids, type and status only. Applications stay §21: a PUBLISHED programme with a form is open to them, a CLOSED one is not.

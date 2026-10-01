@@ -34,6 +34,7 @@ Nine P0 ops capabilities. Seven carry identifiers from frozen sources; two were 
 | `org:manage_relationship` | WF03:35, API:1090 | OrganizationRelationship | write |
 | `membership:confirm` | **named by D2**; action granted at 03:110 | CommunityMembership | write |
 | `leadership:manage` | **named by D2**; action granted at 03:111 | LeadershipRecord | write |
+| `programme:manage` | DEC-W4P-D02 (WF04 production contract §5), PROD-03 | Programme | write |
 
 ## C. Role capability matrix — HUMAN APPROVED
 
@@ -50,6 +51,7 @@ Scope `ORGANIZATION` means the actor must hold an active `HUB_COMMUNITY_LEADER` 
 | `org:manage_relationship` | DENY | DENY | ALLOW | ALLOW | ORGANIZATION / PLATFORM | active assignment for the requested org |
 | `membership:confirm` | DENY | DENY | ALLOW | ALLOW | ORGANIZATION / PLATFORM | active assignment for the requested org |
 | `leadership:manage` | DENY | DENY | ALLOW | ALLOW | ORGANIZATION / PLATFORM | active `HUB_COMMUNITY_LEADER` assignment for that exact scope |
+| `programme:manage` | DENY | DENY | ALLOW | ALLOW | ORGANIZATION / PLATFORM | active assignment for the programme's owning org (`programmes.organization_id`); amendment DEC-W4P-D02 |
 
 An assignment is active when its `state` is `ACTIVE`, `valid_from` is not in the future, and `valid_to` is null or in the future.
 

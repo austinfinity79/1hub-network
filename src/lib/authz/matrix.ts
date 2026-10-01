@@ -29,6 +29,8 @@ export const CAPABILITIES = [
   'org:manage_relationship',
   'membership:confirm',
   'leadership:manage',
+  // WF04 production (DEC-W4P-D02, contract §5): create, edit, publish, close.
+  'programme:manage',
 ] as const
 
 export type Capability = (typeof CAPABILITIES)[number]
@@ -73,6 +75,7 @@ export const CAPABILITY_MATRIX: readonly CapabilityRule[] = [
     platformRoles: PLATFORM_ADMIN,
   },
   { capability: 'leadership:manage', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
+  { capability: 'programme:manage', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
 ]
 
 export function ruleFor(capability: Capability): CapabilityRule | undefined {

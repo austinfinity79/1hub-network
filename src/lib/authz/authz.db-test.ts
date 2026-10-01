@@ -59,13 +59,14 @@ afterAll(async () => {
 })
 
 describe('M0-T09 matrix matches the approved document', () => {
-  it('covers exactly the nine approved capabilities under one naming convention', () => {
-    expect(CAPABILITIES).toHaveLength(9)
+  it('covers exactly the ten approved capabilities under one naming convention', () => {
+    // Nine of DECISION-AUTHZ-01B plus `programme:manage` (DEC-W4P-D02, WF04-PROD-03).
+    expect(CAPABILITIES).toHaveLength(10)
     for (const capability of CAPABILITIES) {
       // D5: resource:action, exactly one colon.
       expect(capability.split(':')).toHaveLength(2)
     }
-    expect(CAPABILITY_MATRIX).toHaveLength(9)
+    expect(CAPABILITY_MATRIX).toHaveLength(10)
   })
 
   it('matches the frozen matrix document capability for capability', () => {

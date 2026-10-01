@@ -1,39 +1,41 @@
 # Claude Task Report
 
 ## Task
-WF04-PROD-02 — DB / persistence hardening. Contract: [WF04_PRODUCTION_CONTRACT.md](reports/WF04_PRODUCTION_CONTRACT.md); PO lifecycle decision: [DEC-W4P-D11](../decisions/DECISION_LOG.md#dec-w4p-d11); task report: [reports/WF04-PROD-02_db-persistence-hardening.md](reports/WF04-PROD-02_db-persistence-hardening.md).
+WF04-PROD-03 — API / RBAC / validation / idempotency hardening. API: [05 §22 amendment A5](../architecture/05_API_CONTRACT_P0_v1.0.md); decisions: [DEC-W4P-D12](../decisions/DECISION_LOG.md#dec-w4p-d12); task report: [reports/WF04-PROD-03_api-rbac-hardening.md](reports/WF04-PROD-03_api-rbac-hardening.md).
 
 ## Verdict
-**GREEN, local only.** Migration 015 gives the canonical Programme aggregate its production persistence foundation; no runtime, API, UI, seed or production change. Not pushed, not deployed; PROD-03 not started. STOP.
+**PASS_WITH_EVIDENCE, local only.** Canonical `/api/v1/programmes*` on the PROD-02 persistence; no migration, table, role, UI or frontend change. Not pushed, not deployed; PROD-04 not started. STOP.
 
 ## Scope implemented
-- `programme_status` (DRAFT, PUBLISHED, CLOSED, ARCHIVED): CLOSED added (approved); ARCHIVED carried over from `publication_status` (present since M001) for compatibility only, DEFERRED.
-- `programmes.organization_id` NOT NULL (the one owning organization; FK of 001 reused).
-- `ck_programmes_dates` (end ≥ start when both set); `ck_programmes_metadata` (documented `journey` / `challenge` shape, `challenge` on CHALLENGE only, no cardinality rule).
-- Data check that STOPS the whole migration on any row it cannot carry; identity status mapping, no coercion.
+- Capability `programme:manage` (leader of exactly the owning org, platform admin) in matrix code, document and test.
+- `GET /programmes`, `POST /programmes`, `GET|PATCH /programmes/{id}`, `PUT /programmes/{id}/registration`, `POST /programmes/{id}/publish`, `POST /programmes/{id}/close`.
+- Lifecycle DRAFT → PUBLISHED → CLOSED only; ARCHIVED never written; publish rules of contract §8 only.
+- Challenge problems in `metadata.challenge` (CHALLENGE only); stages in `metadata.journey`; no generic metadata write.
+- Registration writes the canonical WF05 form (TEAM / STARTUP, per-question `required` / `step`), version bump, refused once applications exist.
+- Idempotency-Key for `programme.create` / `publish` / `close`; audit `PROGRAMME_CREATED|UPDATED|REGISTRATION_UPDATED|PUBLISHED|CLOSED`.
 
 ## Files changed
-- Migration: `db/migrations/015_p0_programme_production.sql` (new).
-- Tests: `src/lib/db/programme-persistence.db-test.ts` (new, 21), `src/lib/db/schema.db-test.ts` (ledger + 015).
-- Docs: contract §5, §6, §11, §12, §19, §20 (ARCHIVED = DEFERRED); DECISION_LOG (DEC-W4P-D11, C1); `DB_SCHEMA_GAPS_P0.md` (D1 resolved, enum table); task report; this report.
+- New: `src/lib/programme/{types,rules,programme,request}.ts`, `src/app/api/v1/programmes/**` (5 route files), tests `src/lib/programme/rules.test.ts`, `src/lib/programme/programme.db-test.ts`, `tests/visual/specs/wf04-prod-api.spec.ts`.
+- Changed: `src/lib/authz/matrix.ts`, `src/lib/api/idempotency.ts`, `src/lib/audit/audit.ts`; tests `authz.db-test.ts`, `idempotency.db-test.ts`, `contract.test.ts` (counts).
+- Docs: API contract §22 (A5), DECISION_LOG (DEC-W4P-D12), capability matrix, WF04 contract §5 / §6 / §12 / §14 / §19, task report, this report.
 
 ## Migrations / data
-`015_p0_programme_production.sql`, one transaction, writes no row. Local dev DB upgraded 013 → 014 → 015 with every row digest identical (18 applications kept). Production DB not touched.
+None. DB changes beyond migration 015: none.
 
 ## Tests / build
-format, lint, typecheck PASS; unit 34 files / 263; build PASS; DB suite 33 files / 483 (new 21); visual WF01–WF05 55 specs / 613; UAT 19/19; PostgreSQL restart check PASS. No failure, no flaky test.
+format, lint, typecheck PASS; unit 35 files / 326; build PASS; DB 34 files / 505; HTTP API spec 8/8; protected visual / API 61 specs 696/696 on the final build; UAT 19/19; 5xx 0, console errors 0.
 
 ## Visual QA
-No UI change; no baseline touched; the 613 visual tests pass unchanged.
+No UI change; no baseline touched.
 
 ## Deviations / blockers
-- None blocking. ARCHIVED stays in the column domain because it pre-dates WF04 (PO rule: preserve, report, do not create).
-- Not encoded in the DB (no frozen basis for this phase): owner type HUB / CHAPTER / CLB and owner / type immutability (PROD-03 service); CHALLENGE ≥ 1 problem, required dates / stages / form (Q7).
-- Compatibility-only runtime changes: none.
+- Field refusals use the ops convention (422 `PROFILE_VALIDATION_FAILED`, `not_accepted` / `immutable`), replacing contract §12's "400" wording (D12).
+- Undecodable `%` escapes are refused with 400 by the Next.js router before the handler; every other malformed id is the canonical 404.
+- Open for the PO: create under an ARCHIVED organization; Q1, Q3 (edits after applications, INDIVIDUAL), Q4–Q6, Q8–Q10. WF05 follow-up: lock the form read on application create (reviewer L1).
 
 ## Git
-- Branch: `feat/wf04-prod-hardening` (from `b4463e2`); start HEAD `b4463e2`; no concurrent change
-- Implementation commit: `feat(wf04): programme persistence foundation, migration 015 (WF04-PROD-02)`
+- Branch: `feat/wf04-prod-hardening`; start HEAD `2a77a1e`; no concurrent change
+- Implementation commit: `feat(wf04): programme API, RBAC and lifecycle (WF04-PROD-03)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -41,4 +43,4 @@ No UI change; no baseline touched; the 613 visual tests pass unchanged.
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-PO review of PROD-02; then WF04-PROD-03 (API / RBAC / validation) once Q1–Q3, Q7, Q10 are answered.
+PO review of PROD-03; then WF04-PROD-04 (frontend fixture → API) once Q4–Q6 are answered.

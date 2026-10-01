@@ -53,7 +53,7 @@ Existing roles only (A03 §4 P0: `HUB_COMMUNITY_LEADER`, `PLATFORM_ADMIN`). D02 
 | Create | DENY | DENY | ALLOW for an owning org in scope (`programme:manage`) | ALLOW (HUB / CHAPTER / CLB) |
 | Edit (basic, journey, problems, registration) | DENY | DENY | ALLOW (`programme:manage`) | ALLOW |
 | Publish | DENY | DENY | ALLOW (`programme:manage`) | ALLOW |
-| Close (archive DEFERRED, DEC-W4P-D11) | DENY | DENY | same actor when decided (Q2) | same actor when decided (Q2) |
+| Close (archive DEFERRED, DEC-W4P-D11) | DENY | DENY | ALLOW (`programme:manage`, DEC-W4P-D12) | ALLOW (DEC-W4P-D12) |
 | Challenge manage (problem statements) | DENY | DENY | ALLOW (`programme:manage`, CHALLENGE only) | ALLOW |
 | Apply / register | DENY 401 | owner of an eligible venture (API §21, relation rule) | as member | as member |
 | Read applications | DENY | own only (API §21) | DENY (HD-A13) | DENY (HD-A13) |
@@ -73,7 +73,7 @@ Every write re-checks session, onboarding DONE, `programme:manage` on the stored
 | — | DRAFT | `programme:manage` on the chosen owning org | §8 create validation | `POST /api/v1/programmes` | row, audit |
 | DRAFT | PUBLISHED | `programme:manage` on the owning org | §8 publish rules; atomic, row-locked; repeat → 409 | `POST /api/v1/programmes/{id}/publish` | status, audit `PROGRAMME_PUBLISHED` |
 | PUBLISHED | DRAFT | — | no transition in SOT or demo: always 409 | — | — |
-| PUBLISHED | CLOSED | (D02 actor) | MISSING_BUSINESS_DECISION (Q2) | — | — |
+| PUBLISHED | CLOSED | `programme:manage` on the owning org | DEC-W4P-D12; atomic, row-locked; repeat → 409 | `POST /api/v1/programmes/{id}/close` | status, audit `PROGRAMME_CLOSED` |
 | CLOSED / PUBLISHED / DRAFT | ARCHIVED | — | DEFERRED (DEC-W4P-D11) | — | — |
 
 PO lifecycle clarification of 02/10 ([DEC-W4P-D11](../../decisions/DECISION_LOG.md#dec-w4p-d11)): CLOSED is approved for P0; **ARCHIVED = DEFERRED**. ARCHIVED stays in the DB only because the column has accepted it since M001; it is not added for WF04 and nothing writes or reads it.
@@ -134,9 +134,12 @@ Proposed **Amendment A5** to `05_API_CONTRACT_P0` (supersedes §15 for the v1 sc
 | Registration | WF05 reads the form only | `programme_application_forms` | write + version bump; Q3 mapping | Yes: `PUT /programmes/{id}/registration` |
 | Publish | none | `publishProgramme` checklist as §8 | row lock, state check, Idempotency-Key `programme.publish`, audit | Yes: `POST /programmes/{id}/publish` |
 | Events (read) | WF03 `GET /ops/organizations/{orgId}/events` (standalone only) | EventDTO | none: included read-only in the detail | No |
-| Events (write), close, team | — | — | — | Q1, Q2, Q4 (archive DEFERRED, DEC-W4P-D11) |
+| Close | none | — | row lock, state check, Idempotency-Key `programme.close`, audit (DEC-W4P-D12) | Yes: `POST /programmes/{id}/close` |
+| Events (write), team | — | — | — | Q1, Q4 (archive DEFERRED, DEC-W4P-D11) |
 | Unit list (WF03-S05) | `GET /ops/organizations/{orgId}/programmes` (contract, no handler) | — | stays FUTURE (DEC-WF03-G12) | No |
 | Demo API | `/api/v1/demo/programmes*` | — | removed from production runtime (D09); test / local only | — |
+
+PROD-03 status: A5 implemented as `/api/v1/programmes*` ([05 §22](../../architecture/05_API_CONTRACT_P0_v1.0.md)); field refusals use the ops convention, 422 `PROFILE_VALIDATION_FAILED` with `not_accepted` / `immutable` (DEC-W4P-D12), not 400. The demo API stays until PROD-04.
 
 ## 13. Security Contract
 FROZEN technical decisions T1–T11 (DEC-W4P): server-side authorization on every write; scope injected from the stored owning organization; same 404 for unknown, malformed, out-of-scope ids (no existence leak, no 500); IDOR, role / header spoofing and cross-organization writes rejected; invalid transitions rejected server-side (409); validation server-side (400 / 422); no client role, scope or org is authoritative; application data never exposed to operators (HD-A13); fixtures never reachable in production; demo `sessionStorage` key no longer written.
@@ -150,6 +153,7 @@ Existing convention (`src/lib/audit/audit.ts`, API §2.3, `src/lib/api/idempoten
 | Edit basic / journey / problems | `PROGRAMME_UPDATED` (changed field names, no content) | not required (whole replacement is repeat-safe) |
 | Registration | `PROGRAMME_REGISTRATION_UPDATED` (version) | not required (replacement) |
 | Publish | `PROGRAMME_PUBLISHED` (= domain event `ProgrammePublished`, A02:253) | required: `programme.publish`; second publish → 409 |
+| Close (DEC-W4P-D12) | `PROGRAMME_CLOSED` | `programme.close`; second close → 409 |
 
 Audit stores ids, status and versions, never free text. Concurrent content edits: last write wins; transitions are row-locked with an expected state.
 
@@ -206,12 +210,12 @@ Historical records are not rewritten; each row is a proposal the owner applies w
 | # | Decision | Class | Must be decided before |
 |---|---|---|---|
 | Q1 | S04 programme events: extend the WF03 event service to accept `programme_id` under a WF04 scope rule (changes a protected WF03 rule), or keep S04 read-only in v1 (removes its add / edit / delete) | NON_BLOCKING | PROD-03 |
-| Q2 | Close in v1: actor and rules of PUBLISHED → CLOSED (the CLOSED state is approved, DEC-W4P-D11), discarding a DRAFT (no demo behaviour exists); archive is DEFERRED | NON_BLOCKING | PROD-03 |
+| Q2 | Close in v1: actor and rules of PUBLISHED → CLOSED (the CLOSED state is approved, DEC-W4P-D11), discarding a DRAFT (no demo behaviour exists); archive is DEFERRED | **CLOSED for close** by DEC-W4P-D12; discarding a DRAFT stays open | PROD-03 |
 | Q3 | Registration mapping: `required` and `step` for operator questions; INDIVIDUAL (default canonical TEAM / STARTUP); question edits once applications exist | NON_BLOCKING | PROD-03 |
 | Q4 | S06 content without a programme role: read-only list of the owning org's leaders, or an empty / hidden step | NON_BLOCKING | PROD-04 |
 | Q5 | Operator application counts (DRAFT / SUBMITTED aggregates) or none (HD-A13) | NON_BLOCKING | PROD-04 |
 | Q6 | Production page routes for the operator screens (today `/demo/programmes/*`) | NON_BLOCKING | PROD-04 |
-| Q7 | Publish extras: CHALLENGE ≥ 1 problem; dates, stages or a form required? | NON_BLOCKING | PROD-03 |
+| Q7 | Publish extras: CHALLENGE ≥ 1 problem; dates, stages or a form required? | **CLOSED** by DEC-W4P-D12: none | PROD-03 |
 | Q8 | Production row `d4…0001` "(demo)": keep, rename or retire | NON_BLOCKING | PROD-07 |
 | Q9 | Pixel reference: `CLAUDE.md` §5 allows `design-reference/final` only, which has no WF04 frame; D08 makes the current UI the baseline | NON_BLOCKING | PROD-06 |
 | Q10 | Owner approval of the §18 document updates (CLAUDE.md §2, API A5, matrix amendment) | NON_BLOCKING | PROD-03 |
