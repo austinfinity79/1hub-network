@@ -1553,6 +1553,25 @@ Superseded in part: [DEC-P0-SHELL-D2](#dec-p0-shell-d2) and the About report's "
 
 Open (contract §19): BLOCKING none; NON_BLOCKING Q3(b) (`required` / `step` of a new operator question: DEFERRED / NEED PO DECISION BEFORE PROD-07, D14), Q4–Q6, Q8–Q10 (deferred by D13); a close control on screen needs a PO / design decision (D14); Q1 (no event writes), Q3(a)(c) closed by D13; Q2 (close) and Q7 closed by D12; DEFERRED as listed in contract §2.
 
+## DEC-W5P — WF05 production contract (WF05-PROD-01, PO, 02/10)
+
+<a id="dec-w5p"></a>**Status:** FROZEN 2026-10-02 on the PO's closed decisions (WF05-PROD-01 task; inputs: [PROD-00 audit](../implementation/reports/WF05-PROD-00_gap-audit.md), [pre-freeze decisions](../implementation/reports/WF05-PROD-01_prefreeze-decisions.md)). Contract: [WF05-PROD-01_production-contract.md](../implementation/reports/WF05-PROD-01_production-contract.md). For production it supersedes DEC-WF05-G3 (fixture programme source), DEC-WF05-T00-D2 / D3 (demo frame and session store), the "· Demo" label of DEC-WF05-G2 and the "read-only" wording of HD-A12 for `d4…0001`; earlier records stay as written.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-w5p-d01"></a>DEC-W5P-D01 | **Scope.** WF05 = L5 + S01 + S02 over the canonical WF02 venture and WF04 programme / form; out of P0 as listed in the contract (review, withdraw, deadlines, INDIVIDUAL, Solution, uploads, operator reads). |
+| <a id="dec-w5p-d02"></a>DEC-W5P-D02 | **Demo artifacts.** Remove the S01 / S02 demo notice, "Đặt lại demo", demo-only copy, actor-key plumbing and the MemberShell "Demo · Internal Alpha" / "· Demo" labels on the WF05 entry; keep `/demo/projects*` and `/api/v1/demo/projects*` (no route migration). |
+| <a id="dec-w5p-d03"></a>DEC-W5P-D03 | **Canonical model.** One Venture (`projects`, PROJECT \| STARTUP), owner `owner_profile_id`, team `project_members`, programme `programmes`, form `programme_application_forms`, application `applications`; no V2 or duplicate model, no copy on entering WF05. Data SOT Team ≡ PROJECT venture + members, Startup ≡ STARTUP venture. |
+| <a id="dec-w5p-d04"></a>DEC-W5P-D04 | **Applicant.** The venture is the primary applicant (PROJECT → TEAM, STARTUP → STARTUP); its owner creates, edits, submits and reads; one active application per (venture, programme); several programmes per venture allowed. |
+| <a id="dec-w5p-d05"></a>DEC-W5P-D05 | **Lifecycle.** DRAFT → SUBMITTED, final. CLOSED / ARCHIVED programmes: no create, edit or submit; the owner keeps reading own drafts (read only) and submitted snapshots. No reopen, withdraw, amendment or review in P0. |
+| <a id="dec-w5p-d06"></a>DEC-W5P-D06 | **Immutability.** A SUBMITTED application never changes and is never deleted (DB guard in migration 016); applicant identity columns are fixed at create; the snapshot is written once. |
+| <a id="dec-w5p-d07"></a>DEC-W5P-D07 | **Visibility.** Applications are visible to their owner only, in every programme state; submission exposes nothing publicly; operators read no application (HD-A13). |
+| <a id="dec-w5p-d08"></a>DEC-W5P-D08 | **Programme `d4…0001`.** KEEP the canonical record + CLOSE / HIDE it from normal production user surfaces: closed through the canonical WF04 `POST …/close` at promotion; never deleted; no runtime or bootstrap dependency; tests use it only through the local seed. |
+| <a id="dec-w5p-d09"></a>DEC-W5P-D09 | **SOT precedence.** C1 (WF05 "demo" wording vs the deployed L5) and C2 (Data SOT Team / Startup vs one Venture) resolve by CLAUDE.md §1 precedence to the second source; owner document updates follow; historical SOT unchanged. |
+| <a id="dec-w5p-d10"></a>DEC-W5P-D10 | **Implementation scope.** WF05-PROD-02 / PROD-03 are limited to the [handoff](../implementation/reports/WF05-PROD-01_implementation-handoff.md); its WF02-protected (P3-1, P3-7) and WF04-candidate (P3-4) touches need explicit authorization in those task contracts. |
+
+Open: none for the contract (TRUE_PO_DECISIONS_REMAINING = 0). Follow-ups outside WF05: team invitation idempotency and e-mail-in-transaction (WF02), global rate limit / CSRF (G14), application DB role (infra).
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 
