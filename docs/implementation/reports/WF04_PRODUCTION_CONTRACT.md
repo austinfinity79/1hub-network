@@ -213,7 +213,7 @@ Historical records are not rewritten; each row is a proposal the owner applies w
 |---|---|---|---|
 | Q1 | S04 programme events: extend the WF03 event service to accept `programme_id` under a WF04 scope rule (changes a protected WF03 rule), or keep S04 read-only in v1 (removes its add / edit / delete) | NON_BLOCKING | PROD-03 |
 | Q2 | Close in v1: actor and rules of PUBLISHED → CLOSED (the CLOSED state is approved, DEC-W4P-D11), discarding a DRAFT (no demo behaviour exists); archive is DEFERRED | **CLOSED for close** by DEC-W4P-D12; discarding a DRAFT stays open | PROD-03 |
-| Q3 | Registration mapping: `required` and `step` for operator questions; INDIVIDUAL (default canonical TEAM / STARTUP); question edits once applications exist | (a)(c) closed by DEC-W4P-D13; **(b) DEFERRED / NEED PO DECISION BEFORE PROD-07** (D14) | PROD-07 |
+| Q3 | Registration mapping: `required` and `step` for operator questions; INDIVIDUAL (default canonical TEAM / STARTUP); question edits once applications exist | (a)(c) closed by DEC-W4P-D13; (b) deferred by D14; **PROD-07 disposition: NOT_REQUIRED_FOR_P0** (operator-authored questions out of current P0, "Thêm câu hỏi" stays disabled; [readiness](WF04-PROD-07_production-readiness.md#q3b-disposition-a-not_required_for_p0)), pending PO closure review | PROD-07 |
 | Q4 | S06 content without a programme role: read-only list of the owning org's leaders, or an empty / hidden step | NON_BLOCKING | PROD-04 |
 | Q5 | Operator application counts (DRAFT / SUBMITTED aggregates) or none (HD-A13) | NON_BLOCKING | PROD-04 |
 | Q6 | Production page routes for the operator screens (today `/demo/programmes/*`) | NON_BLOCKING | PROD-04 |
