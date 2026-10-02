@@ -1,0 +1,262 @@
+layer,file,group,test,result,category
+unit,rules.test.ts,parseCreate,accepts the canonical basic fields and trims text,passed,VALIDATION
+unit,rules.test.ts,parseCreate,refuses with the ops validation envelope (422 PROFILE_VALIDATION_FAILED),passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""  Thử thách  ""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""EVENT"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""  Thử thách  ""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""name"":""  Thử thách  ""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""chapter-01"",""name"":""  Thử thách  ""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":7}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""  Thử thách  "",""starts_at"":""2026-11-01""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""  Thử thách  "",""starts_at"":""2026-11-02T00:00:00Z"",""ends_at"":""2026-11-01T00:00:00Z""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""  Thử thách  "",""status"":""PUBLISHED""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""  Thử thách  "",""slug"":""x""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""  Thử thách  "",""metadata"":{}}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""  Thử thách  "",""role"":""PLATFORM_ADMIN""}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses {""type"":""CHALLENGE"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""  Thử thách  "",""stages"":[]}",passed,VALIDATION
+unit,rules.test.ts,parseCreate,refuses a body that is not an object (null),passed,VALIDATION
+unit,rules.test.ts,parseCreate,refuses a body that is not an object (%j),passed,VALIDATION
+unit,rules.test.ts,parseCreate,"refuses a body that is not an object (""x"")",passed,VALIDATION
+unit,rules.test.ts,parseCreate,refuses a body that is not an object (3),passed,VALIDATION
+unit,rules.test.ts,parseUpdate,keeps type and owner immutable and refuses every key outside the allow-list,passed,VALIDATION
+unit,rules.test.ts,parseUpdate,accepts problem statements on a CHALLENGE only,passed,VALIDATION
+unit,rules.test.ts,parseUpdate,"takes a null summary or date as a clear, and a blank name as missing",passed,VALIDATION
+unit,rules.test.ts,parseStages (contract §11 journey),"orders by the list sent, keeps valid ids and mints the missing ones",passed,VALIDATION
+unit,rules.test.ts,parseStages (contract §11 journey),refuses {},passed,VALIDATION
+unit,rules.test.ts,parseStages (contract §11 journey),"refuses [{""summary"":""x""}]",passed,VALIDATION
+unit,rules.test.ts,parseStages (contract §11 journey),"refuses [{""name"":""a"",""position"":3}]",passed,VALIDATION
+unit,rules.test.ts,parseStages (contract §11 journey),"refuses [{""name"":""a"",""starts_on"":""2026-02-30""}]",passed,VALIDATION
+unit,rules.test.ts,parseStages (contract §11 journey),"refuses [{""name"":""a"",""starts_on"":""2026-11-02"",""ends_on"":""2026-11-01""}]",passed,VALIDATION
+unit,rules.test.ts,parseStages (contract §11 journey),"refuses [{""name"":""a"",""id"":""stage-1""}]",passed,VALIDATION
+unit,rules.test.ts,parseStages (contract §11 journey),"refuses [{""name"":""a"",""id"":""4c1b2a8e-5d3f-4a6b-9c7d-0e1f2a3b4c5d""},{""name"":""b"",""id"":""4c1b2a8e-5d3f-4a6b-9c7d-0e1f2a3b4c5d""}]",passed,VALIDATION
+unit,rules.test.ts,parseStages (contract §11 journey),"refuses [{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""},{""name"":""a""}]",passed,VALIDATION
+unit,rules.test.ts,parseProblems (contract §3 option A),needs a title; the summary is optional,passed,VALIDATION
+unit,rules.test.ts,parseProblems (contract §3 option A),has no minimum: an empty list is valid (contract Q7),passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)",stores the canonical applicant types in canonical order,passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)",mints a question id when none is sent,passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""questions"":[]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[],""questions"":[]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""INDIVIDUAL""],""questions"":[]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM"",""TEAM""],""questions"":[]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""],""questions"":[{""prompt"":""x"",""step"":1}]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""],""questions"":[{""prompt"":""x"",""required"":true}]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""],""questions"":[{""prompt"":""x"",""required"":""yes"",""step"":1}]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""],""questions"":[{""prompt"":""x"",""required"":true,""step"":5}]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""],""questions"":[{""prompt"":"" "",""required"":true,""step"":1}]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""],""questions"":[{""id"":""Q 1"",""prompt"":""Vấn đề?"",""required"":true,""step"":1}]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""],""questions"":[{""id"":""q-problem"",""prompt"":""Vấn đề?"",""required"":true,""step"":1},{""id"":""q-problem"",""prompt"":""Vấn đề?"",""required"":true,""step"":1}]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""],""questions"":[{""id"":""q-problem"",""prompt"":""Vấn đề?"",""required"":true,""step"":1,""type"":""upload""}]}",passed,VALIDATION
+unit,rules.test.ts,"parseRegistration (canonical form, migration 013)","refuses {""applicant_types"":[""TEAM""],""questions"":[],""open"":true}",passed,VALIDATION
+unit,rules.test.ts,"parseEmptyBody (publish, close)",accepts no body or an empty object and refuses any key,passed,VALIDATION
+unit,rules.test.ts,stored content readers,read the documented shapes in order and skip malformed entries,passed,FUNCTIONAL
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses {""type"":""PROGRAMME"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""a\u0000b""}",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses {""type"":""PROGRAMME"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""Chương trình"",""summary"":""x\ud800""}",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses {""type"":""PROGRAMME"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""Chương trình"",""summary"":""\udc00x""}",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses {""type"":""PROGRAMME"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""Chương trình"",""starts_at"":""2026-02-30T10:00Z""}",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses {""type"":""PROGRAMME"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""Chương trình"",""starts_at"":""2026-01-01T24:00Z""}",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses {""type"":""PROGRAMME"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""Chương trình"",""starts_at"":""2026-01-01T10:60Z""}",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses {""type"":""PROGRAMME"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""Chương trình"",""starts_at"":""2026-01-01T10:00+15:00""}",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses {""type"":""PROGRAMME"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""Chương trình"",""starts_at"":""0000-01-01T00:00Z""}",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses {""type"":""PROGRAMME"",""organization_id"":""10000000-0000-0000-0000-000000000101"",""name"":""Chương trình"",""ends_at"":""0001-01-01T00:30+01:00""}",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","keeps well-formed Unicode, including surrogate pairs",passed,VALIDATION
+unit,rules.test.ts,"review hardening: input PostgreSQL cannot store is a 422, never a 500","refuses unstorable text inside stages, problems and questions",passed,VALIDATION
+unit,rules.test.ts,review hardening: a retried whole-list replacement writes the same ids,derives the id of an item sent without one from its position and content,passed,IDEMPOTENCY
+unit,basic-info.test.ts,WF04-S02 basic information rules,accepts a valid input,passed,VALIDATION
+unit,basic-info.test.ts,WF04-S02 basic information rules,"requires a type, a non-blank name and an owner",passed,VALIDATION
+unit,basic-info.test.ts,WF04-S02 basic information rules,rejects a type outside PROGRAMME / CHALLENGE and any type change of an existing programme,passed,VALIDATION
+unit,basic-info.test.ts,WF04-S02 basic information rules,rejects an owner the server did not list (spoofed organization),passed,ROLE_SPOOFING
+unit,basic-info.test.ts,WF04-S02 basic information rules,dates are optional; the end is not before the start; impossible days are invalid,passed,VALIDATION
+unit,basic-info.test.ts,WF04-S02 basic information rules,maps calendar days to Vietnam start / end of day,passed,FUNCTIONAL
+unit,basic-info.test.ts,WF04-S02 new draft,"is a DRAFT with trimmed values, the chosen owner, and empty setup",passed,FUNCTIONAL
+unit,basic-info.test.ts,WF04-S02 new draft,a PROGRAMME has no problem-statement section (H4),passed,FUNCTIONAL
+unit,basic-info.test.ts,WF04-S02 new draft,"a new CHALLENGE and a new PROGRAMME pass the production checklist (no problem rule, Q7)",passed,LIFECYCLE
+unit,basic-info.test.ts,WF04-S08 basic information edit,round-trips the stored values into the form,passed,FUNCTIONAL
+unit,basic-info.test.ts,WF04-S08 basic information edit,"updates name, summary and dates only; status, type, owner and setup untouched",passed,VALIDATION
+unit,basic-info.test.ts,WF04-S08 basic information edit,"refuses a type change, another owner, a blank name or reversed dates, changing nothing",passed,VALIDATION
+unit,fixtures.test.ts,WF04-T00 demo fixture,"is exactly one PROGRAMME and one CHALLENGE, in a fixed order",passed,TEST_FIXTURE
+unit,fixtures.test.ts,WF04-T00 demo fixture,"is deterministic: the same values on every load, and frozen",passed,TEST_FIXTURE
+unit,fixtures.test.ts,WF04-T00 demo fixture,"uses canonical values only: type, demo lifecycle, applicant types, application statuses",passed,TEST_FIXTURE
+unit,fixtures.test.ts,WF04-T00 demo fixture,links every event to its programme (programme_id set) inside the owning organization,passed,TEST_FIXTURE
+unit,fixtures.test.ts,WF04-T00 demo fixture,keeps stages ordered and problem statements on the CHALLENGE only,passed,TEST_FIXTURE
+unit,fixtures.test.ts,WF04-T00 demo fixture,"has unique, reserved-range ids and no contact data",passed,TEST_FIXTURE
+unit,fixtures.test.ts,WF04-T00 demo fixture,finds fixtures by id only,passed,TEST_FIXTURE
+unit,format.test.ts,WF04 demo date display (Asia/Ho_Chi_Minh),"formats a range, an open start / end and nothing",passed,FUNCTIONAL
+unit,format.test.ts,WF04 demo date display (Asia/Ho_Chi_Minh),"uses the Vietnam calendar day, not UTC",passed,FUNCTIONAL
+unit,format.test.ts,WF04 demo date display (Asia/Ho_Chi_Minh),treats an unreadable value as absent,passed,FUNCTIONAL
+unit,journey.test.ts,WF04-S03 stages,"orders by stored position, not array order",passed,FUNCTIONAL
+unit,journey.test.ts,WF04-S03 stages,adds exactly one stage at the end with a contiguous position; trims; optional fields null,passed,FUNCTIONAL
+unit,journey.test.ts,WF04-S03 stages,edits only the stage fields; dates round-trip as Vietnam days,passed,FUNCTIONAL
+unit,journey.test.ts,WF04-S03 stages,"removes and keeps positions contiguous (1,2,3 − 2 → 1,2)",passed,FUNCTIONAL
+unit,journey.test.ts,WF04-S03 stages,"moves up / down atomically; the first cannot go up, the last cannot go down",passed,FUNCTIONAL
+unit,journey.test.ts,WF04-S03 stages,an invalid or unknown edit changes nothing,passed,VALIDATION
+unit,journey.test.ts,WF04-S03 stages,an empty list accepts a first stage at position 1,passed,FUNCTIONAL
+unit,journey.test.ts,WF04-S03 problem statements (CHALLENGE only),"adds, edits and removes on a CHALLENGE",passed,FUNCTIONAL
+unit,journey.test.ts,WF04-S03 problem statements (CHALLENGE only),"refuses a blank title and any problem edit on a PROGRAMME, changing nothing",passed,VALIDATION
+unit,journey.test.ts,WF04-S03 problem statements (CHALLENGE only),"stages and problem statements are never publish prerequisites (contract §8, Q7)",passed,LIFECYCLE
+unit,programme-events.test.ts,WF04-S04 event times (S07 semantics),round-trips Vietnam local time and formats like S07,passed,FUNCTIONAL
+unit,programme-events.test.ts,WF04-S04 programme events,"lists only this programme’s events, in the S07 order (starts desc, undated first)",passed,FUNCTIONAL
+unit,programme-events.test.ts,WF04-S04 programme events,creates a DRAFT linked to the current programme and owner; programme_id is never an input,passed,RESIDUAL_DEMO_LIB
+unit,programme-events.test.ts,WF04-S04 programme events,"validates like the canonical Event: required name, limits, end not before start",passed,RESIDUAL_DEMO_LIB
+unit,programme-events.test.ts,WF04-S04 programme events,edits DRAFT and PUBLISHED events of this programme only; the link never changes,passed,RESIDUAL_DEMO_LIB
+unit,programme-events.test.ts,WF04-S04 programme events,removes a DRAFT from the demo journey; a published or foreign event cannot be removed,passed,RESIDUAL_DEMO_LIB
+unit,programme-events.test.ts,WF04-S04 programme events,an invalid edit changes nothing,passed,RESIDUAL_DEMO_LIB
+unit,registration.test.ts,WF04-S05 registration configuration,"saves applicant types in canonical order, once, with trimmed questions; counts untouched",passed,RESIDUAL_DEMO_LIB
+unit,registration.test.ts,WF04-S05 registration configuration,"accepts only INDIVIDUAL / TEAM / STARTUP and refuses blank questions, changing nothing",passed,RESIDUAL_DEMO_LIB
+unit,registration.test.ts,WF04-S05 registration configuration,"an empty configuration is allowed and reads as ""not configured""",passed,FUNCTIONAL
+unit,registration.test.ts,WF04-S05 registration configuration,"registration is never a publish prerequisite (contract §8, Q7)",passed,LIFECYCLE
+unit,routes.test.ts,WF04 demo route map,builds the audit-frozen paths,passed,FUNCTIONAL
+unit,routes.test.ts,WF04 demo route map,orders setup steps back and next,passed,FUNCTIONAL
+unit,routes.test.ts,WF04 demo route map,never reuses a WF01–WF03 contract route (WF03-S05 stays its own FUTURE route),passed,FUNCTIONAL
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,"(1) applies every migration, 015 last, each with its checksum",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,"(1) gives programmes its own lifecycle domain, a required owner and the two checks",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,(1) needs no fixture: the migrations alone leave every programme table empty,passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,"(13) seeds the same two programme rows on every run, valid under the new constraints",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,"(4) every programme has exactly one owning organization, an operational unit",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,"(8) refuses a programme without an owner, with an unknown owner, or an owner deleted under it",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,"(6) persists CLOSED, on insert and as a transition, and refuses a label outside the domain",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,"keeps end >= start when both dates are set, and leaves open dates open",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,(9) stores the Challenge problem statements and the journey inside the aggregate,passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,(9) refuses problem statements outside a Challenge and content outside the documented shape,passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on a fresh database,(12) keeps CLOSED and the aggregate content across a reconnect,passed,PERSISTENCE_RESTART
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on the schema production holds (014 → 015),(2) the runner applies 015 only; 001–014 match their recorded checksums,passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on the schema production holds (014 → 015),"(3)(5) keeps every programme row and its status, the legacy ARCHIVED one included",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on the schema production holds (014 → 015),(7) adds CLOSED only: ARCHIVED was already in the column domain before WF04,passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on the schema production holds (014 → 015),"(10) leaves WF05 applications, forms, events and organizations byte-identical",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,WF04-PROD-02 migration 015 on the schema production holds (014 → 015),"(11) adds no table: no second Application, Challenge, Problem or Stage store",passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,"WF04-PROD-02 migration 015 stops on rows it cannot carry, and rolls back",STOPS on an ownerless programme and changes nothing,passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,"WF04-PROD-02 migration 015 stops on rows it cannot carry, and rolls back",STOPS on an end before the start and changes nothing,passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,"WF04-PROD-02 migration 015 stops on rows it cannot carry, and rolls back",STOPS on problem statements on a Programme and changes nothing,passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,"WF04-PROD-02 migration 015 stops on rows it cannot carry, and rolls back",applies once the data is clean; the documented rollback restores the 014 schema with the data,passed,DB_MIGRATION
+db,programme-persistence.db-test.ts,"WF04-PROD-02 migration 015 stops on rows it cannot carry, and rolls back","the rollback refuses while a CLOSED programme exists, and leaves 015 in place",passed,DB_MIGRATION
+db,programme.db-test.ts,"WF04-PROD-03 reads: canonical rows, owner-scoped, no fixture",lists the programmes of the actor’s organizations only,passed,RBAC
+db,programme.db-test.ts,"WF04-PROD-03 reads: canonical rows, owner-scoped, no fixture","refuses the list without `programme:read` anywhere, or before onboarding is done",passed,RBAC
+db,programme.db-test.ts,"WF04-PROD-03 reads: canonical rows, owner-scoped, no fixture","summarises with counts and the owner reference, never the raw metadata",passed,SECURITY_SURFACE
+db,programme.db-test.ts,"WF04-PROD-03 reads: canonical rows, owner-scoped, no fixture","reads the detail: linked events read only, the WF05 form, problems on a CHALLENGE",passed,FUNCTIONAL
+db,programme.db-test.ts,"WF04-PROD-03 reads: canonical rows, owner-scoped, no fixture","answers the same 404 for out-of-scope, unknown and malformed ids",passed,IDOR
+db,programme.db-test.ts,WF04-PROD-03 create: the owner is a choice inside the actor’s scope,"creates a DRAFT for an organization the actor manages, with one audit event",passed,FUNCTIONAL
+db,programme.db-test.ts,WF04-PROD-03 create: the owner is a choice inside the actor’s scope,lets a Platform Admin own a programme by any operational unit,passed,RBAC
+db,programme.db-test.ts,WF04-PROD-03 create: the owner is a choice inside the actor’s scope,"refuses another unit, an unknown unit and a non-operational unit",passed,RBAC
+db,programme.db-test.ts,WF04-PROD-03 create: the owner is a choice inside the actor’s scope,"takes no role, scope or lifecycle from the body",passed,ROLE_SPOOFING
+db,programme.db-test.ts,"WF04-PROD-03 edit: allow-listed content, owner-scoped, DRAFT and PUBLISHED only","replaces basic fields, stages and problem statements, auditing field names only",passed,FUNCTIONAL
+db,programme.db-test.ts,"WF04-PROD-03 edit: allow-listed content, owner-scoped, DRAFT and PUBLISHED only",writes nothing for a request that changes nothing,passed,IDEMPOTENCY
+db,programme.db-test.ts,"WF04-PROD-03 edit: allow-listed content, owner-scoped, DRAFT and PUBLISHED only",keeps type and owner immutable and problem statements on a CHALLENGE,passed,FUNCTIONAL
+db,programme.db-test.ts,"WF04-PROD-03 edit: allow-listed content, owner-scoped, DRAFT and PUBLISHED only",refuses another unit’s programme as not found (IDOR),passed,IDOR
+db,programme.db-test.ts,"WF04-PROD-03 lifecycle: DRAFT → PUBLISHED → CLOSED, nothing else",publishes a DRAFT once and closes a PUBLISHED programme once,passed,LIFECYCLE
+db,programme.db-test.ts,"WF04-PROD-03 lifecycle: DRAFT → PUBLISHED → CLOSED, nothing else",refuses closing a DRAFT and a body on a transition,passed,LIFECYCLE
+db,programme.db-test.ts,"WF04-PROD-03 lifecycle: DRAFT → PUBLISHED → CLOSED, nothing else","publishes a CHALLENGE without problem statements, dates, stages or a form (Q7)",passed,LIFECYCLE
+db,programme.db-test.ts,"WF04-PROD-03 lifecycle: DRAFT → PUBLISHED → CLOSED, nothing else",lists every failing publish rule at once,passed,LIFECYCLE
+db,programme.db-test.ts,"WF04-PROD-03 lifecycle: DRAFT → PUBLISHED → CLOSED, nothing else","serialises concurrent publishes: one succeeds, the other is a conflict",passed,IDEMPOTENCY
+db,programme.db-test.ts,"WF04-PROD-03 lifecycle: DRAFT → PUBLISHED → CLOSED, nothing else","never writes ARCHIVED: no transition, route or SQL reaches it (DEC-W4P-D11)",passed,LIFECYCLE
+db,programme.db-test.ts,"WF04-PROD-03 registration: the canonical WF05 form, versioned","creates version 1, bumps on change, keeps the version when nothing changes",passed,APPLICATION
+db,programme.db-test.ts,"WF04-PROD-03 registration: the canonical WF05 form, versioned",refuses INDIVIDUAL and questions without their own required / step (Q3),passed,APPLICATION
+db,programme.db-test.ts,"WF04-PROD-03 registration: the canonical WF05 form, versioned",hands a published programme to WF05 by data; closing it stops new applications,passed,APPLICATION
+db,programme.db-test.ts,WF04-PROD-04 server-computed actions and the archived owner (DEC-W4P-D13),"derives the next actions from the lifecycle, the owner and the form",passed,ARCHIVED_ORG
+db,programme.db-test.ts,WF04-PROD-04 server-computed actions and the archived owner (DEC-W4P-D13),locks the registration action once an application exists,passed,ARCHIVED_ORG
+db,programme.db-test.ts,WF04-PROD-04 server-computed actions and the archived owner (DEC-W4P-D13),keeps an archived owner’s programme readable and refuses every write and a new one,passed,ARCHIVED_ORG
+db,programme.db-test.ts,WF04-PROD-04 server-computed actions and the archived owner (DEC-W4P-D13),offers only the organizations the actor manages as owners,passed,RBAC
+db,read.db-test.ts,"WF04-PROD-04 canonical reads (programme:read, exact organization)",PLATFORM_ADMIN and the Chapter 01 leader read the canonical Chapter 01 rows,passed,RBAC
+db,read.db-test.ts,"WF04-PROD-04 canonical reads (programme:read, exact organization)","an ordinary member is denied: 403 on the list, 404 on a detail",passed,RBAC
+db,read.db-test.ts,"WF04-PROD-04 canonical reads (programme:read, exact organization)","a leader of another organization sees no Chapter 01 programme (404, not listed)",passed,IDOR
+db,read.db-test.ts,"WF04-PROD-04 canonical reads (programme:read, exact organization)","PROGRAMME_ORGANIZER (any scope), membership, leadership and titles grant nothing",passed,RBAC
+db,read.db-test.ts,"WF04-PROD-04 canonical reads (programme:read, exact organization)","unknown, fixture-only and malformed ids are the same 404: nothing falls back to a fixture",passed,SECURITY_SURFACE
+db,read.db-test.ts,"WF04-PROD-04 owner options (DEC-WF04-S02-D2, DEC-W4P-D13)",admin: every active HUB / CHAPTER / CLB by name; leader: exactly its organization; member: none,passed,RBAC
+db,read.db-test.ts,WF04-PROD-04 read boundaries,"reading writes nothing: programmes, forms, events, audit, analytics, roles unchanged",passed,SECURITY_SURFACE
+db,read.db-test.ts,WF04-PROD-04 read boundaries,WF03 standalone events stay programme_id NULL; no fixture event is a row,passed,EVENT_BOUNDARY
+db,read.db-test.ts,WF04-PROD-04 read boundaries,"the detail never carries account, email or session data",passed,SECURITY_SURFACE
+http/e2e,wf04-prod-api.spec.ts,WF04-PROD-03 programme API — authentication and RBAC,a guest gets 401 on every endpoint and nothing is written,passed,RBAC
+http/e2e,wf04-prod-api.spec.ts,WF04-PROD-03 programme API — authentication and RBAC,"a member: list 403, every programme 404, create 403 — spoofed headers, query and body change nothing",passed,ROLE_SPOOFING
+http/e2e,wf04-prod-api.spec.ts,WF04-PROD-03 programme API — authentication and RBAC,a leader of another unit gets the same 404 on a programme it does not own (IDOR),passed,IDOR
+http/e2e,wf04-prod-api.spec.ts,"WF04-PROD-03 programme API — lifecycle, idempotency, validation","create → edit → registration → publish → close, with idempotent replays and 409 repeats",passed,LIFECYCLE
+http/e2e,wf04-prod-api.spec.ts,"WF04-PROD-03 programme API — lifecycle, idempotency, validation",validation answers 422 with the failing field; type and owner are immutable,passed,LIFECYCLE
+http/e2e,wf04-prod-api.spec.ts,"WF04-PROD-03 programme API — lifecycle, idempotency, validation","malformed, unknown and traversal ids are the canonical 404, never a 5xx",passed,SECURITY_SURFACE
+http/e2e,wf04-prod-api.spec.ts,WF04-PROD-03 programme API — response shape and leakage,"list and detail expose the DTO fields only: no metadata, application or account data",passed,SECURITY_SURFACE
+http/e2e,wf04-prod-api.spec.ts,WF04-PROD-03 programme API — response shape and leakage,"the session lists programme:manage for a leader and an admin, never for a member",passed,RBAC
+http/e2e,wf04-prod-qa.spec.ts,QA-RBAC — server-side authority only,a leader whose assignment is revoked loses list and write access at once,passed,RBAC
+http/e2e,wf04-prod-qa.spec.ts,QA-IDOR — organization A on organization B (0 successes),"the Chapter 01 leader cannot read or change B’s programme, Challenge data, form or lifecycle",passed,IDOR
+http/e2e,wf04-prod-qa.spec.ts,QA-SPOOF — client-controlled authority is ignored,"a leader spoofing headers, query and body gains nothing on B and changes no owner or status",passed,ROLE_SPOOFING
+http/e2e,wf04-prod-qa.spec.ts,QA-LIFE — DRAFT → PUBLISHED → CLOSED only; ARCHIVED read only,DRAFT cannot jump to CLOSED; CLOSED cannot reopen or be edited,passed,LIFECYCLE
+http/e2e,wf04-prod-qa.spec.ts,QA-LIFE — DRAFT → PUBLISHED → CLOSED only; ARCHIVED read only,"a legacy ARCHIVED row is readable, has no action, and every write is a conflict",passed,LIFECYCLE
+http/e2e,wf04-prod-qa.spec.ts,QA-LIFE — DRAFT → PUBLISHED → CLOSED only; ARCHIVED read only,"two concurrent closes: one transition, one conflict, one audit event",passed,LIFECYCLE
+http/e2e,wf04-prod-qa.spec.ts,QA-ARCH — an ARCHIVED owning organization over direct API calls,"create, edit, form, publish and close are 409; reads stay available",passed,ARCHIVED_ORG
+http/e2e,wf04-prod-qa.spec.ts,QA-CHAL — Challenge data in programmes.metadata.challenge,"persists through PATCH, is read back, and malformed payloads are 422 with nothing stored",passed,CHALLENGE
+http/e2e,wf04-prod-qa.spec.ts,QA-APP — the canonical WF05 Application flow,a WF04 programme accepts one application per venture; a repeat is APPLICATION_EXISTS; the key replays,passed,APPLICATION
+http/e2e,wf04-prod-qa.spec.ts,QA-EVT — WF04 writes no Event,a full operator journey leaves the events table untouched; no WF04 runtime file writes events,passed,EVENT_BOUNDARY
+http/e2e,wf04-prod-qa.spec.ts,QA-IDEM — repeat safety per action,create: the key replays one row; without a key each request is a new DRAFT (I5),passed,IDEMPOTENCY
+http/e2e,wf04-prod-qa.spec.ts,QA-IDEM — repeat safety per action,edit and form: an identical repeat changes nothing and audits nothing,passed,IDEMPOTENCY
+http/e2e,wf04-prod-qa.spec.ts,QA-IDEM — repeat safety per action,publish and close: the key replays 200 once; a repeat without the key is 409; one audit each,passed,IDEMPOTENCY
+http/e2e,wf04-prod-qa.spec.ts,"QA-AUDIT — who, what, which programme and organization, when, resulting state",each write is one audit row correlated to its response request id,passed,AUDIT
+http/e2e,wf04-prod-qa.spec.ts,QA-PERS — relogin and an expired session,logout and login again: the persisted programme is unchanged,passed,PERSISTENCE_RESTART
+http/e2e,wf04-prod-qa.spec.ts,QA-PERS — relogin and an expired session,a session that expires while editing: the save goes back through sign-in to the same page,passed,PERSISTENCE_RESTART
+http/e2e,wf04-prod-qa.spec.ts,QA-SEC — error surface and removed surfaces,every refusal is the frozen envelope; oversized or malformed input is never a 500,passed,SECURITY_SURFACE
+http/e2e,wf04-s01-programme-list.spec.ts,WF04-S01 list content (canonical rows),"rows come from the database in the actor’s scope, with canonical labels",passed,FUNCTIONAL
+http/e2e,wf04-s01-programme-list.spec.ts,WF04-S01 list content (canonical rows),"a row opens the detail page; ""Tạo mới"" opens the create page",passed,FUNCTIONAL
+http/e2e,wf04-s01-programme-list.spec.ts,WF04-S01 states,"loading, then populated",passed,FUNCTIONAL
+http/e2e,wf04-s01-programme-list.spec.ts,WF04-S01 states,API error: a safe message and a retry that recovers,passed,FUNCTIONAL
+http/e2e,wf04-s01-programme-list.spec.ts,WF04-S01 states,empty: a leader whose organization has no programme sees the scoped empty state,passed,FUNCTIONAL
+http/e2e,wf04-s01-programme-list.spec.ts,WF04-S01 states,"""Tạo mới"" is unavailable when every organization of the actor is ARCHIVED",passed,ARCHIVED_ORG
+http/e2e,wf04-s01-programme-list.spec.ts,WF04-S01 responsive and visual QA,768 / 390: no page overflow; the table stays reachable,passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s01-programme-list.spec.ts,WF04-S01 responsive and visual QA,"1440×900: typography; table card, head, row rule and pills match ADM5",passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s02-programme-create.spec.ts,WF04-S02 create (canonical row),"a PROGRAMME is created as a DRAFT row of the leader’s organization, audited, then the journey opens",passed,FUNCTIONAL
+http/e2e,wf04-s02-programme-create.spec.ts,WF04-S02 create (canonical row),validation: required fields and date order are checked before any request,passed,VALIDATION
+http/e2e,wf04-s02-programme-create.spec.ts,WF04-S02 create (canonical row),a double click creates exactly one programme,passed,IDEMPOTENCY
+http/e2e,wf04-s02-programme-create.spec.ts,WF04-S02 create (canonical row),"a refused or failed create shows a safe message, writes nothing, and a retry creates once",passed,IDEMPOTENCY
+http/e2e,wf04-s02-programme-create.spec.ts,"WF04-S02 owner options (server scope, DEC-W4P-D13)",platform admin chooses among active HUB / CHAPTER / CLB only,passed,RBAC
+http/e2e,wf04-s02-programme-create.spec.ts,"WF04-S02 owner options (server scope, DEC-W4P-D13)",a leader whose only organization is ARCHIVED sees the unavailable state; nothing can be saved,passed,ARCHIVED_ORG
+http/e2e,wf04-s02-programme-create.spec.ts,WF04-S02 responsive and visual QA,"768 / 390: no page overflow; fields and ""Lưu"" reachable",passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s02-programme-create.spec.ts,WF04-S02 responsive and visual QA,1440×900: typography; input and header match the approved sources,passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s03-programme-journey.spec.ts,WF04-S03 stages (metadata.journey),"add, edit, move and remove persist and survive a refresh",passed,FUNCTIONAL
+http/e2e,wf04-s03-programme-journey.spec.ts,WF04-S03 stages (metadata.journey),an invalid stage is refused on screen and never sent,passed,VALIDATION
+http/e2e,wf04-s03-programme-journey.spec.ts,WF04-S03 stages (metadata.journey),"a failed save shows ""Thử lại""; the retry saves once",passed,IDEMPOTENCY
+http/e2e,wf04-s03-programme-journey.spec.ts,WF04-S03 stages (metadata.journey),"a programme closed elsewhere: the save is a conflict, the screen re-reads and turns read only",passed,LIFECYCLE
+http/e2e,wf04-s03-programme-journey.spec.ts,WF04-S03 problem statements (metadata.challenge),"a CHALLENGE adds, edits and removes problems; a PROGRAMME has no problem section",passed,CHALLENGE
+http/e2e,wf04-s03-programme-journey.spec.ts,"WF04-S03 read only, authorization and responsive",a closed programme shows its stages without any edit control,passed,LIFECYCLE
+http/e2e,wf04-s03-programme-journey.spec.ts,"WF04-S03 read only, authorization and responsive","another unit’s, unknown, fixture-only and malformed ids are the same 404",passed,IDOR
+http/e2e,wf04-s03-programme-journey.spec.ts,"WF04-S03 read only, authorization and responsive",768 / 390: no page overflow; stage controls reachable; 1440 typography,passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s03-programme-journey.spec.ts,WF04-S03 restored coverage (WF04-PROD-04-FIX),"move boundaries: the first stage cannot move up, the last cannot move down",passed,FUNCTIONAL
+http/e2e,wf04-s03-programme-journey.spec.ts,WF04-S03 restored coverage (WF04-PROD-04-FIX),the setup frame: the stepper marks the current step; back and next chain every step,passed,FUNCTIONAL
+http/e2e,wf04-s03-programme-journey.spec.ts,WF04-S03 restored coverage (WF04-PROD-04-FIX),"1440×900 populated, empty and Challenge: typography and ADM5 primitives",passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s04-programme-events.spec.ts,"WF04-S04 linked events, read only",the linked canonical event is listed with its time and status; no write control exists,passed,EVENT_BOUNDARY
+http/e2e,wf04-s04-programme-events.spec.ts,"WF04-S04 linked events, read only",a new programme has no event yet: the empty state,passed,FUNCTIONAL
+http/e2e,wf04-s04-programme-events.spec.ts,"WF04-S04 linked events, read only",S03 → S04 → S05 navigation; 768 / 390 without overflow,passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s04-programme-events.spec.ts,WF04-S04 visual QA (restored by WF04-PROD-04-FIX),"1440×900 linked and empty: typography, ADM5 primitives and the event pill",passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s05-programme-registration.spec.ts,WF04-S05 registration (canonical form),"configure: TEAM / STARTUP only, at least one type, saved as form version 1",passed,APPLICATION
+http/e2e,wf04-s05-programme-registration.spec.ts,WF04-S05 registration (canonical form),"editing keeps each question’s id, required and step; removing one bumps the version",passed,APPLICATION
+http/e2e,wf04-s05-programme-registration.spec.ts,WF04-S05 registration (canonical form),once an application exists the form is read only (PO decision 3),passed,APPLICATION
+http/e2e,wf04-s05-programme-registration.spec.ts,WF04-S05 registration (canonical form),"a closed programme: read only, no configure or edit",passed,APPLICATION
+http/e2e,wf04-s05-programme-registration.spec.ts,WF04-S05 registration (canonical form),"768 / 390: no page overflow; the editor and ""Lưu cấu hình"" are reachable",passed,APPLICATION
+http/e2e,wf04-s05-programme-registration.spec.ts,WF04-S05 restored coverage (WF04-PROD-04-FIX),"a failed save shows ""Thử lại""; the retry stores the form once and closes the editor",passed,IDEMPOTENCY
+http/e2e,wf04-s05-programme-registration.spec.ts,WF04-S05 restored coverage (WF04-PROD-04-FIX),"1440×900 configured, editing and not configured: typography and ADM5 primitives",passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s06-programme-team.spec.ts,WF04-S06 operating team (Q4 deferred),"empty state, no control, no RoleAssignment change; back and next work",passed,FUNCTIONAL
+http/e2e,wf04-s06-programme-team.spec.ts,WF04-S06 operating team (Q4 deferred),a PUBLISHED programme shows the same empty state; 768 / 390 without overflow,passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s06-programme-team.spec.ts,WF04-S06 visual QA (restored by WF04-PROD-04-FIX),1440×900 empty team: typography and ADM5 primitives,passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 checklist and publish,"a bare CHALLENGE draft is ready: four checks, no problem rule; publish persists and opens the detail",passed,LIFECYCLE
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 checklist and publish,a double click publishes once,passed,IDEMPOTENCY
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 checklist and publish,a PUBLISHED programme offers no publish; its review shows the published state,passed,LIFECYCLE
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 checklist and publish,a blank name fails its check and publish stays disabled,passed,LIFECYCLE
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 checklist and publish,"an ARCHIVED owner: read only, owner check fails, publish disabled (DEC-W4P-D13)",passed,ARCHIVED_ORG
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 checklist and publish,"published elsewhere: the click is a conflict, the screen re-reads the programme",passed,LIFECYCLE
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 responsive and typography,768 / 390 without overflow; 1440 typography,passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 restored coverage (WF04-PROD-04-FIX),"the summary reflects the programme: basic, journey, problems, events, registration, team",passed,FUNCTIONAL
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 restored coverage (WF04-PROD-04-FIX),"a failed publish keeps DRAFT; ""Thử lại"" publishes once with the same key",passed,IDEMPOTENCY
+http/e2e,wf04-s07-programme-review.spec.ts,WF04-S07 restored coverage (WF04-PROD-04-FIX),"1440×900 ready, incomplete and published: ADM5 primitives",passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s08-programme-detail.spec.ts,WF04-S08 content from the canonical API,"the seed Challenge: overview, linked event, empty journey / problems / registration / team",passed,FUNCTIONAL
+http/e2e,wf04-s08-programme-detail.spec.ts,WF04-S08 content from the canonical API,"a PUBLISHED Challenge summarises its stage, problem and registration",passed,FUNCTIONAL
+http/e2e,wf04-s08-programme-detail.spec.ts,WF04-S08 content from the canonical API,every manage link opens its built step; review and back lead where they say,passed,FUNCTIONAL
+http/e2e,wf04-s08-programme-detail.spec.ts,WF04-S08 no close control (WF04-PROD-04-FIX); read only states,a PUBLISHED programme offers no close control; closed through the API it is read only,passed,LIFECYCLE
+http/e2e,wf04-s08-programme-detail.spec.ts,WF04-S08 no close control (WF04-PROD-04-FIX); read only states,an ARCHIVED owner offers no manage link,passed,ARCHIVED_ORG
+http/e2e,wf04-s08-programme-detail.spec.ts,WF04-S08 basic information (DEC-WF04-S08-D2),type and owner are read only; name and dates are validated; a save shows on the detail,passed,FUNCTIONAL
+http/e2e,wf04-s08-programme-detail.spec.ts,WF04-S08 basic information (DEC-WF04-S08-D2),"a failed save shows ""Thử lại""; the retry stores the edit once",passed,IDEMPOTENCY
+http/e2e,wf04-s08-programme-detail.spec.ts,WF04-S08 basic information (DEC-WF04-S08-D2),"the review ""Sửa"" on a failing name opens the basic step, which fixes it",passed,FUNCTIONAL
+http/e2e,wf04-s08-programme-detail.spec.ts,"WF04-S08 authorization, responsive and visual QA","another unit’s, unknown, fixture-only and malformed ids are the same 404",passed,IDOR
+http/e2e,wf04-s08-programme-detail.spec.ts,"WF04-S08 authorization, responsive and visual QA",768 / 390: cards stack without overflow; status and actions reachable,passed,VISUAL_RESPONSIVE
+http/e2e,wf04-s08-programme-detail.spec.ts,"WF04-S08 authorization, responsive and visual QA","1440×900 DRAFT, PUBLISHED and basic information: typography and ADM5 primitives",passed,VISUAL_RESPONSIVE
+http/e2e,wf04-t00-demo-foundation.spec.ts,"WF04 area guard (programme:read, server side)","guest → /auth; member, PROGRAMME_ORGANIZER label and HUB_MEMBER → 404; leader and admin enter",passed,RBAC
+http/e2e,wf04-t00-demo-foundation.spec.ts,"WF04 area guard (programme:read, server side)",spoofed role headers and cookies grant nothing to a member,passed,RBAC
+http/e2e,wf04-t00-demo-foundation.spec.ts,WF04 production frame (contract §16),"no demo notice, reset or demo copy on any WF04 screen; nothing kept in browser storage",passed,SECURITY_SURFACE
+http/e2e,wf04-t00-demo-foundation.spec.ts,WF04 production frame (contract §16),the OpsShell entry still leads to the list; the demo API no longer exists,passed,SECURITY_SURFACE
+http/e2e,wf04-t00-demo-foundation.spec.ts,WF04 runtime fixture dependency = 0 (contract §15),"no WF04 runtime file imports a fixture, the session store or the demo read model",passed,SECURITY_SURFACE
+http/e2e,wf04-t00-demo-foundation.spec.ts,WF04 route boundaries and the OpsShell entry (restored by WF04-PROD-04-FIX),unbuilt WF04 routes and any public programme page are the ordinary 404,passed,SECURITY_SURFACE
+http/e2e,wf04-t00-demo-foundation.spec.ts,WF04 route boundaries and the OpsShell entry (restored by WF04-PROD-04-FIX),"the entry shows in every OpsShell context, is current on WF04 pages, and never for members",passed,FUNCTIONAL
+http/e2e,wf04-t00-demo-foundation.spec.ts,WF04 route × actor matrix (restored SEC-WF04-01),"6 actors × every WF04 route, plain and with spoofed headers: server scope only",passed,RBAC
+http/e2e,wf04-uat-journey.spec.ts,,UAT-WF04: create → configure → publish → WF05 apply → form locked → close,passed,APPLICATION
