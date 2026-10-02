@@ -40,6 +40,9 @@ import { query, withTransaction } from '@/lib/db/client'
 /** PROVISIONAL. The contract states no retention window. */
 export const IDEMPOTENCY_RETENTION_SECONDS = 24 * 60 * 60
 
+/** Expired records swept per guarded request (WF05-PROD-02); bounded so a write never pays for a backlog. */
+export const IDEMPOTENCY_SWEEP_LIMIT = 100
+
 export type IdempotentResult<T> = {
   status: number
   body: T
@@ -108,6 +111,20 @@ export async function runIdempotent<T>(
   const { key, operation, actorAccountId, fingerprint, run } = options
 
   return withTransaction(async (exec) => {
+    // Retention (WF05-PROD-02). An expired record of this exact scope goes first,
+    // so a key reused after its window is a new request, never a stale replay.
+    // Then a bounded sweep removes other expired records: a stored response may
+    // hold personal data (application answers) that must not outlive the window.
+    await exec(
+      `DELETE FROM idempotency_keys
+        WHERE idempotency_key = $1
+          AND operation = $2
+          AND actor_account_id IS NOT DISTINCT FROM $3
+          AND expires_at <= now()`,
+      [key, operation, actorAccountId],
+    )
+    await purgeExpiredIdempotencyKeys(exec, IDEMPOTENCY_SWEEP_LIMIT)
+
     // The atomic claim. DO NOTHING rather than DO UPDATE: a losing request must
     // not be able to overwrite the winner's record.
     const claimed = await exec<{ id: string }>(
@@ -199,15 +216,31 @@ async function replayExisting<T>(
 }
 
 /**
- * Deletes expired records.
+ * Deletes expired records, all of them or the oldest `limit` (rows another
+ * transaction holds are skipped, never waited for).
  *
- * Retention, not correctness: an unswept expired row still replays its stored
- * outcome, which is the conservative direction to fail in. Returns the count so
- * a caller or a test can assert on it.
+ * `runIdempotent` calls it with a limit before every claim, so expired records
+ * and the responses they store do not outlive the retention window. Returns
+ * the count so a caller or a test can assert on it.
  */
-export async function purgeExpiredIdempotencyKeys(exec: Executor = query): Promise<number> {
-  const rows = await exec<{ id: string }>(
-    `DELETE FROM idempotency_keys WHERE expires_at <= now() RETURNING id::text`,
-  )
+export async function purgeExpiredIdempotencyKeys(
+  exec: Executor = query,
+  limit?: number,
+): Promise<number> {
+  const rows =
+    limit === undefined
+      ? await exec<{ id: string }>(
+          `DELETE FROM idempotency_keys WHERE expires_at <= now() RETURNING id::text`,
+        )
+      : await exec<{ id: string }>(
+          `DELETE FROM idempotency_keys
+            WHERE id IN (SELECT id FROM idempotency_keys
+                          WHERE expires_at <= now()
+                          ORDER BY expires_at
+                          LIMIT $1
+                          FOR UPDATE SKIP LOCKED)
+            RETURNING id::text`,
+          [limit],
+        )
   return rows.length
 }

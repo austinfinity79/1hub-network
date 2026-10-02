@@ -152,6 +152,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '014_p0_legal_v1_0.sql',
       // WF04-PROD-02 (DEC-W4P-D11): programme_status with CLOSED, owner NOT NULL, content checks.
       '015_p0_programme_production.sql',
+      // WF05-PROD-02 (DEC-W5P-D06): submitted applications kept, identity fixed, snapshot shape.
+      '016_p0_application_integrity.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)

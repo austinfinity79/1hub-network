@@ -14,6 +14,7 @@ import {
   submitApplication,
   submitApplicationIn,
 } from './application'
+import { deleteApplicationsForTest } from './testing'
 
 /**
  * TASK 24.4 — the server-side Application against live PostgreSQL (DEC-L5-D2 /
@@ -104,7 +105,7 @@ afterAll(async () => {
         OR resource_id IN ${ventures}`,
     [accounts],
   )
-  await query(`DELETE FROM applications WHERE venture_id IN ${ventures}`, [accounts])
+  await deleteApplicationsForTest(`venture_id IN ${ventures}`, [accounts])
   await query(`DELETE FROM project_members WHERE project_id IN ${ventures}`, [accounts])
   await query(`DELETE FROM project_domains WHERE project_id IN ${ventures}`, [accounts])
   await query(`DELETE FROM projects WHERE id IN ${ventures}`, [accounts])

@@ -118,6 +118,7 @@ Clean, no action needed: `visibility_level`, `consent_type`, `programme_type`, `
 | D5 | `outbox_events` absent | 04:307, 01:163 |
 | D6 | OrganizationRepresentation has no table or endpoint | SOT:201 |
 | D7 | Two sources of org parentage: `organizations.parent_id` and `organization_relationships` | SOT:134, WF03:35 |
+| D8 | `applications`: a SUBMITTED row deletable, applicant identity mutable on a DRAFT, snapshot shape unchecked — **RESOLVED by 016** (WF05-PROD-02, DEC-W5P-D06) | WF05 contract, DB contract D1–D3 |
 
 ## Migration 002 — created and applied
 

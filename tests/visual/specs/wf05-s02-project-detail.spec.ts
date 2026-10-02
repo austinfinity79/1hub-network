@@ -2,6 +2,7 @@ import path from 'node:path'
 
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
+import { deleteApplicationsForTest } from '../../../src/lib/application/testing'
 import { closePool, query } from '../../../src/lib/db/client'
 import { seedVenture } from '../../../src/lib/venture/testing'
 import { assertTypography, settle } from '../pixel-qa/capture'
@@ -49,8 +50,8 @@ test.afterEach(() => {
 })
 
 test.afterAll(async () => {
-  await query(
-    `DELETE FROM applications WHERE venture_id IN
+  await deleteApplicationsForTest(
+    `venture_id IN
        (SELECT p.id FROM projects p JOIN individual_profiles i ON i.id = p.owner_profile_id
          WHERE i.account_id = ANY($1::uuid[]))`,
     [accounts],

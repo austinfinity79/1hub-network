@@ -11,6 +11,7 @@ import { closePool, query, withTransaction } from '@/lib/db/client'
 
 import {
   IDEMPOTENCY_RETENTION_SECONDS,
+  IDEMPOTENCY_SWEEP_LIMIT,
   fingerprintRequest,
   purgeExpiredIdempotencyKeys,
   runIdempotent,
@@ -599,6 +600,84 @@ describe('retention', () => {
       `SELECT count(*)::text AS n FROM idempotency_keys WHERE expires_at > now()`,
     )
     expect(liveAfter[0]!.n).toBe(liveBefore[0]!.n)
+  })
+
+  // WF05-PROD-02 (contract handoff P2-2): expired records never outlive the
+  // window, and a stale record never blocks a valid later action.
+  async function expired(key: string, actor: string | null, fingerprint: string, body: unknown) {
+    await query(
+      `INSERT INTO idempotency_keys
+         (idempotency_key, operation, actor_account_id, request_fingerprint, state,
+          response_status, response_body, completed_at, expires_at, created_at)
+       VALUES ($1, 'application.submit', $2, $3, 'COMPLETED', 200, $4::jsonb,
+               now() - interval '25 hours', now() - interval '1 hour', now() - interval '25 hours')`,
+      [key, actor, fingerprint, JSON.stringify(body)],
+    )
+  }
+
+  it('treats a key reused after its window as a new request, never a stale replay', async () => {
+    const fingerprint = fingerprintRequest({ application: 'a' })
+    await expired('key-stale', accountA, fingerprint, { stale: true })
+    let runs = 0
+
+    const outcome = await runIdempotent({
+      key: 'key-stale',
+      operation: 'application.submit',
+      actorAccountId: accountA,
+      fingerprint,
+      run: async () => {
+        runs += 1
+        return { status: 200, body: { fresh: true } }
+      },
+    })
+
+    expect(outcome).toEqual({ status: 200, body: { fresh: true }, replayed: false })
+    expect(runs).toBe(1)
+    const rows = await query<{ live: boolean }>(
+      `SELECT expires_at > now() AS live FROM idempotency_keys WHERE idempotency_key = 'key-stale'`,
+    )
+    expect(rows).toEqual([{ live: true }])
+  })
+
+  it('sweeps expired records, stored answers included, on every guarded request', async () => {
+    const keys = ['key-sweep-1', 'key-sweep-2', 'key-sweep-3']
+    for (const key of keys)
+      await expired(key, accountB, 'fp', {
+        answers: [{ question_id: 'q-problem', value: 'private answer' }],
+      })
+
+    await runIdempotent({
+      key: 'key-sweep-trigger',
+      operation: 'feedback.submit',
+      actorAccountId: accountA,
+      fingerprint: fingerprintRequest({ sweep: true }),
+      run: async () => ({ status: 201, body: {} }),
+    })
+
+    for (const key of keys) expect(await countKeys(key)).toBe(0)
+    const left = await query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM idempotency_keys WHERE expires_at <= now()`,
+    )
+    expect(left[0]!.n).toBe('0')
+  })
+
+  it('bounds the sweep one request performs', async () => {
+    for (let i = 0; i < IDEMPOTENCY_SWEEP_LIMIT + 5; i += 1)
+      await expired(`key-bulk-${i}`, accountB, 'fp', {})
+
+    await runIdempotent({
+      key: 'key-bulk-trigger',
+      operation: 'feedback.submit',
+      actorAccountId: accountA,
+      fingerprint: fingerprintRequest({ bulk: true }),
+      run: async () => ({ status: 201, body: {} }),
+    })
+
+    const left = await query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM idempotency_keys WHERE expires_at <= now()`,
+    )
+    expect(left[0]!.n).toBe('5')
+    expect(await purgeExpiredIdempotencyKeys()).toBe(5)
   })
 })
 

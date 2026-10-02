@@ -1,36 +1,40 @@
 # Claude Task Report
 
 ## Task
-WF05-PROD-01 — freeze the WF05 production contract and canonical data model. Contract: [production contract](reports/WF05-PROD-01_production-contract.md) · [domain and lifecycle](reports/WF05-PROD-01_domain-lifecycle.md) · [RBAC, API, frontend](reports/WF05-PROD-01_rbac-api-frontend.md) · [DB contract](reports/WF05-PROD-01_db-contract.md) · [implementation handoff](reports/WF05-PROD-01_implementation-handoff.md); decisions: [DEC-W5P](../decisions/DECISION_LOG.md#dec-w5p).
+WF05-PROD-02 — close the remaining WF05 persistence gaps (handoff P2-1 … P2-4 only). Report: [reports/WF05-PROD-02_persistence.md](reports/WF05-PROD-02_persistence.md); evidence: [reports/WF05-PROD-02_evidence.md](reports/WF05-PROD-02_evidence.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE — WF05 PRODUCTION CONTRACT FROZEN.** TRUE_PO_DECISIONS_REMAINING = 0. PROD-02 not started. STOP.
+**PASS_WITH_EVIDENCE, local only.** Submitted applications immutable and undeletable in the database; applicant identity fixed; idempotency records no longer outlive their window; deterministic WF05 fixtures; WF05 state survives refresh, relogin, app restart and PostgreSQL restart. Not pushed, not deployed; PROD-03 not started. STOP.
 
 ## Scope implemented
-- Scope L5 + S01 + S02 with routes, screens, actions and the out-of-P0 list; demo artifact disposition (remove notice, reset, demo copy, actor key, MemberShell "Demo" labels; keep `/demo` routes and API names).
-- One canonical model (`projects`, `project_members`, `programmes`, `programme_application_forms`, `applications`); applicant = the venture; DRAFT → SUBMITTED final; programme-state matrix; submitted immutability; form consistency; visibility; authority matrix; API behaviour per endpoint; idempotency and duplicate rules; audit; frontend rules; cross-WF invariants.
-- DB contract from the live catalog: every table EXISTING / NO_CHANGE except migration 016 (DELETE guard, DRAFT identity guard, snapshot shape check).
-- `d4…0001`: KEEP + CLOSE / HIDE via the canonical WF04 close at promotion; no schema mechanism needed.
-- SOT conflicts C1 / C2 resolved by precedence (historical SOT unchanged); PROD-02 / PROD-03 allowed scope.
+- Migration 016 `016_p0_application_integrity.sql`: identity-fixed trigger, SUBMITTED delete / truncate guards, snapshot-object check; data pre-check; documented lossless rollback; no table, column or index.
+- Idempotency store: expired record of the same scope removed before the claim; bounded sweep (100) of other expired records.
+- `src/lib/application/testing.ts`: deterministic fixture set and the maintenance cleanup used by suites that create SUBMITTED applications.
+- Seed: a form with applications is never rewritten by a re-seed.
+- WF04 migration-chain tests made independent of the newest migration; schema list includes 016.
 
 ## Files changed
-- Docs: the five `reports/WF05-PROD-01_*` contract files above (new); `docs/decisions/DECISION_LOG.md` (DEC-W5P); this report.
+- Migration: `db/migrations/016_p0_application_integrity.sql` (new).
+- Runtime: `src/lib/idempotency/store.ts`.
+- Test support / tests: `src/lib/application/testing.ts` (new), `src/lib/db/application-integrity.db-test.ts` (new), `src/lib/idempotency/idempotency.db-test.ts`, `src/lib/application/application.db-test.ts`, `src/lib/db/programme-persistence.db-test.ts`, `src/lib/db/schema.db-test.ts`, `tests/visual/specs/wf05-s02-project-detail.spec.ts`, `tests/visual/specs/wf05-uat-journey.spec.ts`.
+- Seed: `db/seed/seed_p0_deterministic.sql`. QA tooling: `scripts/qa/wf05-restart-check.mjs` (new, local only).
+- Docs: the two PROD-02 reports, `DB_SCHEMA_GAPS_P0.md` (D8), `IDEMPOTENCY_STORE_P0.md` (I7), this report.
 
 ## Migrations / data
-None. No runtime, API, route, DB or data change.
+Migration 016 (additive, one transaction, pre-check, lossless rollback). Fresh 001 → 016 and upgrade 015 → 016 with WF05 data verified; no data written by the migration.
 
 ## Tests / build
-Not applicable (contract task). Catalog facts read with SELECT only.
+format, lint, typecheck PASS; unit 33 / 307; DB 35 / 549 (+40); build PASS; restart check 14 / 14; protected regression 64 specs / 797 on a fresh DB; UAT 19 / 19; 5xx, console, hydration 0.
 
 ## Visual QA
-Not applicable.
+No UI change.
 
 ## Deviations / blockers
-None. Owner document updates (CLAUDE.md §2 wording, Data SOT annotation, superseded notes) and closing `d4…0001` are promotion-runbook items, not PROD-02 / 03 scope.
+P2-4b deferred: the seeded venture stays ACTIVE + PRIVATE (valid in the DB; twelve protected specs read it). Fixture module placed in `src/lib/application/testing.ts` (next to `venture/testing.ts`) instead of `tests/visual/support/ventures.ts`, so DB suites and Playwright share it.
 
 ## Git
-- Branch: `feat/wf05-prod-hardening`; start HEAD `d1ac04a`; no concurrent change
-- Implementation commit: `docs(wf05): freeze the WF05 production contract (WF05-PROD-01)`
+- Branch: `feat/wf05-prod-hardening`; start HEAD `b362527`; no concurrent change
+- Implementation commit: `feat(wf05): application integrity and persistence hardening, migration 016 (WF05-PROD-02)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -38,4 +42,4 @@ None. Owner document updates (CLAUDE.md §2 wording, Data SOT annotation, supers
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of the WF05 production contract; then WF05-PROD-02 (persistence / schema: migration 016, idempotency retention, test fixtures, seed hygiene).
+ChatGPT / PO review of PROD-02; then WF05-PROD-03 (API / lifecycle / RBAC, handoff P3-1 … P3-10, with the WF02 / WF04 authorizations it needs).

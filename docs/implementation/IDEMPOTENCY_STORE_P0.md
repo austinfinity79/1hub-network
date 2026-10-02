@@ -18,7 +18,7 @@ Everything in the next section is therefore **PROVISIONAL TECHNICAL CONFIGURATIO
 | I4 | Conflict HTTP status | 409 | Contracted, even though the code is not: 05:104 maps 409 to "lifecycle/state conflict / duplicate relation" |
 | I5 | Missing header | request is still processed | Rejecting would require an error code for a missing key, and none exists. Being lenient is the smaller and more reversible choice than minting a public error code |
 | I6 | Request identity | sha256 of the canonicalised input | A hash is sufficient to detect a key reused with different content, and avoids the store becoming a second copy of personal data |
-| I7 | Expired but unswept record | still replays | Fails in the conservative direction. Retention is a sweep concern, not a correctness one |
+| I7 | Expired record | removed before the claim of its own scope, so a reused key is a new request; every guarded write also sweeps up to 100 other expired records (WF05-PROD-02) | Stored responses can hold personal data (application answers), so they must not outlive the window; a stale record never blocks a valid later action |
 
 I5 is the one most likely to need revisiting. It means idempotency is available but not compelled, so a client that omits the header gets the old behaviour silently.
 

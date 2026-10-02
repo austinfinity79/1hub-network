@@ -288,6 +288,11 @@ INSERT INTO programme_application_forms(programme_id, applicant_types, questions
    1, '2026-09-01T02:00:00Z')
 ON CONFLICT (programme_id) DO UPDATE SET
   applicant_types = EXCLUDED.applicant_types, questions = EXCLUDED.questions,
-  version = EXCLUDED.version, updated_at = EXCLUDED.updated_at;
+  version = EXCLUDED.version, updated_at = EXCLUDED.updated_at
+-- A form that already has applications is never rewritten, not even by a
+-- re-seed: the WF04 / WF05 rule (DEC-W4P-D13, WF05 contract) holds here too.
+WHERE NOT EXISTS (
+  SELECT 1 FROM applications a WHERE a.programme_id = programme_application_forms.programme_id
+);
 
 COMMIT;

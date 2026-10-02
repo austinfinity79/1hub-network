@@ -4,6 +4,7 @@ import { expect, test, type APIRequestContext, type APIResponse, type Page } fro
 
 import { onboardThroughUi } from '../support/onboarding'
 import { requestMagicLink } from '../../../src/lib/auth/magic-link'
+import { deleteApplicationsForTest } from '../../../src/lib/application/testing'
 import { closePool, query } from '../../../src/lib/db/client'
 import { seedVenture } from '../../../src/lib/venture/testing'
 import { assertTypography, settle } from '../pixel-qa/capture'
@@ -74,7 +75,7 @@ test.afterEach(() => {
 test.afterAll(async () => {
   const owned = `(SELECT p.id FROM projects p JOIN individual_profiles i ON i.id = p.owner_profile_id
                    WHERE i.account_id = ANY($1::uuid[]))`
-  await query(`DELETE FROM applications WHERE venture_id IN ${owned}`, [accounts])
+  await deleteApplicationsForTest(`venture_id IN ${owned}`, [accounts])
   await query(`DELETE FROM project_members WHERE project_id IN ${owned}`, [accounts])
   await query(
     `DELETE FROM projects WHERE owner_profile_id IN

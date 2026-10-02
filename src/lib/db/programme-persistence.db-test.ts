@@ -27,6 +27,12 @@ const RUNNER = join(ROOT, 'scripts', 'db.mjs')
 const M015 = '015_p0_programme_production.sql'
 const M014 = '014_p0_legal_v1_0.sql'
 const M015_SOURCE = readFileSync(join(MIGRATIONS_DIR, M015), 'utf8')
+// Later migrations (016 onwards, WF05-PROD-02) are applied by the same runner
+// pass; the 015 expectations below hold whatever follows it.
+const MIGRATION_FILES = readdirSync(MIGRATIONS_DIR)
+  .filter((name) => name.endsWith('.sql'))
+  .sort()
+const AFTER_014 = MIGRATION_FILES.filter((name) => name > M014)
 
 const FRESH = 'hubnetwork_p0_prod02_fresh'
 const UPGRADE = 'hubnetwork_p0_prod02_upgrade'
@@ -247,17 +253,15 @@ describe('WF04-PROD-02 migration 015 on a fresh database', () => {
     await db?.end()
   })
 
-  it('(1) applies every migration, 015 last, each with its checksum', async () => {
+  it('(1) applies every migration in order, 015 with its checksum', async () => {
     const { rows } = await db.query<{ filename: string; sha256: string }>(
       'SELECT filename, sha256 FROM schema_migrations ORDER BY filename',
     )
-    const onDisk = readdirSync(MIGRATIONS_DIR)
-      .filter((name) => name.endsWith('.sql'))
-      .sort()
 
-    expect(rows.map((r) => r.filename)).toEqual(onDisk)
-    expect(rows.at(-1)!.filename).toBe(M015)
-    expect(rows.at(-1)!.sha256).toBe(createHash('sha256').update(M015_SOURCE).digest('hex'))
+    expect(rows.map((r) => r.filename)).toEqual(MIGRATION_FILES)
+    expect(rows.find((r) => r.filename === M015)!.sha256).toBe(
+      createHash('sha256').update(M015_SOURCE).digest('hex'),
+    )
   })
 
   it('(1) gives programmes its own lifecycle domain, a required owner and the two checks', async () => {
@@ -527,9 +531,9 @@ describe('WF04-PROD-02 migration 015 on the schema production holds (014 → 015
     await db?.end()
   })
 
-  it('(2) the runner applies 015 only; 001–014 match their recorded checksums', async () => {
+  it('(2) the runner applies 015 and nothing before it; 001–014 match their recorded checksums', async () => {
     expect(migrateOutput).toContain(`applied ${M015}`)
-    expect(migrateOutput.match(/applied /g)).toHaveLength(1)
+    expect(migrateOutput.match(/applied /g)).toHaveLength(AFTER_014.length)
     expect(migrateOutput.match(/skip /g)).toHaveLength(14)
 
     const second = runner(UPGRADE, 'migrate')
@@ -639,11 +643,18 @@ describe('WF04-PROD-02 migration 015 stops on rows it cannot carry, and rolls ba
   it('applies once the data is clean; the documented rollback restores the 014 schema with the data', async () => {
     const before = await snapshot(db)
     runner(RECOVERY, 'migrate')
-    expect(await ledgerAndType()).toEqual({ ledger: 15, status: 'programme_status' })
+    expect(await ledgerAndType()).toEqual({
+      ledger: MIGRATION_FILES.length,
+      status: 'programme_status',
+    })
 
     await db.query(documentedRollback())
 
-    expect(await ledgerAndType()).toEqual({ ledger: 14, status: 'publication_status' })
+    // Only 015 leaves the ledger; later migrations do not depend on it.
+    expect(await ledgerAndType()).toEqual({
+      ledger: MIGRATION_FILES.length - 1,
+      status: 'publication_status',
+    })
     expect((await column(db, 'programmes', 'organization_id'))!.is_nullable).toBe('YES')
     expect(Object.keys(await constraints(db))).toEqual([
       'programmes_organization_id_fkey',
@@ -665,6 +676,9 @@ describe('WF04-PROD-02 migration 015 stops on rows it cannot carry, and rolls ba
       'CLOSED programmes exist; publication_status cannot hold them',
     )
     await db.query('ROLLBACK')
-    expect(await ledgerAndType()).toEqual({ ledger: 15, status: 'programme_status' })
+    expect(await ledgerAndType()).toEqual({
+      ledger: MIGRATION_FILES.length,
+      status: 'programme_status',
+    })
   })
 })
