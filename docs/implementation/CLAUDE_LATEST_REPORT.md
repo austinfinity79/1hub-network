@@ -1,40 +1,40 @@
 # Claude Task Report
 
 ## Task
-WF05-PROD-06 — WF05 pixel + responsive + cross-WF regression. Report: [reports/WF05-PROD-06_pixel-responsive.md](reports/WF05-PROD-06_pixel-responsive.md); screen review: [reports/WF05-PROD-06_screen-review.md](reports/WF05-PROD-06_screen-review.md); PROD-07 handoff: [reports/WF05-PROD-06_prod07-handoff.md](reports/WF05-PROD-06_prod07-handoff.md).
+WF05-PROD-07 — WF05 production readiness closure + combined WF04 / WF05 hardening review. Report: [reports/WF05-PROD-07_production-readiness.md](reports/WF05-PROD-07_production-readiness.md); matrix: [reports/WF05-PROD-07_closure-matrix.md](reports/WF05-PROD-07_closure-matrix.md); combined package: [reports/WF04-WF05-combined-hardening-handoff.md](reports/WF04-WF05-combined-hardening-handoff.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE, local only.** REAL_REGRESSION 0 and NEW_WF05_REGRESSION 0 over 144 baseline / candidate pairs (`f40f70c` vs candidate, 6 widths) and 150 state × width checks; every visible difference is an approved PROD-04 change. Not pushed, not deployed; PROD-07 not started. STOP.
+**PASS_WITH_EVIDENCE — WF05 PROD HARDENED / NOT YET DEPLOYED.** PROD-00 → PROD-06 closed; P0 blockers 0, SOT conflicts 0, PO decisions remaining 0; P1 pre-promotion items 4, P2 debt 7. COMBINED_COMPATIBILITY (WF04 + WF05) PASS; migration chain 001 → 016 fresh and upgrade PASS. Not pushed, merged or deployed; WF06 not started. STOP.
 
 ## Scope implemented
-- QA only, no runtime change: `scripts/qa/wf05-visual-compare.mjs` (baseline vs candidate captures, layout facts, component deltas, pixelmatch), `tests/visual/specs/wf05-prod-visual.spec.ts` (25 states × 1440 / 1024 / 768 / 430 / 390 / 320, interaction and accessibility smoke).
-- Findings reported, not changed: S01 venture-name link without a focus ring (pre-existing, P2); WF02 team 9 px at 320 and the WF04 OpsShell demo entry (known shared baseline).
+- Closure audit only: preflight, 31-area closure matrix, contract invariants, `d4…0001` and demo-artifact checks, cross-WF identity, aggregate QA, debt classification, blocker counts.
+- Combined WF04 + WF05 compatibility review, release boundary SHAs, rollback references and a conceptual promotion runbook (not executed).
+- Rerun on the candidate: fresh DB 16 / 16, unit 307, DB 569, UAT 19 / 19.
 
 ## Files changed
-- QA: `scripts/qa/wf05-visual-compare.mjs` (new), `tests/visual/specs/wf05-prod-visual.spec.ts` (new).
-- Docs: three PROD-06 reports; this report.
-- Captures (local, untracked): `tests/visual/actual/wf05-prod06/` (288 + side-by-side), `tests/visual/actual/wf05-prod-06-states/`.
+- Docs: `WF05-PROD-07_production-readiness.md`, `WF05-PROD-07_closure-matrix.md`, `WF04-WF05-combined-hardening-handoff.md`; this report.
 
 ## Migrations / data
-None. The baseline ran on a scratch database (`hubnetwork_p0_base`, 001–015 + seed), removed after the task.
+None.
 
 ## Tests / build
-format, lint, typecheck PASS; unit 33 / 307; DB 36 / 569; build PASS; `wf05-prod-visual` 154 / 154; compare script 288 captures; protected regression on a fresh DB 68 specs / 981 passed (16.8 min), 0 failed / skipped / flaky; console, hydration, unexpected 5xx 0; server log 0 errors.
+No runtime change. Rerun on `8c1fbd6`: fresh `db:reset` 16 / 16 + seed; unit 33 / 307; DB 36 / 569; UAT 19 / 19. Last full protected regression (PROD-06, same runtime): 68 specs / 981; console, hydration, 5xx 0.
 
 ## Visual QA
-Pixel: IDENTICAL 70, STRUCTURAL 66 (intentional), MAJOR 0, COMPONENT 0, MINOR 8 (6 intentional step-number fix, 2 select anti-aliasing). Responsive: 0 overflow / escaping / overlap / clipped text on every WF05 state at 6 widths.
+None in this task (PROD-06: REAL_REGRESSION 0).
 
 ## Deviations / blockers
-None blocking. Baseline is `f40f70c` (WF05 UI as accepted before the production work; equals production `78f21f2` for WF05 but the WF04 frame changes approved in WF04-PROD-06); L5 is also checked against the approved frames L37–L43.
+None. The contract quotes the candidate as `8c1fb0b6` (no such object; the commit is `8c1fbd6`) and the PROD-06 regression as 901 / 901 (the run reported 981 / 981). Integration with `fix/member-shell-mobile` needs a small conflict resolution at promotion (P1).
 
 ## Git
-- Branch: `feat/wf05-prod-hardening`; start HEAD `0e07dca`; no concurrent change
-- Implementation commit: `test(wf05): pixel, responsive and cross-workflow regression (WF05-PROD-06)`
+- Branch: `feat/wf05-prod-hardening`; start HEAD `8c1fbd6`; no concurrent change
+- Implementation commit: `docs(wf05): production readiness closure and combined WF04 / WF05 package (WF05-PROD-07)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
 - Remote HEAD: `78f21f2` (production also `78f21f2`)
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
+- WF04 candidate `f40f70c`; WF05 candidate runtime `8c1fbd6`; rollback `78f21f2`
 
 ## Recommended next task
-ChatGPT / PO review of PROD-06; then WF05-PROD-07 (closure) per the handoff.
+ChatGPT / PO WF05 closure review; then the PO-controlled combined WF04 + WF05 promotion per the runbook, or WF06-PROD-00 (not started).
