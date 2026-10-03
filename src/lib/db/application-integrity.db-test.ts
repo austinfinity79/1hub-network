@@ -615,14 +615,14 @@ describe('FIXTURE — the deterministic WF05 set through the services', () => {
   it('persists a DRAFT save and keeps a SUBMITTED application final', async () => {
     const saved = await saveApplicationAnswers(fx.owner.accountId, fx.applications.draft, {
       answers: [{ question_id: 'q-support', value: 'Kết nối khách hàng.' }],
-    })
+    }, 'req-wf05-integrity')
     expect(saved.answers).toHaveLength(2)
     await closePool()
     expect((await getApplication(fx.owner.accountId, fx.applications.draft)).answers).toHaveLength(2)
 
     const refusal = await saveApplicationAnswers(fx.owner.accountId, fx.applications.submitted, {
       answers: [{ question_id: 'q-support', value: 'x' }],
-    }).catch((e: unknown) => e)
+    }, 'req-wf05-integrity').catch((e: unknown) => e)
     expect(isApiError(refusal) && refusal.code).toBe('APPLICATION_SUBMITTED')
     const again = await submitApplication(fx.owner.accountId, fx.applications.submitted, 'req-again').catch(
       (e: unknown) => e,

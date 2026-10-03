@@ -58,6 +58,8 @@ const AUDIT_CODES = [
   'EVENT_CANCELLED',
   // DEC-L5-D3 (TASK 24.4): the server-side programme application.
   'APPLICATION_DRAFT_CREATED',
+  // DEC-W5P-D12 (WF05-PROD-05): a draft save that changes an answer.
+  'APPLICATION_DRAFT_UPDATED',
   'APPLICATION_SUBMITTED',
 ]
 

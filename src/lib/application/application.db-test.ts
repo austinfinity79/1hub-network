@@ -276,28 +276,53 @@ describe('GET / PATCH /applications/{id}', () => {
   })
 
   it('saves answers; an empty value clears one; unknown questions and long values are refused', async () => {
-    const saved = await saveApplicationAnswers(owner.accountId, id, {
-      answers: [answer('q-problem', 'Hao hụt ở chặng giao cuối.'), answer('q-support', 'Dữ liệu')],
-    })
+    const saved = await saveApplicationAnswers(
+      owner.accountId,
+      id,
+      {
+        answers: [
+          answer('q-problem', 'Hao hụt ở chặng giao cuối.'),
+          answer('q-support', 'Dữ liệu'),
+        ],
+      },
+      RID,
+    )
     expect(saved.missing).toEqual([])
-    const cleared = await saveApplicationAnswers(owner.accountId, id, {
-      answers: [answer('q-support', '   ')],
-    })
+    const cleared = await saveApplicationAnswers(
+      owner.accountId,
+      id,
+      {
+        answers: [answer('q-support', '   ')],
+      },
+      RID,
+    )
     expect(cleared.answers).toEqual([answer('q-problem', 'Hao hụt ở chặng giao cuối.')])
     expect(cleared.missing).toEqual(['q-support'])
     expect(
-      await refusal(saveApplicationAnswers(owner.accountId, id, { answers: [answer('q-x', 'a')] })),
+      await refusal(
+        saveApplicationAnswers(owner.accountId, id, { answers: [answer('q-x', 'a')] }, RID),
+      ),
     ).toMatchObject({ code: 'APPLICATION_VALIDATION_FAILED', status: 422 })
     expect(
       await refusal(
-        saveApplicationAnswers(owner.accountId, id, {
-          answers: [answer('q-problem', 'x'.repeat(2001))],
-        }),
+        saveApplicationAnswers(
+          owner.accountId,
+          id,
+          {
+            answers: [answer('q-problem', 'x'.repeat(2001))],
+          },
+          RID,
+        ),
       ),
     ).toMatchObject({ code: 'APPLICATION_VALIDATION_FAILED', fields: { 'q-problem': 'too_long' } })
     expect(
       await refusal(
-        saveApplicationAnswers(teammate.accountId, id, { answers: [answer('q-problem', 'x')] }),
+        saveApplicationAnswers(
+          teammate.accountId,
+          id,
+          { answers: [answer('q-problem', 'x')] },
+          RID,
+        ),
       ),
     ).toMatchObject(NOT_FOUND)
   })
@@ -329,9 +354,14 @@ describe('POST /applications/{id}/submit', () => {
   })
 
   it('submits once with a snapshot; later edits never reach it; everything after is 409', async () => {
-    await saveApplicationAnswers(owner.accountId, id, {
-      answers: [answer('q-support', 'Kết nối doanh nghiệp')],
-    })
+    await saveApplicationAnswers(
+      owner.accountId,
+      id,
+      {
+        answers: [answer('q-support', 'Kết nối doanh nghiệp')],
+      },
+      RID,
+    )
     const done = await submitApplication(owner.accountId, id, RID)
     expect(done).toMatchObject({ status: 'SUBMITTED', missing: [] })
     expect(done.submitted_at).not.toBeNull()
@@ -361,17 +391,20 @@ describe('POST /applications/{id}/submit', () => {
     })
     expect(
       await refusal(
-        saveApplicationAnswers(owner.accountId, id, { answers: [answer('q-problem', 'đổi')] }),
+        saveApplicationAnswers(owner.accountId, id, { answers: [answer('q-problem', 'đổi')] }, RID),
       ),
     ).toMatchObject({ code: 'APPLICATION_SUBMITTED', status: 409 })
     const audits = await query<{ action: string; after: Record<string, unknown> }>(
       `SELECT action, after_data AS after FROM audit_events WHERE resource_id = $1 ORDER BY created_at`,
       [id],
     )
-    expect(audits.map((a) => a.action)).toEqual([
-      'APPLICATION_DRAFT_CREATED',
-      'APPLICATION_SUBMITTED',
-    ])
+    // WF05-PROD-05: each changing save before the submit is APPLICATION_DRAFT_UPDATED;
+    // the refused saves after it write nothing.
+    const actions = audits.map((a) => a.action)
+    expect(actions[0]).toBe('APPLICATION_DRAFT_CREATED')
+    expect(actions.at(-1)).toBe('APPLICATION_SUBMITTED')
+    expect(actions.slice(1, -1).length).toBeGreaterThan(0)
+    expect(new Set(actions.slice(1, -1))).toEqual(new Set(['APPLICATION_DRAFT_UPDATED']))
     expect(JSON.stringify(audits)).not.toMatch(/Hao hụt|Kết nối/)
   })
 
@@ -382,9 +415,14 @@ describe('POST /applications/{id}/submit', () => {
       { venture_id: fresh, programme_id: PROGRAMME },
       RID,
     )
-    await saveApplicationAnswers(owner.accountId, app.id, {
-      answers: [answer('q-problem', 'a'), answer('q-support', 'b')],
-    })
+    await saveApplicationAnswers(
+      owner.accountId,
+      app.id,
+      {
+        answers: [answer('q-problem', 'a'), answer('q-support', 'b')],
+      },
+      RID,
+    )
     const run = () =>
       runIdempotent({
         key: `app-test-submit-${app.id}`,

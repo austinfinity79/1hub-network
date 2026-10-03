@@ -33,7 +33,7 @@ Common: `401` without a session; malformed JSON or body `422`, never `500`; ever
 |---|---|
 | repeated create, same key | the first `201` replayed, one row |
 | repeated create, no key | `409 APPLICATION_EXISTS` with the existing `application_id` |
-| repeated save | same answers → same state, no audit |
+| repeated save | same answers → same state, no audit (a changing save: `APPLICATION_DRAFT_UPDATED`, DEC-W5P-D12) |
 | repeated submit, same key | the first `200` replayed |
 | repeated submit, no key | `409 APPLICATION_SUBMITTED` |
 | concurrent submit | row lock: exactly one SUBMITTED, the other `409` (or the replay with the same key) |
@@ -41,7 +41,7 @@ Common: `401` without a session; malformed JSON or body `422`, never `500`; ever
 | replay retention | replay bodies (they contain answers) never outlive their 24 h expiry: expired keys are purged |
 
 ## Audit
-Kept as frozen (API §21.2): `APPLICATION_DRAFT_CREATED`, `APPLICATION_SUBMITTED` with ids and statuses, never answers; venture and team events per WF02. No audit for draft saves. Operational logs record 5xx without request bodies.
+Kept as frozen (API §21.2): `APPLICATION_DRAFT_CREATED`, `APPLICATION_SUBMITTED` with ids and statuses, never answers; venture and team events per WF02. No audit for draft saves. Operational logs record 5xx without request bodies. *Superseded 2026-10-03 by DEC-W5P-D12 (WF05-PROD-05): a changing draft save writes `APPLICATION_DRAFT_UPDATED` (ids, changed question ids, no values).*
 
 ## Frontend
 | Rule | Contract |

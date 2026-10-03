@@ -210,7 +210,13 @@ test.describe('L5-J founder journey', () => {
     const [done, ...more] = await rows([ventureId])
     expect(more).toEqual([])
     expect(done).toMatchObject({ status: 'SUBMITTED' })
-    expect(await audits(done!.id)).toEqual(['APPLICATION_DRAFT_CREATED', 'APPLICATION_SUBMITTED'])
+    // WF05-PROD-05: the changing saves in between are APPLICATION_DRAFT_UPDATED.
+    expect([...new Set(await audits(done!.id))]).toEqual([
+      'APPLICATION_DRAFT_CREATED',
+      'APPLICATION_DRAFT_UPDATED',
+      'APPLICATION_SUBMITTED',
+    ])
+    expect((await audits(done!.id)).filter((a) => a === 'APPLICATION_SUBMITTED')).toHaveLength(1)
 
     // SUBMITTED is final: every entry opens SUB3; every write is refused.
     for (const url of [applyUrl(), formUrl(ventureId), reviewUrl(ventureId)]) {

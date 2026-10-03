@@ -111,9 +111,14 @@ async function draft(owner: Person, ventureId: string, programmeId: string): Pro
     { venture_id: ventureId, programme_id: programmeId },
     RID,
   )
-  await saveApplicationAnswers(owner.accountId, created.id, {
-    answers: [{ question_id: 'q-problem', value: 'Giảm thời gian giao hàng chặng cuối.' }],
-  })
+  await saveApplicationAnswers(
+    owner.accountId,
+    created.id,
+    {
+      answers: [{ question_id: 'q-problem', value: 'Giảm thời gian giao hàng chặng cuối.' }],
+    },
+    RID,
+  )
   return created.id
 }
 

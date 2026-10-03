@@ -8,7 +8,8 @@ import { resolveSession } from '@/lib/auth/sessions'
  * GET/PATCH /api/v1/applications/{applicationId} — 05 §21 (DEC-L5-D3).
  * GET: the venture's owner only; anyone else the same 404. A SUBMITTED
  * application reads its snapshot.
- * PATCH `{ answers }`: the owner saves a DRAFT; SUBMITTED is 409.
+ * PATCH `{ answers }`: the owner saves a DRAFT; SUBMITTED is 409; a change is
+ * audited as APPLICATION_DRAFT_UPDATED (WF05-PROD-05).
  */
 export const dynamic = 'force-dynamic'
 
@@ -21,9 +22,9 @@ export const GET = withApi(async ({ request }) => {
   return getApplication(session.accountId, idOf(request))
 })
 
-export const PATCH = withApi(async ({ request }) => {
+export const PATCH = withApi(async ({ request, requestId }) => {
   const session = await resolveSession(readSessionToken(request.headers))
   if (!session) throw unauthenticated()
   const body: unknown = await request.json().catch(() => null)
-  return saveApplicationAnswers(session.accountId, idOf(request), body)
+  return saveApplicationAnswers(session.accountId, idOf(request), body, requestId)
 })

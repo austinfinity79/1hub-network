@@ -71,7 +71,7 @@ describe('authority: the owner only, server side', () => {
       })
       expect(
         await refusal(
-          saveApplicationAnswers(member.accountId, fx.applications.draft, { answers: [] }),
+          saveApplicationAnswers(member.accountId, fx.applications.draft, { answers: [] }, RID),
         ),
       ).toMatchObject({ status: 404 })
       expect(
@@ -91,9 +91,14 @@ describe('authority: the owner only, server side', () => {
       })
       expect(
         await refusal(
-          saveApplicationAnswers(accountId, fx.applications.draft, {
-            answers: [{ question_id: 'q-problem', value: 'Chiếm' }],
-          }),
+          saveApplicationAnswers(
+            accountId,
+            fx.applications.draft,
+            {
+              answers: [{ question_id: 'q-problem', value: 'Chiếm' }],
+            },
+            RID,
+          ),
         ),
       ).toMatchObject({ status: 404 })
       expect(await refusal(submitApplication(accountId, fx.applications.draft, RID))).toMatchObject(
@@ -156,9 +161,14 @@ describe('programme state and venture state (contract matrix)', () => {
     ).toMatchObject({ status: 404 })
     expect(
       await refusal(
-        saveApplicationAnswers(fx.owner.accountId, fx.applications.closedDraft, {
-          answers: [{ question_id: 'q-support', value: 'x' }],
-        }),
+        saveApplicationAnswers(
+          fx.owner.accountId,
+          fx.applications.closedDraft,
+          {
+            answers: [{ question_id: 'q-support', value: 'x' }],
+          },
+          RID,
+        ),
       ),
     ).toMatchObject({
       status: 409,
@@ -267,9 +277,14 @@ describe('programme state and venture state (contract matrix)', () => {
     await query(`UPDATE projects SET status = 'ARCHIVED' WHERE id = $1`, [venture])
     expect(
       await refusal(
-        saveApplicationAnswers(fx.owner.accountId, draft.id, {
-          answers: [{ question_id: 'q-problem', value: 'x' }],
-        }),
+        saveApplicationAnswers(
+          fx.owner.accountId,
+          draft.id,
+          {
+            answers: [{ question_id: 'q-problem', value: 'x' }],
+          },
+          RID,
+        ),
       ),
     ).toMatchObject({
       status: 409,
@@ -326,7 +341,9 @@ describe('validation (allowlists)', () => {
   ])('refuses %s with 422 and changes nothing', async (_case, answers, field, reason) => {
     const before = await row(fx.applications.draft)
     expect(
-      await refusal(saveApplicationAnswers(fx.owner.accountId, fx.applications.draft, { answers })),
+      await refusal(
+        saveApplicationAnswers(fx.owner.accountId, fx.applications.draft, { answers }, RID),
+      ),
     ).toMatchObject({
       status: 422,
       code: 'APPLICATION_VALIDATION_FAILED',
@@ -338,10 +355,15 @@ describe('validation (allowlists)', () => {
   it('refuses an extra body key, a malformed id and an unknown programme', async () => {
     expect(
       await refusal(
-        saveApplicationAnswers(fx.owner.accountId, fx.applications.draft, {
-          answers: [],
-          status: 'SUBMITTED',
-        }),
+        saveApplicationAnswers(
+          fx.owner.accountId,
+          fx.applications.draft,
+          {
+            answers: [],
+            status: 'SUBMITTED',
+          },
+          RID,
+        ),
       ),
     ).toMatchObject({ status: 422, details: { status: 'not_accepted' } })
     expect(
@@ -387,15 +409,25 @@ describe('concurrency, the form lock and pool use', () => {
       'SELECT id::text FROM applications WHERE venture_id = $1 AND programme_id = $2',
       [fx.ventures.startup, fx.programmes.startupOnly],
     )
-    await saveApplicationAnswers(fx.owner.accountId, created!.id, {
-      answers: [{ question_id: 'q-problem', value: 'Sẵn sàng nộp.' }],
-    })
+    await saveApplicationAnswers(
+      fx.owner.accountId,
+      created!.id,
+      {
+        answers: [{ question_id: 'q-problem', value: 'Sẵn sàng nộp.' }],
+      },
+      RID,
+    )
     const results = await Promise.allSettled([
       submitApplication(fx.owner.accountId, created!.id, RID),
       submitApplication(fx.owner.accountId, created!.id, RID),
-      saveApplicationAnswers(fx.owner.accountId, created!.id, {
-        answers: [{ question_id: 'q-support', value: 'Đua.' }],
-      }),
+      saveApplicationAnswers(
+        fx.owner.accountId,
+        created!.id,
+        {
+          answers: [{ question_id: 'q-support', value: 'Đua.' }],
+        },
+        RID,
+      ),
     ])
     const submits = results.slice(0, 2)
     expect(submits.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
@@ -478,23 +510,94 @@ describe('concurrency, the form lock and pool use', () => {
 })
 
 describe('audit', () => {
-  it('records create and submit with actor, target, context and result, never answers; a save is not audited', async () => {
-    const rows = await query<{ action: string; actor: string; after: Record<string, unknown> }>(
-      `SELECT action, actor_account_id::text AS actor, after_data AS after FROM audit_events
+  it('records create, each changing draft save and submit with actor, target, context and result, never answers (WF05-PROD-05)', async () => {
+    const rows = await query<{
+      action: string
+      actor: string
+      after: Record<string, unknown>
+      request_id: string | null
+      created_at: string
+    }>(
+      `SELECT action, actor_account_id::text AS actor, after_data AS after, request_id,
+              created_at::text FROM audit_events
         WHERE resource_id = $1 ORDER BY created_at, id`,
       [fx.applications.submitted],
     )
+    // The fixture creates, saves one answer, then submits.
     expect(rows.map((r) => r.action)).toEqual([
       'APPLICATION_DRAFT_CREATED',
+      'APPLICATION_DRAFT_UPDATED',
       'APPLICATION_SUBMITTED',
     ])
+    expect(rows[1]!.after).toEqual({
+      programme_id: fx.programmes.open,
+      venture_id: fx.ventures.startup,
+      status: 'DRAFT',
+      changed_questions: ['q-problem'],
+    })
     for (const r of rows) {
       expect(r.actor).toBe(fx.owner.accountId)
+      expect(r.request_id).toBeTruthy()
+      expect(r.created_at).toBeTruthy()
       expect(r.after).toMatchObject({
         programme_id: fx.programmes.open,
         venture_id: fx.ventures.startup,
       })
       expect(JSON.stringify(r.after)).not.toContain('Giảm thời gian')
     }
+  })
+
+  it('a draft save is audited only when an answer changes; a no-op or refused save writes nothing', async () => {
+    const count = async (id: string) =>
+      (
+        await query<{ n: number }>(
+          `SELECT count(*)::int AS n FROM audit_events
+            WHERE resource_id = $1 AND action = 'APPLICATION_DRAFT_UPDATED'`,
+          [id],
+        )
+      )[0]!.n
+    const draft = fx.applications.draft
+    const before = await count(draft)
+    const current = (await getApplication(fx.owner.accountId, draft)).answers
+    // The same answers again (autosave with nothing typed): no audit.
+    await saveApplicationAnswers(fx.owner.accountId, draft, { answers: current }, 'req-noop')
+    expect(await count(draft)).toBe(before)
+    // A real change: one row, the changed question only, no value.
+    await saveApplicationAnswers(
+      fx.owner.accountId,
+      draft,
+      { answers: [{ question_id: 'q-support', value: 'Một câu trả lời riêng tư' }] },
+      'req-change',
+    )
+    expect(await count(draft)).toBe(before + 1)
+    const [last] = await query<{ after: unknown; request_id: string; actor: string }>(
+      `SELECT after_data AS after, request_id, actor_account_id::text AS actor FROM audit_events
+        WHERE resource_id = $1 AND action = 'APPLICATION_DRAFT_UPDATED'
+        ORDER BY created_at DESC, id DESC LIMIT 1`,
+      [draft],
+    )
+    expect(last).toMatchObject({ request_id: 'req-change', actor: fx.owner.accountId })
+    expect((last!.after as { changed_questions: string[] }).changed_questions).toEqual([
+      'q-support',
+    ])
+    expect(JSON.stringify(last)).not.toContain('riêng tư')
+    // Refused saves (another user, a submitted application, a closed programme): nothing.
+    for (const [actor, id] of [
+      [fx.other.accountId, draft],
+      [fx.owner.accountId, fx.applications.submitted],
+      [fx.owner.accountId, fx.applications.closedDraft],
+    ] as const) {
+      const n = await count(id)
+      await saveApplicationAnswers(
+        actor,
+        id,
+        { answers: [{ question_id: 'q-support', value: 'x' }] },
+        'req-refused',
+      ).catch(() => undefined)
+      expect(await count(id)).toBe(n)
+    }
+    expect(await query(`SELECT 1 FROM audit_events WHERE request_id = 'req-refused'`)).toHaveLength(
+      0,
+    )
   })
 })

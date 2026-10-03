@@ -444,11 +444,17 @@ function parseAnswers(body: unknown, questions: ApplicationQuestion[]): Applicat
  * PATCH /applications/{id} `{answers}`: the owner saves a DRAFT. Given answers
  * replace their question's value; an empty value clears it. A SUBMITTED
  * application is 409 and nothing changes.
+ *
+ * WF05-PROD-05 (carry-forward B): a save that changes an answer is audited as
+ * `APPLICATION_DRAFT_UPDATED` with ids, status and the changed question ids —
+ * never a value (the X_UPDATED convention of WF02–WF04). A save that changes
+ * nothing writes no audit; a refused save writes nothing.
  */
 export async function saveApplicationAnswers(
   accountId: string,
   applicationId: string,
   body: unknown,
+  requestId: string,
 ): Promise<ApplicationDTO> {
   return withTransaction(async (exec) => {
     const profileId = await requireEntry(accountId, exec)
@@ -470,6 +476,26 @@ export async function saveApplicationAnswers(
         WHERE id = $1`,
       [row.id, JSON.stringify(merged), form.version],
     )
+    const valueOf = (answers: ApplicationAnswer[], id: string) =>
+      answers.find((a) => a.question_id === id)?.value ?? ''
+    const changed = form.questions
+      .map((q) => q.id)
+      .filter((id) => valueOf(merged, id) !== valueOf(row.answers, id))
+    if (changed.length > 0)
+      await writeAudit(exec, {
+        actorAccountId: accountId,
+        action: 'APPLICATION_DRAFT_UPDATED',
+        resourceType: 'application',
+        resourceId: row.id,
+        before: { status: 'DRAFT' },
+        after: {
+          programme_id: row.programme_id,
+          venture_id: row.venture_id,
+          status: 'DRAFT',
+          changed_questions: changed,
+        },
+        requestId,
+      })
     return toDTO(exec, accountId, await ownRow(exec, profileId, row.id))
   })
 }

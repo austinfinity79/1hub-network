@@ -604,9 +604,14 @@ describe('WF04-PROD-03 registration: the canonical WF05 form, versioned', () => 
     expect((await listOpenForms()).map((f) => f.programme.id)).not.toContain(id)
     expect(
       await refusal(
-        saveApplicationAnswers(MEMBER, application.id, {
-          answers: [{ question_id: 'q-1', value: 'x' }],
-        }),
+        saveApplicationAnswers(
+          MEMBER,
+          application.id,
+          {
+            answers: [{ question_id: 'q-1', value: 'x' }],
+          },
+          rid(),
+        ),
       ),
     ).toMatchObject({ code: 'APPLICATION_NOT_ELIGIBLE', status: 409 })
     // The application itself is untouched by the programme lifecycle.

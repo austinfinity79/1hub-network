@@ -40,6 +40,8 @@ export type AuditAction =
   | 'EVENT_CANCELLED'
   // L5 application (DEC-L5-D3): ids and statuses only, never answers.
   | 'APPLICATION_DRAFT_CREATED'
+  // WF05-PROD-05: a save that changes an answer; changed question ids, never a value.
+  | 'APPLICATION_DRAFT_UPDATED'
   | 'APPLICATION_SUBMITTED'
   // WF04 programmes (DEC-W4P-D12, contract §14): ids, type, statuses, versions and
   // field names only, never free text.

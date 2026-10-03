@@ -224,6 +224,9 @@ function applicationsOf(ventureIds: string[]) {
   )
 }
 
+/** Audit actions with consecutive repeats folded (several changing draft saves are one run). */
+const collapsed = (actions: string[]) => actions.filter((a, i) => a !== actions[i - 1])
+
 async function auditOf(resourceId: string) {
   const rows = await query<{ action: string }>(
     `SELECT action FROM audit_events WHERE resource_id::text = $1 ORDER BY created_at`,
@@ -419,7 +422,12 @@ async function ownerJourney(page: Page, kind: Kind, id: string) {
     answers: answersOf(a0, a1),
     programme: { id: PROGRAMME, name: PROGRAMME_NAME },
   })
-  expect(await auditOf(done!.id)).toEqual(['APPLICATION_DRAFT_CREATED', 'APPLICATION_SUBMITTED'])
+  // WF05-PROD-05: the changing saves in between are APPLICATION_DRAFT_UPDATED.
+  expect(collapsed(await auditOf(done!.id))).toEqual([
+    'APPLICATION_DRAFT_CREATED',
+    'APPLICATION_DRAFT_UPDATED',
+    'APPLICATION_SUBMITTED',
+  ])
   log.step(page, 'HP-09', 'Double-click "Nộp hồ sơ": DRAFT → SUBMITTED once; one audit each')
 
   await page.reload({ waitUntil: 'networkidle' })
@@ -915,7 +923,11 @@ test.describe('NEG-WF05 negative / alternate', () => {
     )
     expect(await errorCode(await page.request.post(APPS, { data }))).toBe('409 APPLICATION_EXISTS')
     expect(await applicationsOf([w.startup.id])).toEqual([final])
-    expect(await auditOf(id)).toEqual(['APPLICATION_DRAFT_CREATED', 'APPLICATION_SUBMITTED'])
+    expect(collapsed(await auditOf(id))).toEqual([
+      'APPLICATION_DRAFT_CREATED',
+      'APPLICATION_DRAFT_UPDATED',
+      'APPLICATION_SUBMITTED',
+    ])
     expectNoWrites(before, await tables(), { applications: true })
   })
 })

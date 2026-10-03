@@ -1442,4 +1442,27 @@ Source: [DEC-W5P](../decisions/DECISION_LOG.md#dec-w5p) (D04–D07) and the [WF0
 | `/ventures/{id}*`, `/demo/projects/{id}` | a malformed id (also a 36-character non-UUID) is the same `404` as an unknown one, never a `500` |
 
 ## 23.2 Rules
-Authority is unchanged: the venture owner only (ACTIVE members `403` on create, `404` elsewhere; operators `404`). Audit stays `APPLICATION_DRAFT_CREATED` and `APPLICATION_SUBMITTED` with ids and statuses, never answers; draft saves are not audited (WF05 contract). An unexpected server error keeps the generic envelope and is logged server side with its `request_id`, never with the request body.
+Authority is unchanged: the venture owner only (ACTIVE members `403` on create, `404` elsewhere; operators `404`). Audit stays `APPLICATION_DRAFT_CREATED` and `APPLICATION_SUBMITTED` with ids and statuses, never answers; draft saves are not audited (WF05 contract; superseded by A7, §24.2). An unexpected server error keeps the generic envelope and is logged server side with its `request_id`, never with the request body.
+
+---
+
+# 24. Amendment A7 — WF05 validation status and draft-save audit (2026-10-03)
+
+Source: [DEC-W5P-D11 / D12](../decisions/DECISION_LOG.md#dec-w5p-d11) (WF05-PROD-05, PO carry-forward items A and B). No new endpoint, error code or status.
+
+## 24.1 Validation status (WF05)
+| Request | Answer |
+|---|---|
+| body not JSON, not an object; field missing, unknown, forbidden (`status`, owner, applicant), mistyped, too long, repeated or extra; an answer to an unknown question | `422 APPLICATION_VALIDATION_FAILED`, `fields` with the reason (`body: invalid` for an unreadable body) |
+| submit with a required answer missing | `422 APPLICATION_INCOMPLETE`, each missing id `required` |
+| malformed or unknown id | `404` (the hidden-resource answer) |
+| lifecycle conflict, duplicate pair, submitted, not eligible | `409` |
+| `400` | never from a WF05 handler; the router's `400` for an undecodable path (`%`) is global and outside the envelope (G14); WF01 auth keeps its own `400` codes (§4.1) |
+
+## 24.2 Audit (WF05)
+| Action | Written when | `after_data` |
+|---|---|---|
+| `APPLICATION_DRAFT_CREATED` | create | `programme_id`, `venture_id`, `status` |
+| `APPLICATION_DRAFT_UPDATED` | a `PATCH` that changes at least one answer | `programme_id`, `venture_id`, `status: DRAFT`, `changed_questions` (ids) |
+| `APPLICATION_SUBMITTED` | submit (`before`: `status: DRAFT`) | `programme_id`, `venture_id`, `status: SUBMITTED` |
+Every row carries `actor_account_id`, the application id, `request_id` and `created_at`, in the mutation's transaction; never an answer value. A save that changes nothing and every refused call write nothing.
