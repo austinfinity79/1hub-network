@@ -1,37 +1,37 @@
 # Claude Task Report
 
 ## Task
-WF06-PROD-05 — functional / security / quality QA of candidate `d113d14` (AUDIT + QA). Summary, regression, skips, index: [reports/WF06-PROD-05_qa-summary.md](reports/WF06-PROD-05_qa-summary.md); functional / quality: [reports/WF06-PROD-05_functional-quality.md](reports/WF06-PROD-05_functional-quality.md); privacy / security: [reports/WF06-PROD-05_privacy-security.md](reports/WF06-PROD-05_privacy-security.md); PROD-06 handoff: [reports/WF06-PROD-05_prod06-handoff.md](reports/WF06-PROD-05_prod06-handoff.md).
+WF06-PROD-06 — pixel / responsive QA and production closure of WF06 minimal P0 (candidate `9733bf3`, runtime unchanged since `d113d14`). Readiness, contract, blockers: [reports/WF06-PROD-06_production-readiness.md](reports/WF06-PROD-06_production-readiness.md); visual closure: [reports/WF06-PROD-06_visual-closure.md](reports/WF06-PROD-06_visual-closure.md); debt: [reports/WF06-PROD-06_known-debt.md](reports/WF06-PROD-06_known-debt.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE.** Full protected regression after the PROD-04 spec correction: 82 specs, 1102 passed, 0 failed, 26 skipped, 0 flaky. Every skip is environment-gated and was run separately (24 opt-in WF01–WF03 pixel screens: 17 fail identically on the pre-WF06 build, pre-existing runner debt; feed-down 1 / 1; crafted feed 1 / 1). Privacy, data exclusion (including a real application answer), direct-id bypass, filters, sort, pagination, merge, external failure and crafted external data, query abuse, restart, data quality, session transition: PASS. Console / hydration / unexpected 5xx: 0 / 0 / 0. Server logs: no sensitive content. PROD-06 not started. STOP.
+**PASS_WITH_EVIDENCE — WF06 PROD HARDENED / NOT YET DEPLOYED.** 84 states × 6 viewports (1440 / 1024 / 768 / 430 / 390 / 320): no overflow, clipped text, overlap or broken card; the only off-viewport control (320 px Library tab bar) and the muted-text contrast are proven pre-existing on `5199e07` and pinned. Every skipped pixel test executed: 7 PASS_EXECUTED, 17 KNOWN_BASELINE (identical before WF06), 2 environment cases with proof. 1440 audits under thresholds. Final regression: 83 specs, 1111 passed, 0 failed, 26 skipped (all dispositioned), 0 flaky. REAL_REGRESSION 0, P0 0, SOT conflict 0, PO decisions 0; P1 pre-promotion 2, P2 debt 6. WF06 CLOSED; ADMIN PORTAL MAY BE PLANNED NEXT. STOP.
 
 ## Scope implemented
-- QA only: `tests/visual/specs/wf06-prod-qa.spec.ts` (76 recorded cases) plus runs on a crafted feed, an unreachable feed, a real restart and a temporary pre-WF06 build for the skip baseline.
+- `tests/visual/specs/wf06-prod-visual.spec.ts` (viewport matrix, transition, URL, focus / contrast); side-by-side measurements and M0-T11 runs on a temporary `5199e07` build (worktree removed); closure reports.
 
 ## Files changed
-- `tests/visual/specs/wf06-prod-qa.spec.ts` (new); four `WF06-PROD-05_*` reports; this report. No runtime file.
+- `tests/visual/specs/wf06-prod-visual.spec.ts` (new); three `WF06-PROD-06_*` reports; this report. No runtime file.
 
 ## Migrations / data
-None. Test fixture rows, the QA application row and QA accounts' sessions only; fixture rows removed after each suite.
+None. Fixture rows only, removed after each suite.
 
 ## Tests / build
-Format, lint, typecheck PASS; unit 36 files / 344 tests; DB (fresh reset) 38 files / 611 tests; existing DB: Library db-tests 42 / 42; production build of `d113d14` used for every visual run.
+Production build of the candidate; unit 36 files / 344; DB 38 files / 611; format, lint, typecheck PASS; final visual regression 83 specs: 1111 / 0 / 26 / 0; console, hydration, unexpected 5xx 0.
 
 ## Visual QA
-Not a pixel task; L15 / L15b / L15c pixel specs green in the full run; the opt-in WF01–WF03 pixel runner's pre-existing typography / dimension debt is handed to PROD-06.
+L15 hero / filtered / load-more, L15b, L15c (member), L19 organization: every segment under thresholds, typography violations 0; responsive matrix GREEN with two pinned pre-existing items.
 
 ## Deviations / blockers
-None blocking. Open for PO / design: guest founder sign-in copy, "Chưa xác định" facet, DOMAIN slug map, H3 (`/library` under DEC-L6-D1 / DEC-PDF-D1 vs DEC-W6P-D02), and the M0-T11 runner's typography rule versus DEC-HD-12.
+None blocking. Pre-promotion: DOMAIN slug map vs production vocabulary; guest founder sign-in copy. WF45-PROMO-01 stays separate and first (this branch carries WF04 / WF05).
 
 ## Git
-- Branch: `feat/wf06-prod-hardening`; base `d113d14`; HEAD unchanged during the task
-- Implementation commit: `test(wf06): functional, security and quality QA (WF06-PROD-05)`
-- Report/final commit: same commit
+- Branch: `feat/wf06-prod-hardening`; base `9733bf3`; HEAD unchanged during the task
+- Implementation commit: `docs(wf06): pixel / responsive QA and production closure (WF06-PROD-06)`
+- Report/final commit: same commit (the WF06 candidate)
 - Remote: `origin`
-- Push status: NOT RUN (task: local commit only)
+- Push status: NOT RUN (task: no push)
 - Remote HEAD: `78f21f2` (production also `78f21f2`)
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of WF06-PROD-05; then WF06-PROD-06 (pixel / responsive / closure) per the handoff.
+ChatGPT / PO WF06 closure review; promotion only through WF45-PROMO-01 and an approved SHA; Admin Portal may be planned next.
