@@ -40,6 +40,7 @@ type OwnerKey =
   | 'blocked' // account BLOCKED
   | 'nameless' // no display name
   | 'privateOnly' // NETWORK_ONLY, owns a PRIVATE venture only
+  | 'stranger' // NETWORK_ONLY member owning nothing: the "other member" viewer
 
 type OwnerSpec = {
   displayName: string | null
@@ -87,6 +88,12 @@ export const FX_OWNERS: Record<OwnerKey, OwnerSpec> = {
   },
   privateOnly: {
     displayName: 'WF06 Founder Riêng',
+    profileStatus: 'ACTIVE',
+    accountStatus: 'ACTIVE',
+    discovery: null,
+  },
+  stranger: {
+    displayName: 'WF06 Thành Viên Khác',
     profileStatus: 'ACTIVE',
     accountStatus: 'ACTIVE',
     discovery: null,
@@ -173,15 +180,24 @@ export const FX_ORGS = [
 ] as const
 
 export type LibraryFixture = {
+  /** Profile ids. */
   owners: Record<OwnerKey, string>
+  /** Account ids, for sessions in API tests. */
+  accounts: Record<OwnerKey, string>
   ventures: Record<string, string>
 }
 
+const FX_ORG_IDS = `SELECT id FROM organizations WHERE slug LIKE 'wf06-fx-%'`
+
 const slugOf = (i: number) => `wf06-fx-venture-${String(i).padStart(2, '0')}`
 
-/** Removes every fixture row (ventures first: they reference the owners). */
+/** Removes every fixture row (ventures first: they reference the owners; sessions cascade). */
 export async function clearLibraryFixture(): Promise<void> {
   await query(`DELETE FROM projects WHERE slug LIKE 'wf06-fx-%'`)
+  await query(
+    `DELETE FROM organization_relationships WHERE source_org_id IN (${FX_ORG_IDS})
+        OR target_org_id IN (${FX_ORG_IDS})`,
+  )
   await query(`DELETE FROM organizations WHERE slug LIKE 'wf06-fx-%'`)
   await query(`DELETE FROM user_accounts WHERE email LIKE 'wf06-fx-%@example.test'`)
 }
@@ -189,6 +205,7 @@ export async function clearLibraryFixture(): Promise<void> {
 export async function seedLibraryFixture(): Promise<LibraryFixture> {
   await clearLibraryFixture()
   const owners = {} as Record<OwnerKey, string>
+  const accounts = {} as Record<OwnerKey, string>
   for (const [key, spec] of Object.entries(FX_OWNERS) as Array<[OwnerKey, OwnerSpec]>) {
     const email = `wf06-fx-${key.toLowerCase()}@example.test`
     const [account] = await query<{ id: string }>(
@@ -219,6 +236,7 @@ export async function seedLibraryFixture(): Promise<LibraryFixture> {
       )
     }
     owners[key] = profile!.id
+    accounts[key] = account!.id
   }
 
   const ventures: Record<string, string> = {}
@@ -257,5 +275,5 @@ export async function seedLibraryFixture(): Promise<LibraryFixture> {
       [org.type, org.slug, `WF06 ${org.slug}`, org.status],
     )
   }
-  return { owners, ventures }
+  return { owners, accounts, ventures }
 }

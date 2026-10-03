@@ -338,6 +338,27 @@ paths:
       responses:
         '200': { description: Public/network organization projection }
         '404': { $ref: '#/components/responses/NotFound' }
+  /library/startups:
+    get:
+      security: []
+      operationId: listLibraryStartups
+      responses:
+        '200': { description: List envelope of Library startups with total, facets and degraded (A8) }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /library/founders:
+    get:
+      security: []
+      operationId: listLibraryFounders
+      responses:
+        '200': { description: List envelope of visible founders; restricted for guests (A8) }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /library/problems:
+    get:
+      security: []
+      operationId: listLibraryProblems
+      responses:
+        '200': { description: List envelope of the problem file with total and facets (A8) }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
   /ops/feedback:
     get:
       operationId: listFeedbackOps

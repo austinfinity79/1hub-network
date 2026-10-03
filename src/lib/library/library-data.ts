@@ -16,6 +16,8 @@ import { fold, STAGE_LABEL, type LibraryStartup, type StartupStage } from './sta
  * frozen filters, the existing deterministic sorts and an opaque page cursor
  * apply (DEC-W6P-D04). Items carry provenance and no id, slug or owner id.
  * No score, ranking, personalisation or founder-name search exists here.
+ * WF06-PROD-03: a filter group takes several values (any of them, as the
+ * existing facets do), and facet counts follow the same rule as the page's.
  */
 
 export type Provenance = 'CANONICAL' | 'TEMPORARY_EXTERNAL'
@@ -40,7 +42,11 @@ export type LibraryFounderItem = {
   key: string
   displayName: string
   avatarUrl: string | null
-  ventures: Array<{ name: string; roleLabel: string | null; stage: string | null }>
+  ventures: Array<{
+    name: string
+    roleLabel: string | null
+    stage: { code: StartupStage; label: string } | null
+  }>
   domainIds: string[]
 }
 
@@ -54,8 +60,11 @@ export const PAGE_MAX = 50
 /** "Giai đoạn phát triển": the most advanced stage first, then no stage (DEC-2909-L2H2). */
 const STAGE_ORDER: StartupStage[] = ['GROWTH', 'SELLING', 'PILOT', 'MVP', 'IDEA']
 
-/** A stable, non-reversible key for a canonical record; no id leaves the server. */
-export function opaqueKey(kind: 'venture' | 'founder', id: string): string {
+/** A stable, non-reversible key for a record; no id or source slug leaves the server. */
+export function opaqueKey(
+  kind: 'venture' | 'founder' | 'external' | 'problem',
+  id: string,
+): string {
   return createHash('sha256').update(`wf06:${kind}:${id}`).digest('hex').slice(0, 16)
 }
 
@@ -93,7 +102,7 @@ function externalEntry(
   const domains = externalDomains(s.categories, vocab.domainsBySlug)
   return {
     item: {
-      key: `x-${s.id}`,
+      key: opaqueKey('external', s.id),
       provenance: 'TEMPORARY_EXTERNAL',
       name: s.name,
       summary: s.tagline,
@@ -143,7 +152,7 @@ export function founderEntries(
       ventures: f.ventures.map((v) => ({
         name: v.name,
         roleLabel: v.roleLabel,
-        stage: v.stage?.label ?? null,
+        stage: v.stage ? { code: v.stage.code, label: v.stage.label } : null,
       })),
       domainIds: f.domainIds,
     },
@@ -153,20 +162,61 @@ export function founderEntries(
   }))
 }
 
-/** Every word of the keyword must appear (the existing Library rule); ids match exactly. */
-export function filterEntries<T>(
-  entries: readonly LibraryEntry<T>[],
-  filter: { q?: string; domainId?: string; stageId?: string },
-): LibraryEntry<T>[] {
-  const words = fold((filter.q ?? '').slice(0, LIBRARY_QUERY_MAX))
+export type LibraryFilter = {
+  q?: string
+  /** Any of these DOMAIN ids; none means no domain filter. */
+  domainIds?: readonly string[]
+  /** Any of these VENTURE_STAGE ids; none means no stage filter. */
+  stageIds?: readonly string[]
+}
+
+const keywordWords = (q: string | undefined) =>
+  fold((q ?? '').slice(0, LIBRARY_QUERY_MAX))
     .split(/\s+/)
     .filter(Boolean)
+
+const inDomains = (e: LibraryEntry<unknown>, ids?: readonly string[]) =>
+  !ids?.length || e.domainIds.some((id) => ids.includes(id))
+const inStages = (e: LibraryEntry<unknown>, ids?: readonly string[]) =>
+  !ids?.length || (e.stageId !== null && ids.includes(e.stageId))
+
+/**
+ * Every word of the keyword must appear (the existing Library rule); within a
+ * filter group any value matches, and the groups combine (as the page's facets).
+ */
+export function filterEntries<T>(
+  entries: readonly LibraryEntry<T>[],
+  filter: LibraryFilter,
+): LibraryEntry<T>[] {
+  const words = keywordWords(filter.q)
   return entries.filter(
     (e) =>
-      (!filter.domainId || e.domainIds.includes(filter.domainId)) &&
-      (!filter.stageId || e.stageId === filter.stageId) &&
+      inDomains(e, filter.domainIds) &&
+      inStages(e, filter.stageIds) &&
       words.every((w) => e.text.includes(w)),
   )
+}
+
+/**
+ * Results each value of a group would give with the keyword and the OTHER
+ * group's filter applied (the page's `facetCount` rule); every listed value is
+ * returned, in the order given, zero counts included.
+ */
+export function facetCounts<V extends { id: string }>(
+  entries: readonly LibraryEntry<unknown>[],
+  filter: LibraryFilter,
+  group: 'domain' | 'stage',
+  values: readonly V[],
+): Array<V & { count: number }> {
+  const words = keywordWords(filter.q)
+  const base = entries.filter(
+    (e) =>
+      words.every((w) => e.text.includes(w)) &&
+      (group === 'domain' ? inStages(e, filter.stageIds) : inDomains(e, filter.domainIds)),
+  )
+  const has = (e: LibraryEntry<unknown>, id: string) =>
+    group === 'domain' ? e.domainIds.includes(id) : e.stageId === id
+  return values.map((v) => ({ ...v, count: base.filter((e) => has(e, v.id)).length }))
 }
 
 const byName = (a: string, b: string) => a.localeCompare(b, 'vi')
@@ -197,8 +247,12 @@ export function sortFounders(
     .sort((a, b) => byName(a.displayName, b.displayName) || a.key.localeCompare(b.key))
 }
 
+/** A query value the Library cannot serve: malformed, or not a value it holds. */
 export class LibraryQueryError extends Error {
-  constructor(readonly field: 'cursor') {
+  constructor(
+    readonly field: string,
+    readonly reason: 'invalid' | 'unknown' = 'invalid',
+  ) {
     super(`Invalid ${field}`)
   }
 }
@@ -208,7 +262,8 @@ const encodeCursor = (offset: number) => Buffer.from(`o:${offset}`).toString('ba
 function decodeCursor(cursor: string): number {
   const text = Buffer.from(cursor, 'base64url').toString()
   const match = /^o:(\d{1,6})$/.exec(text)
-  if (!match || encodeCursor(Number(match[1])) !== cursor) throw new LibraryQueryError('cursor')
+  if (!match || encodeCursor(Number(match[1])) !== cursor)
+    throw new LibraryQueryError('cursor', 'invalid')
   return Number(match[1])
 }
 

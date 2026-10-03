@@ -1,35 +1,36 @@
 # Claude Task Report
 
 ## Task
-WF06-PROD-02 — WF06 data / read-model foundation (IMPLEMENT) under the frozen WF06-PROD-01 contract (DEC-W6P). Summary and evidence index: [reports/WF06-PROD-02_data-foundation.md](reports/WF06-PROD-02_data-foundation.md); source matrix: [reports/WF06-PROD-02_source-matrix.md](reports/WF06-PROD-02_source-matrix.md); visibility / security: [reports/WF06-PROD-02_visibility-security.md](reports/WF06-PROD-02_visibility-security.md); query / index audit: [reports/WF06-PROD-02_query-index-audit.md](reports/WF06-PROD-02_query-index-audit.md); fixtures / tests: [reports/WF06-PROD-02_fixtures-tests.md](reports/WF06-PROD-02_fixtures-tests.md); PROD-03 handoff: [reports/WF06-PROD-02_prod03-handoff.md](reports/WF06-PROD-02_prod03-handoff.md).
+WF06-PROD-03 — WF06 API / visibility / deterministic read hardening (IMPLEMENT) on the PROD-02 foundation `c405c3c`. Summary, inventory and clarifications: [reports/WF06-PROD-03_api-hardening.md](reports/WF06-PROD-03_api-hardening.md); visibility / privacy: [reports/WF06-PROD-03_visibility-privacy.md](reports/WF06-PROD-03_visibility-privacy.md); query behaviour: [reports/WF06-PROD-03_query-behaviour.md](reports/WF06-PROD-03_query-behaviour.md); tests / evidence: [reports/WF06-PROD-03_tests-evidence.md](reports/WF06-PROD-03_tests-evidence.md); PROD-04 handoff: [reports/WF06-PROD-03_prod04-handoff.md](reports/WF06-PROD-03_prod04-handoff.md); contract: [API §25 (A8)](../architecture/05_API_CONTRACT_P0_v1.0.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE.** Canonical Library read path implemented as server-side functions (no API, no frontend): PUBLIC ACTIVE STARTUP ventures with the predicate in SQL; founders only for a NETWORK viewer and only where PROFILE_DISCOVERY, profile and account status allow; the external feed merged as TEMPORARY_EXTERNAL with provenance; deterministic filters, sorts and opaque cursors; no ids in items. DIRECT_QUERY everywhere; NO_SCHEMA_CHANGE. PROD-03 not started. STOP.
+**PASS_WITH_EVIDENCE.** `GET /api/v1/library/{startups,founders,problems}`: read-only, server-side visibility (SQL predicate; founders only for a live session of an ACTIVE account and only where PROFILE_DISCOVERY allows; guests `restricted: true`), canonical-wins merge, deterministic filters / sort, stateless cursor pages (9 / 50), bounded and normalised input, 422 envelope, external failure isolated (`degraded`), no ids or private fields, `Cache-Control: private, no-store`. Organization page children ≤ 200 with the total kept. PROD-04 not started. STOP.
 
 ## Scope implemented
-- P2-1 `canonical-source.ts`, `library-data.ts`, `library-service.ts` (+ db-test); P2-2 `external-domain-map.ts` (+ unit test); P2-3 founder names out of Library search; P2-4 `EXPLAIN ANALYZE` audit (no index); P2-5 `testing.ts` fixture.
-- One query fix found by the audit: the startup read caps the page before reading domains (134.6 ms → 22.7 ms at 50k synthetic projects).
+- Routes and `library-api.ts` (parsing, viewer, DTOs, headers); service: multi-value filters, facet counts, problems paging, vocabulary-id validation; opaque external keys; P3-4 bound.
+- API amendment A8 (§25) in the Markdown contract, three YAML skeleton paths.
+- Seven clarifications within the frozen contract, listed for PO review (C1 – C7).
 
 ## Files changed
-- New: `src/lib/library/{canonical-source,library-data,library-service,external-domain-map,testing}.ts`, tests `canonical-source.db-test.ts`, `library-data.test.ts`, `external-domain-map.test.ts`.
-- Modified: `src/lib/library/startup-adapter.ts` (+ test), `src/components/library/library-model.ts` (+ test).
-- Docs: six `WF06-PROD-02_*` reports, this report.
+- New: `src/app/api/v1/library/{startups,founders,problems}/route.ts`, `src/lib/library/library-api.ts` (+ test), `src/lib/library/library-routes.db-test.ts`, `tests/visual/specs/wf06-prod-api.spec.ts`.
+- Modified: `src/lib/library/{library-data,library-service,canonical-source,testing}.ts`, `library-data.test.ts`, `canonical-source.db-test.ts`, `src/lib/public/organization.ts`.
+- Docs: `05_API_CONTRACT_P0_v1.0.md` / `.yaml`, five `WF06-PROD-03_*` reports, this report.
 
 ## Migrations / data
-None (NO_SCHEMA_CHANGE). The index audit used a scratch database, dropped afterwards.
+None (no schema change). Test fixture rows only, removed after each suite.
 
 ## Tests / build
-Format, lint, typecheck PASS; unit 35 files / 331 tests; DB 37 files / 585 tests on a fresh DB (`db:reset` 16 / 16); Library db-test 16 / 16 on the existing and the fresh DB; production build PASS; focused cross-WF regression 16 specs **190 / 190** (first run: 4 `l6` setup failures from the QA vocabulary fixture removed by `db:reset`; fixture re-applied, then all green in one run).
+Format, lint, typecheck PASS; unit 36 files / 340 tests; DB 38 files / 611 tests; production build PASS; HTTP spec 3 / 3; protected regression 24 specs **275 / 275** in one run; real restart: 5 answers byte-identical, pre-restart cursor valid; API calls 2 – 8 ms at fixture scale; fixed SQL statement count per request (2 / 6 / 0).
 
 ## Visual QA
-No UI change beyond founder names leaving the `/library` search; Library and neighbouring visual specs green (above).
+No UI change (the page still reads its datasets until PROD-04).
 
 ## Deviations / blockers
-None blocking. Intentional: the DOMAIN map is applied in the merge layer, not the adapter; opaque derived keys instead of ids; `/library` keeps the external directory until PROD-04. Open items: HUB / PO review of the DOMAIN slug map; PUBLIC ventures of deactivated owners stay listed (WF02 lifecycle question).
+None blocking. For PO review: C1 – C7 (422 status, multi-value filters, `total` / `facets` / `degraded`, refused oversize / unknown parameters, member = live session of an ACTIVE account, problem facet text, provenance not serialised). PROD-04 open points H1 – H4, including the `l6-discovery-privacy` assertion versus DEC-W6P-D02 once `/library` reads the API.
 
 ## Git
-- Branch: `feat/wf06-prod-hardening`; base `83a84f4`; HEAD unchanged during the task
-- Implementation commit: `feat(wf06): canonical Library data / read foundation (WF06-PROD-02)`
+- Branch: `feat/wf06-prod-hardening`; base `c405c3c`; HEAD unchanged during the task
+- Implementation commit: `feat(wf06): Library read API and visibility hardening (WF06-PROD-03)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -37,4 +38,4 @@ None blocking. Intentional: the DOMAIN map is applied in the merge layer, not th
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of WF06-PROD-02; then WF06-PROD-03 (API / visibility / read hardening) per the handoff.
+ChatGPT / PO review of WF06-PROD-03 (C1 – C7, H1 – H4); then WF06-PROD-04 (frontend integration) per the handoff.

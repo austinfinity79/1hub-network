@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { CanonicalFounderRow, CanonicalStartupRow, StageRef } from './canonical-source'
 import {
+  facetCounts,
   filterEntries,
   founderEntries,
   LibraryQueryError,
@@ -97,6 +98,12 @@ describe('mergeStartups', () => {
     expect(merged.filter((e) => e.item.name.toLowerCase().startsWith('học'))).toHaveLength(1)
   })
 
+  it('keys external records opaquely, never by the source slug (WF06-PROD-03)', () => {
+    const keys = merged.slice(1).map((e) => e.item.key)
+    for (const key of keys) expect(key).toMatch(/^[0-9a-f]{16}$/)
+    expect(keys.join(' ')).not.toMatch(/hoc|nong|x-/)
+  })
+
   it('builds canonical items from the canonical record, with an opaque key and no id', () => {
     const item = merged[0]!.item
     expect(item).toEqual({
@@ -159,10 +166,34 @@ describe('filterEntries', () => {
   })
 
   it('filters by DOMAIN and VENTURE_STAGE id exactly; an unknown id matches nothing', () => {
-    expect(names({ domainId: 'd-govtech' })).toEqual(['Beta Gov'])
-    expect(names({ stageId: 's-IDEA' })).toEqual(['Alpha Edu'])
-    expect(names({ domainId: 'd-edtech', stageId: 's-GROWTH' })).toEqual([])
-    expect(names({ domainId: 'nope' })).toEqual([])
+    expect(names({ domainIds: ['d-govtech'] })).toEqual(['Beta Gov'])
+    expect(names({ stageIds: ['s-IDEA'] })).toEqual(['Alpha Edu'])
+    expect(names({ domainIds: ['d-edtech'], stageIds: ['s-GROWTH'] })).toEqual([])
+    expect(names({ domainIds: ['nope'] })).toEqual([])
+  })
+
+  it('matches any value within a group and every group together', () => {
+    expect(names({ domainIds: ['d-edtech', 'd-govtech'] })).toEqual(['Alpha Edu', 'Beta Gov'])
+    expect(names({ stageIds: ['s-IDEA', 's-GROWTH'], domainIds: ['d-govtech'] })).toEqual([
+      'Beta Gov',
+    ])
+  })
+
+  it('counts each facet value with the keyword and the other group applied, zeros included', () => {
+    const values = [EDTECH, GOVTECH, { id: 'd-none', label: 'Không' }]
+    expect(facetCounts(entries, {}, 'domain', values).map((v) => v.count)).toEqual([1, 1, 0])
+    // The domain filter does not narrow its own group's counts…
+    const own = facetCounts(entries, { domainIds: ['d-edtech'] }, 'domain', values)
+    expect(own.map((v) => v.count)).toEqual([1, 1, 0])
+    // …but narrows the stage counts, as the page does.
+    const stages = facetCounts(entries, { domainIds: ['d-edtech'] }, 'stage', [IDEA, GROWTH])
+    expect(stages.map((v) => [v.code, v.count])).toEqual([
+      ['IDEA', 1],
+      ['GROWTH', 0],
+    ])
+    expect(
+      facetCounts(entries, { q: 'beta' }, 'stage', [IDEA, GROWTH]).map((v) => v.count),
+    ).toEqual([0, 1])
   })
 
   it('caps the keyword at 120 characters', () => {
@@ -247,7 +278,9 @@ describe('founderEntries / sortFounders', () => {
         key: opaqueKey('founder', 'p-2'),
         displayName: 'Trần Bảo',
         avatarUrl: null,
-        ventures: [{ name: 'Beta Gov', roleLabel: 'CEO', stage: 'Tăng trưởng' }],
+        ventures: [
+          { name: 'Beta Gov', roleLabel: 'CEO', stage: { code: 'GROWTH', label: 'Tăng trưởng' } },
+        ],
         domainIds: ['d-govtech'],
       },
     ])
@@ -259,7 +292,7 @@ describe('founderEntries / sortFounders', () => {
       'Trần Bảo',
     ])
     expect(filterEntries(entries, { q: 'alpha' }).map((e) => e.item.displayName)).toEqual(['Lê An'])
-    expect(filterEntries(entries, { domainId: 'd-govtech' })).toHaveLength(1)
+    expect(filterEntries(entries, { domainIds: ['d-govtech'] })).toHaveLength(1)
   })
 })
 

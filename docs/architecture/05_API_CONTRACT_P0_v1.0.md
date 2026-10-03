@@ -1466,3 +1466,27 @@ Source: [DEC-W5P-D11 / D12](../decisions/DECISION_LOG.md#dec-w5p-d11) (WF05-PROD
 | `APPLICATION_DRAFT_UPDATED` | a `PATCH` that changes at least one answer | `programme_id`, `venture_id`, `status: DRAFT`, `changed_questions` (ids) |
 | `APPLICATION_SUBMITTED` | submit (`before`: `status: DRAFT`) | `programme_id`, `venture_id`, `status: SUBMITTED` |
 Every row carries `actor_account_id`, the application id, `request_id` and `created_at`, in the mutation's transaction; never an answer value. A save that changes nothing and every refused call write nothing.
+
+---
+
+# 25. Amendment A8 — WF06 Library read API (2026-10-04)
+
+Source: [DEC-W6P](../decisions/DECISION_LOG.md#dec-w6p) (D01–D05) and the [WF06 runtime contract](../implementation/reports/WF06-PROD-01_runtime-contract.md) / [API–data contract](../implementation/reports/WF06-PROD-01_api-data-contract.md); implemented by WF06-PROD-03. Additive: three read endpoints for the existing `/library` tabs and a bound on §8.5. No write endpoint, no new error code or status, no member directory, no venture, programme or challenge page or list beyond the Library tab, no matching, ranking or recommendation.
+
+## 25.1 Endpoints
+| Call | Rule |
+|---|---|
+| `GET /library/startups` | No session needed; the same answer for every caller. Canonical ventures `type STARTUP`, `status ACTIVE`, `visibility PUBLIC`, plus the external directory's records without a canonical twin (same case- and accent-folded name: the canonical one wins; a repeated external name keeps its first record). `?q=&domain_id=&stage_id=&sort=STAGE\|NAME&cursor=&limit=`. Item: `key`, `name`, `summary`, `stage {code, label}` or null, `domains [{id, label}]`, `domain_labels`, `region`, `website`, `member_count`. Beside the envelope: `total`, `facets {domain [{id, label, count}], stage [{id, code, label, count}]}`, `degraded` (true while the external directory is unavailable; canonical rows are still served) |
+| `GET /library/founders` | Session optional. A member (live session of an ACTIVE account) gets the owners of listed startups whose PROFILE_DISCOVERY is NETWORK_ONLY and whose account and profile are ACTIVE; item `key`, `display_name`, `avatar_url`, `ventures [{name, role_label, stage}]`, `domain_ids`. Anyone else gets `items: []` with `restricted: true`. `?q=&domain_id=&sort=NAME&cursor=&limit=`; `total`, `facets {domain}`. External founders never appear |
+| `GET /library/problems` | No session needed. The "Bài toán" file. `?q=&domain=&stage=&area=&sort=DEADLINE\|PRIZE&cursor=&limit=`; the facet values are the file's own text and a value it does not hold matches nothing. Item `key`, `title`, `summary`, `org`, `stage {code, label}`, `prize`, `time`, `teams`, `domains`, `areas`, `cover`; `total`, `facets {domain, stage, area: [{value, label, count}]}` |
+
+## 25.2 Rules
+| Topic | Rule |
+|---|---|
+| envelope | §2.4 `items`, `page {next_cursor, limit}`; `limit` 1–50, default 9; the cursor is opaque and stateless (it survives a restart) |
+| keyword | NFC, whitespace collapsed, trimmed, ≤ 120 characters, no control character; blank means none; every word must appear, case- and accent-folded; `%` and `*` are plain characters; no fuzzy, semantic or scored search |
+| filters | a repeated parameter means any of its values (≤ 10 per parameter); `domain_id` / `stage_id` are ACTIVE DOMAIN / VENTURE_STAGE ids; facet counts apply the keyword and the other filters, as the page does |
+| order | startups `STAGE`: GROWTH, SELLING, PILOT, MVP, IDEA, none; then name (vi), canonical before external, then `key`. `NAME`: name, then the same ties. Founders: name, then `key`. Problems: the existing `DEADLINE` and `PRIZE`. The same request on the same data gives the same order |
+| errors | `422 PROFILE_VALIDATION_FAILED` with `fields` (`invalid`, `unknown`, `too_long`, `too_many`, `duplicate`, `not_accepted`), every failing field at once; any other parameter is refused, never ignored; an unexpected fault keeps the generic envelope and is logged without the request. No `401` or `403` (a guest gets the restricted answer) and no `429` (no rate-limit layer; G14) |
+| privacy | no record UUID, slug, owner or account id, e-mail or private profile field; `key` is derived per record and resolvable by no endpoint; `Cache-Control: private, no-store`; reads are not audited |
+| §8.5 | `children` holds at most 200 organizations, by name; `stats.children` stays the total |

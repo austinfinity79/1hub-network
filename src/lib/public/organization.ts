@@ -41,12 +41,15 @@ export type PublicOrganizationDTO = PublicOrganizationRef & {
    * - active_members  community_memberships  state = ACTIVE
    * - public_events   events                 programme_id IS NULL AND status = PUBLISHED
    * - children        organization_relationships  ACTIVE PARENT children that are PUBLISHED
+   *   (the total; the `children` list holds the first 200 by name, WF06-PROD-03)
    */
   stats: { active_members: number; public_events: number; children: number }
   upcoming_events: PublicEventDTO[]
 }
 
 const UPCOMING_LIMIT = 6
+/** WF06-PROD-03 (P3-4): the children listed on one page; `stats.children` keeps the total. */
+export const CHILDREN_LIMIT = 200
 
 type OrgRow = PublicOrganizationRef & { id: string; description: string | null }
 
@@ -92,8 +95,9 @@ export async function getPublicOrganization(slug: string): Promise<PublicOrganiz
   const children = childIds
     .map((id) => visible.get(id))
     .filter((c): c is OrgRow => Boolean(c))
-    .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
-  const stats = await counts([org.id, ...children.map((c) => c.id)])
+    .sort((a, b) => a.name.localeCompare(b.name, 'vi') || a.slug.localeCompare(b.slug))
+  const shown = children.slice(0, CHILDREN_LIMIT)
+  const stats = await counts([org.id, ...shown.map((c) => c.id)])
 
   const events = await query<{
     name: string
@@ -115,7 +119,7 @@ export async function getPublicOrganization(slug: string): Promise<PublicOrganiz
     ...ref(org),
     description: org.description,
     parent: parentId && visible.get(parentId) ? ref(visible.get(parentId)!) : null,
-    children: children.map((c) => ({
+    children: shown.map((c) => ({
       ...ref(c),
       stats: stats.get(c.id) ?? { active_members: 0, public_events: 0 },
     })),

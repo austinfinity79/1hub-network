@@ -178,14 +178,19 @@ export async function listVisibleFounders(
   return founders
 }
 
-/** ACTIVE DOMAIN items by slug and VENTURE_STAGE items by code, for mapping external records. */
+/**
+ * ACTIVE DOMAIN items by slug and VENTURE_STAGE items by code, for mapping
+ * external records and validating filter ids; both maps iterate in vocabulary
+ * order (`sort_order`, then label), the order of the facet values.
+ */
 export async function vocabularyForLibrary(exec: Executor = query): Promise<{
   domainsBySlug: Map<string, VocabRef>
   stagesByCode: Map<StartupStage, StageRef>
 }> {
   const rows = await exec<{ type_code: string; id: string; slug: string; label: string }>(
     `SELECT type_code, id::text, slug, label FROM vocabulary_items
-      WHERE status = 'ACTIVE' AND type_code IN ('DOMAIN', 'VENTURE_STAGE')`,
+      WHERE status = 'ACTIVE' AND type_code IN ('DOMAIN', 'VENTURE_STAGE')
+      ORDER BY sort_order, label, id`,
   )
   const domainsBySlug = new Map<string, VocabRef>()
   const stagesByCode = new Map<StartupStage, StageRef>()

@@ -196,11 +196,11 @@ describe('listLibraryStartups — canonical plus the TEMPORARY_EXTERNAL remainde
     )
   })
 
-  it('filters by DOMAIN and VENTURE_STAGE id; an unknown id gives an empty result', async () => {
+  it('filters by DOMAIN and VENTURE_STAGE ids; an unknown id is refused, a no-match is empty', async () => {
     stubFeed(FEED)
     const edtech = await listLibraryStartups({
       q: Q,
-      domainId: LIBRARY_FX.domain.edtech,
+      domainIds: [LIBRARY_FX.domain.edtech],
       limit: 50,
     })
     expect(edtech.items.map((i) => i.name).sort()).toEqual(
@@ -211,17 +211,28 @@ describe('listLibraryStartups — canonical plus the TEMPORARY_EXTERNAL remainde
         'WF06 Ngoài Hai',
       ].sort(),
     )
-    const growth = await listLibraryStartups({ q: Q, stageId: LIBRARY_FX.stage.GROWTH, limit: 50 })
+    const growth = await listLibraryStartups({
+      q: Q,
+      stageIds: [LIBRARY_FX.stage.GROWTH],
+      limit: 50,
+    })
     expect(growth.items.map((i) => i.name)).toEqual([
       'WF06 An Khang',
       'WF06 Kho Lạnh',
       'WF06 Ổ Khóa',
       'WF06 Sao Mai',
     ])
-    const none = await listLibraryStartups({
+    // Several values in a group: any of them (the page's facet rule).
+    const either = await listLibraryStartups({
       q: Q,
-      domainId: '00000000-0000-0000-0000-000000000000',
+      stageIds: [LIBRARY_FX.stage.GROWTH, LIBRARY_FX.stage.SELLING],
+      limit: 50,
     })
+    expect(either.total).toBe(5)
+    await expect(
+      listLibraryStartups({ q: Q, domainIds: ['00000000-0000-0000-0000-000000000000'] }),
+    ).rejects.toMatchObject({ field: 'domain_id', reason: 'unknown' })
+    const none = await listLibraryStartups({ q: `${Q} khong co gi` })
     expect(none).toMatchObject({ items: [], nextCursor: null, total: 0 })
     const NAME = await listLibraryStartups({ q: Q, sort: 'NAME', limit: 2 })
     expect(NAME.items.map((i) => i.name)).toEqual(['WF06 An Khang', 'WF06 Bình Minh'])
@@ -279,6 +290,7 @@ describe('listLibraryFounders', () => {
       items: [],
       nextCursor: null,
       total: 0,
+      facets: { domain: [] },
       restricted: true,
     })
   })
@@ -297,7 +309,7 @@ describe('listLibraryFounders', () => {
     }
     const govtech = await listLibraryFounders('NETWORK', {
       q: Q,
-      domainId: LIBRARY_FX.domain.govtech,
+      domainIds: [LIBRARY_FX.domain.govtech],
     })
     expect(govtech.items.map((f) => f.displayName)).toEqual(['WF06 Founder Lan'])
   })
