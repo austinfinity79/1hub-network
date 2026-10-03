@@ -1,40 +1,37 @@
 # Claude Task Report
 
 ## Task
-WF05-PROD-07 — WF05 production readiness closure + combined WF04 / WF05 hardening review. Report: [reports/WF05-PROD-07_production-readiness.md](reports/WF05-PROD-07_production-readiness.md); matrix: [reports/WF05-PROD-07_closure-matrix.md](reports/WF05-PROD-07_closure-matrix.md); combined package: [reports/WF04-WF05-combined-hardening-handoff.md](reports/WF04-WF05-combined-hardening-handoff.md).
+WF06-PROD-00 — WF06 runtime scope / production gap audit. Report: [reports/WF06-PROD-00_runtime-gap-audit.md](reports/WF06-PROD-00_runtime-gap-audit.md); scope matrix: [reports/WF06-PROD-00_scope-matrix.md](reports/WF06-PROD-00_scope-matrix.md); data and visibility: [reports/WF06-PROD-00_data-visibility.md](reports/WF06-PROD-00_data-visibility.md); gaps and plan: [reports/WF06-PROD-00_gap-matrix.md](reports/WF06-PROD-00_gap-matrix.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE — WF05 PROD HARDENED / NOT YET DEPLOYED.** PROD-00 → PROD-06 closed; P0 blockers 0, SOT conflicts 0, PO decisions remaining 0; P1 pre-promotion items 4, P2 debt 7. COMBINED_COMPATIBILITY (WF04 + WF05) PASS; migration chain 001 → 016 fresh and upgrade PASS. Not pushed, merged or deployed; WF06 not started. STOP.
+**PASS_WITH_EVIDENCE, audit only.** WF06 runtime is not implemented and not promoted (DEC-WF06-INTERNAL-ALPHA-SCOPE, human approved 27/09: FUTURE / VISION). Today's discovery layer = the public organization page (canonical) + the public Library (approved static demo on external / static data). No matching, ranking, directory or WF06 write exists or is documented. TRUE_PO_DECISIONS_COUNT = 4 (member directory, public venture discovery, programme / challenge discovery, Library data source and founder exposure). No push, merge or deploy; PROD-01 not started. STOP.
 
 ## Scope implemented
-- Closure audit only: preflight, 31-area closure matrix, contract invariants, `d4…0001` and demo-artifact checks, cross-WF identity, aggregate QA, debt classification, blocker counts.
-- Combined WF04 + WF05 compatibility review, release boundary SHAs, rollback references and a conceptual promotion runbook (not executed).
-- Rerun on the candidate: fresh DB 16 / 16, unit 307, DB 569, UAT 19 / 19.
+- Preflight, SOT review, runtime inventory, discovery-surface / matching / write / ranking / actor matrices, canonical data reuse, read-model, visibility, search / filter, DB / index, cross-WF, security, test data, proposed P0 scope, readiness diagnostic, PROD-01 → 06 validation.
 
 ## Files changed
-- Docs: `WF05-PROD-07_production-readiness.md`, `WF05-PROD-07_closure-matrix.md`, `WF04-WF05-combined-hardening-handoff.md`; this report.
+- Docs: the four WF06-PROD-00 reports; this report.
 
 ## Migrations / data
 None.
 
 ## Tests / build
-No runtime change. Rerun on `8c1fbd6`: fresh `db:reset` 16 / 16 + seed; unit 33 / 307; DB 36 / 569; UAT 19 / 19. Last full protected regression (PROD-06, same runtime): 68 specs / 981; console, hydration, 5xx 0.
+Not applicable (no runtime change). Evidence read from code, specs and SOT.
 
 ## Visual QA
-None in this task (PROD-06: REAL_REGRESSION 0).
+Not applicable.
 
 ## Deviations / blockers
-None. The contract quotes the candidate as `8c1fb0b6` (no such object; the commit is `8c1fbd6`) and the PROD-06 regression as 901 / 901 (the run reported 981 / 981). Integration with `fix/member-shell-mobile` needs a small conflict resolution at promotion (P1).
+None. The task is a scope audit: proposed P0 = harden the existing discovery layer; any new surface waits for PO-A–D.
 
 ## Git
-- Branch: `feat/wf05-prod-hardening`; start HEAD `8c1fbd6`; no concurrent change
-- Implementation commit: `docs(wf05): production readiness closure and combined WF04 / WF05 package (WF05-PROD-07)`
+- Branch: `feat/wf06-prod-hardening` (new, from `5199e07`, the WF05 closure head with the WF04 + WF05 candidates); no concurrent change
+- Implementation commit: `docs(wf06): runtime scope and production gap audit (WF06-PROD-00)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
 - Remote HEAD: `78f21f2` (production also `78f21f2`)
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
-- WF04 candidate `f40f70c`; WF05 candidate runtime `8c1fbd6`; rollback `78f21f2`
 
 ## Recommended next task
-ChatGPT / PO WF05 closure review; then the PO-controlled combined WF04 + WF05 promotion per the runbook, or WF06-PROD-00 (not started).
+ChatGPT / PO review of WF06-PROD-00 and answers to PO-A–D; then WF06-PROD-01 (contract freeze).
