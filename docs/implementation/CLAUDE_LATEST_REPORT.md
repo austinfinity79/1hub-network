@@ -1,36 +1,35 @@
 # Claude Task Report
 
 ## Task
-WF05-PROD-05 — WF05 functional + security QA. Report: [reports/WF05-PROD-05_functional-security-qa.md](reports/WF05-PROD-05_functional-security-qa.md); matrices: [reports/WF05-PROD-05_matrices.md](reports/WF05-PROD-05_matrices.md); evidence: [reports/WF05-PROD-05_evidence.md](reports/WF05-PROD-05_evidence.md); PROD-06 handoff: [reports/WF05-PROD-05_prod06-handoff.md](reports/WF05-PROD-05_prod06-handoff.md).
+WF05-PROD-06 — WF05 pixel + responsive + cross-WF regression. Report: [reports/WF05-PROD-06_pixel-responsive.md](reports/WF05-PROD-06_pixel-responsive.md); screen review: [reports/WF05-PROD-06_screen-review.md](reports/WF05-PROD-06_screen-review.md); PROD-07 handoff: [reports/WF05-PROD-06_prod07-handoff.md](reports/WF05-PROD-06_prod07-handoff.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE, local only.** Happy paths (PROJECT and STARTUP owners), negative paths, RBAC / IDOR, lifecycle, idempotency, concurrency, integrity, cross-WF, auth, leakage, restart, fresh and upgrade DB all pass. Carry-forward A resolved (`400_CASES` 1 router, `422_CASES` 19, CONSISTENCY PASS); carry-forward B resolved (`APPLICATION_DRAFT_UPDATED` added). Not pushed, not deployed; PROD-06 not started. STOP.
+**PASS_WITH_EVIDENCE, local only.** REAL_REGRESSION 0 and NEW_WF05_REGRESSION 0 over 144 baseline / candidate pairs (`f40f70c` vs candidate, 6 widths) and 150 state × width checks; every visible difference is an approved PROD-04 change. Not pushed, not deployed; PROD-07 not started. STOP.
 
 ## Scope implemented
-- A: WF05 validation status rule recorded (DEC-W5P-D11, API §24.1); runtime already conformed, no route change.
-- B: AUDIT_GAP fixed — a draft save that changes an answer writes `APPLICATION_DRAFT_UPDATED` (ids, status, changed question ids, `request_id`; never a value); no-op and refused saves write nothing (DEC-W5P-D12, API §24.2).
-- TEST_GAP closed: `wf05-prod-qa.spec.ts` (validation matrix, audit over HTTP, PROJECT / STARTUP journeys, negative matrix incl. ARCHIVED and unsupported methods, retry after refusal, leakage).
+- QA only, no runtime change: `scripts/qa/wf05-visual-compare.mjs` (baseline vs candidate captures, layout facts, component deltas, pixelmatch), `tests/visual/specs/wf05-prod-visual.spec.ts` (25 states × 1440 / 1024 / 768 / 430 / 390 / 320, interaction and accessibility smoke).
+- Findings reported, not changed: S01 venture-name link without a focus ring (pre-existing, P2); WF02 team 9 px at 320 and the WF04 OpsShell demo entry (known shared baseline).
 
 ## Files changed
-- Runtime: `src/lib/application/application.ts` (draft-save audit, `requestId`), `src/lib/audit/audit.ts` (action), `src/app/api/v1/applications/[applicationId]/route.ts`.
-- Tests: `tests/visual/specs/wf05-prod-qa.spec.ts` (new); `application-hardening.db-test.ts` (audit test rewritten, +1); `application.db-test.ts`, `application-integrity.db-test.ts`, `programme.db-test.ts`, `testing.ts` (request id argument); audit sequences in `l5-startup-journey`, `wf05-uat-journey`; the new code in the `wf03-uat-journey` audit registry copy.
-- Docs: API contract §23.2 note + §24 (A7); DECISION_LOG DEC-W5P-D11 / D12; superseded note in `WF05-PROD-01_rbac-api-frontend.md`; four PROD-05 reports; this report.
+- QA: `scripts/qa/wf05-visual-compare.mjs` (new), `tests/visual/specs/wf05-prod-visual.spec.ts` (new).
+- Docs: three PROD-06 reports; this report.
+- Captures (local, untracked): `tests/visual/actual/wf05-prod06/` (288 + side-by-side), `tests/visual/actual/wf05-prod-06-states/`.
 
 ## Migrations / data
-None.
+None. The baseline ran on a scratch database (`hubnetwork_p0_base`, 001–015 + seed), removed after the task.
 
 ## Tests / build
-format, lint, typecheck PASS; unit 33 / 307; DB 36 / 569; build PASS; `wf05-prod-qa` 7 / 7; restart check 14 / 14; migration suites FRESH / UPGRADE / RECOVERY pass; protected regression on a fresh DB 67 specs / 827 passed (16.2 min); 5xx, console, hydration 0; server log 0 errors, no sensitive content.
+format, lint, typecheck PASS; unit 33 / 307; DB 36 / 569; build PASS; `wf05-prod-visual` 154 / 154; compare script 288 captures; protected regression on a fresh DB 68 specs / 981 passed (16.8 min), 0 failed / skipped / flaky; console, hydration, unexpected 5xx 0; server log 0 errors.
 
 ## Visual QA
-No UI change. PROD-06 surfaces listed in the handoff.
+Pixel: IDENTICAL 70, STRUCTURAL 66 (intentional), MAJOR 0, COMPONENT 0, MINOR 8 (6 intentional step-number fix, 2 select anti-aliasing). Responsive: 0 overflow / escaping / overlap / clipped text on every WF05 state at 6 widths.
 
 ## Deviations / blockers
-None blocking. Regression run 1 void (a DB suite run in parallel reset the shared schema; one transient 500); run 2: 826 / 827, the WF03 UAT audit-registry copy lacked the new code (fixed); run 3 is the evidence. Observation: a missing create id reports reason `invalid`, not `required` (no contract defines it).
+None blocking. Baseline is `f40f70c` (WF05 UI as accepted before the production work; equals production `78f21f2` for WF05 but the WF04 frame changes approved in WF04-PROD-06); L5 is also checked against the approved frames L37–L43.
 
 ## Git
-- Branch: `feat/wf05-prod-hardening`; start HEAD `71392fb`; no concurrent change
-- Implementation commit: `fix(wf05): draft-save audit and functional / security QA (WF05-PROD-05)`
+- Branch: `feat/wf05-prod-hardening`; start HEAD `0e07dca`; no concurrent change
+- Implementation commit: `test(wf05): pixel, responsive and cross-workflow regression (WF05-PROD-06)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -38,4 +37,4 @@ None blocking. Regression run 1 void (a DB suite run in parallel reset the share
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of PROD-05; then WF05-PROD-06 (pixel / responsive QA per the handoff).
+ChatGPT / PO review of PROD-06; then WF05-PROD-07 (closure) per the handoff.
