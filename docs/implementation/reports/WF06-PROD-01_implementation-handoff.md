@@ -11,6 +11,8 @@
 | P2-4 | no index evidence | `EXPLAIN ANALYZE` of P2-1 on a production-sized copy; add a partial index only if the plan needs it (additive migration `017`, PO / contract note) | report; `db/migrations/017_*` only if proven | INDEX_REQUIRED only on evidence | schema creep → default NO_CHANGE |
 | P2-5 | no WF06 fixture | deterministic helper: PUBLIC / PRIVATE / DRAFT / ARCHIVED ventures, STARTUP / PROJECT, owners NETWORK_ONLY / PRIVATE / deactivated, a same-name external record, > 9 rows | new `src/lib/library/testing.ts` | test data only | shared rows → own slugs, cleanup |
 
+Not in PROD-02: any API or frontend work, a new discovery surface, matching / recommendation, the Admin Portal.
+
 ## WF06-PROD-03 — API / visibility / read hardening (renamed: no matching scope)
 | # | Target | Files / modules | API impact |
 |---|---|---|---|

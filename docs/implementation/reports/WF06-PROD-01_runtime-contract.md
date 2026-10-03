@@ -1,6 +1,15 @@
 # WF06-PROD-01_runtime-contract
 
-**WF06-PROD-01 — frozen WF06 P0 runtime contract.** 2026-10-04, branch `feat/wf06-prod-hardening` on `7004732`. Frozen on the PO's confirmed decisions (in chat, 2026-10-04): **D1 member directory NO · D2 public venture discovery NO · D3 public programme / challenge discovery NO · D4 Library source = canonical system data; founders only where canonical venture and profile visibility permit.** Recorded as [DEC-W6P-D01–D05](../../decisions/DECISION_LOG.md#dec-w6p). API / data / test details: [WF06-PROD-01_api-data-contract.md](WF06-PROD-01_api-data-contract.md); allowed work: [WF06-PROD-01_implementation-handoff.md](WF06-PROD-01_implementation-handoff.md).
+**WF06-PROD-01 — frozen WF06 P0 runtime contract.** 2026-10-04, branch `feat/wf06-prod-hardening` on `7004732`; re-frozen by WF06-PROD-01-FIX. Decisions: **D1 member directory NO · D2 public venture discovery NO · D3 public programme / challenge discovery NO · D4 Library source = canonical system data; founders only where canonical venture and profile visibility permit.** D1–D3 were recommended in PROD-00 and explicitly confirmed by the PO on 04/10/2026 before this re-freeze; D4 was confirmed by the PO before WF06-PROD-01. Recorded as [DEC-W6P-D01–D05](../../decisions/DECISION_LOG.md#dec-w6p). API / data / test details: [WF06-PROD-01_api-data-contract.md](WF06-PROD-01_api-data-contract.md); allowed work: [WF06-PROD-01_implementation-handoff.md](WF06-PROD-01_implementation-handoff.md).
+
+## Decision record
+| Step | What happened |
+|---|---|
+| WF06-PROD-00 (`7004732`) | D1–D3 raised as PO-A–C with the minimal-scope recommendation; D4 raised as PO-D |
+| initial WF06-PROD-01 draft (`ac55735`) | recorded D1–D3 as PO-confirmed from an in-session answer to a confirmation prompt |
+| ChatGPT review | decision-gate issue: no verifiable explicit PO confirmation of D1–D3; result PASS_BUT_NOT_VERIFIED |
+| PO, 04/10/2026 | explicit confirmation of D1 NO, D2 NO, D3 NO (WF06-PROD-01-FIX contract); D4 unchanged |
+| WF06-PROD-01-FIX | decision record corrected; contract re-checked (NO_CONTRACT_CHANGE_NEEDED) and re-frozen |
 
 ## Preflight
 `feat/wf06-prod-hardening`, HEAD `7004732` (WF06-PROD-00), tree clean except `AGENTS.md`; PROD-00 docs (4) present; WF04 `f40f70c` and WF05 `8c1fbd6` candidates in HEAD; migrations 001–016; `origin/main` and production `78f21f2`; no Claude B / shell lane. PO values match the contract exactly.
