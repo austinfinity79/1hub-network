@@ -1,12 +1,5 @@
-import {
-  asQueryError,
-  founderDTO,
-  libraryList,
-  libraryParams,
-  libraryRoute,
-  libraryViewer,
-} from '@/lib/library/library-api'
-import { listLibraryFounders } from '@/lib/library/library-service'
+import { asQueryError, libraryParams, libraryRoute, libraryViewer } from '@/lib/library/library-api'
+import { foundersBody } from '@/lib/library/library-bodies'
 
 /**
  * GET /api/v1/library/founders — API §25.1 (WF06-PROD-03, DEC-W6P-D03).
@@ -28,18 +21,5 @@ export const GET = libraryRoute(async ({ request }) => {
   params.check()
 
   const viewer = await libraryViewer(request.headers)
-  const result = await asQueryError(() =>
-    listLibraryFounders(viewer, { q, domainIds, cursor, limit }),
-  )
-  return libraryList(
-    result.items.map(founderDTO),
-    { nextCursor: result.nextCursor, limit },
-    {
-      total: result.total,
-      facets: {
-        domain: result.facets.domain.map(({ id, label, count }) => ({ id, label, count })),
-      },
-      restricted: result.restricted,
-    },
-  )
+  return asQueryError(() => foundersBody(viewer, { q, domainIds, cursor, limit }))
 })

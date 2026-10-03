@@ -162,6 +162,18 @@ test.describe('public pages: no dead control', () => {
     await expect(page.getByText('Góp ý')).toHaveCount(0)
     for (const tab of [/^Bài toán/, /^Startup/, /^Nhà sáng lập/]) {
       await page.getByRole('tab', { name: tab }).click()
+      // WF06-PROD-04 realignment. OLD: every tab drew cards for a guest. NEW (DEC-W6P-D03): a
+      // guest's founder tab is the sign-in state, whose one control leads to the real /auth.
+      if (tab.source.includes('Nhà')) {
+        const state = page.locator('[data-anchor="sign-in"]')
+        await expect(state).toBeVisible()
+        await expect(state.locator('a, button')).toHaveCount(1)
+        await expect(state.getByRole('link', { name: 'Đăng nhập' })).toHaveAttribute(
+          'href',
+          '/auth',
+        )
+        continue
+      }
       const grid = page.locator('[data-anchor="grid"]')
       await expect(grid.locator('> li').first()).toBeVisible()
       await expect(grid.locator('[aria-disabled], [data-cta-kind="INERT"]')).toHaveCount(0)

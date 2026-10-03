@@ -1,8 +1,7 @@
 import Link from 'next/link'
 
 import type { LandingEntry } from '@/lib/landing/entry'
-import type { LibraryProblem } from '@/lib/library/problem-adapter'
-import type { StartupDirectory } from '@/lib/library/startup-adapter'
+import type { LibraryInitial } from '@/lib/library/library-bodies'
 
 import { Cta, NavLabel } from '../landing/landing-parts'
 import { LibraryBrowser } from './library-client'
@@ -13,14 +12,14 @@ import styles from './library.module.css'
  * visitor (DEC-L15-D1). Reference: "L15 · DIR1 · Thư viện" (1440 × 2470),
  * rebuilt as HTML/CSS; the reference PNG stays a QA source.
  *
- * "Bài toán" shows the supplied problem dataset (LIBRARY DATA UPDATE, replacing
- * the DEC-L15-D2 demo fixture); "Startup" and "Nhà sáng lập" show the public
- * startup.json directory read by the server (DEC-L15-D7). No data source is
- * named on the page. No API or database of ours is read beyond the visitor's
- * own entry point. Header items with no destination are plain labels, and a
- * card action with no destination is not drawn (PO decisions, Alpha
- * interaction gap fix 30/09); "Góp ý" is hidden for Alpha. `?q=` from the
- * homepage search opens the page with that keyword applied.
+ * WF06-PROD-04: every tab shows its Library API (API §25, DEC-W6P): "Bài toán"
+ * the supplied problem file, "Startup" the published canonical startups plus
+ * the remaining external directory records, "Nhà sáng lập" the visible owners
+ * of those startups, for signed-in members only. No data source is named on the
+ * page. Header items with no destination are plain labels, and a card action
+ * with no destination is not drawn (PO decisions, Alpha interaction gap fix
+ * 30/09); "Góp ý" is hidden for Alpha. `?q=` from the homepage search opens the
+ * page with that keyword applied.
  */
 
 function entryLabel(entry: LandingEntry): string {
@@ -54,25 +53,13 @@ function LibraryHeader({ entry }: { entry: LandingEntry }) {
   )
 }
 
-export function Library({
-  entry,
-  problems,
-  directory,
-  query = '',
-}: {
-  entry: LandingEntry
-  problems: LibraryProblem[]
-  directory: StartupDirectory
-  /** The keyword the page opens with (`?q=`, homepage search); empty for none. */
-  query?: string
-}) {
+export function Library({ entry, initial }: { entry: LandingEntry; initial: LibraryInitial }) {
   return (
     <div className={styles.page} data-screen="PUBLIC-LIBRARY" data-entry={entry.kind}>
       <LibraryBrowser
         header={<LibraryHeader entry={entry} />}
-        problems={problems}
-        directory={directory}
-        initialQuery={query}
+        initial={initial}
+        signInHref={entry.kind === 'GUEST' ? entry.href : '/auth'}
       />
     </div>
   )

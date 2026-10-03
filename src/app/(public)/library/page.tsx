@@ -1,20 +1,20 @@
 import type { Metadata } from 'next'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 
 import { Library } from '@/components/library/library'
 import { SESSION_COOKIE_NAME, landingEntry } from '@/lib/landing/entry'
-import { LIBRARY_PROBLEMS } from '@/lib/library/problem-source'
+import { libraryViewer } from '@/lib/library/library-api'
+import { libraryInitial } from '@/lib/library/library-bodies'
 import { libraryQuery } from '@/lib/library/query'
-import { loadStartupDirectory } from '@/lib/library/startup-source'
 
 /**
- * TASK 22-PREVIEW-LIBRARY(-FIX) — `/library`, the public "Thư viện HUB
- * Network" (DEC-L15-D1). Public for every visitor (no guard). It reads the
- * visitor's own entry point for the login button, the problem dataset shipped
- * with the app and the public startup directory (startup.json, cached,
- * DEC-L15-D7); a source failure renders an error state in the Startup / Nhà
- * sáng lập tabs, never a 5xx. `?q=` (the homepage search) opens the page with
- * that keyword applied by the page's own search.
+ * TASK 22-PREVIEW-LIBRARY(-FIX) / WF06-PROD-04 — `/library`, the public
+ * "Thư viện HUB Network" (DEC-L15-D1). Public for every visitor (no guard). It
+ * reads the visitor's own entry point for the login button and the first page
+ * of each tab exactly as the Library APIs answer it (API §25), for this viewer:
+ * a member sees visible founders, a guest the sign-in state. A tab that cannot
+ * be read renders its error state, never a 5xx. `?q=` (the homepage search)
+ * opens the page with that keyword applied.
  */
 export const dynamic = 'force-dynamic'
 
@@ -30,17 +30,11 @@ export default async function LibraryPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
-  const [entry, directory, params] = await Promise.all([
+  const [entry, viewer, params] = await Promise.all([
     landingEntry(token),
-    loadStartupDirectory(),
+    libraryViewer(await headers()),
     searchParams,
   ])
-  return (
-    <Library
-      entry={entry}
-      problems={LIBRARY_PROBLEMS}
-      directory={directory}
-      query={libraryQuery(params.q)}
-    />
-  )
+  const initial = await libraryInitial(viewer, libraryQuery(params.q))
+  return <Library entry={entry} initial={initial} />
 }

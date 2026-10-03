@@ -12,15 +12,14 @@
  *   giai_doan_phat_trien         → stage: the Alpha venture stages, mapped only where
  *                                  deterministic (DEC-2909-L2H2), else null
  *   website                      → website (http/https only, else null)
- *   thanh_vien[].ho_ten/vai_tro  → founders (founder roles only; name, role, startup); founder
- *                                  names are not searchable (DEC-W6P-D03, supersedes DEC-L15-D13)
  *   thanh_vien.length            → memberCount
  *
- * Not read: mo_ta_chi_tiet, chuong_trinh_tung_tham_gia,
- * thanh_vien[].don_vi_lam_viec_hoc_tap and .kinh_nghiem_thanh_tich_khac (personal
- * detail). Every kept string is trimmed, length-capped and stripped of e-mail
- * addresses and phone numbers; a member whose name carries contact data is
- * left out entirely. Pure functions: no I/O here (see startup-source.ts).
+ * Not read: mo_ta_chi_tiet, chuong_trinh_tung_tham_gia and every member field
+ * (thanh_vien[].ho_ten, vai_tro, don_vi_lam_viec_hoc_tap, kinh_nghiem_thanh_tich_khac):
+ * external founders are never shown or searchable (DEC-W6P-D03; WF06-PROD-04
+ * removed the last reader). Every kept string is trimmed, length-capped and
+ * stripped of e-mail addresses and phone numbers. Pure functions: no I/O here
+ * (see startup-source.ts).
  */
 
 export type Category =
@@ -42,16 +41,7 @@ export type LibraryStartup = {
   memberCount: number
 }
 
-export type LibraryFounder = {
-  id: string
-  name: string
-  role: string
-  startups: Array<{ name: string; website: string | null; stage: StartupStage | null }>
-  categories: Category[]
-}
-
-export type StartupDirectory =
-  { status: 'ok'; startups: LibraryStartup[]; founders: LibraryFounder[] } | { status: 'error' }
+export type StartupDirectory = { status: 'ok'; startups: LibraryStartup[] } | { status: 'error' }
 
 export const STAGES: StartupStage[] = ['IDEA', 'MVP', 'PILOT', 'SELLING', 'GROWTH']
 
@@ -175,16 +165,10 @@ const slug = (text: string) =>
     .replace(/^-|-$/g, '')
     .slice(0, 60) || 'x'
 
-const isFounderRole = (role: string) => /found|sang lap/.test(fold(role))
-
 /** Validates and normalises the remote payload. Throws when it is not a list. */
-export function adaptStartups(payload: unknown): {
-  startups: LibraryStartup[]
-  founders: LibraryFounder[]
-} {
+export function adaptStartups(payload: unknown): { startups: LibraryStartup[] } {
   if (!Array.isArray(payload)) throw new Error('startup.json is not a list')
   const startups: LibraryStartup[] = []
-  const founders = new Map<string, LibraryFounder>()
   const ids = new Set<string>()
 
   for (const record of payload.slice(0, MAX_RECORDS)) {
@@ -196,7 +180,6 @@ export function adaptStartups(payload: unknown): {
     for (let n = 2; ids.has(id); n++) id = `${slug(name)}-${n}`
     ids.add(id)
     const domains = splitDomains(r.linh_vuc)
-    const members = Array.isArray(r.thanh_vien) ? r.thanh_vien : []
     const startup: LibraryStartup = {
       id,
       name,
@@ -206,34 +189,9 @@ export function adaptStartups(payload: unknown): {
       categories: categorise(domains),
       stage: stageOf(r.giai_doan_phat_trien),
       website: safeUrl(r.website),
-      memberCount: members.length,
+      memberCount: Array.isArray(r.thanh_vien) ? r.thanh_vien.length : 0,
     }
     startups.push(startup)
-
-    for (const m of members) {
-      if (!m || typeof m !== 'object') continue
-      const raw = (m as Record<string, unknown>).ho_ten
-      const roleRaw = (m as Record<string, unknown>).vai_tro
-      if (typeof raw !== 'string' || hasContact(raw)) continue
-      const person = cleanText(raw, 60)
-      const role = cleanText(roleRaw, 80)
-      if (!person || !role || !isFounderRole(role) || !/\p{L}/u.test(person)) continue
-      const key = fold(person)
-      const found = founders.get(key)
-      const link = { name: startup.name, website: startup.website, stage: startup.stage }
-      if (found) {
-        if (!found.startups.some((s) => s.name === link.name)) found.startups.push(link)
-        found.categories = [...new Set([...found.categories, ...startup.categories])]
-      } else {
-        founders.set(key, {
-          id: slug(person),
-          name: person,
-          role,
-          startups: [link],
-          categories: [...startup.categories],
-        })
-      }
-    }
   }
-  return { startups, founders: [...founders.values()] }
+  return { startups }
 }

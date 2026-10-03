@@ -33,8 +33,8 @@ const record = (over: Record<string, unknown> = {}) => ({
 
 describe('adaptStartups', () => {
   it('maps the remote fields to the Library view model', () => {
-    const { startups, founders } = adaptStartups([record()])
-    expect(startups).toEqual([
+    const directory = adaptStartups([record()])
+    expect(directory.startups).toEqual([
       {
         id: 'psi-lab',
         name: 'PSI Lab',
@@ -47,16 +47,9 @@ describe('adaptStartups', () => {
         memberCount: 2,
       },
     ])
-    // Founder roles only; no affiliation or experience is carried.
-    expect(founders).toEqual([
-      {
-        id: 'nguyen-tung',
-        name: 'Nguyễn Tùng',
-        role: 'Co-Founder',
-        startups: [{ name: 'PSI Lab', website: 'https://psilab.example.vn/', stage: 'GROWTH' }],
-        categories: ['LOGISTICS'],
-      },
-    ])
+    // No member is carried: external founders are never shown (DEC-W6P-D03).
+    expect(Object.keys(directory)).toEqual(['startups'])
+    expect(JSON.stringify(directory)).not.toMatch(/Nguyễn Tùng|Lê Cố Vấn|FTU|Co-Founder/)
   })
 
   it('rejects a non-list payload and skips unusable records', () => {
@@ -66,19 +59,20 @@ describe('adaptStartups', () => {
     expect(startups.map((s) => s.name)).toEqual(['PSI Lab'])
   })
 
-  it('drops members whose name carries contact data and strips contact data elsewhere', () => {
-    const { startups, founders } = adaptStartups([
+  it('strips contact data and never carries a member, even with contact data', () => {
+    const { startups } = adaptStartups([
       record({
         mo_ta_ngan: 'Liên hệ a.b@example.com hoặc 0912 345 678 để biết thêm',
         thanh_vien: [{ ho_ten: 'An - 0912345678 - an@example.com', vai_tro: 'Founder' }],
       }),
     ])
     expect(startups[0]!.tagline).not.toMatch(/@|0912/)
-    expect(founders).toEqual([])
+    expect(JSON.stringify(startups)).not.toMatch(/an@example|0912345678/)
+    expect(startups[0]!.memberCount).toBe(1)
   })
 
-  it('deduplicates founders across startups and keeps unknown stages empty', () => {
-    const { startups, founders } = adaptStartups([
+  it('keeps unknown stages empty and splits domains', () => {
+    const { startups } = adaptStartups([
       record({
         ten_startup: 'A',
         giai_doan_phat_trien: 'Seed?',
@@ -92,9 +86,7 @@ describe('adaptStartups', () => {
     ])
     expect(startups[0]!.stage).toBeNull()
     expect(startups[1]!.domains).toEqual(['FinTech', 'AI'])
-    expect(founders).toHaveLength(1)
-    expect(founders[0]!.startups.map((s) => s.name)).toEqual(['A', 'B'])
-    expect(founders[0]!.categories).toEqual(expect.arrayContaining(['LOGISTICS', 'FINTECH', 'AI']))
+    expect(JSON.stringify(startups)).not.toContain('Vũ Hiếu')
   })
 
   it('maps stages to the Alpha vocabulary only where deterministic (DEC-2909-L2H2)', () => {

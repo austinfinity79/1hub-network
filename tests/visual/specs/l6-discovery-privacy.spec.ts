@@ -135,13 +135,29 @@ test.describe('L6-P discovery privacy', () => {
     const pages = ['/', '/about', '/library', ...ORGS.map((s) => `/organizations/${s}`)]
     const apis = ORGS.map((s) => `/api/v1/organizations/by-slug/${s}`)
     const report: { actor: string; url: string; status: number; leaks: string[] }[] = []
+    /**
+     * WF06-PROD-04 realignment, `/library` only. OLD: no name of this world reached the
+     * Library. NEW (DEC-W6P-D02 / D03, WF06-PROD-01 contract): the Library lists published
+     * STARTUP ventures for every visitor, and names a listed startup's owner to signed-in
+     * members while the owner's PROFILE_DISCOVERY allows it. So the PUBLIC startup's name may
+     * appear for anyone and its owner's name for members; the private member, the DRAFT
+     * venture, e-mails and every id still never appear. Everywhere else nothing changes.
+     */
+    const allowed = (actor: string, url: string) =>
+      url.split('?')[0] !== '/library'
+        ? []
+        : actor === 'guest'
+          ? [`Công bố ${MARK}`]
+          : [`Công bố ${MARK}`, `Công Khai ${MARK}`]
+    const scrub = (body: string, actor: string, url: string) =>
+      allowed(actor, url).reduce((text, name) => text.split(name).join(''), body)
 
     const scan = async (actor: string, request: APIRequestContext) => {
       for (const url of [...pages, ...apis]) {
         const plain = await request.get(url)
         expect(plain.status(), `${actor} ${url}`).toBe(200)
         const body = await plain.text()
-        const leaks = secrets.filter((s) => body.includes(s))
+        const leaks = secrets.filter((s) => scrub(body, actor, url).includes(s))
         report.push({ actor, url, status: plain.status(), leaks })
         expect(leaks, `${actor} ${url}`).toEqual([])
         const spoofed = await request.get(url + forged(w), { headers: spoofs(w) })
@@ -151,7 +167,7 @@ test.describe('L6-P discovery privacy', () => {
         // those of the query, so only the persons' names and e-mails are checked there.
         const named = [MARK, w.hidden.email, w.open.email]
         expect(
-          named.filter((s) => forgedBody.includes(s)),
+          named.filter((s) => scrub(forgedBody, actor, url).includes(s)),
           `${actor} ${url} forged`,
         ).toEqual([])
         if (url.startsWith('/api/')) expect(forgedBody, `${actor} ${url} forged`).toBe(body)

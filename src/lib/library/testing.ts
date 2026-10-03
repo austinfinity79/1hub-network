@@ -1,5 +1,7 @@
 import { query } from '@/lib/db/client'
 
+import { fold } from './startup-adapter'
+
 /**
  * WF06-PROD-02 (P2-5) — deterministic Library fixture for the canonical read
  * path (DEC-W6P-D02 / D03 / D04). Rows are written directly in canonical
@@ -276,4 +278,34 @@ export async function seedLibraryFixture(): Promise<LibraryFixture> {
     )
   }
   return { owners, accounts, ventures }
+}
+
+/**
+ * One more visible founder (NETWORK_ONLY owner of a PUBLIC ACTIVE STARTUP), for
+ * page tests that need a full row of cards. Marked like the rest of the fixture.
+ */
+export async function addVisibleFounder(
+  label: string,
+): Promise<{ profileId: string; ventureId: string }> {
+  const tag = fold(label).replace(/[^a-z0-9]+/g, '-')
+  const email = `wf06-fx-extra-${tag}@example.test`
+  const [account] = await query<{ id: string }>(
+    `INSERT INTO user_accounts (email, email_normalized, status) VALUES ($1, $1, 'ACTIVE') RETURNING id::text`,
+    [email],
+  )
+  const [profile] = await query<{ id: string }>(
+    `INSERT INTO individual_profiles (account_id, display_name, status, purpose_step_completed_at, onboarding_completed_at)
+     VALUES ($1, $2, 'ACTIVE', now(), now()) RETURNING id::text`,
+    [account!.id, `WF06 Founder ${label}`],
+  )
+  const [venture] = await query<{ id: string }>(
+    `INSERT INTO projects (type, owner_profile_id, slug, name, summary, status, visibility, stage_id, owner_role_label)
+     VALUES ('STARTUP', $1, $2, $3, 'Fixture WF06', 'ACTIVE', 'PUBLIC', $4, 'Founder') RETURNING id::text`,
+    [profile!.id, `wf06-fx-extra-${tag}`, `WF06 ${label} Startup`, LIBRARY_FX.stage.MVP],
+  )
+  await query(`INSERT INTO project_domains (project_id, vocabulary_item_id) VALUES ($1, $2)`, [
+    venture!.id,
+    LIBRARY_FX.domain.edtech,
+  ])
+  return { profileId: profile!.id, ventureId: venture!.id }
 }

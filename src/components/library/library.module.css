@@ -1215,3 +1215,26 @@
     min-height: 380px;
   }
 }
+
+/* WF06-PROD-04 — API-backed states. The grid stays while a new answer loads. */
+.grid[data-loading='true'] {
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+}
+
+.more:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+a.more {
+  display: flex;
+  align-items: center;
+  margin-top: 0;
+  text-decoration: none;
+}
+
+.quick[data-empty='true'] {
+  min-height: 29px;
+  visibility: hidden;
+}

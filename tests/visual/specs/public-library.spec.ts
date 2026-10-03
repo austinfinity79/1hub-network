@@ -3,16 +3,31 @@ import path from 'node:path'
 
 import { expect, test, type Page } from '@playwright/test'
 
+import { SESSION_COOKIE_NAME } from '../../../src/lib/auth/config'
+import { createSession } from '../../../src/lib/auth/sessions'
+import { closePool } from '../../../src/lib/db/client'
+import {
+  addVisibleFounder,
+  clearLibraryFixture,
+  FX_OWNERS,
+  seedLibraryFixture,
+} from '../../../src/lib/library/testing'
 import { REPO_ROOT } from '../pixel-qa/paths'
 import { auditRevision } from '../pixel-qa/revision'
 
 /**
  * TASK 22-PREVIEW-LIBRARY(-FIX) — the public Library (/library), L15 DIR1
  * (DEC-L15-D1..D7). "Bài toán" runs on the supplied problem dataset (LIBRARY
- * DATA UPDATE); "Startup" and "Nhà sáng lập" show startup.json as read by the
- * server; no tab names a data source. The homepage "Mạng lưới đổi mới sáng
- * tạo" opens it. Pixel QA compares the full 1440 × 2470 reference (A header …
- * L load more).
+ * DATA UPDATE); no tab names a data source. The homepage "Mạng lưới đổi mới
+ * sáng tạo" opens it. Pixel QA compares the full 1440 × 2470 reference (A
+ * header … L load more).
+ *
+ * WF06-PROD-04 realignment (each change says OLD → NEW and its source): the
+ * tabs read the Library APIs (API §25, DEC-W6P-D02 / D04); "Startup" lists the
+ * published canonical startups plus the external records without a twin;
+ * "Nhà sáng lập" lists the visible canonical owners to signed-in members only
+ * and a sign-in state to guests (DEC-W6P-D03). A deterministic WF06 fixture
+ * and a member session (the stranger, who owns nothing) back those cases.
  */
 
 type Problem = {
@@ -47,6 +62,27 @@ const CONTACT = /[\w.+-]+@[\w-]+\.[\w.]+|(?:\+84|0)\d{9,10}/
 
 let consoleErrors: string[] = []
 let apiCalls: string[] = []
+let memberToken = ''
+
+test.beforeAll(async () => {
+  const fx = await seedLibraryFixture()
+  // Two visible fixture founders plus these make a full row of founder cards.
+  await addVisibleFounder('Minh')
+  await addVisibleFounder('Quân')
+  memberToken = (await createSession(fx.accounts.stranger)).token
+})
+
+test.afterAll(async () => {
+  await clearLibraryFixture()
+  await closePool()
+})
+
+/** Signs the page in as a member who owns nothing (a live session of an ACTIVE account). */
+const asMember = (page: Page, baseURL: string | undefined) =>
+  page.context().addCookies([{ name: SESSION_COOKIE_NAME, value: memberToken, url: baseURL! }])
+/** The directory shows an answer (not a pending one): ready, empty, error or sign-in. */
+const settled = (page: Page) =>
+  expect(page.locator('[data-section="directory"]')).not.toHaveAttribute('data-state', 'loading')
 
 test.beforeEach(async ({ page }) => {
   consoleErrors = []
@@ -140,16 +176,21 @@ test.describe('PUBLIC-LIBRARY functional', () => {
       String(PROBLEMS.filter((p) => p.giai_doan === 'dang_mo_nop').length),
     )
     const startups = await tabCount(page, /Startup/)
-    const founders = await tabCount(page, /Nhà sáng lập/)
     expect(startups).toBeGreaterThan(0)
-    expect(founders).toBeGreaterThan(0)
     await expect(metrics.nth(1)).toHaveText(String(startups))
-    await expect(metrics.nth(2)).toHaveText(String(founders))
+    // OLD: a guest saw the startup.json founder count. NEW (DEC-W6P-D03): founders are
+    // for signed-in members only, so a guest sees no number ("–"), not even a total.
+    await expect(page.getByRole('tab', { name: /Nhà sáng lập/ }).locator('span')).toHaveText('–')
+    await expect(metrics.nth(2)).toHaveText('–')
     // PO decision (Alpha interaction gap fix): a problem has no page, so its card draws no action.
     await expect(cards(page).locator('a, button, [aria-disabled]')).toHaveCount(0)
-    // Every record is reachable through "Xem thêm", in the dataset order.
-    while (await page.locator('[data-anchor="more"]').isVisible())
+    // Every record is reachable through "Xem thêm", in the dataset order. WF06-PROD-04: each
+    // click asks the API for the next page by its cursor, so wait for the cards it adds.
+    while (await page.locator('[data-anchor="more"]').isVisible()) {
+      const shown = await cards(page).count()
       await page.locator('[data-anchor="more"]').click()
+      await expect(cards(page)).not.toHaveCount(shown)
+    }
     await expect(cards(page).locator('h2')).toHaveText(PROBLEMS.map((p) => p.ten))
     await expect(cards(page).first().locator('[class*="org"]').last()).toHaveText(
       PROBLEMS[0]!.owner_org.ten,
@@ -163,16 +204,25 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     expect(grid).not.toMatch(/Còn \d+ ngày|\d+ đội|triệu/)
   })
 
-  test('no tab names a data source', async ({ page }) => {
-    await page.goto('/library')
-    for (const name of [/^Bài toán/, /^Startup/, /^Nhà sáng lập/]) {
-      await page.getByRole('tab', { name }).click()
-      await expect(cards(page).first()).toBeVisible()
-      expect(await page.locator('body').innerText(), `${name}`).not.toMatch(SOURCE_WORDS)
+  test('no tab names a data source', async ({ page, baseURL }) => {
+    for (const member of [false, true]) {
+      if (member) await asMember(page, baseURL)
+      await page.goto('/library')
+      for (const name of [/^Bài toán/, /^Startup/, /^Nhà sáng lập/]) {
+        await page.getByRole('tab', { name }).click()
+        // OLD: every tab drew cards for a guest. NEW (DEC-W6P-D03): a guest's founder tab
+        // is the sign-in state.
+        if (!member && name.source.includes('Nhà'))
+          await expect(page.locator('[data-anchor="sign-in"]')).toBeVisible()
+        else await expect(cards(page).first()).toBeVisible()
+        expect(await page.locator('body').innerText(), `${name}`).not.toMatch(SOURCE_WORDS)
+      }
     }
   })
 
-  test('Startup: real startup.json records, paging, safe external links', async ({ page }) => {
+  test('Startup: canonical startups and the external remainder, paging, safe external links', async ({
+    page,
+  }) => {
     await page.goto('/library')
     await page.getByRole('tab', { name: /Startup/ }).click()
     const total = await tabCount(page, /Startup/)
@@ -182,6 +232,31 @@ test.describe('PUBLIC-LIBRARY functional', () => {
       await page.getByRole('button', { name: `Xem thêm ${total - 9} startup` }).click()
       await expect(cards(page)).toHaveCount(Math.min(18, total))
     }
+    // WF06-PROD-04: the published fixture startups are listed (DEC-W6P-D02), never the
+    // PRIVATE, DRAFT, ARCHIVED or PROJECT ones; the external twin of "WF06 Kho Lạnh" is not.
+    const search = page.getByRole('search')
+    await search.getByRole('searchbox').fill('WF06 Kho Lạnh')
+    await search.getByRole('button', { name: 'Tìm kiếm' }).click()
+    await expect(count(page)).toHaveText('1 startup')
+    await expect(cards(page).locator('h2')).toHaveText(['WF06 Kho Lạnh'])
+    // A canonical card has no website and no member count: no link, no member line.
+    await expect(cards(page).locator('a')).toHaveCount(0)
+    await expect(cards(page).locator('[class*="pcardSub"]')).toHaveCount(0)
+    for (const hidden of [
+      'WF06 Kín Đáo',
+      'WF06 Bản Nháp',
+      'WF06 Lưu Trữ',
+      'WF06 Dự Án',
+      'WF06 Riêng Tư',
+    ]) {
+      await search.getByRole('searchbox').fill(hidden)
+      await search.getByRole('button', { name: 'Tìm kiếm' }).click()
+      await settled(page)
+      // Other records may share the keyword's words; the hidden venture itself never shows.
+      expect(await cards(page).locator('h2').allInnerTexts(), hidden).not.toContain(hidden)
+    }
+    await search.getByRole('searchbox').fill('')
+    await settled(page)
     for (const a of await page.locator('[data-anchor="grid"] a[target="_blank"]').all()) {
       expect(await a.getAttribute('href')).toMatch(/^https?:\/\/[^/@]+\./)
       await expect(a).toHaveAttribute('rel', 'noopener noreferrer nofollow')
@@ -194,7 +269,9 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     // drawn only as the startup's own website; "Theo dõi" is never drawn (no follow exists).
     const first = cards(page).first()
     await expect(first).toHaveAttribute('data-kind', 'STARTUP')
-    await expect(first.locator('[class*="pcardSub"]')).toHaveText(/^\d+ thành viên$/)
+    // OLD: every card had "N thành viên". NEW: only an external record has a member count.
+    for (const sub of await cards(page).locator('[class*="pcardSub"]').all())
+      await expect(sub).toHaveText(/^\d+ thành viên$/)
     await expect(cards(page).getByText('Theo dõi', { exact: true })).toHaveCount(0)
     await expect(cards(page).locator('[aria-disabled]')).toHaveCount(0)
     for (const view of await cards(page).getByText('Xem hồ sơ', { exact: true }).all()) {
@@ -208,9 +285,27 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     await expect(facets.getByText(/ĐANG CẦN|NGUỒN HỒ SƠ/)).toHaveCount(0)
   })
 
-  test('Nhà sáng lập: deduplicated founders from startup.json, no contact data', async ({
+  // OLD: founders deduplicated from startup.json, shown to every visitor. NEW (DEC-W6P-D03,
+  // WF06-PROD-01 contract): the canonical owners of listed startups whose PROFILE_DISCOVERY
+  // allows it, for signed-in members only; a guest gets the sign-in state and no name.
+  test('Nhà sáng lập, guest: the sign-in state, no founder name or count', async ({ page }) => {
+    await page.goto('/library')
+    await page.getByRole('tab', { name: /Nhà sáng lập/ }).click()
+    const state = page.locator('[data-anchor="sign-in"]')
+    await expect(state).toBeVisible()
+    await expect(state.getByRole('link', { name: 'Đăng nhập' })).toHaveAttribute('href', '/auth')
+    await expect(cards(page)).toHaveCount(0)
+    await expect(page.getByRole('complementary', { name: 'Bộ lọc' })).toHaveCount(0)
+    const text = await page.locator('body').innerText()
+    for (const owner of Object.values(FX_OWNERS))
+      if (owner.displayName) expect(text).not.toContain(owner.displayName)
+  })
+
+  test('Nhà sáng lập, member: visible canonical founders only, no contact data', async ({
     page,
+    baseURL,
   }) => {
+    await asMember(page, baseURL)
     await page.goto('/library')
     await page.getByRole('tab', { name: /Nhà sáng lập/ }).click()
     const total = await tabCount(page, /Nhà sáng lập/)
@@ -218,25 +313,30 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     await expect(cards(page)).toHaveCount(Math.min(9, total))
     const names = await cards(page).locator('h2').allInnerTexts()
     expect(new Set(names).size).toBe(names.length)
-    // DEC-L15-D12: name, "role · startup", the startup row. PO decision (Alpha interaction gap
-    // fix): a founder has no profile page or connection, so no "Xem hồ sơ" / "Kết nối"; the
-    // startup row links its website or is plain text.
+    // DEC-L15-D12: name, "role · startup", the startup row; no "Xem hồ sơ" / "Kết nối"; a
+    // canonical startup has no website, so its row is plain text.
     const first = cards(page).first()
     await expect(first).toHaveAttribute('data-kind', 'FOUNDER')
     await expect(first.locator('[class*="pcardSub"]')).toHaveText(/ · /)
     await expect(first.locator('[class*="pcardRowName"]')).not.toBeEmpty()
     await expect(cards(page).getByText(/^(Xem hồ sơ|Kết nối)$/)).toHaveCount(0)
-    await expect(cards(page).locator('[aria-disabled]')).toHaveCount(0)
-    for (const row of await cards(page)
-      .locator('[class*="pcardRow"]:not([class*="pcardRow"] *)')
-      .all()) {
-      const tag = await row.evaluate((n) => n.tagName)
-      expect(['A', 'SPAN']).toContain(tag)
-      if (tag === 'A') await expect(row).toHaveAttribute('target', '_blank')
-    }
+    await expect(cards(page).locator('a, [aria-disabled]')).toHaveCount(0)
+    // The fixture: visible owners are listed; PRIVATE, deactivated, blocked, nameless owners and
+    // the owner of a PRIVATE venture only are not.
+    const search = page.getByRole('search')
+    await search.getByRole('searchbox').fill('WF06')
+    await search.getByRole('button', { name: 'Tìm kiếm' }).click()
+    await expect(cards(page).locator('h2')).toHaveText([
+      'WF06 Founder Hải',
+      'WF06 Founder Lan',
+      'WF06 Founder Minh',
+      'WF06 Founder Quân',
+    ])
     const text = await page.locator('[data-section="directory"]').innerText()
     expect(text).not.toMatch(CONTACT)
     expect(text).not.toMatch(/ĐANG MỞ CHO|Đang mở cho|Đề nghị kết nối/)
+    for (const key of ['hidden', 'deactivated', 'blocked', 'privateOnly'] as const)
+      expect(text).not.toContain(FX_OWNERS[key].displayName!)
   })
 
   test('filters: built from the dataset, multi-select, chips, zero kept, clear all', async ({
@@ -294,7 +394,9 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     await expect(count(page)).toHaveText(`${PROBLEMS.length} bài toán`)
   })
 
-  test('search, quick filters and sort run in the browser', async ({ page }) => {
+  // OLD: search, quick filters and sort ran in the browser on the whole dataset, with no API
+  // call. NEW (WF06-PROD-01 P4-1): each one asks the tab's Library API for its first page.
+  test('search, quick filters and sort ask the Library API', async ({ page }) => {
     await page.goto('/library')
     const quick = page.getByRole('group', { name: 'Tìm nhanh theo lĩnh vực' })
     await quick.getByRole('button', { name: 'Nông nghiệp' }).click()
@@ -333,7 +435,28 @@ test.describe('PUBLIC-LIBRARY functional', () => {
       'aria-selected',
       'true',
     )
-    expect(apiCalls).toEqual([])
+    await settled(page)
+    // Only the Library APIs were called, with the page's own parameters.
+    expect(apiCalls.length).toBeGreaterThan(0)
+    for (const url of apiCalls) {
+      const u = new URL(url)
+      expect(u.pathname).toMatch(/^\/api\/v1\/library\/(problems|startups)$/)
+      expect(
+        [...u.searchParams.keys()].every((k) =>
+          [
+            'q',
+            'domain',
+            'stage',
+            'area',
+            'domain_id',
+            'stage_id',
+            'sort',
+            'cursor',
+            'limit',
+          ].includes(k),
+        ),
+      ).toBe(true)
+    }
   })
 
   test('390 px: filters fold behind a button, no page overflow', async ({ page }) => {
@@ -365,7 +488,10 @@ test.describe('PUBLIC-LIBRARY layout: filters and results', () => {
 
   test('the gutter stays 45px at 1440 and wider; three equal columns; sort on the results edge', async ({
     page,
+    baseURL,
   }) => {
+    // WF06-PROD-04: founder cards are drawn for members only (DEC-W6P-D03).
+    await asMember(page, baseURL)
     for (const width of [1440, 1728, 1920]) {
       await page.setViewportSize({ width, height: 900 })
       await page.goto('/library', { waitUntil: 'networkidle' })
@@ -497,6 +623,9 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
     })
     // I: three rows as drawn — same columns and card size, 23 px gaps, row 3 where the pack has it.
     await page.getByRole('button', { name: 'Xoá tất cả', exact: true }).click()
+    // WF06-PROD-04: clearing asks the API again; measure the answer, not the pending grid.
+    await expect(cards(page)).toHaveCount(9)
+    await settled(page)
     const boxes = await cards(page).evaluateAll((els) =>
       els.slice(0, 9).map((e) => {
         const b = e.getBoundingClientRect()
@@ -555,7 +684,10 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
   ] as const) {
     test(`${kind}: hero, tab bar, card geometry and chrome match ${file.split('/')[1]}`, async ({
       page,
+      baseURL,
     }) => {
+      // WF06-PROD-04: L15c draws a member's view; founders are not shown to guests (DEC-W6P-D03).
+      if (kind === 'FOUNDER') await asMember(page, baseURL)
       await page.goto('/library')
       await page.getByRole('tab', { name: new RegExp(`^${tab}`) }).click()
       await expect(cards(page).first()).toHaveAttribute('data-kind', kind)

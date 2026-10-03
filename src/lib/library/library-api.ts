@@ -43,6 +43,11 @@ const PARAM_NAME = /^[a-z_]{1,32}$/
 
 type Fields = Record<string, string>
 
+/** The keyword as the API reads it: NFC, whitespace collapsed, trimmed (empty = none). */
+export function normalizeKeyword(raw: string): string {
+  return raw.normalize('NFC').replace(/\s+/g, ' ').trim()
+}
+
 export function validationFailed(fields: Fields): ApiError {
   return new ApiError('PROFILE_VALIDATION_FAILED', 422, 'Invalid Library query.', fields)
 }
@@ -73,7 +78,7 @@ export function libraryParams(
     keyword(key = 'q'): string | undefined {
       const raw = one(key)
       if (raw === null) return undefined
-      const text = raw.normalize('NFC').replace(/\s+/g, ' ').trim()
+      const text = normalizeKeyword(raw)
       if (CONTROL.test(text)) fields[key] = 'invalid'
       else if (text.length > LIBRARY_QUERY_MAX) fields[key] = 'too_long'
       return text || undefined

@@ -157,7 +157,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               {childLabel === 'CLB' ? 'CLB trực thuộc' : 'Đơn vị trực thuộc'}
             </p>
             <h2 className={styles.title}>
-              {org.children.length} {childLabel} trực thuộc {org.name}
+              {/* The total (WF06-PROD-03: the list holds the first 200 by name). */}
+              {org.stats.children} {childLabel} trực thuộc {org.name}
             </h2>
             <p className={styles.lede}>
               Số liệu là tổng hợp công khai; danh sách thành viên không hiển thị ở trang này.
