@@ -157,7 +157,8 @@ test.describe('WF05-S01 my projects / startups', () => {
     await open(page)
     await expect(page.locator('[data-screen="WF05-S01"]')).toBeVisible()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dự án & Startup')
-    await expect(page.locator('[data-demo-notice]')).toContainText('Dữ liệu demo · Internal Alpha')
+    // WF05-PROD-04: real data, no demo notice or reset (WF05-PROD-01 demo artifact disposition).
+    await expect(page.locator('[data-demo-notice], [data-demo-reset]')).toHaveCount(0)
     expect(await ventureIds(page)).toEqual([w.archived.id, w.project.id, w.startup.id])
     await expect(ventureRow(page, w.project.id)).toContainText('Dự án S01')
     await expect(ventureRow(page, w.project.id).locator('[data-venture-meta]')).toHaveText(
@@ -394,7 +395,7 @@ test.describe('WF05-S01 states, entry and boundaries', () => {
     // DEC-L2R-D1: /me is FP1-OWN without a sidebar; the MemberShell pages keep the entry.
     await page.goto('/me/settings', { waitUntil: 'networkidle' })
     const entry = page.locator('[data-nav="project-demo"]')
-    await expect(entry).toHaveText('Dự án & Startup · Demo')
+    await expect(entry).toHaveText('Dự án & Startup')
     await expect(entry).toHaveAttribute('href', '/demo/projects')
     await expect(entry).not.toHaveAttribute('aria-current', 'page')
     await expect(page.locator('[aria-current="page"]')).toHaveText('Cài đặt tài khoản')
@@ -425,7 +426,7 @@ test.describe('WF05-S01 states, entry and boundaries', () => {
     ).toBe(404)
   })
 
-  test('19/20. viewing creates no application; a server application shows; reset leaves it (HD-A10)', async ({
+  test('19/20. viewing creates no application; a server application shows (HD-A10)', async ({
     page,
   }) => {
     const w = await world()
@@ -441,14 +442,12 @@ test.describe('WF05-S01 states, entry and boundaries', () => {
     expect(created.status()).toBe(201)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(ventureRow(page, w.startup.id).locator('[data-venture-applications]')).toHaveText(
-      'Đơn đăng ký: Chương trình ươm tạo (demo) · Nháp',
+      'Đơn đăng ký: Chương trình ươm tạo (demo) · Bản nháp',
     )
     await expect(ventureRow(page, w.project.id).locator('[data-venture-applications]')).toHaveCount(
       0,
     )
-    await page.locator('[data-demo-reset="start"]').click()
-    await page.locator('[data-demo-reset="confirm"]').click()
-    // The application lives on the server: the demo reset leaves it.
+    // The application lives on the server (WF05-PROD-04: no demo reset any more).
     await page.reload({ waitUntil: 'networkidle' })
     await expect(ventureRow(page, w.startup.id).locator('[data-venture-applications]')).toHaveCount(
       1,
@@ -462,7 +461,7 @@ test.describe('WF05-S01 authorization, IDOR and privacy', () => {
     page,
   }) => {
     await page.goto(URL_)
-    await expect(page).toHaveURL('/auth')
+    await expect(page).toHaveURL(`/auth?redirect=${encodeURIComponent(URL_)}`)
     await login(page.request, 'newcomer@example.test')
     await page.goto(URL_)
     await expect(page).toHaveURL(/\/onboarding(\/|$)/)
@@ -517,7 +516,6 @@ test.describe('WF05-S01 responsive basics', () => {
         page.locator('[data-nav="create-project"]'),
         ventureRow(page, w.startup.id),
         page.locator(`[data-programme="${PROGRAMME}"]`),
-        page.locator('[data-demo-reset="start"]'),
       ]) {
         await locator.scrollIntoViewIfNeeded()
         await expect(locator).toBeInViewport()

@@ -17,10 +17,13 @@ export default async function Page({
 }: {
   params: Promise<{ id: string; programmeId: string }>
 }) {
-  const member = await requireMember()
   const { id, programmeId } = await params
+  const member = await requireMember(applicationRoutes.review(id, programmeId))
   const application = await findApplication(member.accountId, id, programmeId)
   if (!application) redirect(applicationRoutes.form(id, programmeId))
   if (application.status === 'SUBMITTED') redirect(applicationRoutes.submitted(id, programmeId))
+  // A draft that can no longer be submitted (closed programme, archived venture)
+  // reads on the form, read only with its reason: no enabled submit (WF05-PROD-04).
+  if (!application.editable) redirect(applicationRoutes.form(id, programmeId))
   return <ApplicationReview application={application} ventureId={id} />
 }

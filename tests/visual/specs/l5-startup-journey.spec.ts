@@ -241,19 +241,20 @@ test.describe('L5-E entry routing', () => {
     browser,
     baseURL,
   }) => {
-    // Guest → /auth; onboarding not done → its resolver step.
+    // Guest → /auth, back here after sign-in (WF05-PROD-04); onboarding not done → its resolver step.
     await page.goto(applyUrl())
-    await expect(page).toHaveURL('/auth')
+    await expect(page).toHaveURL(`/auth?redirect=${encodeURIComponent(applyUrl())}`)
     await signInFresh(page.request, 'l5-entry-new')
     await page.goto(applyUrl())
     await expect(page).toHaveURL(/\/onboarding(\/|$)/)
 
     // One eligible venture: straight to its form; once submitted, to SUB3.
+    // WF05-PROD-04 (G24): `tu=ds` names where the journey started (back → S01).
     await page.context().clearCookies()
     await completedAccount(page.request, 'l5-entry-one', PERSONA)
     const one = await createVenture(page.request, { type: 'PROJECT', name: 'Một hồ sơ' })
     await page.goto(applyUrl(), { waitUntil: 'networkidle' })
-    await expect(page).toHaveURL(formUrl(one.id))
+    await expect(page).toHaveURL(`${formUrl(one.id)}?tu=ds`)
     await submit(page.request, await draft(page.request, one.id, ['Một', 'Hai']))
     await page.goto(applyUrl(), { waitUntil: 'networkidle' })
     await expect(page).toHaveURL(submittedUrl(one.id))
@@ -269,7 +270,7 @@ test.describe('L5-E entry routing', () => {
     )
     await expect(page.locator(`[data-venture="${two.id}"] a`)).toHaveAttribute(
       'href',
-      formUrl(two.id),
+      `${formUrl(two.id)}?tu=chon`,
     )
     await expect(page.locator(`[data-venture="${one.id}"]`)).toContainText('Đã nộp')
 
@@ -419,7 +420,7 @@ test.describe('L5-S ownership', () => {
       '401 UNCONTRACTED_UNAUTHENTICATED',
     )
     await page.goto(formUrl(venture.id))
-    await expect(page).toHaveURL('/auth')
+    await expect(page).toHaveURL(`/auth?redirect=${encodeURIComponent(formUrl(venture.id))}`)
     expect(await rows([venture.id, theirs.id])).toEqual(before)
   })
 })
@@ -506,7 +507,8 @@ for (const width of [1440, 1024, 768, 390] as const) {
     await page.goto(reviewUrl(startup.id), { waitUntil: 'networkidle' })
     await usable(page, `SUB2-${width}`, ['[data-question] a', '[data-action="submit"]'])
     await page.goto(submittedUrl(project.id), { waitUntil: 'networkidle' })
-    await usable(page, `SUB3-${width}`, ['a[href="#ho-so-da-nop"]', 'a[href="/projects"]'])
+    // WF05-PROD-04 (G24): "Về Dự án & startup của tôi" opens the list that shows the application.
+    await usable(page, `SUB3-${width}`, ['a[href="#ho-so-da-nop"]', 'a[href="/demo/projects"]'])
     await page.goto(applyUrl(), { waitUntil: 'networkidle' })
     await expect(screen(page, 'L5-CHOOSE')).toBeVisible()
     await usable(page, `CHOOSE-${width}`, ['[data-venture] a'])

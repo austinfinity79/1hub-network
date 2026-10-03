@@ -1,24 +1,11 @@
-import { DEMO_COPY } from '@/lib/programme-demo/copy'
-
 /**
- * WF05 — user-facing copy of the Founder / Project / Startup demo. The demo
- * indicator is the WF04 one (DEC-WF05-G1: one demo frame); the notice says
- * what is real: the member's own Project / Startup and, since TASK 24.4
- * (HD-A10), their programme applications, which the demo reset never touches.
- * No technical terms.
+ * WF05 — user-facing copy of the Project / Startup screens. Everything shown
+ * is the member's real data, so nothing is labelled demo (WF05-PROD-01 demo
+ * artifact disposition). No technical terms.
  */
 export const PROJECT_DEMO_COPY = {
   /** DEC-WF05-G2: the MemberShell entry label. */
-  entry: 'Dự án & Startup · Demo',
-  noticeEyebrow: DEMO_COPY.noticeEyebrow,
-  noticeBody:
-    'Dự án, startup và đơn đăng ký chương trình là dữ liệu thật trong tài khoản của bạn. Đặt lại dữ liệu demo không xoá chúng.',
-  reset: DEMO_COPY.reset,
-  resetConfirm:
-    'Xoá mọi đơn đăng ký demo trong phiên này? Hồ sơ dự án và startup của bạn không thay đổi.',
-  resetYes: DEMO_COPY.resetYes,
-  resetNo: DEMO_COPY.resetNo,
-  resetDone: DEMO_COPY.resetDone,
+  entry: 'Dự án & Startup',
 } as const
 
 /** The WF02 venture wording (WF02-S05 editor, WF02-S01 rows), unchanged. */
@@ -44,11 +31,12 @@ export const S01_COPY = {
   create: '+ Tạo dự án / startup',
   venturesEmpty: 'Bạn chưa có dự án hay startup nào.',
   programmesTitle: 'Chương trình đang mở',
-  programmesHint: 'Chương trình và challenge đang công khai trong bản demo.',
+  programmesHint: 'Chương trình và challenge đang nhận đơn.',
   programmesEmpty: 'Hiện chưa có chương trình nào đang mở.',
   applicantTypes: 'Dành cho',
-  // HD-A10 (DEC-L5-D1): applications persist, so they carry no demo label.
   applications: 'Đơn đăng ký',
+  /** An application whose programme no longer takes applications (it stays readable). */
+  closed: 'đã đóng',
   apply: 'Đăng ký',
 } as const
 
@@ -72,12 +60,13 @@ export const S02_COPY = {
   teamLink: 'Xem đội',
   members: (n: number) => `${n} thành viên`,
   programmesTitle: 'Chương trình đang mở',
-  programmesHint: 'Chương trình và challenge đang công khai trong bản demo.',
+  programmesHint: 'Chương trình đang nhận đơn, và đơn của hồ sơ này ở chương trình đã đóng.',
   programmesEmpty: 'Hiện chưa có chương trình nào đang mở.',
   applicantTypes: 'Dành cho',
   apply: 'Đăng ký',
   resume: 'Tiếp tục',
   view: 'Xem đơn',
+  closed: 'Chương trình đã đóng nhận đơn · đơn chỉ xem được',
   ineligible: {
     NOT_OWNER: 'Chỉ chủ sở hữu đăng ký được.',
     ARCHIVED: 'Hồ sơ đã lưu trữ.',

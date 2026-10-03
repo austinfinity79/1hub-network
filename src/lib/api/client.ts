@@ -25,6 +25,8 @@ export type RequestOptions = {
   idempotencyKey?: string
   requestId?: string
   signal?: AbortSignal
+  /** Lets the request outlive the page (a save flushed on page hide). */
+  keepalive?: boolean
   /** Overrides the origin; used by tests and server-side calls. */
   baseUrl?: string
 }
@@ -43,7 +45,7 @@ function buildUrl(path: string, baseUrl?: string): string {
  * rather than being returned as if it were data.
  */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, idempotencyKey, requestId, signal, baseUrl } = options
+  const { method = 'GET', body, idempotencyKey, requestId, signal, keepalive, baseUrl } = options
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
@@ -62,6 +64,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     // The session is an HTTP-only cookie, so it must ride along.
     credentials: 'same-origin',
     ...(signal ? { signal } : {}),
+    ...(keepalive ? { keepalive } : {}),
   })
 
   const responseRequestId = response.headers.get(REQUEST_ID_HEADER) ?? headers[REQUEST_ID_HEADER]!

@@ -25,7 +25,7 @@ export type DemoFrame = {
       copy: DemoFrameCopy
     }
   // WF04-PROD-04: the production WF04 screens keep the frame without the demo
-  // notice and reset (contract §16); WF05 stays a demo.
+  // notice and reset (contract §16); WF05-PROD-04 the WF05 screens likewise.
   | { notice: false }
 )
 

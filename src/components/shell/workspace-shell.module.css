@@ -206,17 +206,6 @@
   margin-top: 2rem;
 }
 
-.eyebrow {
-  margin: 0 0 0.5rem;
-  padding: 0 0.75rem;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  line-height: 1rem;
-  letter-spacing: 0.07em;
-  color: var(--faint);
-}
-
 .main {
   flex: 1;
   min-width: 0;

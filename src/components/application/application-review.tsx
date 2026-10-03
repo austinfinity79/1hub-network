@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
 import { apiRequest } from '@/lib/api/client'
+import { isApiError } from '@/lib/api/errors'
 import { APPLICATION_COPY as COPY } from '@/lib/application/copy'
 import { applicationRoutes } from '@/lib/application/routes'
 import type { ApplicationDTO } from '@/lib/application/types'
 
 import styles from './application.module.css'
+import { signInAgain } from './session'
 
 /**
  * TASK 24.4 — SUB2, review and submit (L42, DEC-L5-D1/D4). Every answer with
@@ -17,6 +19,10 @@ import styles from './application.module.css'
  * idempotent (one key per visit), so a double click sends one application; a
  * SUBMITTED application is final. Not drawn here (DEC-L5-D6): profile
  * completion, commitment checkboxes, "editable until the deadline".
+ *
+ * WF05-PROD-04: a refusal re-reads the server — incomplete answers, a programme
+ * closed meanwhile (the page then opens the read-only form), already submitted
+ * (SUB3); a `401` signs in again and comes back here.
  */
 export function ApplicationReview({
   application,
@@ -26,7 +32,7 @@ export function ApplicationReview({
   ventureId: string
 }) {
   const router = useRouter()
-  const [state, setState] = useState<'idle' | 'submitting' | 'failed'>('idle')
+  const [state, setState] = useState<'idle' | 'submitting' | 'incomplete' | 'failed'>('idle')
   const key = useRef<string | null>(null)
   const { programme, venture, questions, answers, missing } = application
   const ready = missing.length === 0
@@ -42,8 +48,13 @@ export function ApplicationReview({
         idempotencyKey: key.current,
       })
       router.replace(applicationRoutes.submitted(ventureId, programme.id))
-    } catch {
-      setState('failed')
+    } catch (caught) {
+      if (!isApiError(caught) || caught.status >= 500) return setState('failed')
+      if (caught.status === 401) return signInAgain()
+      if (caught.code === 'APPLICATION_SUBMITTED')
+        return router.replace(applicationRoutes.submitted(ventureId, programme.id))
+      setState(caught.status === 422 ? 'incomplete' : 'idle')
+      router.refresh()
     }
   }
 
@@ -117,9 +128,9 @@ export function ApplicationReview({
                 {COPY.incomplete}
               </p>
             ) : null}
-            {state === 'failed' ? (
-              <p className={styles.alert} role="alert">
-                {COPY.submitFailed}
+            {state === 'failed' || state === 'incomplete' ? (
+              <p className={styles.alert} role="alert" data-submit-state={state}>
+                {state === 'incomplete' ? COPY.submitFailed : COPY.submitError}
               </p>
             ) : null}
             <button

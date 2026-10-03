@@ -212,15 +212,17 @@ test.describe('WF05-T00 route and entry contract', () => {
   }) => {
     expect(PROJECT_DEMO_ENTRY).toEqual({
       key: 'project-demo',
-      group: 'Demo · Internal Alpha',
-      label: 'Dự án & Startup · Demo',
+      label: 'Dự án & Startup',
       href: '/demo/projects',
       visible: true,
     })
     const oldForm = `/demo/projects/${SEED_VENTURE}/applications/${PROGRAMME}`
-    // Guest → /auth; onboarding incomplete → its resolver step.
+    // Guest → /auth, back to the member route after sign-in (WF05-PROD-04);
+    // onboarding incomplete → its resolver step.
     await page.goto(oldForm)
-    await expect(page).toHaveURL('/auth')
+    await expect(page).toHaveURL(
+      `/auth?redirect=${encodeURIComponent(`/projects/${SEED_VENTURE}/applications/${PROGRAMME}`)}`,
+    )
     await login(page.request, 'newcomer@example.test')
     await page.goto(oldForm)
     await expect(page).toHaveURL(/\/onboarding(\/|$)/)

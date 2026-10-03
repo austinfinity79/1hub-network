@@ -35,15 +35,14 @@ export const INERT_REASONS: Record<'FUTURE' | 'NO_P0_SCREEN', string> = {
 export const OPS_ENTRY = { label: 'Vận hành tổ chức', href: '/ops/network' } as const
 
 /**
- * WF05 (DEC-WF05-G2): the MemberShell demo entry for the Founder / Project /
- * Startup demo, in the sidebar-footer demo area under a "Demo · Internal
- * Alpha" group label (the WF04 OpsShell convention). Registered hidden by
- * WF05-T00; shown since WF05-S01 made `/demo/projects` a real screen. It grants
- * no capability: every venture read is authorized on the server.
+ * WF05 (DEC-WF05-G2): the MemberShell entry of the Project / Startup screens,
+ * in the sidebar footer. Registered hidden by WF05-T00; shown since WF05-S01
+ * made `/demo/projects` a real screen. WF05-PROD-04: no demo group label — the
+ * screens show real data (WF05-PROD-01 demo artifact disposition). It grants no
+ * capability: every venture read is authorized on the server.
  */
 export const PROJECT_DEMO_ENTRY = {
   key: 'project-demo',
-  group: 'Demo · Internal Alpha',
   label: PROJECT_DEMO_COPY.entry,
   href: PROJECT_DEMO_PATH,
   visible: true,

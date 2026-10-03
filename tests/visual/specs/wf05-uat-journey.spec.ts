@@ -268,11 +268,6 @@ async function settled(page: Page, url: string) {
   return response
 }
 
-async function reset(page: Page) {
-  await page.locator('[data-demo-reset="start"]').click()
-  await page.locator('[data-demo-reset="confirm"]').click()
-}
-
 function journal(name: string) {
   const steps: { id: string; check: string; url: string }[] = []
   return {
@@ -320,7 +315,7 @@ async function ownerJourney(page: Page, kind: Kind, id: string) {
   log.step(
     page,
     'HP-01',
-    'MemberShell "Dự án & Startup · Demo" → S01: no venture, the PUBLISHED programme only',
+    'MemberShell "Dự án & Startup" → S01: no venture, the PUBLISHED programme only',
   )
 
   // The canonical venture is created in WF02, then WF05 is entered again from MemberShell.
@@ -520,8 +515,10 @@ test.describe('HC-WF05-03 canonical reuse', () => {
   })
 })
 
-test.describe('HC-WF05-04 reset', () => {
-  test('reset after DRAFT and after SUBMITTED leaves the server applications (HD-A10); canonical and WF04 data unchanged', async ({
+// WF05-PROD-04: the demo reset is removed (WF05-PROD-01 demo artifact disposition);
+// this journey now proves its absence and that the server applications stay.
+test.describe('HC-WF05-04 no demo reset', () => {
+  test('S01 / S02 carry no demo notice or reset; the DRAFT and SUBMITTED applications stay (HD-A10); nothing written', async ({
     page,
   }) => {
     const log = journal('HC04')
@@ -534,23 +531,26 @@ test.describe('HC-WF05-04 reset', () => {
     const before = await tables()
     const programmes = await (await page.request.get(API)).json()
     await settled(page, '/demo/projects')
-    await reset(page)
-    await expect(page.locator('[data-demo-notice]')).toContainText('Đã đặt lại dữ liệu demo.')
+    await expect(page.locator('[data-demo-notice], [data-demo-reset]')).toHaveCount(0)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(
       page.locator(`[data-venture="${w.project.id}"] [data-venture-applications]`),
-    ).toHaveText(`Đơn đăng ký: ${PROGRAMME_NAME} · Nháp`)
+    ).toHaveText(`Đơn đăng ký: ${PROGRAMME_NAME} · Bản nháp`)
     await expect(
       page.locator(`[data-venture="${w.startup.id}"] [data-venture-applications]`),
     ).toHaveText(`Đơn đăng ký: ${PROGRAMME_NAME} · Đã nộp`)
-    log.step(page, 'RS-01', 'Reset on S01: the DRAFT and the SUBMITTED application stay')
+    log.step(
+      page,
+      'RS-01',
+      'S01: no demo notice or reset; the DRAFT and the SUBMITTED application stay',
+    )
 
     await settled(page, detailUrl(w.startup.id))
-    await reset(page)
+    await expect(page.locator('[data-demo-notice], [data-demo-reset]')).toHaveCount(0)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(page.locator('[data-nav="application-view"]')).toHaveCount(1)
     await expect(page.locator('[data-action="apply"]')).toHaveCount(0)
-    log.step(page, 'RS-02', 'Reset on S02: still "Đã nộp", no second "Đăng ký"')
+    log.step(page, 'RS-02', 'S02: no reset; still "Đã nộp", no second "Đăng ký"')
 
     expect(await applicationsOf([w.project.id, w.startup.id])).toEqual(kept)
     expect(await (await page.request.get(API)).json()).toEqual(programmes)
@@ -889,13 +889,14 @@ test.describe('NEG-WF05 negative / alternate', () => {
     )
 
     // A form opened while DRAFT, submitted meanwhile: its save is refused; SUBMITTED is final.
+    // WF05-PROD-04: the refusal (409 APPLICATION_SUBMITTED) opens the submitted view.
     await settled(page, `${formUrl(w.startup.id)}?buoc=1`)
     await page.request.patch(`${APPS}/${id}`, { data: { answers: answersOf('Một', 'Hai') } })
     await submit(page.request, id)
     const [final] = await applicationsOf([w.startup.id])
     await answer(page, 'q-problem').fill('Sửa sau khi nộp')
     await answer(page, 'q-problem').blur()
-    await expect(page.locator('[data-save-state="failed"]')).toHaveText('Chưa lưu được — thử lại')
+    await expect(page).toHaveURL(submittedUrl(w.startup.id))
     expect(await applicationsOf([w.startup.id])).toEqual([final])
 
     // Existing SUBMITTED: no "Đăng ký", every route opens the submitted view, every write is 409.
@@ -1047,10 +1048,11 @@ test.describe('NAV-WF05 navigation crawl', () => {
     }
     expect(dead).toEqual([])
     const uuid = '[0-9a-f-]{36}'
+    // WF05-PROD-04: a form link may name where the journey started (`tu=ds` / `tu=chon`).
     for (const h of [...hrefs.keys()].filter((h) => /^\/demo\/projects|\/applications\//.test(h)))
       expect(h).toMatch(
         new RegExp(
-          `^(/demo/projects(/${uuid})?|/projects/${uuid}/applications/${PROGRAMME}(/review|/submitted)?(\\?buoc=[1-4])?)$`,
+          `^(/demo/projects(/${uuid})?|/projects/${uuid}/applications/${PROGRAMME}(/review|/submitted)?(\\?(buoc=[1-4](&tu=(ds|chon))?|tu=(ds|chon)))?)$`,
         ),
       )
 

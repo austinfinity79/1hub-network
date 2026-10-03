@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { apiRequest } from '@/lib/api/client'
+import { isApiError } from '@/lib/api/errors'
 import { APPLICATION_COPY as COPY } from '@/lib/application/copy'
-import { applicationRoutes } from '@/lib/application/routes'
+import { applicationRoutes, type ApplicationOrigin } from '@/lib/application/routes'
 import type {
   ApplicationDTO,
+  ApplicationLockReason,
   ApplicationProgramme,
   ApplicationQuestion,
   ApplicationTeamMember,
@@ -18,6 +20,7 @@ import { ANSWER_MAX_LENGTH } from '@/lib/application/types'
 
 import styles from './application.module.css'
 import { formatTime } from './format'
+import { signInAgain } from './session'
 
 /**
  * TASK 24.4 — SUB1, the application form (L38–L41, DEC-L5-D1/D4). The
@@ -27,12 +30,19 @@ import { formatTime } from './format'
  * The application is created on the first save (idempotent POST), then every
  * save PATCHes the same id: on leaving a field, every 20 seconds while there
  * are changes, and before changing step. Nothing is kept in the browser.
+ *
+ * WF05-PROD-04: the first words typed start that first save, so a page hide
+ * can flush the rest (keepalive PATCH); a failed save offers "Thử lại"; the
+ * server's verdict locks the form (`editable` / `reason`: a closed programme,
+ * an archived venture), read only with its reason; a `401` signs in again and
+ * comes back; a submitted application opens SUB3.
  */
 
 const AUTOSAVE_MS = 20_000
 
 type Eligibility =
-  { eligible: true } | { eligible: false; reason: 'ARCHIVED' | 'TYPE_NOT_ACCEPTED' }
+  | { eligible: true }
+  | { eligible: false; reason: 'NOT_PUBLISHED' | 'ARCHIVED' | 'TYPE_NOT_ACCEPTED' }
 
 export function ApplicationForm({
   ventureId,
@@ -42,6 +52,7 @@ export function ApplicationForm({
   application,
   eligibility,
   initialStep,
+  from,
   backHref,
 }: {
   ventureId: string
@@ -51,6 +62,7 @@ export function ApplicationForm({
   application: ApplicationDTO | null
   eligibility: Eligibility
   initialStep: FormStep | null
+  from: ApplicationOrigin | null
   backHref: string
 }) {
   const router = useRouter()
@@ -76,10 +88,17 @@ export function ApplicationForm({
   const id = useRef<string | null>(application?.id ?? null)
   const createKey = useRef<string | null>(null)
   const dirty = useRef(false)
+  const started = useRef(false)
   const inFlight = useRef<Promise<boolean> | null>(null)
   const latest = useRef(answers)
   latest.current = answers
-  const locked = !eligibility.eligible
+  const lockReason: ApplicationLockReason | 'TYPE_NOT_ACCEPTED' | null =
+    application && !application.editable
+      ? application.reason
+      : eligibility.eligible
+        ? null
+        : eligibility.reason
+  const locked = lockReason !== null
 
   const ensure = useCallback(async (): Promise<string> => {
     if (id.current) return id.current
@@ -99,6 +118,26 @@ export function ApplicationForm({
     return id.current
   }, [ventureId, programme.id])
 
+  const body = useCallback(
+    () => ({
+      answers: questions.map((q) => ({ question_id: q.id, value: latest.current[q.id] ?? '' })),
+    }),
+    [questions],
+  )
+
+  /** The server refused: sign in again, the submitted view, or the page re-read (read only or 404). */
+  const refused = useCallback(
+    (caught: unknown) => {
+      if (!isApiError(caught)) return
+      if (caught.status === 401) signInAgain()
+      else if (caught.code === 'APPLICATION_SUBMITTED')
+        router.replace(applicationRoutes.submitted(ventureId, programme.id))
+      else if (caught.status === 403 || caught.status === 404 || caught.status === 409)
+        router.refresh()
+    },
+    [router, ventureId, programme.id],
+  )
+
   const save = useCallback(async (): Promise<boolean> => {
     if (inFlight.current) await inFlight.current
     if (!dirty.current && id.current) return true
@@ -109,19 +148,15 @@ export function ApplicationForm({
         dirty.current = false
         const saved = await apiRequest<ApplicationDTO>(`/applications/${target}`, {
           method: 'PATCH',
-          body: {
-            answers: questions.map((q) => ({
-              question_id: q.id,
-              value: latest.current[q.id] ?? '',
-            })),
-          },
+          body: body(),
         })
         setSavedAt(saved.updated_at)
         setState('idle')
         return true
-      } catch {
+      } catch (caught) {
         dirty.current = true
         setState('failed')
+        refused(caught)
         return false
       }
     })()
@@ -129,7 +164,7 @@ export function ApplicationForm({
     const ok = await run
     inFlight.current = null
     return ok
-  }, [ensure, questions])
+  }, [ensure, body, refused])
 
   useEffect(() => {
     if (locked) return
@@ -139,10 +174,37 @@ export function ApplicationForm({
     return () => window.clearInterval(timer)
   }, [locked, save])
 
+  // Unsaved typing leaves with the page (WF05 contract: flushed on page hide).
+  useEffect(() => {
+    if (locked) return
+    const flush = () => {
+      if (!dirty.current || !id.current) return
+      dirty.current = false
+      apiRequest<ApplicationDTO>(`/applications/${id.current}`, {
+        method: 'PATCH',
+        body: body(),
+        keepalive: true,
+      })
+        .then((saved) => setSavedAt(saved.updated_at))
+        .catch(() => {
+          dirty.current = true
+        })
+    }
+    const hidden = () => {
+      if (document.visibilityState === 'hidden') flush()
+    }
+    window.addEventListener('pagehide', flush)
+    document.addEventListener('visibilitychange', hidden)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      document.removeEventListener('visibilitychange', hidden)
+    }
+  }, [locked, body])
+
   const go = async (next: FormStep) => {
     if (!locked && !(await save())) return
     setStep(next)
-    router.replace(applicationRoutes.form(ventureId, programme.id, next), { scroll: true })
+    router.replace(applicationRoutes.form(ventureId, programme.id, next, from), { scroll: true })
   }
   const toReview = async () => {
     if (!(await save())) return
@@ -170,10 +232,23 @@ export function ApplicationForm({
           <p className={styles.barTitle}>{COPY.barTitle(programme.name)}</p>
           <p className={styles.barSub} data-save-state={state}>
             {status}
+            {state === 'failed' && !locked ? (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  className={styles.retry}
+                  onClick={() => void save()}
+                  data-action="save-retry"
+                >
+                  {COPY.retry}
+                </button>
+              </>
+            ) : null}
           </p>
         </div>
         <span className={styles.pill} data-anchor="remaining">
-          {missing.length ? COPY.remaining(missing.length) : COPY.ready}
+          {locked ? COPY.readOnly : missing.length ? COPY.remaining(missing.length) : COPY.ready}
         </span>
       </header>
 
@@ -204,9 +279,9 @@ export function ApplicationForm({
               </div>
             </div>
 
-            {locked ? (
-              <p className={styles.alert} role="status" data-ineligible={eligibility.reason}>
-                {COPY.ineligible[eligibility.reason]}
+            {lockReason ? (
+              <p className={styles.alert} role="status" data-ineligible={lockReason}>
+                {COPY.ineligible[lockReason]}
               </p>
             ) : null}
 
@@ -229,6 +304,11 @@ export function ApplicationForm({
                     onChange={(e) => {
                       dirty.current = true
                       setAnswers((all) => ({ ...all, [q.id]: e.target.value }))
+                      // The first words start the first save once (the draft gets its id).
+                      if (!id.current && !started.current) {
+                        started.current = true
+                        void save()
+                      }
                     }}
                     onBlur={() => {
                       if (dirty.current) void save()
@@ -248,7 +328,7 @@ export function ApplicationForm({
                   onClick={() => go(prev)}
                   data-action="prev"
                 >
-                  {COPY.backStep(prev)}
+                  {COPY.backStep(steps.indexOf(prev) + 1)}
                 </button>
               ) : (
                 <Link href={backHref} className={styles.secondary} data-nav="application-back">
@@ -323,10 +403,13 @@ export function ApplicationForm({
                 </ol>
               </section>
             )}
-            <section className={styles.cardPink} data-anchor="autosave">
-              <p className={styles.label}>{COPY.autosaveLabel}</p>
-              <p className={styles.cardText}>{COPY.autosaveText}</p>
-            </section>
+            {/* A read-only draft is never saved: no autosave promise (WF05-PROD-04). */}
+            {locked ? null : (
+              <section className={styles.cardPink} data-anchor="autosave">
+                <p className={styles.label}>{COPY.autosaveLabel}</p>
+                <p className={styles.cardText}>{COPY.autosaveText}</p>
+              </section>
+            )}
           </aside>
         </div>
       </div>

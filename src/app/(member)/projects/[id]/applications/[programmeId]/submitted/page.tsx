@@ -17,8 +17,8 @@ export default async function Page({
 }: {
   params: Promise<{ id: string; programmeId: string }>
 }) {
-  const member = await requireMember()
   const { id, programmeId } = await params
+  const member = await requireMember(applicationRoutes.submitted(id, programmeId))
   const application = await findApplication(member.accountId, id, programmeId)
   if (application?.status !== 'SUBMITTED') redirect(applicationRoutes.form(id, programmeId))
   return <ApplicationSubmitted application={application} ventureId={id} />

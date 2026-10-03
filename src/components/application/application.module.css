@@ -510,6 +510,17 @@
   color: var(--red);
 }
 
+/* WF05-PROD-04: "Thử lại" after a failed save, inline in the bar's save line. */
+.retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--red);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .answerText {
   margin-top: 8px !important;
   font-size: 14px;

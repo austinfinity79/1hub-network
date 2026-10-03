@@ -556,13 +556,17 @@ export type ApplicationContext = {
   venture: ApplicationVenture
   team: ApplicationTeamMember[]
   application: ApplicationDTO | null
-  eligibility: { eligible: true } | { eligible: false; reason: 'ARCHIVED' | 'TYPE_NOT_ACCEPTED' }
+  eligibility:
+    | { eligible: true }
+    | { eligible: false; reason: 'NOT_PUBLISHED' | 'ARCHIVED' | 'TYPE_NOT_ACCEPTED' }
 }
 
 /**
  * The SUB1–SUB3 pages (DEC-L5-D4): the programme's form, the owner's venture and
- * its active application to this programme, if any. The owner only; anyone else,
- * a closed programme or an unreadable venture is the same 404.
+ * its active application to this programme, if any. The owner only; anyone else
+ * or an unreadable venture is the same 404. A programme no longer PUBLISHED
+ * opens only the owner's existing application, read only (WF05 contract,
+ * programme-state matrix; WF05-PROD-04); without one it is the same 404.
  */
 export async function getApplicationContext(
   accountId: string,
@@ -570,7 +574,7 @@ export async function getApplicationContext(
   programmeId: string,
 ): Promise<ApplicationContext> {
   const profileId = await requireEntry(accountId)
-  const form = await loadForm(query, programmeId)
+  const form = await loadForm(query, programmeId, 'read')
   if (!form || !UUID.test(ventureId)) throw notFound()
   const live = await ventureOf(query, accountId, ventureId)
   if (live.relation !== 'OWNER') throw notFound()
@@ -579,6 +583,8 @@ export async function getApplicationContext(
       WHERE venture_id = $1 AND programme_id = $2 AND status IN ('DRAFT', 'SUBMITTED')`,
     [ventureId, programmeId],
   )
+  const open = form.status === 'PUBLISHED'
+  if (!open && !active) throw notFound()
   const accepted = form.applicant_types.includes(applicantTypeFor(live.type))
   return {
     form,
@@ -587,8 +593,9 @@ export async function getApplicationContext(
     application: active
       ? await toDTO(query, accountId, await ownRow(query, profileId, active.id))
       : null,
-    eligibility:
-      live.status === 'ARCHIVED'
+    eligibility: !open
+      ? { eligible: false, reason: 'NOT_PUBLISHED' }
+      : live.status === 'ARCHIVED'
         ? { eligible: false, reason: 'ARCHIVED' }
         : accepted
           ? { eligible: true }

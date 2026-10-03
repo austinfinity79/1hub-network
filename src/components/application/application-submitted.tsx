@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { APPLICATION_COPY as COPY } from '@/lib/application/copy'
 import type { ApplicationDTO } from '@/lib/application/types'
+import { projectDemoRoutes } from '@/lib/project-demo/routes'
 
 import styles from './application.module.css'
 import { formatDate, formatTime } from './format'
@@ -31,7 +32,8 @@ export function ApplicationSubmitted({
           <a href="#ho-so-da-nop" className={styles.heroPrimary}>
             {COPY.viewSubmitted}
           </a>
-          <Link href="/projects" className={styles.heroSecondary}>
+          {/* WF05-PROD-04 (G24): the list that shows this application and its status. */}
+          <Link href={projectDemoRoutes.list()} className={styles.heroSecondary}>
             {COPY.toMine}
           </Link>
         </div>

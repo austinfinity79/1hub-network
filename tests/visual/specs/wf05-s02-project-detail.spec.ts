@@ -345,7 +345,8 @@ test.describe('WF05-S02 participation', () => {
       })
     ).json()
     await page.reload({ waitUntil: 'networkidle' })
-    await expect(programmeRow(page).locator('[data-application]')).toHaveText('Nháp')
+    // WF05-PROD-04: the L5 status wording ("Bản nháp", as on the form and the choice).
+    await expect(programmeRow(page).locator('[data-application]')).toHaveText('Bản nháp')
     await expect(apply(page)).toHaveCount(0)
     await expect(programmeRow(page).locator('[data-nav="application-resume"]')).toHaveAttribute(
       'href',
@@ -371,10 +372,9 @@ test.describe('WF05-S02 participation', () => {
     // The other venture has no application: its "Đăng ký" stays.
     await open(page, w.project.id)
     await expect(apply(page)).toHaveCount(1)
-    // The application lives on the server: the demo reset leaves it (HD-A10).
+    // The application lives on the server (HD-A10); WF05-PROD-04: no demo reset any more.
     await open(page, w.startup.id)
-    await page.locator('[data-demo-reset="start"]').click()
-    await page.locator('[data-demo-reset="confirm"]').click()
+    await expect(page.locator('[data-demo-reset]')).toHaveCount(0)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(programmeRow(page).locator('[data-application]')).toHaveText('Đã nộp')
   })
@@ -466,7 +466,7 @@ test.describe('WF05-S02 authorization, IDOR and privacy', () => {
     const w = await world()
     const before = await fingerprint()
     await page.goto(detailUrl(w.startup.id))
-    await expect(page).toHaveURL('/auth')
+    await expect(page).toHaveURL(`/auth?redirect=${encodeURIComponent(detailUrl(w.startup.id))}`)
     await login(page.request, 'newcomer@example.test')
     await page.goto(detailUrl(w.startup.id))
     await expect(page).toHaveURL(/\/onboarding(\/|$)/)
@@ -550,7 +550,6 @@ test.describe('WF05-S02 responsive basics', () => {
           page.locator('[data-detail="overview"]'),
           page.locator('[data-nav="venture-team"]'),
           programmeRow(page),
-          page.locator('[data-demo-reset="start"]'),
         ]) {
           await locator.scrollIntoViewIfNeeded()
           await expect(locator).toBeInViewport()

@@ -129,11 +129,8 @@ export function MemberShell({ active, member, responsive = false, children }: Pr
             </ul>
           </nav>
           {PROJECT_DEMO_ENTRY.visible ? (
-            // WF05 (DEC-WF05-G2): text only unless current, like the WF04 OpsShell entry.
+            // WF05 (DEC-WF05-G2): text only unless current; no demo group label (WF05-PROD-04).
             <div className={styles.demoEntry}>
-              <p className={`weight-semibold ${styles.eyebrow}`}>
-                {PROJECT_DEMO_ENTRY.group.toUpperCase()}
-              </p>
               <Link
                 href={PROJECT_DEMO_ENTRY.href}
                 className={`type-body-sm ${styles.sideItem} ${demoCurrent ? `${styles.sideItemActive} weight-medium` : ''}`}

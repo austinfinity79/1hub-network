@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { SESSION_COOKIE_NAME } from '@/lib/auth/config'
+import { authWithReturn } from '@/lib/auth/return-path'
 import { resolveSession } from '@/lib/auth/sessions'
 import { resolveActor } from '@/lib/authz/actor'
 import { query } from '@/lib/db/client'
@@ -12,7 +13,9 @@ import { hasOpsAccess } from '@/lib/ops/scope'
 /**
  * WF02-T00 — server-side entry check for member-shell pages (DEC-WF02-T00-D1).
  *
- * No session → /auth, as the WF01 page guards do. An account whose onboarding
+ * No session → /auth, as the WF01 page guards do; a page that names its own
+ * path (`returnTo`) sends the guest to `/auth?redirect=<path>` so sign-in comes
+ * back to it (WF05-PROD-04, G23). An account whose onboarding
  * is not DONE is sent where the one resolver says it belongs (DEC-WF01-RESUME-D1:
  * `/me` is the DONE destination), so the member area never renders for a
  * half-onboarded account. This is page routing only; every API re-authorizes.
@@ -32,10 +35,10 @@ export type MemberIdentity = {
   opsAccess: boolean
 }
 
-export async function requireMember(): Promise<MemberIdentity> {
+export async function requireMember(returnTo?: string): Promise<MemberIdentity> {
   const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
   const session = await resolveSession(token)
-  if (!session) redirect('/auth')
+  if (!session) redirect(returnTo ? authWithReturn(returnTo) : '/auth')
 
   const state = await getOnboardingState(session.accountId)
   if (!state.completed) redirect(routeFor(state))
@@ -59,4 +62,14 @@ export async function requireMember(): Promise<MemberIdentity> {
     avatarUrl,
     opsAccess,
   }
+}
+
+/**
+ * Whether the request carries a live session. A layout that cannot know the
+ * page's path leaves a guest to the page, whose `requireMember(path)` keeps
+ * the return path (WF05-PROD-04, G23).
+ */
+export async function hasMemberSession(): Promise<boolean> {
+  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
+  return (await resolveSession(token)) !== null
 }

@@ -166,7 +166,6 @@ export function WorkspaceShell({
           </nav>
           {PROJECT_DEMO_ENTRY.visible ? (
             <div className={styles.demoEntry}>
-              <p className={styles.eyebrow}>{PROJECT_DEMO_ENTRY.group.toUpperCase()}</p>
               <Link
                 href={PROJECT_DEMO_ENTRY.href}
                 className={styles.sideItem}

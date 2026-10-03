@@ -6,22 +6,23 @@ import { QuickTeam } from '@/components/application/quick-team'
 import { isApiError } from '@/lib/api/errors'
 import { getApplyOptions } from '@/lib/application/application'
 import { APPLICATION_COPY as COPY } from '@/lib/application/copy'
-import { applicationRoutes } from '@/lib/application/routes'
+import { applicationRoutes, type ApplicationOrigin } from '@/lib/application/routes'
 import { requireMember } from '@/lib/member/guard'
 
 import { ventureOptions } from '../../../projects/venture-options'
 
 /**
  * TASK 24.4 — /programmes/:programmeId/apply, the L5 entry (DEC-L5-D4). Guest →
- * /auth; onboarding not done → its resolver step. Without a venture that may
- * apply: SUB0 quick team (L37). With one: straight to its form, or to its
- * submitted view. With several: a choice. A closed or unknown programme is 404.
+ * /auth, back here after sign-in (WF05-PROD-04, G23); onboarding not done → its
+ * resolver step. Without a venture that may apply: SUB0 quick team (L37). With
+ * one: straight to its form, or to its submitted view. With several: a choice.
+ * A closed or unknown programme is 404.
  */
 export const dynamic = 'force-dynamic'
 
 export default async function Page({ params }: { params: Promise<{ programmeId: string }> }) {
-  const member = await requireMember()
   const { programmeId } = await params
+  const member = await requireMember(applicationRoutes.apply(programmeId))
   let data
   try {
     data = await getApplyOptions(member.accountId, programmeId)
@@ -31,10 +32,12 @@ export default async function Page({ params }: { params: Promise<{ programmeId: 
   }
   const { form, options } = data
   const programme = form.programme
-  const target = (o: (typeof options)[number]) =>
+  // The form's back link returns where this entry was used from (WF05-PROD-04, G24):
+  // the S01 list when the entry goes straight to the form, else this choice.
+  const target = (o: (typeof options)[number], from: ApplicationOrigin) =>
     o.application?.status === 'SUBMITTED'
       ? applicationRoutes.submitted(o.venture.id, programme.id)
-      : applicationRoutes.form(o.venture.id, programme.id)
+      : applicationRoutes.form(o.venture.id, programme.id, undefined, from)
 
   if (options.length === 0) {
     const { domains, stages } = await ventureOptions()
@@ -48,7 +51,7 @@ export default async function Page({ params }: { params: Promise<{ programmeId: 
       />
     )
   }
-  if (options.length === 1) redirect(target(options[0]!))
+  if (options.length === 1) redirect(target(options[0]!, 'list'))
 
   return (
     <div className={styles.page} data-screen="L5-CHOOSE">
@@ -71,7 +74,7 @@ export default async function Page({ params }: { params: Promise<{ programmeId: 
                   {o.application ? ` · ${COPY.status[o.application.status]}` : ''}
                 </span>
               </span>
-              <Link href={target(o)} className={styles.ghost}>
+              <Link href={target(o, 'choose')} className={styles.ghost}>
                 {!o.application
                   ? COPY.open
                   : o.application.status === 'DRAFT'

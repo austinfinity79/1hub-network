@@ -4,11 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState, type FormEvent } from 'react'
 
 import { apiRequest } from '@/lib/api/client'
+import { isApiError } from '@/lib/api/errors'
 import { APPLICATION_COPY as COPY } from '@/lib/application/copy'
 import { applicationRoutes } from '@/lib/application/routes'
 import type { ApplicantType } from '@/lib/application/types'
 
 import styles from './application.module.css'
+import { signInAgain } from './session'
 
 type Option = { id: string; label: string }
 type VentureType = 'PROJECT' | 'STARTUP'
@@ -23,6 +25,8 @@ const TYPE_FOR: Record<ApplicantType, VentureType> = { TEAM: 'PROJECT', STARTUP:
  * application form; the application itself is created on the first save.
  * The type is asked only when the programme accepts both (HD-A11); the stage
  * is asked because the canonical venture requires it (DEC-L2R-D4).
+ * WF05-PROD-04: a refused field shows the server's reason; a `401` signs in
+ * again and comes back here.
  */
 export function QuickTeam({
   programmeId,
@@ -75,10 +79,18 @@ export function QuickTeam({
         },
         idempotencyKey: key.current,
       })
-      router.push(applicationRoutes.form(created.id, programmeId))
+      router.push(applicationRoutes.form(created.id, programmeId, undefined, 'list'))
     } catch (caught) {
-      const fields = (caught as { fields?: Record<string, string> }).fields ?? {}
-      setErrors(Object.fromEntries(Object.keys(fields).map((f) => [f, COPY.fieldRequired])))
+      if (isApiError(caught) && caught.status === 401) return signInAgain()
+      const fields = (isApiError(caught) && caught.fields) || {}
+      setErrors(
+        Object.fromEntries(
+          Object.entries(fields).map(([f, reason]) => [
+            f,
+            COPY.fieldReasons[reason] ?? COPY.fieldInvalid,
+          ]),
+        ),
+      )
       setFailed(true)
       setBusy(false)
     }

@@ -10,6 +10,7 @@ import {
   createApplication,
   createApplicationIn,
   getApplication,
+  getApplicationContext,
   listMyApplications,
   saveApplicationAnswers,
   submitApplication,
@@ -177,6 +178,39 @@ describe('programme state and venture state (contract matrix)', () => {
     const submitted = await getApplication(fx.owner.accountId, fx.applications.closedSubmitted)
     expect(submitted).toMatchObject({ status: 'SUBMITTED', editable: false, reason: 'SUBMITTED' })
     expect(submitted.answers).toHaveLength(1)
+  })
+
+  it('the SUB1 page context of a CLOSED programme: the owner draft read only; no new entry (WF05-PROD-04)', async () => {
+    const context = await getApplicationContext(
+      fx.owner.accountId,
+      fx.ventures.project,
+      fx.programmes.closed,
+    )
+    expect(context.eligibility).toEqual({ eligible: false, reason: 'NOT_PUBLISHED' })
+    expect(context.application).toMatchObject({
+      id: fx.applications.closedDraft,
+      status: 'DRAFT',
+      editable: false,
+      reason: 'NOT_PUBLISHED',
+    })
+    expect(context.form.questions.map((q) => q.id)).toEqual(['q-problem', 'q-support'])
+    // No application of this venture to the closed programme: the same 404 as before.
+    expect(
+      await refusal(
+        getApplicationContext(fx.owner.accountId, fx.ventures.archived, fx.programmes.closed),
+      ),
+    ).toMatchObject({ status: 404 })
+    // Anyone but the owner: 404, whatever the programme state.
+    expect(
+      await refusal(
+        getApplicationContext(fx.editor.accountId, fx.ventures.project, fx.programmes.closed),
+      ),
+    ).toMatchObject({ status: 404 })
+    // An open programme is unchanged.
+    expect(
+      (await getApplicationContext(fx.owner.accountId, fx.ventures.project, fx.programmes.open))
+        .eligibility,
+    ).toEqual({ eligible: true })
   })
 
   it('an ARCHIVED programme behaves as CLOSED; a DRAFT programme takes no application', async () => {

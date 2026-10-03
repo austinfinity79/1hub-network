@@ -7,11 +7,14 @@ import buttons from '@/components/programme-demo/demo-buttons.module.css'
 import { DemoPage } from '@/components/programme-demo/demo-page'
 import cards from '@/components/programme-demo/journey.module.css'
 import pill from '@/components/programme-demo/status-pill.module.css'
-import { APPLICANT_LABEL, APPLICATION_STATUS_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
+import { signInAgain } from '@/components/application/session'
+import { APPLICATION_COPY } from '@/lib/application/copy'
+import { APPLICANT_LABEL, TYPE_LABEL } from '@/lib/programme-demo/copy'
 import { formatDemoDateRange } from '@/lib/programme-demo/format'
 import type { ApplicantType } from '@/lib/programme-demo/types'
 import {
   relationLabel,
+  S01_COPY,
   S02_COPY as COPY,
   VENTURE_STATUS_LABEL,
   VENTURE_TYPE_LABEL,
@@ -33,6 +36,10 @@ import styles from './project-list.module.css'
  * opens the L5 application form with "Đăng ký", resumes a DRAFT with "Tiếp
  * tục" or views a SUBMITTED one; the status is the server application's
  * (`GET /api/v1/me/applications`, TASK 24.4 / DEC-L5-D4).
+ *
+ * WF05-PROD-04: a draft that can no longer be submitted (ineligible, or its
+ * programme closed) opens read only with "Xem đơn"; an application to a
+ * programme no longer open stays listed (G25); a `401` signs in again.
  */
 
 type Load =
@@ -51,6 +58,7 @@ export function ProjectDemoDetail({ id }: { id: string }) {
         fetch(`/api/v1/demo/projects/${encodeURIComponent(id)}`, { cache: 'no-store' }),
         fetch('/api/v1/me/applications', { cache: 'no-store' }),
       ])
+      if (response.status === 401 || mine.status === 401) return signInAgain()
       if (response.status === 404) return setLoad({ kind: 'missing' })
       if (!response.ok || !mine.ok) throw new Error(String(response.status))
       setLoad({
@@ -80,7 +88,7 @@ export function ProjectDemoDetail({ id }: { id: string }) {
   if (load.kind !== 'ready') {
     return (
       <div data-screen="WF05-S02">
-        <DemoPage title={load.kind === 'loading' ? COPY.loading : ''} actions={back}>
+        <DemoPage title={load.kind === 'loading' ? COPY.loading : S01_COPY.title} actions={back}>
           {load.kind === 'loading' ? (
             <p className="type-body-sm" data-state="venture-loading" aria-busy="true">
               {COPY.loading}
@@ -108,6 +116,9 @@ export function ProjectDemoDetail({ id }: { id: string }) {
   }
 
   const { venture, team, programmes } = load.data
+  const mine = load.applications.filter((a) => a.venture.id === venture.id)
+  // Applications to a programme no longer open: still listed, read only (G25).
+  const closed = mine.filter((a) => !programmes.some((p) => p.id === a.programme.id))
   return (
     <div data-screen="WF05-S02" data-venture-type={venture.type} data-relation={venture.relation}>
       <DemoPage
@@ -209,7 +220,7 @@ export function ProjectDemoDetail({ id }: { id: string }) {
               <p className={`type-meta-xs ${cards.cardHint}`}>{COPY.programmesHint}</p>
             </div>
           </header>
-          {programmes.length === 0 ? (
+          {programmes.length === 0 && closed.length === 0 ? (
             <p className={`type-body-sm ${cards.empty}`} data-state="programmes-empty">
               {COPY.programmesEmpty}
             </p>
@@ -220,12 +231,11 @@ export function ProjectDemoDetail({ id }: { id: string }) {
                   key={p.id}
                   ventureId={venture.id}
                   programme={p}
-                  application={
-                    load.applications.find(
-                      (a) => a.venture.id === venture.id && a.programme.id === p.id,
-                    ) ?? null
-                  }
+                  application={mine.find((a) => a.programme.id === p.id) ?? null}
                 />
+              ))}
+              {closed.map((a) => (
+                <ClosedRow key={a.id} ventureId={venture.id} application={a} />
               ))}
             </ul>
           )}
@@ -263,7 +273,7 @@ function ParticipationRow({
             .map((t) => APPLICANT_LABEL[t as ApplicantType] ?? t)
             .join(', ')}
         </p>
-        {!eligibility.eligible && !application ? (
+        {!eligibility.eligible && application?.status !== 'SUBMITTED' ? (
           <p className={`type-meta-xs ${cards.meta}`} data-ineligible={eligibility.reason}>
             {COPY.ineligible[eligibility.reason]}
           </p>
@@ -272,7 +282,7 @@ function ParticipationRow({
       {application ? (
         <div className={buttons.group}>
           <span className={`weight-medium ${pill.pill}`} data-application={application.status}>
-            {APPLICATION_STATUS_LABEL[application.status]}
+            {APPLICATION_COPY.status[application.status]}
           </span>
           {application.status === 'DRAFT' && eligibility.eligible ? (
             <Link
@@ -282,15 +292,9 @@ function ParticipationRow({
             >
               {COPY.resume}
             </Link>
-          ) : application.status === 'SUBMITTED' ? (
-            <Link
-              href={applicationRoutes.submitted(ventureId, programme.id)}
-              className={`weight-medium ${styles.textAction}`}
-              data-nav="application-view"
-            >
-              {COPY.view}
-            </Link>
-          ) : null}
+          ) : (
+            <ViewLink ventureId={ventureId} application={application} />
+          )}
         </div>
       ) : eligibility.eligible ? (
         // TASK 24.4: the eligible owner opens the L5 form; the draft is created on the first save.
@@ -302,6 +306,60 @@ function ParticipationRow({
           {COPY.apply}
         </Link>
       ) : null}
+    </li>
+  )
+}
+
+/** "Xem đơn": a submitted application's SUB3, or a draft's form, read only. */
+function ViewLink({
+  ventureId,
+  application,
+}: {
+  ventureId: string
+  application: ApplicationSummaryDTO
+}) {
+  const { programme } = application
+  return (
+    <Link
+      href={
+        application.status === 'SUBMITTED'
+          ? applicationRoutes.submitted(ventureId, programme.id)
+          : applicationRoutes.form(ventureId, programme.id)
+      }
+      className={`weight-medium ${styles.textAction}`}
+      data-nav="application-view"
+    >
+      {COPY.view}
+    </Link>
+  )
+}
+
+/** This venture's application to a programme no longer open: read only (WF05-PROD-04, G25). */
+function ClosedRow({
+  ventureId,
+  application,
+}: {
+  ventureId: string
+  application: ApplicationSummaryDTO
+}) {
+  return (
+    <li
+      className={`${cards.item} ${styles.row}`}
+      data-programme={application.programme.id}
+      data-programme-status={application.programme.status}
+    >
+      <div className={styles.text}>
+        <p className={`type-body-md weight-medium ${styles.name}`}>{application.programme.name}</p>
+        <p className={`type-meta-xs ${cards.meta}`} data-programme-closed>
+          {COPY.closed}
+        </p>
+      </div>
+      <div className={buttons.group}>
+        <span className={`weight-medium ${pill.pill}`} data-application={application.status}>
+          {APPLICATION_COPY.status[application.status]}
+        </span>
+        <ViewLink ventureId={ventureId} application={application} />
+      </div>
     </li>
   )
 }

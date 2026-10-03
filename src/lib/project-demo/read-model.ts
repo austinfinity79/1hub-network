@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto'
-
 import { ApiError } from '@/lib/api/errors'
 import { listOpenForms } from '@/lib/application/application'
 import { getOwnNetwork } from '@/lib/network/network'
@@ -29,11 +27,6 @@ import type {
  * - Entry needs onboarding DONE (DEC-WF05-G2); identity comes from the session
  *   only — no profile, owner, role or organization input is accepted.
  */
-
-/** Namespaces the browser application store per actor; not reversible, not a secret. */
-export function projectDemoActorKey(accountId: string): string {
-  return createHash('sha256').update(`wf05-demo:${accountId}`).digest('hex').slice(0, 16)
-}
 
 async function requireEntry(accountId: string): Promise<void> {
   const state = await getOnboardingState(accountId)

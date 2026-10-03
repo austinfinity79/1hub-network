@@ -5,12 +5,7 @@ import { closePool, query } from '@/lib/db/client'
 import { DEMO_PROGRAMMES } from '@/lib/programme-demo/fixtures'
 import { seedVenture } from '@/lib/venture/testing'
 
-import {
-  getDemoVenture,
-  listDemoVentures,
-  listOpenProgrammes,
-  projectDemoActorKey,
-} from './read-model'
+import { getDemoVenture, listDemoVentures, listOpenProgrammes } from './read-model'
 
 /**
  * WF05-T00 — the Project / Startup demo read model (DEC-WF05-G2..G5,
@@ -219,13 +214,5 @@ describe('WF05-T00 demo read model', () => {
     expect(await refusal(getDemoVenture(NEWCOMER, '50000000-0000-0000-0000-000000000001'))).toEqual(
       { code: 'SCOPE_FORBIDDEN', status: 403 },
     )
-  })
-
-  it('the store key is per actor, opaque and stable', () => {
-    const key = projectDemoActorKey(LEADER)
-    expect(key).toMatch(/^[0-9a-f]{16}$/)
-    expect(projectDemoActorKey(LEADER)).toBe(key)
-    expect(projectDemoActorKey(ADMIN)).not.toBe(key)
-    expect(key).not.toContain(LEADER.slice(0, 8))
   })
 })
