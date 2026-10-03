@@ -1,35 +1,32 @@
 # Claude Task Report
 
 ## Task
-WF06-PROD-04 — frontend integration of the existing discovery / read-only surfaces (IMPLEMENT) on the PROD-03 API `4fe1e36`. Summary, preflight, inventory: [reports/WF06-PROD-04_frontend-integration.md](reports/WF06-PROD-04_frontend-integration.md); behaviour: [reports/WF06-PROD-04_library-behaviour.md](reports/WF06-PROD-04_library-behaviour.md); spec realignment: [reports/WF06-PROD-04_spec-realignment.md](reports/WF06-PROD-04_spec-realignment.md); QA evidence: [reports/WF06-PROD-04_qa-evidence.md](reports/WF06-PROD-04_qa-evidence.md); PROD-05 handoff: [reports/WF06-PROD-04_prod05-handoff.md](reports/WF06-PROD-04_prod05-handoff.md).
+WF06-PROD-05 — functional / security / quality QA of candidate `d113d14` (AUDIT + QA). Summary, regression, skips, index: [reports/WF06-PROD-05_qa-summary.md](reports/WF06-PROD-05_qa-summary.md); functional / quality: [reports/WF06-PROD-05_functional-quality.md](reports/WF06-PROD-05_functional-quality.md); privacy / security: [reports/WF06-PROD-05_privacy-security.md](reports/WF06-PROD-05_privacy-security.md); PROD-06 handoff: [reports/WF06-PROD-05_prod06-handoff.md](reports/WF06-PROD-05_prod06-handoff.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE.** `/library` renders only the Library APIs' answers: the first page of each tab is built on the server with the API's own builders for the session's viewer; keyword, filters and sort ask the API; "Xem thêm" follows the cursor. Startup: canonical PUBLIC startups plus the external remainder (canonical wins); founders: visible canonical owners for members, a sign-in state for guests; loading / empty / error / retry states; the external feed's failure leaves canonical rows. Zero runtime fixture. Organization page heading shows the children total. PROD-05 not started. STOP.
+**PASS_WITH_EVIDENCE.** Full protected regression after the PROD-04 spec correction: 82 specs, 1102 passed, 0 failed, 26 skipped, 0 flaky. Every skip is environment-gated and was run separately (24 opt-in WF01–WF03 pixel screens: 17 fail identically on the pre-WF06 build, pre-existing runner debt; feed-down 1 / 1; crafted feed 1 / 1). Privacy, data exclusion (including a real application answer), direct-id bypass, filters, sort, pagination, merge, external failure and crafted external data, query abuse, restart, data quality, session transition: PASS. Console / hydration / unexpected 5xx: 0 / 0 / 0. Server logs: no sensitive content. PROD-06 not started. STOP.
 
 ## Scope implemented
-- Page, client, model and CSS of `/library`; shared body builders for routes and page; external-founder extraction removed from the adapter (no reader; DEC-W6P-D03); organization children heading.
-- New spec `wf06-prod-library`; realigned `public-library`, `l6-discovery-privacy`, `alpha-interaction-gaps` and two unit suites, each with OLD → NEW, source and reason.
+- QA only: `tests/visual/specs/wf06-prod-qa.spec.ts` (76 recorded cases) plus runs on a crafted feed, an unreachable feed, a real restart and a temporary pre-WF06 build for the skip baseline.
 
 ## Files changed
-- Runtime: `src/app/(public)/library/page.tsx`, `src/components/library/*` (client, model, view, CSS), `src/lib/library/library-bodies.ts` (new), `library-api.ts`, `startup-adapter.ts`, `src/app/api/v1/library/*/route.ts`, `src/app/(public)/organizations/[slug]/page.tsx`.
-- Tests: `library-model.test.ts`, `startup-adapter.test.ts`, `src/lib/library/testing.ts`, four visual specs.
-- Docs: five `WF06-PROD-04_*` reports, this report.
+- `tests/visual/specs/wf06-prod-qa.spec.ts` (new); four `WF06-PROD-05_*` reports; this report. No runtime file.
 
 ## Migrations / data
-None. Test fixture rows only, removed after each suite.
+None. Test fixture rows, the QA application row and QA accounts' sessions only; fixture rows removed after each suite.
 
 ## Tests / build
-Format, lint, typecheck PASS; unit 36 files / 344 tests; DB 38 files / 611 tests; production build PASS; all 81 visual specs: 1091 passed, 1 contract-driven failure realigned and re-run green (15 / 15), 25 gated skips; feed-down case PASS; console / hydration / unexpected 5xx: 0.
+Format, lint, typecheck PASS; unit 36 files / 344 tests; DB (fresh reset) 38 files / 611 tests; existing DB: Library db-tests 42 / 42; production build of `d113d14` used for every visual run.
 
 ## Visual QA
-Targeted responsive smoke at 1440 / 768 / 390: no overflow in any state; L15 / L15b / L15c pixel tests green (founder frame as a member). Full pixel matrix belongs to PROD-06 (risks V1 – V6).
+Not a pixel task; L15 / L15b / L15c pixel specs green in the full run; the opt-in WF01–WF03 pixel runner's pre-existing typography / dimension debt is handed to PROD-06.
 
 ## Deviations / blockers
-None blocking. For PO / design review: the guest founder sign-in copy, "Chưa xác định" no longer a facet, quick chips on Startup / founders follow the DOMAIN slug map (hidden when none matches), H3 (`/library` reading of DEC-L6-D1 / DEC-PDF-D1 under DEC-W6P-D02). The task's backend SHA `c4fe1e36` does not exist; `4fe1e36` is the PROD-03 commit.
+None blocking. Open for PO / design: guest founder sign-in copy, "Chưa xác định" facet, DOMAIN slug map, H3 (`/library` under DEC-L6-D1 / DEC-PDF-D1 vs DEC-W6P-D02), and the M0-T11 runner's typography rule versus DEC-HD-12.
 
 ## Git
-- Branch: `feat/wf06-prod-hardening`; base `4fe1e36`; HEAD unchanged during the task
-- Implementation commit: `feat(wf06): Library frontend on the read API (WF06-PROD-04)`
+- Branch: `feat/wf06-prod-hardening`; base `d113d14`; HEAD unchanged during the task
+- Implementation commit: `test(wf06): functional, security and quality QA (WF06-PROD-05)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -37,4 +34,4 @@ None blocking. For PO / design review: the guest founder sign-in copy, "Chưa x�
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of WF06-PROD-04 (copy, H1 / H2 / H3); then WF06-PROD-05 (QA) per the handoff.
+ChatGPT / PO review of WF06-PROD-05; then WF06-PROD-06 (pixel / responsive / closure) per the handoff.
