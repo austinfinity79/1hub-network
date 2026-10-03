@@ -1,34 +1,35 @@
 # Claude Task Report
 
 ## Task
-WF06-PROD-01-FINAL-REFREEZE (after WF06-PROD-01-FIX) — decision provenance corrected; the WF06 runtime contract is validly frozen. Contract: [reports/WF06-PROD-01_runtime-contract.md](reports/WF06-PROD-01_runtime-contract.md) (decision record table); API / data / tests: [reports/WF06-PROD-01_api-data-contract.md](reports/WF06-PROD-01_api-data-contract.md); handoff: [reports/WF06-PROD-01_implementation-handoff.md](reports/WF06-PROD-01_implementation-handoff.md); decisions: [DEC-W6P](../decisions/DECISION_LOG.md#dec-w6p).
+WF06-PROD-02 — WF06 data / read-model foundation (IMPLEMENT) under the frozen WF06-PROD-01 contract (DEC-W6P). Summary and evidence index: [reports/WF06-PROD-02_data-foundation.md](reports/WF06-PROD-02_data-foundation.md); source matrix: [reports/WF06-PROD-02_source-matrix.md](reports/WF06-PROD-02_source-matrix.md); visibility / security: [reports/WF06-PROD-02_visibility-security.md](reports/WF06-PROD-02_visibility-security.md); query / index audit: [reports/WF06-PROD-02_query-index-audit.md](reports/WF06-PROD-02_query-index-audit.md); fixtures / tests: [reports/WF06-PROD-02_fixtures-tests.md](reports/WF06-PROD-02_fixtures-tests.md); PROD-03 handoff: [reports/WF06-PROD-02_prod03-handoff.md](reports/WF06-PROD-02_prod03-handoff.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE — WF06 RUNTIME CONTRACT FROZEN.** PROD-00 recommended D1–D3 = NO; the initial WF06-PROD-01 draft (`ac55735`) incorrectly treated them as already confirmed; the ChatGPT review blocked that freeze (PASS_BUT_NOT_VERIFIED). D1–D3 were explicitly confirmed by the PO on 04/10/2026 before this re-freeze; D4 was confirmed earlier and is unchanged. The decision record now states that trail. Contract consistency: NO_CONTRACT_CHANGE_NEEDED = YES (provenance wording only). TRUE_PO_DECISIONS_REMAINING = 0. Docs only; PROD-02 not started. STOP.
+**PASS_WITH_EVIDENCE.** Canonical Library read path implemented as server-side functions (no API, no frontend): PUBLIC ACTIVE STARTUP ventures with the predicate in SQL; founders only for a NETWORK viewer and only where PROFILE_DISCOVERY, profile and account status allow; the external feed merged as TEMPORARY_EXTERNAL with provenance; deterministic filters, sorts and opaque cursors; no ids in items. DIRECT_QUERY everywhere; NO_SCHEMA_CHANGE. PROD-03 not started. STOP.
 
 ## Scope implemented
-- Final values: D1 member directory NO; D2 public venture discovery NO; D3 public programme / challenge discovery NO; D4 Library source = canonical system data, founders only where canonical venture / profile visibility permits.
-- Decision record corrected in DEC-W6P and the runtime contract (decision record table); no false claim of earlier confirmation remains in the current docs. Commit `ac55735` stays in history as written.
-- Consistency re-checked (scope, actors, routes, data source, visibility, search / filter, sort, read model, API, DB, frontend, security, tests, PROD-02 / 03 / 04 handoff): no substantive change; one clarifying line lists PROD-02 exclusions.
+- P2-1 `canonical-source.ts`, `library-data.ts`, `library-service.ts` (+ db-test); P2-2 `external-domain-map.ts` (+ unit test); P2-3 founder names out of Library search; P2-4 `EXPLAIN ANALYZE` audit (no index); P2-5 `testing.ts` fixture.
+- One query fix found by the audit: the startup read caps the page before reading domains (134.6 ms → 22.7 ms at 50k synthetic projects).
 
 ## Files changed
-- Docs: `DECISION_LOG.md` (DEC-W6P status and D01 wording), `WF06-PROD-01_runtime-contract.md` (decision record), `WF06-PROD-01_implementation-handoff.md` (PROD-02 exclusions line, FIX), this report. FINAL-REFREEZE: provenance wording in the first two and this report.
+- New: `src/lib/library/{canonical-source,library-data,library-service,external-domain-map,testing}.ts`, tests `canonical-source.db-test.ts`, `library-data.test.ts`, `external-domain-map.test.ts`.
+- Modified: `src/lib/library/startup-adapter.ts` (+ test), `src/components/library/library-model.ts` (+ test).
+- Docs: six `WF06-PROD-02_*` reports, this report.
 
 ## Migrations / data
-None.
+None (NO_SCHEMA_CHANGE). The index audit used a scratch database, dropped afterwards.
 
 ## Tests / build
-Not applicable (docs only).
+Format, lint, typecheck PASS; unit 35 files / 331 tests; DB 37 files / 585 tests on a fresh DB (`db:reset` 16 / 16); Library db-test 16 / 16 on the existing and the fresh DB; production build PASS; focused cross-WF regression 16 specs **190 / 190** (first run: 4 `l6` setup failures from the QA vocabulary fixture removed by `db:reset`; fixture re-applied, then all green in one run).
 
 ## Visual QA
-Not applicable.
+No UI change beyond founder names leaving the `/library` search; Library and neighbouring visual specs green (above).
 
 ## Deviations / blockers
-None.
+None blocking. Intentional: the DOMAIN map is applied in the merge layer, not the adapter; opaque derived keys instead of ids; `/library` keeps the external directory until PROD-04. Open items: HUB / PO review of the DOMAIN slug map; PUBLIC ventures of deactivated owners stay listed (WF02 lifecycle question).
 
 ## Git
-- Branch: `feat/wf06-prod-hardening`; FIX `87ea298` on `ac55735`; FINAL-REFREEZE on `87ea298`; no concurrent change
-- Implementation commits: `87ea298` (FIX) and `docs(wf06): final re-freeze of the WF06 runtime contract (WF06-PROD-01-FINAL-REFREEZE)`
+- Branch: `feat/wf06-prod-hardening`; base `83a84f4`; HEAD unchanged during the task
+- Implementation commit: `feat(wf06): canonical Library data / read foundation (WF06-PROD-02)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -36,4 +37,4 @@ None.
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of the re-frozen WF06-PROD-01; then WF06-PROD-02 (data / read-model foundation) per the handoff.
+ChatGPT / PO review of WF06-PROD-02; then WF06-PROD-03 (API / visibility / read hardening) per the handoff.

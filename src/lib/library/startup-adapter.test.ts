@@ -40,8 +40,6 @@ describe('adaptStartups', () => {
         name: 'PSI Lab',
         tagline: 'Xe máy điện chở hàng.',
         product: null,
-        // Founder roles only, for search (DEC-L15-D13); the advisor is left out.
-        founderNames: ['Nguyễn Tùng'],
         domains: ['Logistics'],
         categories: ['LOGISTICS'],
         stage: 'GROWTH',

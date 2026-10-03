@@ -12,8 +12,8 @@
  *   giai_doan_phat_trien         → stage: the Alpha venture stages, mapped only where
  *                                  deterministic (DEC-2909-L2H2), else null
  *   website                      → website (http/https only, else null)
- *   thanh_vien[].ho_ten/vai_tro  → founders (founder roles only; name, role, startup) and the
- *                                  startup's founderNames (search only, DEC-L15-D13)
+ *   thanh_vien[].ho_ten/vai_tro  → founders (founder roles only; name, role, startup); founder
+ *                                  names are not searchable (DEC-W6P-D03, supersedes DEC-L15-D13)
  *   thanh_vien.length            → memberCount
  *
  * Not read: mo_ta_chi_tiet, chuong_trinh_tung_tham_gia,
@@ -35,8 +35,6 @@ export type LibraryStartup = {
   tagline: string | null
   /** Main product; search only. */
   product: string | null
-  /** Founder names; search only. */
-  founderNames: string[]
   domains: string[]
   categories: Category[]
   stage: StartupStage | null
@@ -204,7 +202,6 @@ export function adaptStartups(payload: unknown): {
       name,
       tagline: cleanText(r.mo_ta_ngan, 200),
       product: cleanText(r.san_pham_chinh, 120),
-      founderNames: [],
       domains,
       categories: categorise(domains),
       stage: stageOf(r.giai_doan_phat_trien),
@@ -223,7 +220,6 @@ export function adaptStartups(payload: unknown): {
       if (!person || !role || !isFounderRole(role) || !/\p{L}/u.test(person)) continue
       const key = fold(person)
       const found = founders.get(key)
-      if (!startup.founderNames.includes(person)) startup.founderNames.push(person)
       const link = { name: startup.name, website: startup.website, stage: startup.stage }
       if (found) {
         if (!found.startups.some((s) => s.name === link.name)) found.startups.push(link)

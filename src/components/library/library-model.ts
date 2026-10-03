@@ -236,7 +236,8 @@ function startupItem(s: LibraryStartup): Item {
     cta: { label: 'Xem hồ sơ', href: s.website },
     facets: { domain: s.categories, stage: [stage] },
     text: fold(
-      [s.name, s.tagline ?? '', s.product ?? '', ...s.domains, ...s.founderNames].join(' '),
+      // Founder names are not searchable (DEC-W6P-D03).
+      [s.name, s.tagline ?? '', s.product ?? '', ...s.domains].join(' '),
     ),
     sort: { rank: STAGE_RANK[stage] ?? 5, days: 0, prize: 0, name: s.name },
   }

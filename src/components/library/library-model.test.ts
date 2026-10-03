@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import { adaptStartups } from '@/lib/library/startup-adapter'
 
-import { founderTab, matches, startupTab } from './library-model'
+import type { LibraryProblem } from '@/lib/library/problem-adapter'
+
+import { founderTab, matches, problemTab, startupTab } from './library-model'
 
 /** TASK 24.1 — the white Startup and Nhà sáng lập cards (DEC-L15-D11…D13). */
 
@@ -62,10 +64,10 @@ describe('startupTab', () => {
     expect(items[1]!.cta.href).toBeNull()
   })
 
-  it('searches product and founder names too', () => {
+  it('searches the product too, never founder names (DEC-W6P-D03)', () => {
     const hit = (q: string) => items.filter((i) => matches(i, q, {})).map((i) => i.title)
     expect(hit('tracely scan')).toEqual(['Tracely'])
-    expect(hit('vo thanh ha')).toEqual(['Kho Lạnh Miền Tây'])
+    expect(hit('vo thanh ha')).toEqual([])
     expect(hit('co van')).toEqual([])
   })
 })
@@ -90,5 +92,48 @@ describe('founderTab', () => {
       href: 'https://tracely.example.vn/',
     })
     expect(JSON.stringify(items)).not.toMatch(/Trường X|Kinh nghiệm riêng|Lê Cố Vấn/)
+  })
+})
+
+describe('problemTab (WF06-PROD-02 location and content-type filters)', () => {
+  const problem = (id: string, areas: string[], domains: string[]): LibraryProblem => ({
+    id,
+    title: `Bài toán ${id}`,
+    shortTitle: null,
+    summary: null,
+    org: null,
+    stage: 'dang_mo_nop',
+    stageLabel: 'Đang mở nộp',
+    prize: null,
+    prizeValue: null,
+    deadline: null,
+    time: null,
+    teams: null,
+    domains,
+    areas,
+    cover: null,
+    challengeId: null,
+  })
+  const tab = problemTab([
+    problem('a', ['Hà Nội'], ['Giáo dục']),
+    problem('b', ['Đà Nẵng'], ['Giáo dục']),
+    problem('c', [], ['Nông nghiệp']),
+  ])
+  const hit = (filters: Record<string, string[]>) =>
+    tab.items!.filter((i) => matches(i, '', filters)).map((i) => i.id)
+
+  it('filters by area (the temporary file’s location values) and by domain', () => {
+    expect(hit({ area: ['Hà Nội'] })).toEqual(['a'])
+    expect(hit({ area: ['Hà Nội', 'Đà Nẵng'] })).toEqual(['a', 'b'])
+    expect(hit({ area: ['Hà Nội'], domain: ['Nông nghiệp'] })).toEqual([])
+    // A problem without an area matches no area filter, and still lists unfiltered.
+    expect(hit({})).toEqual(['a', 'b', 'c'])
+  })
+
+  it('keeps each tab to its own content type', () => {
+    expect(tab.entity).toBe('PROBLEM')
+    expect(tab.items!.every((i) => i.kind === 'PROBLEM')).toBe(true)
+    expect(startupTab(dir).items!.every((i) => i.kind === 'STARTUP')).toBe(true)
+    expect(founderTab(dir).items!.every((i) => i.kind === 'FOUNDER')).toBe(true)
   })
 })
