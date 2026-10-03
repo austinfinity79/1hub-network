@@ -1,32 +1,33 @@
 # Claude Task Report
 
 ## Task
-WF06-PROD-00 — WF06 runtime scope / production gap audit. Report: [reports/WF06-PROD-00_runtime-gap-audit.md](reports/WF06-PROD-00_runtime-gap-audit.md); scope matrix: [reports/WF06-PROD-00_scope-matrix.md](reports/WF06-PROD-00_scope-matrix.md); data and visibility: [reports/WF06-PROD-00_data-visibility.md](reports/WF06-PROD-00_data-visibility.md); gaps and plan: [reports/WF06-PROD-00_gap-matrix.md](reports/WF06-PROD-00_gap-matrix.md).
+WF06-PROD-01 — freeze the WF06 runtime contract + data / ranking boundaries. Contract: [reports/WF06-PROD-01_runtime-contract.md](reports/WF06-PROD-01_runtime-contract.md); API / data / tests: [reports/WF06-PROD-01_api-data-contract.md](reports/WF06-PROD-01_api-data-contract.md); handoff: [reports/WF06-PROD-01_implementation-handoff.md](reports/WF06-PROD-01_implementation-handoff.md); decisions: [DEC-W6P](../decisions/DECISION_LOG.md#dec-w6p).
 
 ## Verdict
-**PASS_WITH_EVIDENCE, audit only.** WF06 runtime is not implemented and not promoted (DEC-WF06-INTERNAL-ALPHA-SCOPE, human approved 27/09: FUTURE / VISION). Today's discovery layer = the public organization page (canonical) + the public Library (approved static demo on external / static data). No matching, ranking, directory or WF06 write exists or is documented. TRUE_PO_DECISIONS_COUNT = 4 (member directory, public venture discovery, programme / challenge discovery, Library data source and founder exposure). No push, merge or deploy; PROD-01 not started. STOP.
+**PASS_WITH_EVIDENCE — WF06 RUNTIME CONTRACT FROZEN.** PO confirmed D1–D4 in chat (2026-10-04): member directory NO, public venture discovery NO, public programme / challenge discovery NO, Library source canonical with founders only where canonical visibility permits. WF06 P0 = the existing read-only discovery layer (`/library`, `/organizations/:slug`, home search); Library moves to canonical PUBLIC startups and their NETWORK_ONLY owners (members only), with the external remainder and the problem file as TEMPORARY_EXTERNAL. TRUE_PO_DECISIONS_REMAINING = 0. Docs only; PROD-02 not started. STOP.
 
 ## Scope implemented
-- Preflight, SOT review, runtime inventory, discovery-surface / matching / write / ranking / actor matrices, canonical data reuse, read-model, visibility, search / filter, DB / index, cross-WF, security, test data, proposed P0 scope, readiness diagnostic, PROD-01 → 06 validation.
+- Frozen: surfaces, actors, canonical sources, Library transition, founder rule, visibility, search / filter, deterministic sorts, read model (direct reads), API (three read endpoints + bounded org page), DB (no change unless query-plan evidence), frontend, security, tests, write boundary (read-only), out-of-scope list.
+- PROD-02 / 03 / 04 allowed scope (PROD-03 renamed to read hardening; no matching).
 
 ## Files changed
-- Docs: the four WF06-PROD-00 reports; this report.
+- Docs: `DECISION_LOG.md` (DEC-W6P-D01–D05); the three WF06-PROD-01 reports; this report.
 
 ## Migrations / data
 None.
 
 ## Tests / build
-Not applicable (no runtime change). Evidence read from code, specs and SOT.
+Not applicable (docs only).
 
 ## Visual QA
 Not applicable.
 
 ## Deviations / blockers
-None. The task is a scope audit: proposed P0 = harden the existing discovery layer; any new surface waits for PO-A–D.
+None. Technical freezes inside D4, not new product decisions: founder = the venture owner (no inference from team roles); external founders never shown or searchable; external startups suppressed by a same-name canonical venture. Follow-ups outside WF06: privacy switch copy (DEC-WF02-S03-D2), open-programme list vs owner organization status (WF05), G14.
 
 ## Git
-- Branch: `feat/wf06-prod-hardening` (new, from `5199e07`, the WF05 closure head with the WF04 + WF05 candidates); no concurrent change
-- Implementation commit: `docs(wf06): runtime scope and production gap audit (WF06-PROD-00)`
+- Branch: `feat/wf06-prod-hardening`; start HEAD `7004732`; no concurrent change
+- Implementation commit: `docs(wf06): freeze the WF06 runtime contract (WF06-PROD-01)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: local commit only)
@@ -34,4 +35,4 @@ None. The task is a scope audit: proposed P0 = harden the existing discovery lay
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of WF06-PROD-00 and answers to PO-A–D; then WF06-PROD-01 (contract freeze).
+ChatGPT / PO review of WF06-PROD-01; then WF06-PROD-02 (data / read-model foundation) per the handoff.
