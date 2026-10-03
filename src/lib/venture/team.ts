@@ -244,19 +244,27 @@ function onlyKeys(body: unknown, allowed: readonly string[]): Record<string, unk
 
 const iso = (value: unknown) => new Date(value as string).toISOString()
 
-/** GET /ventures/{id}/team: owner or ACTIVE member; pending data for the owner only (G8). */
-export async function getTeam(accountId: string, ventureId: string): Promise<TeamDTO> {
-  const me = await actor(query, accountId)
-  const venture = me ? await ventureOf(query, ventureId) : null
+/**
+ * GET /ventures/{id}/team: owner or ACTIVE member; pending data for the owner
+ * only (G8). `exec` lets a caller's transaction read on its own connection
+ * (WF05-PROD-03).
+ */
+export async function getTeam(
+  accountId: string,
+  ventureId: string,
+  exec: Executor = query,
+): Promise<TeamDTO> {
+  const me = await actor(exec, accountId)
+  const venture = me ? await ventureOf(exec, ventureId) : null
   if (!me || !venture) throw notFound()
   const owner = venture.owner_profile_id === me.profile_id
-  if (!owner && !(await isActiveMember(query, venture.id, me.profile_id))) throw notFound()
+  if (!owner && !(await isActiveMember(exec, venture.id, me.profile_id))) throw notFound()
 
-  const [ownerProfile] = await query<{ display_name: string | null }>(
+  const [ownerProfile] = await exec<{ display_name: string | null }>(
     'SELECT display_name FROM individual_profiles WHERE id = $1',
     [venture.owner_profile_id],
   )
-  const members = await query<{
+  const members = await exec<{
     id: string
     display_name: string | null
     role_label: string | null
@@ -270,7 +278,7 @@ export async function getTeam(accountId: string, ventureId: string): Promise<Tea
     [venture.id, venture.owner_profile_id],
   )
   const pending = owner
-    ? await query<{
+    ? await exec<{
         id: string
         invite_email_normalized: string
         role_label: string | null

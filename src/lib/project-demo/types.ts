@@ -1,3 +1,4 @@
+import type { ApplicantType } from '@/lib/application/types'
 import type { VentureType } from '@/lib/venture/venture'
 
 /**
@@ -9,8 +10,9 @@ import type { VentureType } from '@/lib/venture/venture'
  */
 
 /** DEC-WF05-G4: the applicant types a venture can apply as (INDIVIDUAL is FUTURE). */
-export const WF05_APPLICANT_TYPES = ['TEAM', 'STARTUP'] as const
-export type Wf05ApplicantType = (typeof WF05_APPLICANT_TYPES)[number]
+export const WF05_APPLICANT_TYPES = ['TEAM', 'STARTUP'] as const satisfies readonly ApplicantType[]
+/** The canonical applicant type of `@/lib/application` (one definition, G28). */
+export type Wf05ApplicantType = ApplicantType
 
 export type VentureRelation = 'OWNER' | 'MEMBER'
 

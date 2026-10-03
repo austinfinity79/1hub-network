@@ -56,7 +56,7 @@ export function ProjectDemoDetail({ id }: { id: string }) {
       setLoad({
         kind: 'ready',
         data: (await response.json()) as DemoVentureDetailDTO,
-        applications: (await mine.json()) as ApplicationSummaryDTO[],
+        applications: ((await mine.json()) as { items: ApplicationSummaryDTO[] }).items,
       })
     } catch {
       setLoad({ kind: 'failed' })

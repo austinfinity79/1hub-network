@@ -198,6 +198,48 @@ paths:
         - $ref: '#/components/parameters/VentureId'
       responses:
         '201': { description: Invitation created }
+  /ventures/{ventureId}/publish:
+    post:
+      operationId: publishVenture
+      parameters:
+        - $ref: '#/components/parameters/VentureId'
+      responses:
+        '200': { description: Venture published (owner only) }
+  /me/applications:
+    get:
+      operationId: listMyApplications
+      responses:
+        '200': { description: List envelope of the caller's applications, every programme state (A6) }
+  /applications:
+    post:
+      operationId: createApplication
+      responses:
+        '201': { description: DRAFT created (Idempotency-Key application.create) }
+        '409': { description: APPLICATION_EXISTS or APPLICATION_NOT_ELIGIBLE }
+  /applications/{applicationId}:
+    get:
+      operationId: getApplication
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      responses:
+        '200': { description: The application with editable and reason (A6) }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: saveApplicationAnswers
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      responses:
+        '200': { description: DRAFT saved }
+        '409': { description: APPLICATION_SUBMITTED or APPLICATION_NOT_ELIGIBLE }
+  /applications/{applicationId}/submit:
+    post:
+      operationId: submitApplication
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      responses:
+        '200': { description: SUBMITTED with its snapshot (Idempotency-Key application.submit) }
+        '409': { description: APPLICATION_SUBMITTED or APPLICATION_NOT_ELIGIBLE }
+        '422': { description: APPLICATION_INCOMPLETE }
   /feedback:
     post:
       operationId: submitFeedback
@@ -323,6 +365,11 @@ components:
       in: path
       required: true
       schema: { type: string }
+    ApplicationId:
+      name: applicationId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
     OrgId:
       name: orgId
       in: path

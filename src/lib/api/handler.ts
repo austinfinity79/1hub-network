@@ -86,7 +86,18 @@ export function withApi<T>(handler: ApiHandler<T>) {
       )
     } catch (caught) {
       // Anything not deliberately thrown as ApiError is an internal fault, and
-      // its message never reaches the client.
+      // its message never reaches the client. It is logged on the server with
+      // the request id (WF05-PROD-03, G12): class, message and stack only, never
+      // the request body.
+      if (!isApiError(caught)) {
+        const fault = caught instanceof Error ? caught : new Error(String(caught))
+        console.error('api unexpected error', {
+          request_id: requestId,
+          name: fault.name,
+          message: fault.message,
+          stack: fault.stack,
+        })
+      }
       const error: ApiError = isApiError(caught) ? caught : toUnexpectedError()
 
       // Cookies queued before the failure are still applied, so a logout that

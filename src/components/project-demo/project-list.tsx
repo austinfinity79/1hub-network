@@ -54,7 +54,7 @@ export function ProjectDemoList() {
         kind: 'ready',
         data: {
           ...((await list.json()) as DemoVenturesDTO),
-          applications: (await mine.json()) as ApplicationSummaryDTO[],
+          applications: ((await mine.json()) as { items: ApplicationSummaryDTO[] }).items,
         },
       })
     } catch {

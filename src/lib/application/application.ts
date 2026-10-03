@@ -2,16 +2,18 @@ import { ApiError, notFound } from '@/lib/api/errors'
 import { writeAudit } from '@/lib/audit/audit'
 import { query, withTransaction, type Executor } from '@/lib/db/client'
 import { getOnboardingState } from '@/lib/onboarding/state'
-import { applicantTypeFor } from '@/lib/project-demo/eligibility'
 import { getTeam } from '@/lib/venture/team'
 import { getVenture, type VentureType } from '@/lib/venture/venture'
 
+import { applicantTypeFor } from './applicant'
 import {
   ANSWER_MAX_LENGTH,
   type ApplicantType,
   type ApplicationAnswer,
   type ApplicationDTO,
+  type ApplicationLockReason,
   type ApplicationProgramme,
+  type ApplicationProgrammeStatus,
   type ApplicationQuestion,
   type ApplicationSnapshot,
   type ApplicationStatus,
@@ -64,6 +66,7 @@ async function requireEntry(accountId: string, exec: Executor = query): Promise<
 
 export type Form = {
   programme: ApplicationProgramme
+  status: ApplicationProgrammeStatus
   starts_at: string | null
   ends_at: string | null
   applicant_types: ApplicantType[]
@@ -82,15 +85,35 @@ function toQuestions(raw: unknown): ApplicationQuestion[] {
   })
 }
 
-/** The application form of a PUBLISHED programme, or null (unknown, unpublished, no form). */
-async function loadForm(exec: Executor, programmeId: string): Promise<Form | null> {
+/**
+ * How a caller reads the programme's canonical form:
+ *   open  a PUBLISHED programme only (who may still apply, save or submit);
+ *   lock  the same, holding the programme and the form row FOR SHARE until the
+ *         transaction ends, in the order WF04 locks them (programme, then form):
+ *         a concurrent `PUT …/registration` or close waits, so no application
+ *         is created, saved or submitted against a form or a state that is
+ *         changing (WF05-PROD-03, G10; the Q3 lock rule);
+ *   read  whatever the programme's state, for the owner's read-only history
+ *         (CLOSED / ARCHIVED, WF05 contract programme-state matrix).
+ */
+type FormMode = 'open' | 'lock' | 'read'
+
+/** The programme's application form, or null (unknown id, no form, or not PUBLISHED unless `read`). */
+async function loadForm(
+  exec: Executor,
+  programmeId: string,
+  mode: FormMode = 'open',
+): Promise<Form | null> {
   if (!UUID.test(programmeId)) return null
+  if (mode === 'lock')
+    await exec('SELECT 1 AS one FROM programmes WHERE id = $1 FOR SHARE', [programmeId])
   const [row] = await exec<{
     id: string
     type: 'PROGRAMME' | 'CHALLENGE'
     name: string
     summary: string | null
     organization: string
+    status: ApplicationProgrammeStatus
     starts_at: string | null
     ends_at: string | null
     applicant_types: string[]
@@ -98,13 +121,14 @@ async function loadForm(exec: Executor, programmeId: string): Promise<Form | nul
     version: number
   }>(
     `SELECT p.id::text, p.programme_type::text AS type, p.name, p.summary,
-            o.name AS organization, p.starts_at, p.ends_at,
+            o.name AS organization, p.status::text AS status, p.starts_at, p.ends_at,
             f.applicant_types::text[] AS applicant_types,
             f.questions, f.version
        FROM programmes p
        JOIN programme_application_forms f ON f.programme_id = p.id
        JOIN organizations o ON o.id = p.organization_id
-      WHERE p.id = $1 AND p.status = 'PUBLISHED'`,
+      WHERE p.id = $1 ${mode === 'read' ? '' : "AND p.status = 'PUBLISHED'"}
+      ${mode === 'lock' ? 'FOR SHARE OF f' : ''}`,
     [programmeId],
   )
   if (!row) return null
@@ -116,6 +140,7 @@ async function loadForm(exec: Executor, programmeId: string): Promise<Form | nul
       summary: row.summary,
       organization: { name: row.organization },
     },
+    status: row.status,
     starts_at: row.starts_at ? new Date(row.starts_at).toISOString() : null,
     ends_at: row.ends_at ? new Date(row.ends_at).toISOString() : null,
     applicant_types: row.applicant_types as ApplicantType[],
@@ -124,12 +149,17 @@ async function loadForm(exec: Executor, programmeId: string): Promise<Form | nul
   }
 }
 
-/** The venture as the application sees it; the WF02 read rule (owner or ACTIVE member, else 404). */
+/**
+ * The venture as the application sees it; the WF02 read rule (owner or ACTIVE
+ * member, else 404), read on the caller's executor so a transaction never
+ * borrows a second pool connection (WF05-PROD-03, G13).
+ */
 async function ventureOf(
+  exec: Executor,
   accountId: string,
   ventureId: string,
 ): Promise<ApplicationVenture & { relation: 'OWNER' | 'MEMBER' }> {
-  const v = await getVenture(accountId, ventureId)
+  const v = await getVenture(accountId, ventureId, exec)
   return {
     id: v.id,
     type: v.type,
@@ -153,8 +183,12 @@ const publicVenture = (v: ApplicationVenture): ApplicationVenture => ({
   domains: v.domains,
 })
 
-async function teamOf(accountId: string, ventureId: string): Promise<ApplicationTeamMember[]> {
-  const team = await getTeam(accountId, ventureId)
+async function teamOf(
+  exec: Executor,
+  accountId: string,
+  ventureId: string,
+): Promise<ApplicationTeamMember[]> {
+  const team = await getTeam(accountId, ventureId, exec)
   return team.rows.flatMap((row): ApplicationTeamMember[] =>
     row.kind === 'PENDING_INVITATION'
       ? []
@@ -221,7 +255,7 @@ const missingOf = (questions: ApplicationQuestion[], answers: ApplicationAnswer[
     .filter((q) => q.required && !answers.find((a) => a.question_id === q.id)?.value.trim())
     .map((q) => q.id)
 
-async function toDTO(accountId: string, row: Row): Promise<ApplicationDTO> {
+async function toDTO(exec: Executor, accountId: string, row: Row): Promise<ApplicationDTO> {
   if (row.status === 'SUBMITTED' && row.snapshot) {
     const s = row.snapshot
     const { question_set_version: version, ...programme } = s.programme
@@ -239,20 +273,26 @@ async function toDTO(accountId: string, row: Row): Promise<ApplicationDTO> {
       created_at: row.created_at,
       updated_at: row.updated_at,
       submitted_at: s.submitted_at,
+      editable: false,
+      reason: 'SUBMITTED',
     }
   }
-  const form = await loadForm(query, row.programme_id)
-  // A draft whose programme closed still reads; it can no longer be submitted.
+  // A draft reads its programme's form whatever the programme's state, so the
+  // owner keeps the saved answers of a CLOSED / ARCHIVED programme, read only.
+  const form = await loadForm(exec, row.programme_id, 'read')
   const questions = form?.questions ?? []
-  const venture = publicVenture(await ventureOf(accountId, row.venture_id))
+  const live = await ventureOf(exec, accountId, row.venture_id)
+  const venture = publicVenture(live)
   const answers = row.answers.filter((a) => questions.some((q) => q.id === a.question_id))
+  const reason: ApplicationLockReason | null =
+    form?.status !== 'PUBLISHED' ? 'NOT_PUBLISHED' : live.status === 'ARCHIVED' ? 'ARCHIVED' : null
   return {
     id: row.id,
     status: row.status,
     primary_applicant_type: row.primary_applicant_type,
-    programme: form?.programme ?? (await programmeOf(row.programme_id)),
+    programme: form?.programme ?? (await programmeOf(exec, row.programme_id)),
     venture,
-    team: await teamOf(accountId, row.venture_id),
+    team: await teamOf(exec, accountId, row.venture_id),
     questions,
     answers,
     missing: missingOf(questions, answers),
@@ -260,11 +300,13 @@ async function toDTO(accountId: string, row: Row): Promise<ApplicationDTO> {
     created_at: row.created_at,
     updated_at: row.updated_at,
     submitted_at: null,
+    editable: reason === null,
+    reason,
   }
 }
 
-async function programmeOf(programmeId: string): Promise<ApplicationProgramme> {
-  const [p] = await query<{
+async function programmeOf(exec: Executor, programmeId: string): Promise<ApplicationProgramme> {
+  const [p] = await exec<{
     id: string
     type: 'PROGRAMME' | 'CHALLENGE'
     name: string
@@ -289,7 +331,7 @@ export async function listMyApplications(accountId: string): Promise<Application
   const profileId = await requireEntry(accountId)
   return query<ApplicationSummaryDTO>(
     `SELECT a.id::text, a.status::text AS status,
-            json_build_object('id', g.id::text, 'name', g.name) AS programme,
+            json_build_object('id', g.id::text, 'name', g.name, 'status', g.status::text) AS programme,
             json_build_object('id', p.id::text, 'name', p.name, 'type', p.type::text) AS venture,
             a.updated_at::text, a.submitted_at::text
        FROM applications a
@@ -318,9 +360,9 @@ export async function createApplicationIn(
   if (typeof input.programme_id !== 'string' || !UUID.test(input.programme_id))
     throw invalid('programme_id', 'invalid')
   const profileId = await requireEntry(accountId, exec)
-  const form = await loadForm(exec, input.programme_id)
+  const form = await loadForm(exec, input.programme_id, 'lock')
   if (!form) throw notFound()
-  const venture = await ventureOf(accountId, input.venture_id)
+  const venture = await ventureOf(exec, accountId, input.venture_id)
   assertEligible(venture, form)
   // One active application per pair (uq_applications_active_pair): a concurrent
   // second create inserts nothing and gets the same 409 as a late one.
@@ -356,7 +398,7 @@ export async function createApplicationIn(
     after: { programme_id: form.programme.id, venture_id: venture.id, status: 'DRAFT' },
     requestId,
   })
-  return toDTO(accountId, await ownRow(exec, profileId, created.id))
+  return toDTO(exec, accountId, await ownRow(exec, profileId, created.id))
 }
 
 export async function createApplication(
@@ -373,7 +415,7 @@ export async function getApplication(
   applicationId: string,
 ): Promise<ApplicationDTO> {
   const profileId = await requireEntry(accountId)
-  return toDTO(accountId, await ownRow(query, profileId, applicationId))
+  return toDTO(query, accountId, await ownRow(query, profileId, applicationId))
 }
 
 function parseAnswers(body: unknown, questions: ApplicationQuestion[]): ApplicationAnswer[] {
@@ -382,11 +424,16 @@ function parseAnswers(body: unknown, questions: ApplicationQuestion[]): Applicat
   const input = body as Record<string, unknown>
   for (const key of Object.keys(input)) if (key !== 'answers') throw invalid(key, 'not_accepted')
   if (!Array.isArray(input.answers)) throw invalid('answers', 'invalid')
+  // At most one entry per question of the form (WF05 contract, PATCH payload).
+  if (input.answers.length > questions.length) throw invalid('answers', 'too_many')
+  const seen = new Set<string>()
   return input.answers.map((raw) => {
     if (!raw || typeof raw !== 'object') throw invalid('answers', 'invalid')
     const { question_id, value } = raw as Record<string, unknown>
     if (typeof question_id !== 'string' || !questions.some((q) => q.id === question_id))
       throw invalid('answers', 'unknown_question')
+    if (seen.has(question_id)) throw invalid('answers', 'duplicate')
+    seen.add(question_id)
     if (typeof value !== 'string') throw invalid(question_id, 'invalid')
     if (value.length > ANSWER_MAX_LENGTH) throw invalid(question_id, 'too_long')
     return { question_id, value }
@@ -407,8 +454,11 @@ export async function saveApplicationAnswers(
     const profileId = await requireEntry(accountId, exec)
     const row = await ownRow(exec, profileId, applicationId, true)
     if (row.status !== 'DRAFT') throw alreadySubmitted()
-    const form = await loadForm(exec, row.programme_id)
+    const form = await loadForm(exec, row.programme_id, 'lock')
     if (!form) throw notEligible('NOT_PUBLISHED')
+    // An ARCHIVED venture's draft is read only, as at create and submit (G09).
+    if ((await ventureOf(exec, accountId, row.venture_id)).status === 'ARCHIVED')
+      throw notEligible('ARCHIVED')
     const given = parseAnswers(body, form.questions)
     const merged = form.questions.flatMap((q): ApplicationAnswer[] => {
       const next = given.find((a) => a.question_id === q.id)
@@ -420,7 +470,7 @@ export async function saveApplicationAnswers(
         WHERE id = $1`,
       [row.id, JSON.stringify(merged), form.version],
     )
-    return toDTO(accountId, await ownRow(exec, profileId, row.id))
+    return toDTO(exec, accountId, await ownRow(exec, profileId, row.id))
   })
 }
 
@@ -438,9 +488,9 @@ export async function submitApplicationIn(
   const profileId = await requireEntry(accountId, exec)
   const row = await ownRow(exec, profileId, applicationId, true)
   if (row.status !== 'DRAFT') throw alreadySubmitted()
-  const form = await loadForm(exec, row.programme_id)
+  const form = await loadForm(exec, row.programme_id, 'lock')
   if (!form) throw notEligible('NOT_PUBLISHED')
-  const live = await ventureOf(accountId, row.venture_id)
+  const live = await ventureOf(exec, accountId, row.venture_id)
   assertEligible(live, form)
   const answers = row.answers.filter((a) => form.questions.some((q) => q.id === a.question_id))
   const missing = missingOf(form.questions, answers)
@@ -460,7 +510,7 @@ export async function submitApplicationIn(
     questions: form.questions,
     answers,
     venture,
-    team: await teamOf(accountId, row.venture_id),
+    team: await teamOf(exec, accountId, row.venture_id),
     submitted_at: now,
   }
   await exec(
@@ -479,7 +529,7 @@ export async function submitApplicationIn(
     after: { programme_id: row.programme_id, venture_id: row.venture_id, status: 'SUBMITTED' },
     requestId,
   })
-  return toDTO(accountId, await ownRow(exec, profileId, row.id))
+  return toDTO(exec, accountId, await ownRow(exec, profileId, row.id))
 }
 
 export async function submitApplication(
@@ -522,7 +572,7 @@ export async function getApplicationContext(
   const profileId = await requireEntry(accountId)
   const form = await loadForm(query, programmeId)
   if (!form || !UUID.test(ventureId)) throw notFound()
-  const live = await ventureOf(accountId, ventureId)
+  const live = await ventureOf(query, accountId, ventureId)
   if (live.relation !== 'OWNER') throw notFound()
   const [active] = await query<{ id: string }>(
     `SELECT id::text FROM applications
@@ -533,8 +583,10 @@ export async function getApplicationContext(
   return {
     form,
     venture: publicVenture(live),
-    team: await teamOf(accountId, ventureId),
-    application: active ? await toDTO(accountId, await ownRow(query, profileId, active.id)) : null,
+    team: await teamOf(query, accountId, ventureId),
+    application: active
+      ? await toDTO(query, accountId, await ownRow(query, profileId, active.id))
+      : null,
     eligibility:
       live.status === 'ARCHIVED'
         ? { eligible: false, reason: 'ARCHIVED' }
@@ -609,5 +661,5 @@ export async function findApplication(
         AND a.status IN ('DRAFT', 'SUBMITTED')`,
     [ventureId, programmeId, profileId],
   )
-  return row ? toDTO(accountId, await ownRow(query, profileId, row.id)) : null
+  return row ? toDTO(query, accountId, await ownRow(query, profileId, row.id)) : null
 }

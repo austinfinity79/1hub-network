@@ -76,8 +76,9 @@ WF01 and WF02 own-account and own-profile actions are **not** in this catalogue 
 | Capability | Held by | Enforced in |
 |---|---|---|
 | `venture:read` | the owner (`projects.owner_profile_id`) and ACTIVE `project_members` | `GET /ventures/{id}`, `/projects/:id/edit`, `GET /ventures/{id}/team`, `/projects/:id/team` (members: read-only, no pending data) |
-| `venture:manage` | the owner only | `PATCH /ventures/{id}` |
+| `venture:manage` | the owner and ACTIVE members with EDIT (DEC-L2R-D7; the creator's own `owner_role_label` stays the owner's) | `PATCH /ventures/{id}`; `POST /ventures/{id}/publish` stays the owner's |
 | `venture:team_manage` | the owner only | `POST /ventures/{id}/team/invitations`, `PATCH`/`DELETE /ventures/{id}/team/{membershipId}` (WF02-S06) |
+| application (relation rule, no capability) | the venture owner only; ACTIVE members `403` on create and `404` elsewhere; operators and everyone else `404` (HD-A13, DEC-W5P-D04 / D07) | `POST /applications`, `GET`/`PATCH /applications/{id}`, `POST /applications/{id}/submit`, `GET /me/applications` (WF05-PROD-03) |
 
 `role_label` never grants anything. Creating a venture needs no capability: onboarding DONE is enough (DEC-WF02-S05-G2). Accepting or declining a team invitation (`POST …/team/invitations/{membershipId}/accept|decline`, DEC-WF02-S06-G2) needs no capability either: only the signed-in recipient whose normalised account email equals the invitation email may act, and an ACTIVE membership grants `venture:read` only, never a RoleAssignment.
 

@@ -50,11 +50,17 @@ export type ApplicationProgramme = {
   organization: { name: string }
 }
 
-/** One row of `GET /me/applications`. */
+/** The programme lifecycle (WF04 `programme_status`); ARCHIVED is read compatibility only. */
+export type ApplicationProgrammeStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED' | 'ARCHIVED'
+
+/** Why an application is read only (WF05 contract, programme-state matrix). */
+export type ApplicationLockReason = 'SUBMITTED' | 'NOT_PUBLISHED' | 'ARCHIVED'
+
+/** One item of `GET /me/applications` (§2.4 list envelope `{items}`). */
 export type ApplicationSummaryDTO = {
   id: string
   status: ApplicationStatus
-  programme: { id: string; name: string }
+  programme: { id: string; name: string; status: ApplicationProgrammeStatus }
   venture: { id: string; name: string; type: 'PROJECT' | 'STARTUP' }
   updated_at: string
   submitted_at: string | null
@@ -79,6 +85,10 @@ export type ApplicationDTO = {
   created_at: string
   updated_at: string
   submitted_at: string | null
+  /** Whether the owner may still save and submit (the server's verdict, WF05-PROD-03). */
+  editable: boolean
+  /** Why it is read only: SUBMITTED, a programme no longer PUBLISHED, an ARCHIVED venture. */
+  reason: ApplicationLockReason | null
 }
 
 /** Written once at submit (`schema_version` 1); later edits never touch it. */

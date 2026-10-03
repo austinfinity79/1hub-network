@@ -707,7 +707,10 @@ test.describe('SEC-WF05-01 authorization matrix', () => {
       expect(JSON.stringify(list).includes(w.startup.id), `${actor} lists the venture`).toBe(
         detailCode === 200,
       )
-      expect(await (await page.request.get('/api/v1/me/applications')).json(), actor).toEqual([])
+      // §2.4 list envelope (API amendment A6, WF05-PROD-03).
+      expect(await (await page.request.get('/api/v1/me/applications')).json(), actor).toEqual({
+        items: [],
+      })
     }
 
     // The relation and the eligibility come from the server: the member reads, never applies.

@@ -1,17 +1,14 @@
-import type { VentureType } from '@/lib/venture/venture'
+import { applicantTypeFor } from '@/lib/application/applicant'
 
-import type { Eligibility, ProgrammeContext, VentureContext, Wf05ApplicantType } from './types'
+import type { Eligibility, ProgrammeContext, VentureContext } from './types'
+
+export { applicantTypeFor }
 
 /**
  * WF05-T00 — who may apply with which venture (DEC-WF05-G3..G5). Pure rules over
  * server-resolved facts: the venture's canonical type, status and the actor's
  * relation to it; the programme's status and configured applicant types.
  */
-
-/** DEC-WF05-G4: derived from the canonical type; never stored on the venture. */
-export function applicantTypeFor(type: VentureType): Wf05ApplicantType {
-  return type === 'PROJECT' ? 'TEAM' : 'STARTUP'
-}
 
 /**
  * Whether this actor may start / edit / submit an application of this venture

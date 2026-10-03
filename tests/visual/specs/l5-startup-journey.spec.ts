@@ -374,9 +374,10 @@ test.describe('L5-S ownership', () => {
       expect(await errorCode(await request.post(`${APPS}/${own}/submit`)), who).toBe(
         '404 UNCONTRACTED_NOT_FOUND',
       )
-      expect(await (await request.get('/api/v1/me/applications')).json(), who).toEqual(
-        who === 'stranger' ? [expect.objectContaining({ id: foreign })] : [],
-      )
+      // §2.4 list envelope (API amendment A6, WF05-PROD-03).
+      expect(await (await request.get('/api/v1/me/applications')).json(), who).toEqual({
+        items: who === 'stranger' ? [expect.objectContaining({ id: foreign })] : [],
+      })
     }
     await teammate.context.close()
     await stranger.context.close()

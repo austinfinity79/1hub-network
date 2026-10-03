@@ -206,7 +206,10 @@ async function readable(
   profileId: string,
   lock = false,
 ): Promise<Row | null> {
-  if (!/^[0-9a-f-]{36}$/i.test(ventureId)) return null
+  // A strict UUID (WF05-PROD-03, G06): a 36-character non-UUID used to reach the
+  // ::uuid cast and fail as a 500; it is now the same 404 as an unknown id.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ventureId))
+    return null
   const [row] = await exec<Row>(
     `SELECT ${COLUMNS}
        FROM projects p ${VIEWER_JOIN}
@@ -363,12 +366,19 @@ export async function createVenture(
   return withTransaction((exec) => createVentureIn(exec, accountId, body, requestId))
 }
 
-/** GET /ventures/{id}: owner or ACTIVE member; anyone else gets the same 404. */
-export async function getVenture(accountId: string, ventureId: string): Promise<VentureDTO> {
-  const profileId = await profileOf(query, accountId)
-  const row = profileId ? await readable(query, ventureId, profileId) : null
+/**
+ * GET /ventures/{id}: owner or ACTIVE member; anyone else gets the same 404.
+ * `exec` lets a caller's transaction read on its own connection (WF05-PROD-03).
+ */
+export async function getVenture(
+  accountId: string,
+  ventureId: string,
+  exec: Executor = query,
+): Promise<VentureDTO> {
+  const profileId = await profileOf(exec, accountId)
+  const row = profileId ? await readable(exec, ventureId, profileId) : null
   if (!row) throw notFound()
-  return toDTO(query, row)
+  return toDTO(exec, row)
 }
 
 /**

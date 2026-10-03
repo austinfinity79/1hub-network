@@ -206,8 +206,8 @@ test.describe('WF05-S01 my projects / startups', () => {
     await expect(ventureRow(page, w.startup.id).locator('p').first()).toHaveText(
       'Startup S01 đổi tên',
     )
-    // Viewing creates no application.
-    expect(await (await page.request.get('/api/v1/me/applications')).json()).toEqual([])
+    // Viewing creates no application (§2.4 list envelope, API amendment A6).
+    expect(await (await page.request.get('/api/v1/me/applications')).json()).toEqual({ items: [] })
   })
 
   test('4/5/6. ACTIVE member sees the venture as a member; unrelated and pending-invite ventures never appear', async ({

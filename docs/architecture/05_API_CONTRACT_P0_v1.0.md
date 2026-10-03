@@ -1424,3 +1424,22 @@ Source: [DEC-W4P](../decisions/DECISION_LOG.md#dec-w4p) (D02, D11, D12) and the 
 
 ## 22.2 Rules
 An owning organization that is ARCHIVED keeps its programmes readable; every write on them and a new programme for it get `409` (PO, DEC-W4P-D13). Errors use existing codes only: `422 PROFILE_VALIDATION_FAILED` with `fields` (reasons `required`, `invalid`, `too_long`, `too_many`, `duplicate`, `before_start`, `not_accepted`, `immutable`, `not_challenge`, `empty`), `409 MEMBERSHIP_INVALID_TRANSITION`, `403 SCOPE_FORBIDDEN`, and for 401, 404 and an idempotency conflict the existing gap codes of the implementation (no code is added). The Idempotency-Key is honoured when sent and a missing key is processed (provisional rule I5). Stages are `metadata.journey` and problem statements `metadata.challenge` (`schema_version` 1); no other metadata key is writable. A stage, problem or question sent without an `id` gets one derived from its position and content, so a retried replacement writes the same list; a client keeps an item's identity by sending its `id` back. ARCHIVED has no endpoint (DEFERRED, DEC-W4P-D11); events are never written here. Audit: `PROGRAMME_CREATED`, `PROGRAMME_UPDATED` (field names), `PROGRAMME_REGISTRATION_UPDATED` (versions), `PROGRAMME_PUBLISHED`, `PROGRAMME_CLOSED`, with ids, type and status only. Applications stay §21: a PUBLISHED programme with a form is open to them, a CLOSED one is not.
+
+
+---
+
+# 23. Amendment A6 — WF05 application hardening (2026-10-02)
+
+Source: [DEC-W5P](../decisions/DECISION_LOG.md#dec-w5p) (D04–D07) and the [WF05 production contract](../implementation/reports/WF05-PROD-01_production-contract.md); implemented by WF05-PROD-03. Additive to §21: no new endpoint, error code or status.
+
+## 23.1 Changes
+| Call | Change |
+|---|---|
+| `GET /me/applications` | the §2.4 list envelope `{items}`; every own application in every programme state; each item's `programme` adds `status` (DRAFT \| PUBLISHED \| CLOSED \| ARCHIVED) |
+| `GET /applications/{id}` | adds `editable` (boolean) and `reason` (`SUBMITTED` \| `NOT_PUBLISHED` \| `ARCHIVED` \| null); a DRAFT of a programme no longer PUBLISHED returns its questions and saved answers, read only |
+| `PATCH /applications/{id}` | an ARCHIVED venture → `409 APPLICATION_NOT_ELIGIBLE` with `reason: ARCHIVED`; `answers` holds at most one entry per form question: more → `422` `too_many`, a repeated question → `422` `duplicate` |
+| `POST /applications`, `PATCH`, `POST …/submit` | the programme and form rows are held `FOR SHARE` for the transaction: a concurrent `PUT /programmes/{id}/registration` or close waits, and a registration change then refuses with `409` because an application exists |
+| `/ventures/{id}*`, `/demo/projects/{id}` | a malformed id (also a 36-character non-UUID) is the same `404` as an unknown one, never a `500` |
+
+## 23.2 Rules
+Authority is unchanged: the venture owner only (ACTIVE members `403` on create, `404` elsewhere; operators `404`). Audit stays `APPLICATION_DRAFT_CREATED` and `APPLICATION_SUBMITTED` with ids and statuses, never answers; draft saves are not audited (WF05 contract). An unexpected server error keeps the generic envelope and is logged server side with its `request_id`, never with the request body.
