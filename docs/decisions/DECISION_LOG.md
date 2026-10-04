@@ -1588,6 +1588,24 @@ Open: none for the contract (TRUE_PO_DECISIONS_REMAINING = 0). Follow-ups outsid
 
 Open: none (TRUE_PO_DECISIONS_REMAINING = 0). Follow-ups outside WF06: the privacy switch copy that names the Library (DEC-WF02-S03-D2 copy review), the open-programme list ignoring the owner organization's status (WF05), global rate limit (G14).
 
+## DEC-ADM — Admin Portal P0 contract (ADMIN-PROD-01, PO, 04/10)
+
+<a id="dec-adm"></a>**Status:** FROZEN 2026-10-04. **Decision trail:** the [ADMIN-PORTAL-00 audit](../implementation/reports/ADMIN-PORTAL-00-gap-audit.md) raised PD-1 … PD-8; the PO approved them (ADMIN-DECISION-01) and stated them verbatim in the ADMIN-PROD-01 task contract on 04/10/2026; the contract was frozen on that basis. Contract: [ADMIN-PROD-01-runtime-contract.md](../implementation/reports/ADMIN-PROD-01-runtime-contract.md).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-adm-pd1"></a>DEC-ADM-PD1 | **Role verification (PO PD-1).** One declared HUB position = one verification request. HUB Tổng position → HUB Tổng BĐH; Chapter position → Chapter BĐH; CLB position → the delegated CLB handler. No handler: CLB → Chapter → HUB Tổng. Never routed by the user's highest role. Supersedes DEC-PDF-D6B (platform-only verification) when the request model ships. |
+| <a id="dec-adm-pd2"></a>DEC-ADM-PD2 | **Venture publishing (PO PD-2).** Approval before PUBLIC: DRAFT → PENDING_REVIEW → PUBLIC. A core-field change on a PUBLIC venture enters review; the approved public version stays visible until the new one is approved. Supersedes DEC-PDF-D1 self-publish when venture review ships. |
+| <a id="dec-adm-pd3"></a>DEC-ADM-PD3 | **Venture fields (PO PD-3).** Website and logo in P0; no business registration / tax code. |
+| <a id="dec-adm-pd4"></a>DEC-ADM-PD4 | **Location (PO PD-4).** Hybrid: Việt Nam → country + canonical province / city; other countries → country catalog + region suggestions + free-text fallback; Other → free text. Not catalog-only worldwide. Supersedes D-N1 (Việt Nam only). |
+| <a id="dec-adm-pd5"></a>DEC-ADM-PD5 | **Feedback (PO PD-5).** Screenshots kept 90 days; text / context per the record lifecycle; guest e-mail optional and may be used to follow up. |
+| <a id="dec-adm-pd6"></a>DEC-ADM-PD6 | **Delegation (PO PD-6).** Scoped: HUB Tổng → its Chapters; Chapter → its CLBs; CLB within itself only; never more than the delegator holds; every grant / revocation audited. |
+| <a id="dec-adm-pd7"></a>DEC-ADM-PD7 | **Account lock / deletion (PO PD-7).** PLATFORM_ADMIN only; leaders submit / escalate; deactivate / soft-delete first; hard deletion is a separate retention / privacy procedure. Extends DEC-WF03-G3 (no account admin in WF03) with a platform-only Admin path. |
+| <a id="dec-adm-pd8"></a>DEC-ADM-PD8 | **Admin UI (PO PD-8).** Existing OpsShell + current design system; no new admin design system; contract first, then design only the required admin screens. |
+| <a id="dec-adm-c"></a>DEC-ADM-C1…C8 | **Contract choices** (from evidence, not new PO decisions): C1 venture reviewer = PLATFORM_ADMIN; C2 CORE = every publicly shown venture field; C3 approval of a position → leadership record (+ ACTIVE membership for a current term), never a RoleAssignment; the declaration itself still grants nothing (DEC-L1R-D5); C4 WITHDRAWN state; C5 delegation reuses `role_assignments` + a nullable `capability`; delegable list per the RBAC matrix; C6 feedback NEW → IN_REVIEW → DONE (+ NEW → DONE), types BUG / UX / FEATURE / OTHER; C7 workflow-specific queues; C8 no runtime CMS or action registry, featured activities out of P0. |
+
+Open: none (TRUE_PO_DECISIONS_REMAINING = 0).
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

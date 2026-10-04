@@ -1,19 +1,19 @@
 # Claude Task Report
 
 ## Task
-ADMIN-PORTAL-00 — Admin Portal scope / architecture / dependency audit (AUDIT, docs only). Inventory, needs, actors, auth and `/ops`: [reports/ADMIN-PORTAL-00-gap-audit.md](reports/ADMIN-PORTAL-00-gap-audit.md); data map, authority, approval, IA, P0 scope, phasing, readiness: [reports/ADMIN-PORTAL-00-scope-matrix.md](reports/ADMIN-PORTAL-00-scope-matrix.md); blocked items, Sprint1, API / DB gaps, PO decisions: [reports/ADMIN-PORTAL-00-dependency-map.md](reports/ADMIN-PORTAL-00-dependency-map.md).
+ADMIN-PROD-01 — freeze the Admin Portal P0 contract, roles and workflow boundaries (CONTRACT, docs only). Contract: [reports/ADMIN-PROD-01-runtime-contract.md](reports/ADMIN-PROD-01-runtime-contract.md); RBAC: [reports/ADMIN-PROD-01-rbac-matrix.md](reports/ADMIN-PROD-01-rbac-matrix.md); data / API: [reports/ADMIN-PROD-01-data-api-handoff.md](reports/ADMIN-PROD-01-data-api-handoff.md); plan: [reports/ADMIN-PROD-01-implementation-plan.md](reports/ADMIN-PROD-01-implementation-plan.md); decisions: [DEC-ADM](../decisions/DECISION_LOG.md#dec-adm).
 
 ## Verdict
-**PASS_WITH_EVIDENCE.** No Admin Portal runtime exists; operator tools live in `/ops` (org-scoped) and `/demo/programmes`. Proposed P0 is four capabilities inside the existing ops shell, on canonical tables with no new table: declarations verification queue, leader role assignment, vocabulary management, feedback triage (after Sprint1 FB-01). Venture review, per-position verification, location staging, leader delegation, deletion processing and the screen design source wait on 8 true PO decisions. STOP.
+**PASS_WITH_EVIDENCE — ADMIN PORTAL P0 CONTRACT FROZEN.** PD-1 … PD-8 (PO, ADMIN-DECISION-01) applied as written. P0: role verification (one request per position, unit routing, CLB → Chapter → HUB Tổng fallback), venture review (approved public version stays live during re-review; website + logo, no tax code), organizations + scoped delegation on the existing `role_assignments`, feedback triage with 90-day screenshots and a weekly summary, categories, platform-only account lifecycle; one OpsShell; no new role; workflow-specific queues; server-side RBAC; audit on every mutation. TRUE_PO_DECISIONS_REMAINING = 0. STOP.
 
 ## Scope implemented
-- Read-only audit of the SOT, decisions, runtime at `1ed6010` and the business Sprint1 documents (three read-only sub-agents plus direct reads). The task's backlog ids exist only in its contract; findings cite the underlying sources.
+- Four contract documents; DEC-ADM (PD-1 … PD-8 with provenance, contract choices C1 … C8, supersessions of D6B, DEC-PDF-D1 self-publish and D-N1 when the new models ship).
 
 ## Files changed
-- Three `ADMIN-PORTAL-00-*` reports; this report.
+- `docs/implementation/reports/ADMIN-PROD-01-*.md` (4), `docs/decisions/DECISION_LOG.md`, this report.
 
 ## Migrations / data
-None.
+None (DB impact is a plan: 4 new tables and 5 column changes, each justified, for ADMIN-PROD-02 onward).
 
 ## Tests / build
 Not applicable (docs only).
@@ -22,11 +22,11 @@ Not applicable (docs only).
 Not applicable.
 
 ## Deviations / blockers
-None. Conflicts surfaced (not resolved): D6B vs UAT verification routing; DEC-PDF-D1 self-publish vs UAT venture review; catalog-only vs "Khác" free-text location; feedback status wording (API `RECEIVED` vs DB `NEW / REVIEWED / CLOSED`); vocabulary ownership without a write path.
+None. Sprint1 coordination: one migration owner per shared model (verification requests, feedback columns, venture review); a conflicting shape is a CONTRACT_CONFLICT.
 
 ## Git
-- Branch: `feat/wf06-prod-hardening`; base `1ed6010`; HEAD unchanged during the task
-- Implementation commit: `docs(admin): Admin Portal scope, architecture and dependency audit (ADMIN-PORTAL-00)`
+- Branch: `feat/admin-portal`; base `9a52bb4`; HEAD unchanged during the task
+- Implementation commit: `docs(admin): freeze the Admin Portal P0 contract (ADMIN-PROD-01)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: no push)
@@ -34,4 +34,4 @@ None. Conflicts surfaced (not resolved): D6B vs UAT verification routing; DEC-PD
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of ADMIN-PORTAL-00 and answers to PD-1 … PD-8; then ADMIN-PROD-01 (contract).
+ChatGPT / PO review of ADMIN-PROD-01; then ADMIN-PROD-02 (RBAC / scope / data foundation) and ADMIN-DESIGN-01 in parallel.
