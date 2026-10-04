@@ -73,6 +73,9 @@ const CODE_KEYS = new Set([
   'kind',
   'type',
   'priority',
+  'membership_outcome',
+  'leadership_outcome',
+  'leadership_state',
 ])
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const CODE = /^[A-Za-z0-9_:-]{1,64}$/
@@ -99,7 +102,8 @@ export function assertAuditSafe(data: Record<string, AuditScalar> | null | undef
 export async function writeAdminAudit(
   exec: Executor,
   event: {
-    actorAccountId: string
+    /** Null for a system conversion (history shows SYSTEM). */
+    actorAccountId: string | null
     action: AdminAuditAction
     target: { type: AdminAuditTarget; id: string }
     /** The organization the action was authorized for, when scoped. */

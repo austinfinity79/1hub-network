@@ -25,6 +25,7 @@ import {
   summaryBucket,
 } from './feedback'
 import { isSameScope } from './hierarchy'
+import { parseLegacyPeriod } from './legacy-declarations'
 import { decisionNotification, NOTIFICATION_RESOURCE } from './notifications'
 import {
   changedCoreFields,
@@ -356,6 +357,21 @@ describe('feedback, accounts, categories, notifications, audit', () => {
     expect(() => assertAuditSafe({ status: { nested: true } as unknown as string })).toThrow(
       /scalar/,
     )
+  })
+
+  it('legacy periods: explicit months only, typos refused', () => {
+    expect(parseLegacyPeriod('03/2024 - nay', NOW)).toEqual({ from: '2024-03-01', to: null })
+    expect(parseLegacyPeriod('Từ 01/2021 đến 12/2022', NOW)).toEqual({
+      from: '2021-01-01',
+      to: '2022-12-01',
+    })
+    expect(parseLegacyPeriod('2024 – nay', NOW)).toEqual({ reason: 'period_year_only' })
+    expect(parseLegacyPeriod('01/0000 - nay', NOW)).toEqual({ reason: 'period_unparsed' })
+    expect(parseLegacyPeriod('13/2024 - nay', NOW)).toEqual({ reason: 'period_unparsed' })
+    expect(parseLegacyPeriod('3/2024', NOW)).toEqual({ reason: 'period_unparsed' })
+    expect(parseLegacyPeriod('11/2026 - nay', NOW)).toEqual({ reason: 'period_future' })
+    expect(parseLegacyPeriod('06/2025 - 03/2024', NOW)).toEqual({ reason: 'period_order' })
+    expect(parseLegacyPeriod(null, NOW)).toEqual({ reason: 'missing_period' })
   })
 
   it('compares scopes as canonical ids only', () => {

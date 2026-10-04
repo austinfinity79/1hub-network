@@ -364,6 +364,43 @@ paths:
       operationId: listFeedbackOps
       responses:
         '200': { description: Feedback list }
+  /ops/verification-requests:
+    get:
+      operationId: listVerificationRequests
+      responses:
+        '200': { description: List envelope of role verification requests routed to the viewer's units, with counts.pending (A9) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/verification-requests/{requestId}:
+    get:
+      operationId: getVerificationRequest
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200': { description: One request with discovery identity, unit context and history (A9) }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /ops/verification-requests/{requestId}/approve:
+    post:
+      operationId: approveVerificationRequest
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200': { description: The approved request (A9) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/verification-requests/{requestId}/reject:
+    post:
+      operationId: rejectVerificationRequest
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200': { description: The rejected request (A9) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
   /ops/metrics/p0:
     get:
       operationId: getP0Metrics
@@ -396,6 +433,11 @@ components:
       in: path
       required: true
       schema: { type: string }
+    RequestId:
+      name: requestId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
   responses:
     BadRequest:
       description: Bad request

@@ -1,34 +1,35 @@
 # Claude Task Report
 
 ## Task
-ADMIN-PROD-02 — Admin Portal RBAC / scope / data foundation (IMPLEMENT; no frontend, no API route). Reports: [scope / RBAC](reports/ADMIN-PROD-02-rbac-scope-foundation.md) · [data](reports/ADMIN-PROD-02-data-foundation.md) · [DB / migration](reports/ADMIN-PROD-02-db-migration.md) · [QA](reports/ADMIN-PROD-02-qa-handoff.md) · [PROD-03 handoff](reports/ADMIN-PROD-02-prod03-handoff.md); matrix [addendum](AUTHORIZATION_CAPABILITY_MATRIX_P0_ADMIN.md).
+ADMIN-PROD-03 — Admin Portal role verification APIs / queue (IMPLEMENT; no frontend). Reports: [API](reports/ADMIN-PROD-03-verification-api.md) · [legacy / S1 boundary](reports/ADMIN-PROD-03-legacy-boundary.md) · [QA](reports/ADMIN-PROD-03-qa.md) · [PROD-04 handoff](reports/ADMIN-PROD-03-prod04-handoff.md); contract [05 §26 (A9)](../architecture/05_API_CONTRACT_P0_v1.0.md); rules [DEC-ADM-R1…R6](../decisions/DECISION_LOG.md#dec-adm-r).
 
 ## Verdict
-**PASS_WITH_EVIDENCE.** No new role; 8 scoped capabilities (10 → 18) with a `delegable` flag; delegation on the existing `role_assignments` + `capability`, read through one predicate so a capability-only grant never acts as the role; exact authority, one-level reach (HUB Tổng → Chapter → CLB); PD-1 routing with CLB → Chapter → HUB Tổng fallback; foundations for verification requests, venture review (public version stays live), website / logo, feedback, account actions, categories, notifications and audit. Migration 017. No SOT / Sprint1 / contract conflict. STOP.
+**PASS_WITH_EVIDENCE.** Scoped queue, detail, approve, reject on the one RoleVerificationRequest table: scope from the routed unit, out-of-scope = 404, no self-decision (audited), PENDING + version, one terminal transition under races, effects = LeadershipRecord (+ membership for a current term), never a RoleAssignment, existing records reused (no duplicates), notifications on approve / reject, history from audit. Legacy conversion built and tested (explicit months only, never approves), run at the S1-UAT-03B cut-over. No SOT / Sprint1 / contract conflict. STOP.
 
 ## Scope implemented
-- `src/lib/authz`: capability matrix + `assignmentGrants`; `resolveActor` reads `capability` and fails closed on unknown / non-delegable values; session derivation; `src/lib/ops/scope.ts`.
-- `src/lib/admin`: scope, hierarchy, delegation (`grantAccess` / `revokeAccess`), verification (`fileVerificationRequest`, predicates, states), venture review, feedback, account actions, categories, notifications, admin audit, test fixture.
-- Independent security review before commit: 6 findings in the new code fixed (self-grant chain, self-verification routing, archived source, grant race, audit allowlist, malformed id → 500).
+- `src/lib/admin/verification-queue.ts` (+ route helper), 4 routes `GET /ops/verification-requests`, `GET …/{id}`, `POST …/{id}/approve`, `POST …/{id}/reject`; idempotent operation `verification.decide`.
+- `src/lib/admin/legacy-declarations.ts` (dry run / apply, provenance `VERIFICATION_REQUEST_MIGRATED`).
+- Audit codes (approved-existing, self-action refused, migrated), system actor; API contract §26 + YAML; DEC-ADM-R1…R6.
+- Independent security review before commit: 7 findings fixed (keyset paging, cursor / limit 422, scope-in-lock, pre-transaction self refusal, concurrent-insert re-read, ALUMNI month match, year guard).
 
 ## Files changed
-- `db/migrations/017_p0_admin_foundation.sql`; 6 `src/lib/authz` / `ops` / `audit` files; 15 new `src/lib/admin` files (4 test suites); 4 updated DB test files; matrix docs, `DB_SCHEMA_GAPS_P0.md`, five reports, this report.
+- New: 3 `src/lib/admin` modules, 4 route files, `verification-queue.db-test.ts`, `admin-prod-03-verification-api.spec.ts`, 4 reports. Changed: `audit.ts`, `admin-audit.ts`, `idempotency.ts`, 3 tests, API contract (md + yaml), `DECISION_LOG.md`, this report.
 
 ## Migrations / data
-017: `role_assignments.capability`; new `role_verification_requests`, `venture_reviews`, `account_action_requests`, `notifications`; `projects.website` / `logo_asset_id`; feedback triage columns (status renamed in place NEW / IN_REVIEW / DONE); deletion request status. STOP check, lossless-or-refused rollback, fresh / upgrade / recovery tested. No seed change, no data deleted. Rollback rule: close capability-only grants before an app rollback below 017.
+NO_SCHEMA_CHANGE (on 017). No data changed; the legacy conversion is not run (seed: 0 legacy declarations; production not queried).
 
 ## Tests / build
-format, lint, typecheck PASS · unit 37 files / 365 PASS · DB 41 files / 662 PASS · build PASS · full visual / workflow suite 1,111 passed, 26 skipped, 0 failed (fresh DB) · final-build authz smoke 24 / 24.
+format, lint, typecheck PASS · unit 37 / 366 · DB 42 / 685 · build PASS · full visual / workflow suite 1,116 passed, 26 skipped, 0 failed · final build: admin API, authz, WF03 review, contract, idempotency specs 37 / 37.
 
 ## Visual QA
-Not applicable (no UI change); the full suite is the protected regression.
+Not applicable (no UI change).
 
 ## Deviations / blockers
-None. Carried to later tasks: legacy `hub_declaration` memberships → requests and the onboarding cut-over (ADMIN-PROD-03 / S1-UAT-03B); ops entry for capability-only grantees (ADMIN-PROD-06); membership check on escalation targets and the 90-day screenshot job (ADMIN-PROD-05); schema gap D3 with `POST /feedback`.
+None. Reconciled, not conflicts: task audit names → frozen `VERIFICATION_REQUEST_*` (R6); "submitted" notice → scoped `counts.pending` per frozen contract §22 (R4); "role assignment" on approval → LeadershipRecord per DL:759 (R1). Compatibility gap documented: onboarding still files declarations as memberships until S1-UAT-03B.
 
 ## Git
-- Branch: `feat/admin-portal`; base `a5d60f4`; HEAD unchanged during the task
-- Implementation commit: `feat(admin): RBAC / scope / data foundation, migration 017 (ADMIN-PROD-02)`
+- Branch: `feat/admin-portal`; base `8bdcaae`; HEAD unchanged during the task
+- Implementation commit: `feat(admin): role verification queue APIs (ADMIN-PROD-03)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: no push)
@@ -36,4 +37,4 @@ None. Carried to later tasks: legacy `hub_declaration` memberships → requests 
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of ADMIN-PROD-02; then ADMIN-PROD-03 (role verification APIs / queue) per the handoff.
+ChatGPT / PO review of ADMIN-PROD-03; then ADMIN-PROD-04 (venture review + organization delegation APIs) per the handoff.

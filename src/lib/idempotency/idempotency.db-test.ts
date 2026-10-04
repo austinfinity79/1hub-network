@@ -715,10 +715,11 @@ describe('migration 003 shape', () => {
     expect(applied).toContain('003_p0_idempotency_store.sql')
   })
 
-  it('keeps the operation catalogue aligned with the frozen seven and amendments A2, A4 and A5', () => {
+  it('keeps the operation catalogue aligned with the frozen seven and amendments A2, A4, A5 and A9', () => {
     // A4 (TASK 24.4, 05 §21): application.create and application.submit.
     // A5 (WF04-PROD-03, 05 §22): programme.create, programme.publish, programme.close.
-    expect(IDEMPOTENT_OPERATIONS).toHaveLength(13)
+    // A9 (ADMIN-PROD-03, 05 §26): verification.decide.
+    expect(IDEMPOTENT_OPERATIONS).toHaveLength(14)
     const contract = readFileSync(
       join(ROOT, 'docs/architecture/05_API_CONTRACT_P0_v1.0.md'),
       'utf8',

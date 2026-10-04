@@ -17,7 +17,8 @@ const MAX_KEY_LENGTH = 255
  * The seven operation classes listed at 05:56-63, `venture.create` of amendment
  * A2 (05 §19, DEC-L2R-D9), `application.create` / `application.submit` of
  * amendment A4 (05 §21, DEC-L5-D3), and `programme.create` / `programme.publish`
- * / `programme.close` of amendment A5 (05 §22, DEC-W4P-D12).
+ * / `programme.close` of amendment A5 (05 §22, DEC-W4P-D12), and
+ * `verification.decide` of amendment A9 (05 §26, ADMIN-PROD-03; optional header).
  */
 export const IDEMPOTENT_OPERATIONS = [
   'auth.magic-link.request',
@@ -33,6 +34,7 @@ export const IDEMPOTENT_OPERATIONS = [
   'programme.create',
   'programme.publish',
   'programme.close',
+  'verification.decide',
 ] as const
 
 export type IdempotentOperation = (typeof IDEMPOTENT_OPERATIONS)[number]

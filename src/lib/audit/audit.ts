@@ -57,8 +57,8 @@ export type AuditAction =
  * and an optional decision reason only; never a password, token, session,
  * e-mail, profile field, feedback text, screenshot or uploaded document.
  * Written through `writeAdminAudit` (src/lib/admin/admin-audit.ts), which
- * refuses any other payload. ADMIN-PROD-02 writes the first four; the rest are
- * frozen here for ADMIN-PROD-03 … 05.
+ * refuses any other payload. ADMIN-PROD-02 / 03 write the access and verification
+ * codes; the rest are frozen here for ADMIN-PROD-04 … 05.
  */
 export type AdminAuditAction =
   | 'ACCESS_GRANTED'
@@ -68,7 +68,13 @@ export type AdminAuditAction =
   | 'VERIFICATION_REQUEST_WITHDRAWN'
   | 'VERIFICATION_REQUEST_RESUBMITTED'
   | 'VERIFICATION_REQUEST_APPROVED'
+  // ADMIN-PROD-03: the approval reused the requester's ACTIVE membership of the unit.
+  | 'VERIFICATION_REQUEST_APPROVED_EXISTING_MEMBERSHIP'
   | 'VERIFICATION_REQUEST_REJECTED'
+  // ADMIN-PROD-03: a requester tried to decide their own request (refused, 403).
+  | 'VERIFICATION_REQUEST_SELF_ACTION_REFUSED'
+  // ADMIN-PROD-03: a legacy onboarding declaration converted to a request (system actor).
+  | 'VERIFICATION_REQUEST_MIGRATED'
   | 'VENTURE_REVIEW_SUBMITTED'
   | 'VENTURE_REVIEW_UPDATED'
   | 'VENTURE_REVIEW_WITHDRAWN'
@@ -91,7 +97,8 @@ export type AdminAuditAction =
 export async function writeAudit(
   exec: Executor,
   event: {
-    actorAccountId: string
+    /** Null only for a system action with no signed-in actor (a data conversion). */
+    actorAccountId: string | null
     action: AuditAction
     resourceType: string
     resourceId: string

@@ -1490,3 +1490,32 @@ Source: [DEC-W6P](../decisions/DECISION_LOG.md#dec-w6p) (D01–D05) and the [WF0
 | errors | `422 PROFILE_VALIDATION_FAILED` with `fields` (`invalid`, `unknown`, `too_long`, `too_many`, `duplicate`, `not_accepted`), every failing field at once; any other parameter is refused, never ignored; an unexpected fault keeps the generic envelope and is logged without the request. No `401` or `403` (a guest gets the restricted answer) and no `429` (no rate-limit layer; G14) |
 | privacy | no record UUID, slug, owner or account id, e-mail or private profile field; `key` is derived per record and resolvable by no endpoint; `Cache-Control: private, no-store`; reads are not audited |
 | §8.5 | `children` holds at most 200 organizations, by name; `stats.children` stays the total |
+
+---
+
+# 26. Amendment A9 — Role verification queue (2026-10-04)
+
+Source: [DEC-ADM](../decisions/DECISION_LOG.md#dec-adm) (PD-1; ADMIN-PROD-03 rules R1–R6) and the frozen [Admin Portal P0 contract](../implementation/reports/ADMIN-PROD-01-runtime-contract.md) §A; implemented by ADMIN-PROD-03. Additive: the unit side of the RoleVerificationRequest (one declared HUB position = one request). The user side (create, edit, withdraw, resubmit) is Sprint1 S1-UAT-03B's on the same table. No new error code; one new idempotent operation, `verification.decide` (optional header, §2.3).
+
+### GET `/ops/verification-requests`
+The viewer's queue: requests whose receiving unit (`routed_to`, fixed at submission by the CLB → Chapter → HUB Tổng fallback) is a unit where the viewer holds `verification:review`; every request for PLATFORM_ADMIN. `?status=` (`PENDING` default, `APPROVED`, `REJECTED`, `WITHDRAWN`) `&organization_id=` (the position's unit) `&routed_to=&cursor=&limit=` (1–50, default 20; any other value `422`); order `submitted_at`, then id; the cursor is an opaque keyset on that order, so decisions between pages never make the next page skip a request. Item: `id`, `status`, `version`, `position {title, organization {id, name, type}, period_from, period_to, current}` (months `YYYY-MM`), `routed_to {id, name, type}`, `fallback`, `requester {profile_id, display_name}`, `submitted_at`, `handled_at`, `can_act` (display only). Beside the envelope: `counts {pending}` in the viewer's scope — how a submission reaches handlers (no per-handler notification).
+
+### GET `/ops/verification-requests/{requestId}`
+The item plus `requester {profile_id, display_name, headline?, avatar_url?}` through PROFILE_DISCOVERY for a network viewer (no ops bypass; hidden → `display_name: null`), `reject_reason`, `handler_profile_id`, `context {memberships [{state, source_type, declaration, started_at, ended_at}], leadership [{title, state, started_at, ended_at}]}` in the position's unit, and `history [{event, at, by: REQUESTER | HANDLER | SYSTEM, status, routed_to, reason}]`. No e-mail, phone, full name, account id or other profile field.
+
+### POST `/ops/verification-requests/{requestId}/approve`
+Body `{ version }`. Effects in one transaction (never a RoleAssignment): a current term (no `period_to`) → an ACTIVE LeadershipRecord for the title plus an ACTIVE membership of the position's unit; an ended term → an ALUMNI LeadershipRecord with the term's months, no membership. Existing records are reused, never duplicated (R2). Returns the request as in the detail.
+
+### POST `/ops/verification-requests/{requestId}/reject`
+Body `{ version, reason? }`; the reason is optional (trimmed, ≤ 500, blank = none) and shown to the requester. The request is kept, `REJECTED`; the requester may edit and resubmit (S1-UAT-03B).
+
+## 26.1 Rules
+| Topic | Rule |
+|---|---|
+| scope | from the session's grants on the server; a request outside it, an unknown id and a malformed id are the same `404`; a viewer with no grant gets `403 SCOPE_FORBIDDEN` on the list; a `routed_to` filter outside scope `403` |
+| self | nobody decides their own request, PLATFORM_ADMIN included: `403 SCOPE_FORBIDDEN`, the attempt audited (`VERIFICATION_REQUEST_SELF_ACTION_REFUSED`) |
+| lifecycle | only `PENDING`, only the `version` the handler saw; otherwise `409 MEMBERSHIP_INVALID_TRANSITION`; the handler's grant is re-read in the transaction (revoked → refused); the second of two racing decisions gets `409`; an approval over a SUSPENDED membership, or for a requester whose profile or account is not ACTIVE, or on an unpublished unit → `409`, the request stays `PENDING` |
+| errors | `422 PROFILE_VALIDATION_FAILED` with `fields` (`invalid`, `not_accepted`, `duplicate`, `too_long`); any other parameter or body key is refused |
+| idempotency | `Idempotency-Key` optional on approve / reject (`verification.decide`): a retry replays the stored answer; the same key with another body `409` |
+| audit | `VERIFICATION_REQUEST_APPROVED` or `…_APPROVED_EXISTING_MEMBERSHIP` (membership / leadership outcomes and ids), `…_REJECTED` (reason), `…_SUBMITTED`, `…_MIGRATED` (system); ids, statuses, scope and the reason only |
+| notifications | APPROVED / REJECTED → one in-system notice to the requester; none on submission or withdrawal; no e-mail |

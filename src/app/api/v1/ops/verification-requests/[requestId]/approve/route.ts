@@ -1,0 +1,32 @@
+import { withApi, withStatus } from '@/lib/api/handler'
+import { readIdempotencyKey } from '@/lib/api/idempotency'
+import { approveVerificationRequest, refuseOwnDecision } from '@/lib/admin/verification-queue'
+import { verificationRequest } from '@/lib/admin/verification-route'
+import { fingerprintRequest, runIdempotent } from '@/lib/idempotency/store'
+
+/**
+ * POST /api/v1/ops/verification-requests/{requestId}/approve — 05 §26 (A9).
+ * `{ version }` on a PENDING request routed to the handler's unit. Not pending or a
+ * stale version → 409; own request → 403; Idempotency-Key honoured (optional).
+ */
+export const dynamic = 'force-dynamic'
+
+export const POST = withApi(async ({ request, requestId: auditRequestId }) => {
+  const { accountId, requestId } = await verificationRequest(request)
+  const body: unknown = await request.json().catch(() => undefined)
+  const key = readIdempotencyKey(request.headers)
+  if (!key) return approveVerificationRequest(accountId, requestId, body, auditRequestId)
+  // Before the idempotent transaction, so the refusal's audit row survives it.
+  await refuseOwnDecision(accountId, requestId, 'APPROVE', auditRequestId)
+  const outcome = await runIdempotent({
+    key,
+    operation: 'verification.decide',
+    actorAccountId: accountId,
+    fingerprint: fingerprintRequest({ action: 'approve', requestId, body }),
+    run: async (exec) => ({
+      status: 200,
+      body: await approveVerificationRequest(accountId, requestId, body, auditRequestId, exec),
+    }),
+  })
+  return withStatus(outcome.status, outcome.body)
+})
