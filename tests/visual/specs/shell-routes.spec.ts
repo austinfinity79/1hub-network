@@ -34,6 +34,8 @@ const IMPLEMENTED_SCREENS = new Set([
   // DEC-L1R: the intro and stage 2 of the four-stage onboarding.
   'WF01-S09',
   'WF01-S10',
+  // S1-UAT-01 (DEC-S1A-D5): password reset completion.
+  'WF01-S11',
   // WF02-T00: the member shell wraps these routes and guards them; their
   // placeholder body is proven by wf02-t00-member-foundation.spec.ts.
   'WF02-S01',
@@ -91,8 +93,9 @@ async function openPlaceholder(page: Page) {
 }
 
 test.describe('M0-T03 frozen routes', () => {
-  test('the manifest covers 28 routes across all five groups', () => {
-    expect(FROZEN_ROUTES).toHaveLength(28)
+  test('the manifest covers 29 routes across all five groups', () => {
+    // 28 + WF01-S11 /auth/reset-password (S1-UAT-01, DEC-S1A-D5).
+    expect(FROZEN_ROUTES).toHaveLength(29)
     for (const group of ROUTE_GROUPS) {
       expect(routesInGroup(group).length, `group ${group} is empty`).toBeGreaterThan(0)
     }

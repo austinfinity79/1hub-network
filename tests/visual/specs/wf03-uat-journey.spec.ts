@@ -31,6 +31,11 @@ const KEEP = process.env.UAT_KEEP === '1'
 /** Every audit code the application may write (src/lib/audit/audit.ts). */
 const AUDIT_CODES = [
   'CONSENT_ACCEPTED',
+  // S1-UAT-01 auth security events (DEC-S1A), written by the auth specs.
+  'AUTH_PASSWORD_LOGIN_LOCKED',
+  'AUTH_PASSWORD_RESET_COMPLETED',
+  'AUTH_GOOGLE_IDENTITY_LINKED',
+  'AUTH_REGISTRATION_CONFLICT',
   'PROFILE_VISIBILITY_CHANGED',
   'PROFILE_ACTIVATED',
   'MEMBERSHIP_REQUESTED',

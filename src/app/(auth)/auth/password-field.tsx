@@ -43,7 +43,7 @@ export function PasswordField({
     <div className={styles.passwordBlock}>
       <Field label={label} error={error} helper={helper}>
         {({ id, invalid, describedBy }) => (
-          <div className={styles.passwordWrap}>
+          <>
             <TextInput
               ref={inputRef}
               id={id}
@@ -66,7 +66,7 @@ export function PasswordField({
             >
               {visible ? 'Ẩn' : 'Hiện'}
             </button>
-          </div>
+          </>
         )}
       </Field>
       {meter ? (

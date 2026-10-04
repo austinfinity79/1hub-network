@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { afterSignIn } from './after-sign-in'
-import { fetchGoogleProfile, startGoogleFlow, verifyGoogleState } from './google'
+import { fetchGoogleProfile, googleConfig, startGoogleFlow, verifyGoogleState } from './google'
 import { hashPassword, verifyPassword } from './password'
 import { isValidPasswordFormat, passwordStrength } from './password-rules'
 import { passwordResetUrl, renderPasswordResetEmail } from './password-reset-email'
@@ -111,6 +111,29 @@ describe('reset e-mail', () => {
 
 describe('Google OAuth state and exchange', () => {
   const config = { clientId: 'cid', clientSecret: 'secret' }
+
+  it('is offered only when BOTH server-side variables are set (env contract)', () => {
+    vi.stubEnv('GOOGLE_OAUTH_CLIENT_ID', '')
+    vi.stubEnv('GOOGLE_OAUTH_CLIENT_SECRET', '')
+    expect(googleConfig()).toBeNull()
+    vi.stubEnv('GOOGLE_OAUTH_CLIENT_ID', 'cid')
+    expect(googleConfig()).toBeNull()
+    vi.stubEnv('GOOGLE_OAUTH_CLIENT_SECRET', ' s3cr3t ')
+    expect(googleConfig()).toEqual({ clientId: 'cid', clientSecret: 's3cr3t' })
+    vi.unstubAllEnvs()
+  })
+
+  it('a provider failure logs neither the secret, the code nor a token', async () => {
+    const logged: unknown[] = []
+    vi.spyOn(console, 'error').mockImplementation((...args) => void logged.push(...args))
+    const down = vi.fn(async () => {
+      throw new TypeError('network secret code-xyz')
+    })
+    await expect(
+      fetchGoogleProfile(config, 'https://x.vn', 'code-xyz', 'v', down as unknown as typeof fetch),
+    ).rejects.toMatchObject({ code: 'AUTH_GOOGLE_FAILED' })
+    expect(JSON.stringify(logged)).not.toMatch(/secret|code-xyz/)
+  })
 
   it('starts with PKCE S256 and a state bound to the cookie', () => {
     const { url, cookieValue } = startGoogleFlow(config, 'https://1hubnetwork.io.vn')

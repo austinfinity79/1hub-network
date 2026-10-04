@@ -1,6 +1,6 @@
 # S1-UAT-01 auth replacement
 
-Sprint1 AUTH replacement: username/email + password + Google + reset / session rules on the one canonical `/auth`. Decisions: [DEC-S1A](../../decisions/DECISION_LOG.md#dec-s1a). Contract: [05 amendment A12](../../architecture/05_API_CONTRACT_P0_v1.0.md). Tests and git: [S1-UAT-01-evidence](S1-UAT-01-evidence.md).
+Sprint1 AUTH replacement: username/email + password + Google + reset / session rules on the one canonical `/auth`. Decisions: [DEC-S1A](../../decisions/DECISION_LOG.md#dec-s1a). Contract: [05 amendment A12](../../architecture/05_API_CONTRACT_P0_v1.0.md). Tests, security and git: [S1-UAT-01-evidence](S1-UAT-01-evidence.md). DB incident: [S1-UAT-01-db-incident](S1-UAT-01-db-incident.md).
 
 ## Preflight
 | Check | Result |
@@ -22,7 +22,7 @@ Sprint1 AUTH replacement: username/email + password + Google + reset / session r
 ## Final architecture
 | Layer | After |
 |---|---|
-| `/auth` (WF01-S01) | views: sign-in · create account · forgot; Google control; no mode parameter |
+| `/auth` (WF01-S01) | views: sign-in · create account · forgot; Google control; no mode parameter; existing AUTH1 shell and components (PO decision 1) |
 | `/auth/check-email` (S02) | also confirms the reset e-mail (`kind: reset`) |
 | `/auth/callback` (S03) | magic-link token OR Google `code` / `state` |
 | `/auth/reset-password` (**S11**, new) | new password from the e-mailed `#token=` |
@@ -37,10 +37,13 @@ No parallel auth: one session table, one cookie, one resolver, one status gate.
 | Username | 4–30, `[A-Za-z0-9.]`, unique case-insensitively; Google: generated | `username.ts`, UNIQUE `username_normalized` |
 | Password | ≥ 8, letters + digits; scrypt N=16384; cap 256 | `password.ts`, `password-rules.ts` |
 | Lockout | 5 consecutive → password sign-in off 15 min; server columns; audited; cleared by success / reset; Google unaffected | `lockout.ts` |
-| Forgot / reset | 15 min, one use, resend ≥ 45 s retires older, 5 / account / 15 min silent, no existence leak, fragment token | `credentials.ts` |
+| Forgot / reset | 15 min, one use, resend ≥ 45 s retires older, a repeat forgot within 45 s sends nothing (silent), no existence leak, fragment token | `credentials.ts` |
 | Reset effect | new hash + every session revoked in one transaction; no session created | `completePasswordReset` |
 | Google | PKCE + state cookie; `sub` identity; verified e-mail links the SAME account; one Google per account; status before link | `google.ts` |
 | Remember me | 30-day cookie; else browser-session cookie | `login` route |
+| Enumeration (PO decision 3) | no answer says an e-mail has an account; sign-up conflict = neutral `AUTH_REGISTRATION_REJECTED`, reason audited internally (`AUTH_REGISTRATION_CONFLICT`); unknown identifiers lock like real ones | `credentials.ts`, `lockout.ts` |
+| Limits (PO decision 4) | Sprint1 values only (5 / 15 min, 15 min link, 45 s); no invented per-IP bucket on the new endpoints | — |
+| CSRF | new POST endpoints JSON-only (`body: json_required`) | `require-json.ts` |
 
 ## Magic-link disposition (task section 10)
 | Part | Class |

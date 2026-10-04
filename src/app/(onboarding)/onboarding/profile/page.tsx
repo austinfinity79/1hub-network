@@ -46,9 +46,10 @@ export default async function Page() {
     >
       <BasicForm
         initial={{
-          // S1-UAT-01: the sign-up name prefills an empty stage 1; never overrides.
+          // S1-UAT-01: the sign-up name prefills an empty full name; never overrides.
+          // The display name stays empty so it keeps defaulting to the full name.
           full_name: profile.full_name ?? signupName ?? '',
-          display_name: profile.display_name ?? signupName ?? '',
+          display_name: profile.display_name ?? '',
           headline: profile.headline ?? '',
           bio: profile.bio ?? '',
           country_id: profile.country?.id ?? '',
