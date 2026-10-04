@@ -2,7 +2,14 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import type { Capability } from '@/lib/authz/matrix'
-import { ACCOUNT_ENTRY, NETWORK_NAV, OPS_COPY, organizationNav } from '@/lib/ops/nav'
+import {
+  ACCOUNT_ENTRY,
+  ADMIN_HOME_NAV,
+  ADMIN_NAV_ITEMS,
+  NETWORK_NAV,
+  OPS_COPY,
+  organizationNav,
+} from '@/lib/ops/nav'
 import type { OrganizationRefDTO } from '@/lib/ops/organizations'
 
 import { OpsDemoEntry, OpsNav } from './ops-nav'
@@ -14,6 +21,20 @@ type Props = {
   organization?: Pick<OrganizationRefDTO, 'id' | 'name'>
   /** The actor's capabilities for that organization (menu visibility only). */
   capabilities?: readonly Capability[]
+  /**
+   * ADMIN-PROD-06 — the actor's platform-admin capabilities, from
+   * `requireOpsAdmin`; unset (default) renders no admin group, unchanged for
+   * every existing call site (DEC-ADM, `/ops/network` and `/ops/org/*` never
+   * pass this).
+   */
+  adminCapabilities?: readonly Capability[]
+  /**
+   * False only for a capability-only admin grantee with no `network:read`
+   * (`/ops/admin/*`, which may admit such an actor): hides the dead
+   * "Danh sách tổ chức" link rather than send them to a 404. Default true,
+   * unchanged for every existing call site.
+   */
+  hasNetworkAccess?: boolean
   children: ReactNode
 }
 
@@ -33,10 +54,21 @@ type Props = {
  * Organization context: the subtitle slot carries the breadcrumb
  * ("Tổ chức › {organization}"), so no bar is added above the screens' content.
  */
-export function OpsShell({ organization, capabilities = [], children }: Props) {
+export function OpsShell({
+  organization,
+  capabilities = [],
+  adminCapabilities = [],
+  hasNetworkAccess = true,
+  children,
+}: Props) {
   const orgItems = organization
-    ? organizationNav(organization.id).filter((i) => capabilities.includes(i.capability))
+    ? organizationNav(organization.id).filter(
+        (i) => !!i.capability && capabilities.includes(i.capability),
+      )
     : []
+  const adminItems = ADMIN_NAV_ITEMS.filter(
+    (i) => !!i.capability && adminCapabilities.includes(i.capability),
+  )
   return (
     <div className={styles.root} data-shell="ops">
       <aside className={styles.sidebar}>
@@ -60,14 +92,28 @@ export function OpsShell({ organization, capabilities = [], children }: Props) {
           <p className={`type-body-sm ${styles.context}`}>{OPS_COPY.product}</p>
         )}
         <nav aria-label="Vận hành">
-          <p className={`weight-semibold ${styles.group}`}>{OPS_COPY.networkGroup}</p>
-          <OpsNav items={[NETWORK_NAV]} label={OPS_COPY.networkGroup} />
+          {hasNetworkAccess ? (
+            <>
+              <p className={`weight-semibold ${styles.group}`}>{OPS_COPY.networkGroup}</p>
+              <OpsNav items={[NETWORK_NAV]} label={OPS_COPY.networkGroup} />
+            </>
+          ) : null}
           {orgItems.length > 0 ? (
             <>
               <p className={`weight-semibold ${styles.group} ${styles.groupNext}`}>
                 {OPS_COPY.organizationGroup}
               </p>
               <OpsNav items={orgItems} label={OPS_COPY.organizationGroup} />
+            </>
+          ) : null}
+          {adminItems.length > 0 ? (
+            <>
+              <p
+                className={`weight-semibold ${styles.group} ${hasNetworkAccess ? styles.groupNext : ''}`}
+              >
+                {OPS_COPY.adminGroup}
+              </p>
+              <OpsNav items={[ADMIN_HOME_NAV, ...adminItems]} label={OPS_COPY.adminGroup} />
             </>
           ) : null}
         </nav>

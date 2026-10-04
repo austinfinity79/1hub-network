@@ -9,7 +9,7 @@ import type { Capability } from '@/lib/authz/matrix'
 import { getOnboardingState, routeFor } from '@/lib/onboarding/state'
 
 import { requireOpsOrganization, type OpsOrganizationContext } from './organizations'
-import { hasOpsAccess } from './scope'
+import { hasOpsAccess, organizationScope } from './scope'
 
 /**
  * WF03-T00 — server-side entry check for `/ops/*` pages (DEC-WF03-G11/G15).
@@ -41,6 +41,37 @@ export async function requireOps(): Promise<{ accountId: string }> {
   const accountId = await signedInAccount()
   if (!hasOpsAccess(await resolveActor(accountId))) notFound()
   return { accountId }
+}
+
+/**
+ * ADMIN-PROD-06 — the six platform-admin queues (05 §26–28) have no single
+ * organization context, so they get their own entry check rather than
+ * `requireOps` (`network:read`): any of the six (platform-wide, or on at least
+ * one organization) admits the actor to `/ops/admin/*`; holding none is the
+ * same 404 as having no ops access at all. Each page's own API call is still
+ * the authority for that one capability.
+ */
+export async function requireOpsAdmin(): Promise<{
+  accountId: string
+  capabilities: Capability[]
+}> {
+  const accountId = await signedInAccount()
+  const actor = await resolveActor(accountId)
+  const capabilities = (
+    [
+      'verification:review',
+      'access:delegate',
+      'venture:review',
+      'feedback:manage',
+      'vocabulary:manage',
+      'account:administer',
+    ] as const
+  ).filter((c) => {
+    const scope = organizationScope(actor, c)
+    return scope.kind === 'ALL' || scope.organizationIds.length > 0
+  })
+  if (capabilities.length === 0) notFound()
+  return { accountId, capabilities }
 }
 
 export async function requireOpsOrg(

@@ -5,7 +5,12 @@ import { resolveActor } from '@/lib/authz/actor'
 import { can } from '@/lib/authz/authorize'
 import { closePool, query } from '@/lib/db/client'
 
-import { accessHistory, listAccess, parseGrantBody } from './access-api'
+import {
+  accessHistory,
+  listAccess,
+  listDelegationOrganizations,
+  parseGrantBody,
+} from './access-api'
 import { grantAccess, revokeAccess } from './delegation'
 import { holdsAt } from './scope'
 import { ADM_FX, ADM_PEOPLE, clearAdminFixture, seedAdminFixture } from './testing'
@@ -190,5 +195,35 @@ describe('concurrency', () => {
       [P.memberA.profile, O.CLB_A2],
     )
     expect(n!.n).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('ADMIN-PROD-06 — listDelegationOrganizations: the /ops/admin/access entry list', () => {
+  it('PLATFORM_ADMIN sees every operational unit; a whole-role leader sees its own unit and direct children only', async () => {
+    const admin = await listDelegationOrganizations(P.admin.account)
+    const adminIds = admin.map((o) => o.id)
+    expect(adminIds).toEqual(expect.arrayContaining([O.HUB, O.CH_A, O.CH_B, O.CLB_A1, O.CLB_B1]))
+
+    const leader = await listDelegationOrganizations(P.chALeader.account)
+    const leaderIds = leader.map((o) => o.id)
+    expect(leaderIds).toEqual(expect.arrayContaining([O.CH_A, O.CLB_A1]))
+    // Reach only (DEC-ADM reach: own unit + direct children) — a sibling
+    // chapter and its own CLBs never list, even though the actor is a
+    // delegation source somewhere.
+    expect(leaderIds).not.toContain(O.CH_B)
+    expect(leaderIds).not.toContain(O.CLB_B1)
+  })
+
+  it('holding access:delegate nowhere is refused, not an empty list (`access:delegate` is itself never delegable, DEC-ADM)', async () => {
+    // A capability-only grant of verification:review alone — access:delegate
+    // not among it — still gets the same refusal, not a narrowed list.
+    const granted = await grant('admin', O.CLB_A1, 'memberB', 'verification:review')
+    expect(await failure(listDelegationOrganizations(P.memberB.account))).toMatchObject({
+      status: 403,
+    })
+    await revoke('admin', O.CLB_A1, granted.id)
+    expect(await failure(listDelegationOrganizations(P.memberC.account))).toMatchObject({
+      status: 403,
+    })
   })
 })

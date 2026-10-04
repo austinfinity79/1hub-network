@@ -1,11 +1,13 @@
 import { ApiError, unauthenticated } from '@/lib/api/errors'
 import { resolveActor, type Actor } from '@/lib/authz/actor'
 import { query } from '@/lib/db/client'
+import { OPS_ORGANIZATION_TYPES } from '@/lib/ops/organizations'
 import { projectDiscovery } from '@/lib/profile/projection'
 import { discoveryLevelsOf } from '@/lib/profile/visibility'
 
 import { DELEGABLE_ROLE, delegationSourceFor } from './delegation'
 import { isUuid } from './hierarchy'
+import { delegationReach, holdsPlatform } from './scope'
 
 /**
  * ADMIN-PROD-04 — reading a unit's delegated access (PD-6). Grant and revoke are
@@ -48,6 +50,36 @@ async function authorizedFor(accountId: string, orgId: string): Promise<Actor> {
   )
   if (!org) throw forbidden()
   return actor
+}
+
+export type DelegationOrganizationDTO = { id: string; name: string; type: string }
+
+/**
+ * ADMIN-PROD-06 — the units whose Access tab (`/ops/admin/access/{orgId}`)
+ * this actor may open: PD-6 reach (its delegation sources and their direct
+ * canonical children), every operational unit for PLATFORM_ADMIN. Scoped by
+ * `access:delegate` specifically, never `network:read` — a capability-only
+ * grantee with no network access still finds its one unit here.
+ */
+export async function listDelegationOrganizations(
+  accountId: string,
+): Promise<DelegationOrganizationDTO[]> {
+  const actor = await resolveActor(accountId)
+  if (!actor.profileId) throw unauthenticated()
+  if (holdsPlatform(actor, 'access:delegate')) {
+    return query<DelegationOrganizationDTO>(
+      `SELECT id::text, name, type::text AS type FROM organizations
+        WHERE type::text = ANY($1::text[]) ORDER BY name`,
+      [[...OPS_ORGANIZATION_TYPES]],
+    )
+  }
+  const reach = await delegationReach(query, actor)
+  if (reach.kind !== 'SOME' || reach.organizationIds.length === 0) throw forbidden()
+  return query<DelegationOrganizationDTO>(
+    `SELECT id::text, name, type::text AS type FROM organizations
+      WHERE id = ANY($1::uuid[]) ORDER BY name`,
+    [reach.organizationIds],
+  )
 }
 
 async function names(profileIds: string[]): Promise<Map<string, string | null>> {

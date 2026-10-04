@@ -1,0 +1,457 @@
+/*
+ * ADMIN-PROD-06 — shared styles for every /ops/admin/* queue, detail and
+ * settings screen. No approved pixel reference exists for these screens
+ * (ADMIN-PROD-08 owns pixel QA); tokens and component shapes are the same
+ * ones WF03's OpsShell screens already use (network/dashboard/relationships
+ * CSS modules), so the admin area reads as one product, not a new style.
+ */
+
+.page {
+  min-height: 100vh;
+  padding: 1.4375rem 2rem 3rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.125rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.375rem;
+  line-height: 1.875rem;
+  font-weight: var(--weight-semibold);
+  color: #140002;
+}
+
+.subtitle {
+  margin: 0.1875rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: #533f41;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.875rem;
+  margin-bottom: 1.125rem;
+}
+
+.kpi {
+  padding: 0.9375rem 1.125rem;
+  border: 1px solid #e4dfdf;
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+  text-decoration: none;
+  display: block;
+}
+
+.kpiLabel {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #635253;
+}
+
+.kpiValue {
+  margin: 0.25rem 0 0;
+  font-size: 1.625rem;
+  font-weight: var(--weight-semibold);
+  color: #140002;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 0.875rem;
+}
+
+.select,
+.input {
+  height: 2.0625rem;
+  padding: 0 0.75rem;
+  border: 1px solid #e6e1e1;
+  border-radius: 0.375rem;
+  background: var(--hub-surface);
+  font-size: 0.8125rem;
+  color: #251011;
+}
+
+.textarea {
+  width: 100%;
+  height: 5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e6e1e1;
+  border-radius: 0.375rem;
+  background: var(--hub-surface);
+  font-size: 0.8125rem;
+  color: #251011;
+  resize: vertical;
+}
+
+.select:focus-visible,
+.input:focus-visible,
+.textarea:focus-visible,
+.primary:focus-visible,
+.secondary:focus-visible,
+.danger:focus-visible,
+.textAction:focus-visible,
+.tab:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e6e1e1;
+}
+
+.tab {
+  padding: 0.5rem 0.875rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-medium);
+  color: #635253;
+  cursor: pointer;
+}
+
+.tab[aria-current='true'] {
+  border-bottom-color: #fc523c;
+  color: #140002;
+}
+
+.table {
+  overflow-x: auto;
+  border: 1px solid #e5e1e1;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+}
+
+.head,
+.row {
+  display: grid;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1.125rem;
+}
+
+.head {
+  height: 2.1875rem;
+  background: #f7f5f5;
+  font-size: 0.625rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #907a7b;
+}
+
+.row {
+  text-decoration: none;
+  color: inherit;
+}
+
+.row + .row {
+  border-top: 1px solid #e6e1e1;
+}
+
+/* Per-queue column tracks (fixed trailing date/status column, flexible rest). */
+.colsVerification,
+.colsVentures,
+.colsAccounts {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) 9rem;
+}
+
+.colsFeedback {
+  grid-template-columns: 4.5rem minmax(0, 1fr) 6rem 6rem 8.5rem;
+}
+
+.colsOrgs {
+  grid-template-columns: minmax(0, 1fr) 8rem;
+}
+
+.colsCategories {
+  grid-template-columns: minmax(0, 1fr) 7rem 6rem 7rem 11rem;
+}
+
+.row:hover {
+  background: #fbf9f9;
+}
+
+.cell {
+  min-width: 0;
+  padding-right: 0.75rem;
+  font-size: 0.8125rem;
+  color: #5a4748;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cellName {
+  font-weight: var(--weight-medium);
+  color: #251011;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 1.4375rem;
+  padding: 0 0.625rem;
+  border: 1px solid #e3dede;
+  border-radius: 0.75rem;
+  background: var(--hub-surface);
+  font-size: 0.6875rem;
+  color: #533f41;
+  white-space: nowrap;
+}
+
+.chipHigh {
+  border-color: #f0c9c6;
+  background: #fdecea;
+  color: #b91610;
+}
+
+.loadMore {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.125rem;
+  border: 0;
+  border-top: 1px solid #e6e1e1;
+  background: none;
+  font-size: 0.8125rem;
+  color: var(--color-fg-accent);
+  cursor: pointer;
+}
+
+.card {
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e4dfdf;
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
+  box-shadow:
+    0 1px 2px rgb(20 0 2 / 0.04),
+    0 4px 16px rgb(20 0 2 / 0.04);
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.625rem;
+  line-height: 1rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #b91610;
+}
+
+.line {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #251011;
+}
+
+.muted {
+  color: #8a7a7b;
+}
+
+.primary,
+.secondary,
+.danger,
+.textAction {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.primary {
+  height: 2.0625rem;
+  padding: 0 1.125rem;
+  border: 0;
+  background: #fc523c;
+  color: #160002;
+  box-shadow:
+    0 -1px 0 rgb(252 82 60 / 0.25),
+    0 1px 0 rgb(252 82 60 / 0.3);
+}
+
+.secondary {
+  height: 2.0625rem;
+  padding: 0 1rem;
+  border: 1px solid #e6e1e1;
+  background: var(--hub-surface);
+  color: #442f30;
+}
+
+.danger {
+  height: 2.0625rem;
+  padding: 0 1rem;
+  border: 0;
+  background: #b91610;
+  color: #ffffff;
+}
+
+.textAction {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #b91610;
+}
+
+.primary:disabled,
+.secondary:disabled,
+.danger:disabled,
+.textAction:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+/* The project's inline confirm idiom (WF03-S08 "end relationship"): a reason
+   field plus Confirm / Cancel, not a modal dialog. */
+.confirmForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1ebeb;
+}
+
+.confirmText {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: #533f41;
+  flex: 1 100%;
+}
+
+.fieldError {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #b00000;
+  flex: 1 100%;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.125rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e5e1e1;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+  color: #5a4748;
+}
+
+.loading,
+.empty {
+  padding: 0.75rem 1.125rem;
+  color: #5a4748;
+}
+
+.retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-fg-accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.actionNotice {
+  margin: 0 0 0.875rem;
+  font-size: 0.875rem;
+}
+
+.actionOk {
+  color: #2a3b24;
+}
+
+.actionError {
+  color: #b00000;
+}
+
+.diffTable {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.diffRow {
+  display: contents;
+}
+
+.diffHead {
+  font-size: 0.625rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #907a7b;
+}
+
+.diffField {
+  color: #533f41;
+  font-weight: var(--weight-medium);
+}
+
+.diffBefore {
+  color: #8a7a7b;
+}
+
+.diffAfter {
+  color: #140002;
+  font-weight: var(--weight-medium);
+}
+
+.screenshot {
+  max-width: 20rem;
+  border: 1px solid #e4dfdf;
+  border-radius: 0.5rem;
+}
+
+.history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.historyEntry {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.historyWhen {
+  flex: none;
+  width: 9rem;
+  color: #8a7a7b;
+}
+
+.historyWhat {
+  color: #251011;
+}
