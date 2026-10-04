@@ -132,7 +132,16 @@ export function parseWebsite(value: unknown): { ok: true; value: string | null }
   if (value === null || (typeof value === 'string' && value.trim() === ''))
     return { ok: true, value: null }
   const url = safeUrl(value)
-  return url ? { ok: true, value: url } : { ok: false }
+  // Normalisation can lengthen a URL (percent-encoding): the stored value is bounded too.
+  return url && url.length <= 500 ? { ok: true, value: url } : { ok: false }
+}
+
+/** A keyset cursor time: the exact UTC microsecond form, and a real instant. */
+export function isCursorTime(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/.test(value))
+    return false
+  const parsed = new Date(value)
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 19) === value.slice(0, 19)
 }
 
 /** PD-3 logo: a reference into the existing media asset store, as avatars. */

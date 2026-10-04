@@ -57,8 +57,8 @@ export type AuditAction =
  * and an optional decision reason only; never a password, token, session,
  * e-mail, profile field, feedback text, screenshot or uploaded document.
  * Written through `writeAdminAudit` (src/lib/admin/admin-audit.ts), which
- * refuses any other payload. ADMIN-PROD-02 / 03 write the access and verification
- * codes; the rest are frozen here for ADMIN-PROD-04 … 05.
+ * refuses any other payload. ADMIN-PROD-02 … 04 write the access, verification and
+ * venture review codes; the rest are frozen here for ADMIN-PROD-05.
  */
 export type AdminAuditAction =
   | 'ACCESS_GRANTED'
@@ -76,6 +76,10 @@ export type AdminAuditAction =
   // ADMIN-PROD-03: a legacy onboarding declaration converted to a request (system actor).
   | 'VERIFICATION_REQUEST_MIGRATED'
   | 'VENTURE_REVIEW_SUBMITTED'
+  // ADMIN-PROD-04: a new submission after a rejected one.
+  | 'VENTURE_REVIEW_RESUBMITTED'
+  // ADMIN-PROD-04: a reviewer tried to decide a venture they own or belong to (refused, 403).
+  | 'VENTURE_REVIEW_SELF_ACTION_REFUSED'
   | 'VENTURE_REVIEW_UPDATED'
   | 'VENTURE_REVIEW_WITHDRAWN'
   | 'VENTURE_REVIEW_APPROVED'

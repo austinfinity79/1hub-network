@@ -1519,3 +1519,43 @@ Body `{ version, reason? }`; the reason is optional (trimmed, ≤ 500, blank = n
 | idempotency | `Idempotency-Key` optional on approve / reject (`verification.decide`): a retry replays the stored answer; the same key with another body `409` |
 | audit | `VERIFICATION_REQUEST_APPROVED` or `…_APPROVED_EXISTING_MEMBERSHIP` (membership / leadership outcomes and ids), `…_REJECTED` (reason), `…_SUBMITTED`, `…_MIGRATED` (system); ids, statuses, scope and the reason only |
 | notifications | APPROVED / REJECTED → one in-system notice to the requester; none on submission or withdrawal; no e-mail |
+
+---
+
+# 27. Amendment A10 — Venture review and organization access (2026-10-04)
+
+Source: [DEC-ADM](../decisions/DECISION_LOG.md#dec-adm) (PD-2, PD-3, PD-6; ADMIN-PROD-04 rules R7–R11) and the frozen [Admin Portal P0 contract](../implementation/reports/ADMIN-PROD-01-runtime-contract.md) §B, §C; implemented by ADMIN-PROD-04. Additive. The owner side of venture review ("Gửi duyệt", saving core fields) is Sprint1 S1-UAT-06's on the same `venture_reviews` rows, through the shared writers `submitVentureForReview` / `saveVentureCore`; until it ships, §20.1 self-publication stays as it is. No new error code; two idempotent operations, `venture.review` and `access.grant-or-revoke` (optional header, §2.3).
+
+### GET `/ops/venture-reviews`
+PLATFORM_ADMIN only (`venture:review`); anyone else `403 SCOPE_FORBIDDEN`. `?status=` (`PENDING` default, `APPROVED`, `REJECTED`, `WITHDRAWN`) `&kind=` (`FIRST_PUBLISH`, `CORE_CHANGE`) `&venture_id=&cursor=&limit=` (1–50, default 20; keyset on `submitted_at`, id); any other value `422`. Item: `id`, `kind`, `status`, `version`, `venture {id, type, name, status, visibility}` (the live row), `proposed_name`, `changed_fields` (core fields that would change publicly; every set one for a first publication), `owner {profile_id, display_name}`, `submitted_at`, `reviewed_at`, `can_act`; beside the envelope `counts {pending}`.
+
+### GET `/ops/venture-reviews/{reviewId}`
+The item plus `public_version` (the approved public core, null before the first publication), `proposed`, `diff [{field, before, after}]`, `vocabulary {id: label}`, `logo {public, proposed}` (`asset_id`, `url`, `content_type`, `byte_size`), `owner {profile_id, display_name, headline?}` through PROFILE_DISCOVERY, `reject_reason`, `reviewer_profile_id`, `history [{event, at, by: OWNER | TEAM | REVIEWER | SYSTEM, status, reason}]`, `previous_reviews`. Non-reviewers and unknown or malformed ids: the same `404`.
+
+### POST `/ops/venture-reviews/{reviewId}/approve`
+Body `{ version }`. The candidate is written onto the SAME `projects` row (core fields, sectors replaced); a first publication becomes ACTIVE / PUBLIC (`VENTURE_PUBLISHED` on the venture too). The owner is notified.
+
+### POST `/ops/venture-reviews/{reviewId}/reject`
+Body `{ version, reason? }` (optional, ≤ 500). The live row is untouched; the review is kept; the owner edits and resubmits (a new review, `VENTURE_REVIEW_RESUBMITTED`). The owner is notified.
+
+### GET `/ops/organizations/{orgId}/access`
+`?state=ACTIVE|CLOSED|ALL` (default ACTIVE). The unit's grantable-role assignments (HUB_COMMUNITY_LEADER, whole role or one capability): `id`, `role_code`, `capability`, `grantee {profile_id, display_name}`, `granted_by_profile_id`, `created_at`, `revoked_at`, `state`, `effective`, `can_revoke`. Readers = grantors: PLATFORM_ADMIN or `access:delegate` on the unit or its canonical parent; others, unknown and malformed units `403`.
+
+### POST `/ops/organizations/{orgId}/access`
+Body `{ grantee_profile_id, capability? }` (absent / null = the whole role) → `201`. PD-6 on the server: own unit or a direct child; a delegable capability the grantor holds there, the whole role only from its holder; never platform-scoped, never to oneself; ARCHIVED target or source `409`; grantee an ACTIVE profile and account (`422`); a live identical grant `409`.
+
+### GET `/ops/organizations/{orgId}/access/history`
+Every grant and revocation of the unit from the audit trail, oldest first: `event` (GRANTED / REVOKED), `at`, `grant_id`, `actor_profile_id`, `grantee_profile_id`, `role_code`, `capability`.
+
+### POST `/ops/organizations/{orgId}/access/{grantId}/revoke`
+ACTIVE → CLOSED now (`revoked_at`); the grantor, `access:delegate` on the unit or its parent, or PLATFORM_ADMIN. Effective on the grantee's next request. A grant of another unit `404`; not active `409`.
+
+## 27.1 Rules
+| Topic | Rule |
+|---|---|
+| public version | `projects` is the approved version and the only thing a public surface reads; a core change of a PUBLIC venture waits in its review; nothing unapproved is public |
+| edit while pending | one PENDING review per venture; a save updates its candidate and `version`; a decision on an older `version` is `409`; an approval that lands first makes the next save open a new review |
+| self | a reviewer never decides a venture they own or belong to (`403`, audited) |
+| website / logo | `website` http / https only, ≤ 500, normalised; `logo_asset_id` an asset of the media store uploaded by the editor or owner, PNG / JPEG / WebP, ≤ 2 MB; a reviewer may fetch a referenced logo at `/media/assets/{id}`; no business registration or tax code field |
+| audit | `VENTURE_REVIEW_SUBMITTED` / `_RESUBMITTED` / `_UPDATED` / `_APPROVED` / `_REJECTED` / `_SELF_ACTION_REFUSED`; `ACCESS_GRANTED` / `ACCESS_REVOKED`; ids, codes, versions and the optional reason only |
+| notifications | venture approve / reject → the owner; grants and revocations → none (no such notice in the contract) |

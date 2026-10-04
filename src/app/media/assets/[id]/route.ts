@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { reviewerMayFetchLogo } from '@/lib/admin/venture-review-queue'
 import { readSessionToken } from '@/lib/auth/session-cookie'
 import { resolveSession } from '@/lib/auth/sessions'
 import { query } from '@/lib/db/client'
@@ -17,10 +18,21 @@ import { discoveryLevelOf } from '@/lib/profile/visibility'
  *   and the owner's PROFILE_DISCOVERY is NETWORK_ONLY (or wider);
  * - PRIVATE discovery, guests, unknown ids: the same 404, so nothing reveals
  *   that an asset exists. Never cached publicly.
+ * - ADMIN-PROD-04: a venture reviewer (`venture:review`) may fetch an asset that
+ *   is a venture's logo or a review's proposed logo; avatars are unaffected.
  */
 export const dynamic = 'force-dynamic'
 
 const VISIBLE_TO_NETWORK = new Set(['NETWORK_ONLY', 'PUBLIC'])
+
+/** The avatar rule: the owner's current avatar, with PROFILE_DISCOVERY NETWORK_ONLY or wider. */
+async function avatarVisible(owner: string, id: string): Promise<boolean> {
+  const [current] = await query<{ avatar_asset_id: string | null }>(
+    'SELECT avatar_asset_id FROM individual_profiles WHERE account_id = $1',
+    [owner],
+  )
+  return current?.avatar_asset_id === id && VISIBLE_TO_NETWORK.has(await discoveryLevelOf(owner))
+}
 
 export async function GET(
   request: Request,
@@ -34,13 +46,9 @@ export async function GET(
   if (!asset) return denied
 
   const owner = asset.meta.owner_account_id
-  if (owner !== session.accountId) {
-    const [current] = await query<{ avatar_asset_id: string | null }>(
-      'SELECT avatar_asset_id FROM individual_profiles WHERE account_id = $1',
-      [owner],
-    )
-    if (current?.avatar_asset_id !== id) return denied
-    if (!VISIBLE_TO_NETWORK.has(await discoveryLevelOf(owner))) return denied
+  if (owner !== session.accountId && !(await avatarVisible(owner, id))) {
+    // Only then the reviewer rule, so avatar views pay nothing for it.
+    if (!(await reviewerMayFetchLogo(session.accountId, id))) return denied
   }
 
   return new NextResponse(new Uint8Array(asset.bytes), {

@@ -9,6 +9,7 @@ import { discoveryLevelsOf } from '@/lib/profile/visibility'
 
 import { writeAdminAudit } from './admin-audit'
 import { isUuid } from './hierarchy'
+import { isCursorTime } from './venture-review'
 import { notify } from './notifications'
 import { holdsPlatform, inScope } from './scope'
 import {
@@ -164,13 +165,12 @@ const iso = (value: Date | null) => (value ? new Date(value).toISOString() : nul
  * precision, exactly as stored.
  */
 type Cursor = { t: string; i: string }
-const CURSOR_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/
 const encodeCursor = (cursor: Cursor) => Buffer.from(JSON.stringify(cursor)).toString('base64url')
 function decodeCursor(raw: string | null): Cursor | null {
   if (raw === null) return null
   try {
     const value = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')) as Partial<Cursor>
-    if (typeof value.t === 'string' && CURSOR_TIME.test(value.t) && isUuid(value.i)) {
+    if (isCursorTime(value.t) && isUuid(value.i)) {
       return { t: value.t, i: value.i }
     }
   } catch {

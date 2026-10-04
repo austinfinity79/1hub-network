@@ -76,6 +76,7 @@ const CODE_KEYS = new Set([
   'membership_outcome',
   'leadership_outcome',
   'leadership_state',
+  'visibility',
 ])
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const CODE = /^[A-Za-z0-9_:-]{1,64}$/

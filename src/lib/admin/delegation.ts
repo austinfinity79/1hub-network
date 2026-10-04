@@ -36,12 +36,17 @@ import { holdsAt, holdsPlatform, holdsRoleAt } from './scope'
  *   race       the grantor's source assignment is re-read FOR SHARE inside the
  *              transaction, so a revocation committed first refuses the grant.
  * Revoke: the grantor, a holder of `access:delegate` on the grant's unit or on
- * its parent, or PLATFORM_ADMIN; ACTIVE → CLOSED with `valid_to` now.
+ * its parent, or PLATFORM_ADMIN; ACTIVE → CLOSED with `valid_to` now. Only the
+ * grantable role's rows (HUB_COMMUNITY_LEADER, whole or capability) are revocable
+ * here; other role rows of the unit (e.g. HUB_MEMBER from the roster) are not access.
  * Every grant and revoke writes ACCESS_GRANTED / ACCESS_REVOKED with grantor,
  * grantee, role / capability and scope. A refused call writes nothing.
  */
 
 export const DELEGABLE_ROLE = 'HUB_COMMUNITY_LEADER' as const
+
+const inTransaction = <T>(exec: Executor | undefined, work: (exec: Executor) => Promise<T>) =>
+  exec ? work(exec) : withTransaction(work)
 
 export type AccessGrantRecord = {
   id: string
@@ -141,6 +146,7 @@ export async function grantAccess(
   accountId: string,
   input: { organizationId: string; granteeProfileId: string; capability: string | null },
   requestId: string,
+  exec?: Executor,
 ): Promise<AccessGrantRecord> {
   const actor = await resolveActor(accountId)
   if (!actor.profileId) throw unauthenticated()
@@ -155,7 +161,7 @@ export async function grantAccess(
     throw invalid('grantee_profile_id', 'self')
   }
 
-  return withTransaction(async (exec) => {
+  return inTransaction(exec, async (exec) => {
     const source = await delegationSourceFor(exec, actor, input.organizationId)
     if (!source) throw forbidden()
 
@@ -230,17 +236,19 @@ export async function revokeAccess(
   accountId: string,
   input: { organizationId: string; grantId: string },
   requestId: string,
+  exec?: Executor,
 ): Promise<AccessGrantRecord> {
   const actor = await resolveActor(accountId)
   if (!actor.profileId) throw unauthenticated()
   if (!isUuid(input.organizationId) || !isUuid(input.grantId)) throw forbidden()
 
-  return withTransaction(async (exec) => {
+  return inTransaction(exec, async (exec) => {
     const authorized = (await delegationSourceFor(exec, actor, input.organizationId)) !== null
     const [row] = await exec<GrantRow>(
       `SELECT ${GRANT_COLUMNS} FROM role_assignments
-        WHERE id = $1 AND scope_type = 'ORGANIZATION' AND scope_id = $2 FOR UPDATE`,
-      [input.grantId, input.organizationId],
+        WHERE id = $1 AND scope_type = 'ORGANIZATION' AND scope_id = $2 AND role_code = $3
+        FOR UPDATE`,
+      [input.grantId, input.organizationId, DELEGABLE_ROLE],
     )
     const grantor = row !== undefined && row.assigned_by === actor.profileId
     // A foreign unit and an unknown grant answer alike, so nothing is enumerable.

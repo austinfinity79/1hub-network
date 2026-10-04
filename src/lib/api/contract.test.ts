@@ -112,9 +112,9 @@ describe('M0-T05 idempotency', () => {
     expect(bullets).toHaveLength(7)
     // The seven of 05:56-63, `venture.create` of amendment A2 (05 §19), the
     // two application operations of amendment A4 (05 §21) and the three
-    // programme operations of amendment A5 (05 §22) and the verification
-    // decision of amendment A9 (05 §26).
-    expect(IDEMPOTENT_OPERATIONS).toHaveLength(14)
+    // programme operations of amendment A5 (05 §22), the verification
+    // decision of amendment A9 (05 §26) and the two of amendment A10 (05 §27).
+    expect(IDEMPOTENT_OPERATIONS).toHaveLength(16)
     expect(CONTRACT.split('# 19. Amendment A2')[1]).toContain('venture.create')
     const a4 = CONTRACT.split('# 21. Amendment A4')[1] ?? ''
     expect(a4).toContain('application.create')
@@ -123,6 +123,9 @@ describe('M0-T05 idempotency', () => {
     for (const operation of ['programme.create', 'programme.publish', 'programme.close'])
       expect(a5).toContain(operation)
     expect(CONTRACT.split('# 26. Amendment A9')[1]).toContain('verification.decide')
+    const a10 = CONTRACT.split('# 27. Amendment A10')[1] ?? ''
+    for (const operation of ['venture.review', 'access.grant-or-revoke'])
+      expect(a10).toContain(operation)
   })
 })
 

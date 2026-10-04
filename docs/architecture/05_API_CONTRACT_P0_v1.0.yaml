@@ -401,6 +401,80 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/venture-reviews:
+    get:
+      operationId: listVentureReviews
+      responses:
+        '200': { description: List envelope of venture reviews with counts.pending (A10) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/venture-reviews/{reviewId}:
+    get:
+      operationId: getVentureReview
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      responses:
+        '200': { description: Public version, candidate, diff, owner identity and history (A10) }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /ops/venture-reviews/{reviewId}/approve:
+    post:
+      operationId: approveVentureReview
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      responses:
+        '200': { description: The approved review (A10) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/venture-reviews/{reviewId}/reject:
+    post:
+      operationId: rejectVentureReview
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      responses:
+        '200': { description: The rejected review (A10) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/organizations/{orgId}/access:
+    get:
+      operationId: listOrganizationAccess
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '200': { description: The unit's delegated access (A10) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+    post:
+      operationId: grantOrganizationAccess
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '201': { description: The new grant (A10) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/organizations/{orgId}/access/history:
+    get:
+      operationId: getOrganizationAccessHistory
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+      responses:
+        '200': { description: Grants and revocations of the unit (A10) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /ops/organizations/{orgId}/access/{grantId}/revoke:
+    post:
+      operationId: revokeOrganizationAccess
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+        - $ref: '#/components/parameters/GrantId'
+      responses:
+        '200': { description: The closed grant (A10) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /ops/metrics/p0:
     get:
       operationId: getP0Metrics
@@ -435,6 +509,16 @@ components:
       schema: { type: string }
     RequestId:
       name: requestId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ReviewId:
+      name: reviewId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    GrantId:
+      name: grantId
       in: path
       required: true
       schema: { type: string, format: uuid }
