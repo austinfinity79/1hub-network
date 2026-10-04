@@ -115,6 +115,7 @@ export function AccountRequestsQueue() {
           className={styles.select}
           value={status}
           onChange={(e) => setStatus(e.target.value)}
+          aria-label={COPY.statusLabel}
           data-filter="status"
         >
           {Object.entries(STATUS_LABELS).map(([k, v]) => (
@@ -127,6 +128,7 @@ export function AccountRequestsQueue() {
           className={styles.select}
           value={kind}
           onChange={(e) => setKind(e.target.value)}
+          aria-label={COPY.kindLabel}
           data-filter="kind"
         >
           <option value="">{COPY.any}</option>

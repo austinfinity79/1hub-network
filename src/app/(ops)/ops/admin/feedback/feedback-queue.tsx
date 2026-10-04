@@ -208,6 +208,7 @@ export function FeedbackQueue() {
           className={styles.select}
           value={filters.status}
           onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
+          aria-label={COPY.status}
           data-filter="status"
         >
           <option value="">{COPY.status}</option>
@@ -221,6 +222,7 @@ export function FeedbackQueue() {
           className={styles.select}
           value={filters.type}
           onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))}
+          aria-label={COPY.type}
           data-filter="type"
         >
           <option value="">{COPY.type}</option>
@@ -234,6 +236,7 @@ export function FeedbackQueue() {
           className={styles.select}
           value={filters.priority}
           onChange={(e) => setFilters((f) => ({ ...f, priority: e.target.value }))}
+          aria-label={COPY.priority}
           data-filter="priority"
         >
           <option value="">{COPY.priority}</option>
@@ -247,6 +250,7 @@ export function FeedbackQueue() {
         <input
           className={styles.input}
           placeholder={COPY.owner}
+          aria-label={COPY.owner}
           value={filters.owner}
           onChange={(e) => setFilters((f) => ({ ...f, owner: e.target.value }))}
           data-filter="owner"

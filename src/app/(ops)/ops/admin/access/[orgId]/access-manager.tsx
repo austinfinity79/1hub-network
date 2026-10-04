@@ -213,10 +213,12 @@ export function AccessManager({ organization }: { organization: { id: string; na
                     >
                       {COPY.revoke}
                     </button>
+                    {/* Focus the safe choice, so a stray Enter never revokes. */}
                     <button
                       type="button"
                       className={styles.secondary}
                       onClick={() => setRevoking(null)}
+                      autoFocus
                     >
                       Huỷ
                     </button>

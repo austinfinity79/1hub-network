@@ -208,6 +208,8 @@ export function VerificationDetail({ requestId }: { requestId: string }) {
             className={styles.input}
             placeholder={COPY.reasonLabel}
             aria-label={COPY.reasonLabel}
+            // Keyboard users land in the form the action button just opened.
+            autoFocus
             maxLength={500}
             value={reason}
             onChange={(e) => setReason(e.target.value)}

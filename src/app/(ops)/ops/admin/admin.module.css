@@ -11,6 +11,18 @@
   padding: 1.4375rem 2rem 3rem;
 }
 
+/*
+ * Basic responsive safety, the WF03 IA-P2-03 idiom: when the OpsShell column
+ * is narrower than a screen's rows (390 px leaves it ~174 px beside the fixed
+ * shell sidebar — shared shell debt, not solved here), the screen scrolls
+ * inside its own column instead of pushing the whole page sideways.
+ */
+@media (max-width: 1279px) {
+  .page {
+    overflow-x: auto;
+  }
+}
+
 .header {
   display: flex;
   align-items: flex-start;

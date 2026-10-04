@@ -1,36 +1,32 @@
 # Claude Task Report
 
 ## Task
-ADMIN-PROD-07-CONTRACT-FIX — reconcile the frozen ADMIN-DECISION-02 / -04 with repo, contracts and code (FIX + RECHECK; trigger: ADMIN-PROD-07 = FAIL / BLOCKER_REMAINS at preflight, CONTRACT_CONFLICT). Reports: [reconciliation](reports/ADMIN-PROD-07-CONTRACT-FIX-reconciliation.md) · [stale-contract search](reports/ADMIN-PROD-07-CONTRACT-FIX-stale-search.md).
+ADMIN-PROD-07 FINAL RERUN — Admin Portal functional / security QA on the reconciled candidate (`3b04063`). Reports: [summary](reports/ADMIN-PROD-07-qa-summary.md) · [access-security](reports/ADMIN-PROD-07-access-security.md) · [modules-ui](reports/ADMIN-PROD-07-modules-ui.md) · [PROD-08 handoff](reports/ADMIN-PROD-07-prod08-handoff.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE — ADMIN CONTRACT/CODE RECONCILED — READY FOR CHATGPT/PO REVIEW.** Both decisions recorded verbatim as DEC-ADM-D02 / D04 (no new PO decision). D04: `account:escalate` and the leader account-request route removed; PLATFORM_ADMIN Account Ops untouched. D02: revoke requires a current `access:delegate` on exactly the grant's unit (or PLATFORM_ADMIN); parent / child / sibling, grantorship alone and lost capability all 403. Zero unresolved contradictory statements. ADMIN-PROD-07 not rerun; ADMIN-PROD-08 not started. STOP.
+**PASS_WITH_EVIDENCE — READY FOR CHATGPT/PO ADMIN-PROD-07 REVIEW.** CONTRACT_CONFLICT = 0. Actor × endpoint and actor × route matrices, DEC-ADM-D02 revoke matrix, DEC-ADM-D04, immediate revocation, session invalidation, error contract, deep links, responsive and accessibility smoke all verified on a freshly started server. No security / RBAC / IDOR defect found; three UI defects (two accessibility, one 390 px containment) fixed minimally. Full protected regression GREEN. ADMIN-PROD-08 not started. STOP.
 
 ## Scope implemented
-- `src/lib/authz/matrix.ts`: `account:escalate` removed (17 capabilities).
-- Deleted `src/app/api/v1/ops/organizations/[orgId]/members/[profileId]/account-requests/route.ts`; removed `fileAccountRequest`, `ESCALATABLE`, `mayEscalateAccountAction`.
-- `src/lib/admin/delegation.ts`: `revocationSourceFor` (exact unit or PLATFORM); `revokeAccess` locks the unit, then the grant, then re-reads the revoker's assignment FOR SHARE; grantor branch removed. `access-api.ts` `can_revoke` uses the same predicate.
-- DECISION_LOG (D02, D04; PD-7, PD-7.1, R16 superseded), 05 API contract md + yaml, Admin capability matrix, PROD-01 contract, PROD-06 handoff updated; supersession banner on 15 archived Admin reports.
-- Tests: new D02 matrix, mutual-revoke race, grant-reach and D04 DB tests; HTTP tests for the withdrawn route and exact-scope revoke; existing tests realigned.
+QA only, plus minimal fixes: accessible names on six filter controls; focus moves into inline confirm forms; WF03-style responsive containment for admin screens at ≤ 1279 px. New spec `tests/visual/specs/admin-prod-07-qa.spec.ts` (18 tests).
 
 ## Files changed
-39 modified, 1 deleted, 2 new reports (see `git show --stat`). No UI component, route, role or workflow added.
+7 files under `src/app/(ops)/ops/admin/` (CSS + 6 components), 1 new spec, 4 new reports, this report. No API, route, schema, role or workflow change.
 
 ## Migrations / data
-NO_SCHEMA_CHANGE. `account_action_requests` (017) kept, unwritten in P0.
+NO_SCHEMA_CHANGE. Local dev DB reset + QA vocabulary fixture for the regression (documented QA procedure).
 
 ## Tests / build
-format, lint, typecheck PASS · unit 37 / 367 · DB 47 / 750 · build PASS · focused Playwright (Admin, auth, RBAC, WF03): 20 specs / 183 tests, 183 pass, 0 fail, 0 skip, 0 flaky. Full protected regression not run (belongs to ADMIN-PROD-07).
+format, lint, typecheck PASS · unit 37 / 367 · DB 47 / 750 (incl. migration fresh / upgrade / recovery) · build PASS · **full protected regression: SPEC_COUNT 88 · TEST_COUNT 1185 · PASS 1159 · FAIL 0 · SKIP 26 (pre-existing, environment-gated) · FLAKY 0** · console 0 / hydration 0 / unexpected 5xx 0.
 
 ## Visual QA
-No UI change (comment-only edits in two Admin client files).
+No pixel baseline exists for the admin screens (ADMIN-PROD-08). Responsive smoke: 1440 / 1024 / 768 / 390 no page overflow on all 12 screens; 390 usability limited by the pre-existing OpsShell sidebar (shell debt, handed to PROD-08).
 
 ## Deviations / blockers
-None. Interpretation recorded in D02: PLATFORM_ADMIN keeps platform-wide revocation (its `access:delegate` is PLATFORM-scoped). Consequence: a Chapter leader who granted on its CLB can no longer revoke that grant; the CLB's leader or PLATFORM_ADMIN can. A stale `next-server` on port 3972 (pre-task code) was stopped before the final browser run.
+None. Observed, not changed: two endpoints validate the body before scope (no information leak); queue filters are not kept in the URL; approve is a single step.
 
 ## Git
-- Branch: `feat/admin-portal`; start HEAD `546bfff`, unchanged during the task
-- Implementation commit: `fix(admin): reconcile ADMIN-DECISION-02/04 with contracts and code (ADMIN-PROD-07-CONTRACT-FIX)`
+- Branch: `feat/admin-portal`; start HEAD `3b04063`, unchanged during the task
+- Implementation commit: `test(admin): final functional / security QA, a11y and 390 containment fixes (ADMIN-PROD-07)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: no push)
@@ -38,4 +34,4 @@ None. Interpretation recorded in D02: PLATFORM_ADMIN keeps platform-wide revocat
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of ADMIN-PROD-07-CONTRACT-FIX, then rerun ADMIN-PROD-07.
+ChatGPT / PO review of ADMIN-PROD-07. ADMIN-PROD-08 not started.

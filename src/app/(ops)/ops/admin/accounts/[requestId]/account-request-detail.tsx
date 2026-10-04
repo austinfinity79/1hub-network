@@ -268,6 +268,8 @@ export function AccountRequestDetail({ requestId }: { requestId: string }) {
             className={styles.input}
             placeholder={deletionReasonRequired ? COPY.reasonRequired : COPY.reasonLabel}
             aria-label={deletionReasonRequired ? COPY.reasonRequired : COPY.reasonLabel}
+            // Keyboard users land in the form the action button just opened.
+            autoFocus
             maxLength={500}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -335,7 +337,13 @@ export function AccountRequestDetail({ requestId }: { requestId: string }) {
               >
                 {COPY.confirm}
               </button>
-              <button type="button" className={styles.secondary} onClick={() => setDirecting(null)}>
+              {/* Focus the safe choice, so a stray Enter never executes the action. */}
+              <button
+                type="button"
+                className={styles.secondary}
+                onClick={() => setDirecting(null)}
+                autoFocus
+              >
                 {COPY.cancel}
               </button>
             </div>
