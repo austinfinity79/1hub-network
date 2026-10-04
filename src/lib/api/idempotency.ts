@@ -20,6 +20,7 @@ const MAX_KEY_LENGTH = 255
  * / `programme.close` of amendment A5 (05 §22, DEC-W4P-D12), and
  * `verification.decide` of amendment A9 (05 §26, ADMIN-PROD-03; optional header), and
  * `venture.review` / `access.grant-or-revoke` of amendment A10 (05 §27, ADMIN-PROD-04;
+ * optional header), and `account.action` of amendment A11 (05 §28, ADMIN-PROD-05;
  * optional header).
  */
 export const IDEMPOTENT_OPERATIONS = [
@@ -39,6 +40,7 @@ export const IDEMPOTENT_OPERATIONS = [
   'verification.decide',
   'venture.review',
   'access.grant-or-revoke',
+  'account.action',
 ] as const
 
 export type IdempotentOperation = (typeof IDEMPOTENT_OPERATIONS)[number]

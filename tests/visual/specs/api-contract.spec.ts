@@ -75,12 +75,12 @@ test.describe('M0-T05 API surface discipline', () => {
     // (wf03-s06-organization-profile.spec.ts), WF03-S08 GET/POST …/relationships and
     // …/relationships/{id}/close (wf03-s08-organization-relationships.spec.ts), WF03-S07
     // events (wf03-s07-event-management.spec.ts), WF03-S09 GET /organizations/by-slug/{slug}
-    // (wf03-s09-public-organization.spec.ts), and WF02-S08 GET /me/ventures (asserted
-    // below; wf02-s08-projects.spec.ts). Other business endpoints still belong to
-    // later screens; answering now would be scope leakage.
+    // (wf03-s09-public-organization.spec.ts), WF02-S08 GET /me/ventures (asserted
+    // below; wf02-s08-projects.spec.ts), and ADMIN-PROD-05 GET /ops/feedback (05 §28;
+    // admin-prod-05-api.spec.ts). Other business endpoints still belong to later
+    // screens; answering now would be scope leakage.
     for (const path of [
       '/ops/organizations/10000000-0000-0000-0000-000000000101/programmes',
-      '/ops/feedback',
       '/vocabularies/STARTUP_STAGE',
     ]) {
       const response = await request.get(`${BASE}${path}`)

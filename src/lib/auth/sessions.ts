@@ -41,9 +41,11 @@ export async function createSession(
  * Resolves a token to a live session, or null.
  *
  * Expiry and revocation are filtered in SQL, so a revoked or stale row can never
- * authenticate even if the token is still held. Returns null for every failure
- * mode rather than distinguishing them, so the endpoint cannot be used to
- * enumerate which tokens once existed.
+ * authenticate even if the token is still held. The account must be ACTIVE
+ * (ADMIN-PROD-05, PD-7): a lock or deactivation also revokes every session, and
+ * this check closes the gap for a session minted by a sign-in racing the lock.
+ * Returns null for every failure mode rather than distinguishing them, so the
+ * endpoint cannot be used to enumerate which tokens once existed.
  */
 export async function resolveSession(
   token: string | undefined,
@@ -51,11 +53,12 @@ export async function resolveSession(
   if (!token) return null
 
   const rows = await query<{ id: string; account_id: string; expires_at: Date }>(
-    `SELECT id::text, account_id::text, expires_at
-     FROM user_sessions
-     WHERE token_hash = $1
-       AND revoked_at IS NULL
-       AND expires_at > now()
+    `SELECT s.id::text, s.account_id::text, s.expires_at
+     FROM user_sessions s
+     JOIN user_accounts a ON a.id = s.account_id AND a.status = 'ACTIVE'
+     WHERE s.token_hash = $1
+       AND s.revoked_at IS NULL
+       AND s.expires_at > now()
      LIMIT 1`,
     [hashToken(token)],
   )

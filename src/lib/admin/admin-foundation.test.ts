@@ -20,6 +20,8 @@ import {
   canTransitionFeedback,
   FEEDBACK_SCREENSHOT_RETENTION_DAYS,
   isScreenshotExpired,
+  parseGuestEmail,
+  projectFeedbackContext,
   screenshotExpiresAt,
   SENDER_FEEDBACK_TYPES,
   summaryBucket,
@@ -289,6 +291,22 @@ describe('feedback, accounts, categories, notifications, audit', () => {
     expect(screenshotExpiresAt(created).toISOString()).toBe('2026-09-29T00:00:00.000Z')
     expect(isScreenshotExpired(created, new Date('2026-09-28T23:59:59Z'))).toBe(false)
     expect(isScreenshotExpired(created, new Date('2026-09-29T00:00:00Z'))).toBe(true)
+  })
+
+  it('feedback: guest e-mail optional and validated; context reduced to operator keys', () => {
+    expect(parseGuestEmail(undefined)).toBeNull()
+    expect(parseGuestEmail('  ')).toBeNull()
+    expect(parseGuestEmail(' khach@example.vn ')).toBe('khach@example.vn')
+    for (const bad of ['khach', 'a@b', 'a b@c.vn', '<x>@y.vn', `${'a'.repeat(250)}@x.vn`, 42]) {
+      expect(parseGuestEmail(bad), String(bad)).toBe('invalid')
+    }
+    expect(
+      projectFeedbackContext({ route: '/me', ip: '1.2.3.4', token: 't', browser: ' Safari ' }),
+    ).toEqual({
+      route: '/me',
+      browser: 'Safari',
+    })
+    expect(projectFeedbackContext('x')).toEqual({})
   })
 
   it('accounts: no hard delete; requests end PROCESSED or DECLINED', () => {

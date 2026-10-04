@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { isFeedbackScreenshot, managerMayFetchScreenshot } from '@/lib/admin/feedback-ops'
 import { reviewerMayFetchLogo } from '@/lib/admin/venture-review-queue'
 import { readSessionToken } from '@/lib/auth/session-cookie'
 import { resolveSession } from '@/lib/auth/sessions'
@@ -20,6 +21,9 @@ import { discoveryLevelOf } from '@/lib/profile/visibility'
  *   that an asset exists. Never cached publicly.
  * - ADMIN-PROD-04: a venture reviewer (`venture:review`) may fetch an asset that
  *   is a venture's logo or a review's proposed logo; avatars are unaffected.
+ * - ADMIN-PROD-05: a feedback screenshot is served only to a feedback manager
+ *   (`feedback:manage`) during its 90 days (PD-5) — never after, never to anyone
+ *   else, its uploader included.
  */
 export const dynamic = 'force-dynamic'
 
@@ -46,9 +50,15 @@ export async function GET(
   if (!asset) return denied
 
   const owner = asset.meta.owner_account_id
-  if (owner !== session.accountId && !(await avatarVisible(owner, id))) {
-    // Only then the reviewer rule, so avatar views pay nothing for it.
-    if (!(await reviewerMayFetchLogo(session.accountId, id))) return denied
+  // A feedback screenshot: managers only, within 90 days — not even its uploader (PD-5).
+  if (await isFeedbackScreenshot(id)) {
+    if (!(await managerMayFetchScreenshot(session.accountId, id))) return denied
+  } else if (owner !== session.accountId && !(await avatarVisible(owner, id))) {
+    // Only then the operator rules, so avatar views pay nothing for them.
+    const operator =
+      (await reviewerMayFetchLogo(session.accountId, id)) ||
+      (await managerMayFetchScreenshot(session.accountId, id))
+    if (!operator) return denied
   }
 
   return new NextResponse(new Uint8Array(asset.bytes), {

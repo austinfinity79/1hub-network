@@ -1559,3 +1559,52 @@ ACTIVE → CLOSED now (`revoked_at`); the grantor, `access:delegate` on the unit
 | website / logo | `website` http / https only, ≤ 500, normalised; `logo_asset_id` an asset of the media store uploaded by the editor or owner, PNG / JPEG / WebP, ≤ 2 MB; a reviewer may fetch a referenced logo at `/media/assets/{id}`; no business registration or tax code field |
 | audit | `VENTURE_REVIEW_SUBMITTED` / `_RESUBMITTED` / `_UPDATED` / `_APPROVED` / `_REJECTED` / `_SELF_ACTION_REFUSED`; `ACCESS_GRANTED` / `ACCESS_REVOKED`; ids, codes, versions and the optional reason only |
 | notifications | venture approve / reject → the owner; grants and revocations → none (no such notice in the contract) |
+
+---
+
+# 28. Amendment A11 — Feedback, categories and account operations (2026-10-04)
+
+Source: [DEC-ADM](../decisions/DECISION_LOG.md#dec-adm) (PD-5, PD-7; ADMIN-PROD-05 rules R12–R16) and the frozen [Admin Portal P0 contract](../implementation/reports/ADMIN-PROD-01-runtime-contract.md); implemented by ADMIN-PROD-05. Additive; PLATFORM_ADMIN only except the leader escalation. The feedback submission (`POST /feedback`, §11) stays Sprint1 FB-01's. No new error code; one idempotent operation, `account.action` (optional header, §2.3). Sign-in (§3) is refused for a BLOCKED or DEACTIVATED account (`AUTH_ACCOUNT_BLOCKED`) and a session only authenticates an ACTIVE account.
+
+### GET `/ops/feedback`
+`feedback:manage`; others `403`. Newest first; `?status=&type=&priority=` (LOW, MEDIUM, HIGH, NONE) `&owner=` (profile id or `none`) `&created_from=&created_to=` (dates, Vietnam time) `&cursor=&limit=` (1–50, default 20; keyset); any other value `422`. Item: `id`, `type`, `status`, `priority`, `owner {profile_id, display_name}`, `sender {kind: MEMBER | GUEST, profile_id, display_name}`, `excerpt`, `has_screenshot`, `created_at`, `updated_at`; beside the envelope `counts {open}`. Each read also runs the bounded 90-day screenshot retention.
+
+### GET `/ops/feedback/summary`
+`?week=YYYY-Www` (ISO week, Monday 00:00 Vietnam time; default the current one): `week`, `from`, `to`, `total`, `by_type [{type, group: technical_bug | ux | feature_request | other, open, closed, total}]`, `by_priority`, `by_owner`. Open = NEW + IN_REVIEW, closed = DONE. Read only: no e-mail, Slack or dashboard.
+
+### GET `/ops/feedback/{feedbackId}`
+The item plus `content`, `sender.guest_email` (guests only), `context` (route, screen, step, workflow, browser, os, device, viewport, locale, user_agent only), `screenshot {asset_id, url, expires_at, deleted_at, expired}` (url only inside the 90 days), `resolution_note`, `history`. Non-managers, unknown and malformed ids: the same `404`.
+
+### PATCH `/ops/feedback/{feedbackId}`
+`{ type?, priority? (or null), owner_profile_id? (a feedback:manage holder, or null), status?, resolution_note? }`. NEW → IN_REVIEW → DONE; NEW → DONE only with a note; DONE is final; an invalid move `409`; the same value again is no change.
+
+### GET `/ops/categories/{type}`
+`vocabulary:manage`; one of the six existing types (else `404`); every item `id`, `code`, `label`, `sort_order`, `status`, `in_use` (canonical rows referencing it).
+
+### PATCH `/ops/categories/{type}/{itemId}`
+`{ label?, sort_order?, status? }` (ACTIVE / ARCHIVED); VENTURE_STAGE label and order only. Archiving never touches a reference; it only stops new selections. No create, no delete.
+
+### PUT `/ops/categories/{type}/order`
+`{ ids }` naming every item of the type exactly once → positions 10, 20, 30… in one transaction (`422` otherwise).
+
+### POST `/ops/accounts/{profileId}/lock`
+And `…/unlock`, `…/deactivate`, `…/reactivate`, `…/soft-delete`; body `{ reason? }`; `account:administer`; `{profileId}` is the person's profile id (account ids are never serialized). Response `{profile_id, account_status, profile_status, soft_deleted, changed}`. LOCK: BLOCKED, sessions revoked, data kept. DEACTIVATE: account and profile DEACTIVATED, sessions revoked, organization role assignments closed. SOFT_DELETE: the account's deletion request recorded / PROCESSED and the account deactivated — flagged for the separate retention procedure, nothing deleted, no reactivation. Never one's own account (`403`), and only while the acting admin is still ACTIVE (`403`); same state again no change; an impossible move `409`.
+
+### GET `/ops/account-requests`
+Leader escalations and users' own deletion requests, oldest first: `?status=` (PENDING default, PROCESSED, DECLINED) `&kind=` (ESCALATION, SELF_DELETION) `&cursor=&limit=`. Item: `id`, `kind`, `action`, `status`, `target {profile_id, display_name, account_status, profile_status}`, `organization`, `requested_by_profile_id`, `reason`, `created_at`, `handled_at`, `handler_profile_id`; `counts {pending}`.
+
+### GET `/ops/account-requests/{requestId}`
+One request; non-admins and unknown ids `404`.
+
+### POST `/ops/account-requests/{requestId}/process`
+And `…/decline`; `{ reason? }`; PENDING only (`409`); processing executes the requested action as above. A user's own deletion request (SELF_DELETION) can only be processed (decline `409`); a request about the admin's own account `403`.
+
+### POST `/ops/organizations/{orgId}/members/{profileId}/account-requests`
+A leader (`account:escalate` on exactly the unit) files `{ action: LOCK | DEACTIVATE | SOFT_DELETE, reason? }` for an ACTIVE member of that unit → `201`; a pending duplicate `409`; not a member `404`; another unit `403`. Leaders never execute.
+
+## 28.1 Rules
+| Topic | Rule |
+|---|---|
+| audit | `FEEDBACK_STATUS_CHANGED` / `_PRIORITY_CHANGED` / `_ASSIGNED` / `_UPDATED`; `VOCABULARY_ITEM_UPDATED` / `_ARCHIVED` / `_ACTIVATED`; `ACCOUNT_LOCKED` / `_UNLOCKED` / `_DEACTIVATED` / `_REACTIVATED` / `_SOFT_DELETE_REQUESTED` / `_SELF_ACTION_REFUSED`; `ACCOUNT_REQUEST_FILED` / `_PROCESSED` / `_DECLINED`: ids, codes, counts and the optional reason only — never feedback text, notes, e-mails, tokens or screenshots |
+| screenshots | served (`/media/assets/{id}`) to feedback managers only (not the uploader), and only within 90 days of submission; then the reference is cleared (`screenshot_deleted_at`) and the file removed unless another record still uses it |
+| privacy | the guest e-mail and full content only in the feedback detail; identities through PROFILE_DISCOVERY |

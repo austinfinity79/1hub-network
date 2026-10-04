@@ -225,7 +225,8 @@ export async function consumeMagicLink(token: unknown): Promise<ConsumeResult> {
     return { id: existing!.id, status: existing!.status, created: false }
   })
 
-  if (resolved.status === 'BLOCKED') {
+  // ADMIN-PROD-05 (PD-7): a locked (BLOCKED) or deactivated account cannot sign in.
+  if (resolved.status !== 'ACTIVE') {
     throw new ApiError('AUTH_ACCOUNT_BLOCKED', 403, 'This account cannot sign in.')
   }
   const accountId = resolved.id

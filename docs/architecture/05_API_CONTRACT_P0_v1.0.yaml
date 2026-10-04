@@ -363,7 +363,119 @@ paths:
     get:
       operationId: listFeedbackOps
       responses:
-        '200': { description: Feedback list }
+        '200': { description: Feedback queue with counts.open (A11) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/feedback/summary:
+    get:
+      operationId: getFeedbackWeeklySummary
+      responses:
+        '200': { description: Weekly counts by type, priority and owner (A11) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/feedback/{feedbackId}:
+    get:
+      operationId: getFeedbackOps
+      parameters:
+        - $ref: '#/components/parameters/FeedbackId'
+      responses:
+        '200': { description: One feedback with context, screenshot and history (A11) }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateFeedbackOps
+      parameters:
+        - $ref: '#/components/parameters/FeedbackId'
+      responses:
+        '200': { description: The updated feedback (A11) }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/categories/{type}:
+    get:
+      operationId: listCategories
+      parameters:
+        - $ref: '#/components/parameters/VocabularyType'
+      responses:
+        '200': { description: Items of one vocabulary type with usage (A11) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /ops/categories/{type}/{itemId}:
+    patch:
+      operationId: updateCategory
+      parameters:
+        - $ref: '#/components/parameters/VocabularyType'
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200': { description: The updated item (A11) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/categories/{type}/order:
+    put:
+      operationId: reorderCategories
+      parameters:
+        - $ref: '#/components/parameters/VocabularyType'
+      responses:
+        '200': { description: The type in its new order (A11) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/accounts/{profileId}/{operation}:
+    post:
+      operationId: runAccountOperation
+      parameters:
+        - $ref: '#/components/parameters/ProfileId'
+        - name: operation
+          in: path
+          required: true
+          schema: { type: string, enum: [lock, unlock, deactivate, reactivate, soft-delete] }
+      responses:
+        '200': { description: The account state after the operation (A11) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/account-requests:
+    get:
+      operationId: listAccountRequests
+      responses:
+        '200': { description: Escalations and self-deletion requests with counts.pending (A11) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/account-requests/{requestId}:
+    get:
+      operationId: getAccountRequest
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200': { description: One account request (A11) }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /ops/account-requests/{requestId}/{decision}:
+    post:
+      operationId: decideAccountRequest
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - name: decision
+          in: path
+          required: true
+          schema: { type: string, enum: [process, decline] }
+      responses:
+        '200': { description: The decided request (A11) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
+  /ops/organizations/{orgId}/members/{profileId}/account-requests:
+    post:
+      operationId: fileAccountRequest
+      parameters:
+        - $ref: '#/components/parameters/OrgId'
+        - $ref: '#/components/parameters/ProfileId'
+      responses:
+        '201': { description: The filed escalation (A11) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessValidation' }
   /ops/verification-requests:
     get:
       operationId: listVerificationRequests
@@ -519,6 +631,21 @@ components:
       schema: { type: string, format: uuid }
     GrantId:
       name: grantId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    FeedbackId:
+      name: feedbackId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    VocabularyType:
+      name: type
+      in: path
+      required: true
+      schema: { type: string, enum: [COUNTRY, REGION, DOMAIN, SKILL, SPECIALIZATION, VENTURE_STAGE] }
+    ItemId:
+      name: itemId
       in: path
       required: true
       schema: { type: string, format: uuid }

@@ -9,10 +9,12 @@
  *               reclassifying (and for rows from before typing existed).
  *   sender      `account_id` / `profile_id` when signed in; a guest has neither
  *               and may leave an e-mail, used only to reply.
- *   screenshot  optional, ≤ 5 MB, in the media asset store; deleted 90 days after
- *               submission by a daily job (ADMIN-PROD-05), which clears the
- *               reference and sets `screenshot_deleted_at`. The record itself
- *               follows its own lifecycle.
+ *   screenshot  optional, ≤ 5 MB, in the media asset store; served to managers
+ *               only and only for 90 days after submission; then the reference
+ *               is cleared (`screenshot_deleted_at`) and the file removed by
+ *               `runFeedbackScreenshotRetention` (every queue read) and
+ *               `scripts/admin/feedback-retention.mjs` (daily, ADMIN-PROD-05).
+ *               The record itself follows its own lifecycle.
  *   manage      `feedback:manage`, PLATFORM_ADMIN only. No e-mail / Slack: the
  *               weekly summary is read in the portal.
  */
@@ -60,4 +62,44 @@ export function isScreenshotExpired(createdAt: Date, now: Date = new Date()): bo
 /** The weekly summary's open / closed split (ADMIN-PROD-01 feedback contract). */
 export function summaryBucket(status: FeedbackStatus): 'open' | 'closed' {
   return status === 'DONE' ? 'closed' : 'open'
+}
+
+const EMAIL = /^[^\s@<>()[\],;:"]+@[^\s@<>()[\],;:"]+\.[^\s@<>()[\],;:".]{2,}$/
+
+/**
+ * A guest's optional e-mail (FB-01, PD-5): absent or blank → null; otherwise a
+ * plausible address of at most 254 characters, or 'invalid'. Shared with the
+ * Sprint1 submission; only `feedback:manage` holders ever read it back.
+ */
+export function parseGuestEmail(value: unknown): string | null | 'invalid' {
+  if (value === undefined || value === null) return null
+  if (typeof value !== 'string') return 'invalid'
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  if (trimmed.length > FEEDBACK_LIMITS.guestEmail || !EMAIL.test(trimmed)) return 'invalid'
+  return trimmed
+}
+
+/** The context keys an operator may see; anything else the client sent stays stored, unshown. */
+export const FEEDBACK_CONTEXT_KEYS = [
+  'route',
+  'screen',
+  'step',
+  'workflow',
+  'browser',
+  'os',
+  'device',
+  'viewport',
+  'locale',
+  'user_agent',
+] as const
+
+export function projectFeedbackContext(context: unknown): Record<string, string> {
+  if (typeof context !== 'object' || context === null || Array.isArray(context)) return {}
+  const out: Record<string, string> = {}
+  for (const key of FEEDBACK_CONTEXT_KEYS) {
+    const value = (context as Record<string, unknown>)[key]
+    if (typeof value === 'string' && value.trim()) out[key] = value.trim().slice(0, 300)
+  }
+  return out
 }

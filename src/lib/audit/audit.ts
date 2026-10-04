@@ -57,8 +57,8 @@ export type AuditAction =
  * and an optional decision reason only; never a password, token, session,
  * e-mail, profile field, feedback text, screenshot or uploaded document.
  * Written through `writeAdminAudit` (src/lib/admin/admin-audit.ts), which
- * refuses any other payload. ADMIN-PROD-02 … 04 write the access, verification and
- * venture review codes; the rest are frozen here for ADMIN-PROD-05.
+ * refuses any other payload. ADMIN-PROD-02 … 05 write them; ORGANIZATION_* stay
+ * frozen for the organization lifecycle APIs (not yet assigned).
  */
 export type AdminAuditAction =
   | 'ACCESS_GRANTED'
@@ -88,12 +88,22 @@ export type AdminAuditAction =
   | 'ORGANIZATION_ACTIVATED'
   | 'ORGANIZATION_DEACTIVATED'
   | 'FEEDBACK_UPDATED'
+  // ADMIN-PROD-05: the task's granular feedback codes (FEEDBACK_UPDATED stays for type / note).
+  | 'FEEDBACK_ASSIGNED'
+  | 'FEEDBACK_STATUS_CHANGED'
+  | 'FEEDBACK_PRIORITY_CHANGED'
   | 'VOCABULARY_ITEM_CREATED'
   | 'VOCABULARY_ITEM_UPDATED'
+  // ADMIN-PROD-05: the task's CATEGORY_ARCHIVED / _ACTIVATED inside the frozen VOCABULARY_ITEM_* family.
+  | 'VOCABULARY_ITEM_ARCHIVED'
+  | 'VOCABULARY_ITEM_ACTIVATED'
   | 'ACCOUNT_LOCKED'
   | 'ACCOUNT_UNLOCKED'
   | 'ACCOUNT_DEACTIVATED'
   | 'ACCOUNT_REACTIVATED'
+  // ADMIN-PROD-05: the task's SOFT_DELETE_REQUESTED, and a refused action on one's own account.
+  | 'ACCOUNT_SOFT_DELETE_REQUESTED'
+  | 'ACCOUNT_SELF_ACTION_REFUSED'
   | 'ACCOUNT_REQUEST_FILED'
   | 'ACCOUNT_REQUEST_PROCESSED'
   | 'ACCOUNT_REQUEST_DECLINED'
