@@ -50,6 +50,43 @@ export type AuditAction =
   | 'PROGRAMME_REGISTRATION_UPDATED'
   | 'PROGRAMME_PUBLISHED'
   | 'PROGRAMME_CLOSED'
+  | AdminAuditAction
+
+/**
+ * Admin Portal P0 (ADMIN-PROD-01 audit contract, DEC-ADM): ids, states, scope
+ * and an optional decision reason only; never a password, token, session,
+ * e-mail, profile field, feedback text, screenshot or uploaded document.
+ * Written through `writeAdminAudit` (src/lib/admin/admin-audit.ts), which
+ * refuses any other payload. ADMIN-PROD-02 writes the first four; the rest are
+ * frozen here for ADMIN-PROD-03 … 05.
+ */
+export type AdminAuditAction =
+  | 'ACCESS_GRANTED'
+  | 'ACCESS_REVOKED'
+  | 'VERIFICATION_REQUEST_SUBMITTED'
+  | 'VERIFICATION_REQUEST_UPDATED'
+  | 'VERIFICATION_REQUEST_WITHDRAWN'
+  | 'VERIFICATION_REQUEST_RESUBMITTED'
+  | 'VERIFICATION_REQUEST_APPROVED'
+  | 'VERIFICATION_REQUEST_REJECTED'
+  | 'VENTURE_REVIEW_SUBMITTED'
+  | 'VENTURE_REVIEW_UPDATED'
+  | 'VENTURE_REVIEW_WITHDRAWN'
+  | 'VENTURE_REVIEW_APPROVED'
+  | 'VENTURE_REVIEW_REJECTED'
+  | 'ORGANIZATION_CREATED'
+  | 'ORGANIZATION_ACTIVATED'
+  | 'ORGANIZATION_DEACTIVATED'
+  | 'FEEDBACK_UPDATED'
+  | 'VOCABULARY_ITEM_CREATED'
+  | 'VOCABULARY_ITEM_UPDATED'
+  | 'ACCOUNT_LOCKED'
+  | 'ACCOUNT_UNLOCKED'
+  | 'ACCOUNT_DEACTIVATED'
+  | 'ACCOUNT_REACTIVATED'
+  | 'ACCOUNT_REQUEST_FILED'
+  | 'ACCOUNT_REQUEST_PROCESSED'
+  | 'ACCOUNT_REQUEST_DECLINED'
 
 export async function writeAudit(
   exec: Executor,

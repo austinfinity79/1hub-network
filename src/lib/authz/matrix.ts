@@ -2,7 +2,9 @@
  * M0-T09 — the approved P0 authorization matrix, in code.
  *
  * Mirrors docs/implementation/AUTHORIZATION_CAPABILITY_MATRIX_P0.md section C,
- * frozen by DECISION-AUTHZ-01B. `matrix.test.ts` fails if the two drift.
+ * frozen by DECISION-AUTHZ-01B, and its Admin Portal addendum
+ * (AUTHORIZATION_CAPABILITY_MATRIX_P0_ADMIN.md, DEC-ADM). `authz.db-test.ts`
+ * fails if code and documents drift.
  *
  * This table is the ONLY source of grants. There is no wildcard, no implicit
  * inheritance and no "admin gets everything" branch: PLATFORM_ADMIN appears here
@@ -31,6 +33,16 @@ export const CAPABILITIES = [
   'leadership:manage',
   // WF04 production (DEC-W4P-D02, contract §5): create, edit, publish, close.
   'programme:manage',
+  // Admin Portal P0 (DEC-ADM, ADMIN-PROD-01 RBAC matrix). Organization-scoped:
+  'verification:review',
+  'access:delegate',
+  'account:escalate',
+  // Platform-scoped only:
+  'venture:review',
+  'org:lifecycle',
+  'feedback:manage',
+  'vocabulary:manage',
+  'account:administer',
 ] as const
 
 export type Capability = (typeof CAPABILITIES)[number]
@@ -40,11 +52,12 @@ export type ScopeType = 'PLATFORM' | 'ORGANIZATION'
 /**
  * Which roles hold a capability, and at which scope.
  *
- * Every capability in the approved matrix has the same shape: denied to the two
- * individual roles, allowed to a Leader only inside their assigned organization,
- * allowed to a Platform Admin platform-wide. It is written out per capability
- * rather than collapsed, so a future divergence is a data edit rather than a
- * refactor, and so the table reads like the approved document.
+ * Every M0-T09 capability has the same shape: denied to the two individual
+ * roles, allowed to a Leader only inside their assigned organization, allowed to
+ * a Platform Admin platform-wide. The Admin Portal adds platform-only ones (no
+ * organization role). It is written out per capability rather than collapsed,
+ * so a future divergence is a data edit rather than a refactor, and so the table
+ * reads like the approved documents.
  */
 export type CapabilityRule = {
   capability: Capability
@@ -52,30 +65,127 @@ export type CapabilityRule = {
   organizationRoles: readonly RoleCode[]
   /** Roles that may hold it platform-wide. */
   platformRoles: readonly RoleCode[]
+  /**
+   * PD-6: whether a holder may grant this capability alone to someone else on
+   * the same or a child organization (`role_assignments.capability`). Never for
+   * `org:manage_relationship`, `leadership:manage`, `access:delegate` or any
+   * platform-only capability (ADMIN-PROD-01 RBAC matrix).
+   */
+  delegable: boolean
 }
 
 const ORG_LEADER: readonly RoleCode[] = ['HUB_COMMUNITY_LEADER']
 const PLATFORM_ADMIN: readonly RoleCode[] = ['PLATFORM_ADMIN']
 
 export const CAPABILITY_MATRIX: readonly CapabilityRule[] = [
-  { capability: 'network:read', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
-  { capability: 'org:read', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
-  { capability: 'member:read', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
-  { capability: 'programme:read', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
-  { capability: 'org:manage', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
-  { capability: 'event:manage', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
+  {
+    capability: 'network:read',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: false,
+  },
+  {
+    capability: 'org:read',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: true,
+  },
+  {
+    capability: 'member:read',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: true,
+  },
+  {
+    capability: 'programme:read',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: true,
+  },
+  {
+    capability: 'org:manage',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: true,
+  },
+  {
+    capability: 'event:manage',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: true,
+  },
   {
     capability: 'org:manage_relationship',
     organizationRoles: ORG_LEADER,
     platformRoles: PLATFORM_ADMIN,
+    delegable: false,
   },
   {
     capability: 'membership:confirm',
     organizationRoles: ORG_LEADER,
     platformRoles: PLATFORM_ADMIN,
+    delegable: true,
   },
-  { capability: 'leadership:manage', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
-  { capability: 'programme:manage', organizationRoles: ORG_LEADER, platformRoles: PLATFORM_ADMIN },
+  {
+    capability: 'leadership:manage',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: false,
+  },
+  {
+    capability: 'programme:manage',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: true,
+  },
+  {
+    capability: 'verification:review',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: true,
+  },
+  {
+    capability: 'access:delegate',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: false,
+  },
+  {
+    capability: 'account:escalate',
+    organizationRoles: ORG_LEADER,
+    platformRoles: PLATFORM_ADMIN,
+    delegable: true,
+  },
+  {
+    capability: 'venture:review',
+    organizationRoles: [],
+    platformRoles: PLATFORM_ADMIN,
+    delegable: false,
+  },
+  {
+    capability: 'org:lifecycle',
+    organizationRoles: [],
+    platformRoles: PLATFORM_ADMIN,
+    delegable: false,
+  },
+  {
+    capability: 'feedback:manage',
+    organizationRoles: [],
+    platformRoles: PLATFORM_ADMIN,
+    delegable: false,
+  },
+  {
+    capability: 'vocabulary:manage',
+    organizationRoles: [],
+    platformRoles: PLATFORM_ADMIN,
+    delegable: false,
+  },
+  {
+    capability: 'account:administer',
+    organizationRoles: [],
+    platformRoles: PLATFORM_ADMIN,
+    delegable: false,
+  },
 ]
 
 export function ruleFor(capability: Capability): CapabilityRule | undefined {
@@ -84,6 +194,29 @@ export function ruleFor(capability: Capability): CapabilityRule | undefined {
 
 export function isCapability(value: string): value is Capability {
   return (CAPABILITIES as readonly string[]).includes(value)
+}
+
+/** PD-6: true only for a capability the matrix marks delegable. */
+export function isDelegable(capability: Capability): boolean {
+  return ruleFor(capability)?.delegable === true
+}
+
+/**
+ * The one grant predicate: does this assignment carry `rule.capability`?
+ *
+ * The role must hold the capability at the assignment's scope type, and a
+ * capability-only grant (`role_assignments.capability`, PD-6) carries that one
+ * capability and nothing else of its role. Every authorization path goes
+ * through this, so a delegated grant can never act as the whole role.
+ */
+export function assignmentGrants(
+  assignment: { roleCode: RoleCode; scopeType: ScopeType; capability: Capability | null },
+  rule: CapabilityRule,
+): boolean {
+  if (assignment.capability !== null && assignment.capability !== rule.capability) return false
+  return assignment.scopeType === 'PLATFORM'
+    ? rule.platformRoles.includes(assignment.roleCode)
+    : rule.organizationRoles.includes(assignment.roleCode)
 }
 
 export function isRoleCode(value: string): value is RoleCode {

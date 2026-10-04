@@ -1,6 +1,6 @@
 # P0 Authorization Capability Matrix
 
-**HUMAN APPROVED — P0.** Frozen by DECISION-AUTHZ-01B and implemented by M0-T09.
+**HUMAN APPROVED — P0.** Frozen by DECISION-AUTHZ-01B and implemented by M0-T09. Admin Portal capabilities and delegated grants: [addendum](AUTHORIZATION_CAPABILITY_MATRIX_P0_ADMIN.md) (DEC-ADM, ADMIN-PROD-02).
 
 This is the approved P0 authorization **overlay**. It does not modify Product, Data, Workflow or Design SOT; it supplies the role-to-capability mapping those documents never joined, which is why M0-T09 was originally blocked.
 

@@ -154,6 +154,7 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '015_p0_programme_production.sql',
       // WF05-PROD-02 (DEC-W5P-D06): submitted applications kept, identity fixed, snapshot shape.
       '016_p0_application_integrity.sql',
+      '017_p0_admin_foundation.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -321,6 +322,9 @@ describe('M0-T07 seed fixture quality', () => {
     // sessions belong to M0-T08 auth, feedback has no frozen pixel screen
     // (API:671), and education/links are not profile-completion groups.
     expect(empty).toEqual([
+      // Migration 017 (ADMIN-PROD-02): Admin Portal runtime stores, written by
+      // leaders' escalations, reviews, decisions and user submissions.
+      'account_action_requests',
       // WF02-S07 P13: a runtime request store; a seeded request would be a false one.
       'account_deletion_requests',
       'analytics_events',
@@ -332,6 +336,7 @@ describe('M0-T07 seed fixture quality', () => {
       // M0-T10: a runtime concurrency store. Seeding it would be meaningless,
       // and a seeded key would suppress a real request.
       'idempotency_keys',
+      'notifications',
       // Migration 010: self-declared roles are written in onboarding stage 3.
       'profile_declared_roles',
       'profile_education',
@@ -340,7 +345,9 @@ describe('M0-T07 seed fixture quality', () => {
       'profile_specializations',
       // WF02-S05: venture domains are written at runtime; the seeded startup has none.
       'project_domains',
+      'role_verification_requests',
       'user_sessions',
+      'venture_reviews',
     ])
   })
 

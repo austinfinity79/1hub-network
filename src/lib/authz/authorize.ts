@@ -1,7 +1,7 @@
 import { ApiError } from '@/lib/api/errors'
 
 import type { Actor } from './actor'
-import { ruleFor, type Capability, type ScopeType } from './matrix'
+import { assignmentGrants, ruleFor, type Capability, type ScopeType } from './matrix'
 
 /**
  * M0-T09 — the single server-side authorization entry point.
@@ -46,7 +46,7 @@ export async function authorize(
   if (!rule) return { allowed: false, reason: 'FORBIDDEN' }
 
   const platformGrant = actor.assignments.some(
-    (a) => a.scopeType === 'PLATFORM' && rule.platformRoles.includes(a.roleCode),
+    (a) => a.scopeType === 'PLATFORM' && assignmentGrants(a, rule),
   )
 
   // An organization grant must match the requested organization exactly. This
@@ -58,7 +58,7 @@ export async function authorize(
       (a) =>
         a.scopeType === 'ORGANIZATION' &&
         a.scopeId === resource.scopeId &&
-        rule.organizationRoles.includes(a.roleCode),
+        assignmentGrants(a, rule),
     )
 
   if (!platformGrant && !organizationGrant) {

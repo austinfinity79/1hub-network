@@ -1,7 +1,7 @@
 import type { ManagedScope } from '@/lib/api/types'
 
 import type { Actor } from './actor'
-import { CAPABILITY_MATRIX, type Capability } from './matrix'
+import { assignmentGrants, CAPABILITY_MATRIX, type Capability } from './matrix'
 
 /**
  * M0-T09 — derives the contract's session authorization fields.
@@ -26,11 +26,7 @@ export function deriveCapabilities(actor: Actor | null): Capability[] {
   const held = new Set<Capability>()
 
   for (const rule of CAPABILITY_MATRIX) {
-    const granted = actor.assignments.some(
-      (a) =>
-        (a.scopeType === 'PLATFORM' && rule.platformRoles.includes(a.roleCode)) ||
-        (a.scopeType === 'ORGANIZATION' && rule.organizationRoles.includes(a.roleCode)),
-    )
+    const granted = actor.assignments.some((a) => assignmentGrants(a, rule))
     if (granted) held.add(rule.capability)
   }
 
@@ -41,7 +37,9 @@ export function deriveCapabilities(actor: Actor | null): Capability[] {
  * The scopes the actor administers, in the contract's shape.
  *
  * Only assignments that actually grant something in the matrix are listed, so a
- * role carrying no ops capability does not appear as a managed scope.
+ * role carrying no ops capability does not appear as a managed scope. A
+ * capability-only grant (PD-6) is not listed either: the frozen shape names a
+ * role, and it does not hold the role. Its capability is in `capabilities`.
  */
 export function deriveManagedScopes(actor: Actor | null): ManagedScope[] {
   if (!actor || !actor.profileId) return []
@@ -50,11 +48,8 @@ export function deriveManagedScopes(actor: Actor | null): ManagedScope[] {
   const seen = new Set<string>()
 
   for (const assignment of actor.assignments) {
-    const grantsSomething = CAPABILITY_MATRIX.some((rule) =>
-      assignment.scopeType === 'PLATFORM'
-        ? rule.platformRoles.includes(assignment.roleCode)
-        : rule.organizationRoles.includes(assignment.roleCode),
-    )
+    if (assignment.capability !== null) continue
+    const grantsSomething = CAPABILITY_MATRIX.some((rule) => assignmentGrants(assignment, rule))
     if (!grantsSomething) continue
 
     const key = `${assignment.scopeType}:${assignment.scopeId ?? ''}:${assignment.roleCode}`

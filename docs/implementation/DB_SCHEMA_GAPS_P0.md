@@ -33,7 +33,7 @@ Evidence is a **live PostgreSQL 17.6 introspection**, not a documentation readin
 | `consent_type` | TERMS_ACCEPTANCE, PRIVACY_DATA_PROCESSING |
 | `visibility_level` | PUBLIC, NETWORK_ONLY, PROGRAMME_ACCESS, GRANTED_ACCESS, PRIVATE |
 | `vocab_status` | ACTIVE, ARCHIVED |
-| `feedback_status` | NEW, REVIEWED, CLOSED |
+| `feedback_status` | NEW, IN_REVIEW, DONE | **renamed in place by 017** (ADMIN-PROD-02, PD-5): REVIEWED → IN_REVIEW, CLOSED → DONE |
 
 Clean, no action needed: `visibility_level`, `consent_type`, `programme_type`, `project_type`, `project_status`, `vocab_status`, `account_status`.
 
@@ -119,6 +119,7 @@ Clean, no action needed: `visibility_level`, `consent_type`, `programme_type`, `
 | D6 | OrganizationRepresentation has no table or endpoint | SOT:201 |
 | D7 | Two sources of org parentage: `organizations.parent_id` and `organization_relationships` | SOT:134, WF03:35 |
 | D8 | `applications`: a SUBMITTED row deletable, applicant identity mutable on a DRAFT, snapshot shape unchecked — **RESOLVED by 016** (WF05-PROD-02, DEC-W5P-D06) | WF05 contract, DB contract D1–D3 |
+| D9 | Admin Portal stores (verification requests, venture reviews, account requests, notifications, delegation `capability`, venture website / logo, feedback triage fields) — **RESOLVED by 017** (ADMIN-PROD-02, DEC-ADM). D3 stays open: `RECEIVED` is the `POST /feedback` response label, owned by that endpoint's task | ADMIN-PROD-01 DB impact |
 
 ## Migration 002 — created and applied
 

@@ -33,6 +33,14 @@ const MIGRATION_FILES = readdirSync(MIGRATIONS_DIR)
   .filter((name) => name.endsWith('.sql'))
   .sort()
 const AFTER_014 = MIGRATION_FILES.filter((name) => name > M014)
+/** Tables later migrations create; 015's own "adds no table" check leaves them out. */
+const LATER_TABLES = MIGRATION_FILES.filter((name) => name > M015).flatMap((name) =>
+  [
+    ...readFileSync(join(MIGRATIONS_DIR, name), 'utf8').matchAll(
+      /^CREATE TABLE (?:IF NOT EXISTS )?(\w+)/gm,
+    ),
+  ].map((match) => match[1]!),
+)
 
 const FRESH = 'hubnetwork_p0_prod02_fresh'
 const UPGRADE = 'hubnetwork_p0_prod02_upgrade'
@@ -580,7 +588,7 @@ describe('WF04-PROD-02 migration 015 on the schema production holds (014 → 015
 
   it('(11) adds no table: no second Application, Challenge, Problem or Stage store', async () => {
     const after = await tables(db)
-    expect(after).toEqual(tablesBefore)
+    expect(after.filter((name) => !LATER_TABLES.includes(name))).toEqual(tablesBefore)
     expect(after.filter((name) => /application/.test(name))).toEqual([
       'applications',
       'programme_application_forms',

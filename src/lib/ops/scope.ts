@@ -1,5 +1,5 @@
 import type { Actor } from '@/lib/authz/actor'
-import { ruleFor, type Capability } from '@/lib/authz/matrix'
+import { assignmentGrants, ruleFor, type Capability } from '@/lib/authz/matrix'
 
 /**
  * WF03-T00 — which organizations an actor holds a capability for.
@@ -7,7 +7,8 @@ import { ruleFor, type Capability } from '@/lib/authz/matrix'
  * Derived only from the actor's ACTIVE RoleAssignments and the approved matrix
  * (DECISION-AUTHZ-01B): a PLATFORM grant covers every organization; an
  * ORGANIZATION grant covers exactly that organization, never its children
- * (no inheritance, DEC-WF03-G11). Membership, LeadershipRecord, titles and
+ * (no inheritance, DEC-WF03-G11); a capability-only grant covers its one
+ * capability there (PD-6). Membership, LeadershipRecord, titles and
  * organization type are not inputs, so none of them can grant anything
  * (DEC-WF03-G6).
  */
@@ -17,17 +18,12 @@ export type OrganizationScope = { kind: 'ALL' } | { kind: 'SOME'; organizationId
 export function organizationScope(actor: Actor | null, capability: Capability): OrganizationScope {
   const rule = ruleFor(capability)
   if (!actor || !actor.profileId || !rule) return { kind: 'SOME', organizationIds: [] }
-  if (
-    actor.assignments.some(
-      (a) => a.scopeType === 'PLATFORM' && rule.platformRoles.includes(a.roleCode),
-    )
-  ) {
+  if (actor.assignments.some((a) => a.scopeType === 'PLATFORM' && assignmentGrants(a, rule))) {
     return { kind: 'ALL' }
   }
   const ids = new Set<string>()
   for (const a of actor.assignments) {
-    if (a.scopeType === 'ORGANIZATION' && a.scopeId && rule.organizationRoles.includes(a.roleCode))
-      ids.add(a.scopeId)
+    if (a.scopeType === 'ORGANIZATION' && a.scopeId && assignmentGrants(a, rule)) ids.add(a.scopeId)
   }
   return { kind: 'SOME', organizationIds: [...ids].sort() }
 }

@@ -41,6 +41,8 @@ const M016_SOURCE = readFileSync(join(MIGRATIONS_DIR, M016), 'utf8')
 const MIGRATION_FILES = readdirSync(MIGRATIONS_DIR)
   .filter((name) => name.endsWith('.sql'))
   .sort()
+// 016 and every later migration: the chain checks hold whatever the newest file is.
+const AFTER_015 = MIGRATION_FILES.filter((name) => name > M015)
 const FRESH = 'hubnetwork_p0_w5p02_fresh'
 const UPGRADE = 'hubnetwork_p0_w5p02_upgrade'
 const RECOVERY = 'hubnetwork_p0_w5p02_recovery'
@@ -136,7 +138,9 @@ function documentedRollback(): string {
 
 const SNAPSHOT: Record<string, string> = {
   applications: 'SELECT * FROM applications',
-  projects: 'SELECT * FROM projects',
+  // The pre-017 venture columns: 017 adds website / logo, which are not 016's concern.
+  projects: `SELECT id, type, owner_profile_id, slug, name, summary, status, metadata, created_at,
+                    updated_at, region_id, stage_id, owner_role_label, visibility FROM projects`,
   project_members: 'SELECT * FROM project_members',
   programmes: 'SELECT * FROM programmes',
   programme_application_forms: 'SELECT * FROM programme_application_forms',
@@ -244,8 +248,9 @@ describe('FRESH — 001 → 016 on an empty database, then the seed', () => {
     )
     expect(migrateOutput.match(/applied /g)).toHaveLength(MIGRATION_FILES.length)
     expect(rows.map((r) => r.filename)).toEqual(MIGRATION_FILES)
-    expect(rows.at(-1)!.filename).toBe(M016)
-    expect(rows.at(-1)!.sha256).toBe(createHash('sha256').update(M016_SOURCE).digest('hex'))
+    expect(rows.find((r) => r.filename === M016)!.sha256).toBe(
+      createHash('sha256').update(M016_SOURCE).digest('hex'),
+    )
   })
 
   it('installs the three guards and the snapshot check; adds no table, column or index', async () => {
@@ -321,10 +326,10 @@ describe('UPGRADE — the WF04 candidate schema with WF05 data, then 016 only', 
     await db?.end()
   })
 
-  it('applies 016 only and is a no-op on a second run', async () => {
+  it('applies 016 (and every later migration) once and is a no-op on a second run', async () => {
     expect(migrateOutput).toContain(`applied ${M016}`)
-    expect(migrateOutput.match(/applied /g)).toHaveLength(1)
-    expect(migrateOutput.match(/skip /g)).toHaveLength(MIGRATION_FILES.length - 1)
+    expect(migrateOutput.match(/applied /g)).toHaveLength(AFTER_015.length)
+    expect(migrateOutput.match(/skip /g)).toHaveLength(MIGRATION_FILES.length - AFTER_015.length)
     const second = runner(UPGRADE, 'migrate')
     expect(second).toContain(`skip    ${M016} (already applied)`)
     expect(second).not.toContain('applied ')
@@ -526,7 +531,7 @@ describe('RECOVERY — the STOP check, the documented rollback and a re-apply', 
     expect(runnerFailure(RECOVERY)).toContain(
       `016 stopped: application snapshots that are not an object: ${A_CLOSED}`,
     )
-    expect(await ledger()).toBe(MIGRATION_FILES.length - 1)
+    expect(await ledger()).toBe(MIGRATION_FILES.length - AFTER_015.length)
     expect(await snapshot(db)).toEqual(before)
 
     await db.query(`ALTER TABLE applications DISABLE TRIGGER trg_applications_submitted_final`)

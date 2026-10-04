@@ -25,7 +25,11 @@ const ROOT = process.cwd()
 const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
 const CHAPTER_02 = '10000000-0000-0000-0000-000000000102'
 
-const ORG_CAPS = CAPABILITIES
+// Organization-scoped capabilities: every one but the five platform-only Admin
+// Portal capabilities (DEC-ADM), which src/lib/admin/admin-scope.db-test.ts covers.
+const ORG_CAPS = CAPABILITY_MATRIX.filter((rule) => rule.organizationRoles.length > 0).map(
+  (rule) => rule.capability,
+)
 
 /** Removes block and line comments so source scans read executable code only. */
 function stripComments(source: string): string {
@@ -59,25 +63,28 @@ afterAll(async () => {
 })
 
 describe('M0-T09 matrix matches the approved document', () => {
-  it('covers exactly the ten approved capabilities under one naming convention', () => {
-    // Nine of DECISION-AUTHZ-01B plus `programme:manage` (DEC-W4P-D02, WF04-PROD-03).
-    expect(CAPABILITIES).toHaveLength(10)
+  it('covers exactly the approved capabilities under one naming convention', () => {
+    // Nine of DECISION-AUTHZ-01B, `programme:manage` (DEC-W4P-D02, WF04-PROD-03)
+    // and the eight Admin Portal capabilities (DEC-ADM, ADMIN-PROD-02).
+    expect(CAPABILITIES).toHaveLength(18)
     for (const capability of CAPABILITIES) {
       // D5: resource:action, exactly one colon.
       expect(capability.split(':')).toHaveLength(2)
     }
-    expect(CAPABILITY_MATRIX).toHaveLength(10)
+    expect(CAPABILITY_MATRIX).toHaveLength(18)
   })
 
-  it('matches the frozen matrix document capability for capability', () => {
-    const doc = readFileSync(
-      join(ROOT, 'docs', 'implementation', 'AUTHORIZATION_CAPABILITY_MATRIX_P0.md'),
-      'utf8',
-    )
+  it('matches the frozen matrix documents capability for capability', () => {
+    const read = (name: string) => readFileSync(join(ROOT, 'docs', 'implementation', name), 'utf8')
+    const doc = read('AUTHORIZATION_CAPABILITY_MATRIX_P0.md')
+    const admin = read('AUTHORIZATION_CAPABILITY_MATRIX_P0_ADMIN.md')
 
     expect(doc).toContain('HUMAN APPROVED — P0')
+    expect(admin).toContain('PO APPROVED — DEC-ADM')
     for (const capability of CAPABILITIES) {
-      expect(doc, `${capability} missing from the approved matrix`).toContain(`\`${capability}\``)
+      expect(doc + admin, `${capability} missing from the approved matrix`).toContain(
+        `\`${capability}\``,
+      )
     }
   })
 
@@ -337,7 +344,7 @@ describe('M0-T09 session derivation', () => {
   })
 
   it('derives the leader capabilities and one organization scope', () => {
-    expect(deriveCapabilities(leader)).toEqual([...CAPABILITIES].sort())
+    expect(deriveCapabilities(leader)).toEqual([...ORG_CAPS].sort())
 
     const scopes = deriveManagedScopes(leader)
     expect(scopes).toEqual([
