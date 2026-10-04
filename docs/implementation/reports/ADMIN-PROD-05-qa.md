@@ -45,7 +45,7 @@ Two status updates (IN_REVIEW vs DONE) → final DONE, at most one 409; two iden
 | 2 | security review | retention could remove a file still used as an avatar / logo / another screenshot | `shared` guard in the one retention statement |
 | 3 | security review | a screenshot's uploader could fetch it through the owner rule | screenshot branch: managers only |
 | 4 | security review | an admin could decline a request about their own account; idempotent replay could skip the self check | pre-check before the idempotent run + in-transaction 403, audited |
-| 5 | security review | a user's own deletion request could be declined, stranding WF02 | processed only (409); flagged for the PO |
+| 5 | security review | a user's own deletion request could be declined, stranding WF02 | was "processed only (409)" — superseded by the PO: decline allowed with a required reason ([FIX](ADMIN-PROD-05-FIX-deletion-policy.md)) |
 | 6 | security review | a profile-less account's deletion request could not be processed | account-only soft delete |
 | 7 | security review | an admin-recorded deletion request named the user as requester | requester only with WF02's audit |
 | 8 | security review | feedback PATCH validated the body before authorizing (422 hint) | authorize first (404) |
@@ -67,4 +67,4 @@ New: `src/lib/admin/{feedback-ops,category-ops,account-ops,paging,identity}.ts`,
 | PLATFORM_ADMIN-only account execution | ✓ | PROD-06 not started | ✓ |
 
 ## Related
-- [ADMIN-PROD-05-feedback-categories.md](ADMIN-PROD-05-feedback-categories.md) · [ADMIN-PROD-05-accounts.md](ADMIN-PROD-05-accounts.md) · [ADMIN-PROD-05-prod06-handoff.md](ADMIN-PROD-05-prod06-handoff.md)
+- [ADMIN-PROD-05-feedback-categories.md](ADMIN-PROD-05-feedback-categories.md) · [ADMIN-PROD-05-accounts.md](ADMIN-PROD-05-accounts.md) · [ADMIN-PROD-05-prod06-handoff.md](ADMIN-PROD-05-prod06-handoff.md) · [ADMIN-PROD-05-FIX-deletion-policy.md](ADMIN-PROD-05-FIX-deletion-policy.md)

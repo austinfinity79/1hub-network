@@ -7,7 +7,7 @@
 |---|---|---|
 | `POST /ops/accounts/{profileId}/lock` · `unlock` · `deactivate` · `reactivate` · `soft-delete` `{ reason? }` | PLATFORM_ADMIN (`account:administer`) | below; anyone else 403 before the id is read (no enumeration) |
 | `POST /ops/organizations/{orgId}/members/{profileId}/account-requests` `{ action, reason? }` | leader with `account:escalate` on exactly the unit | files LOCK / DEACTIVATE / SOFT_DELETE for an ACTIVE member of that unit → 201; never executes |
-| `GET /ops/account-requests` · `GET …/{id}` · `POST …/{id}/process` · `…/decline` | PLATFORM_ADMIN | one queue: leader escalations + users' own deletion requests (WF02-S07); process executes the action, decline closes it — a user's own deletion request can only be processed (decline 409); a profile-less account's deletion is processable |
+| `GET /ops/account-requests` · `GET …/{id}` · `POST …/{id}/process` · `…/decline` | PLATFORM_ADMIN | one queue: leader escalations + users' own deletion requests (WF02-S07); process executes the action, decline closes it — declining a deletion request needs a reason ([DEC-ADM-PD7.1](../../decisions/DECISION_LOG.md#dec-adm-pd7-1), [FIX](ADMIN-PROD-05-FIX-deletion-policy.md)); a profile-less account's deletion is processable |
 The target is the person's profile id (account ids are never serialized; an account without a profile cannot be targeted). Every action: actor, target, optional reason (≤ 500), timestamp, audit. No hard-delete endpoint or code path exists.
 
 ## 11. Semantics
@@ -33,4 +33,4 @@ An admin can never lock, deactivate or soft-delete their own account, nor proces
 Actor + target accounts (id order), then the target's profile, then any request row (one order everywhere). Two locks → one change, one audit; lock vs deactivate → always DEACTIVATED (deactivate first makes the lock a 409); processing a request twice → 409.
 
 ## Related
-- [ADMIN-PROD-05-feedback-categories.md](ADMIN-PROD-05-feedback-categories.md) · [ADMIN-PROD-05-qa.md](ADMIN-PROD-05-qa.md) · [ADMIN-PROD-01-rbac-matrix.md](ADMIN-PROD-01-rbac-matrix.md)
+- [ADMIN-PROD-05-feedback-categories.md](ADMIN-PROD-05-feedback-categories.md) · [ADMIN-PROD-05-qa.md](ADMIN-PROD-05-qa.md) · [ADMIN-PROD-05-FIX-deletion-policy.md](ADMIN-PROD-05-FIX-deletion-policy.md) · [ADMIN-PROD-01-rbac-matrix.md](ADMIN-PROD-01-rbac-matrix.md)

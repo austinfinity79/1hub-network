@@ -30,7 +30,7 @@ Menus are display only: every call re-authorizes on the server. Hide self-action
 ## Interaction rules
 - Paging: `page.next_cursor` → "Tải thêm"; never page numbers; filters reset the cursor.
 - Decisions send the detail's `version`; every mutation sends an `Idempotency-Key` (one UUID per click) so a retry after a timeout replays.
-- Confirm dialogs: approve / reject (optional reason ≤ 500), grant / revoke, every account action. The account dialog names the person and the consequence (LOCK: sign-in blocked, sessions ended; DEACTIVATE: profile hidden, unit roles closed; SOFT_DELETE: irreversible in the portal, flagged for deletion — typed confirmation recommended).
+- Confirm dialogs: approve / reject (optional reason ≤ 500), grant / revoke, every account action. Declining a deletion request (SELF_DELETION or a SOFT_DELETE escalation) requires the reason (≤ 500): prompt for the obligation that blocks it — legal, retention, security or operational (DEC-ADM-PD7.1). The account dialog names the person and the consequence (LOCK: sign-in blocked, sessions ended; DEACTIVATE: profile hidden, unit roles closed; SOFT_DELETE: irreversible in the portal, flagged for deletion — typed confirmation recommended).
 - Feedback: filters status, type, priority (incl. "Chưa đặt" = NONE), owner (me / none / anyone), created_from / to; inline owner, priority, status with the NEW → DONE note rule; the week picker drives the summary.
 - Categories: inline label edit, archive toggle (absent for VENTURE_STAGE), `in_use` shown, drag-and-drop sends the whole ordered id list.
 - Verification / venture detail: identity through discovery (a hidden name shows as "Ẩn danh"); diff tables use `vocabulary` labels.
@@ -41,6 +41,7 @@ Menus are display only: every call re-authorizes on the server. Hide self-action
 | `/ops` entry | `requireOps` / `OPS_ENTRY` use `network:read`; capability-only grantees (e.g. `verification:review` on a CLB) need entry by any operator capability (contract) |
 | `GET /ops/summary` | not built; compose Home counts from the lists or add it with an amendment |
 | organization lifecycle APIs | not assigned to any task yet |
+| deletion rejection, user side | the decline reason is kept in the audit only (not on the request DTO); WF02-S07 does not show a rejection to the user — PO follow-up |
 | owner / user sides | verification requests (S1-UAT-03B), venture submit / save / logo upload (S1-UAT-06), feedback submission (FB-01) |
 
 ## Related
