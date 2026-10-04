@@ -1,5 +1,5 @@
 import { OnboardingShell } from '@/components/shell/onboarding-shell'
-import { getAccountEmail } from '@/lib/auth/account'
+import { getAccountEmail, getAccountSignupName } from '@/lib/auth/account'
 import { requireOnboardingStage } from '@/lib/onboarding/guard'
 import { getOwnProfile } from '@/lib/profile/profile'
 import { listActiveItems } from '@/lib/vocabulary/vocabulary'
@@ -30,11 +30,12 @@ const withKept = (active: Ref[], kept: Ref | null) => [
 export default async function Page() {
   const { accountId } = await requireOnboardingStage('BASIC')
 
-  const [profile, countries, regions, email] = await Promise.all([
+  const [profile, countries, regions, email, signupName] = await Promise.all([
     getOwnProfile(accountId),
     listActiveItems(['COUNTRY']),
     listActiveItems(['REGION']),
     getAccountEmail(accountId),
+    getAccountSignupName(accountId),
   ])
 
   return (
@@ -45,8 +46,9 @@ export default async function Page() {
     >
       <BasicForm
         initial={{
-          full_name: profile.full_name ?? '',
-          display_name: profile.display_name ?? '',
+          // S1-UAT-01: the sign-up name prefills an empty stage 1; never overrides.
+          full_name: profile.full_name ?? signupName ?? '',
+          display_name: profile.display_name ?? signupName ?? '',
           headline: profile.headline ?? '',
           bio: profile.bio ?? '',
           country_id: profile.country?.id ?? '',

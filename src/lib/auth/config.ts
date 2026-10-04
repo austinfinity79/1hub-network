@@ -18,6 +18,25 @@ export const MAGIC_LINK_RESEND_AFTER_SECONDS = 60
 /** FROZEN: 05:23 IDs are opaque strings. The contract's own examples are prefixed. */
 export const AUTH_REQUEST_ID_PREFIX = 'authreq_'
 
+/**
+ * S1-UAT-01 — username/password/reset constants, FROZEN by the Sprint1 UAT
+ * pack Appendix B ("Quyết định đã áp dụng") and feedback.md FB-06/FB-18, not
+ * invented here.
+ */
+export const USERNAME_MIN_LENGTH = 4
+export const USERNAME_MAX_LENGTH = 30
+export const PASSWORD_MIN_LENGTH = 8
+/** Technical bound, not a business rule: caps scrypt work per request (DEC-S1A-D3). */
+export const PASSWORD_MAX_LENGTH = 256
+/** "Sai 5 lần → tạm dừng đăng nhập bằng mật khẩu 15 phút". */
+export const PASSWORD_FAILED_ATTEMPTS_LIMIT = 5
+export const PASSWORD_LOCKOUT_SECONDS = 15 * 60
+/** "Link đặt lại 15 phút, dùng 1 lần, gửi lại sau 45 giây". */
+export const PASSWORD_RESET_EXPIRES_IN_SECONDS = 15 * 60
+export const PASSWORD_RESET_RESEND_AFTER_SECONDS = 45
+/** "Có ghi nhớ: phiên 30 ngày. Không ghi nhớ: phiên kết thúc khi đóng trình duyệt." */
+export const REMEMBER_ME_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30
+
 export type UnstatedAuthValue = {
   name: string
   provisional: string

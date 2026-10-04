@@ -110,10 +110,9 @@ test.describe('REL-AUTH magic link and session', () => {
     baseURL,
   }) => {
     const email = newEmail('auth')
-    await page.goto('/auth', { waitUntil: 'networkidle' })
-    await page.getByLabel('Email', { exact: true }).fill(email)
-    await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
-    await expect(page).toHaveURL('/auth/check-email')
+    // S1-UAT-01 (DEC-S1A-D7): the magic link is compatibility-only and not on /auth.
+    const requested = await page.request.post('/api/v1/auth/magic-link', { data: { email } })
+    expect(requested.status()).toBe(202)
     const { token } = await requestMagicLink(email, null)
     const callback = `/auth/callback?token=${encodeURIComponent(token)}`
     const response = page.waitForResponse((r) => r.url().includes('/auth/callback'))
@@ -473,7 +472,7 @@ test.describe('REL-RESP responsive sweep', () => {
       certified: boolean
     }[] = [
       { name: 'landing', who: null, url: '/', key: '[data-cta="primary"]', certified: true },
-      { name: 'auth', who: null, url: '/auth', key: 'input[type="email"]', certified: true },
+      { name: 'auth', who: null, url: '/auth', key: 'input[name="identifier"]', certified: true },
       {
         name: 'onboarding',
         who: 'newcomer@example.test',

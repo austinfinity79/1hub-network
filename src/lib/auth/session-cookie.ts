@@ -15,11 +15,16 @@ export type CookieDirective = {
     secure: boolean
     sameSite: 'lax' | 'strict'
     path: string
-    maxAge: number
+    maxAge?: number
   }
 }
 
-export function sessionSetCookie(token: string, maxAgeSeconds: number): CookieDirective {
+/**
+ * `maxAgeSeconds` undefined sets a browser-session cookie (US-01.03 "Không ghi
+ * nhớ: phiên kết thúc khi đóng trình duyệt"). The server-side session row keeps
+ * its own expiry either way, so the cookie lifetime is never the only bound.
+ */
+export function sessionSetCookie(token: string, maxAgeSeconds?: number): CookieDirective {
   return {
     name: SESSION_COOKIE_NAME,
     value: token,
@@ -28,7 +33,7 @@ export function sessionSetCookie(token: string, maxAgeSeconds: number): CookieDi
       secure: sessionCookieSecure(),
       sameSite: SESSION_COOKIE_SAMESITE,
       path: '/',
-      maxAge: maxAgeSeconds,
+      ...(maxAgeSeconds === undefined ? {} : { maxAge: maxAgeSeconds }),
     },
   }
 }

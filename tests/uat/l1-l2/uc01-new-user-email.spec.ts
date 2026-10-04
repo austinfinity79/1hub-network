@@ -96,9 +96,17 @@ test('UC01 · exceptions · invalid e-mail, expired link, abandoned onboarding',
     expect(res.status(), bad).toBe(400)
     expect((await res.json()).error.code).toBe('AUTH_EMAIL_INVALID')
   }
+  // S1-UAT-01: the address is now typed on the create-account view of /auth.
   await page.goto('/auth', { waitUntil: 'networkidle' })
-  await page.getByLabel('Email', { exact: true }).fill('not-an-email')
-  await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
+  await page.getByRole('button', { name: 'Tạo tài khoản' }).click()
+  await page
+    .getByRole('form', { name: 'Tạo tài khoản' })
+    .getByLabel('Email', { exact: true })
+    .fill('not-an-email')
+  await page
+    .getByRole('form', { name: 'Tạo tài khoản' })
+    .getByRole('button', { name: 'Tạo tài khoản' })
+    .click()
   await expect(page.getByText('Email chưa đúng định dạng.')).toBeVisible()
   await expect(page).toHaveURL('/auth')
 

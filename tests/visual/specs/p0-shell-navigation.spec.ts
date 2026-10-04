@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 import { reach } from '../support/onboarding'
-import { requestMagicLink } from '../../../src/lib/auth/magic-link'
+import { signUpThroughUi } from '../support/auth'
 import { closePool, query } from '../../../src/lib/db/client'
 import { VENTURE_CORE } from '../../../src/lib/venture/testing'
 import { writeJsonReport } from '../pixel-qa/report'
@@ -257,7 +257,7 @@ test.describe('P0-SHELL navigation matrix', () => {
 })
 
 test.describe('P0-SHELL journeys', () => {
-  test('landing → auth → magic link → onboarding → complete → project; wordmarks lead home', async ({
+  test('landing → auth → create account → onboarding → complete → project; wordmarks lead home', async ({
     page,
   }) => {
     const email = `shell-journey-${Date.now()}@example.test`
@@ -266,12 +266,8 @@ test.describe('P0-SHELL journeys', () => {
     await expect(page).toHaveURL('/auth')
     await page.locator('[data-nav="home"]').click()
     await expect(page).toHaveURL('/')
-    await page.goto('/auth')
-    await page.getByLabel('Email', { exact: true }).fill(email)
-    await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
-    await expect(page).toHaveURL('/auth/check-email')
-    const { token } = await requestMagicLink(email, null)
-    await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
+    // S1-UAT-01: the primary sign-up is the create-account view of /auth (DEC-S1A-D1).
+    await signUpThroughUi(page, email)
     await expect(page).toHaveURL('/onboarding')
     // The landing sends an incomplete account back through the canonical resolver.
     await page.locator('[data-nav="home"]').click()

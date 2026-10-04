@@ -50,6 +50,8 @@ export const FROZEN_ROUTES: readonly FrozenRoute[] = [
   r('WF01-S02', 'WF01', 'auth', '/auth/check-email'),
   r('WF01-S03', 'WF01', 'auth', '/auth/callback'),
   r('WF01-S04', 'WF01', 'auth', '/auth/error'),
+  // S1-UAT-01 (DEC-S1A-D5): password reset completion from the e-mailed link.
+  r('WF01-S11', 'WF01', 'auth', '/auth/reset-password'),
   // Four-stage onboarding (DEC-L1R): S05..S08 keep their routes for the stages
   // that replace their screens; S09 (intro) and S10 (stage 2) are new.
   r('WF01-S05', 'WF01', 'onboarding', '/onboarding/purpose'),

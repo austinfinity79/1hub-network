@@ -55,6 +55,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* S1-UAT-01: the create-account card is taller than 900 px; symmetric
+     padding keeps it off the edges and leaves the AUTH1 / AUTH2 cards, which
+     fit, centred exactly where they were. */
+  padding-block: 2rem;
   background: var(--hub-canvas);
 }
 

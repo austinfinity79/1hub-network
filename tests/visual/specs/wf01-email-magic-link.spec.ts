@@ -6,7 +6,9 @@ import { closePool, query } from '../../../src/lib/db/client'
 
 /**
  * Real e-mail magic link with open sign-up (DEC-L1R-D1, which supersedes the
- * invite-only DEC-AUTH-EMAIL-D1; D2 … D4 still hold).
+ * invite-only DEC-AUTH-EMAIL-D1; D2 … D4 still hold). Since S1-UAT-01 it is the
+ * COMPATIBILITY path (DEC-S1A-D7): /auth no longer offers it, so each link is
+ * requested through its API; the e-mail, the callback and the session are real.
  *
  * The test server runs without a Resend key and with dev routes on, so the
  * e-mail lands in /dev/outbox, read here like an inbox; every sign-in opens the
@@ -35,17 +37,8 @@ test.afterAll(async () => {
   await closePool()
 })
 
-const emailField = (page: Page) => page.getByLabel('Email', { exact: true })
-const submit = (page: Page) => page.getByRole('button', { name: 'Gửi liên kết đăng nhập' })
-
 async function requestLink(page: Page, email: string) {
-  await page.goto('/auth', { waitUntil: 'networkidle' })
-  await emailField(page).fill(email)
-  const [res] = await Promise.all([
-    page.waitForResponse('**/api/v1/auth/magic-link'),
-    submit(page).click(),
-  ])
-  return res
+  return page.request.post('/api/v1/auth/magic-link', { data: { email } })
 }
 
 async function inbox(page: Page, email: string): Promise<string> {
@@ -69,7 +62,6 @@ test.describe('e-mail magic link, open sign-up', () => {
     )
     const res = await requestLink(page, email)
     expect(res.status()).toBe(202)
-    await expect(page).toHaveURL('/auth/check-email')
     const link = await inbox(page, email)
     expect(new URL(link).pathname).toBe('/auth/callback')
     expect(tokenOf(link)).toMatch(/^[A-Za-z0-9_-]{20,}$/)
@@ -110,8 +102,6 @@ test.describe('e-mail magic link, open sign-up', () => {
     expect(Object.keys(JSON.parse(body)).sort()).toEqual(
       ['email_masked', 'expires_in_seconds', 'request_id', 'resend_after_seconds'].sort(),
     )
-    await expect(page).toHaveURL('/auth/check-email')
-    await expect(page.locator('.ui-notice[role="alert"]')).toHaveCount(0)
     // Asking for a link creates nothing: the account exists only once the address is verified.
     expect(await accounts()).toHaveLength(0)
     expect(await context.cookies()).toEqual([])
@@ -154,11 +144,6 @@ test.describe('e-mail magic link, open sign-up', () => {
         'AUTH_EMAIL_INVALID',
       )
     }
-    await page.goto('/auth', { waitUntil: 'networkidle' })
-    await emailField(page).fill('not-an-email')
-    await submit(page).click()
-    await expect(page.getByText('Email chưa đúng định dạng.')).toBeVisible()
-    await expect(page).toHaveURL('/auth')
   })
 
   test('D. the e-mailed link works once; reopening it is refused', async ({ page, browser }) => {

@@ -1,8 +1,7 @@
-import { isIP } from 'node:net'
-
 import { ApiError } from '@/lib/api/errors'
 import { withApi, withStatus } from '@/lib/api/handler'
 import { readIdempotencyKey } from '@/lib/api/idempotency'
+import { clientIp } from '@/lib/auth/client-ip'
 import { requestMagicLink } from '@/lib/auth/magic-link'
 import { deliverMagicLink } from '@/lib/auth/magic-link-email'
 import { checkEmailRate, checkIpRate } from '@/lib/auth/rate-limit'
@@ -38,17 +37,6 @@ import { fingerprintRequest, runIdempotent } from '@/lib/idempotency/store'
  * because inventing a public error code is the harder thing to undo.
  */
 export const dynamic = 'force-dynamic'
-
-/**
- * `request_ip` is an `inet` column: only a plain IPv4 / IPv6 literal is kept.
- * Anything else a proxy may forward ("unknown", "ip:port", an IPv6 zone id) is
- * dropped rather than failing the request (the contract answers 202 / 429 only).
- */
-function clientIp(request: Request): string | null {
-  const forwarded = request.headers.get('x-forwarded-for')
-  const first = forwarded?.split(',')[0]?.trim()
-  return first && isIP(first) !== 0 && !first.includes('%') ? first : null
-}
 
 /** Issues the link inside the caller's transaction and e-mails it; a failed send rolls it back. */
 async function issueAndSend(email: string, ip: string | null, origin: string, exec: Executor) {

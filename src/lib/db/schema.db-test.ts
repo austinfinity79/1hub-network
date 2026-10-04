@@ -155,6 +155,7 @@ describe('M0-T06A PostgreSQL foundation', () => {
       // WF05-PROD-02 (DEC-W5P-D06): submitted applications kept, identity fixed, snapshot shape.
       '016_p0_application_integrity.sql',
       '017_p0_admin_foundation.sql',
+      '018_p0_password_auth.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -332,12 +333,15 @@ describe('M0-T07 seed fixture quality', () => {
       // Migration 013 (DEC-L5): a founder creates an application at runtime.
       'applications',
       'audit_events',
+      // Migration 018 (S1-UAT-01): Google links and reset links are runtime only.
+      'auth_identities',
       'auth_magic_link_requests',
       'feedback_submissions',
       // M0-T10: a runtime concurrency store. Seeding it would be meaningless,
       // and a seeded key would suppress a real request.
       'idempotency_keys',
       'notifications',
+      'password_reset_requests',
       // Migration 010: self-declared roles are written in onboarding stage 3.
       'profile_declared_roles',
       'profile_education',

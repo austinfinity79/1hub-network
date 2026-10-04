@@ -87,6 +87,24 @@ export const DECISION_ERROR_CODES = [
   'APPLICATION_SUBMITTED',
   // DEC-L5-D3: 422, a required question is unanswered at submit.
   'APPLICATION_INCOMPLETE',
+  // DEC-S1A-D9: 422, a sign-up / reset field fails its rule (`fields` names which).
+  'AUTH_VALIDATION_FAILED',
+  // DEC-S1A-D9: 401, wrong username/email or password; never says which part.
+  'AUTH_INVALID_CREDENTIALS',
+  // DEC-S1A-D9: 429, password sign-in suspended for 15 minutes after 5 wrong attempts.
+  'AUTH_PASSWORD_LOGIN_LOCKED',
+  // DEC-S1A-D9: 409, the username is already used (sign-up only; login never says).
+  'AUTH_USERNAME_TAKEN',
+  // DEC-S1A-D9: 409, sign-up refused; neutral, never says the e-mail has an account (DEC-S1A-D11).
+  'AUTH_REGISTRATION_REJECTED',
+  // DEC-S1A-D9: 400, the reset link is unknown or malformed.
+  'AUTH_RESET_LINK_INVALID',
+  // DEC-S1A-D9: 400, the reset link expired, was used, or was superseded by a resend.
+  'AUTH_RESET_LINK_EXPIRED',
+  // DEC-S1A-D9: 400, the Google callback state does not match this browser's.
+  'AUTH_GOOGLE_STATE_MISMATCH',
+  // DEC-S1A-D9: 400, Google sign-in could not complete (provider error, unverified e-mail, not configured).
+  'AUTH_GOOGLE_FAILED',
 ] as const
 
 export type DecisionErrorCode = (typeof DECISION_ERROR_CODES)[number]

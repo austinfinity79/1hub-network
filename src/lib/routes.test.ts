@@ -33,10 +33,10 @@ describe('M0-T03 frozen route manifest', () => {
   const contractRoutes = parseContractRoutes()
 
   it('parses the expected shape of the contract', () => {
-    // 27 screens, 28 routes: WF02-S05 declares two; DEC-L1R added WF01-S09 and S10,
-    // DEC-L2R added WF02-S08.
-    expect(new Set(contractRoutes.map((r) => r.screenId)).size).toBe(27)
-    expect(contractRoutes).toHaveLength(28)
+    // 28 screens, 29 routes: WF02-S05 declares two; DEC-L1R added WF01-S09 and S10,
+    // DEC-L2R added WF02-S08, DEC-S1A-D5 added WF01-S11.
+    expect(new Set(contractRoutes.map((r) => r.screenId)).size).toBe(28)
+    expect(contractRoutes).toHaveLength(29)
   })
 
   it('covers every contract route exactly once, with no extras', () => {
@@ -69,6 +69,7 @@ describe('M0-T03 frozen route manifest', () => {
       '/auth/check-email',
       '/auth/callback',
       '/auth/error',
+      '/auth/reset-password',
     ])
     expect(routesInGroup('onboarding')).toHaveLength(6)
     expect(routesInGroup('member')).toHaveLength(9)
@@ -94,6 +95,9 @@ describe('M0-T03 frozen route manifest', () => {
     const notInContract = [
       '/login',
       '/register',
+      // S1-UAT-01 task section 2: one canonical /auth, no sign-up aliases.
+      '/signup',
+      '/dang-ky',
       '/verify-email',
       '/ops/members',
       '/me/memberships',

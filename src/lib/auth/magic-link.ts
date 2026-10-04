@@ -2,15 +2,13 @@ import { trackEvent } from '@/lib/analytics/analytics'
 import { ApiError } from '@/lib/api/errors'
 import type { Executor } from '@/lib/db/client'
 import { query, withTransaction } from '@/lib/db/client'
-import { getOnboardingState } from '@/lib/onboarding/state'
-import { reconcileRoster } from '@/lib/roster/reconcile'
 
 import {
   AUTH_REQUEST_ID_PREFIX,
   MAGIC_LINK_EXPIRES_IN_SECONDS,
   MAGIC_LINK_RESEND_AFTER_SECONDS,
 } from './config'
-import { createSession } from './sessions'
+import { completeSignIn, type SignInResponse } from './sign-in'
 import { generateToken, hashToken, isPlausibleEmail, maskEmail, normalizeEmail } from './tokens'
 
 /**
@@ -40,11 +38,7 @@ export type MagicLinkRequestResult = {
 }
 
 export type ConsumeResult = {
-  response: {
-    result: 'SUCCESS'
-    account_created: boolean
-    onboarding: { completed: boolean; next_step: string | null }
-  }
+  response: SignInResponse
   sessionToken: string
   sessionExpiresAt: Date
 }
@@ -229,33 +223,6 @@ export async function consumeMagicLink(token: unknown): Promise<ConsumeResult> {
   if (resolved.status !== 'ACTIVE') {
     throw new ApiError('AUTH_ACCOUNT_BLOCKED', 403, 'This account cannot sign in.')
   }
-  const accountId = resolved.id
-  const accountCreated = resolved.created
-
-  // Known launch-roster emails get their confirmed relationships (Freeze D2).
-  // Runs on every sign-in, so a roster imported after the account existed is
-  // picked up too; it is idempotent. A failure must not block sign-in: the
-  // next sign-in (or `pnpm roster:import`) retries. Nothing personal is logged.
-  try {
-    await reconcileRoster(accountId)
-  } catch (error) {
-    console.error('roster reconciliation failed', (error as { code?: string }).code ?? 'unknown')
-  }
-
-  // A fresh session token every time: this is the session-fixation defence.
-  const { token: sessionToken, expiresAt } = await createSession(accountId)
-
-  // The one onboarding resolver decides where a returning user resumes
-  // (DEC-WF01-RESUME-D1): the first incomplete step, or null when done.
-  const onboarding = await getOnboardingState(accountId)
-
-  return {
-    response: {
-      result: 'SUCCESS',
-      account_created: accountCreated,
-      onboarding: { completed: onboarding.completed, next_step: onboarding.current_step },
-    },
-    sessionToken,
-    sessionExpiresAt: expiresAt,
-  }
+  // Roster, fresh session and onboarding state: shared with every sign-in method.
+  return completeSignIn(resolved.id, resolved.created)
 }

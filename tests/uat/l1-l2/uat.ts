@@ -72,12 +72,16 @@ export function gap(kind: 'PRODUCT GAP' | 'DEFERRED' | 'NOT APPLICABLE', text: s
 export const unique = (label: string) =>
   `uat-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.test`
 
-/** The real sign-in: /auth → the e-mail the dev outbox holds → the one-time link. */
+/**
+ * The magic-link sign-in: request → the e-mail the dev outbox holds → the
+ * one-time link. S1-UAT-01 (DEC-S1A-D7): /auth no longer offers it, so the link
+ * is requested through its compatibility API; everything from the e-mail on
+ * (callback, single use, expiry, session) is the real path. The primary
+ * password path is covered by tests/visual/specs/wf01-s01-auth-entry.spec.ts.
+ */
 export async function requestLink(page: Page, email: string): Promise<string> {
-  await page.goto('/auth', { waitUntil: 'networkidle' })
-  await page.getByLabel('Email', { exact: true }).fill(email)
-  await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
-  await expect(page).toHaveURL('/auth/check-email')
+  const requested = await page.request.post('/api/v1/auth/magic-link', { data: { email } })
+  expect(requested.status(), `a link for ${email}`).toBe(202)
   const res = await page.request.get(`/dev/outbox?email=${encodeURIComponent(email)}`)
   expect(res.status(), `an e-mail for ${email}`).toBe(200)
   return ((await res.json()) as { link: string }).link

@@ -1608,3 +1608,45 @@ Withdrawn by [DEC-ADM-D04](../decisions/DECISION_LOG.md#dec-adm-d04) (ADMIN-PROD
 | audit | `FEEDBACK_STATUS_CHANGED` / `_PRIORITY_CHANGED` / `_ASSIGNED` / `_UPDATED`; `VOCABULARY_ITEM_UPDATED` / `_ARCHIVED` / `_ACTIVATED`; `ACCOUNT_LOCKED` / `_UNLOCKED` / `_DEACTIVATED` / `_REACTIVATED` / `_SOFT_DELETE_REQUESTED` / `_SELF_ACTION_REFUSED`; `ACCOUNT_REQUEST_FILED` / `_PROCESSED` / `_DECLINED`: ids, codes, counts and the optional reason only — never feedback text, notes, e-mails, tokens or screenshots |
 | screenshots | served (`/media/assets/{id}`) to feedback managers only (not the uploader), and only within 90 days of submission; then the reference is cleared (`screenshot_deleted_at`) and the file removed unless another record still uses it |
 | privacy | the guest e-mail and full content only in the feedback detail; identities through PROFILE_DISCOVERY |
+
+# 29. Amendment A12 — Sprint1 auth: username/email + password + Google (2026-10-05)
+
+Source: [DEC-S1A](../decisions/DECISION_LOG.md#dec-s1a) (S1-UAT-01; Sprint1 UAT pack US-01.02 … US-01.05, Appendix B). Additive: §4.1 magic link stays as compatibility ([DEC-S1A-D7](../decisions/DECISION_LOG.md#dec-s1a-d7)); its rule "no password is required by the frozen P0 design" no longer describes the primary path. No new idempotent operation (a double submit converges on the UNIQUE indexes). Decision codes (not contract codes, [DEC-S1A-D9](../decisions/DECISION_LOG.md#dec-s1a-d9)): `AUTH_VALIDATION_FAILED`, `AUTH_INVALID_CREDENTIALS`, `AUTH_PASSWORD_LOGIN_LOCKED`, `AUTH_USERNAME_TAKEN`, `AUTH_REGISTRATION_REJECTED`, `AUTH_RESET_LINK_INVALID`, `AUTH_RESET_LINK_EXPIRED`, `AUTH_GOOGLE_STATE_MISMATCH`, `AUTH_GOOGLE_FAILED`. Every sign-in answers like §4.1 consume (`{ result, account_created, onboarding {completed, next_step} }`) and sets a NEW session cookie.
+
+### POST `/auth/register`
+`{ full_name, email, username, password, password_confirm, legal_versions {TERMS_ACCEPTANCE, PRIVACY_DATA_PROCESSING} }` → `200`, `account_created: true`, 30-day cookie. Rules: e-mail normalised (trim, lowercase); username 4–30 `[A-Za-z0-9.]`, unique case-insensitively; password ≥ 8 with letters and digits; both legal versions must be current (`409 LEGAL_DOCUMENT_VERSION_STALE`) and are recorded through `POST /me/consents/accept`'s writer. `422` with `fields` (`required`, `invalid`, `weak`, `mismatch`, `too_long`); an e-mail that has an account `409 AUTH_REGISTRATION_REJECTED` (neutral message, no field; reason audited internally); `409 AUTH_USERNAME_TAKEN` with `fields.suggestion`.
+
+### POST `/auth/login`
+`{ identifier, password, remember }`; identifier with "@" = e-mail, else username, both case-insensitive. `remember: true` → 30-day cookie, else a browser-session cookie. `401 AUTH_INVALID_CREDENTIALS` for an unknown identifier, a wrong password or a password-less (Google-only) account alike; the 5th consecutive wrong password and every attempt for the next 15 minutes `429 AUTH_PASSWORD_LOGIN_LOCKED` (`fields.locked_until`); `403 AUTH_ACCOUNT_BLOCKED` only after a correct password.
+
+### POST `/auth/password/forgot`
+`{ identifier }` → `202 { request_id, email_masked, resend_after_seconds: 45, expires_in_seconds: 900 }`, identical for an unknown or inactive account, and for a repeat within 45 s (no e-mail then). `email_masked` is empty when the identifier is a username. The e-mail carries `/auth/reset-password#token=…`.
+
+### POST `/auth/password/forgot/resend`
+`{ request_id }` → `202`, same shape. Before 45 s `429 AUTH_RATE_LIMITED`; retires every earlier link of the account.
+
+### POST `/auth/password/reset`
+`{ token, password, password_confirm }` → `204`. Claims the link once; sets the new hash; revokes every session of the account; clears the lockout; creates no session. `400 AUTH_RESET_LINK_EXPIRED` (expired, used, superseded), `400 AUTH_RESET_LINK_INVALID`, `422 AUTH_VALIDATION_FAILED`, `403 AUTH_ACCOUNT_BLOCKED`.
+
+### POST `/auth/password/reset/check`
+`{ token }` → `204` while the link is usable, else `400 AUTH_RESET_LINK_EXPIRED` / `AUTH_RESET_LINK_INVALID`. Read-only; WF01-S11 calls it on open.
+
+### GET `/auth/google/start`
+Top-level navigation. `302` to Google (code flow, PKCE S256, `openid email profile`) with an HttpOnly 10-minute state cookie; not configured or over the IP limit → `302 /auth?google=unavailable|rate_limited`.
+
+### POST `/auth/google/callback`
+`{ code, state }` from `/auth/callback`. State cookie cleared on every outcome; `400 AUTH_GOOGLE_STATE_MISMATCH`; `400 AUTH_GOOGLE_FAILED` (provider error, unverified e-mail, a second Google identity for the account, not configured); `403 AUTH_ACCOUNT_BLOCKED`. Links by `sub`, then by verified e-mail to the same account, else creates one (generated username, no password).
+
+### GET `/auth/providers`
+`{ providers: [{ id: "GOOGLE", start_url: "/api/v1/auth/google/start" }] }` when configured, else `[]`.
+
+## 29.1 Rules
+| Topic | Rule |
+|---|---|
+| storage | scrypt hash only; reset tokens and session tokens as SHA-256 hashes; nothing secret in a response, a log or an audit event |
+| audit | `AUTH_PASSWORD_LOGIN_LOCKED`, `AUTH_PASSWORD_RESET_COMPLETED`, `AUTH_GOOGLE_IDENTITY_LINKED`, `CONSENT_ACCEPTED`: ids and timestamps only |
+| status | BLOCKED / DEACTIVATED refused by every method; sessions of a non-ACTIVE account never authenticate (A11) |
+| body | the A12 POST endpoints take `application/json` only; anything else `400 AUTH_VALIDATION_FAILED` (`body: json_required`) |
+| enumeration | no answer says whether an e-mail has an account (sign-up refusal is neutral); an identifier without a password account locks like a real one; only a taken username is named |
+| limits | only the Sprint1 values: 5 attempts / 15 min, link 15 min, resend and repeat forgot 45 s |
+

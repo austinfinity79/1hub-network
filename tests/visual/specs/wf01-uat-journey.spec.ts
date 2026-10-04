@@ -54,13 +54,16 @@ const NAME = 'Người Dùng UAT'
 const newEmail = (tag: string) =>
   `uat-${tag}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@example.test`
 
-/** AUTH1 → AUTH2 in the UI, then open the emailed link (AUTH3). Returns the raw token. */
+/**
+ * The e-mailed link (AUTH3), as the compatibility path of DEC-S1A-D7: since
+ * S1-UAT-01 /auth offers username/email + password instead, so the link is
+ * requested through its API; the inbox step, the callback, single use and the
+ * session are the real ones. The primary password journey is
+ * wf01-s01-auth-entry.spec.ts. Returns the raw token.
+ */
 async function signInThroughUi(page: Page, email: string): Promise<string> {
-  await page.goto('/auth', { waitUntil: 'networkidle' })
-  await page.getByLabel('Email', { exact: true }).fill(email)
-  await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
-  await expect(page).toHaveURL('/auth/check-email')
-  await expect(page.getByRole('button', { name: /Gửi lại/ })).toBeVisible()
+  const requested = await page.request.post('/api/v1/auth/magic-link', { data: { email } })
+  expect(requested.status()).toBe(202)
   // The inbox: the newest link for this address (a resend retires older ones).
   const { token } = await requestMagicLink(email, null)
   await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)

@@ -16,7 +16,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 
 | Screen | State |
 |---|---|
-| WF01-S01 Auth Entry | DONE — functional + typography + pixel gate PASS ([report](reports/WF01-S01_auth-entry.md)) |
+| WF01-S01 Auth Entry | REPLACED by S1-UAT-01 (local, not deployed): username/email + password, create account, forgot password, Google on the one `/auth`; magic link compatibility-only ([DEC-S1A](../decisions/DECISION_LOG.md#dec-s1a), [report](reports/S1-UAT-01-auth-replacement.md)). AUTH1 shell pixel PASS; password forms await PO design review |
 | WF01-S02 Check Email | CLOSED / PASS — "Mở Gmail" omitted by contract; runtime copy approved; countdown from server `resend_after_seconds` ([report](reports/WF01-S02_check-email.md)) |
 | WF01-S03 Auth Callback | CLOSED / PASS — SUCCESS/EXPIRED/USED; INVALID → S04; decisions DEC-WF01-S03-D1..D7, D6a, ICON ([report](reports/WF01-S03_auth-callback-states.md), [mapping](WF01_S03_STATE_BOARD_MAPPING.md)) |
 | WF01-S04 Auth Errors | CLOSED / PASS (BLOCKED copy neutralised: no email promise) — BLOCKED/SESSION_EXPIRED component pixel PASS; GENERIC = DESIGN-GAP-GENERIC (PO review); DEC-WF01-S04-D1..D8 ([report](reports/WF01-S04_auth-errors.md), [mapping](WF01_S04_STATE_BOARD_MAPPING.md)) |
@@ -25,6 +25,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S07 Onboarding stage 4 · ACC-09 `/onboarding/privacy` | REBUILT — review of the three stages, server completion, visibility switch and the one required acknowledgement (two versioned ConsentRecords) as separate controls; "Hoàn tất hồ sơ" completes; [DEC-L1R-D6](../decisions/DECISION_LOG.md#dec-l1r-d6) |
 | WF01-S08 Onboarding complete · ACC-10 `/onboarding/complete` | REBUILT — completes nothing; next actions only for routes that exist ("Lập hồ sơ đội", "Theo dõi xác minh chức vụ HUB"); completion on entry (DEC-WF01-S08-D1) is SUPERSEDED |
 | WF01-S09 Onboarding intro · ACC-05 `/onboarding` | NEW — entry to the four stages; writes nothing; AI block drawn and inert; [DEC-L1R-D3](../decisions/DECISION_LOG.md#dec-l1r-d3) |
+| WF01-S11 Reset password `/auth/reset-password` | NEW (S1-UAT-01) — new password from the e-mailed `#token=`; revokes every session; [DEC-S1A-D5](../decisions/DECISION_LOG.md#dec-s1a-d5) |
 | WF01-S10 Onboarding stage 2 · ACC-07 `/onboarding/capability` | NEW — fields, specialisations (at most five), skills from the controlled vocabulary, experience with period, links; [DEC-L1R-D4](../decisions/DECISION_LOG.md#dec-l1r-d4) |
 
 **INTERNAL ALPHA — P0-LANDING: DONE** — `/` is the public homepage (DEC-P0-LANDING-D1..D3; [report](P0_LANDING_IMPLEMENTATION_REPORT.md)). WF01–WF03 remain PROTECTED / CLOSED / GREEN.

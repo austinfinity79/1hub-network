@@ -14,11 +14,15 @@ workflows:
       - AuthRequest
       actions:
       - continue_google_if_configured
-      - send_magic_link
+      - sign_in_password
+      - create_account
+      - forgot_password
       next:
       - WF01-S02
+      - WF01-S03
+      - WF01-S09
       notes:
-      - Email magic-link is required P0 path; provider auth is config-driven.
+      - S1-UAT-01 (DEC-S1A) supersedes the magic-link P0 path. Username/email + password and Google (config-driven); create account and forgot password are views of this one route. Magic link is compatibility-only and not offered here.
     - id: WF01-S02
       route: /auth/check-email
       source: AUTH2
@@ -178,6 +182,23 @@ workflows:
       - WF01-S05
       notes:
       - Stage 2 of 4. Skills come from the controlled vocabulary, never free text.
+    # S1-UAT-01 (DEC-S1A-D5): password reset completion, reached only from the
+    # e-mailed link (token in the URL fragment). WF01-S02 confirms the e-mail.
+    - id: WF01-S11
+      route: /auth/reset-password
+      source: US-01.04
+      reads:
+      - PasswordResetToken
+      writes:
+      - UserAccount
+      - Session
+      actions:
+      - set_new_password
+      - request_new_link
+      next:
+      - WF01-S01
+      notes:
+      - Revokes every session of the account; creates none. The person signs in again on WF01-S01.
     future_insertion:
       after: WF01-S03
       capability: 1Hub verified identity / CCCD verification

@@ -147,7 +147,8 @@ test.describe('WF01-S04 functional', () => {
   })
 
   test('rate limiting stays inline on WF01-S01 and never routes to S04', async ({ page }) => {
-    await page.route('**/api/v1/auth/magic-link', (route) =>
+    // S1-UAT-01: the WF01-S01 request is now the password sign-in (DEC-S1A-D1).
+    await page.route('**/api/v1/auth/login', (route) =>
       route.fulfill({
         status: 429,
         contentType: 'application/json',
@@ -157,9 +158,11 @@ test.describe('WF01-S04 functional', () => {
       }),
     )
     await page.goto('/auth', { waitUntil: 'networkidle' })
-    await page.getByLabel('Email', { exact: true }).fill('member@example.test')
-    await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
-    await expect(page.locator('form').getByRole('alert')).toBeVisible()
+    const form = page.getByRole('form', { name: 'Đăng nhập' })
+    await form.getByLabel('Tên tài khoản hoặc email').fill('member@example.test')
+    await form.getByLabel('Mật khẩu', { exact: true }).fill('Uat2026pass')
+    await form.getByRole('button', { name: 'Đăng nhập' }).click()
+    await expect(form.getByRole('alert')).toBeVisible()
     await expect(page).toHaveURL('/auth')
   })
 

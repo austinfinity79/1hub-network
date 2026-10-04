@@ -18,6 +18,12 @@ export type MagicLinkRequestAccepted = {
   email_masked: string
   resend_after_seconds: number
   expires_in_seconds: number
+  /**
+   * S1-UAT-01: which e-mail WF01-S02 is confirming. Absent = the magic link
+   * (compatibility); 'reset' = the forgot-password link (US-01.04), whose
+   * 202 body has the same four fields.
+   */
+  kind?: 'reset'
 }
 
 export const PENDING_REQUEST_STORAGE_KEY = '1hub.auth.pending-request'
@@ -31,16 +37,23 @@ function isAccepted(value: unknown): value is MagicLinkRequestAccepted {
     typeof v.request_id === 'string' &&
     typeof v.email_masked === 'string' &&
     typeof v.resend_after_seconds === 'number' &&
-    typeof v.expires_in_seconds === 'number'
+    typeof v.expires_in_seconds === 'number' &&
+    (v.kind === undefined || v.kind === 'reset')
   )
 }
 
-/** Stores only the four contract fields, dropping anything else the body carried. */
+/** Stores only the four contract fields (and the kind), dropping anything else the body carried. */
 export function savePendingRequest(storage: StorageLike, accepted: MagicLinkRequestAccepted): void {
-  const { request_id, email_masked, resend_after_seconds, expires_in_seconds } = accepted
+  const { request_id, email_masked, resend_after_seconds, expires_in_seconds, kind } = accepted
   storage.setItem(
     PENDING_REQUEST_STORAGE_KEY,
-    JSON.stringify({ request_id, email_masked, resend_after_seconds, expires_in_seconds }),
+    JSON.stringify({
+      request_id,
+      email_masked,
+      resend_after_seconds,
+      expires_in_seconds,
+      ...(kind === 'reset' ? { kind } : {}),
+    }),
   )
 }
 

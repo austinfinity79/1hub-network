@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { closePool } from '../../../src/lib/db/client'
+import { TEST_PASSWORD, ensurePassword, logInThroughUi, signUpThroughUi } from '../support/auth'
 import { completedAccount, reach, watchConsole } from '../support/onboarding'
 
 /**
@@ -31,25 +32,6 @@ test.afterAll(async () => {
 
 async function login(page: Page, email: string) {
   expect((await page.request.post('/dev/login', { data: { email } })).ok()).toBe(true)
-}
-
-/** The e-mailed link of the dev outbox, opened on this server. */
-async function openInboxLink(page: Page, email: string) {
-  const res = await page.request.get(`/dev/outbox?email=${encodeURIComponent(email)}`)
-  expect(res.status(), `an e-mail for ${email}`).toBe(200)
-  const link = new URL(((await res.json()) as { link: string }).link)
-  await page.goto(`${link.pathname}${link.search}`)
-}
-
-async function requestLinkFrom(page: Page, entry: string, email: string) {
-  await page.goto(entry, { waitUntil: 'networkidle' })
-  await page.getByLabel('Email', { exact: true }).fill(email)
-  const [res] = await Promise.all([
-    page.waitForResponse('**/api/v1/auth/magic-link'),
-    page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click(),
-  ])
-  expect(res.status()).toBe(202)
-  await expect(page).toHaveURL('/auth/check-email')
 }
 
 test.describe('homepage search → /library?q=', () => {
@@ -214,32 +196,35 @@ test.describe('account and workspace menus', () => {
 })
 
 test.describe('sign in and return to venture creation (BD-02 return-to rule)', () => {
-  test('guest → /auth?redirect → e-mailed link → /projects/new; unsafe paths are ignored', async ({
+  test('guest → /auth?redirect → password sign-in → /projects/new; unsafe paths are ignored', async ({
     page,
   }) => {
+    // S1-UAT-01: the return-to rule now rides the password sign-in (DEC-S1A-D1).
     const account = await completedAccount(page.request, 'return')
+    await ensurePassword(account.email)
     await page.context().clearCookies()
     await page.goto('/', { waitUntil: 'networkidle' })
     await page.locator('[data-cta="startup"]').click()
     await expect(page).toHaveURL('/auth?redirect=%2Fprojects%2Fnew')
-    await requestLinkFrom(page, '/auth?redirect=%2Fprojects%2Fnew', account.email)
-    await openInboxLink(page, account.email)
+    await logInThroughUi(page, account.email, TEST_PASSWORD, '/auth?redirect=%2Fprojects%2Fnew')
     await expect(page).toHaveURL('/projects/new')
     expect(await page.evaluate((k) => localStorage.getItem(k), RETURN_KEY)).toBeNull()
 
     // Another origin, a protocol-relative path or an auth path is never followed.
     for (const redirect of ['https://evil.example/', '//evil.example', '/auth/callback']) {
       await page.context().clearCookies()
-      await requestLinkFrom(page, `/auth?redirect=${encodeURIComponent(redirect)}`, account.email)
-      await openInboxLink(page, account.email)
+      await logInThroughUi(
+        page,
+        account.email,
+        TEST_PASSWORD,
+        `/auth?redirect=${encodeURIComponent(redirect)}`,
+      )
       await expect(page, redirect).toHaveURL('/me')
     }
 
-    // A plain entry after an unused return forgets it.
+    // A plain entry has no return path.
     await page.context().clearCookies()
-    await requestLinkFrom(page, '/auth?redirect=%2Fprojects%2Fnew', account.email)
-    await requestLinkFrom(page, '/auth', account.email)
-    await openInboxLink(page, account.email)
+    await logInThroughUi(page, account.email)
     await expect(page).toHaveURL('/me')
   })
 
@@ -247,8 +232,7 @@ test.describe('sign in and return to venture creation (BD-02 return-to rule)', (
     page,
   }) => {
     const email = `return-new-${Date.now()}@example.test`
-    await requestLinkFrom(page, '/auth?redirect=%2Fprojects%2Fnew', email)
-    await openInboxLink(page, email)
+    await signUpThroughUi(page, email, 'Người Dùng Mới', '/auth?redirect=%2Fprojects%2Fnew')
     await expect(page).toHaveURL('/onboarding')
     await reach(page.request, 'DONE')
     await page.goto('/onboarding/complete', { waitUntil: 'networkidle' })

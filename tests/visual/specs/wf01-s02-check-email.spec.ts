@@ -70,17 +70,20 @@ async function openAt(page: Page, seconds = 0) {
 const resendButton = (page: Page) => page.locator('button', { hasText: /Gửi lại/ })
 
 test.describe('WF01-S02 functional', () => {
-  test('S01 → S02: submitting an email lands on check-email with the masked address', async ({
+  test('S01 → S02 (S1-UAT-01, US-01.04): "Quên mật khẩu?" lands on check-email, masked', async ({
     page,
   }) => {
     await page.goto('/auth', { waitUntil: 'networkidle' })
-    await page.getByLabel('Email', { exact: true }).fill('newcomer@example.test')
-    await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
+    await page.getByRole('button', { name: 'Quên mật khẩu?' }).click()
+    const form = page.getByRole('form', { name: 'Quên mật khẩu' })
+    await form.getByLabel('Tên tài khoản hoặc email').fill('newcomer@example.test')
+    await form.getByRole('button', { name: 'Gửi liên kết đặt lại' }).click()
 
     await expect(page).toHaveURL(ROUTE)
     await expect(
       page.getByRole('heading', { level: 1, name: 'Kiểm tra hòm thư của bạn' }),
     ).toBeVisible()
+    await expect(page.getByText(/liên kết đặt lại mật khẩu/)).toBeVisible()
     await expect(page.getByTestId('email-masked')).toHaveText('n***@example.test')
     await expect(page.getByText('newcomer@example.test')).toHaveCount(0)
   })

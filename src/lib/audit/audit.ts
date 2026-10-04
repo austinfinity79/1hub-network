@@ -12,6 +12,13 @@ export type AuditAction =
   | 'PROFILE_ACTIVATED'
   | 'MEMBERSHIP_REQUESTED'
   | 'ACCOUNT_DELETION_REQUESTED'
+  // S1-UAT-01 auth security events: ids and timestamps only, never a password,
+  // hash, token or e-mail.
+  | 'AUTH_PASSWORD_LOGIN_LOCKED'
+  | 'AUTH_PASSWORD_RESET_COMPLETED'
+  | 'AUTH_GOOGLE_IDENTITY_LINKED'
+  // A sign-up refused because the e-mail has an account; the answer stays neutral.
+  | 'AUTH_REGISTRATION_CONFLICT'
   // WF02-S06 venture team (DEC-WF02-S06-G7): ids and states only, never the email.
   | 'VENTURE_TEAM_INVITED'
   | 'VENTURE_TEAM_JOINED'

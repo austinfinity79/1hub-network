@@ -28,6 +28,11 @@ import styles from './check-email.module.css'
  *   WF01-S01, since there is nothing to confirm or resend.
  * - The reference's "Mở Gmail" button is NOT rendered: it is not a WF01-S02
  *   contract action (resend, change_email).
+ * - S1-UAT-01: the same screen confirms the forgot-password e-mail (US-01.04
+ *   step 3, `kind: 'reset'`): its copy names the reset link, resend goes to
+ *   POST /auth/password/forgot/resend after the server's 45 s, and "change"
+ *   returns to the forgot view. When the request named a username, no address
+ *   is shown (nothing about the account is disclosed), only "the account's e-mail".
  */
 
 /** Copy for states the reference does not show. */
@@ -36,6 +41,8 @@ const MESSAGES = {
   sent: 'Đã gửi lại liên kết. Hãy kiểm tra hộp thư của bạn.',
   stale: 'Yêu cầu này không còn hiệu lực. Hãy nhập lại email.',
   rateLimited: 'Bạn đã yêu cầu liên kết quá nhiều lần. Vui lòng thử lại sau ít phút.',
+  resetLede: 'Nếu tài khoản tồn tại, chúng tôi đã gửi liên kết đặt lại mật khẩu đến:',
+  resetAccountEmail: 'email gắn với tài khoản của bạn',
   failed: 'Chưa gửi lại được liên kết. Vui lòng thử lại.',
 } as const
 
@@ -85,6 +92,7 @@ export function CheckEmailCard() {
   // first client render agree and no empty card flashes before a redirect.
   if (!pending) return null
 
+  const reset = pending.kind === 'reset'
   const remaining = Math.max(0, Math.ceil((availableAt - now) / 1000))
   const coolingDown = remaining > 0
 
@@ -99,10 +107,19 @@ export function CheckEmailCard() {
     setSending(true)
     setStatus(undefined)
     try {
-      const accepted = await apiRequest<MagicLinkRequestAccepted>('/auth/magic-link/resend', {
-        method: 'POST',
-        body: { auth_request_id: pending.request_id },
-      })
+      const accepted =
+        pending.kind === 'reset'
+          ? {
+              ...(await apiRequest<MagicLinkRequestAccepted>('/auth/password/forgot/resend', {
+                method: 'POST',
+                body: { request_id: pending.request_id },
+              })),
+              kind: 'reset' as const,
+            }
+          : await apiRequest<MagicLinkRequestAccepted>('/auth/magic-link/resend', {
+              method: 'POST',
+              body: { auth_request_id: pending.request_id },
+            })
       // The server retires the previous request; only the new id can resend.
       savePendingRequest(window.sessionStorage, accepted)
       const at = Date.now()
@@ -144,9 +161,11 @@ export function CheckEmailCard() {
           </div>
 
           <h1 className={styles.title}>Kiểm tra hòm thư của bạn</h1>
-          <p className={styles.lede}>Chúng tôi đã gửi liên kết đăng nhập đến:</p>
+          <p className={styles.lede}>
+            {reset ? MESSAGES.resetLede : 'Chúng tôi đã gửi liên kết đăng nhập đến:'}
+          </p>
           <p className={styles.address} data-testid="email-masked">
-            {pending.email_masked}
+            {pending.email_masked || MESSAGES.resetAccountEmail}
           </p>
           <p className={styles.spam}>Vui lòng kiểm tra cả thư mục Spam hoặc Thư rác.</p>
 
@@ -174,8 +193,8 @@ export function CheckEmailCard() {
             ) : null}
           </div>
 
-          <Link href="/auth" className={styles.changeEmail}>
-            Dùng email khác
+          <Link href={reset ? '/auth#quen-mat-khau' : '/auth'} className={styles.changeEmail}>
+            {reset ? 'Nhập lại tên tài khoản hoặc email' : 'Dùng email khác'}
           </Link>
         </div>
       </AuthCard>

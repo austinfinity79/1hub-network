@@ -3,8 +3,8 @@ import path from 'node:path'
 
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
+import { signInThroughUi } from '../support/auth'
 import { onboardThroughUi } from '../support/onboarding'
-import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { closePool, query } from '../../../src/lib/db/client'
 import { REPO_ROOT } from '../pixel-qa/paths'
 
@@ -112,15 +112,9 @@ async function cleanup() {
 const newEmail = (tag: string) =>
   `uat3-${tag}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@example.test`
 
+/** WF01 sign-in since S1-UAT-01: /auth, password (DEC-S1A-D1). */
 async function signIn(page: Page, email: string) {
-  await page.goto('/auth', { waitUntil: 'networkidle' })
-  await page.getByLabel('Email', { exact: true }).fill(email)
-  await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
-  await expect(page).toHaveURL('/auth/check-email')
-  const { token } = await requestMagicLink(email, null)
-  await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
-  // The callback signs in client-side; wait until it has left /auth.
-  await page.waitForURL((url) => !url.pathname.startsWith('/auth'))
+  await signInThroughUi(page, email)
 }
 
 /** ACC-05 → ACC-10 → /me through the screens (DEC-L1R). */

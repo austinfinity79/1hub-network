@@ -27,6 +27,12 @@ const RUNNER = join(ROOT, 'scripts', 'db.mjs')
 const M016 = '016_p0_application_integrity.sql'
 const M017 = '017_p0_admin_foundation.sql'
 const M017_SOURCE = readFileSync(join(MIGRATIONS_DIR, M017), 'utf8')
+// S1-UAT-01: migrations after 017 unwind first, by their own documented rollback.
+const LATER_ROLLBACKS = readdirSync(MIGRATIONS_DIR)
+  .filter((name) => name.endsWith('.sql') && name > M017)
+  .sort()
+  .reverse()
+  .map((name) => readFileSync(join(MIGRATIONS_DIR, name), 'utf8'))
 const MIGRATION_FILES = readdirSync(MIGRATIONS_DIR)
   .filter((name) => name.endsWith('.sql'))
   .sort()
@@ -105,8 +111,8 @@ async function applyBefore017(client: Client): Promise<void> {
   }
 }
 
-function documentedRollback(): string {
-  const lines = M017_SOURCE.split('\n')
+function documentedRollback(source: string = M017_SOURCE): string {
+  const lines = source.split('\n')
   const start = lines.findIndex((line) => line.startsWith('-- ROLLBACK'))
   const body: string[] = []
   for (const line of lines.slice(start + 1)) {
@@ -366,6 +372,7 @@ describe('RECOVERY — the STOP check, the documented rollback and a re-apply', 
 
   it('rolls back losslessly to the 016 schema and re-applies', async () => {
     const before = await snapshot(db)
+    for (const later of LATER_ROLLBACKS) await db.query(documentedRollback(later))
     await db.query(documentedRollback())
     expect(await ledger(db)).toEqual(BEFORE_017)
     for (const table of [

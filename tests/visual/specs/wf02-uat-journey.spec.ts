@@ -18,6 +18,7 @@ import {
   onboardThroughUi,
   watchConsole,
 } from '../support/onboarding'
+import { signInThroughUi } from '../support/auth'
 import { CORE, createVenture, freshAddress, invite, STAGE } from '../support/workspace'
 
 /**
@@ -72,12 +73,13 @@ test.afterAll(async () => {
 
 const newEmail = (tag: string) => freshAddress(`uat2-${tag}`)
 
-/** WF01 sign-in as the member does it; the "mail" step reads a fresh link. */
+/** WF01 sign-in as the member does it since S1-UAT-01: /auth, password (DEC-S1A-D1). */
 async function signIn(page: Page, email: string) {
-  await page.goto('/auth', { waitUntil: 'networkidle' })
-  await page.getByLabel('Email', { exact: true }).fill(email)
-  await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
-  await expect(page).toHaveURL('/auth/check-email')
+  await signInThroughUi(page, email)
+}
+
+/** The compatibility magic link (DEC-S1A-D7): requested by API, opened in the browser. */
+async function signInByMagicLink(page: Page, email: string) {
   const { token } = await requestMagicLink(email, null)
   await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
   return token
@@ -789,7 +791,7 @@ test.describe('WF02 UAT — guards', () => {
   })
 
   test('ALT-03 a used magic link never signs in again', async ({ page, browser }) => {
-    const token = await signIn(page, newEmail('used'))
+    const token = await signInByMagicLink(page, newEmail('used'))
     await onboardThroughUi(page, 'Link Once')
     const other: BrowserContext = await browser.newContext({
       baseURL: test.info().project.use.baseURL,

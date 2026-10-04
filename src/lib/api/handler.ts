@@ -18,7 +18,8 @@ export type CookieOptions = {
   secure: boolean
   sameSite: 'lax' | 'strict'
   path: string
-  maxAge: number
+  /** Omitted = a browser-session cookie, gone when the browser closes (S1-UAT-01 "không ghi nhớ"). */
+  maxAge?: number
 }
 
 export type ApiContext = {

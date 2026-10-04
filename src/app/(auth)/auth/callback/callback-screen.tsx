@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from 'react'
 import { AuthCard } from '@/components/shell/auth-card'
 import { apiRequest } from '@/lib/api/client'
 import { isApiError } from '@/lib/api/errors'
-import { rememberReturnPath, takeReturnPath } from '@/lib/auth/return-path'
+import { afterSignIn, type Destination, type SignInResult } from '@/lib/auth/after-sign-in'
+import { takeReturnPath } from '@/lib/auth/return-path'
 
 import styles from './callback.module.css'
 
@@ -30,6 +31,13 @@ import styles from './callback.module.css'
  *   owned by WF01-S04 (D3). A blocked account goes to ?reason=blocked, an
  *   allowlisted public code (DEC-WF01-S04-D1, superseding D3 in that part).
  * - While consuming, only a screen-reader status is rendered (D4).
+ * - S1-UAT-01 (US-01.05): Google returns here too, with `?code=&state=` (or
+ *   `?error=` when the person cancels). Both are stripped from the address bar
+ *   first, then posted once to POST /auth/google/callback, which owns the code
+ *   exchange and the state check. Cancel goes back to /auth with no red error;
+ *   any other Google failure to /auth?google=failed; a blocked account to
+ *   /auth/error?reason=blocked. Success shares the magic link's state and
+ *   destination rule (`lib/auth/after-sign-in.ts`).
  * - TASK 22.2 (DEC-L1-D5): copy and look follow the corrected AUTH3 board.
  *   The success body names the real destination: the board's "bước hoàn thiện
  *   hồ sơ" only for an unfinished account, "Tài khoản của tôi" otherwise.
@@ -37,27 +45,6 @@ import styles from './callback.module.css'
 
 export type TerminalStatus = 'expired' | 'used'
 type State = 'processing' | 'success' | TerminalStatus
-type Destination = 'onboarding' | 'account' | 'return'
-
-type ConsumeResponse = {
-  result: 'SUCCESS'
-  account_created: boolean
-  onboarding: { completed: boolean; next_step: string | null }
-}
-
-/** The four-stage onboarding steps as the consume response names them (DEC-L1R-D3). */
-const ONBOARDING_ROUTES: Record<string, string> = {
-  INTRO: '/onboarding',
-  BASIC: '/onboarding/profile',
-  CAPABILITY: '/onboarding/capability',
-  ROLE: '/onboarding/purpose',
-  REVIEW: '/onboarding/privacy',
-}
-
-function nextRoute(onboarding: ConsumeResponse['onboarding']): string {
-  if (onboarding.completed) return '/me'
-  return ONBOARDING_ROUTES[onboarding.next_step ?? ''] ?? '/onboarding'
-}
 
 type Props = {
   /** From the frozen magic-link expiry, so the copy cannot drift from the server. */
@@ -81,7 +68,43 @@ export function CallbackScreen({ expiresInMinutes }: Props) {
     if (started.current) return
     started.current = true
 
+    // BD-02 return-to rule: onboarding comes first and carries the path in
+    // this tab; a finished account goes straight back to it.
+    function succeed(res: SignInResult) {
+      const next = afterSignIn(res, takeReturnPath(window.localStorage), window.sessionStorage)
+      setDestination(next.destination)
+      setState('success')
+      router.replace(next.path)
+    }
+
     const params = new URL(window.location.href).searchParams
+
+    // Google's redirect (US-01.05). Nothing from it stays in the address bar.
+    if (params.has('code') || params.has('error')) {
+      const code = params.get('code')
+      const oauthState = params.get('state')
+      window.history.replaceState(null, '', '/auth/callback')
+      if (!code) {
+        // Cancelled on Google's screen: back to sign-in, no red error.
+        router.replace('/auth')
+        return
+      }
+      apiRequest<SignInResult>('/auth/google/callback', {
+        method: 'POST',
+        body: { code, state: oauthState },
+      })
+        .then(succeed)
+        .catch((error: unknown) => {
+          const failure = isApiError(error) ? error.code : undefined
+          router.replace(
+            failure === 'AUTH_ACCOUNT_BLOCKED'
+              ? '/auth/error?reason=blocked'
+              : '/auth?google=failed',
+          )
+        })
+      return
+    }
+
     const token = params.get('token')
     const status = terminalStatus(params)
     // Strip the token from the address bar and history before anything else.
@@ -101,17 +124,8 @@ export function CallbackScreen({ expiresInMinutes }: Props) {
       return
     }
 
-    apiRequest<ConsumeResponse>('/auth/magic-link/consume', { method: 'POST', body: { token } })
-      .then((res) => {
-        // BD-02 return-to rule: onboarding comes first and carries the path in
-        // this tab; a finished account goes straight back to it.
-        const back = takeReturnPath(window.localStorage)
-        if (back && !res.onboarding.completed) rememberReturnPath(window.sessionStorage, back)
-        const returning = back !== null && res.onboarding.completed
-        setDestination(returning ? 'return' : res.onboarding.completed ? 'account' : 'onboarding')
-        setState('success')
-        router.replace(returning ? back : nextRoute(res.onboarding))
-      })
+    apiRequest<SignInResult>('/auth/magic-link/consume', { method: 'POST', body: { token } })
+      .then(succeed)
       .catch((error: unknown) => {
         const code = isApiError(error) ? error.code : undefined
         // Terminal states stay on this page; the URL records them for refresh.

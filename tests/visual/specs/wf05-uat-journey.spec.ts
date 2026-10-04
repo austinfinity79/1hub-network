@@ -2,8 +2,8 @@ import path from 'node:path'
 
 import { expect, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 
+import { signInThroughUi } from '../support/auth'
 import { onboardThroughUi } from '../support/onboarding'
-import { requestMagicLink } from '../../../src/lib/auth/magic-link'
 import { deleteApplicationsForTest } from '../../../src/lib/application/testing'
 import { closePool, query } from '../../../src/lib/db/client'
 import { seedVenture } from '../../../src/lib/venture/testing'
@@ -94,14 +94,9 @@ async function login(request: APIRequestContext, email: string) {
 const newEmail = (tag: string) =>
   `wf05-uat-${tag}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@example.test`
 
-/** The real WF01 path: /auth → check email → the magic link. */
+/** The real WF01 path since S1-UAT-01: /auth, create account (DEC-S1A-D1). */
 async function signIn(page: Page, email: string) {
-  await page.goto('/auth', { waitUntil: 'networkidle' })
-  await page.getByLabel('Email', { exact: true }).fill(email)
-  await page.getByRole('button', { name: 'Gửi liên kết đăng nhập' }).click()
-  await expect(page).toHaveURL('/auth/check-email')
-  const { token } = await requestMagicLink(email, null)
-  await page.goto(`/auth/callback?token=${encodeURIComponent(token)}`)
+  await signInThroughUi(page, email)
 }
 
 /** ACC-05 → ACC-10 → /me through the screens (DEC-L1R). */
