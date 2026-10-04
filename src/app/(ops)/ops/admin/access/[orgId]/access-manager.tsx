@@ -169,7 +169,7 @@ export function AccessManager({ organization }: { organization: { id: string; na
           <AdminEmpty label={COPY.none} />
         ) : (
           <div className={styles.table} role="table" aria-label={COPY.active}>
-            <div className={styles.head} role="row">
+            <div className={`${styles.head} ${styles.colsGrants}`} role="row">
               {COPY.columns.map((c) => (
                 <span key={c} role="columnheader" className={styles.cell}>
                   {c}
@@ -177,7 +177,12 @@ export function AccessManager({ organization }: { organization: { id: string; na
               ))}
             </div>
             {state.active.map((g) => (
-              <div key={g.id} role="row" className={styles.row} data-grant-row={g.id}>
+              <div
+                key={g.id}
+                role="row"
+                className={`${styles.row} ${styles.colsGrants}`}
+                data-grant-row={g.id}
+              >
                 <span role="cell" className={`${styles.cell} ${styles.cellName}`}>
                   {g.grantee.display_name ?? COPY.hidden}
                 </span>
@@ -187,7 +192,7 @@ export function AccessManager({ organization }: { organization: { id: string; na
                 <span role="cell" className={styles.cell}>
                   {g.granted_by_profile_id ?? '—'}
                 </span>
-                <span role="cell" className={styles.cell}>
+                <span role="cell" className={`${styles.cell} ${styles.actions}`}>
                   {adminDate(g.created_at)}
                   {g.can_revoke && revoking !== g.id ? (
                     <button
@@ -203,7 +208,10 @@ export function AccessManager({ organization }: { organization: { id: string; na
                   ) : null}
                 </span>
                 {revoking === g.id ? (
-                  <div className={styles.confirmForm} data-revoke-confirm={g.id}>
+                  <div
+                    className={`${styles.confirmForm} ${styles.rowSpan}`}
+                    data-revoke-confirm={g.id}
+                  >
                     <p className={styles.confirmText}>{COPY.confirmRevoke}</p>
                     <button
                       type="button"
@@ -243,7 +251,7 @@ export function AccessManager({ organization }: { organization: { id: string; na
             {COPY.granteeLabel}
             <br />
             <input
-              className={styles.input}
+              className={`${styles.input} ${styles.inputWide}`}
               value={grantee}
               onChange={(e) => setGrantee(e.target.value)}
               placeholder="00000000-0000-0000-0000-000000000000"

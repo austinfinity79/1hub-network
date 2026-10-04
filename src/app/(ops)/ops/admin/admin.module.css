@@ -21,6 +21,21 @@
   .page {
     overflow-x: auto;
   }
+
+  /* Rows keep their column tracks and scroll inside the table card (as WF03
+     members do) instead of collapsing the flexible column to zero width. */
+  .head,
+  .row {
+    min-width: 45rem;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .tab {
+    white-space: nowrap;
+  }
 }
 
 .header {
@@ -92,6 +107,12 @@
   background: var(--hub-surface);
   font-size: 0.8125rem;
   color: #251011;
+}
+
+/* Fits a full profile id / its placeholder without truncation. */
+.inputWide {
+  width: 20rem;
+  max-width: 100%;
 }
 
 .textarea {
@@ -183,7 +204,17 @@
 }
 
 .colsFeedback {
-  grid-template-columns: 4.5rem minmax(0, 1fr) 6rem 6rem 8.5rem;
+  grid-template-columns: 8.5rem minmax(0, 1fr) 6rem 7rem 8.5rem;
+}
+
+.colsGrants {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) 10rem;
+}
+
+/* An inline confirm form inside a grid row takes the whole row. */
+.rowSpan {
+  grid-column: 1 / -1;
+  margin-bottom: 0.75rem;
 }
 
 .colsOrgs {
@@ -348,6 +379,19 @@
   margin-top: 0.75rem;
   padding-top: 0.75rem;
   border-top: 1px solid #f1ebeb;
+}
+
+/*
+ * The same confirm form opened at page level (reject / decline under the
+ * header) sits in the card frame every other page block uses, not loose on
+ * the canvas against the next card.
+ */
+.confirmCard {
+  margin: 0 0 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e4dfdf;
+  border-radius: 0.625rem;
+  background: var(--hub-surface);
 }
 
 .confirmText {

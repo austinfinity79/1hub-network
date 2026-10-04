@@ -196,7 +196,7 @@ export function VerificationDetail({ requestId }: { requestId: string }) {
 
       {rejecting ? (
         <form
-          className={styles.confirmForm}
+          className={`${styles.confirmForm} ${styles.confirmCard}`}
           onSubmit={(e) => {
             e.preventDefault()
             void decide('reject', reason.trim() || undefined)
@@ -205,7 +205,7 @@ export function VerificationDetail({ requestId }: { requestId: string }) {
         >
           <p className={styles.confirmText}>{COPY.confirmReject}</p>
           <input
-            className={styles.input}
+            className={`${styles.input} ${styles.inputWide}`}
             placeholder={COPY.reasonLabel}
             aria-label={COPY.reasonLabel}
             // Keyboard users land in the form the action button just opened.

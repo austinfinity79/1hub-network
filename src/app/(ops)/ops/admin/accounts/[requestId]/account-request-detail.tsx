@@ -256,7 +256,7 @@ export function AccountRequestDetail({ requestId }: { requestId: string }) {
 
       {declining ? (
         <form
-          className={styles.confirmForm}
+          className={`${styles.confirmForm} ${styles.confirmCard}`}
           onSubmit={(e) => {
             e.preventDefault()
             void decide('decline', reason.trim() || undefined)
@@ -265,7 +265,7 @@ export function AccountRequestDetail({ requestId }: { requestId: string }) {
         >
           <p className={styles.confirmText}>{COPY.confirmDecline}</p>
           <input
-            className={styles.input}
+            className={`${styles.input} ${styles.inputWide}`}
             placeholder={deletionReasonRequired ? COPY.reasonRequired : COPY.reasonLabel}
             aria-label={deletionReasonRequired ? COPY.reasonRequired : COPY.reasonLabel}
             // Keyboard users land in the form the action button just opened.

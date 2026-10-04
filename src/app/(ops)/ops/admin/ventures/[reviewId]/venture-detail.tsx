@@ -80,6 +80,16 @@ type Core = {
   owner_role_label: string | null
 }
 
+/** History events, shown as labels like the verification detail, never raw codes. */
+const EVENT_LABELS: Record<string, string> = {
+  SUBMITTED: 'Gửi duyệt',
+  RESUBMITTED: 'Gửi lại',
+  UPDATED: 'Cập nhật',
+  WITHDRAWN: 'Rút yêu cầu',
+  APPROVED: 'Duyệt',
+  REJECTED: 'Từ chối',
+}
+
 type Detail = {
   id: string
   kind: string
@@ -230,7 +240,7 @@ export function VentureDetail({ reviewId }: { reviewId: string }) {
 
       {rejecting ? (
         <form
-          className={styles.confirmForm}
+          className={`${styles.confirmForm} ${styles.confirmCard}`}
           onSubmit={(e) => {
             e.preventDefault()
             void decide('reject', reason.trim() || undefined)
@@ -239,7 +249,7 @@ export function VentureDetail({ reviewId }: { reviewId: string }) {
         >
           <p className={styles.confirmText}>{COPY.confirmReject}</p>
           <input
-            className={styles.input}
+            className={`${styles.input} ${styles.inputWide}`}
             placeholder={COPY.reasonLabel}
             aria-label={COPY.reasonLabel}
             // Keyboard users land in the form the action button just opened.
@@ -340,7 +350,7 @@ export function VentureDetail({ reviewId }: { reviewId: string }) {
           {detail.history.map((h, i) => (
             <li key={i} className={styles.historyEntry} data-history-entry>
               <span className={styles.historyWhen}>{adminDateTime(h.at)}</span>
-              <span className={styles.historyWhat}>{h.event}</span>
+              <span className={styles.historyWhat}>{EVENT_LABELS[h.event] ?? h.event}</span>
             </li>
           ))}
         </ol>

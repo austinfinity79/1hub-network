@@ -7,6 +7,7 @@ import { apiRequest } from '@/lib/api/client'
 import styles from '../../admin.module.css'
 import {
   AdminActionNotice,
+  AdminEmpty,
   AdminLoadFailure,
   AdminLoading,
   classifyAdminError,
@@ -42,8 +43,17 @@ const COPY = {
   noScreenshot: 'Không có ảnh chụp.',
   guestEmail: 'E-mail khách',
   history: 'Lịch sử',
+  noHistory: 'Chưa có thay đổi nào.',
   saved: 'Đã lưu.',
 } as const
+
+/** History events (`FEEDBACK_*` audit names), shown as labels, never raw codes. */
+const EVENT_LABELS: Record<string, string> = {
+  ASSIGNED: 'Giao người phụ trách',
+  PRIORITY_CHANGED: 'Đổi mức ưu tiên',
+  STATUS_CHANGED: 'Đổi trạng thái',
+  UPDATED: 'Cập nhật',
+}
 
 const STATUS_LABELS: Record<string, string> = { NEW: 'Mới', IN_REVIEW: 'Đang xử lý', DONE: 'Xong' }
 const TYPE_LABELS: Record<string, string> = {
@@ -219,57 +229,56 @@ export function FeedbackDetail({ feedbackId }: { feedbackId: string }) {
           }}
           data-triage-form
         >
-          <label className="type-body-sm">
-            {COPY.type}
-            <br />
-            <select
-              className={styles.select}
-              value={form.type}
-              onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-            >
-              {Object.entries(TYPE_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </label>
-          {' · '}
-          <label className="type-body-sm">
-            {COPY.priority}
-            <br />
-            <select
-              className={styles.select}
-              value={form.priority}
-              onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
-            >
-              <option value="">{COPY.none}</option>
-              {Object.entries(PRIORITY_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </label>
-          {' · '}
-          <label className="type-body-sm">
-            {COPY.status}
-            <br />
-            <select
-              className={styles.select}
-              value={form.status}
-              disabled={done}
-              onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-              data-field="status"
-            >
-              {Object.entries(STATUS_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </label>
-          <br />
+          <div className={styles.filters}>
+            <label className="type-body-sm">
+              {COPY.type}
+              <br />
+              <select
+                className={styles.select}
+                value={form.type}
+                onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+              >
+                {Object.entries(TYPE_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="type-body-sm">
+              {COPY.priority}
+              <br />
+              <select
+                className={styles.select}
+                value={form.priority}
+                onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
+              >
+                <option value="">{COPY.none}</option>
+                {Object.entries(PRIORITY_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="type-body-sm">
+              {COPY.status}
+              <br />
+              <select
+                className={styles.select}
+                value={form.status}
+                disabled={done}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+                data-field="status"
+              >
+                {Object.entries(STATUS_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <label className="type-body-sm">
             {COPY.owner}
             <br />
@@ -304,14 +313,18 @@ export function FeedbackDetail({ feedbackId }: { feedbackId: string }) {
 
       <section className={styles.card} data-card="history">
         <h2 className={styles.eyebrow}>{COPY.history}</h2>
-        <ol className={styles.history}>
-          {detail.history.map((h, i) => (
-            <li key={i} className={styles.historyEntry} data-history-entry>
-              <span className={styles.historyWhen}>{adminDateTime(h.at)}</span>
-              <span className={styles.historyWhat}>{h.event}</span>
-            </li>
-          ))}
-        </ol>
+        {detail.history.length === 0 ? (
+          <AdminEmpty label={COPY.noHistory} />
+        ) : (
+          <ol className={styles.history}>
+            {detail.history.map((h, i) => (
+              <li key={i} className={styles.historyEntry} data-history-entry>
+                <span className={styles.historyWhen}>{adminDateTime(h.at)}</span>
+                <span className={styles.historyWhat}>{EVENT_LABELS[h.event] ?? h.event}</span>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
     </div>
   )

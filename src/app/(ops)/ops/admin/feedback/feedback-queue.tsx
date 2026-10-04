@@ -25,7 +25,7 @@ import {
 
 const COPY = {
   title: 'Phản hồi',
-  subtitle: (open: number) => `${open} đang mở (NEW / IN_REVIEW)`,
+  subtitle: (open: number) => `${open} đang mở (Mới / Đang xử lý)`,
   columns: ['Loại', 'Nội dung', 'Ưu tiên', 'Trạng thái', 'Gửi lúc'],
   empty: 'Không có phản hồi nào ở phạm vi này.',
   loadMore: 'Tải thêm',
@@ -248,7 +248,7 @@ export function FeedbackQueue() {
           ))}
         </select>
         <input
-          className={styles.input}
+          className={`${styles.input} ${styles.inputWide}`}
           placeholder={COPY.owner}
           aria-label={COPY.owner}
           value={filters.owner}
