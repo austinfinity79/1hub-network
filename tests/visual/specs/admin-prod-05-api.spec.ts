@@ -1,7 +1,12 @@
 import { expect, test, type APIRequestContext, type APIResponse } from '@playwright/test'
 
 import { requestAccountDeletion } from '../../../src/lib/account/settings'
-import { ADM_PEOPLE, clearAdminFixture, seedAdminFixture } from '../../../src/lib/admin/testing'
+import {
+  ADM_FX,
+  ADM_PEOPLE,
+  clearAdminFixture,
+  seedAdminFixture,
+} from '../../../src/lib/admin/testing'
 import { closePool, query } from '../../../src/lib/db/client'
 import { removeAsset, saveAvatarAsset } from '../../../src/lib/media/avatar-storage'
 
@@ -14,6 +19,7 @@ import { removeAsset, saveAvatarAsset } from '../../../src/lib/media/avatar-stor
  */
 
 const P = ADM_PEOPLE
+const O = ADM_FX.org
 type Person = keyof typeof P
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 5, 5])
 let statuses: { url: string; status: number }[] = []
@@ -112,6 +118,25 @@ test.describe('ADMIN-PROD-05 operations API', () => {
       403,
     )
     await refused(await call(request, 'get', '/api/v1/ops/account-requests'), 403)
+  })
+
+  test('ADMIN-DECISION-04: no leader account-escalation route exists, for anyone', async ({
+    request,
+  }) => {
+    const path = `/api/v1/ops/organizations/${O.CH_A}/members/${P.memberB.profile}/account-requests`
+    for (const who of ['chALeader', 'hubLeader', 'clbA1Leader', 'memberA', 'admin'] as const) {
+      await login(request, who)
+      for (const action of ['LOCK', 'DEACTIVATE', 'SOFT_DELETE']) {
+        const response = await call(request, 'post', path, { data: { action, reason: 'x' } })
+        expect([404, 405], `${who} ${action}`).toContain(response.status())
+        expect(await response.text()).not.toMatch(/stack|SELECT |constraint/i)
+      }
+    }
+    const [n] = await query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM account_action_requests WHERE target_account_id = $1`,
+      [P.memberB.account],
+    )
+    expect(n!.n).toBe(0)
   })
 
   test('triages feedback and reads the weekly summary; managers see the screenshot', async ({

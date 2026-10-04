@@ -2,6 +2,8 @@
 
 **Evidence 27: exact handoff to ADMIN-PROD-05 (feedback, categories, account operations APIs).** Parent: [ADMIN-PROD-04-qa.md](ADMIN-PROD-04-qa.md). ADMIN-PROD-05 is not started.
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## Feedback (PD-5, FB-01) — `feedback:manage`, platform only
 | Ready | To build |
 |---|---|

@@ -2,6 +2,8 @@
 
 **Canonical data map, DB impact, future Admin API, feedback, categories, content / registry boundaries, audit and notifications** (evidence 12, 13, 15 – 17, 21, 22, 25 – 27). Parent: [ADMIN-PROD-01-runtime-contract.md](ADMIN-PROD-01-runtime-contract.md). Nothing here is implemented.
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## Canonical data map (evidence 25)
 | Module | Canonical source (one copy only) |
 |---|---|

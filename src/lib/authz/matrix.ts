@@ -36,7 +36,8 @@ export const CAPABILITIES = [
   // Admin Portal P0 (DEC-ADM, ADMIN-PROD-01 RBAC matrix). Organization-scoped:
   'verification:review',
   'access:delegate',
-  'account:escalate',
+  // `account:escalate` was withdrawn by ADMIN-DECISION-04: no leader-facing
+  // account escalation in P0; account operations are PLATFORM_ADMIN's alone.
   // Platform-scoped only:
   'venture:review',
   'org:lifecycle',
@@ -149,12 +150,6 @@ export const CAPABILITY_MATRIX: readonly CapabilityRule[] = [
     organizationRoles: ORG_LEADER,
     platformRoles: PLATFORM_ADMIN,
     delegable: false,
-  },
-  {
-    capability: 'account:escalate',
-    organizationRoles: ORG_LEADER,
-    platformRoles: PLATFORM_ADMIN,
-    delegable: true,
   },
   {
     capability: 'venture:review',

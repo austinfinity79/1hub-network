@@ -1,42 +1,41 @@
 # Claude Task Report
 
 ## Task
-ADMIN-PROD-06 — Admin Portal frontend / OpsShell integration (IMPLEMENT; no new shell, no new auth, no CMS). Reports: [frontend](reports/ADMIN-PROD-06-frontend.md) · [modules](reports/ADMIN-PROD-06-modules.md) · [QA](reports/ADMIN-PROD-06-qa.md) · [PROD-07 handoff](reports/ADMIN-PROD-06-prod07-handoff.md); uses only the real APIs of ADMIN-PROD-03/04/05 (05 §26–28).
+ADMIN-PROD-07-CONTRACT-FIX — reconcile the frozen ADMIN-DECISION-02 / -04 with repo, contracts and code (FIX + RECHECK; trigger: ADMIN-PROD-07 = FAIL / BLOCKER_REMAINS at preflight, CONTRACT_CONFLICT). Reports: [reconciliation](reports/ADMIN-PROD-07-CONTRACT-FIX-reconciliation.md) · [stale-contract search](reports/ADMIN-PROD-07-CONTRACT-FIX-stale-search.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE.** The six frozen Admin Portal queues — Verification, Venture Review, Organization Access/Delegation, Feedback, Categories, Account Operations — are integrated into the existing OpsShell under a new `/ops/admin/*` route tree, sharing its sidebar, nav markup and CSS tokens (two optional, backward-compatible props added to `OpsShell`; every existing WF03 call site unchanged). Navigation is capability-gated end to end, including the previously-flagged PD-6 gap: a capability-only grantee (no `network:read`) now reaches exactly its one queue instead of a 404. Venture review clearly separates the public-current version from the pending candidate and renders the server's own diff, never a fabricated one. Account-deletion decline still requires a reason (DEC-ADM-PD7.1); no hard-delete control exists anywhere. Full protected regression on the final build: 1164 tests, 1138 pass, 0 fail, 0 flaky, 26 pre-existing environment-gated skips. STOP.
+**PASS_WITH_EVIDENCE — ADMIN CONTRACT/CODE RECONCILED — READY FOR CHATGPT/PO REVIEW.** Both decisions recorded verbatim as DEC-ADM-D02 / D04 (no new PO decision). D04: `account:escalate` and the leader account-request route removed; PLATFORM_ADMIN Account Ops untouched. D02: revoke requires a current `access:delegate` on exactly the grant's unit (or PLATFORM_ADMIN); parent / child / sibling, grantorship alone and lost capability all 403. Zero unresolved contradictory statements. ADMIN-PROD-07 not rerun; ADMIN-PROD-08 not started. STOP.
 
 ## Scope implemented
-- `requireOpsAdmin()` (`src/lib/ops/guard.ts`): entry by any of the six admin capabilities, not `network:read`.
-- `OpsShell` (+2 optional props), `ADMIN_NAV_ITEMS`/`ADMIN_HOME_NAV` (`src/lib/ops/nav.ts`): the new "Quản trị nền tảng" sidebar group, capability-filtered.
-- 25 new files under `src/app/(ops)/ops/admin/*`: layout, Admin Home (composed counts, no `GET /ops/summary`), and the six modules (queue + detail client components, Vietnamese copy, shared `admin.module.css`/`shared.tsx` for loading/empty/denied/error states).
-- `listDelegationOrganizations` (`src/lib/admin/access-api.ts`, new): the Access tab's entry list, scoped by `access:delegate` (PD-6 reach), not `network:read`.
-- 1 Playwright spec (14 tests, real DB-backed fixtures, no runtime mocks) + 3 new DB tests for `listDelegationOrganizations`.
-- Two real bugs found and fixed while writing the tests (a stale-data race on fast tab/filter switches; a loading-flash that hid the row mid-interaction) — see the QA report's bug table.
+- `src/lib/authz/matrix.ts`: `account:escalate` removed (17 capabilities).
+- Deleted `src/app/api/v1/ops/organizations/[orgId]/members/[profileId]/account-requests/route.ts`; removed `fileAccountRequest`, `ESCALATABLE`, `mayEscalateAccountAction`.
+- `src/lib/admin/delegation.ts`: `revocationSourceFor` (exact unit or PLATFORM); `revokeAccess` locks the unit, then the grant, then re-reads the revoker's assignment FOR SHARE; grantor branch removed. `access-api.ts` `can_revoke` uses the same predicate.
+- DECISION_LOG (D02, D04; PD-7, PD-7.1, R16 superseded), 05 API contract md + yaml, Admin capability matrix, PROD-01 contract, PROD-06 handoff updated; supersession banner on 15 archived Admin reports.
+- Tests: new D02 matrix, mutual-revoke race, grant-reach and D04 DB tests; HTTP tests for the withdrawn route and exact-scope revoke; existing tests realigned.
 
 ## Files changed
-New: 25 files under `src/app/(ops)/ops/admin/`, 1 Playwright spec, 4 reports. Changed: `src/components/shell/ops-shell.tsx`, `src/lib/ops/{guard,nav}.ts`, `src/lib/admin/access-api.ts` (+`.db-test.ts`), this report.
+39 modified, 1 deleted, 2 new reports (see `git show --stat`). No UI component, route, role or workflow added.
 
 ## Migrations / data
-NO_SCHEMA_CHANGE. No data changed (one pre-existing `vocabulary_items` row left ARCHIVED by an early, now-fixed test run was restored to ACTIVE — see QA report item 22).
+NO_SCHEMA_CHANGE. `account_action_requests` (017) kept, unwritten in P0.
 
 ## Tests / build
-format, lint, typecheck PASS · unit 37 / 367 · DB 47 / 746 (`pnpm test:db`, fresh reset) · build PASS · **full protected regression on final HEAD:** 87 specs / 1164 tests, 1138 pass, 0 fail, 0 flaky, 26 skip (pre-existing, environment-gated, unrelated).
+format, lint, typecheck PASS · unit 37 / 367 · DB 47 / 750 · build PASS · focused Playwright (Admin, auth, RBAC, WF03): 20 specs / 183 tests, 183 pass, 0 fail, 0 skip, 0 flaky. Full protected regression not run (belongs to ADMIN-PROD-07).
 
 ## Visual QA
-No pixel baseline exists for these six screens (ADMIN-DESIGN-01 was never produced); pixel QA is explicitly ADMIN-PROD-08's. Built to the existing design-token vocabulary (cards, chips, the inline confirm-form) instead. Responsive: 1440/1024/768 no-overflow proven on two representative screens; 390 is smoke-only (the fixed-width OpsShell sidebar is pre-existing shared shell debt, not solved here).
+No UI change (comment-only edits in two Admin client files).
 
 ## Deviations / blockers
-None blocking. Reconciled: Organization/Delegation lives at `/ops/admin/access` (a thin, capability-scoped entry list) + the real per-org `/ops/admin/access/{orgId}` screen, rather than reusing `GET /ops/organizations` (wrong capability scope) or adding a new API route (the task's "real APIs only"). Category reorder uses move-up/down, not drag-and-drop (no such library in the stack). `account:escalate` has no UI (WF03-S04 deliberately excludes account administration; reopening that is outside this task's six modules — flagged for PROD-07). ADMIN-DECISION-02 (co-leader revoke) reported as current behaviour, not resolved — carries into PROD-07.
+None. Interpretation recorded in D02: PLATFORM_ADMIN keeps platform-wide revocation (its `access:delegate` is PLATFORM-scoped). Consequence: a Chapter leader who granted on its CLB can no longer revoke that grant; the CLB's leader or PLATFORM_ADMIN can. A stale `next-server` on port 3972 (pre-task code) was stopped before the final browser run.
 
 ## Git
-- Branch: `feat/admin-portal`; base `f2845a0`; HEAD unchanged during the task
-- Implementation commit: `feat(admin): Admin Portal frontend inside the existing OpsShell (ADMIN-PROD-06)` (`69b7d85`)
+- Branch: `feat/admin-portal`; start HEAD `546bfff`, unchanged during the task
+- Implementation commit: `fix(admin): reconcile ADMIN-DECISION-02/04 with contracts and code (ADMIN-PROD-07-CONTRACT-FIX)`
 - Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: no push)
-- Remote HEAD: `78f21f2` (production also `78f21f2`)
+- Remote HEAD: origin/main `78f21f2` (production also `78f21f2`)
 - Working tree: clean after the commit, except the untracked `AGENTS.md`
 
 ## Recommended next task
-ChatGPT / PO review of ADMIN-PROD-06. ADMIN-PROD-07 not started.
+ChatGPT / PO review of ADMIN-PROD-07-CONTRACT-FIX, then rerun ADMIN-PROD-07.

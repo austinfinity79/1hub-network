@@ -1,12 +1,10 @@
 import { ApiError, notFound, unauthenticated } from '@/lib/api/errors'
 import { resolveActor, type Actor } from '@/lib/authz/actor'
 import { query, withTransaction, type Executor } from '@/lib/db/client'
-import { OPS_ORGANIZATION_TYPES } from '@/lib/ops/organizations'
 
 import {
   ACCOUNT_REQUEST_LIMITS,
   ACCOUNT_REQUEST_STATUSES,
-  mayEscalateAccountAction,
   mayExecuteAccountAction,
 } from './account-actions'
 import { writeAdminAudit } from './admin-audit'
@@ -16,9 +14,10 @@ import { checkParams, cursorTime, decodeKeyset, encodeKeyset, parseLimit } from 
 
 /**
  * ADMIN-PROD-05 — account operations (PD-7; ADMIN-PROD-01 account lifecycle).
- * Execution is PLATFORM_ADMIN's alone (`account:administer`); a unit leader may
- * only FILE a request for an ACTIVE member of exactly its unit
- * (`account:escalate`). No hard delete exists anywhere.
+ * Execution is PLATFORM_ADMIN's alone (`account:administer`). ADMIN-DECISION-04:
+ * no leader-facing account escalation in P0 — no capability, no route; the
+ * queue's ESCALATION kind reads `account_action_requests` (017), which no P0
+ * path writes. No hard delete exists anywhere.
  *
  *   LOCK         account ACTIVE → BLOCKED; every session revoked; sign-in refused
  *                (AUTH_ACCOUNT_BLOCKED). Data, profile and roles kept. UNLOCK
@@ -45,7 +44,6 @@ export const ACCOUNT_OPERATIONS = [
   'SOFT_DELETE',
 ] as const
 export type AccountOperation = (typeof ACCOUNT_OPERATIONS)[number]
-const ESCALATABLE = ['LOCK', 'DEACTIVATE', 'SOFT_DELETE'] as const
 
 const forbidden = () =>
   new ApiError('SCOPE_FORBIDDEN', 403, 'You do not have access to this resource.')
@@ -355,54 +353,6 @@ export async function runAccountOperation(
   })
 }
 
-/** POST /ops/organizations/{orgId}/members/{profileId}/account-requests `{ action, reason? }` → 201. */
-export async function fileAccountRequest(
-  accountId: string,
-  orgId: string,
-  targetProfileId: string,
-  body: unknown,
-  requestId: string,
-  exec?: Executor,
-): Promise<AccountRequestDTO> {
-  const actor = await signed(accountId)
-  if (!isUuid(orgId) || !mayEscalateAccountAction(actor, orgId)) throw forbidden()
-  const { reason, rest } = parseReason(body ?? {}, ['action'])
-  if (!(ESCALATABLE as readonly unknown[]).includes(rest.action)) throw invalid('action', 'invalid')
-  const action = rest.action as (typeof ESCALATABLE)[number]
-  if (!isUuid(targetProfileId)) throw notFound()
-  if (targetProfileId.toLowerCase() === actor.profileId) throw invalid('profile_id', 'self')
-  return inTransaction(exec, async (tx) => {
-    const [org] = await tx<{ id: string }>(
-      `SELECT id::text FROM organizations WHERE id = $1 AND type::text = ANY($2::text[])`,
-      [orgId, [...OPS_ORGANIZATION_TYPES]],
-    )
-    if (!org) throw forbidden()
-    // Only an ACTIVE member of exactly this unit (PD-7, "members of its unit").
-    const [member] = await tx<{ account_id: string }>(
-      `SELECT p.account_id::text FROM individual_profiles p
-         JOIN community_memberships m ON m.profile_id = p.id
-        WHERE p.id = $1 AND m.organization_id = $2 AND m.state = 'ACTIVE' LIMIT 1`,
-      [targetProfileId, org.id],
-    )
-    if (!member) throw notFound()
-    const [row] = await tx<{ id: string }>(
-      `INSERT INTO account_action_requests (target_account_id, organization_id, requested_by_account_id, action, reason)
-       VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING RETURNING id::text`,
-      [member.account_id, org.id, accountId, action, reason],
-    )
-    if (!row) throw conflict('This request is already pending.')
-    await writeAdminAudit(tx, {
-      actorAccountId: accountId,
-      action: 'ACCOUNT_REQUEST_FILED',
-      target: { type: 'account_action_request', id: row.id },
-      organizationId: org.id,
-      after: { status: 'PENDING', action, profile_id: targetProfileId.toLowerCase() },
-      requestId,
-    })
-    return (await requestRows(tx, { id: row.id }))[0]!.dto
-  })
-}
-
 export type AccountRequestDTO = {
   id: string
   kind: 'ESCALATION' | 'SELF_DELETION'
@@ -522,7 +472,7 @@ async function requestRows(
   }))
 }
 
-/** GET /ops/account-requests — leader escalations and users' own deletion requests, oldest first. */
+/** GET /ops/account-requests — users' own deletion requests and any ESCALATION row (none filed in P0), oldest first. */
 export async function listAccountRequests(
   accountId: string,
   params: URLSearchParams,
@@ -616,7 +566,7 @@ export async function decideAccountRequest(
   if (entry.targetAccountId === accountId) throw forbidden()
   const found = entry.dto
   // PO decision (ADMIN-PROD-05-FIX): an account-deletion request — the user's own or a
-  // leader's SOFT_DELETE escalation — may be rejected (DECLINED), but only with a reason
+  // SOFT_DELETE escalation row — may be rejected (DECLINED), but only with a reason
   // stating the legal / retention / security / operational obligation that blocks it.
   if (decision === 'DECLINE' && found.action === 'SOFT_DELETE' && !reason)
     throw invalid('reason', 'required')

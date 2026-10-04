@@ -16,7 +16,7 @@ import {
 
 /**
  * ADMIN-PROD-06 — account-request detail (05 §28, A11; PD-7, DEC-ADM-PD7.1).
- * Declining a deletion request (SELF_DELETION or a SOFT_DELETE escalation)
+ * Declining a deletion request (SELF_DELETION or a SOFT_DELETE ESCALATION row)
  * requires a reason stating the legal / retention / security / operational
  * obligation that blocks it (422 `reason: required` otherwise); every other
  * decline keeps the reason optional. No hard-delete button anywhere. Direct

@@ -2,6 +2,8 @@
 
 **Evidence 14 – 20, 22 – 27 and the self-audit.** Parent: [ADMIN-PROD-05-feedback-categories.md](ADMIN-PROD-05-feedback-categories.md).
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 14. Audit
 | Domain | Codes (ids, codes, counts, reason via its field — never text, e-mail, token or screenshot) |
 |---|---|

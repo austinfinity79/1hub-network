@@ -2,6 +2,8 @@
 
 **Evidence 18 – 22, 24 – 26, 28 – 33 and the self-audit.** Parent: [ADMIN-PROD-04-venture-review.md](ADMIN-PROD-04-venture-review.md).
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 18. Audit
 | Code | When | Payload (allowlisted ids / codes / numbers; reason via its own field) |
 |---|---|---|

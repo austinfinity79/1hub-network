@@ -80,7 +80,8 @@ describe('list and history', () => {
       expect(items.find((i) => i.id === g.id)).toMatchObject({
         state: 'ACTIVE',
         effective: true,
-        can_revoke: true,
+        // ADMIN-DECISION-02: the parent unit (and the grantor as such) reads, never revokes.
+        can_revoke: who !== 'chALeader',
         granted_by_profile_id: P.chALeader.profile,
         grantee: { display_name: 'ADM02 memberA' },
       })
@@ -142,9 +143,13 @@ describe('revocation takes effect immediately; IDOR', () => {
 
   it('answers a grant through another unit, a foreign unit or a non-access row alike', async () => {
     const g = await grant('chALeader', O.CLB_A1, 'memberA', 'event:manage')
-    expect(await failure(revoke('chALeader', O.CLB_A2, g.id))).toMatchObject({ status: 404 })
+    // ADMIN-DECISION-02: a parent unit is refused like a foreign one; only an
+    // authorized revoker naming the wrong unit learns "not found" there.
+    expect(await failure(revoke('chALeader', O.CLB_A2, g.id))).toMatchObject({ status: 403 })
     expect(await failure(revoke('chBLeader', O.CLB_A1, g.id))).toMatchObject({ status: 403 })
-    expect(await failure(revoke('chBLeader', O.CLB_B1, g.id))).toMatchObject({ status: 404 })
+    expect(await failure(revoke('chBLeader', O.CLB_B1, g.id))).toMatchObject({ status: 403 })
+    expect(await failure(revoke('chBLeader', O.CH_B, g.id))).toMatchObject({ status: 404 })
+    expect(await failure(revoke('clbA1Leader', O.CLB_A2, g.id))).toMatchObject({ status: 403 })
     // Roster HUB_MEMBER rows are memberships, not access: not listed, not revocable here.
     const [member] = await query<{ id: string }>(
       `INSERT INTO role_assignments (account_id, individual_profile_id, role_code, scope_type, scope_id)
@@ -175,16 +180,16 @@ describe('revocation takes effect immediately; IDOR', () => {
 describe('concurrency', () => {
   it('two identical grants: one wins; grant vs revoke: at most one live identical grant', async () => {
     const both = await Promise.allSettled([
-      grant('chALeader', O.CLB_A2, 'memberA', 'org:read'),
-      grant('admin', O.CLB_A2, 'memberA', 'org:read'),
+      grant('chALeader', O.CLB_A1, 'memberA', 'org:read'),
+      grant('admin', O.CLB_A1, 'memberA', 'org:read'),
     ])
     expect(both.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
     const live = (
       both.find((r) => r.status === 'fulfilled') as PromiseFulfilledResult<{ id: string }>
     ).value
     const race = await Promise.allSettled([
-      revoke('chALeader', O.CLB_A2, live.id),
-      grant('admin', O.CLB_A2, 'memberA', 'org:read'),
+      revoke('clbA1Leader', O.CLB_A1, live.id),
+      grant('admin', O.CLB_A1, 'memberA', 'org:read'),
     ])
     for (const r of race) {
       if (r.status === 'rejected') expect(r.reason).toMatchObject({ status: 409 })
@@ -192,7 +197,7 @@ describe('concurrency', () => {
     const [n] = await query<{ n: number }>(
       `SELECT count(*)::int AS n FROM role_assignments
         WHERE individual_profile_id = $1 AND scope_id = $2 AND capability = 'org:read' AND state = 'ACTIVE'`,
-      [P.memberA.profile, O.CLB_A2],
+      [P.memberA.profile, O.CLB_A1],
     )
     expect(n!.n).toBeLessThanOrEqual(1)
   })

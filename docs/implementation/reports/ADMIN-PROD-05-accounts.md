@@ -2,6 +2,8 @@
 
 **Evidence 10 – 13: account operations, lock / deactivate semantics, session invalidation, self-action protection.** Parent: [ADMIN-PROD-05-feedback-categories.md](ADMIN-PROD-05-feedback-categories.md). PD-7; rules R15, R16.
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 10. Account operations
 | Call | Who | Effect |
 |---|---|---|

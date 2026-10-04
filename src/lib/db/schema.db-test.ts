@@ -323,7 +323,8 @@ describe('M0-T07 seed fixture quality', () => {
     // (API:671), and education/links are not profile-completion groups.
     expect(empty).toEqual([
       // Migration 017 (ADMIN-PROD-02): Admin Portal runtime stores, written by
-      // leaders' escalations, reviews, decisions and user submissions.
+      // reviews, decisions and user submissions (no P0 path files escalations,
+      // DEC-ADM-D04).
       'account_action_requests',
       // WF02-S07 P13: a runtime request store; a seeded request would be a false one.
       'account_deletion_requests',

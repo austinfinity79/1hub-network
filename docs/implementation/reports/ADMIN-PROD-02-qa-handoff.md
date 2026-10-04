@@ -2,6 +2,8 @@
 
 **Evidence 19, 20, 23 – 31 and the self-audit: security and data-integrity tests, protected regression, bugs, files, git, confirmations.** Parent: [ADMIN-PROD-02-rbac-scope-foundation.md](ADMIN-PROD-02-rbac-scope-foundation.md). PROD-03 handoff: [ADMIN-PROD-02-prod03-handoff.md](ADMIN-PROD-02-prod03-handoff.md).
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 19. Security tests (`src/lib/admin/admin-scope.db-test.ts`, 20)
 | Case | Proven |
 |---|---|

@@ -9,20 +9,19 @@ import { closePool, query } from '@/lib/db/client'
 
 import {
   decideAccountRequest,
-  fileAccountRequest,
   getAccountRequest,
   listAccountRequests,
   runAccountOperation,
   type AccountOperation,
 } from './account-ops'
 import { holdsAt } from './scope'
-import { ADM_FX, ADM_PEOPLE, clearAdminFixture, seedAdminFixture } from './testing'
+import { ADM_FX, ADM_PEOPLE, clearAdminFixture, insertGrant, seedAdminFixture } from './testing'
 
 /**
  * ADMIN-PROD-05 — account operations on live PostgreSQL: PLATFORM_ADMIN-only
  * execution, LOCK / DEACTIVATE / SOFT_DELETE semantics, session invalidation
- * (existing session, new sign-in), self-action, leader escalations and their
- * processing, races and audit.
+ * (existing session, new sign-in), self-action, ADMIN-DECISION-04 (no leader
+ * escalation), processing of the request queue, races and audit.
  */
 
 const O = ADM_FX.org
@@ -45,6 +44,19 @@ const email = (who: Person) => `adm02-fx-${who.toLowerCase()}@example.test`
 async function signIn(who: Person) {
   const { token } = await requestMagicLink(email(who), null)
   return consumeMagicLink(token)
+}
+/**
+ * ADMIN-DECISION-04: no P0 path files an account escalation, so a row of the
+ * (kept) 017 `account_action_requests` table is seeded directly to cover the
+ * PLATFORM_ADMIN queue that still reads it.
+ */
+async function seedEscalation(org: string, by: Person, target: Person, action: string) {
+  const [row] = await query<{ id: string }>(
+    `INSERT INTO account_action_requests (target_account_id, organization_id, requested_by_account_id, action)
+     VALUES ($1, $2, $3, $4) RETURNING id::text`,
+    [P[target].account, org, P[by].account, action],
+  )
+  return row!
 }
 async function status(who: Person) {
   const [row] = await query<{ account: string; profile: string }>(
@@ -222,43 +234,44 @@ describe('self-action protection and races', () => {
   })
 })
 
-describe('leader escalations (file only) and admin processing', () => {
-  it('files for an ACTIVE member of exactly the unit; the admin processes or declines', async () => {
-    await query(
-      `INSERT INTO community_memberships (profile_id, organization_id, state, source, started_at)
-       VALUES ($1, $2, 'ACTIVE', 'PRESEED', now()), ($3, $2, 'ACTIVE', 'PRESEED', now())`,
-      [P.memberA.profile, O.CH_A, P.memberB.profile],
-    )
-    const file = (who: Person, org: string, target: Person, body: unknown) =>
-      fileAccountRequest(P[who].account, org, P[target].profile, body, 'adm05')
-    const lock = await file('chALeader', O.CH_A, 'memberA', {
-      action: 'LOCK',
-      reason: 'Spam lặp lại',
-    })
-    expect(lock).toMatchObject({
-      kind: 'ESCALATION',
-      action: 'LOCK',
-      status: 'PENDING',
-      organization: { id: O.CH_A },
-    })
-    expect(await failure(file('chALeader', O.CH_A, 'memberA', { action: 'LOCK' }))).toMatchObject({
-      status: 409,
-    })
-    expect(await failure(file('chALeader', O.CH_A, 'memberC', { action: 'LOCK' }))).toMatchObject({
-      status: 404,
-    })
+describe('ADMIN-DECISION-04: no leader account escalation; PLATFORM_ADMIN decides the queue', () => {
+  it('leaves leaders no account capability and no account-request route', async () => {
+    for (const who of ['hubLeader', 'chALeader', 'clbA1Leader', 'memberA'] as const) {
+      const actor = await resolveActor(P[who].account)
+      for (const org of [O.HUB, O.CH_A, O.CLB_A1])
+        expect(holdsAt(actor, 'account:escalate' as never, org), `${who}`).toBe(false)
+    }
+    expect(Object.keys(await import('./account-ops'))).not.toContain('fileAccountRequest')
+    const { existsSync } = await import('node:fs')
     expect(
-      await failure(file('chBLeader', O.CH_A, 'memberA', { action: 'DEACTIVATE' })),
-    ).toMatchObject({ status: 403 })
-    expect(
-      await failure(file('hubLeader', O.CH_A, 'memberA', { action: 'DEACTIVATE' })),
-    ).toMatchObject({ status: 403 })
-    expect(await failure(file('chALeader', O.CH_A, 'chALeader', { action: 'LOCK' }))).toMatchObject(
-      { status: 422 },
-    )
-    expect(
-      await failure(file('chALeader', O.CH_A, 'memberA', { action: 'HARD_DELETE' })),
-    ).toMatchObject({ status: 422 })
+      existsSync(
+        'src/app/api/v1/ops/organizations/[orgId]/members/[profileId]/account-requests/route.ts',
+      ),
+    ).toBe(false)
+  })
+
+  it('a forged account:escalate grant row confers nothing', async () => {
+    await insertGrant('memberA', O.CH_A, 'account:escalate')
+    try {
+      const actor = await resolveActor(P.memberA.account)
+      expect(actor.assignments.some((a) => String(a.capability) === 'account:escalate')).toBe(false)
+      expect(holdsAt(actor, 'account:escalate' as never, O.CH_A)).toBe(false)
+      for (const op of ['LOCK', 'DEACTIVATE', 'SOFT_DELETE'] as const)
+        expect(await failure(run('memberA', 'memberB', op))).toMatchObject({ status: 403 })
+      expect(
+        await failure(listAccountRequests(P.memberA.account, new URLSearchParams())),
+      ).toMatchObject({ status: 403 })
+    } finally {
+      await query(
+        `DELETE FROM role_assignments WHERE individual_profile_id = $1 AND capability = 'account:escalate'`,
+        [P.memberA.profile],
+      )
+    }
+    expect(await status('memberB')).toEqual({ account: 'ACTIVE', profile: 'ACTIVE' })
+  })
+
+  it('a pre-existing ESCALATION row is visible and decidable by PLATFORM_ADMIN only', async () => {
+    const lock = await seedEscalation(O.CH_A, 'chALeader', 'memberA', 'LOCK')
     // Leaders never execute and never see the queue.
     expect(
       await failure(listAccountRequests(P.chALeader.account, new URLSearchParams())),
@@ -291,7 +304,7 @@ describe('leader escalations (file only) and admin processing', () => {
     const selfDeletion = mine[1]!
     await decideAccountRequest(P.admin.account, selfDeletion.id, 'PROCESS', {}, 'adm05')
     expect((await status('memberC')).account).toBe('DEACTIVATED')
-    const declined = await file('chALeader', O.CH_A, 'memberB', { action: 'DEACTIVATE' })
+    const declined = await seedEscalation(O.CH_A, 'chALeader', 'memberB', 'DEACTIVATE')
     expect(
       (
         await decideAccountRequest(
@@ -309,9 +322,7 @@ describe('leader escalations (file only) and admin processing', () => {
       [[lock.id, declined.id]],
     )
     expect(audits.map((a) => a.action)).toEqual([
-      'ACCOUNT_REQUEST_FILED',
       'ACCOUNT_REQUEST_PROCESSED',
-      'ACCOUNT_REQUEST_FILED',
       'ACCOUNT_REQUEST_DECLINED',
     ])
     const text = JSON.stringify(
@@ -466,15 +477,8 @@ describe('account-deletion requests: processed, or rejected with a reason (PO, A
     })
   })
 
-  it('a leader’s SOFT_DELETE escalation also needs a reason; LOCK / DEACTIVATE keep it optional', async () => {
-    await query(
-      `INSERT INTO community_memberships (profile_id, organization_id, state, source, started_at)
-       VALUES ($1, $2, 'ACTIVE', 'PRESEED', now()), ($3, $2, 'ACTIVE', 'PRESEED', now())`,
-      [P.memberA.profile, O.CH_A, P.memberB.profile],
-    )
-    const file = (target: Person, action: string) =>
-      fileAccountRequest(P.chALeader.account, O.CH_A, P[target].profile, { action }, 'adm05')
-    const softDelete = await file('memberA', 'SOFT_DELETE')
+  it('a SOFT_DELETE ESCALATION row also needs a reason; LOCK / DEACTIVATE keep it optional', async () => {
+    const softDelete = await seedEscalation(O.CH_A, 'chALeader', 'memberA', 'SOFT_DELETE')
     expect(await failure(decide('admin', softDelete.id, 'DECLINE'))).toMatchObject({
       status: 422,
       fields: { reason: 'required' },
@@ -482,7 +486,7 @@ describe('account-deletion requests: processed, or rejected with a reason (PO, A
     expect((await decide('admin', softDelete.id, 'DECLINE', { reason: REASON })).status).toBe(
       'DECLINED',
     )
-    const lock = await file('memberB', 'LOCK')
+    const lock = await seedEscalation(O.CH_A, 'chALeader', 'memberB', 'LOCK')
     expect((await decide('admin', lock.id, 'DECLINE')).status).toBe('DECLINED')
     expect(await status('memberA')).toEqual({ account: 'ACTIVE', profile: 'ACTIVE' })
   })

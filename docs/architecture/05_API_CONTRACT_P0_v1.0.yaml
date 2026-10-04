@@ -438,7 +438,7 @@ paths:
     get:
       operationId: listAccountRequests
       responses:
-        '200': { description: Escalations and self-deletion requests with counts.pending (A11) }
+        '200': { description: Self-deletion requests and any ESCALATION rows (none filed in P0, DEC-ADM-D04) with counts.pending (A11) }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/BusinessValidation' }
   /ops/account-requests/{requestId}:
@@ -464,18 +464,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessValidation' }
-  /ops/organizations/{orgId}/members/{profileId}/account-requests:
-    post:
-      operationId: fileAccountRequest
-      parameters:
-        - $ref: '#/components/parameters/OrgId'
-        - $ref: '#/components/parameters/ProfileId'
-      responses:
-        '201': { description: The filed escalation (A11) }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/BusinessValidation' }
+  # POST /ops/organizations/{orgId}/members/{profileId}/account-requests (fileAccountRequest)
+  # was withdrawn by DEC-ADM-D04 (ADMIN-DECISION-04): no leader account escalation in P0.
   /ops/verification-requests:
     get:
       operationId: listVerificationRequests

@@ -6,7 +6,7 @@
 | Actor | `/ops/admin` entry | Reaches |
 |---|---|---|
 | PLATFORM_ADMIN | `requireOpsAdmin` → all six | Everything; every org's Access tab |
-| Whole-role HUB/Chapter/CLB leader | via its granted capabilities (verification:review, access:delegate always come together with the whole role) | Verification (own + PD-1 fallback), Access (own unit + direct children) |
+| Whole-role HUB/Chapter/CLB leader | via its granted capabilities (verification:review, access:delegate always come together with the whole role) | Verification (own + PD-1 fallback), Access (grant on own unit + direct children; revoke on own unit only, DEC-ADM-D02) |
 | Capability-only grantee (PD-6, e.g. `verification:review` alone) | `requireOpsAdmin` admits it; no `network:read` link shown | Exactly the one granted queue |
 | Member / guest | 404 on `/ops/admin` and every sub-route | Nothing |
 
@@ -19,7 +19,7 @@
 | `feedback:manage` | platform only | `/ops/admin/feedback` |
 | `vocabulary:manage` | platform only | `/ops/admin/categories` |
 | `account:administer` | platform only | `/ops/admin/accounts` |
-| `account:escalate` | org | **no UI** (gap, see below) |
+| ~~`account:escalate`~~ | — | withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)): no capability, no route |
 
 ## IDOR
 | Case | Expected |
@@ -33,7 +33,7 @@
 |---|---|
 | Grant a capability not in `CAPABILITY_MATRIX.delegable` | Form cannot select it; server would 422 if forced |
 | Grant to self, upward, or cross-branch | Server refuses; UI never offers it (PD-6) |
-| Co-leader revokes another leader's grant on the same unit | **Allowed today** (ADMIN-DECISION-02, unresolved — carry into PROD-07 unless the PO has closed it) |
+| Co-leader revokes another leader's grant on the same unit | Allowed only with a current `access:delegate` on exactly that unit; parent / child / sibling, lost-capability grantor → 403 ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02), fixed in ADMIN-PROD-07-CONTRACT-FIX) |
 
 ## Verification / venture review
 | Case | Expected |
@@ -60,10 +60,10 @@ Every mutation already audits server-side (PROD-02–05); the frontend renders n
 ## Gaps PROD-06 raises, not builds
 | Item | Note |
 |---|---|
-| `account:escalate` UI (a leader filing a lock/deactivate/soft-delete request from a member's page) | API exists (05 §28); WF03-S04 explicitly excludes account administration (G3, a considered decision predating PROD-05) — reopening that is outside this task's six listed modules |
+| ~~`account:escalate` UI~~ | Closed by [DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04): no leader escalation in P0; the API was removed in ADMIN-PROD-07-CONTRACT-FIX |
 | `GET /ops/summary` | Still not built; Admin Home composes counts from each list's own `limit=1` call, as the PROD-05 handoff suggested |
 | Filter state in the URL | Queues reset filters on reload; acceptable, flagged as a possible PROD-07 enhancement |
-| ADMIN-DECISION-02 (co-leader revoke) | Unresolved; current behaviour reported above, not changed |
+| ADMIN-DECISION-02 (co-leader revoke) | Closed: [DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02), implemented in ADMIN-PROD-07-CONTRACT-FIX |
 
 ## Related
 - [ADMIN-PROD-06-qa.md](ADMIN-PROD-06-qa.md) · [ADMIN-PROD-06-frontend.md](ADMIN-PROD-06-frontend.md) · [ADMIN-PROD-06-modules.md](ADMIN-PROD-06-modules.md)

@@ -1548,7 +1548,7 @@ Body `{ grantee_profile_id, capability? }` (absent / null = the whole role) → 
 Every grant and revocation of the unit from the audit trail, oldest first: `event` (GRANTED / REVOKED), `at`, `grant_id`, `actor_profile_id`, `grantee_profile_id`, `role_code`, `capability`.
 
 ### POST `/ops/organizations/{orgId}/access/{grantId}/revoke`
-ACTIVE → CLOSED now (`revoked_at`); the grantor, `access:delegate` on the unit or its parent, or PLATFORM_ADMIN. Effective on the grantee's next request. A grant of another unit `404`; not active `409`.
+ACTIVE → CLOSED now (`revoked_at`). Only a current holder of `access:delegate` on exactly this unit (a same-unit co-leader), or PLATFORM_ADMIN ([DEC-ADM-D02](../decisions/DECISION_LOG.md#dec-adm-d02)); never from a parent, child or sibling unit, and never on grantorship alone (a grantor who lost `access:delegate` there, or granted from the parent unit, is refused `403`). The revoker's authority is re-read in the transaction. Effective on the grantee's next request. A unit the actor cannot revoke on `403`; a grant of another unit `404`; not active `409`. The listing's `can_revoke` follows the same rule.
 
 ## 27.1 Rules
 | Topic | Rule |
@@ -1564,7 +1564,7 @@ ACTIVE → CLOSED now (`revoked_at`); the grantor, `access:delegate` on the unit
 
 # 28. Amendment A11 — Feedback, categories and account operations (2026-10-04)
 
-Source: [DEC-ADM](../decisions/DECISION_LOG.md#dec-adm) (PD-5, PD-7; ADMIN-PROD-05 rules R12–R16) and the frozen [Admin Portal P0 contract](../implementation/reports/ADMIN-PROD-01-runtime-contract.md); implemented by ADMIN-PROD-05. Additive; PLATFORM_ADMIN only except the leader escalation. The feedback submission (`POST /feedback`, §11) stays Sprint1 FB-01's. No new error code; one idempotent operation, `account.action` (optional header, §2.3). Sign-in (§3) is refused for a BLOCKED or DEACTIVATED account (`AUTH_ACCOUNT_BLOCKED`) and a session only authenticates an ACTIVE account.
+Source: [DEC-ADM](../decisions/DECISION_LOG.md#dec-adm) (PD-5, PD-7; ADMIN-PROD-05 rules R12–R16) and the frozen [Admin Portal P0 contract](../implementation/reports/ADMIN-PROD-01-runtime-contract.md); implemented by ADMIN-PROD-05. Additive; PLATFORM_ADMIN only (the leader escalation route was withdrawn by [DEC-ADM-D04](../decisions/DECISION_LOG.md#dec-adm-d04)). The feedback submission (`POST /feedback`, §11) stays Sprint1 FB-01's. No new error code; one idempotent operation, `account.action` (optional header, §2.3). Sign-in (§3) is refused for a BLOCKED or DEACTIVATED account (`AUTH_ACCOUNT_BLOCKED`) and a session only authenticates an ACTIVE account.
 
 ### GET `/ops/feedback`
 `feedback:manage`; others `403`. Newest first; `?status=&type=&priority=` (LOW, MEDIUM, HIGH, NONE) `&owner=` (profile id or `none`) `&created_from=&created_to=` (dates, Vietnam time) `&cursor=&limit=` (1–50, default 20; keyset); any other value `422`. Item: `id`, `type`, `status`, `priority`, `owner {profile_id, display_name}`, `sender {kind: MEMBER | GUEST, profile_id, display_name}`, `excerpt`, `has_screenshot`, `created_at`, `updated_at`; beside the envelope `counts {open}`. Each read also runs the bounded 90-day screenshot retention.
@@ -1591,16 +1591,16 @@ The item plus `content`, `sender.guest_email` (guests only), `context` (route, s
 And `…/unlock`, `…/deactivate`, `…/reactivate`, `…/soft-delete`; body `{ reason? }`; `account:administer`; `{profileId}` is the person's profile id (account ids are never serialized). Response `{profile_id, account_status, profile_status, soft_deleted, changed}`. LOCK: BLOCKED, sessions revoked, data kept. DEACTIVATE: account and profile DEACTIVATED, sessions revoked, organization role assignments closed. SOFT_DELETE: the account's deletion request recorded / PROCESSED and the account deactivated — flagged for the separate retention procedure, nothing deleted, no reactivation. Never one's own account (`403`), and only while the acting admin is still ACTIVE (`403`); same state again no change; an impossible move `409`.
 
 ### GET `/ops/account-requests`
-Leader escalations and users' own deletion requests, oldest first: `?status=` (PENDING default, PROCESSED, DECLINED) `&kind=` (ESCALATION, SELF_DELETION) `&cursor=&limit=`. Item: `id`, `kind`, `action`, `status`, `target {profile_id, display_name, account_status, profile_status}`, `organization`, `requested_by_profile_id`, `reason`, `created_at`, `handled_at`, `handler_profile_id`; `counts {pending}`.
+Users' own deletion requests and any `account_action_requests` row (kind ESCALATION; no P0 path files one since [DEC-ADM-D04](../decisions/DECISION_LOG.md#dec-adm-d04)), oldest first: `?status=` (PENDING default, PROCESSED, DECLINED) `&kind=` (ESCALATION, SELF_DELETION) `&cursor=&limit=`. Item: `id`, `kind`, `action`, `status`, `target {profile_id, display_name, account_status, profile_status}`, `organization`, `requested_by_profile_id`, `reason`, `created_at`, `handled_at`, `handler_profile_id`; `counts {pending}`.
 
 ### GET `/ops/account-requests/{requestId}`
 One request; non-admins and unknown ids `404`.
 
 ### POST `/ops/account-requests/{requestId}/process`
-And `…/decline`; `{ reason? }`; PENDING only (`409`); processing executes the requested action as above. Declining a deletion request (a user's own SELF_DELETION, or a SOFT_DELETE escalation) requires a `reason` stating the legal / retention / security / operational obligation that blocks it (missing or blank `422` `reason: required`); the request becomes `DECLINED` (the PO's REJECTED, [DEC-ADM-PD7.1](../decisions/DECISION_LOG.md#dec-adm-pd7-1)), the account is untouched and the reason is kept in the audit. A request about the admin's own account `403`. Nothing is ever hard-deleted.
+And `…/decline`; `{ reason? }`; PENDING only (`409`); processing executes the requested action as above. Declining a deletion request (a user's own SELF_DELETION, or a SOFT_DELETE ESCALATION row) requires a `reason` stating the legal / retention / security / operational obligation that blocks it (missing or blank `422` `reason: required`); the request becomes `DECLINED` (the PO's REJECTED, [DEC-ADM-PD7.1](../decisions/DECISION_LOG.md#dec-adm-pd7-1)), the account is untouched and the reason is kept in the audit. A request about the admin's own account `403`. Nothing is ever hard-deleted.
 
-### POST `/ops/organizations/{orgId}/members/{profileId}/account-requests`
-A leader (`account:escalate` on exactly the unit) files `{ action: LOCK | DEACTIVATE | SOFT_DELETE, reason? }` for an ACTIVE member of that unit → `201`; a pending duplicate `409`; not a member `404`; another unit `403`. Leaders never execute.
+### ~~POST `/ops/organizations/{orgId}/members/{profileId}/account-requests`~~ — WITHDRAWN
+Withdrawn by [DEC-ADM-D04](../decisions/DECISION_LOG.md#dec-adm-d04) (ADMIN-PROD-07-CONTRACT-FIX): P0 has no leader-facing account escalation and no `account:escalate` capability; the route does not exist (the framework answers `404` / `405`). Leaders use the generic support / feedback channels; a dedicated escalation workflow is future scope.
 
 ## 28.1 Rules
 | Topic | Rule |

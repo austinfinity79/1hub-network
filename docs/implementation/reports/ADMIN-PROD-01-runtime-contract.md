@@ -13,7 +13,7 @@ Branch `feat/admin-portal` at `9a52bb4` (ADMIN-PORTAL-00 on WF06 closure `1ed601
 | C. Organizations + delegated administration | create, edit, activate / deactivate; assign scoped managers; scoped delegation (PD-6) |
 | D. Feedback operations | triage (type, priority, owner, status, resolution), 90-day screenshots, weekly summary |
 | E. Categories | label, order, active / archived for existing vocabulary types |
-| F. Account lifecycle (PD-7) | lock / deactivate / soft-delete by PLATFORM_ADMIN; leaders submit or escalate |
+| F. Account lifecycle (PD-7) | lock / deactivate / soft-delete by PLATFORM_ADMIN only; ~~leaders submit or escalate~~ — no leader account escalation in P0 ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)) |
 Not built: CMS, page builder, generic workflow engine, BI, new account system, permission-builder UI, notification centre, runtime action registry, application review, structural-change approval queue.
 
 ## Information architecture (evidence 3) — one `OpsShell`, flat

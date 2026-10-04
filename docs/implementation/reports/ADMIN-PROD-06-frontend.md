@@ -2,6 +2,8 @@
 
 **ADMIN-PROD-06 — Admin Portal frontend inside the existing OpsShell (IMPLEMENT, no new shell).** Evidence 1 – 10. Uses only the real, frozen APIs: [05 §26 (A9)](../../architecture/05_API_CONTRACT_P0_v1.0.md) role verification, §27 (A10) venture review + access, §28 (A11) feedback / categories / accounts. Companions: [modules](ADMIN-PROD-06-modules.md) · [QA](ADMIN-PROD-06-qa.md) · [PROD-07 handoff](ADMIN-PROD-06-prod07-handoff.md).
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 1. Preflight
 `feat/admin-portal` at `f2845a0` (ADMIN-PROD-05-FIX), tree clean except `AGENTS.md`, HEAD unchanged until the commit; migrations 001 – 017 intact; origin/main and production `78f21f2`; no concurrent writer. Read: ADMIN-PROD-01 frozen contract, the PROD-03/04/05 API handoffs, the existing OpsShell (`ops-shell.tsx`, `ops-nav.tsx`, `nav.ts`, `guard.ts`), the WF03 screen conventions (member-detail, org-relationships, dashboard) and the design tokens. No ADMIN-DESIGN-01 pixel reference exists for these six screens; pixel QA is PD-8's ADMIN-PROD-08, not this task.
 

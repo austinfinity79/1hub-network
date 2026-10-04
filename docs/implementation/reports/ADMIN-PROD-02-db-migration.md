@@ -2,6 +2,8 @@
 
 **Evidence 16 – 18, 21, 22: DB impact matrix, migration 017, Sprint1 coexistence, location, fresh and upgrade databases.** Parent: [ADMIN-PROD-02-rbac-scope-foundation.md](ADMIN-PROD-02-rbac-scope-foundation.md). File: `db/migrations/017_p0_admin_foundation.sql` (each change and WHY in its header).
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 16. DB impact matrix
 | Domain | Class | Change | WHY |
 |---|---|---|---|

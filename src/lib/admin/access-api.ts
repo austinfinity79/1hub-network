@@ -5,7 +5,7 @@ import { OPS_ORGANIZATION_TYPES } from '@/lib/ops/organizations'
 import { projectDiscovery } from '@/lib/profile/projection'
 import { discoveryLevelsOf } from '@/lib/profile/visibility'
 
-import { DELEGABLE_ROLE, delegationSourceFor } from './delegation'
+import { DELEGABLE_ROLE, delegationSourceFor, revocationSourceFor } from './delegation'
 import { isUuid } from './hierarchy'
 import { delegationReach, holdsPlatform } from './scope'
 
@@ -169,7 +169,8 @@ export async function listAccess(
     [orgId, DELEGABLE_ROLE, state],
   )
   const display = await names(rows.map((r) => r.grantee))
-  const manager = (await delegationSourceFor(query, actor, orgId)) !== null
+  // ADMIN-DECISION-02: exact-unit authority only, never grantorship or a parent.
+  const revoker = revocationSourceFor(actor, orgId) !== null
   return {
     items: rows.map((r) => ({
       id: r.id,
@@ -181,7 +182,7 @@ export async function listAccess(
       revoked_at: r.valid_to ? new Date(r.valid_to).toISOString() : null,
       state: r.state === 'ACTIVE' ? 'ACTIVE' : 'CLOSED',
       effective: r.effective,
-      can_revoke: r.state === 'ACTIVE' && (manager || r.granted_by === actor.profileId),
+      can_revoke: r.state === 'ACTIVE' && revoker,
     })),
   }
 }

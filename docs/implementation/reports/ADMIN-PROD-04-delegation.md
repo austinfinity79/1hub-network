@@ -2,6 +2,8 @@
 
 **Evidence 13 – 17: organization delegation APIs, scope matrix, grant / revoke validation, privilege escalation.** Parent: [ADMIN-PROD-04-venture-review.md](ADMIN-PROD-04-venture-review.md). Rules: PD-6 and the ADMIN-PROD-01 delegation contract on the existing `role_assignments` (+ `capability`, migration 017); services `grantAccess` / `revokeAccess` (ADMIN-PROD-02), readers new here.
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 13. Delegation APIs
 | Call | Behaviour |
 |---|---|

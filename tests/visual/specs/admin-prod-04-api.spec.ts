@@ -272,7 +272,12 @@ test.describe('ADMIN-PROD-04 organization access API', () => {
     expect(((await listed.json()) as { items: { id: string }[] }).items.map((i) => i.id)).toContain(
       grant.id,
     )
-    await refused(await call(request, 'post', `${access(O.CLB_A2)}/${grant.id}/revoke`), 404)
+    // ADMIN-DECISION-02: revoke needs access:delegate on exactly the unit. The
+    // grantor, from the parent Chapter, is refused; the CLB's own leader revokes.
+    await refused(await call(request, 'post', `${access(O.CLB_A2)}/${grant.id}/revoke`), 403)
+    await refused(await call(request, 'post', `${access(O.CLB_A1)}/${grant.id}/revoke`), 403)
+    await login(request, 'clbA1Leader')
+    await refused(await call(request, 'post', `${access(O.CLB_A2)}/${grant.id}/revoke`), 403)
     const revoked = await call(request, 'post', `${access(O.CLB_A1)}/${grant.id}/revoke`)
     expect(revoked.status()).toBe(200)
     expect(await revoked.json()).toMatchObject({ state: 'CLOSED' })

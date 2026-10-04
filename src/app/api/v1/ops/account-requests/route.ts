@@ -4,9 +4,9 @@ import { listAccountRequests } from '@/lib/admin/account-ops'
 import { adminRequest } from '@/lib/admin/admin-route'
 
 /**
- * GET /api/v1/ops/account-requests — 05 §28 (A11): leader escalations and
- * users' own deletion requests, oldest first (`?status=&kind=&cursor=&limit=`);
- * PLATFORM_ADMIN only.
+ * GET /api/v1/ops/account-requests — 05 §28 (A11): users' own deletion
+ * requests and any ESCALATION row (none filed in P0, DEC-ADM-D04), oldest first
+ * (`?status=&kind=&cursor=&limit=`); PLATFORM_ADMIN only.
  */
 export const dynamic = 'force-dynamic'
 

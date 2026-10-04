@@ -432,7 +432,7 @@ describe('self-approval, eligibility, validation', () => {
     const second = await file('memberB', O.CLB_A2)
     expect((await approve('memberC', request.id)).status).toBe('APPROVED')
     await revokeAccess(
-      P.chALeader.account,
+      P.admin.account,
       { organizationId: O.CLB_A2, grantId: grant.id },
       'adm03-test',
     )

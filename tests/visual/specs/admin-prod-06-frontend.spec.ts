@@ -270,14 +270,14 @@ test.describe('ADMIN-PROD-06 organization access / delegation', () => {
 
     await page.goto(`/ops/admin/access/${O.CH_A}`)
     await page.locator('[data-grant-form] input').fill(P.memberC.profile)
-    await page.locator('[data-grant-form] select').selectOption('account:escalate')
+    await page.locator('[data-grant-form] select').selectOption('membership:confirm')
     await page.locator('[data-grant-form] button[type="submit"]').click()
-    const row = page.locator('[data-grant-row]').filter({ hasText: 'account:escalate' })
+    const row = page.locator('[data-grant-row]').filter({ hasText: 'membership:confirm' })
     await expect(row).toBeVisible()
     await row.locator('[data-action="revoke"]').click()
     await row.locator('[data-revoke-confirm] button', { hasText: 'Thu hồi' }).click()
     await expect(row).toHaveCount(0)
-    await expect(page.locator('[data-card="history"]')).toContainText('account:escalate')
+    await expect(page.locator('[data-card="history"]')).toContainText('membership:confirm')
   })
 })
 

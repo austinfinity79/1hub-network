@@ -65,13 +65,14 @@ afterAll(async () => {
 describe('M0-T09 matrix matches the approved document', () => {
   it('covers exactly the approved capabilities under one naming convention', () => {
     // Nine of DECISION-AUTHZ-01B, `programme:manage` (DEC-W4P-D02, WF04-PROD-03)
-    // and the eight Admin Portal capabilities (DEC-ADM, ADMIN-PROD-02).
-    expect(CAPABILITIES).toHaveLength(18)
+    // and the seven Admin Portal capabilities (DEC-ADM, ADMIN-PROD-02;
+    // `account:escalate` withdrawn by ADMIN-DECISION-04).
+    expect(CAPABILITIES).toHaveLength(17)
     for (const capability of CAPABILITIES) {
       // D5: resource:action, exactly one colon.
       expect(capability.split(':')).toHaveLength(2)
     }
-    expect(CAPABILITY_MATRIX).toHaveLength(18)
+    expect(CAPABILITY_MATRIX).toHaveLength(17)
   })
 
   it('matches the frozen matrix documents capability for capability', () => {

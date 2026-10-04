@@ -9,7 +9,7 @@ import { deriveCapabilities, deriveManagedScopes } from '@/lib/authz/session-aut
 import { closePool, databaseUrl, query } from '@/lib/db/client'
 import { organizationScope } from '@/lib/ops/scope'
 
-import { mayEscalateAccountAction, mayExecuteAccountAction } from './account-actions'
+import { mayExecuteAccountAction } from './account-actions'
 import { delegationSourceFor, grantAccess, revokeAccess } from './delegation'
 import { ancestorChain, fallbackChain, isDescendant, isDirectChild } from './hierarchy'
 import { delegationReach, holdsAt, holdsPlatform } from './scope'
@@ -267,7 +267,7 @@ describe('§20 denials', () => {
     const record = await grant('chALeader', O.CLB_A2, 'memberC', 'verification:review')
     expect(holdsAt(await actor('memberC'), 'verification:review', O.CLB_A2)).toBe(true)
     const revoked = await revokeAccess(
-      P.chALeader.account,
+      P.admin.account,
       { organizationId: O.CLB_A2, grantId: record.id },
       'adm02-test',
     )
@@ -276,7 +276,7 @@ describe('§20 denials', () => {
     expect(holdsAt(await actor('memberC'), 'verification:review', O.CLB_A2)).toBe(false)
     expect(
       await failure(
-        revokeAccess(P.chALeader.account, { organizationId: O.CLB_A2, grantId: record.id }, 't'),
+        revokeAccess(P.admin.account, { organizationId: O.CLB_A2, grantId: record.id }, 't'),
       ),
     ).toEqual({ status: 409, code: 'MEMBERSHIP_INVALID_TRANSITION' })
 
@@ -307,36 +307,108 @@ describe('delegation lifecycle, revoke authority and audit', () => {
     })
   })
 
-  it('lets the grantor, the unit, its parent or the admin revoke — nobody else', async () => {
-    const ids = await Promise.all([
-      grant('chALeader', O.CLB_A1, 'memberA', 'member:read'),
-      grant('chALeader', O.CLB_A1, 'memberB', 'event:manage'),
-      grant('chALeader', O.CLB_A1, 'memberC', 'org:read'),
-      grant('chALeader', O.CLB_A1, 'memberA', 'programme:read'),
+  it('ADMIN-DECISION-02: only a current access:delegate holder on exactly the unit, or the admin, revokes', async () => {
+    const revoke = (who: keyof typeof P, org: string, grantId: string) =>
+      revokeAccess(P[who].account, { organizationId: org, grantId }, 'adm02-test')
+    const denied = { status: 403, code: 'SCOPE_FORBIDDEN' }
+    // memberB becomes a same-unit co-leader on CH_A (whole role, so access:delegate).
+    const coLeader = await grant('chALeader', O.CH_A, 'memberB', null)
+    const [g1, g2, g3] = await Promise.all([
+      grant('chALeader', O.CH_A, 'memberC', 'member:read'),
+      grant('chALeader', O.CH_A, 'memberC', 'event:manage'),
+      grant('chALeader', O.CH_A, 'memberA', 'member:read'),
     ])
-    const revoke = (who: keyof typeof P, grantId: string) =>
-      revokeAccess(P[who].account, { organizationId: O.CLB_A1, grantId }, 'adm02-test')
-    expect(await failure(revoke('chBLeader', ids[0]!.id))).toEqual({
-      status: 403,
-      code: 'SCOPE_FORBIDDEN',
+    // Same unit without the capability: memberA holds member:read there, not access:delegate.
+    expect(await failure(revoke('memberA', O.CH_A, g2!.id)), 'no capability').toEqual(denied)
+    // Parent, child and sibling units — the hierarchy never qualifies.
+    expect(await failure(revoke('hubLeader', O.CH_A, g2!.id)), 'parent').toEqual(denied)
+    expect(await failure(revoke('clbA1Leader', O.CH_A, g2!.id)), 'child').toEqual(denied)
+    expect(await failure(revoke('chBLeader', O.CH_A, g2!.id)), 'sibling').toEqual(denied)
+    // Forged scope: naming a unit the grant is not on, or one the actor holds nothing on.
+    expect(await failure(revoke('chBLeader', O.CH_B, g2!.id)), 'forged own unit').toEqual({
+      status: 404,
+      code: 'UNCONTRACTED_NOT_FOUND',
     })
-    expect(await failure(revoke('hubLeader', ids[0]!.id))).toEqual({
-      status: 403,
-      code: 'SCOPE_FORBIDDEN',
-    })
-    expect(await failure(revoke('memberB', ids[0]!.id))).toEqual({
-      status: 403,
-      code: 'SCOPE_FORBIDDEN',
-    })
-    expect((await revoke('chALeader', ids[0]!.id)).state).toBe('CLOSED') // grantor, parent
-    expect((await revoke('clbA1Leader', ids[1]!.id)).state).toBe('CLOSED') // the unit
-    expect((await revoke('admin', ids[2]!.id)).state).toBe('CLOSED')
+    expect(await failure(revoke('hubLeader', O.CLB_A1, g2!.id)), 'forged unit').toEqual(denied)
+    // A forged stored access:delegate row (non-delegable capability) reads as nothing.
+    await insertGrant('memberA', O.CH_A, 'access:delegate')
+    expect(await failure(revoke('memberA', O.CH_A, g2!.id)), 'forged capability').toEqual(denied)
+    // Same-unit co-leader with the capability: allowed, though not the grantor.
+    expect((await revoke('memberB', O.CH_A, g1!.id)).state).toBe('CLOSED')
+
+    // Parent grantor: chALeader granted on its child CLB_A1 but holds nothing there.
+    const child = await grant('chALeader', O.CLB_A1, 'memberA', 'org:read')
+    expect(await failure(revoke('chALeader', O.CLB_A1, child.id)), 'parent grantor').toEqual(denied)
+    expect((await revoke('clbA1Leader', O.CLB_A1, child.id)).state).toBe('CLOSED')
+
+    // Original grantor after losing access:delegate: no historical bypass.
+    const own = await grant('memberB', O.CH_A, 'memberA', 'event:manage')
+    await revoke('chALeader', O.CH_A, coLeader.id)
+    expect(await failure(revoke('memberB', O.CH_A, own.id)), 'lost capability').toEqual(denied)
+    expect(await failure(revoke('memberB', O.CH_A, g3!.id)), 'lost capability').toEqual(denied)
+
+    // PLATFORM_ADMIN keeps platform-wide revocation; nothing denied was closed.
+    expect((await revoke('admin', O.CH_A, own.id)).state).toBe('CLOSED')
+    const open = await query<{ id: string }>(
+      `SELECT id::text FROM role_assignments WHERE id = ANY($1::uuid[]) AND state = 'ACTIVE'`,
+      [[g2!.id, g3!.id]],
+    )
+    expect(open.map((r) => r.id).sort()).toEqual([g2!.id, g3!.id].sort())
+    // A refused revocation writes no audit; each success writes one.
+    const audits = await query<{ action: string; resource_id: string }>(
+      `SELECT action, resource_id::text FROM audit_events
+        WHERE action = 'ACCESS_REVOKED' AND resource_id = ANY($1::uuid[])`,
+      [[g1!.id, g2!.id, g3!.id, child.id, own.id, coLeader.id]],
+    )
+    expect(audits.map((r) => r.resource_id).sort()).toEqual(
+      [g1!.id, child.id, own.id, coLeader.id].sort(),
+    )
     // A grant id read through another unit is not found there.
-    expect(
-      await failure(
-        revokeAccess(P.admin.account, { organizationId: O.CLB_A2, grantId: ids[3]!.id }, 't'),
-      ),
-    ).toEqual({ status: 404, code: 'UNCONTRACTED_NOT_FOUND' })
+    expect(await failure(revoke('admin', O.CLB_A2, g2!.id))).toEqual({
+      status: 404,
+      code: 'UNCONTRACTED_NOT_FOUND',
+    })
+  })
+
+  it('ADMIN-DECISION-02: two co-leaders revoking each other at once — exactly one wins, no deadlock', async () => {
+    const b = await grant('chALeader', O.CH_A, 'memberB', null)
+    const [chA] = await query<{ id: string }>(
+      `SELECT id::text FROM role_assignments WHERE individual_profile_id = $1 AND scope_id = $2
+          AND capability IS NULL AND state = 'ACTIVE'`,
+      [P.chALeader.profile, O.CH_A],
+    )
+    const race = await Promise.allSettled([
+      revokeAccess(P.chALeader.account, { organizationId: O.CH_A, grantId: b.id }, 't'),
+      revokeAccess(P.memberB.account, { organizationId: O.CH_A, grantId: chA!.id }, 't'),
+    ])
+    expect(race.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
+    const lost = race.find((r) => r.status === 'rejected') as PromiseRejectedResult
+    expect(lost.reason).toMatchObject({ status: 403, code: 'SCOPE_FORBIDDEN' })
+  })
+
+  it('ADMIN-DECISION-02: grant reach is unchanged (own unit and direct children only)', async () => {
+    expect((await grant('hubLeader', O.CH_A, 'memberA', 'member:read')).state).toBe('ACTIVE')
+    expect((await grant('chALeader', O.CLB_A1, 'memberB', 'member:read')).state).toBe('ACTIVE')
+    expect((await grant('clbA1Leader', O.CLB_A1, 'memberC', 'member:read')).state).toBe('ACTIVE')
+    for (const [who, org] of [
+      ['chALeader', O.HUB],
+      ['chALeader', O.CH_B],
+      ['clbA1Leader', O.CLB_A2],
+      ['clbA1Leader', O.CH_A],
+      ['hubLeader', O.CLB_A1],
+    ] as const) {
+      expect(await failure(grant(who, org, 'memberA', 'org:read')), `${who}→${org}`).toEqual({
+        status: 403,
+        code: 'SCOPE_FORBIDDEN',
+      })
+    }
+    // Never beyond what the grantor holds: platform-only and non-delegable are refused.
+    for (const capability of ['venture:review', 'access:delegate', 'account:escalate']) {
+      expect(
+        (await failure(grant('chALeader', O.CH_A, 'memberA', capability))).status,
+        capability,
+      ).toBeGreaterThanOrEqual(403)
+    }
   })
 
   it('audits every grant and revoke with grantor, grantee, capability and scope only', async () => {
@@ -487,7 +559,7 @@ describe('existing capabilities keep their meaning', () => {
       organizationIds: [O.CH_A],
     })
     expect(mayExecuteAccountAction(chA)).toBe(false)
-    expect(mayEscalateAccountAction(chA, O.CH_A)).toBe(true)
-    expect(mayEscalateAccountAction(chA, O.CLB_A1)).toBe(false)
+    // ADMIN-DECISION-04: no leader account escalation capability exists.
+    expect(CAPABILITIES as readonly string[]).not.toContain('account:escalate')
   })
 })

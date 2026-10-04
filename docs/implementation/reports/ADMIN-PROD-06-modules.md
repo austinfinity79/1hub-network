@@ -2,6 +2,8 @@
 
 **Evidence 4 – 8: Verification, Venture Review, Organization Access, Feedback, Categories.** Parent: [ADMIN-PROD-06-frontend.md](ADMIN-PROD-06-frontend.md).
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 4. Role Verification UI — `/ops/admin/verification[/:id]`
 Queue: status filter (PENDING default, APPROVED, REJECTED, WITHDRAWN — the frozen four, no invented "ALL"), requester (PROFILE_DISCOVERY name), position, routing (+ the PD-1 fallback flag), submitted time; `counts.pending` in the subtitle. Detail: full position/period, routing, the requester's existing memberships/leadership at the unit, history, reject reason. Approve / reject send `{version, reason?}` with a fresh `Idempotency-Key`; reject's reason stays optional per contract. No self-approval control (`can_act` is server-computed and already excludes it). States: loading, empty, denied (403 → "Bạn không có quyền"), not-found (404, identical for unknown/foreign/malformed), a 401 mid-session routes to sign-in.
 

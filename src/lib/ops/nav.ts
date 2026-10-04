@@ -74,8 +74,8 @@ export const OPS_COPY = {
  * (05 §26–28). Each item shows only when the actor holds its capability
  * anywhere (platform-wide, or on at least one organization); the Admin group
  * itself (including the unconditional "Tổng quan quản trị" link) only when at
- * least one of these is held — a leader holding only `account:escalate` (file,
- * never decide) sees no admin group, same as holding nothing (no dead nav).
+ * least one of these is held; holding none of them shows no admin group (no
+ * dead nav). ADMIN-DECISION-04: leaders have no account capability at all.
  * A dedicated subtree (`/ops/admin/*`), never the organization shell: these
  * capabilities are platform- or cross-org queues, not one organization's
  * context (DEC-ADM C1/PD-6), so they do not belong in `organizationNav`.

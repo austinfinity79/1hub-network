@@ -2,6 +2,8 @@
 
 **Evidence 7 – 15: role verification, venture review, core-field detection, website / logo, feedback, account actions, categories, notifications, audit.** Parent: [ADMIN-PROD-02-rbac-scope-foundation.md](ADMIN-PROD-02-rbac-scope-foundation.md). Code in `src/lib/admin/`; schema in migration 017 ([DB / migration](ADMIN-PROD-02-db-migration.md)).
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 7. RoleVerification foundation (`verification.ts`, PD-1)
 | Item | Foundation |
 |---|---|

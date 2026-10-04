@@ -35,8 +35,12 @@ import { holdsAt, holdsPlatform, holdsRoleAt } from './scope'
  *              account (422); no live identical grant exists (409).
  *   race       the grantor's source assignment is re-read FOR SHARE inside the
  *              transaction, so a revocation committed first refuses the grant.
- * Revoke: the grantor, a holder of `access:delegate` on the grant's unit or on
- * its parent, or PLATFORM_ADMIN; ACTIVE → CLOSED with `valid_to` now. Only the
+ * Revoke (ADMIN-DECISION-02): only a CURRENT holder of `access:delegate` on
+ * exactly the grant's unit (a same-unit co-leader), or PLATFORM_ADMIN. Never
+ * from a parent, child or sibling unit, and never on historical grantorship
+ * alone: a grantor who no longer holds `access:delegate` there is refused. The
+ * revoker's assignment is re-read FOR SHARE after the unit is locked, so a
+ * concurrent loss of authority wins. ACTIVE → CLOSED with `valid_to` now. Only the
  * grantable role's rows (HUB_COMMUNITY_LEADER, whole or capability) are revocable
  * here; other role rows of the unit (e.g. HUB_MEMBER from the roster) are not access.
  * Every grant and revoke writes ACCESS_GRANTED / ACCESS_REVOKED with grantor,
@@ -113,8 +117,23 @@ export async function delegationSourceFor(
 }
 
 /**
+ * ADMIN-DECISION-02 — the scope a revocation on `orgId` is authorized from:
+ * 'PLATFORM', or `orgId` itself when the actor currently holds
+ * `access:delegate` on exactly that unit; null otherwise. Unlike a grant, a
+ * parent unit never qualifies, and neither does having made the grant.
+ */
+export function revocationSourceFor(
+  actor: Actor | null,
+  orgId: string,
+): 'PLATFORM' | string | null {
+  if (!isUuid(orgId)) return null
+  if (holdsPlatform(actor, 'access:delegate')) return 'PLATFORM'
+  return holdsAt(actor, 'access:delegate', orgId) ? orgId.toLowerCase() : null
+}
+
+/**
  * Re-reads, locked FOR SHARE in the caller's transaction, the whole-role
- * assignment that gives the grantor `access:delegate` at its source. A
+ * assignment that gives the grantor (or revoker) `access:delegate` at its source. A
  * concurrent revocation either commits first (and this finds nothing) or waits
  * for this transaction.
  */
@@ -243,17 +262,24 @@ export async function revokeAccess(
   if (!isUuid(input.organizationId) || !isUuid(input.grantId)) throw forbidden()
 
   return inTransaction(exec, async (exec) => {
-    const authorized = (await delegationSourceFor(exec, actor, input.organizationId)) !== null
+    const source = revocationSourceFor(actor, input.organizationId)
+    // A foreign unit and an unknown grant answer alike, so nothing is enumerable.
+    if (!source) throw forbidden()
+    // Unit first, as grantAccess does: grants and revocations on one unit
+    // serialize, so two co-leaders revoking each other cannot deadlock.
+    const [org] = await exec<{ id: string }>(
+      `SELECT id::text FROM organizations WHERE id = $1 AND type::text = ANY($2::text[]) FOR UPDATE`,
+      [input.organizationId, [...OPS_ORGANIZATION_TYPES]],
+    )
+    if (!org) throw source === 'PLATFORM' ? notFound() : forbidden()
     const [row] = await exec<GrantRow>(
       `SELECT ${GRANT_COLUMNS} FROM role_assignments
         WHERE id = $1 AND scope_type = 'ORGANIZATION' AND scope_id = $2 AND role_code = $3
         FOR UPDATE`,
       [input.grantId, input.organizationId, DELEGABLE_ROLE],
     )
-    const grantor = row !== undefined && row.assigned_by === actor.profileId
-    // A foreign unit and an unknown grant answer alike, so nothing is enumerable.
-    if (!authorized && !grantor) throw forbidden()
     if (!row) throw notFound()
+    if (!(await grantorStillHolds(exec, actor.profileId!, source))) throw forbidden()
     if (row.state !== 'ACTIVE' || (row.valid_to && new Date(row.valid_to) <= new Date())) {
       throw conflict('This access is not active.')
     }

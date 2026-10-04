@@ -2,6 +2,8 @@
 
 **Evidence 21: exact frontend handoff to ADMIN-PROD-06 (Admin / OpsShell integration).** Parent: [ADMIN-PROD-05-qa.md](ADMIN-PROD-05-qa.md). Not started. Design: ADMIN-DESIGN-01 in the existing OpsShell and design system (PD-8); pixel QA in ADMIN-PROD-08.
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## Routes, capabilities, APIs
 | Route (contract IA) | Shown when the session's `capabilities` hold | APIs (05 §26 – §28) |
 |---|---|---|

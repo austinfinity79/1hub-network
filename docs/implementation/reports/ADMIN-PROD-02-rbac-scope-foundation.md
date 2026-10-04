@@ -2,6 +2,8 @@
 
 **ADMIN-PROD-02 — Admin Portal RBAC / scope / data foundation (IMPLEMENT, no frontend, no API route).** Evidence 1 – 6: preflight, role-model audit, scope model, capability model, delegation, hierarchy helpers. Contract: [ADMIN-PROD-01](ADMIN-PROD-01-runtime-contract.md) (frozen), [DEC-ADM](../../decisions/DECISION_LOG.md#dec-adm). Companions: [data](ADMIN-PROD-02-data-foundation.md) · [DB / migration](ADMIN-PROD-02-db-migration.md) · [QA / handoff](ADMIN-PROD-02-qa-handoff.md).
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 1. Preflight
 | Check | Result |
 |---|---|

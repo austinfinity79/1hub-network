@@ -17,9 +17,9 @@ import {
 } from '../shared'
 
 /**
- * ADMIN-PROD-06 — account-request queue (05 §28, A11; PD-7): leader
- * escalations (LOCK / DEACTIVATE / SOFT_DELETE) and users' own deletion
- * requests, one queue, PLATFORM_ADMIN only.
+ * ADMIN-PROD-06 — account-request queue (05 §28, A11; PD-7): users' own
+ * deletion requests and any ESCALATION row (none filed in P0, DEC-ADM-D04),
+ * one queue, PLATFORM_ADMIN only.
  */
 
 const COPY = {

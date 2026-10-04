@@ -2,6 +2,8 @@
 
 **ADMIN-PROD-05-FIX — close the account-deletion policy + final regression recheck (AUDIT + FIX + RECHECK).** Evidence 1 – 15. Decision: [DEC-ADM-PD7.1](../../decisions/DECISION_LOG.md#dec-adm-pd7-1) (PO, stated in the task contract). Contract: [05 §28](../../architecture/05_API_CONTRACT_P0_v1.0.md). Base `5ea7835`; HEAD unchanged by anyone else during the task.
 
+> **Superseded in part (ADMIN-PROD-07-CONTRACT-FIX):** revoke authority is now exact-unit only ([DEC-ADM-D02](../../decisions/DECISION_LOG.md#dec-adm-d02)); `account:escalate` and the leader account-request route are withdrawn ([DEC-ADM-D04](../../decisions/DECISION_LOG.md#dec-adm-d04)). Historical evidence below is kept as recorded.
+
 ## 1. Rule correction
 | | ADMIN-PROD-05 (unsupported, removed) | Now (PO) |
 |---|---|---|

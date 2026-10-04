@@ -62,8 +62,10 @@ const assignment = (over: Partial<ActiveAssignment>): ActiveAssignment => ({
 })
 
 describe('capability matrix (DEC-ADM)', () => {
-  it('adds the eight admin capabilities under the one naming convention', () => {
-    expect(CAPABILITIES).toHaveLength(18)
+  it('adds the seven admin capabilities under the one naming convention', () => {
+    // `account:escalate` was withdrawn by ADMIN-DECISION-04.
+    expect(CAPABILITIES).toHaveLength(17)
+    expect(CAPABILITIES as readonly string[]).not.toContain('account:escalate')
     expect(CAPABILITY_MATRIX.map((r) => r.capability)).toEqual([...CAPABILITIES])
     for (const c of CAPABILITIES) expect(c.split(':')).toHaveLength(2)
   })
@@ -93,7 +95,6 @@ describe('capability matrix (DEC-ADM)', () => {
         'programme:manage',
         'org:manage',
         'verification:review',
-        'account:escalate',
       ].sort(),
     )
     for (const c of ['org:manage_relationship', 'leadership:manage', 'access:delegate'] as const)

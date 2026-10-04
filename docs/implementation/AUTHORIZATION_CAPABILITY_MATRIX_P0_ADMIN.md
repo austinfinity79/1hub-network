@@ -8,7 +8,6 @@
 |---|---|---|---|---|---|---|
 | `verification:review` | DENY | DENY | ALLOW | ALLOW | ORGANIZATION / PLATFORM | yes |
 | `access:delegate` | DENY | DENY | ALLOW | ALLOW | ORGANIZATION / PLATFORM | no |
-| `account:escalate` | DENY | DENY | ALLOW | ALLOW | ORGANIZATION / PLATFORM | yes |
 | `venture:review` | DENY | DENY | DENY | ALLOW | PLATFORM | no |
 | `org:lifecycle` | DENY | DENY | DENY | ALLOW | PLATFORM | no |
 | `feedback:manage` | DENY | DENY | DENY | ALLOW | PLATFORM | no |
@@ -16,6 +15,8 @@
 | `account:administer` | DENY | DENY | DENY | ALLOW | PLATFORM | no |
 
 Delegable existing capabilities: `org:read`, `member:read`, `membership:confirm`, `event:manage`, `programme:read`, `programme:manage`, `org:manage`. Never delegable: `org:manage_relationship`, `leadership:manage`, `access:delegate`, every platform capability. *(impl.)* `network:read` is on neither contract list and is treated as not delegable (fail closed).
+
+**Withdrawn — [DEC-ADM-D04](../decisions/DECISION_LOG.md#dec-adm-d04):** `account:escalate` (HUB_COMMUNITY_LEADER: was ALLOW) no longer exists. Account Ops: PLATFORM_ADMIN ALLOW (`account:administer`); HUB / Chapter / CLB leader, HUB_MEMBER, INDIVIDUAL_USER: DENY — no capability, no account-request route. A stored row naming it is discarded as unknown (fail closed).
 
 ## B. Delegated grants (PD-6)
 
@@ -27,7 +28,7 @@ Delegable existing capabilities: `org:read`, `member:read`, `membership:confirm`
 | who grants | PLATFORM_ADMIN, or `access:delegate` on the target unit or on its canonical parent |
 | reach | own unit and direct children: HUB Tổng → Chapter, Chapter → CLB, CLB → itself; never a parent, sibling, other branch or grandchild |
 | ceiling | the whole role only by a whole-role holder at the source unit; a capability only if delegable and held there |
-| revoke | the grantor, `access:delegate` on the unit or its parent, or PLATFORM_ADMIN; ACTIVE → CLOSED, `valid_to` now |
+| revoke | [DEC-ADM-D02](../decisions/DECISION_LOG.md#dec-adm-d02): only a CURRENT holder of `access:delegate` on exactly the grant's unit (same-unit co-leader), or PLATFORM_ADMIN; never a parent, child or sibling unit, never grantorship alone, never after losing `access:delegate` (re-read FOR SHARE in the transaction); ACTIVE → CLOSED, `valid_to` now |
 | audit | `ACCESS_GRANTED` / `ACCESS_REVOKED`: grantor, grantee, role, capability, scope |
 
 ## C. Authority and reach
