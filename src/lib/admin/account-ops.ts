@@ -598,7 +598,7 @@ export async function refuseOwnRequestDecision(
   throw forbidden()
 }
 
-/** POST /ops/account-requests/{id}/process|decline `{ reason? }`. */
+/** POST /ops/account-requests/{id}/process|decline `{ reason? }` — required to decline a deletion. */
 export async function decideAccountRequest(
   accountId: string,
   id: string,
@@ -615,10 +615,11 @@ export async function decideAccountRequest(
   if (!entry) throw notFound()
   if (entry.targetAccountId === accountId) throw forbidden()
   const found = entry.dto
-  // A user's own data-removal request is a privacy request: processed, never declined
-  // (WF02 would otherwise keep showing the declined row and refuse a new one).
-  if (decision === 'DECLINE' && found.kind === 'SELF_DELETION')
-    throw conflict("A user's own deletion request can only be processed.")
+  // PO decision (ADMIN-PROD-05-FIX): an account-deletion request — the user's own or a
+  // leader's SOFT_DELETE escalation — may be rejected (DECLINED), but only with a reason
+  // stating the legal / retention / security / operational obligation that blocks it.
+  if (decision === 'DECLINE' && found.action === 'SOFT_DELETE' && !reason)
+    throw invalid('reason', 'required')
   return inTransaction(exec, async (tx) => {
     const table =
       found.kind === 'ESCALATION' ? 'account_action_requests' : 'account_deletion_requests'

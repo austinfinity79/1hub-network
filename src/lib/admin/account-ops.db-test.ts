@@ -324,29 +324,6 @@ describe('leader escalations (file only) and admin processing', () => {
 })
 
 describe('review hardening', () => {
-  const selfDeletion = async (who: Person) =>
-    (
-      await listAccountRequests(P.admin.account, new URLSearchParams({ kind: 'SELF_DELETION' }))
-    ).items.find((i) => i.target.profile_id === P[who].profile)!
-
-  it('a user’s own deletion request is processed, never declined; its requester comes from the WF02 audit', async () => {
-    await requestAccountDeletion(P.memberC.account, 'adm05')
-    await query(`INSERT INTO account_deletion_requests (account_id) VALUES ($1)`, [
-      P.memberB.account,
-    ])
-    const filed = await selfDeletion('memberC')
-    expect(filed.requested_by_profile_id).toBe(P.memberC.profile)
-    // Recorded without the user's own request (no WF02 audit): no requester is invented.
-    expect((await selfDeletion('memberB')).requested_by_profile_id).toBeNull()
-    expect(
-      await failure(decideAccountRequest(P.admin.account, filed.id, 'DECLINE', {}, 'adm05')),
-    ).toMatchObject({ status: 409 })
-    expect((await getAccountRequest(P.admin.account, filed.id)).status).toBe('PENDING')
-    expect(
-      await decideAccountRequest(P.admin.account, filed.id, 'PROCESS', {}, 'adm05'),
-    ).toMatchObject({ status: 'PROCESSED' })
-  })
-
   it('an admin never decides a request about their own account; the attempt is audited', async () => {
     const [own] = await query<{ id: string }>(
       `INSERT INTO account_deletion_requests (account_id) VALUES ($1) RETURNING id::text`,
@@ -410,5 +387,181 @@ describe('review hardening', () => {
     expect(await resolveSession(token)).toBeNull()
     await query(`UPDATE user_accounts SET status = 'ACTIVE' WHERE id = $1`, [P.memberB.account])
     expect(await resolveSession(token)).not.toBeNull()
+  })
+})
+
+describe('account-deletion requests: processed, or rejected with a reason (PO, ADMIN-PROD-05-FIX)', () => {
+  const REASON = 'Nghĩa vụ lưu giữ pháp lý: hồ sơ đang có tranh chấp chưa giải quyết.'
+  const decide = (who: Person, id: string, decision: 'PROCESS' | 'DECLINE', body: unknown = {}) =>
+    decideAccountRequest(P[who].account, id, decision, body, 'adm05')
+  async function fileOwn(who: Person) {
+    await requestAccountDeletion(P[who].account, 'adm05')
+    const queue = await listAccountRequests(
+      P.admin.account,
+      new URLSearchParams({ kind: 'SELF_DELETION' }),
+    )
+    return queue.items.find((i) => i.target.profile_id === P[who].profile)!
+  }
+  async function kept(who: Person) {
+    const [row] = await query<{ accounts: number; profiles: number; requests: number }>(
+      `SELECT (SELECT count(*)::int FROM user_accounts WHERE id = $1) AS accounts,
+              (SELECT count(*)::int FROM individual_profiles WHERE account_id = $1) AS profiles,
+              (SELECT count(*)::int FROM account_deletion_requests WHERE account_id = $1) AS requests`,
+      [P[who].account],
+    )
+    return row!
+  }
+  async function history(requestId: string) {
+    return query<{ action: string; before: unknown; after: Record<string, unknown> | null }>(
+      `SELECT action, before_data AS before, after_data AS after FROM audit_events
+        WHERE resource_id = $1 ORDER BY created_at, action`,
+      [requestId],
+    )
+  }
+
+  it('names the requester only when the WF02 audit proves the user filed it', async () => {
+    const own = await fileOwn('memberC')
+    expect(own.requested_by_profile_id).toBe(P.memberC.profile)
+    await query(`INSERT INTO account_deletion_requests (account_id) VALUES ($1)`, [
+      P.memberB.account,
+    ])
+    const recorded = (
+      await listAccountRequests(P.admin.account, new URLSearchParams({ kind: 'SELF_DELETION' }))
+    ).items.find((i) => i.target.profile_id === P.memberB.profile)!
+    expect(recorded.requested_by_profile_id).toBeNull()
+  })
+
+  it('rejects only with a reason; nothing about the account changes; the reason is audited', async () => {
+    const own = await fileOwn('memberC')
+    for (const body of [{}, undefined, null, { reason: '   ' }, { reason: null }])
+      expect(
+        await failure(decide('admin', own.id, 'DECLINE', body)),
+        JSON.stringify(body),
+      ).toMatchObject({ status: 422, fields: { reason: 'required' } })
+    expect(
+      await failure(decide('admin', own.id, 'DECLINE', { reason: 'x'.repeat(501) })),
+    ).toMatchObject({ status: 422, fields: { reason: 'too_long' } })
+    expect(
+      await failure(decide('admin', own.id, 'DECLINE', { reason: REASON, hard: true })),
+    ).toMatchObject({ status: 422, fields: { hard: 'not_accepted' } })
+    expect((await getAccountRequest(P.admin.account, own.id)).status).toBe('PENDING')
+
+    const rejected = await decide('admin', own.id, 'DECLINE', { reason: ` ${REASON} ` })
+    expect(rejected).toMatchObject({
+      status: 'DECLINED',
+      handler_profile_id: P.admin.profile,
+      target: { account_status: 'ACTIVE', profile_status: 'ACTIVE' },
+    })
+    expect(rejected.handled_at).not.toBeNull()
+    expect(await status('memberC')).toEqual({ account: 'ACTIVE', profile: 'ACTIVE' })
+    expect(await kept('memberC')).toEqual({ accounts: 1, profiles: 1, requests: 1 })
+    const trail = await history(own.id)
+    expect(trail.map((h) => h.action)).toEqual([
+      'ACCOUNT_DELETION_REQUESTED',
+      'ACCOUNT_REQUEST_DECLINED',
+    ])
+    expect(trail[1]).toMatchObject({
+      before: { status: 'PENDING' },
+      after: { status: 'DECLINED', action: 'SOFT_DELETE', reason: REASON },
+    })
+  })
+
+  it('a leader’s SOFT_DELETE escalation also needs a reason; LOCK / DEACTIVATE keep it optional', async () => {
+    await query(
+      `INSERT INTO community_memberships (profile_id, organization_id, state, source, started_at)
+       VALUES ($1, $2, 'ACTIVE', 'PRESEED', now()), ($3, $2, 'ACTIVE', 'PRESEED', now())`,
+      [P.memberA.profile, O.CH_A, P.memberB.profile],
+    )
+    const file = (target: Person, action: string) =>
+      fileAccountRequest(P.chALeader.account, O.CH_A, P[target].profile, { action }, 'adm05')
+    const softDelete = await file('memberA', 'SOFT_DELETE')
+    expect(await failure(decide('admin', softDelete.id, 'DECLINE'))).toMatchObject({
+      status: 422,
+      fields: { reason: 'required' },
+    })
+    expect((await decide('admin', softDelete.id, 'DECLINE', { reason: REASON })).status).toBe(
+      'DECLINED',
+    )
+    const lock = await file('memberB', 'LOCK')
+    expect((await decide('admin', lock.id, 'DECLINE')).status).toBe('DECLINED')
+    expect(await status('memberA')).toEqual({ account: 'ACTIVE', profile: 'ACTIVE' })
+  })
+
+  it('processing follows the deactivate / privacy flow and deletes nothing', async () => {
+    const own = await fileOwn('memberC')
+    const done = await decide('admin', own.id, 'PROCESS')
+    expect(done).toMatchObject({
+      status: 'PROCESSED',
+      handler_profile_id: P.admin.profile,
+      target: { account_status: 'DEACTIVATED', profile_status: 'DEACTIVATED' },
+    })
+    expect(await kept('memberC')).toEqual({ accounts: 1, profiles: 1, requests: 1 })
+    expect(await failure(run('admin', 'memberC', 'REACTIVATE'))).toMatchObject({ status: 409 })
+    const actions = (await history(own.id)).map((h) => h.action)
+    expect(actions[0]).toBe('ACCOUNT_DELETION_REQUESTED')
+    expect(actions).toContain('ACCOUNT_REQUEST_PROCESSED')
+    expect(actions).not.toContain('ACCOUNT_REQUEST_DECLINED')
+  })
+
+  it('a decided request is final: duplicate or opposite decisions answer 409', async () => {
+    const processed = await fileOwn('memberC')
+    await decide('admin', processed.id, 'PROCESS')
+    expect(await failure(decide('admin', processed.id, 'PROCESS'))).toMatchObject({ status: 409 })
+    expect(
+      await failure(decide('admin', processed.id, 'DECLINE', { reason: REASON })),
+    ).toMatchObject({ status: 409 })
+    const declined = await fileOwn('memberB')
+    await decide('admin', declined.id, 'DECLINE', { reason: REASON })
+    expect(
+      await failure(decide('admin', declined.id, 'DECLINE', { reason: REASON })),
+    ).toMatchObject({ status: 409 })
+    expect(await failure(decide('admin', declined.id, 'PROCESS'))).toMatchObject({ status: 409 })
+    expect(await status('memberB')).toEqual({ account: 'ACTIVE', profile: 'ACTIVE' })
+    for (const id of [processed.id, declined.id]) {
+      const decisions = (await history(id)).filter((h) =>
+        ['ACCOUNT_REQUEST_PROCESSED', 'ACCOUNT_REQUEST_DECLINED'].includes(h.action),
+      )
+      expect(decisions).toHaveLength(1)
+    }
+  })
+
+  it('only PLATFORM_ADMIN decides: leaders, members and the requester see 404', async () => {
+    const own = await fileOwn('memberC')
+    for (const who of ['chALeader', 'hubLeader', 'clbA1Leader', 'memberA', 'memberC'] as const)
+      for (const decision of ['PROCESS', 'DECLINE'] as const)
+        expect(
+          await failure(decide(who, own.id, decision, { reason: REASON })),
+          `${who} ${decision}`,
+        ).toMatchObject({ status: 404 })
+    expect(
+      await failure(
+        decide('admin', '00000000-0000-4000-8000-000000000000', 'DECLINE', { reason: REASON }),
+      ),
+    ).toMatchObject({ status: 404 })
+    expect(await failure(decide('admin', 'not-a-uuid', 'PROCESS'))).toMatchObject({ status: 404 })
+    expect((await getAccountRequest(P.admin.account, own.id)).status).toBe('PENDING')
+    expect(await status('memberC')).toEqual({ account: 'ACTIVE', profile: 'ACTIVE' })
+  })
+
+  it('a concurrent process and reject resolve to exactly one decision', async () => {
+    for (const who of ['memberC', 'memberB'] as const) {
+      const own = await fileOwn(who)
+      const race = await Promise.allSettled([
+        decide('admin', own.id, 'PROCESS'),
+        decide('admin', own.id, 'DECLINE', { reason: REASON }),
+      ])
+      const won = race.filter((r) => r.status === 'fulfilled')
+      expect(won).toHaveLength(1)
+      for (const r of race)
+        if (r.status === 'rejected') expect(r.reason).toMatchObject({ status: 409 })
+      const final = (await getAccountRequest(P.admin.account, own.id)).status
+      expect(final).toBe(won[0]!.value.status)
+      expect((await status(who)).account).toBe(final === 'PROCESSED' ? 'DEACTIVATED' : 'ACTIVE')
+      expect(await kept(who)).toEqual({ accounts: 1, profiles: 1, requests: 1 })
+      const decisions = (await history(own.id)).filter((h) =>
+        ['ACCOUNT_REQUEST_PROCESSED', 'ACCOUNT_REQUEST_DECLINED'].includes(h.action),
+      )
+      expect(decisions).toHaveLength(1)
+    }
   })
 })

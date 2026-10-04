@@ -1597,7 +1597,7 @@ Leader escalations and users' own deletion requests, oldest first: `?status=` (P
 One request; non-admins and unknown ids `404`.
 
 ### POST `/ops/account-requests/{requestId}/process`
-And `…/decline`; `{ reason? }`; PENDING only (`409`); processing executes the requested action as above. A user's own deletion request (SELF_DELETION) can only be processed (decline `409`); a request about the admin's own account `403`.
+And `…/decline`; `{ reason? }`; PENDING only (`409`); processing executes the requested action as above. Declining a deletion request (a user's own SELF_DELETION, or a SOFT_DELETE escalation) requires a `reason` stating the legal / retention / security / operational obligation that blocks it (missing or blank `422` `reason: required`); the request becomes `DECLINED` (the PO's REJECTED, [DEC-ADM-PD7.1](../decisions/DECISION_LOG.md#dec-adm-pd7-1)), the account is untouched and the reason is kept in the audit. A request about the admin's own account `403`. Nothing is ever hard-deleted.
 
 ### POST `/ops/organizations/{orgId}/members/{profileId}/account-requests`
 A leader (`account:escalate` on exactly the unit) files `{ action: LOCK | DEACTIVATE | SOFT_DELETE, reason? }` for an ACTIVE member of that unit → `201`; a pending duplicate `409`; not a member `404`; another unit `403`. Leaders never execute.

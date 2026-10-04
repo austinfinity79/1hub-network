@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type APIResponse } from '@playwright/test'
 
+import { requestAccountDeletion } from '../../../src/lib/account/settings'
 import { ADM_PEOPLE, clearAdminFixture, seedAdminFixture } from '../../../src/lib/admin/testing'
 import { closePool, query } from '../../../src/lib/db/client'
 import { removeAsset, saveAvatarAsset } from '../../../src/lib/media/avatar-storage'
@@ -233,5 +234,42 @@ test.describe('ADMIN-PROD-05 operations API', () => {
       }),
       422,
     )
+  })
+
+  test('a deletion request is rejected only with a reason; the decision is final; leaders cannot decide', async ({
+    request,
+  }) => {
+    await requestAccountDeletion(P.memberC.account, 'adm05-http')
+    const [row] = await query<{ id: string }>(
+      `SELECT id::text FROM account_deletion_requests WHERE account_id = $1`,
+      [P.memberC.account],
+    )
+    const decline = `/api/v1/ops/account-requests/${row!.id}/decline`
+    await login(request, 'chALeader')
+    await refused(await call(request, 'post', decline, { data: { reason: 'Không' } }), 404)
+
+    await login(request, 'admin')
+    const missing = await call(request, 'post', decline)
+    await refused(missing, 422)
+    expect(((await missing.json()) as { error: { fields: unknown } }).error.fields).toEqual({
+      reason: 'required',
+    })
+    await refused(await call(request, 'post', decline, { data: { reason: '  ' } }), 422)
+    const headers = { 'Idempotency-Key': `adm05-decline-${row!.id}` }
+    const data = { reason: 'Nghĩa vụ lưu giữ pháp lý: hồ sơ đang có tranh chấp.' }
+    const rejected = await call(request, 'post', decline, { data, headers })
+    expect(rejected.status()).toBe(200)
+    expect(await rejected.json()).toMatchObject({ kind: 'SELF_DELETION', status: 'DECLINED' })
+    const replay = await call(request, 'post', decline, { data, headers })
+    expect(await replay.json()).toEqual(await rejected.json())
+    await refused(
+      await call(request, 'post', `/api/v1/ops/account-requests/${row!.id}/process`),
+      409,
+    )
+    const [account] = await query<{ status: string }>(
+      `SELECT status::text AS status FROM user_accounts WHERE id = $1`,
+      [P.memberC.account],
+    )
+    expect(account!.status).toBe('ACTIVE')
   })
 })

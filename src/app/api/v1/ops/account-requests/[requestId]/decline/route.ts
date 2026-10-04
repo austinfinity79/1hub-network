@@ -5,8 +5,8 @@ import { adminRequest } from '@/lib/admin/admin-route'
 import { fingerprintRequest, runIdempotent } from '@/lib/idempotency/store'
 
 /**
- * POST /api/v1/ops/account-requests/{requestId}/decline — 05 §28 (A11): `{ reason? }`;
- * PENDING only (409 otherwise); processing executes the requested action.
+ * POST /api/v1/ops/account-requests/{requestId}/decline — 05 §28 (A11): `{ reason? }`,
+ * required (422) when the request is an account deletion; PENDING only (409 otherwise).
  */
 export const dynamic = 'force-dynamic'
 
