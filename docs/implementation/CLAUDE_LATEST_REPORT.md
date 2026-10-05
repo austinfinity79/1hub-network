@@ -1,37 +1,37 @@
 # Claude Task Report
 
 ## Task
-S1-UAT-05 — WF02 profile consistency: FB-09 tags, FB-10 no skills, experience "Loại hình" / "Địa điểm", twelve-item completion. Reports: [task](reports/S1-UAT-05-profile.md) · [evidence](reports/S1-UAT-05-evidence.md).
+S1-UAT-07 — Team invitations: e-mail invitation to US-02.11, invite link in parallel (US-02.12, FB-18), invitation detail in the workspace shell (FB-14). Reports: [task](reports/S1-UAT-07-invite.md) · [evidence](reports/S1-UAT-07-evidence.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE — READY FOR CHATGPT/PO S1-UAT-05 REVIEW.** No other task started. STOP.
+**PASS_WITH_EVIDENCE — READY FOR CHATGPT/PO S1-UAT-07 REVIEW.** US-02.11 PASS (AC1 PASS_WITH_DEVIATION, privacy, PO 05/10) · US-02.12 PASS · FB-14 PASS · FB-18 PASS. No other task started. STOP.
 
 ## Scope implemented
-Built on DB-SAFETY-01 (`e84308f`). One completion function, twelve equal items (US-01.12); one tag control for domains and specialisations (stage 2, /me dialog, editor) with free text stored `UNNORMALIZED`; stage 2 needs one of each to continue; skills removed from every screen and from completion (stored data kept); experience type and place in the shared dialog and on /me. Decisions [DEC-S1P](../decisions/DECISION_LOG.md#dec-s1p); contract amendment A14.
+Migration 020 (D1): e-mail invitation expiry column and `venture_invite_links` (hash only, one open link per venture). E-mail (D4): 7-day expiry, re-send extends the same row, current member refused, ≤ 10 per send, ≤ 20 people. Link (D2 / D3): owner-only copy / regenerate on PRJ2 and the team page; receiver `/moi/:code` (WF02-S09) with auth return and explicit "Tham gia" as Thành viên · Xem; one invalid answer; TEAM_FULL. FB-14 (D5): detail in WorkspaceShell with ME7's card. Decisions [DEC-S1I](../decisions/DECISION_LOG.md#dec-s1i); contract amendment A15; DEC-PDF-D2 / D-T1 marked superseded.
 
 ## Files changed
-New: migration 019, `src/components/ui/tag-input.{tsx,module.css,test.ts}`, `profile-sprint1.db-test.ts`, `profile-migration.db-test.ts`, `tests/visual/specs/s1-uat-05-profile.spec.ts`, 2 reports. Changed: completion, profile, vocabulary, onboarding state, admin category ops, stage 2 form / page, experience dialog, /me page / model / dialogs / CSS, editor page / form / CSS, step 4 page, onboarding intro, DECISION_LOG, API contract, P0_STATUS; tests (DB helpers and suites, e2e helper, 13 specs, UAT uc01–uc03).
+New: migration 020, `src/lib/venture/invite-link.ts`, 4 API routes (`team/invite-link`, `…/regenerate`, `invite-links/[code]`, `…/join`), `/moi/[code]` page + card, `projects/invite-link.{tsx,module.css}`, `invite-link.db-test.ts`, `invite-link-migration.db-test.ts`, `s1-uat-07-invite.spec.ts`, 2 reports. Changed: `team.ts`, team route helper, invitations route, error codes, audit codes, routes registry + screen contracts, wizard team step / CSS, team view, invitation detail, team page, team copy, projects view, seed (schema-agnostic), `.env.example`, DECISION_LOG, API contract, P0_STATUS, living UAT docs; tests (8 DB suites, 13 specs, UAT UC07 / UC08).
 
 ## Migrations / data
-019 (additive, documented lossless rollback): `vocab_status` + `UNNORMALIZED`; `profile_experience.employment_type`, `location`. Applied to the isolated `hubnetwork_s1profile` only; shared `hubnetwork_p0` untouched (017).
+020 (additive, documented rollback refused while a link exists): `project_members.invite_expires_at` (pending rows now + 7 days) + CHECK; `venture_invite_links`. Applied to `hubnetwork_s1invite` only; shared `hubnetwork_p0` untouched (ledger ends at 017). **Deploy prerequisite: `INVITE_LINK_SECRET` (≥ 32 chars) in the server env.**
 
 ## Tests / build
-format, lint, typecheck, build PASS · unit 42 / 444 · DB 53 / 825 (migration 019 fresh / upgrade / recovery) · S1-UAT-05 spec 11 / 11 · UAT L1-L2 19 / 19 · **protected regression SPEC_COUNT 95 · TEST_COUNT 1248 · PASS 1219 · FAIL 0 · SKIP 29 (opt-in) · FLAKY 0** · server log 0 unexpected 5xx, 0 hydration.
+format, lint, typecheck, build PASS · unit 42 / 444 · DB 55 / 848 (migration 020 fresh / upgrade / recovery) · S1-UAT-07 spec 11 / 11 · UAT L1-L2 19 / 19 · **protected regression SPEC_COUNT 96 · TEST_COUNT 1260 · PASS 1231 · FAIL 0 · SKIP 29 (opt-in) · FLAKY 0** on `6a3a485` · server log 0 5xx, 0 hydration, 0 token.
 
 ## Visual QA
-1440 / 768 / 390 clean; ACC-07 and WF02-S02 pixel PASS with recorded INTENTIONAL-SCOPE regions (FB-09 / FB-10).
+1440 / 768 / 390 clean for PRJ2 link row, team invite panel, receiver, invalid card, invitation detail. PRJ2 pixel PASS with the INTENTIONAL region updated (row text says what the link grants instead of an address).
 
 ## Deviations / blockers
-None blocking. PO review: the /me expertise note copy; "Vị trí" completion item must count a typed city abroad once S1-UAT-03 decides it; consolidating `UNNORMALIZED` tags (HUB) has no tool yet.
+None blocking. PO review: US-02.11 AC1 note not shown (privacy); "Cố vấn" not added; PRJ2 link row text; 20-pending bound replaced by 20 people per team.
 
 ## Git
-- Branch: `feat/s1-uat-05-profile`; start HEAD `e84308f` (DB-SAFETY-01 on `29b25ad`), unchanged by others
-- Implementation commit: `2f73940`
+- Branch: `feat/s1-uat-07-invite`; start HEAD `6ab6cbc`, unchanged by others
+- Implementation commit: `d37c36c` (+ `6a3a485` stale WF03 audit-code test)
 - Report/final commit: the docs commit after it
 - Remote: `origin`
 - Push status: NOT RUN (task: no push)
-- Remote HEAD: origin/main `edd3d24`; production `78f21f2` (not touched)
+- Remote HEAD: origin/main `edd3d24`; production `78f21f2` (last known, not touched)
 - Working tree: clean after the report commit
 
 ## Recommended next task
-ChatGPT / PO review of S1-UAT-05. S1-UAT-06 not started.
+ChatGPT / PO review of S1-UAT-07. No next task started.

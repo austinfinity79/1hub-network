@@ -12,7 +12,7 @@ Automated in `tests/visual/specs/wf02-uat-journey.spec.ts` (Playwright, 1440×90
 | E | Stage | PILOT ("Pilot / Thử nghiệm") stored by id and answered with its code; changed to "Đang bán" in the editor; ME7 shows it (DEC-PDF-D5) | PASS |
 | F | Creator role | Co-founder stored and shown in the wizard, the editor and the owner row; 0 role assignments, leadership or community memberships; session capabilities `[]`; `/ops/network` 404; "Thành viên" as own role is still OWNER | PASS |
 | G | E-mail invitation | PRJ2 → PENDING_CONFIRMATION with EDIT and Co-founder, no profile; the outbox message is the approved copy (inviter, venture, role, "Xem lời mời" to `/projects`), no level, no token (DEC-PDF-D4) | PASS |
-| H | Link invitation | DEFERRED (DEC-PDF-D2): "Sao chép link" is inert with the reason "Tính năng giai đoạn sau", pressing it sends nothing; link paths answer 404 / 405 | PASS |
+| H | Link invitation | **Superseded by DEC-S1I (S1-UAT-07): the link is live, owner-only, joined by "Tham gia"; see `s1-uat-07-invite.spec.ts`.** Was DEFERRED (DEC-PDF-D2): "Sao chép link" is inert with the reason "Tính năng giai đoạn sau", pressing it sends nothing; link paths answer 404 / 405 | PASS |
 | I | Accept | ME7 banner → "Chấp nhận" → ACTIVE at the invited level EDIT; `/me/ventures` MEMBER / EDIT; the member may update the venture (200) and may not invite (403) | PASS |
 | J | IDOR | another member gets 404 on the venture, team and invitation APIs and pages; the venture name does not leak | PASS |
 | K | Role spoof | `x-role`, `x-permission`, `x-profile-id` headers, query values and body `permission: OWNER`, `owner_profile_id`, `status` → 403 or 422; level unchanged; RBAC rows 0 | PASS |

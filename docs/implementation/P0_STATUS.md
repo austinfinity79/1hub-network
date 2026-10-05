@@ -28,6 +28,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | FB-01 "Góp ý" (all WF01 / WF02 screens, homepage, /about, /library) | NEW (S1-UAT-02, local, not deployed) — shared popup, `POST /feedback` into the Admin feedback store; [DEC-S1F](../decisions/DECISION_LOG.md#dec-s1f), [report](reports/S1-UAT-02-feedback.md) |
 | `/about` Humans of HUB + Hoạt động tiêu biểu | REFRESHED (S1-UAT-08A, local, not deployed) — 34 current-term people and 43 activities from the PO workbook; PO acceptance pending; [DEC-S1H](../decisions/DECISION_LOG.md#dec-s1h), [report](reports/S1-UAT-08A-about.md) |
 | WF02 profile consistency (FB-09 tags, FB-10 no skills, experience type / place, 12-item completion) | NEW (S1-UAT-05, local, not deployed) — migration 019; [DEC-S1P](../decisions/DECISION_LOG.md#dec-s1p), [report](reports/S1-UAT-05-profile.md) |
+| WF02 team invitations (US-02.11 e-mail expiry / re-send, US-02.12 invite link, FB-14, FB-18) | NEW (S1-UAT-07, local, not deployed) — migration 020; deploy needs `INVITE_LINK_SECRET`; [DEC-S1I](../decisions/DECISION_LOG.md#dec-s1i), [report](reports/S1-UAT-07-invite.md) |
 | WF01-S11 Reset password `/auth/reset-password` | NEW (S1-UAT-01) — new password from the e-mailed `#token=`; revokes every session; [DEC-S1A-D5](../decisions/DECISION_LOG.md#dec-s1a-d5) |
 | WF01-S10 Onboarding stage 2 · ACC-07 `/onboarding/capability` | NEW — fields, specialisations (at most five), skills from the controlled vocabulary, experience with period, links; [DEC-L1R-D4](../decisions/DECISION_LOG.md#dec-l1r-d4) |
 

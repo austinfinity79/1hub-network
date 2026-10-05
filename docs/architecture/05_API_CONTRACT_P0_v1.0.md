@@ -1342,11 +1342,11 @@ Venture DTO adds `stage`, `permission` (`OWNER | EDIT | VIEW`, the viewer's own)
 
 - `permission` is `EDIT` or `VIEW` (default `VIEW`); `OWNER` is ownership and is never given;
 - the invitation is e-mailed inside the same transaction; when the e-mail cannot be sent nothing is created and the answer is `500 INVITATION_EMAIL_DELIVERY_FAILED` (decision code, DEC-L2R-D8);
-- at most 20 pending invitations per venture (`422`, `email: too_many_pending`);
+- ~~at most 20 pending invitations per venture (`422`, `email: too_many_pending`)~~ — replaced by A15 §32.2: at most 20 people per team (`409 TEAM_FULL`);
 - sends in the last 24 hours, counted over every state: at most 3 to one address of one venture and 50 by one inviting profile; beyond that `429 INVITATION_RATE_LIMITED` (decision code, DEC-L2R-D13) and nothing is created or sent;
 - nobody joins before accepting (§5.4 unchanged).
 
-`PATCH /ventures/{ventureId}/team/{membershipId}` accepts `role_label` and/or `permission` on an `ACTIVE` member. Team rows carry `permission`; the owner row carries `OWNER` and the owner's role label. Invitation by link is not part of the contract (D-T1).
+`PATCH /ventures/{ventureId}/team/{membershipId}` accepts `role_label` and/or `permission` on an `ACTIVE` member. Team rows carry `permission`; the owner row carries `OWNER` and the owner's role label. Invitation by link is not part of the contract (D-T1) — superseded: see A15 (§32).
 
 ## 19.4 Profile
 
@@ -1680,3 +1680,29 @@ Source: [DEC-S1P](../decisions/DECISION_LOG.md#dec-s1p) (S1-UAT-05; FB-09, FB-10
 | DTO | domain / specialisation refs carry `status` `ACTIVE` · `ARCHIVED` · `UNNORMALIZED`; experience items carry `employment_type`, `location` |
 | stage 2 | `PUT /me/onboarding/stage` `CAPABILITY` → `422 ONBOARDING_REQUIREMENTS_MISSING` (`domains` / `specializations: missing`) without one of each |
 | completion | §4.3 `GET /me/profile/completion` `groups` are the twelve Sprint 1 items (order of US-01.12), `weight` 8.33, `percent` = round(complete × 100 / 12) |
+
+# 32. Amendment A15 — Sprint1 team invitations: expiry and invite link (2026-10-05)
+
+Source: [DEC-S1I](../decisions/DECISION_LOG.md#dec-s1i) (S1-UAT-07; US-02.11, US-02.12, FB-14, FB-18). Additive to §19.3; migration 020. E-mail invitation and invite link are two parallel flows.
+
+### `POST /ventures/{ventureId}/team/invitations` — changes
+`201` a new invitation; `200` with `resent: true` when the address already has a live pending invitation (same row re-sent, `expires_at` + 7 days, role and level unchanged; 3 sends per address per 24 h → `429 INVITATION_RATE_LIMITED`). Rows carry `expires_at` and `expired`. An active member's address → `422` `email: already_member`. Expired invitations cannot be accepted (`409 MEMBERSHIP_INVALID_TRANSITION`) and leave `GET /me/venture-invitations`.
+
+### Invite link (owner, `venture:team_manage`)
+| Endpoint | Answer |
+|---|---|
+| `GET /ventures/{ventureId}/team/invite-link` | `{ link: { path, expires_at } \| null }` |
+| `POST /ventures/{ventureId}/team/invite-link` | `{ link, created }`: the live link, created when none is live (7 days) |
+| `POST /ventures/{ventureId}/team/invite-link/regenerate` | `{ link }`: a new link; the previous one stops at once |
+
+### Receiver (signed in, onboarding done)
+| Endpoint | Answer |
+|---|---|
+| `GET /invite-links/{code}` | `{ venture: { name, type }, role_label: "Thành viên", permission: "VIEW", expires_at, membership }` |
+| `POST /invite-links/{code}/join` | empty body → `{ venture_id, joined }`; any field → `422 not_accepted`; already owner / member → `joined: false` |
+
+## 32.1 Link security
+`path` = `/moi/{slug}-{token}`; token = 160-bit HMAC of the link id with the server secret `INVITE_LINK_SECRET` (deploy prerequisite; absent → `500 INVITE_LINK_UNAVAILABLE`). Only SHA-256(token) is stored; the token is never logged or written to audit. Unknown, malformed, expired, regenerated, or archived-venture links → one answer, `404 INVITE_LINK_INVALID`.
+
+## 32.2 Team size
+At most 20 people: owner + active members + live pending invitations. An invitation or a join beyond it → `409 TEAM_FULL`. Audit: `VENTURE_TEAM_INVITATION_RESENT`, `VENTURE_INVITE_LINK_CREATED`, `VENTURE_INVITE_LINK_REGENERATED`, `VENTURE_TEAM_JOINED` (with `invite_link_id`).

@@ -56,7 +56,7 @@ Journey 3 — member profile + venture (canonical Project / Startup, team). Name
 | Persona · account | owner + your **second** address (ACTIVE venture member) |
 | Start URL | `/projects/<id>/team` |
 | Preconditions | a venture of yours |
-| Steps | 1. "Mời thành viên": your second address, a role label, permission "Biên tập" or "Xem". 2. Second window: sign in with that address → the invitation → "Nhận lời mời" |
+| Steps | 1. "Mời thành viên": your second address, a role label, permission "Biên tập" or "Xem". 2. Second window: sign in with that address → the invitation → "Chấp nhận" (was "Nhận lời mời", S1-UAT-07) |
 | Expected UI | owner sees a pending row, then an ACTIVE member; the member sees the venture read-only ("Xem") or editable ("Biên tập") |
 | Expected route | member: `/projects` → `/projects/<id>` pages |
 | Expected data / state | one membership row, ACTIVE; the owner stays the owner |
