@@ -42,13 +42,14 @@ HMAC-SHA256(secret, "venture-invite-link:v1:" + link id), first 160 bits (≥ 12
 ## Deviations (PO review)
 | Item | Disposition |
 |---|---|
-| US-02.11 AC1 "Chưa có tài khoản HUB" row note | not shown (PO 05/10, privacy: DEC-WF02-S06, DEC-S1A-D11) → PASS_WITH_DEVIATION |
-| UAT role "Cố vấn" | not added; three roles kept (PO 05/10, D4) |
+| US-02.11 AC1 "Chưa có tài khoản HUB" row note | not shown (PO 05/10, privacy: DEC-WF02-S06, DEC-S1A-D11) → PO_APPROVED_SECURITY_DEVIATION (not a FAIL) |
+| UAT role "Cố vấn" | ADDED in [S1-UAT-07-FIX-01](S1-UAT-07-FIX-01.md): PRJ2 offers Founder · Co-founder · Thành viên · Cố vấn |
 | PRJ2 link row text | board shows an address; build says what the link grants, since no link exists until the owner asks (no link minted on view). INTENTIONAL, recorded in `wf02-l2-revision` |
 | Old 20-pending bound (DEC-L2R-D8, `too_many_pending`) | replaced by 20 people per team (`TEAM_FULL`), A15 §32.2 |
 
 ## Related
 - [S1-UAT-07-evidence](S1-UAT-07-evidence.md)
+- [S1-UAT-07-FIX-01](S1-UAT-07-FIX-01.md)
 - [DECISION_LOG DEC-S1I](../../decisions/DECISION_LOG.md#dec-s1i)
 - [S1-UAT-05-profile](S1-UAT-05-profile.md)
 - [CLAUDE_LATEST_REPORT](../CLAUDE_LATEST_REPORT.md)
