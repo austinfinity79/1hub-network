@@ -397,6 +397,22 @@ test.describe('WF01-S10 functional and security', () => {
     expect(text).not.toMatch(/AI đã gợi ý|AI đề xuất/)
   })
 
+  test('FB-08: no guide block and no line under the two field titles', async ({ page }) => {
+    await signInFresh(page.request, 's10')
+    await reach(page.request, 'CAPABILITY', BOARD)
+    await openCapability(page)
+    await expect(page.locator('[data-anchor="guide"]')).toHaveCount(0)
+    const text = await page.locator('main').innerText()
+    expect(text).not.toMatch(
+      /Ngành hoặc chủ đề|Chức năng hoặc năng lực|Chọn các ngành hoặc chủ đề|Chọn những chức năng/,
+    )
+    for (const anchor of ['domains', 'specializations']) {
+      await expect(page.locator(`[data-anchor="${anchor}"] > p`)).toHaveCount(0)
+    }
+    await expect(page.getByPlaceholder('Gõ lĩnh vực, Enter để thêm')).toBeVisible()
+    await expect(page.getByPlaceholder('Gõ chuyên môn, Enter để thêm')).toBeVisible()
+  })
+
   test('keyboard and a11y', async ({ page }) => {
     await signInFresh(page.request, 's10')
     await reach(page.request, 'CAPABILITY')
@@ -434,11 +450,12 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
   /**
    * ACC-07, measured once. The board draws the AI-filled state: an AI banner
    * above the guide and marks on suggested items. Without suggestions the
-   * banner is absent, so every region is compared at its own anchor.
+   * banner is absent, so every region is compared at its own anchor. FB-08
+   * (S1-UAT-09) removed the guide and the line under each field title, so the
+   * guide is not compared and the two field heads are compared to the title row.
    */
   const REF = {
     cardTop: 113,
-    guideTop: 353,
     domainsTop: 495,
     specializationsTop: 663,
     experienceTop: 951,
@@ -446,9 +463,7 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
     ruleTop: 1359,
   } as const
 
-  test('1440×900: header, guide, pickers, records, links and footer match ACC-07', async ({
-    page,
-  }) => {
+  test('1440×900: header, pickers, records, links and footer match ACC-07', async ({ page }) => {
     await signInFresh(page.request, 's10')
     await reach(page.request, 'CAPABILITY')
     await saveProfile(page.request, BOARD)
@@ -487,18 +502,13 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
           dy: card - REF.cardTop,
         },
         {
-          name: 'guide',
-          reference: { x: 310, y: 345, width: 820, height: 130 },
-          dy: (await at('guide')) - REF.guideTop,
-        },
-        {
           name: 'domains-head',
-          reference: { x: 310, y: 490, width: 820, height: 60 },
+          reference: { x: 310, y: 490, width: 820, height: 30 },
           dy: (await at('domains')) - REF.domainsTop,
         },
         {
           name: 'specializations-head',
-          reference: { x: 310, y: 658, width: 820, height: 60 },
+          reference: { x: 310, y: 658, width: 820, height: 30 },
           dy: (await at('specializations')) - REF.specializationsTop,
         },
         {
@@ -527,6 +537,11 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
           class: 'INTENTIONAL-SCOPE',
           reason:
             'S1-UAT-05 (FB-09, FB-10, DEC-S1P): the domain and specialisation chip rows are the free-text tag controls with their "ĐÃ THÊM n/5" counts, and the skill block is gone; those regions are excluded and the sections below are compared at their own anchors',
+        },
+        {
+          class: 'INTENTIONAL-SCOPE',
+          reason:
+            'S1-UAT-09 (FB-08, US-01.09): the "LĨNH VỰC / CHUYÊN MÔN" guide block and the line under the "Lĩnh vực quan tâm" and "Chuyên môn" titles are removed; the guide is not compared and the field heads are compared to their title row',
         },
         {
           class: 'INTENTIONAL-SCOPE',

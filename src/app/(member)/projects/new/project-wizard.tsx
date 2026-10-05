@@ -63,7 +63,7 @@ const COPY = {
   domainHint: 'Chọn từ danh mục chuẩn. Dùng để gợi ý bài toán phù hợp.',
   domainPlaceholder: 'Chọn lĩnh vực',
   summary: 'Một dòng mô tả',
-  summaryHint: 'Dưới 20 từ. Viết như nói với người ngồi cạnh.',
+  summaryHint: 'Dưới 20 từ.',
   stage: 'Giai đoạn',
   stageNote: '· thang trưởng thành, tách khỏi thang gọi vốn',
   role: 'Vai trò của bạn trong đội',

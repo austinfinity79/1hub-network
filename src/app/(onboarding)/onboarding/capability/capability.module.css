@@ -11,53 +11,6 @@
   color: var(--ob-muted);
 }
 
-/* What a field and a specialisation are, side by side. */
-.guide {
-  display: grid;
-  grid-template-columns: calc(50% - 1px) 1fr;
-  margin: 1.8125rem 0 0;
-  border: 1px solid #e4dede;
-  border-radius: 0.625rem;
-}
-
-.guide > div {
-  min-height: 6.9375rem;
-  padding: 0.9375rem 1rem 0.8125rem;
-}
-
-.guide > div + div {
-  border-left: 2px solid #f1eeee;
-}
-
-.guideLabel {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  line-height: 1rem;
-  letter-spacing: 0.09em;
-  color: var(--ob-accent);
-}
-
-.guideBody {
-  margin: 0.3125rem 0 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.25rem;
-  color: var(--ob-ink);
-}
-
-.guideExample {
-  margin: 0.3125rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.0625rem;
-  color: var(--ob-muted);
-}
-
-.guide + .block {
-  margin-top: 1.8125rem;
-}
-
 .block {
   margin-top: 1.875rem;
   padding: 0;
@@ -375,19 +328,6 @@
 }
 
 @media (max-width: 767px) {
-  .guide {
-    grid-template-columns: 1fr;
-  }
-
-  .guide > div {
-    min-height: 0;
-  }
-
-  .guide > div + div {
-    border-top: 2px solid #f1eeee;
-    border-left: 0;
-  }
-
   .record {
     flex-wrap: wrap;
   }

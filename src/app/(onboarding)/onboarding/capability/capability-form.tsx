@@ -24,6 +24,9 @@ import { ExperienceDialog, type ExperienceRecord } from './experience-dialog'
  * stage. "Tiếp tục" saves, records the stage as passed and opens
  * stage 3; "Lưu và hoàn tất sau" saves and leaves. The board's AI banner and
  * "AI đề xuất" marks belong to suggested items, and there are none (D-A1).
+ *
+ * S1-UAT-09 (FB-08): no "LĨNH VỰC / CHUYÊN MÔN" guide block and no line under
+ * the two field titles; only the titles and the short placeholders stay.
  */
 
 export type StoredLink = { label: string | null; url: string }
@@ -182,24 +185,6 @@ export function CapabilityForm({
             Thông tin này giúp hệ thống đề xuất cơ hội phù hợp hơn với bạn.
           </p>
 
-          <div className={styles.guide} data-anchor="guide">
-            <div>
-              <p className={styles.guideLabel}>LĨNH VỰC</p>
-              <p className={styles.guideBody}>
-                Ngành hoặc chủ đề bạn quan tâm, nghiên cứu hoặc hoạt động.
-              </p>
-              <p className={styles.guideExample}>Ví dụ: AI · Fintech · EdTech · Climate Tech</p>
-            </div>
-            <div>
-              <p className={styles.guideLabel}>CHUYÊN MÔN</p>
-              <p className={styles.guideBody}>Chức năng hoặc năng lực nghề nghiệp của bạn.</p>
-              <p className={styles.guideExample}>
-                Ví dụ: Product · Business Development · Technology · Design · Marketing · Finance ·
-                Legal
-              </p>
-            </div>
-          </div>
-
           <div className={styles.block} data-anchor="domains">
             <div className={styles.blockHead}>
               <label id={id('domains')} className={styles.blockTitle} htmlFor={id('domain')}>
@@ -209,9 +194,6 @@ export function CapabilityForm({
                 ĐÃ THÊM {domains.length}/{MAX_TAGS}
               </span>
             </div>
-            <p className={styles.blockLede}>
-              Chọn các ngành hoặc chủ đề bạn đang hoạt động hoặc quan tâm.
-            </p>
             <TagInput
               id={id('domain')}
               name="domains"
@@ -240,9 +222,6 @@ export function CapabilityForm({
                 ĐÃ THÊM {specializations.length}/{MAX_TAGS}
               </span>
             </div>
-            <p className={styles.blockLede}>
-              Chọn những chức năng hoặc năng lực chuyên môn nổi bật nhất.
-            </p>
             <TagInput
               id={id('specialization')}
               name="specializations"

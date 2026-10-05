@@ -235,6 +235,8 @@ test.describe('WF02-S05 PRJ1 create', () => {
     await expect(page.locator('[data-anchor="role"] input[type="radio"]')).toHaveCount(3)
     // PRJ1 starts with the first role chosen.
     await expect(page.getByRole('radio', { name: 'Founder', exact: true })).toBeChecked()
+    // FB-16 (S1-UAT-09): under "Một dòng mô tả" only "Dưới 20 từ." stays.
+    await expect(page.locator('#ve-summary-hint')).toHaveText('Dưới 20 từ.')
 
     // Nothing filled: every save refuses in place, naming the five fields.
     for (const action of [next(page), saveDraft(page), exitDraft(page)]) {
