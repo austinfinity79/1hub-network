@@ -476,6 +476,85 @@ describe('e-mail invitation (US-02.11)', () => {
     })
   })
 
+  it('"Cố vấn" is a role like the others: any level but OWNER, kept by re-send and accept', async () => {
+    const owner = await person()
+    const v = await venture(owner)
+    // Role and level are independent: Cố vấn with each level an owner may give.
+    const advisors: Record<'EDIT' | 'VIEW', Person> = { EDIT: await person(), VIEW: await person() }
+    for (const level of ['EDIT', 'VIEW'] as const) {
+      const sent = await inviteMember(
+        owner.accountId,
+        v.id,
+        { email: advisors[level].email, role_label: 'Cố vấn', permission: level },
+        RID,
+      )
+      expect(sent).toMatchObject({ role_label: 'Cố vấn', permission: level, resent: false })
+      // A re-send keeps the role (and the level) as first chosen.
+      expect(
+        await inviteMember(
+          owner.accountId,
+          v.id,
+          { email: advisors[level].email, role_label: 'Founder', permission: 'VIEW' },
+          RID,
+        ),
+      ).toMatchObject({
+        membership_id: sent.membership_id,
+        resent: true,
+        role_label: 'Cố vấn',
+        permission: level,
+      })
+      expect(await getOwnInvitation(advisors[level].accountId, v.id)).toMatchObject({
+        role_label: 'Cố vấn',
+        permission: level,
+      })
+      await acceptInvitation(advisors[level].accountId, v.id, sent.membership_id, RID)
+      expect(await memberships(v.id, advisors[level].profileId)).toEqual([
+        { state: 'ACTIVE', role_label: 'Cố vấn', permission: level },
+      ])
+    }
+    // OWNER is ownership and is never given by an invitation, whatever the role.
+    expect(
+      await refusal(
+        inviteMember(
+          owner.accountId,
+          v.id,
+          { email: 'owner-advisor@example.test', role_label: 'Cố vấn', permission: 'OWNER' },
+          RID,
+        ),
+      ),
+    ).toMatchObject({ status: 422, fields: { permission: 'invalid' } })
+    // The role adds no capability: an Editor or Viewer advisor still cannot invite.
+    for (const level of ['EDIT', 'VIEW'] as const) {
+      expect(
+        await refusal(
+          inviteMember(
+            advisors[level].accountId,
+            v.id,
+            { email: `by-${level.toLowerCase()}@example.test`, role_label: 'Cố vấn' },
+            RID,
+          ),
+        ),
+      ).toMatchObject({ status: 403 })
+    }
+    // The other roles are unchanged.
+    for (const [i, role] of ['Founder', 'Co-founder', 'Thành viên'].entries()) {
+      const row = await inviteMember(
+        owner.accountId,
+        v.id,
+        { email: `role-${i}@example.test`, role_label: role },
+        RID,
+      )
+      expect(row).toMatchObject({ role_label: role, permission: 'VIEW' })
+    }
+    // A link join never takes a client role, Cố vấn included.
+    const code = codeOf((await ensureInviteLink(owner.accountId, v.id, RID)).link.path)
+    const outsider = await person()
+    expect(
+      await refusal(joinInviteLink(outsider.accountId, code, { role_label: 'Cố vấn' }, RID)),
+    ).toMatchObject({ status: 422 })
+    expect(await memberships(v.id, outsider.profileId)).toEqual([])
+  })
+
   it('an active member’s address is refused; re-sends stay within the send limit', async () => {
     const owner = await person()
     const mate = await person()

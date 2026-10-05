@@ -268,6 +268,62 @@ test.describe('US-02.11 — e-mail invitation', () => {
   })
 })
 
+test.describe('US-02.11 — team role "Cố vấn" (S1-UAT-07-FIX-01)', () => {
+  test('owner invites as Cố vấn · Xem on PRJ2; a re-send keeps it; accepting keeps it', async ({
+    page,
+    browser,
+  }) => {
+    const { venture } = await ownerWithVenture(page, 's1i-advisor')
+    const invitee = await member(browser, 's1i-advisor-r')
+    await page.goto(`/projects/new?venture=${venture.id}&step=team`, { waitUntil: 'networkidle' })
+    await expect(page.locator('#team-invite-role option')).toHaveText([
+      'Founder',
+      'Co-founder',
+      'Thành viên',
+      'Cố vấn',
+    ])
+    await page.getByLabel('Email thành viên').fill(invitee.account.email)
+    await page.locator('#team-invite-role').selectOption('Cố vấn')
+    await page.locator('#team-invite-permission').selectOption('VIEW')
+    await page.getByRole('button', { name: 'Gửi lời mời' }).click()
+    await expect(page.getByText('Đã gửi lời mời.')).toBeVisible()
+    const pending = page.locator('[data-row-kind="PENDING_INVITATION"]')
+    await expect(pending).toContainText('Cố vấn')
+    await expect(pending).toContainText('Xem')
+
+    // Re-send with other choices: the invitation keeps Cố vấn · Xem.
+    await page.getByLabel('Email thành viên').fill(invitee.account.email)
+    await page.locator('#team-invite-role').selectOption('Founder')
+    await page.locator('#team-invite-permission').selectOption('EDIT')
+    await page.getByRole('button', { name: 'Gửi lời mời' }).click()
+    await expect(page.getByText('Đã gửi lại lời mời; hạn mới 7 ngày.')).toBeVisible()
+    const rows = await query<{ state: string; role_label: string; permission: string }>(
+      `SELECT state::text AS state, role_label, permission FROM project_members
+        WHERE project_id = $1 AND invite_email_normalized = $2`,
+      [venture.id, invitee.account.email.toLowerCase()],
+    )
+    expect(rows).toEqual([
+      { state: 'PENDING_CONFIRMATION', role_label: 'Cố vấn', permission: 'VIEW' },
+    ])
+
+    await invitee.page.goto(`/projects/${venture.id}/team`, { waitUntil: 'networkidle' })
+    const detail = invitee.page.locator('[data-team-invitation]')
+    await expect(detail).toContainText('với vai trò Cố vấn · quyền Xem')
+    await detail.getByRole('button', { name: 'Chấp nhận' }).click()
+    await expect(invitee.page.locator('[data-team-table]')).toBeVisible()
+    expect(await memberships(venture.id, invitee.account.profileId)).toEqual([
+      { state: 'ACTIVE', role_label: 'Cố vấn', permission: 'VIEW' },
+    ])
+    // The role grants nothing: the advisor sees the team read-only.
+    await expect(invitee.page.getByRole('button', { name: 'Mời thành viên' })).toHaveCount(0)
+    await page.goto(`/projects/${venture.id}/team`, { waitUntil: 'networkidle' })
+    const active = page.locator('[data-row-kind="ACTIVE_MEMBER"]')
+    await expect(active.getByRole('cell').nth(1)).toHaveText('Cố vấn')
+    await expect(active.getByRole('cell').nth(2)).toHaveText('Xem')
+    await invitee.context.close()
+  })
+})
+
 test.describe('FB-14 — invitation detail in the workspace shell', () => {
   test('header, five-item sidebar, ME7 card and buttons; "Chấp nhận" from the keyboard', async ({
     page,

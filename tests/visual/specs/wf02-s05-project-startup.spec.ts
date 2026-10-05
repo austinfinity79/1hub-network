@@ -669,10 +669,12 @@ test.describe('WF02-S05 PRJ1 create', () => {
     await page.goto(`/projects/new?venture=${v.id}&step=team`, { waitUntil: 'networkidle' })
     const ownerRow = page.locator('[data-team-table] [data-row-kind="OWNER"]')
     for (const chip of ['Founder', 'Chủ sở hữu', 'Bạn']) await expect(ownerRow).toContainText(chip)
+    // US-02.11 (S1-UAT-07-FIX-01): four team roles, "Cố vấn" included.
     await expect(page.locator('#team-invite-role option')).toHaveText([
       'Founder',
       'Co-founder',
       'Thành viên',
+      'Cố vấn',
     ])
     await expect(page.locator('#team-invite-role')).toHaveValue('Co-founder')
     await expect(page.locator('#team-invite-permission option')).toHaveText(['Biên tập', 'Xem'])

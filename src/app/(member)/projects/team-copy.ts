@@ -3,8 +3,12 @@
  * the wizard (PRJ2) and the team page (DEC-L2R-D7, D8).
  */
 
-/** The roles PRJ1 and PRJ2 offer; stored as display text and nothing more. */
-export const TEAM_ROLES = ['Founder', 'Co-founder', 'Thành viên'] as const
+/**
+ * The team roles an owner picks when inviting (US-02.11, S1-UAT-07-FIX-01):
+ * stored as display text and nothing more. A role grants no capability; the
+ * level (OWNER / EDIT / VIEW) alone does.
+ */
+export const TEAM_ROLES = ['Founder', 'Co-founder', 'Thành viên', 'Cố vấn'] as const
 
 export const PERMISSION_LABELS = { OWNER: 'Chủ sở hữu', EDIT: 'Biên tập', VIEW: 'Xem' } as const
 
