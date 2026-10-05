@@ -1457,6 +1457,13 @@
 
 .activityFacts dd {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* S1-UAT-08A: one organiser per line, as the workbook lists them. */
+.activityLine {
+  display: block;
 }
 
 .activityMore {
@@ -2094,6 +2101,12 @@
 
   .activity {
     width: min(320px, 82vw);
+  }
+
+  /* S1-UAT-08A: the banner keeps 16:9 at any card width (420 × 236 above). */
+  .activityBanner {
+    height: auto;
+    aspect-ratio: 16 / 9;
   }
 
   .activityTitle {

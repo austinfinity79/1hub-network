@@ -276,7 +276,7 @@ export function HumansStrip({ later }: { later: Action }) {
       <ul className={styles.humansRow}>
         {shown.length === 0 ? <li className={styles.pending}>Chờ cập nhật</li> : null}
         {shown.map((h, i) => (
-          <li key={h.photo.src} className={styles.human}>
+          <li key={`${h.order}-${h.name}`} className={styles.human} data-human-order={h.order}>
             <div className={styles.humanPhoto}>
               <Photo
                 caption={`ẢNH · CHÂN DUNG · ${h.name.toUpperCase()}`}
@@ -285,9 +285,11 @@ export function HumansStrip({ later }: { later: Action }) {
                 sizes="270px"
               />
             </div>
-            <p className={styles.humanRole}>VAI TRÒ · CHỜ CẬP NHẬT</p>
+            <p className={styles.humanRole}>{h.title ?? 'VAI TRÒ · CHỜ CẬP NHẬT'}</p>
             <p className={styles.humanName}>{h.name}</p>
-            <p className={styles.humanTerm}>NHIỆM KỲ · CHỜ CẬP NHẬT</p>
+            <p className={styles.humanTerm}>
+              {h.term === 'CURRENT' ? 'NHIỆM KỲ HIỆN TẠI' : 'CÁC THẾ HỆ TRƯỚC'}
+            </p>
             <Cta action={later} label="Xem thêm" className={styles.humanMore}>
               Xem thêm →
             </Cta>
@@ -494,11 +496,19 @@ export function ActivitiesStrip({ later }: { later: Action }) {
       >
         <ul className={styles.stripRow}>
           {shown.length === 0 ? <li className={styles.pendingInk}>Chờ cập nhật</li> : null}
-          {shown.map((a) => (
-            <li key={a.title} className={styles.activity}>
+          {shown.map((a, i) => (
+            <li key={a.row} className={styles.activity} data-activity-row={a.row}>
               <div className={styles.activityBanner}>
-                <Photo caption={a.banner} tone={a.tone} rounded={false} />
-                <span className={styles.activityKind}>{KIND_LABEL[a.kind]}</span>
+                <Photo
+                  caption={`ẢNH · ${a.title.toUpperCase()}`}
+                  tone={(['warm', 'deep', 'dark'] as const)[i % 3]!}
+                  photo={a.photo}
+                  rounded={false}
+                  sizes="420px"
+                />
+                <span className={styles.activityKind}>
+                  {a.kind ? KIND_LABEL[a.kind] : a.tagLabel}
+                </span>
               </div>
               <div className={styles.activityBody}>
                 <h3 className={styles.activityTitle}>{a.title}</h3>
@@ -506,9 +516,19 @@ export function ActivitiesStrip({ later }: { later: Action }) {
                   <dt>THỜI GIAN</dt>
                   <dd className={a.time ? '' : styles.muted}>{a.time ?? 'Chờ cập nhật'}</dd>
                   <dt>ĐƠN VỊ TỔ CHỨC</dt>
-                  <dd>{a.organiser}</dd>
+                  <dd className={a.organisers.length ? '' : styles.muted}>
+                    {a.organisers.length
+                      ? a.organisers.map((o) => (
+                          <span key={o} className={styles.activityLine}>
+                            {o}
+                          </span>
+                        ))
+                      : 'Chờ cập nhật'}
+                  </dd>
+                  <dt>ĐỊA ĐIỂM</dt>
+                  <dd className={a.location ? '' : styles.muted}>{a.location ?? 'Chờ cập nhật'}</dd>
                   <dt>VAI TRÒ HUB</dt>
-                  <dd className={styles.muted}>Chủ trì / phối hợp · chờ xác nhận</dd>
+                  <dd className={a.hubRole ? '' : styles.muted}>{a.hubRole ?? 'Chờ cập nhật'}</dd>
                 </dl>
                 <Cta action={later} label={`Xem thêm — ${a.title}`} className={styles.activityMore}>
                   Xem thêm →
