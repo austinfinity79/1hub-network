@@ -290,8 +290,8 @@ test.describe('WF02-S08 list', () => {
       await item.click()
       await expect(page).toHaveURL('/projects')
     }
-    // "Góp ý" is hidden for Alpha (PO decision 30/09; no feedback channel).
-    await expect(page.getByText('Góp ý')).toHaveCount(0)
+    // S1-UAT-02 (FB-01, DEC-S1F-D1): "Góp ý" is the one shared launcher.
+    await expect(page.locator('[data-feedback-launcher]')).toHaveCount(1)
     await expect(shell.locator('[data-nav="project-demo"]')).toHaveAttribute(
       'href',
       '/demo/projects',

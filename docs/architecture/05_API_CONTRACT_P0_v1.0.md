@@ -1650,3 +1650,17 @@ Top-level navigation. `302` to Google (code flow, PKCE S256, `openid email profi
 | enumeration | no answer says whether an e-mail has an account (sign-up refusal is neutral); an identifier without a password account locks like a real one; only a taken username is named |
 | limits | only the Sprint1 values: 5 attempts / 15 min, link 15 min, resend and repeat forgot 45 s |
 
+# 30. Amendment A13 — Sprint1 FB-01 feedback submission (2026-10-05)
+
+Source: [DEC-S1F](../decisions/DECISION_LOG.md#dec-s1f) (S1-UAT-02; US-X.01). Implements §6 `POST /feedback` into the A11 store (`feedback_submissions`); no new table. Decision codes: `FEEDBACK_VALIDATION_FAILED`, `FEEDBACK_RATE_LIMITED`. `GET /me/feedback` stays deferred (§6).
+
+### POST `/feedback`
+Guests and members. `multipart/form-data`: `type` (BUG | UX | FEATURE), `content` (1 … 2000), `screenshot` (optional, PNG / JPEG / WebP ≤ 5 MB), `email` (optional, guests only), `route`, `viewport`, `locale`. Header `Idempotency-Key` required. `201 { id: "fb_…", status: "RECEIVED", submitted_at }`; stored NEW. `422 FEEDBACK_VALIDATION_FAILED` with `fields` (`type: required | invalid`, `content: required | too_long`, `email: invalid`, `screenshot: too_large | unsupported`); `400` with `idempotency_key: required` or `body: multipart_required`; `409` for a reused key with other content (the implementation's existing idempotency gap code); `429 FEEDBACK_RATE_LIMITED` past 10 in an hour.
+
+## 30.1 Rules
+| Topic | Rule |
+|---|---|
+| identity | sender = session; body identity ignored; guest e-mail only without a session |
+| context | A11 keys only; route = path; screen / workflow / step derived from it; UA from the request header |
+| privacy | no cookie, token, header, query or form value stored; screenshot served to feedback managers only (A11) |
+

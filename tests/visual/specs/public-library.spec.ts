@@ -472,10 +472,13 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     expect(overflow).toBe(0)
   })
 
-  test('"Góp ý" is hidden for Alpha (PO decision; no feedback channel)', async ({ page }) => {
+  test('"Góp ý" is the shared FB-01 launcher, not a screen-local control (S1-UAT-02)', async ({
+    page,
+  }) => {
     await page.goto('/library')
     await expect(page.locator('[data-anchor="feedback"]')).toHaveCount(0)
-    await expect(page.getByText('Góp ý')).toHaveCount(0)
+    // S1-UAT-02 (FB-01, DEC-S1F-D1): "Góp ý" is the one shared launcher.
+    await expect(page.locator('[data-feedback-launcher]')).toHaveCount(1)
   })
 })
 

@@ -116,7 +116,11 @@ function layout() {
     ...document.querySelectorAll(
       'a[href], button, input:not([type=hidden]), select, textarea, [role=button]',
     ),
-  ].filter(visible)
+  ]
+    .filter(visible)
+    // S1-UAT-02 (DEC-S1F-D8): the floating "Góp ý" is an overlay over the page;
+    // a page control is brought clear of it by scrolling (REL-RESP checks that).
+    .filter((el) => !el.closest('[data-feedback-launcher]'))
   const boxes = controls.map((el) => ({
     el,
     r: el.getBoundingClientRect(),

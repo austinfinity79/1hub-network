@@ -30,6 +30,12 @@ export const STABILIZE_CSS = `*, *::before, *::after {
   transition-duration: 0s !important;
   transition-delay: 0s !important;
   caret-color: transparent !important;
+}
+/* S1-UAT-02 (DEC-S1F-D8): the floating "Góp ý" overlays every FB-01 surface;
+   screen captures compare the screen, as the boards' pill was "not compared".
+   The launcher is verified by s1-uat-02-feedback.spec.ts. */
+[data-feedback-launcher] {
+  visibility: hidden !important;
 }`
 
 /** Design SOT section 2.3: the only family/weight pairs allowed in UI text. */

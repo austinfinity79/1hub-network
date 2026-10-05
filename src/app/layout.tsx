@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
 
+import { FeedbackLauncher } from '@/components/feedback/feedback-launcher'
+
 export const metadata: Metadata = {
   title: '1hub.network',
   description: '1hub.network Phase 0',
@@ -31,7 +33,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         ))}
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* S1-UAT-02 (FB-01): one "Góp ý" for every surface it is offered on. */}
+        <FeedbackLauncher />
+      </body>
     </html>
   )
 }

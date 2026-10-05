@@ -736,6 +736,17 @@ function pointerProblems() {
           el.contains(hit) ||
           (hit.contains(el) && !!hit.closest('label')) ||
           !!label?.contains(hit))
+      // S1-UAT-02 (DEC-S1F-D8): "Góp ý" floats over the bottom corner; a control
+      // under it is brought clear by scrolling (as wf02-l2-responsive).
+      if (!reached && hit?.closest('[data-feedback-launcher]')) {
+        el.scrollIntoView({ block: 'center' })
+        const again = el.getBoundingClientRect()
+        const next = document.elementFromPoint(
+          again.left + again.width / 2,
+          again.top + again.height / 2,
+        )
+        if (next && (next === el || el.contains(next) || !!label?.contains(next))) continue
+      }
       if (!reached) problem = `covered by ${hit ? name(hit) : 'nothing'}`
     }
     if (problem) problems.push(`${name(el)} ${problem}`)

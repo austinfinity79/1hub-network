@@ -139,9 +139,10 @@ test.describe('public pages: no dead control', () => {
       ).toHaveCount(0)
   })
 
-  test('/library: every card control is real; "Góp ý" is hidden', async ({ page }) => {
+  test('/library: every card control is real; "Góp ý" is the shared launcher', async ({ page }) => {
     await page.goto('/library', { waitUntil: 'networkidle' })
-    await expect(page.getByText('Góp ý')).toHaveCount(0)
+    // S1-UAT-02 (FB-01, DEC-S1F-D1): "Góp ý" is the one shared launcher.
+    await expect(page.locator('[data-feedback-launcher]')).toHaveCount(1)
     for (const tab of [/^Bài toán/, /^Startup/, /^Nhà sáng lập/]) {
       await page.getByRole('tab', { name: tab }).click()
       // WF06-PROD-04 realignment. OLD: every tab drew cards for a guest. NEW (DEC-W6P-D03): a
@@ -185,7 +186,10 @@ test.describe('account and workspace menus', () => {
     ]
     for (const [from, name, to] of hops) {
       await page.goto(from, { waitUntil: 'networkidle' })
-      await expect(page.getByText('Góp ý'), from).toHaveCount(0)
+      // S1-UAT-02 (FB-01): the one shared launcher on FB-01 surfaces; none on the demo.
+      await expect(page.locator('[data-feedback-launcher]'), from).toHaveCount(
+        from.startsWith('/demo') ? 0 : 1,
+      )
       await page.getByRole('link', { name, exact: true }).first().click()
       await expect(page, `${from} → ${name}`).toHaveURL(to)
       await expect(page.locator('[data-route-placeholder]')).toHaveCount(0)

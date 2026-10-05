@@ -104,9 +104,10 @@ test.describe('WF01-S09 functional and security', () => {
       'Hoàn thiện hồ sơ nhanh hơn với AI',
     )
     await expect(ai.locator('a, button, input')).toHaveCount(0)
-    // PO decision (Alpha interaction gap fix 30/09): no feedback channel, so no "Góp ý".
+    // No screen-local "Góp ý"; the shared launcher is S1-UAT-02's (DEC-S1F-D1).
     await expect(page.locator('[data-anchor="feedback"]')).toHaveCount(0)
-    await expect(page.getByText('Góp ý')).toHaveCount(0)
+    // S1-UAT-02 (FB-01, DEC-S1F-D1): "Góp ý" is the one shared launcher.
+    await expect(page.locator('[data-feedback-launcher]')).toHaveCount(1)
     await ai.click()
     await expect(page).toHaveURL('/onboarding')
     expect(requests).toEqual([])

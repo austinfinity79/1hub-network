@@ -1634,6 +1634,21 @@ Open: none (TRUE_PO_DECISIONS_REMAINING = 0).
 
 Open after this task: Google OAuth client credentials (external configuration; the code path is complete and tested with a stubbed provider), choosing / changing a username and listing sessions in Cài đặt (US-01.05 / US-02.08, a settings task), the Google photo in stage 1.
 
+## DEC-S1F — Sprint1 FB-01 "Góp ý" (S1-UAT-02, PO, 05/10)
+
+<a id="dec-s1f"></a>**Status:** IMPLEMENTED 2026-10-05 on the S1-UAT-02 task contract and the Sprint1 UAT pack (US-X.01, feedback.md FB-01). Not pushed, not merged, not deployed. Report: [S1-UAT-02](../implementation/reports/S1-UAT-02-feedback.md). Contract: [05 §30, amendment A13](../architecture/05_API_CONTRACT_P0_v1.0.md).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-s1f-d1"></a>DEC-S1F-D1 | **Entry point.** ONE shared launcher ("Góp ý", floating bottom-right) mounted once in the root layout and shown only on the FB-01 surfaces: `/`, `/about`, `/library`, every `/auth*`, `/onboarding*`, `/me*`, `/projects*` (`src/lib/feedback/surfaces.ts`). A native modal dialog over the page: no navigation, no reload, the page's own form untouched. WF03 / ops / admin, the demo and the legal reader have none (HD-11). Supersedes [DEC-AIG-D7](#dec-aig-d7) ("Góp ý" hidden for Alpha) and D-F1 (drawn and inert) on those surfaces |
+| <a id="dec-s1f-d2"></a>DEC-S1F-D2 | **Types.** Báo lỗi · Góp ý trải nghiệm · Đề xuất tính năng = the existing `feedback_type` BUG · UX · FEATURE (migration 017); none preselected, one required. OTHER stays the admin's reclassification bucket |
+| <a id="dec-s1f-d3"></a>DEC-S1F-D3 | **Content and screenshot.** Content required, 1 … 2000 characters. Screenshot optional, only a file the person chooses (the page is never captured), PNG / JPEG / WebP sniffed from the bytes, ≤ 5 MB, stored in the existing media asset store and served as before (feedback managers only, 90 days, ADMIN-PROD-05). A file written for a row that does not commit is removed |
+| <a id="dec-s1f-d4"></a>DEC-S1F-D4 | **Identity and e-mail.** `account_id` / `profile_id` from the session only; body identity fields are ignored. A guest may leave an optional e-mail (private: only the feedback detail shows it); a member's e-mail field is not shown and any value sent is ignored (DB check `ck_feedback_guest_email`) |
+| <a id="dec-s1f-d5"></a>DEC-S1F-D5 | **Context.** Only the Admin's `FEEDBACK_CONTEXT_KEYS`: `route` (path only: query and fragment dropped; non-paths refused), `screen` / `workflow` / `step` derived on the server from that route, `browser` / `os` / `device` / `user_agent` from the request's own header, `viewport` and `locale` bounded. No cookie, token, header, query or form value is stored |
+| <a id="dec-s1f-d6"></a>DEC-S1F-D6 | **API.** `POST /api/v1/feedback`, multipart; `Idempotency-Key` REQUIRED (05 §2.3; also blocks cross-site posts); `201 { id: "fb_…", status: "RECEIVED", submitted_at }` (05 §6), stored `NEW`. Codes: `FEEDBACK_VALIDATION_FAILED` 422 (`fields`; 400 for a missing key or a non-multipart body), `FEEDBACK_RATE_LIMITED` 429 for the 11th message in an hour (US-X.01 "Quá 10 góp ý/giờ"), per account, or per client address for a guest (process memory) |
+| <a id="dec-s1f-d7"></a>DEC-S1F-D7 | **Data.** No migration: `feedback_submissions` (017) is the one store, the Admin queue reads the same rows. No analytics event: the frozen writer takes an account and WF01 / WF02 only, and the row itself is the metric (the Admin weekly summary counts it); `feedback_submitted` stays deferred |
+| <a id="dec-s1f-d8"></a>DEC-S1F-D8 | **UX.** The unsent draft survives closing and reopening (FB-01); a sent one is cleared. Success "Cảm ơn bạn đã góp ý", the person stays on the same screen. Errors keep the text; a retry of the same draft reuses its key (no duplicate), an edited draft gets a new one. Modal: initial focus on the type, Tab kept inside, Escape and "Đóng" close, focus returns to "Góp ý". In pixel captures of a screen the launcher is excluded like the boards' pill was ("not compared"); its own spec checks it |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

@@ -275,7 +275,8 @@ test.describe('WF01-S02 functional', () => {
     await withPending(page, await requestLink(request, 'member@example.test'))
     await openAt(page)
     await expect(page.getByText(/Gmail/)).toHaveCount(0)
-    await expect(page.getByRole('button')).toHaveCount(1)
+    // The shared "Góp ý" launcher (S1-UAT-02) is not this screen's action.
+    await expect(page.locator('button:not([data-feedback-launcher])')).toHaveCount(1)
   })
 })
 

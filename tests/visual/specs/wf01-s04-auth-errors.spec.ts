@@ -90,7 +90,8 @@ test.describe('WF01-S04 functional', () => {
     expect(text).toContain('Liên hệ ban điều hành HUB để được hỗ trợ.')
     // No action is invented without a configured support contact.
     await expect(page.getByRole('link')).toHaveCount(0)
-    await expect(page.getByRole('button')).toHaveCount(0)
+    // The shared "Góp ý" launcher (S1-UAT-02) is not an action of this state.
+    await expect(page.locator('button:not([data-feedback-launcher])')).toHaveCount(0)
   })
 
   test('SESSION_EXPIRED: board copy, no unsaved-work claim, relogin to /auth', async ({ page }) => {

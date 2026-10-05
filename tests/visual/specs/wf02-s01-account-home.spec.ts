@@ -792,7 +792,8 @@ test.describe('WF02-S01 navigation', () => {
     await expect(cover).toHaveAttribute('aria-disabled', 'true')
     await cover.click()
     await expect(page).toHaveURL('/me')
-    await expect(page.getByText('Góp ý')).toHaveCount(0)
+    // S1-UAT-02 (FB-01, DEC-S1F-D1): "Góp ý" is the one shared launcher.
+    await expect(page.locator('[data-feedback-launcher]')).toHaveCount(1)
     await expect(header).toContainText('Kim Chi Đặng')
     await expect(page.locator('[data-nav="ops-entry"]')).toHaveCount(0)
 

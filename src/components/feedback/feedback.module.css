@@ -1,0 +1,287 @@
+/*
+ * S1-UAT-02 — "Góp ý" launcher and dialog (FB-01). The boards' floating pill
+ * at the bottom-right corner, and a modal in the existing dialog language
+ * (the L12 experience editor: surface, 16 px corners, burgundy backdrop).
+ * Colours are the design tokens only; Be Vietnam Pro, the default UI face.
+ */
+
+.launcher {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.125rem 0 1rem;
+  border: 1px solid color-mix(in srgb, var(--hub-burgundy) 18%, transparent);
+  border-radius: 999px;
+  background: var(--hub-surface);
+  box-shadow: 0 0.5rem 1.5rem color-mix(in srgb, var(--hub-burgundy) 18%, transparent);
+  font: inherit;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--hub-burgundy);
+  cursor: pointer;
+}
+
+.launcher svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--hub-primary);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.launcher:focus-visible,
+.close:focus-visible,
+.link:focus-visible,
+.kind input:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.dialog {
+  width: 32.5rem;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100dvh - 2rem);
+  /* The global reset removes the UA margin that centres a modal dialog. */
+  margin: auto;
+  padding: 1.5rem;
+  overflow: auto;
+  border: 0;
+  border-radius: 1rem;
+  background: var(--hub-surface);
+  box-shadow: 0 1.5rem 3.75rem rgb(22 0 2 / 35%);
+  color: var(--hub-burgundy);
+  font-family: var(--font-ui);
+}
+
+.dialog::backdrop {
+  background: rgb(83 64 65 / 75%);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.75rem;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.close svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  stroke: var(--hub-burgundy);
+  stroke-width: 1.75;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  margin-top: 1rem;
+}
+
+.lede {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: #534041;
+}
+
+.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.label {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+.kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.875rem;
+  border: 1px solid #e2dcdc;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+
+.kind:has(input:checked) {
+  border-color: var(--hub-primary);
+  background: var(--color-bg-accent-soft);
+}
+
+.kind input {
+  margin: 0;
+  accent-color: var(--hub-primary);
+}
+
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.field .label {
+  margin-bottom: 0;
+}
+
+.optional {
+  font-weight: 400;
+  color: #695859;
+}
+
+.textarea,
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid #e2dcdc;
+  border-radius: 0.5rem;
+  background: #fbfafa;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  color: var(--hub-burgundy);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 7.5rem;
+}
+
+.textarea:focus-visible,
+.input:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.textarea[aria-invalid='true'],
+.input[aria-invalid='true'] {
+  border-color: var(--hub-primary);
+}
+
+/* The native control stays focusable and labelled; "Chọn ảnh" is its face. */
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fileButton {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 0.875rem;
+  border: 1px solid #b9aeae;
+  border-radius: 0.5rem;
+  background: var(--hub-surface);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+
+.fileInput:focus-visible + .fileButton {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.count,
+.help {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #695859;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--color-fg-accent);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: #b91610;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+@media (max-width: 599px) {
+  .launcher {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+
+  .dialog {
+    padding: 1.25rem 1rem;
+  }
+
+  .actions :global(.ui-button) {
+    flex: 1 1 0;
+  }
+}

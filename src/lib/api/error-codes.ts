@@ -105,6 +105,10 @@ export const DECISION_ERROR_CODES = [
   'AUTH_GOOGLE_STATE_MISMATCH',
   // DEC-S1A-D9: 400, Google sign-in could not complete (provider error, unverified e-mail, not configured).
   'AUTH_GOOGLE_FAILED',
+  // DEC-S1F-D6: 422 (400 for a missing Idempotency-Key / non-multipart body), a feedback field fails its rule.
+  'FEEDBACK_VALIDATION_FAILED',
+  // DEC-S1F-D6: 429, more than 10 feedback messages in an hour (US-X.01).
+  'FEEDBACK_RATE_LIMITED',
 ] as const
 
 export type DecisionErrorCode = (typeof DECISION_ERROR_CODES)[number]
