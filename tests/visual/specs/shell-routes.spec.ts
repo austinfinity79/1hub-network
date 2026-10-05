@@ -46,6 +46,8 @@ const IMPLEMENTED_SCREENS = new Set([
   'WF02-S06',
   'WF02-S07',
   'WF02-S08',
+  // S1-UAT-07 (DEC-S1I): the invite-link receiver (s1-uat-07-invite.spec.ts).
+  'WF02-S09',
   // WF03-S09: the public organization page (wf03-s09-public-organization.spec.ts).
   'WF03-S09',
 ])
@@ -66,6 +68,7 @@ const GUARDED_SCREENS = new Set([
   'WF02-S06',
   'WF02-S07',
   'WF02-S08',
+  'WF02-S09',
   // WF03-T00: every /ops route is guarded by the ops guard; the placeholder body
   // still renders inside OpsShell for an authorized actor (wf03-t00 spec).
   'WF03-S01',
@@ -95,7 +98,8 @@ async function openPlaceholder(page: Page) {
 test.describe('M0-T03 frozen routes', () => {
   test('the manifest covers 29 routes across all five groups', () => {
     // 28 + WF01-S11 /auth/reset-password (S1-UAT-01, DEC-S1A-D5).
-    expect(FROZEN_ROUTES).toHaveLength(29)
+    // 30 since S1-UAT-07 added WF02-S09 /moi/:code (DEC-S1I).
+    expect(FROZEN_ROUTES).toHaveLength(30)
     for (const group of ROUTE_GROUPS) {
       expect(routesInGroup(group).length, `group ${group} is empty`).toBeGreaterThan(0)
     }
@@ -111,7 +115,10 @@ test.describe('M0-T03 frozen routes', () => {
       // A guarded route sends a guest to /auth; what it renders for an
       // authorized actor is proven by its own spec.
       if (GUARDED_SCREENS.has(route.screenId)) {
-        await expect(page).toHaveURL('/auth')
+        // The invite-link receiver brings the guest back after sign-in (DEC-S1I D3).
+        const back =
+          route.screenId === 'WF02-S09' ? `?redirect=${encodeURIComponent(route.samplePath)}` : ''
+        await expect(page).toHaveURL(`/auth${back}`)
         return
       }
       // An implemented screen replaces its placeholder and brings its own shell;

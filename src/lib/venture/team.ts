@@ -27,6 +27,15 @@ import type { InvitationNotice } from './invitation-email'
  * Sending (DEC-L2R-D8): `inviteMember` hands the notice to `deliver` inside
  * its transaction, so an e-mail that cannot be sent leaves no invitation.
  *
+ * Sprint 1 (S1-UAT-07, DEC-S1I; US-02.11): an e-mail invitation expires 7 days
+ * after it is sent (`invite_expires_at`, migration 020) and an expired one is
+ * neither accepted nor shown to its recipient. Inviting an address that already
+ * has a pending invitation re-sends that same row and extends it by 7 days: no
+ * second row, and the role and level stay as first chosen. An address that is
+ * already an active member is refused ("already_member"). The team holds at
+ * most 20 people counting the owner, active members and live pending
+ * invitations (TEAM_FULL), the same count the link flow uses (invite-link.ts).
+ *
  * Races: each mutation locks its membership row, so accept vs cancel and
  * remove vs role edit resolve to one canonical transition; the partial unique
  * indexes of migration 008 stop duplicate pending invitations and duplicate
@@ -34,8 +43,12 @@ import type { InvitationNotice } from './invitation-email'
  * with ids and states only.
  */
 
-/** Provisional TECHNICAL bounds; not business rules. */
-export const TEAM_LIMITS = { roleLabel: 100, pendingPerVenture: 20 } as const
+/** Provisional TECHNICAL bound; not a business rule. */
+export const TEAM_LIMITS = { roleLabel: 100 } as const
+
+/** US-02.11 / US-02.12, Appendix B: invitations last 7 days; a team holds at most 20. */
+export const INVITATION_DAYS = 7
+export const TEAM_MAX_PEOPLE = 20
 
 /**
  * Invitation e-mails sent in the last 24 hours, counted over every state, so
@@ -73,7 +86,12 @@ export type TeamRow =
       role_label: string | null
       permission: MemberPermission
       invited_at: string
+      /** When the invitation stops being acceptable; a re-send moves it 7 days on. */
+      expires_at: string
+      expired: boolean
     }
+
+export type PendingInvitationRow = Extract<TeamRow, { kind: 'PENDING_INVITATION' }>
 
 export type TeamDTO = {
   venture: { id: string; name: string; type: string; status: string }
@@ -91,9 +109,10 @@ export type InvitationView = {
   role_label: string | null
   permission: MemberPermission
   invited_at: string
+  expires_at: string
 }
 
-type Venture = {
+export type Venture = {
   id: string
   name: string
   type: string
@@ -122,7 +141,27 @@ const archived = () =>
 const sendLimited = () =>
   new ApiError('INVITATION_RATE_LIMITED', 429, 'Too many invitations sent. Try again later.')
 
-async function actor(exec: Executor, accountId: string) {
+export const teamFull = () =>
+  new ApiError('TEAM_FULL', 409, 'The team already holds 20 people, pending invitations included.')
+
+/**
+ * People the team holds or has asked (Appendix B "Tối đa 20 thành viên, tính cả
+ * lời mời đang chờ"): the owner, active members other than the owner, and
+ * pending invitations that have not expired. Read inside the caller's
+ * transaction after it locked the venture row.
+ */
+export async function teamHeadcount(exec: Executor, venture: Venture): Promise<number> {
+  const [row] = await exec<{ n: number }>(
+    `SELECT 1 + count(*) FILTER (WHERE state = 'ACTIVE' AND profile_id <> $2)
+              + count(*) FILTER (WHERE state = 'PENDING_CONFIRMATION' AND invite_expires_at > now())
+              AS n
+       FROM project_members WHERE project_id = $1`,
+    [venture.id, venture.owner_profile_id],
+  )
+  return Number(row?.n ?? 1)
+}
+
+export async function actor(exec: Executor, accountId: string) {
   const [row] = await exec<{ profile_id: string; email: string; name: string | null }>(
     `SELECT p.id::text AS profile_id, a.email_normalized AS email,
             coalesce(nullif(trim(p.display_name), ''), nullif(trim(p.full_name), '')) AS name
@@ -133,7 +172,7 @@ async function actor(exec: Executor, accountId: string) {
   return row ?? null
 }
 
-async function ventureOf(exec: Executor, ventureId: string): Promise<Venture | null> {
+export async function ventureOf(exec: Executor, ventureId: string): Promise<Venture | null> {
   if (!UUID.test(ventureId)) return null
   const [row] = await exec<Venture>(
     `SELECT id::text, name, type::text AS type, status::text AS status,
@@ -144,7 +183,7 @@ async function ventureOf(exec: Executor, ventureId: string): Promise<Venture | n
   return row ?? null
 }
 
-async function isActiveMember(exec: Executor, ventureId: string, profileId: string) {
+export async function isActiveMember(exec: Executor, ventureId: string, profileId: string) {
   const rows = await exec(
     `SELECT 1 FROM project_members
       WHERE project_id = $1 AND profile_id = $2 AND state = 'ACTIVE'`,
@@ -154,7 +193,7 @@ async function isActiveMember(exec: Executor, ventureId: string, profileId: stri
 }
 
 /** The venture for a `venture:team_manage` mutation, or the refusal. */
-async function managed(exec: Executor, accountId: string, ventureId: string) {
+export async function managed(exec: Executor, accountId: string, ventureId: string) {
   const me = await actor(exec, accountId)
   const venture = me ? await ventureOf(exec, ventureId) : null
   if (!me || !venture) throw notFound()
@@ -284,8 +323,11 @@ export async function getTeam(
         role_label: string | null
         permission: MemberPermission
         invited_at: Date
+        invite_expires_at: Date
+        expired: boolean
       }>(
-        `SELECT id::text, invite_email_normalized, role_label, permission, invited_at
+        `SELECT id::text, invite_email_normalized, role_label, permission, invited_at,
+                invite_expires_at, invite_expires_at <= now() AS expired
            FROM project_members
           WHERE project_id = $1 AND state = 'PENDING_CONFIRMATION'
           ORDER BY invited_at, id`,
@@ -317,21 +359,28 @@ export async function getTeam(
       role_label: p.role_label,
       permission: p.permission,
       invited_at: iso(p.invited_at),
+      expires_at: iso(p.invite_expires_at),
+      expired: p.expired,
     })),
   ]
   return {
     venture: { id: venture.id, name: venture.name, type: venture.type, status: venture.status },
     viewer: owner ? 'OWNER' : 'MEMBER',
     can_manage: owner && venture.status !== 'ARCHIVED',
-    counts: { members: 1 + members.length, pending: owner ? pending.length : null },
+    counts: {
+      members: 1 + members.length,
+      pending: owner ? pending.filter((p) => !p.expired).length : null,
+    },
     rows,
   }
 }
 
 /**
  * POST /ventures/{id}/team/invitations `{email, role_label, permission}` → 201
- * PENDING_CONFIRMATION. Without a level the invitation is VIEW. `deliver`
- * sends the notice; when it throws, nothing of the invitation remains.
+ * PENDING_CONFIRMATION, valid 7 days. Without a level the invitation is VIEW.
+ * An address with a pending invitation (live or expired) gets that same row
+ * re-sent and extended 7 days (`resent: true`, 200); its role and level stay.
+ * `deliver` sends the notice; when it throws, nothing of the change remains.
  */
 export async function inviteMember(
   accountId: string,
@@ -339,7 +388,7 @@ export async function inviteMember(
   body: unknown,
   requestId: string,
   deliver?: (notice: InvitationNotice) => Promise<void>,
-): Promise<TeamRow> {
+): Promise<PendingInvitationRow & { resent: boolean }> {
   const input = onlyKeys(body, ['email', 'role_label', 'permission'])
   if (typeof input.email !== 'string' || !isPlausibleEmail(input.email))
     throw invalid('email', 'invalid')
@@ -353,14 +402,33 @@ export async function inviteMember(
     // The owner is never a row. Only the owner's own address is compared, so
     // nothing about any other account is looked up or revealed.
     if (email === me.email) throw invalid('email', 'invalid')
-    // One invitation of a venture at a time, so the counts below hold at insert.
+    // One invitation change of a venture at a time, so the counts below hold.
     await exec(`SELECT 1 FROM projects WHERE id = $1 FOR UPDATE`, [venture.id])
-    const [{ pending } = { pending: 0 }] = await exec<{ pending: number }>(
-      `SELECT count(*)::int AS pending FROM project_members
-        WHERE project_id = $1 AND state = 'PENDING_CONFIRMATION'`,
-      [venture.id],
+
+    // US-02.11 "Email đã là thành viên": only this team's own members are compared.
+    const member = await exec(
+      `SELECT 1 FROM project_members m
+         JOIN individual_profiles p ON p.id = m.profile_id
+         JOIN user_accounts a ON a.id = p.account_id
+        WHERE m.project_id = $1 AND m.state = 'ACTIVE' AND a.email_normalized = $2`,
+      [venture.id, email],
     )
-    if (pending >= TEAM_LIMITS.pendingPerVenture) throw invalid('email', 'too_many_pending')
+    if (member.length > 0) throw invalid('email', 'already_member')
+
+    const [pending] = await exec<{
+      id: string
+      role_label: string | null
+      permission: MemberPermission
+      invited_at: Date
+    }>(
+      `SELECT id::text, role_label, permission, invited_at FROM project_members
+        WHERE project_id = $1 AND state = 'PENDING_CONFIRMATION' AND invite_email_normalized = $2
+        FOR UPDATE`,
+      [venture.id, email],
+    )
+    if (pending) return resend(exec, accountId, me, venture, email, pending, requestId, deliver)
+
+    if ((await teamHeadcount(exec, venture)) >= TEAM_MAX_PEOPLE) throw teamFull()
     const [sent = { to_address: 0, by_inviter: 0 }] = await exec<{
       to_address: number
       by_inviter: number
@@ -378,15 +446,17 @@ export async function inviteMember(
       sent.by_inviter >= INVITE_SEND_LIMITS.perInviter
     )
       throw sendLimited()
-    let created: { id: string; invited_at: Date } | undefined
+    let created: { id: string; invited_at: Date; invite_expires_at: Date } | undefined
     try {
-      ;[created] = await exec<{ id: string; invited_at: Date }>(
+      ;[created] = await exec<{ id: string; invited_at: Date; invite_expires_at: Date }>(
         `INSERT INTO project_members
            (project_id, profile_id, role_label, permission, state, joined_at,
-            invite_email_normalized, invited_by_profile_id, invited_at, updated_at)
-         VALUES ($1, NULL, $2, $3, 'PENDING_CONFIRMATION', NULL, $4, $5, now(), now())
-         RETURNING id::text, invited_at`,
-        [venture.id, roleLabel, permission, email, me.profile_id],
+            invite_email_normalized, invited_by_profile_id, invited_at, invite_expires_at,
+            updated_at)
+         VALUES ($1, NULL, $2, $3, 'PENDING_CONFIRMATION', NULL, $4, $5, now(),
+                 now() + make_interval(days => $6), now())
+         RETURNING id::text, invited_at, invite_expires_at`,
+        [venture.id, roleLabel, permission, email, me.profile_id, INVITATION_DAYS],
       )
     } catch (error) {
       if ((error as { code?: string }).code === '23505') {
@@ -420,8 +490,71 @@ export async function inviteMember(
       role_label: roleLabel,
       permission,
       invited_at: iso(created!.invited_at),
+      expires_at: iso(created!.invite_expires_at),
+      expired: false,
+      resent: false,
     }
   })
+}
+
+/**
+ * US-02.11 "Gửi lại lời mời đang chờ → gia hạn 7 ngày, không tạo bản ghi mới":
+ * the same row, its role and level unchanged, expiring 7 days from now. Sends
+ * count against the per-address limit like new invitations (DEC-L2R-D13).
+ */
+async function resend(
+  exec: Executor,
+  accountId: string,
+  me: { profile_id: string; name: string | null },
+  venture: Venture,
+  email: string,
+  row: { id: string; role_label: string | null; permission: MemberPermission; invited_at: Date },
+  requestId: string,
+  deliver?: (notice: InvitationNotice) => Promise<void>,
+): Promise<PendingInvitationRow & { resent: boolean }> {
+  const [sends] = await exec<{ n: number }>(
+    `SELECT count(*)::int AS n FROM audit_events
+      WHERE resource_type = 'project_member' AND resource_id = $1
+        AND action IN ('VENTURE_TEAM_INVITED', 'VENTURE_TEAM_INVITATION_RESENT')
+        AND created_at > now() - interval '24 hours'`,
+    [row.id],
+  )
+  if ((sends?.n ?? 0) >= INVITE_SEND_LIMITS.perAddress) throw sendLimited()
+  const [updated] = await exec<{ invite_expires_at: Date }>(
+    `UPDATE project_members
+        SET invite_expires_at = now() + make_interval(days => $2), updated_at = now()
+      WHERE id = $1
+      RETURNING invite_expires_at`,
+    [row.id, INVITATION_DAYS],
+  )
+  await audit(
+    exec,
+    accountId,
+    'VENTURE_TEAM_INVITATION_RESENT',
+    venture,
+    row.id,
+    'PENDING_CONFIRMATION',
+    'PENDING_CONFIRMATION',
+    requestId,
+  )
+  await deliver?.({
+    to: email,
+    inviter: me.name ?? '',
+    venture: { name: venture.name, type: venture.type },
+    role_label: row.role_label,
+    permission: row.permission,
+  })
+  return {
+    kind: 'PENDING_INVITATION',
+    membership_id: row.id,
+    email,
+    role_label: row.role_label,
+    permission: row.permission,
+    invited_at: iso(row.invited_at),
+    expires_at: iso(updated!.invite_expires_at),
+    expired: false,
+    resent: true,
+  }
 }
 
 /**
@@ -512,9 +645,9 @@ async function recipientRow(
   const me = await actor(exec, accountId)
   const venture = me ? await ventureOf(exec, ventureId) : null
   if (!me || !venture || !UUID.test(membershipId)) throw notFound()
-  const [row] = await exec<Member>(
+  const [row] = await exec<Member & { expired: boolean }>(
     `SELECT id::text, profile_id::text, state::text AS state, role_label, permission,
-            invite_email_normalized
+            invite_email_normalized, coalesce(invite_expires_at <= now(), false) AS expired
        FROM project_members WHERE id = $1 AND project_id = $2 FOR UPDATE`,
     [membershipId, venture.id],
   )
@@ -544,6 +677,8 @@ export async function acceptInvitation(
       return { membership_id: row.id, state: 'ACTIVE' }
     }
     if (row.state !== 'PENDING_CONFIRMATION') throw conflict('This invitation is closed.')
+    // US-02.14 "Lời mời … hết hạn → không còn hiệu lực".
+    if (row.expired) throw conflict('This invitation has expired.')
     if (venture.status === 'ARCHIVED') throw archived()
     if (await isActiveMember(exec, venture.id, me.profile_id)) {
       throw conflict('You are already a member of this team.')
@@ -625,10 +760,11 @@ export async function getOwnInvitation(
     role_label: string | null
     permission: MemberPermission
     invited_at: Date
+    invite_expires_at: Date
   }>(
-    `SELECT id::text, role_label, permission, invited_at FROM project_members
+    `SELECT id::text, role_label, permission, invited_at, invite_expires_at FROM project_members
       WHERE project_id = $1 AND state = 'PENDING_CONFIRMATION'
-        AND invite_email_normalized = $2`,
+        AND invite_email_normalized = $2 AND invite_expires_at > now()`,
     [venture.id, me.email],
   )
   if (!row) return null
@@ -638,6 +774,7 @@ export async function getOwnInvitation(
     role_label: row.role_label,
     permission: row.permission,
     invited_at: iso(row.invited_at),
+    expires_at: iso(row.invite_expires_at),
   }
 }
 
@@ -656,12 +793,14 @@ export async function listOwnInvitations(accountId: string): Promise<InvitationV
     role_label: string | null
     permission: MemberPermission
     invited_at: Date
+    invite_expires_at: Date
   }>(
     `SELECT m.id::text, p.id::text AS venture_id, p.name, p.type::text AS type,
-            m.role_label, m.permission, m.invited_at
+            m.role_label, m.permission, m.invited_at, m.invite_expires_at
        FROM user_accounts a
        JOIN project_members m
          ON m.invite_email_normalized = a.email_normalized AND m.state = 'PENDING_CONFIRMATION'
+        AND m.invite_expires_at > now()
        JOIN projects p ON p.id = m.project_id AND p.status <> 'ARCHIVED'
       WHERE a.id = $1
         AND NOT EXISTS (SELECT 1 FROM individual_profiles o
@@ -675,5 +814,6 @@ export async function listOwnInvitations(accountId: string): Promise<InvitationV
     role_label: row.role_label,
     permission: row.permission,
     invited_at: iso(row.invited_at),
+    expires_at: iso(row.invite_expires_at),
   }))
 }

@@ -404,7 +404,9 @@ test.describe('WF02-S05 PRJ1–PRJ3 pixel QA', () => {
         },
       ],
       exclude: [
-        // The link row's address: invitation by link is not defined (D-T1).
+        // The link row's text: the board shows an address; the build says what the
+        // link grants (Thành viên · Xem · expiry), since no link exists until the
+        // owner asks for one (DEC-S1I, superseding D-T1).
         { x: 390, y: 360, width: 520, height: 50 },
         // A person's column: a pending row shows the address alone (whether it has an
         // account is never said), and the owner row carries no e-mail line.
@@ -421,7 +423,7 @@ test.describe('WF02-S05 PRJ1–PRJ3 pixel QA', () => {
         {
           class: 'INTENTIONAL-SCOPE',
           reason:
-            'D-T1: the link row is drawn and inert, with no address; the fourth line of the levels box names NOTI1 and FP1-OWN / ME7 and is not shown',
+            'DEC-S1I (was D-T1): the link row is live; its text says what the link grants instead of an address, which exists only once the owner copies; the fourth line of the levels box names NOTI1 and FP1-OWN / ME7 and is not shown',
         },
         {
           class: 'INTENTIONAL-PRIVACY',

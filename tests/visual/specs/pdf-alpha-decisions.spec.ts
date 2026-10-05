@@ -211,25 +211,18 @@ test.describe('DEC-PDF-D6B HUB verification authority', () => {
   })
 })
 
-test.describe('DEC-PDF-D2 invitation by link is deferred', () => {
-  test('PRJ2 draws the link row inert and says it comes later; e-mail stays the way', async ({
+test.describe('DEC-PDF-D2 invitation by link (superseded by DEC-S1I)', () => {
+  // DEC-PDF-D2 drew the link row inert; DEC-S1I (S1-UAT-07) supersedes it: the
+  // link is live and owner-only, and e-mail stays a parallel way (D2).
+  test('PRJ2 link row is live (DEC-S1I supersedes DEC-PDF-D2); e-mail stays the way', async ({
     page,
   }) => {
     await completedAccount(page.request, 'pdf-link')
     const v = await createVenture(page.request, { type: 'PROJECT', name: `PDF Link ${Date.now()}` })
-    const requests: string[] = []
-    page.on('request', (r) => {
-      if (r.method() !== 'GET') requests.push(r.url())
-    })
     await page.goto(`/projects/new?venture=${v.id}&step=team`, { waitUntil: 'networkidle' })
-    const link = page.locator('[data-invite-link] [data-cta-kind="INERT"]')
-    await expect(link).toHaveAttribute('aria-disabled', 'true')
-    await expect(link).toHaveAttribute(
-      'title',
-      'Tính năng giai đoạn sau — chưa có trong phiên bản này',
-    )
-    await link.click({ force: true })
-    expect(requests).toEqual([])
+    const row = page.locator('[data-invite-link]')
+    await expect(row.locator('[data-cta-kind="INERT"]')).toHaveCount(0)
+    await expect(row.getByRole('button', { name: 'Sao chép link' })).toBeEnabled()
     await page.locator('#team-invite-email').fill(freshAddress('pdf-link-invitee'))
     await page.getByRole('button', { name: 'Gửi lời mời' }).click()
     await expect(page.locator('[data-row-kind="PENDING_INVITATION"]')).toHaveCount(1)

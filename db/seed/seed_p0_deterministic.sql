@@ -240,14 +240,40 @@ ON CONFLICT (id) DO UPDATE SET
 -- unlinked (profile_id NULL) until that account explicitly accepts (G2).
 DELETE FROM project_members WHERE id = '11000000-0000-0000-0000-000000000001';
 
-INSERT INTO project_members(id, project_id, profile_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at, updated_at) VALUES
-  ('11000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', NULL, 'Contributor', 'PENDING_CONFIRMATION', NULL, 'leader@example.test', '40000000-0000-0000-0000-000000000001', '2026-01-15T09:00:00Z', '2026-01-15T09:00:00Z')
-ON CONFLICT (id) DO UPDATE SET
-  project_id = EXCLUDED.project_id, profile_id = EXCLUDED.profile_id,
-  role_label = EXCLUDED.role_label, state = EXCLUDED.state, joined_at = EXCLUDED.joined_at,
-  ended_at = NULL, invite_email_normalized = EXCLUDED.invite_email_normalized,
-  invited_by_profile_id = EXCLUDED.invited_by_profile_id,
-  invited_at = EXCLUDED.invited_at, updated_at = EXCLUDED.updated_at;
+-- S1-UAT-07 (migration 020): a pending invitation carries its expiry. The
+-- fixture keeps a fixed, far one so the deterministic invitation stays open;
+-- the 7-day rule is applied by the services that write real invitations. The
+-- seed also runs on schemas before 020 (the migration upgrade tests), where the
+-- column does not exist yet and 020's own backfill gives the row its expiry.
+DO $seed$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+              WHERE table_name = 'project_members' AND column_name = 'invite_expires_at') THEN
+    EXECUTE $q$
+      INSERT INTO project_members(id, project_id, profile_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at, invite_expires_at, updated_at) VALUES
+        ('11000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', NULL, 'Contributor', 'PENDING_CONFIRMATION', NULL, 'leader@example.test', '40000000-0000-0000-0000-000000000001', '2026-01-15T09:00:00Z', '2099-12-31T00:00:00Z', '2026-01-15T09:00:00Z')
+      ON CONFLICT (id) DO UPDATE SET
+        project_id = EXCLUDED.project_id, profile_id = EXCLUDED.profile_id,
+        role_label = EXCLUDED.role_label, state = EXCLUDED.state, joined_at = EXCLUDED.joined_at,
+        ended_at = NULL, invite_email_normalized = EXCLUDED.invite_email_normalized,
+        invited_by_profile_id = EXCLUDED.invited_by_profile_id,
+        invited_at = EXCLUDED.invited_at, invite_expires_at = EXCLUDED.invite_expires_at,
+        updated_at = EXCLUDED.updated_at
+    $q$;
+  ELSE
+    EXECUTE $q$
+      INSERT INTO project_members(id, project_id, profile_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at, updated_at) VALUES
+        ('11000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', NULL, 'Contributor', 'PENDING_CONFIRMATION', NULL, 'leader@example.test', '40000000-0000-0000-0000-000000000001', '2026-01-15T09:00:00Z', '2026-01-15T09:00:00Z')
+      ON CONFLICT (id) DO UPDATE SET
+        project_id = EXCLUDED.project_id, profile_id = EXCLUDED.profile_id,
+        role_label = EXCLUDED.role_label, state = EXCLUDED.state, joined_at = EXCLUDED.joined_at,
+        ended_at = NULL, invite_email_normalized = EXCLUDED.invite_email_normalized,
+        invited_by_profile_id = EXCLUDED.invited_by_profile_id,
+        invited_at = EXCLUDED.invited_at, updated_at = EXCLUDED.updated_at
+    $q$;
+  END IF;
+END
+$seed$;
 
 -- ------------------------------------------------------- WF03 programmes/events
 

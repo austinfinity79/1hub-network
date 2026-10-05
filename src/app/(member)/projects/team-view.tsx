@@ -10,6 +10,7 @@ import { apiRequest } from '@/lib/api/client'
 import type { TeamDTO, TeamRow } from '@/lib/venture/team'
 
 import styles from './team.module.css'
+import { InviteLinkControl } from './invite-link'
 import { inviteFailure, PERMISSION_LABELS, PERMISSION_LEVELS } from './team-copy'
 
 /**
@@ -55,6 +56,8 @@ const COPY = {
   inviteSubmit: 'Gửi lời mời',
   inviteClose: 'Đóng',
   created: 'Đã gửi lời mời.',
+  resent: 'Đã gửi lại lời mời; hạn mới 7 ngày.',
+  expired: 'Đã hết hạn',
   failed: 'Chưa thực hiện được. Vui lòng thử lại.',
   readOnly: 'Chỉ chủ sở hữu mới quản lý được đội. Bạn đang xem danh sách đội.',
   archived: 'Dự án đã lưu trữ nên đội chỉ xem được.',
@@ -132,15 +135,15 @@ export function TeamView({ team }: { team: TeamDTO }) {
     setBusy(true)
     setInviteError(undefined)
     try {
-      await apiRequest(`/ventures/${team.venture.id}/team/invitations`, {
-        method: 'POST',
-        body: { email, role_label: roleLabel || null, permission },
-      })
+      const row = await apiRequest<{ resent: boolean }>(
+        `/ventures/${team.venture.id}/team/invitations`,
+        { method: 'POST', body: { email, role_label: roleLabel || null, permission } },
+      )
       setEmail('')
       setRoleLabel('')
       setPermission('VIEW')
       setInviting(false)
-      setNotice(COPY.created)
+      setNotice(row.resent ? COPY.resent : COPY.created)
       router.refresh()
     } catch (caught) {
       setInviteError(inviteFailure(caught))
@@ -409,6 +412,11 @@ export function TeamView({ team }: { team: TeamDTO }) {
             </div>
           </form>
         ) : null}
+        {inviting ? (
+          // US-02.12 / FB-18: the same link control as PRJ2, for the owner; outside the
+          // e-mail form so Enter in its fields never sends an invitation.
+          <InviteLinkControl ventureId={team.venture.id} />
+        ) : null}
 
         <div className={styles.table} role="table" aria-label={COPY.title} data-team-table>
           <div className={`${styles.row} ${styles.head}`} role="row">
@@ -449,7 +457,9 @@ export function TeamView({ team }: { team: TeamDTO }) {
                   {row.kind === 'ACTIVE_MEMBER'
                     ? monthYear(row.joined_at)
                     : row.kind === 'PENDING_INVITATION'
-                      ? `${COPY.invitedOn} ${dayMonth(row.invited_at)}`
+                      ? row.expired
+                        ? `${COPY.expired} · ${COPY.invitedOn} ${dayMonth(row.invited_at)}`
+                        : `${COPY.invitedOn} ${dayMonth(row.invited_at)}`
                       : '—'}
                 </span>
                 <span role="cell" className={styles.actions}>

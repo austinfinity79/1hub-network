@@ -309,6 +309,21 @@ workflows:
       - decline_invitation
       notes:
       - 'DEC-L2R-D1/D8: ventures the account owns or belongs to, and the pending invitations sent to its own address.'
+    # S1-UAT-07 (DEC-S1I): the receiver of a team invite link (US-02.12, FB-18).
+    - id: WF02-S09
+      route: /moi/:code
+      source: US-02.12
+      reads:
+      - TeamInviteLink
+      - ProjectStartup
+      writes:
+      - TeamMembership
+      actions:
+      - join_team
+      next:
+      - WF02-S06
+      notes:
+      - 'Sign-in first (return to this path); shows only the team name, "Thành viên" and "Xem"; "Tham gia" joins with role Thành viên, level VIEW; an unusable link is one "Lời mời không còn hiệu lực".'
     - id: WF02-S07
       route: /me/settings
       source: ME4

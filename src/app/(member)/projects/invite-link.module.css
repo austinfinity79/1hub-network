@@ -1,0 +1,142 @@
+/*
+ * FB-18 invite-link control. The row keeps PRJ2's approved link row (wizard
+ * step 2): same box, "HOẶC" label and copy button; the fallbacks are the
+ * wizard's own inks so the team page draws it the same.
+ */
+
+.block {
+  margin-top: 1.625rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4.3125rem;
+  padding: 0 0.8125rem 0 0.875rem;
+  border-radius: 0.625rem;
+  background: var(--control-fill, #f7f5f5);
+}
+
+.or {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.07em;
+  color: var(--faint, #8e7677);
+}
+
+.meta {
+  flex: 1 1 14rem;
+  min-width: 0;
+  padding: 0.5rem 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--muted, #534041);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  padding: 0.5rem 0;
+}
+
+.copy,
+.regenerate {
+  display: inline-flex;
+  align-items: center;
+  height: 2.8125rem;
+  padding: 0 1.375rem;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.copy {
+  border: 1px solid var(--control-line, #cfc5c5);
+  background: var(--hub-surface, #fff);
+  color: var(--ink, #170002);
+}
+
+.copy[data-state='copied'] {
+  border-color: var(--accent-strong, #b91610);
+  color: var(--accent-strong, #b91610);
+}
+
+.regenerate {
+  padding: 0 0.75rem;
+  border: 0;
+  background: none;
+  color: var(--accent-strong, #b91610);
+}
+
+.copy:disabled,
+.regenerate:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.copy:focus-visible,
+.regenerate:focus-visible,
+.manualField:focus-visible {
+  outline: 0.125em solid var(--color-fg-accent);
+  outline-offset: 0.125em;
+}
+
+/* Announced, not drawn: the button's own label shows the copied state. */
+.live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.note {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--muted, #534041);
+}
+
+.manual {
+  margin-top: 0.5rem;
+}
+
+.message {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--accent-strong, #b91610);
+}
+
+.manualLabel {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted, #534041);
+}
+
+.manualField {
+  width: 100%;
+  min-width: 0;
+  height: 2.75rem;
+  margin-top: 0.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--control-line, #cfc5c5);
+  border-radius: 0.5rem;
+  background: var(--hub-surface, #fff);
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--ink, #170002);
+}

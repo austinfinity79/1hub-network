@@ -10,7 +10,7 @@ import type { InvitationView } from '@/lib/venture/team'
 import type { VentureSummaryDTO } from '@/lib/venture/venture'
 
 import styles from './projects.module.css'
-import { PERMISSION_LABELS } from './team-copy'
+import { invitationSentence, PERMISSION_LABELS } from './team-copy'
 
 /**
  * ME7 body (DEC-L2R-D1, D7, D8, D10, D11).
@@ -65,11 +65,6 @@ function initials(name: string): string {
 }
 
 /** The ME7 sentence: "AgriLink mời bạn vào đội với vai trò … · quyền Xem". */
-function invitationSentence(invitation: InvitationView): string {
-  const role = invitation.role_label ? ` với vai trò ${invitation.role_label}` : ''
-  return `${invitation.venture.name} mời bạn vào đội${role} · quyền ${PERMISSION_LABELS[invitation.permission]}`
-}
-
 function VentureCard({ venture }: { venture: VentureSummaryDTO }) {
   const editHref = `/projects/${venture.id}/edit`
   const teamHref = `/projects/${venture.id}/team`

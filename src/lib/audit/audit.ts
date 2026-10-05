@@ -25,6 +25,11 @@ export type AuditAction =
   | 'VENTURE_TEAM_INVITATION_REJECTED'
   | 'VENTURE_TEAM_ROLE_CHANGED'
   | 'VENTURE_TEAM_REMOVED'
+  // S1-UAT-07 (DEC-S1I): an e-mail invitation re-sent (+7 days); invite links
+  // created or regenerated. Ids, states and link ids only, never a token.
+  | 'VENTURE_TEAM_INVITATION_RESENT'
+  | 'VENTURE_INVITE_LINK_CREATED'
+  | 'VENTURE_INVITE_LINK_REGENERATED'
   // WF02 venture record (DEC-L2R-D9): ids, type, status and field names only.
   | 'VENTURE_CREATED'
   | 'VENTURE_UPDATED'

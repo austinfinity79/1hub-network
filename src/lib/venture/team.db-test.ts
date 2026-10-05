@@ -189,19 +189,15 @@ describe('WF02-S06 invitation create', () => {
     ).toHaveLength(0)
   })
 
-  it('DEC-L2R-D8: at most 20 pending invitations per venture; a closed one frees its place', async () => {
+  it('S1-UAT-07 (DEC-S1I-D4): at most 20 people, owner and live invitations counted; a closed one frees its place', async () => {
     const owner = await person()
     const v = await venture(owner)
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 19; i++) {
       await inviteMember(owner.accountId, v.id, { email: `cap-${i}@example.test` }, RID)
     }
     expect(
       await refusal(inviteMember(owner.accountId, v.id, { email: 'cap-20@example.test' }, RID)),
-    ).toMatchObject({
-      code: 'PROFILE_VALIDATION_FAILED',
-      status: 422,
-      fields: { email: 'too_many_pending' },
-    })
+    ).toMatchObject({ code: 'TEAM_FULL', status: 409 })
     const [first] = await query<{ id: string }>(
       `SELECT id::text FROM project_members
         WHERE project_id = $1 AND invite_email_normalized = 'cap-0@example.test'`,
@@ -210,7 +206,7 @@ describe('WF02-S06 invitation create', () => {
     await removeMember(owner.accountId, v.id, first!.id, RID)
     const sent = await inviteMember(owner.accountId, v.id, { email: 'cap-20@example.test' }, RID)
     expect(sent.kind).toBe('PENDING_INVITATION')
-    expect((await getTeam(owner.accountId, v.id)).counts.pending).toBe(20)
+    expect((await getTeam(owner.accountId, v.id)).counts.pending).toBe(19)
   })
 
   it('the owner cannot invite their own email; no row is created', async () => {
@@ -245,17 +241,24 @@ describe('WF02-S06 invitation create', () => {
   it('duplicate and concurrent duplicate invites leave exactly one pending row', async () => {
     const owner = await person()
     const v = await venture(owner)
-    await inviteMember(owner.accountId, v.id, { email: 'dup@example.test' }, RID)
+    const first = await inviteMember(owner.accountId, v.id, { email: 'dup@example.test' }, RID)
+    // US-02.11 (DEC-S1I-D5): inviting a pending address again re-sends the same row.
     expect(
-      await refusal(inviteMember(owner.accountId, v.id, { email: 'DUP@example.test' }, RID)),
-    ).toMatchObject({ code: 'MEMBERSHIP_INVALID_TRANSITION', status: 409 })
+      await inviteMember(owner.accountId, v.id, { email: 'DUP@example.test' }, RID),
+    ).toMatchObject({ membership_id: first.membership_id, resent: true })
 
     const results = await Promise.allSettled(
       Array.from({ length: 5 }, () =>
         inviteMember(owner.accountId, v.id, { email: 'race@example.test' }, RID),
       ),
     )
-    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
+    // Concurrent sends serialise on the venture row: one row, the others re-send it
+    // (a refusal is only ever the per-address send limit).
+    for (const r of results) {
+      if (r.status === 'rejected') {
+        expect((r.reason as { code?: string }).code).toBe('INVITATION_RATE_LIMITED')
+      }
+    }
     const rows = await query(
       `SELECT 1 FROM project_members WHERE project_id = $1 AND invite_email_normalized = 'race@example.test'`,
       [v.id],
@@ -342,6 +345,7 @@ describe('WF02-S06 accept / decline (explicit, recipient only)', () => {
       role_label: 'Dev',
       permission: 'EDIT',
       invited_at: expect.any(String),
+      expires_at: expect.any(String),
     })
     expect(inv).toMatchObject({ invited_at: own!.invited_at })
     await acceptInvitation(mate.accountId, v.id, inv.membership_id!, RID)
@@ -450,12 +454,13 @@ describe('WF02-S06 accept / decline (explicit, recipient only)', () => {
 
   it('an already-ACTIVE recipient gets no second membership', async () => {
     const { owner, mate, v } = await teamWithMember()
-    const again = await inviteMember(owner.accountId, v.id, { email: mate.email }, RID)
+    // US-02.11 "Email đã là thành viên → báo 'Người này đã ở trong đội'" (DEC-S1I-D5).
     expect(
-      await refusal(acceptInvitation(mate.accountId, v.id, again.membership_id!, RID)),
+      await refusal(inviteMember(owner.accountId, v.id, { email: mate.email }, RID)),
     ).toMatchObject({
-      code: 'MEMBERSHIP_INVALID_TRANSITION',
-      status: 409,
+      code: 'PROFILE_VALIDATION_FAILED',
+      status: 422,
+      fields: { email: 'already_member' },
     })
     const active = await query(
       `SELECT 1 FROM project_members WHERE project_id = $1 AND profile_id = $2 AND state = 'ACTIVE'`,

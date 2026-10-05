@@ -133,8 +133,8 @@ async function teamRow(
 /** A pending invitation (DEC-WF02-S06-G1) carries the invitee's email, never a profile. */
 async function pendingRow(ventureId: string, owner: Member, invitee: Member) {
   await query(
-    `INSERT INTO project_members (project_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at)
-     VALUES ($1, 'Co-founder', 'PENDING_CONFIRMATION', NULL, $2, $3, now())`,
+    `INSERT INTO project_members (project_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at, invite_expires_at)
+     VALUES ($1, 'Co-founder', 'PENDING_CONFIRMATION', NULL, $2, $3, now(), now() + interval '7 days')`,
     [ventureId, invitee.email, owner.profileId],
   )
 }

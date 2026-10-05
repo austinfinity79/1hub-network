@@ -364,6 +364,7 @@ test.describe('WF02-S08 invitations', () => {
     const invitations = await items(page.request, MY_INVITATIONS)
     expect(invitations).toHaveLength(1)
     expect(Object.keys(invitations[0]!).sort()).toEqual([
+      'expires_at',
       'invited_at',
       'membership_id',
       'permission',

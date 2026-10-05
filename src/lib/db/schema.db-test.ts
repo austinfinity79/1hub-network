@@ -158,6 +158,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '018_p0_password_auth.sql',
       // S1-UAT-05 (DEC-S1P): unnormalised tags, experience type and place.
       '019_p0_profile_sprint1.sql',
+      // S1-UAT-07 (DEC-S1I): e-mail invitation expiry and team invite links.
+      '020_p0_team_invite_links.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -354,6 +356,8 @@ describe('M0-T07 seed fixture quality', () => {
       'project_domains',
       'role_verification_requests',
       'user_sessions',
+      // Migration 020 (S1-UAT-07): an owner creates invite links at runtime.
+      'venture_invite_links',
       'venture_reviews',
     ])
   })
@@ -457,8 +461,9 @@ describe('TASK 22-L1-L2 venture lifecycle (migration 011)', () => {
       query(
         `INSERT INTO project_members
            (project_id, profile_id, role_label, permission, state, joined_at,
-            invite_email_normalized, invited_by_profile_id, invited_at)
-         VALUES ($1, NULL, 'x', 'OWNER', 'PENDING_CONFIRMATION', NULL, 'ck@example.test', $2, now())`,
+            invite_email_normalized, invited_by_profile_id, invited_at, invite_expires_at)
+         VALUES ($1, NULL, 'x', 'OWNER', 'PENDING_CONFIRMATION', NULL, 'ck@example.test', $2, now(),
+                 now() + interval '7 days')`,
         [project!.id, project!.owner],
       ),
     ).rejects.toMatchObject({ code: '23514', constraint: 'ck_pm_permission' })

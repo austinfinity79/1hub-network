@@ -614,7 +614,9 @@ test.describe('WF02-S05 PRJ1 create', () => {
     })
   })
 
-  test('the AI block and the link row are drawn inert: not a control, no request', async ({
+  // The link row was inert too until DEC-S1I (S1-UAT-07) made it live; its
+  // behaviour is proven by s1-uat-07-invite.spec.ts.
+  test('the AI block is drawn inert: not a control, no request; the link row is live', async ({
     page,
   }) => {
     await member(page.request, 'inert')
@@ -647,7 +649,9 @@ test.describe('WF02-S05 PRJ1 create', () => {
 
     const v = await createVenture(page.request, { type: 'PROJECT', name: 'Link QA' })
     await page.goto(`/projects/new?venture=${v.id}&step=team`, { waitUntil: 'networkidle' })
-    await assertInert('[data-invite-link]', 'Sao chép link')
+    const link = page.locator('[data-invite-link]')
+    await expect(link.locator('[data-cta-kind="INERT"]')).toHaveCount(0)
+    await expect(link.getByRole('button', { name: 'Sao chép link' })).toBeEnabled()
     await expect(page.locator('[data-team-table] li')).toHaveCount(1)
     expect(await stored(v.id)).toMatchObject({ team_rows: 0 })
   })
@@ -724,8 +728,12 @@ test.describe('WF02-S05 PRJ1 create', () => {
     }
 
     // Refusals name the reason and create nothing.
+    // A waiting address is sent again, not refused (DEC-S1I D4): same row, new 7 days.
+    await page.locator('#team-invite-email').fill(a)
+    await page.getByRole('button', { name: 'Gửi lời mời' }).click()
+    await expect(page.getByText('Đã gửi lại lời mời; hạn mới 7 ngày.')).toBeVisible()
+    await expect(page.locator('#team-invite-email')).toHaveValue('')
     const refusals: [string, string][] = [
-      [a, 'Email này đã có một lời mời đang chờ.'],
       ['not-an-email', 'Email chưa hợp lệ.'],
       [m.email, 'Email chưa hợp lệ.'],
     ]

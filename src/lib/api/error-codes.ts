@@ -67,6 +67,12 @@ export type UncontractedErrorCode = (typeof UNCONTRACTED_ERROR_CODES)[number]
  * decision record in docs/decisions/DECISION_LOG.md; they are not gap codes.
  */
 export const DECISION_ERROR_CODES = [
+  // DEC-S1I-D3: 404, the invite link is unknown, expired, regenerated or its venture closed (one answer).
+  'INVITE_LINK_INVALID',
+  // DEC-S1I-D4: 409, the team holds 20 people counting live pending invitations.
+  'TEAM_FULL',
+  // DEC-S1I-D2: 500, invite links are not configured on this server (INVITE_LINK_SECRET).
+  'INVITE_LINK_UNAVAILABLE',
   // DEC-WF01-S07-D8: 409, the submitted legal document version is no longer current.
   'LEGAL_DOCUMENT_VERSION_STALE',
   // DEC-WF01-S07-D8: 422, unsupported visibility group/level combination.

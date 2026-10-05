@@ -25,7 +25,7 @@ import { CORE, createVenture, freshAddress, invite, STAGE } from '../support/wor
  * WF02 L2 UAT — the business matrix of TASK 22-L1-L2-SOT-REALIGN (BA workbook
  * WF-02, DEC-L2R-D1..D11), one test per letter:
  *
- *   A profile on /me (FP1-OWN)       H invitation by link (inert, D-T1)
+ *   A profile on /me (FP1-OWN)       H invitation by link (live, DEC-S1I)
  *   B create PROJECT                 I accept → member at the invited level
  *   C create STARTUP                 J IDOR
  *   D duplicate create               K role / level spoofing
@@ -450,24 +450,28 @@ test.describe('WF02 L2 UAT — business matrix', () => {
     expect(team.counts).toEqual({ members: 1, pending: 1 })
   })
 
-  test('H · link invitation: drawn and inert, no endpoint (NOT SUPPORTED BY CONTRACT, D-T1)', async ({
+  // D-T1 drew the link inert with no endpoint; DEC-S1I (S1-UAT-07) supersedes it.
+  // The link is live, owner-only, and joining needs an explicit "Tham gia"
+  // (s1-uat-07-invite.spec.ts proves the receiver).
+  test('H · link invitation: live and owner-only (DEC-S1I supersedes D-T1)', async ({
     page,
+    browser,
   }) => {
     await completedAccount(page.request, 'uat2-h')
     const v = await createVenture(page.request, { type: 'PROJECT', name: 'Link UAT' })
     await page.goto(`/projects/new?venture=${v.id}&step=team`, { waitUntil: 'networkidle' })
-    const link = page.locator('[data-invite-link] [data-cta-kind="INERT"]')
-    await expect(link).toHaveText('Sao chép link')
-    await expect(link).toHaveAttribute('aria-disabled', 'true')
-    expect(await link.evaluate((el) => el.tagName)).toBe('SPAN')
-    const calls: string[] = []
-    page.on('request', (r) => {
-      if (r.url().includes('/api/')) calls.push(`${r.method()} ${r.url()}`)
-    })
-    await link.click({ force: true })
-    await page.waitForLoadState('networkidle')
-    expect(calls).toEqual([])
-    // No route mints, lists or redeems an invitation link.
+    const row = page.locator('[data-invite-link]')
+    await expect(row.locator('[data-cta-kind="INERT"]')).toHaveCount(0)
+    const copy = row.getByRole('button', { name: 'Sao chép link' })
+    expect(await copy.evaluate((el) => el.tagName)).toBe('BUTTON')
+    const link = await page.request.post(`${VENTURES}/${v.id}/team/invite-link`)
+    expect(link.status()).toBe(200)
+    expect((await link.json()).link.path).toMatch(/^\/moi\/link-uat-[0-9a-f]{40}$/)
+    // Only the owner mints a link; nobody joined by minting one.
+    const stranger = await persona(browser, 'h-stranger')
+    const refused = await stranger.request.post(`${VENTURES}/${v.id}/team/invite-link`)
+    expect([403, 404]).toContain(refused.status())
+    // The names D-T1 ruled out still do not exist.
     for (const res of [
       await page.request.post(`${VENTURES}/${v.id}/team/invitation-links`),
       await page.request.post(`${VENTURES}/${v.id}/team/link`),
@@ -477,6 +481,7 @@ test.describe('WF02 L2 UAT — business matrix', () => {
       expect([404, 405], res.url()).toContain(res.status())
     }
     expect((await ventureRow(v.id)).team_rows).toBe(0)
+    await stranger.context.close()
   })
 
   test('I · accept: the invitee joins only by accepting, at the invited level', async ({
@@ -690,6 +695,7 @@ test.describe('WF02 L2 UAT — business matrix', () => {
         role_label: 'Thành viên',
         permission: 'VIEW',
         invited_at: expect.any(String),
+        expires_at: expect.any(String),
       },
     ])
     expect(JSON.stringify(listed)).not.toContain(third)

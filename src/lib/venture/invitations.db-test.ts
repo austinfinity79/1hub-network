@@ -183,8 +183,9 @@ describe('DEC-L2R-D13 send limits', () => {
       await venture(owner, 'B'),
       await venture(owner, 'C'),
     ]
+    // 17 per venture: a team holds 20 people with its owner (DEC-S1I-D4).
     for (let n = 0; n < INVITE_SEND_LIMITS.perInviter; n++) {
-      const v = ventures[Math.floor(n / 20)]!
+      const v = ventures[Math.floor(n / 17)]!
       await inviteMember(owner.accountId, v.id, { email: address() }, RID, sent)
     }
     expect(
@@ -199,7 +200,7 @@ describe('DEC-L2R-D13 send limits', () => {
     ).toBe('sent')
   })
 
-  it('concurrent invitations never pass the pending cap of a venture', async () => {
+  it('concurrent invitations never pass the team cap (20 people, owner included)', async () => {
     const owner = await person()
     const v = await venture(owner)
     for (let n = 0; n < 18; n++)
@@ -209,8 +210,10 @@ describe('DEC-L2R-D13 send limits', () => {
         code(inviteMember(owner.accountId, v.id, { email: address() }, RID, sent)),
       ),
     )
-    expect(results.filter((r) => r === 'sent')).toHaveLength(2)
-    expect(await pendingRows(v.id)).toHaveLength(20)
+    // Owner + 18 pending + 1 = 20 (DEC-S1I-D4): one more goes out, the rest are TEAM_FULL.
+    expect(results.filter((r) => r === 'sent')).toHaveLength(1)
+    expect(results.filter((r) => r === '409 TEAM_FULL')).toHaveLength(3)
+    expect(await pendingRows(v.id)).toHaveLength(19)
   })
 })
 
@@ -237,8 +240,8 @@ describe('DEC-L2R-D8 GET /me/venture-invitations', () => {
     await query(`UPDATE projects SET status = 'ARCHIVED' WHERE id = $1`, [fromC.id])
     // A pending row carrying the owner's own address on the owner's venture is not an invitation.
     await query(
-      `INSERT INTO project_members (project_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at)
-       VALUES ($1, 'Self', 'PENDING_CONFIRMATION', NULL, $2, $3, now())`,
+      `INSERT INTO project_members (project_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at, invite_expires_at)
+       VALUES ($1, 'Self', 'PENDING_CONFIRMATION', NULL, $2, $3, now(), now() + interval '7 days')`,
       [mine.id, me.email, me.profileId],
     )
     // Oldest first, by the time of the invitation rather than of the venture.
@@ -259,6 +262,7 @@ describe('DEC-L2R-D8 GET /me/venture-invitations', () => {
         role_label: null,
         permission: 'VIEW',
         invited_at: '2026-02-01T09:00:00.000Z',
+        expires_at: expect.any(String),
       },
       {
         venture: { id: fromA.id, name: 'Alpha', type: 'STARTUP' },
@@ -266,6 +270,7 @@ describe('DEC-L2R-D8 GET /me/venture-invitations', () => {
         role_label: 'Dev',
         permission: 'EDIT',
         invited_at: '2026-03-01T09:00:00.000Z',
+        expires_at: expect.any(String),
       },
     ])
     const json = JSON.stringify(list)
@@ -310,6 +315,7 @@ describe('DEC-L2R-D8 GET /me/venture-invitations', () => {
       role_label: null,
       permission: 'VIEW',
       invited_at: expect.any(String),
+      expires_at: expect.any(String),
     })
     expect(inv).toMatchObject({ invited_at: own!.invited_at })
     expect(await listOwnInvitations('00000000-0000-0000-0000-000000000000')).toEqual([])

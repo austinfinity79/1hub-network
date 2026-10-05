@@ -1,7 +1,7 @@
 import { query } from '../../../src/lib/db/client'
 import { completedAccount, reach } from '../../visual/support/onboarding'
 import { createVenture, invite } from '../../visual/support/workspace'
-import { expect, gap, requestLink, test, uatHooks, unique } from './uat'
+import { expect, requestLink, test, uatHooks, unique } from './uat'
 import { VENTURES } from './ventures'
 
 /**
@@ -146,9 +146,12 @@ test('UC08 · exceptions · wrong account, revoked, declined; expiry', async ({ 
     ]),
   ).toEqual([])
 
-  gap(
-    'PRODUCT GAP',
-    'Invitation expiry: an e-mail invitation has no time limit in Alpha; it stays PENDING until accepted, declined or cancelled (DEC-PDF-D2 notes no expiry exists).',
+  // Invitation expiry exists since S1-UAT-07 (DEC-S1I D4, superseding the
+  // "no expiry" of DEC-PDF-D2): every invitation carries its 7-day end.
+  const [ends] = await query<{ ends: Date | null }>(
+    'SELECT invite_expires_at AS ends FROM project_members WHERE id = $1',
+    [second.membership_id],
   )
+  expect(ends!.ends).not.toBeNull()
   await Promise.all([owner.close(), wrong.close()])
 })

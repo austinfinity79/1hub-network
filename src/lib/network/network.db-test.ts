@@ -169,8 +169,8 @@ describe('GET /me/network read model (WF02-T00)', () => {
     )
     // A pending invitation to this member's email is not a relation yet (DEC-WF02-S06-G2).
     await query(
-      `INSERT INTO project_members (project_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at)
-       SELECT $1, 'Invitee', 'PENDING_CONFIRMATION', NULL, a.email_normalized, $2, now()
+      `INSERT INTO project_members (project_id, role_label, state, joined_at, invite_email_normalized, invited_by_profile_id, invited_at, invite_expires_at)
+       SELECT $1, 'Invitee', 'PENDING_CONFIRMATION', NULL, a.email_normalized, $2, now(), now() + interval '7 days'
          FROM user_accounts a WHERE a.id = $3`,
       [pending, other.profileId, owner.accountId],
     )

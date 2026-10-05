@@ -105,8 +105,8 @@ async function world() {
     [startup.id, teammate.profileId],
   )
   await query(
-    `INSERT INTO project_members (project_id, invite_email_normalized, role_label, state, invited_at, invited_by_profile_id, joined_at)
-     VALUES ($1, $2, 'Cố vấn', 'PENDING_CONFIRMATION', now(), $3, NULL)`,
+    `INSERT INTO project_members (project_id, invite_email_normalized, role_label, state, invited_at, invited_by_profile_id, joined_at, invite_expires_at)
+     VALUES ($1, $2, 'Cố vấn', 'PENDING_CONFIRMATION', now(), $3, NULL, now() + interval '7 days')`,
     [startup.id, invitee.email, owner.profileId],
   )
   return { owner, teammate, invitee, stranger, startup, project, archived, foreign }

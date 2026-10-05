@@ -141,7 +141,10 @@ const SNAPSHOT: Record<string, string> = {
   // The pre-017 venture columns: 017 adds website / logo, which are not 016's concern.
   projects: `SELECT id, type, owner_profile_id, slug, name, summary, status, metadata, created_at,
                     updated_at, region_id, stage_id, owner_role_label, visibility FROM projects`,
-  project_members: 'SELECT * FROM project_members',
+  // The pre-020 member columns: 020 adds the invitation expiry, not 016's concern.
+  project_members: `SELECT id, project_id, profile_id, role_label, state, joined_at, ended_at,
+                           invite_email_normalized, invited_by_profile_id, invited_at, updated_at,
+                           permission FROM project_members`,
   programmes: 'SELECT * FROM programmes',
   programme_application_forms: 'SELECT * FROM programme_application_forms',
 }

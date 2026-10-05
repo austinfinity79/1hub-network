@@ -194,6 +194,7 @@ test.describe('WF02-S06 team journeys (UI)', () => {
         role_label: 'CTO',
         permission: 'EDIT',
         invited_at: expect.any(String),
+        expires_at: expect.any(String),
       },
     ])
     await mate.page.goto(`/projects/${v.id}/team`, { waitUntil: 'networkidle' })
@@ -201,7 +202,7 @@ test.describe('WF02-S06 team journeys (UI)', () => {
     await expect(mate.page.locator('[data-team-table]')).toHaveCount(0)
     await expect(mate.page.locator('body')).not.toContainText('Chủ Đội QA')
     expect((await rowOf(inv!.id)).state).toBe('PENDING_CONFIRMATION')
-    await mate.page.getByRole('button', { name: 'Nhận lời mời' }).click()
+    await mate.page.getByRole('button', { name: 'Chấp nhận' }).click()
     await expect(mate.page.locator('[data-team-view]')).toHaveAttribute('data-viewer', 'MEMBER')
     await expect(mate.page.locator('[data-state="read-only"]')).toBeVisible()
     await expect(mate.page.getByRole('button', { name: 'Mời thành viên' })).toHaveCount(0)
@@ -348,7 +349,7 @@ test.describe('WF02-S06 team journeys (UI)', () => {
 })
 
 test.describe('WF02-S06 API security', () => {
-  test('IDOR, enumeration, privacy, cross-project, concurrency, pending limit, audit', async ({
+  test('IDOR, enumeration, privacy, cross-project, concurrency, team limit, audit', async ({
     browser,
     page,
   }) => {
@@ -370,10 +371,13 @@ test.describe('WF02-S06 API security', () => {
     expect(Object.keys(ja).sort()).toEqual(Object.keys(jb).sort())
     expect(Object.keys(ja).sort()).toEqual([
       'email',
+      'expired',
+      'expires_at',
       'invited_at',
       'kind',
       'membership_id',
       'permission',
+      'resent',
       'role_label',
     ])
     expect(ja.permission).toBe('VIEW')
@@ -439,16 +443,17 @@ test.describe('WF02-S06 API security', () => {
     const self = await page.request.post(`${team}/invitations`, { data: { email: owner.email } })
     expect(self.status()).toBe(422)
 
-    // Duplicate and concurrent duplicate invites: exactly one pending row.
+    // Duplicate and concurrent duplicate invites: exactly one pending row. A
+    // repeat re-sends it (DEC-S1I D4), at most 3 sends per address a day.
     const dupAddress = freshAddress('dup')
     const dup = await Promise.all(
       [0, 1, 2, 3].map(() =>
         page.request.post(`${team}/invitations`, { data: { email: dupAddress } }),
       ),
     )
-    expect(dup.map((r) => r.status()).sort()).toEqual([201, 409, 409, 409])
-    expect((await dup.find((r) => r.status() === 409)!.json()).error.code).toBe(
-      'MEMBERSHIP_INVALID_TRANSITION',
+    expect(dup.map((r) => r.status()).sort()).toEqual([200, 200, 201, 429])
+    expect((await dup.find((r) => r.status() === 429)!.json()).error.code).toBe(
+      'INVITATION_RATE_LIMITED',
     )
     const pending = await query(
       `SELECT 1 FROM project_members WHERE project_id = $1 AND invite_email_normalized = $2`,
@@ -456,15 +461,17 @@ test.describe('WF02-S06 API security', () => {
     )
     expect(pending).toHaveLength(1)
 
-    // Technical bound: 20 pending invitations per venture (DEC-L2R-D8).
-    for (let i = 0; i < 20; i++)
+    // Team bound: 20 people, owner and live invitations counted (DEC-S1I D3,
+    // superseding the 20-pending bound of DEC-L2R-D8).
+    const { counts } = await (await page.request.get(`${VENTURES}/${w.id}/team`)).json()
+    for (let i = counts.members + counts.pending; i < 20; i++)
       await invite(page.request, w.id, { email: freshAddress(`bulk${i}`) })
     const overflow = freshAddress('overflow')
     const tooMany = await page.request.post(`${VENTURES}/${w.id}/team/invitations`, {
       data: { email: overflow },
     })
-    expect(tooMany.status()).toBe(422)
-    expect((await tooMany.json()).error.fields).toEqual({ email: 'too_many_pending' })
+    expect(tooMany.status()).toBe(409)
+    expect((await tooMany.json()).error.code).toBe('TEAM_FULL')
     expect((await outbox(page.request, overflow)).status()).toBe(404)
 
     // Audit rows carry ids, states and levels only.
@@ -474,7 +481,7 @@ test.describe('WF02-S06 API security', () => {
       [v.id],
     )
     expect(new Set(trail.map((x) => x.action))).toEqual(
-      new Set(['VENTURE_TEAM_INVITED', 'VENTURE_TEAM_JOINED']),
+      new Set(['VENTURE_TEAM_INVITED', 'VENTURE_TEAM_INVITATION_RESENT', 'VENTURE_TEAM_JOINED']),
     )
     expect(trail.filter((x) => x.action === 'VENTURE_TEAM_JOINED')).toHaveLength(1)
     for (const x of trail) expect(x.payload).not.toMatch(/@|token|cookie|role_label|Owner/i)

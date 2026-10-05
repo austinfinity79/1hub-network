@@ -3,13 +3,14 @@ import type { Browser } from '@playwright/test'
 import { query } from '../../../src/lib/db/client'
 import { completedAccount } from '../../visual/support/onboarding'
 import { createVenture, freshAddress, invite } from '../../visual/support/workspace'
-import { expect, gap, test, uatHooks } from './uat'
+import { expect, test, uatHooks } from './uat'
 import { VENTURES } from './ventures'
 
 /**
  * UC07 — Owner mời thành viên vào Project/Startup, by e-mail (Alpha): the
  * owner chooses role and level, the invitation is PENDING, nobody joins yet.
- * Invitation by link is DEFERRED (DEC-PDF-D2).
+ * Invitation by link exists alongside e-mail since S1-UAT-07 (DEC-S1I, which
+ * supersedes DEC-PDF-D2); its receiver is proven by s1-uat-07-invite.spec.ts.
  */
 uatHooks()
 
@@ -67,17 +68,22 @@ test('UC07 · UI+API+DB · the owner invites by e-mail with role and level; PEND
   expect(mail.text).toContain(`Chủ UC07 mời bạn tham gia ${v.name} với vai trò CTO.`)
   expect(mail.text).not.toMatch(/token|[0-9a-f]{8}-[0-9a-f]{4}-/i)
 
-  // Invitation by link: drawn in the wizard, inert, no endpoint.
+  // The e-mail invitation expires in 7 days (DEC-S1I D4).
+  const [expiry] = await query<{ days: number }>(
+    `SELECT extract(epoch FROM invite_expires_at - invited_at) / 86400 AS days
+       FROM project_members WHERE project_id = $1 AND state = 'PENDING_CONFIRMATION'`,
+    [v.id],
+  )
+  expect(Math.round(Number(expiry!.days))).toBe(7)
+  // Invitation by link (DEC-S1I): a live control in the wizard, owner-only API.
   await page.goto(`/projects/new?venture=${v.id}&step=team`, { waitUntil: 'networkidle' })
-  await expect(page.locator('[data-invite-link] [data-cta-kind="INERT"]')).toHaveAttribute(
-    'aria-disabled',
-    'true',
-  )
-  // No link endpoint: the path falls to the membership route, which has no POST.
-  expect([404, 405]).toContain(
-    (await page.request.post(`${VENTURES}/${v.id}/team/invite-links`)).status(),
-  )
-  gap('DEFERRED', 'Invitation by link and its expiry (DEC-PDF-D2).')
+  await expect(page.locator('[data-invite-link] [data-cta-kind="INERT"]')).toHaveCount(0)
+  await expect(
+    page.locator('[data-invite-link]').getByRole('button', { name: 'Sao chép link' }),
+  ).toBeEnabled()
+  const link = await page.request.post(`${VENTURES}/${v.id}/team/invite-link`)
+  expect(link.status()).toBe(200)
+  expect((await link.json()).link.path).toMatch(/^\/moi\/[a-z0-9-]+-[0-9a-f]{40}$/)
 })
 
 test('UC07 · exceptions · current member again, owner cancels, non-owners cannot invite, no escalation', async ({
@@ -105,20 +111,9 @@ test('UC07 · exceptions · current member again, owner cancels, non-owners cann
   const again = await page.request.post(`${VENTURES}/${v.id}/team/invitations`, {
     data: { email: mate.account.email, permission: 'EDIT' },
   })
-  const duplicate = again.status()
-  if (duplicate === 201) {
-    const { membership_id } = await again.json()
-    const accept = await mate.request.post(
-      `${VENTURES}/${v.id}/team/invitations/${membership_id}/accept`,
-    )
-    expect(accept.status()).toBe(409)
-    gap(
-      'PRODUCT GAP',
-      'Inviting the address of a current member is not refused at invite time: a second PENDING invitation is created and e-mailed; accepting it is refused (409), so no duplicate membership results.',
-    )
-  } else {
-    expect([409, 422]).toContain(duplicate)
-  }
+  // Refused at invite time since S1-UAT-07 (DEC-S1I D4): no second invitation.
+  expect(again.status()).toBe(422)
+  expect((await again.json()).error.fields).toEqual({ email: 'already_member' })
   const active = await query<{ n: number }>(
     `SELECT count(*)::int AS n FROM project_members WHERE project_id = $1 AND profile_id = $2 AND state = 'ACTIVE'`,
     [v.id, mate.account.profileId],
@@ -136,9 +131,7 @@ test('UC07 · exceptions · current member again, owner cancels, non-owners cann
   )
   expect(cancelled!.state).toBe('REMOVED')
   await page.goto(`/projects/${v.id}/team`, { waitUntil: 'networkidle' })
-  await expect(page.locator('[data-row-kind="PENDING_INVITATION"]')).toHaveCount(
-    duplicate === 201 ? 1 : 0,
-  )
+  await expect(page.locator('[data-row-kind="PENDING_INVITATION"]')).toHaveCount(0)
 
   // Unauthorized inviters: Biên tập and Xem 403, an outsider 404; spoofed headers change nothing.
   const spoof = { 'x-role': 'OWNER', 'x-permission': 'OWNER' }

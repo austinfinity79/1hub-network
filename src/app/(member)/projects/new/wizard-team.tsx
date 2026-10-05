@@ -3,12 +3,19 @@
 import { useRouter } from 'next/navigation'
 import { useRef, useState, type FormEvent } from 'react'
 
-import { Inert } from '@/components/onboarding/inert'
 import { Button, Notice, TextInput } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
+import { isPlausibleEmail } from '@/lib/auth/email'
 import type { TeamDTO, TeamRow } from '@/lib/venture/team'
 
-import { inviteFailure, PERMISSION_LABELS, PERMISSION_LEVELS, TEAM_ROLES } from '../team-copy'
+import { InviteLinkControl } from '../invite-link'
+import {
+  inviteFailure,
+  MAX_INVITE_BATCH,
+  PERMISSION_LABELS,
+  PERMISSION_LEVELS,
+  TEAM_ROLES,
+} from '../team-copy'
 import styles from './wizard.module.css'
 
 /**
@@ -17,8 +24,11 @@ import styles from './wizard.module.css'
  * before accepting. A role is display text; the level is Biên tập or Xem, and
  * Chủ sở hữu is the creator's alone. Several addresses may be given at once,
  * each becomes its own invitation. A pending row shows the address only: the
- * server never tells whether an address has an account. Invitation by link is
- * deferred (DEC-PDF-D2): the board's row is drawn inert, saying so. The clauses of the board's three levels about
+ * server never tells whether an address has an account. Invitation by link
+ * (S1-UAT-07, US-02.12, FB-18; DEC-S1I supersedes DEC-PDF-D2): the board's row
+ * is the real "Sao chép link". US-02.11: at most 10 addresses per send; a
+ * malformed or refused address is skipped and named while the others go out;
+ * an address already invited is re-sent (+7 days). The clauses of the board's three levels about
  * submissions and ownership transfer are left out: neither exists.
  */
 
@@ -30,12 +40,13 @@ const COPY = {
   role: 'Vai trò',
   permission: 'Quyền',
   submit: 'Gửi lời mời',
-  or: 'HOẶC',
-  copyLink: 'Sao chép link',
   current: 'ĐỘI HIỆN TẠI',
   you: 'Bạn',
   pending: 'Chờ xác nhận',
   sent: 'Đã gửi lời mời.',
+  resent: 'Đã gửi lại lời mời; hạn mới 7 ngày.',
+  batch: `Mỗi lần gửi tối đa ${MAX_INVITE_BATCH} email.`,
+  notSent: 'Chưa gửi được:',
   levels: 'BA MỨC QUYỀN',
   back: 'Quay lại',
   skip: 'Bỏ qua, mời sau',
@@ -94,29 +105,45 @@ export function WizardTeam({
       setError(inviteFailure({ fields: { email: 'invalid' } }))
       return
     }
+    if (addresses.length > MAX_INVITE_BATCH) {
+      setError(COPY.batch)
+      return
+    }
     inFlight.current = true
     setBusy(true)
     setError(undefined)
     setNotice(undefined)
-    // One request per address, in order; the first refusal stops and keeps the rest in the field.
-    const left = [...addresses]
-    try {
-      while (left.length > 0) {
-        await apiRequest(`/ventures/${team.venture.id}/team/invitations`, {
-          method: 'POST',
-          body: { email: left[0], role_label: roleLabel || null, permission },
-        })
-        left.shift()
+    // One request per address, in order. A refused address is skipped and named;
+    // the others still go out, and only the refused ones stay in the field.
+    const refused: { address: string; reason: string }[] = []
+    let sent = 0
+    let resent = 0
+    for (const address of addresses) {
+      if (!isPlausibleEmail(address)) {
+        refused.push({ address, reason: inviteFailure({ fields: { email: 'invalid' } }) })
+        continue
       }
-      setNotice(COPY.sent)
-    } catch (caught) {
-      setError(inviteFailure(caught))
-    } finally {
-      setEmail(left.join(', '))
-      inFlight.current = false
-      setBusy(false)
-      router.refresh()
+      try {
+        const row = await apiRequest<{ resent: boolean }>(
+          `/ventures/${team.venture.id}/team/invitations`,
+          { method: 'POST', body: { email: address, role_label: roleLabel || null, permission } },
+        )
+        if (row.resent) resent += 1
+        else sent += 1
+      } catch (caught) {
+        refused.push({ address, reason: inviteFailure(caught) })
+      }
     }
+    setEmail(refused.map((r) => r.address).join(', '))
+    if (sent > 0 || resent > 0) setNotice(sent > 0 ? COPY.sent : COPY.resent)
+    // One address refused alone: just the reason, as before. In a batch, name them.
+    if (addresses.length === 1 && refused.length === 1) setError(refused[0]!.reason)
+    else if (refused.length > 0) {
+      setError(`${COPY.notSent} ${refused.map((r) => `${r.address} (${r.reason})`).join('; ')}`)
+    }
+    inFlight.current = false
+    setBusy(false)
+    router.refresh()
   }
 
   return (
@@ -189,14 +216,7 @@ export function WizardTeam({
         ) : null}
       </form>
 
-      <div className={styles.linkRow} data-anchor="link" data-invite-link>
-        <span className={styles.linkOr} aria-hidden="true">
-          {COPY.or}
-        </span>
-        <Inert reason="FUTURE" label={COPY.copyLink} className={styles.linkCopy}>
-          {COPY.copyLink}
-        </Inert>
-      </div>
+      <InviteLinkControl ventureId={team.venture.id} />
 
       {notice ? (
         <div className={styles.notice} data-state="invite-sent">

@@ -17,3 +17,9 @@ export async function teamRequest(request: Request) {
   const membershipId = (tail[0] === 'invitations' ? tail[1] : tail[0]) ?? ''
   return { accountId: session.accountId, ventureId, membershipId }
 }
+
+/** The code of `…/invite-links/{code}` or `…/invite-links/{code}/join` (S1-UAT-07). */
+export function inviteCodeOf(request: Request): string {
+  const parts = new URL(request.url).pathname.split('/')
+  return decodeURIComponent(parts[parts.indexOf('invite-links') + 1] ?? '')
+}

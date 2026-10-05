@@ -38,6 +38,8 @@ export type FrozenRoute = {
  */
 const SAMPLE_PARAMS: Record<string, string> = {
   id: 'sample-project',
+  // An invite code that names no link: the page shows "Lời mời không còn hiệu lực".
+  code: 'sample-code',
   orgId: 'sample-org',
   profileId: 'sample-profile',
   // WF03-S09 resolves a real PUBLISHED organization; an unknown slug is the public 404.
@@ -72,6 +74,8 @@ export const FROZEN_ROUTES: readonly FrozenRoute[] = [
   r('WF02-S07', 'WF02', 'member', '/me/settings'),
   // DEC-L2R-D1: "Dự án & startup của tôi" (ME7).
   r('WF02-S08', 'WF02', 'member', '/projects'),
+  // S1-UAT-07 (DEC-S1I): the receiver of a team invite link (US-02.12).
+  r('WF02-S09', 'WF02', 'member', '/moi/:code'),
 
   // WF03 — HUB / Chapter / CLB Operations
   r('WF03-S01', 'WF03', 'ops', '/ops/network'),
