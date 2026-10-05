@@ -20,6 +20,7 @@ S1-UAT-09B-PREP: readiness of the Sprint 1 formal UAT (33 user stories, 160 acce
 3. READY means the behaviour exists on the Sprint 1 chain with code and test evidence. Integrating that chain into one frozen candidate and deploying it is a global gate (see [readiness-gaps](readiness-gaps.md)), not a per-AC downgrade.
 4. S1-UAT-07 rule (task correction 06/10): every AC whose readiness depends on S1-UAT-07 is IMPLEMENTATION_PENDING with the note "S1-UAT-07 implemented on isolated branch; final fix/review and integration into Sprint1 candidate still pending", until S1-UAT-07-FIX-01 passes, the PO accepts it, it is integrated and regression passes.
 5. Every cited decision ID was checked to exist; key quotes were re-read in the log.
+6. Decision reconciliation (final pass): each conflict was resolved by provenance and date before any PO question; the latest explicit PO source governs ([business-decisions](business-decisions.md)).
 
 ## Counts
 
@@ -32,25 +33,27 @@ S1-UAT-09B-PREP: readiness of the Sprint 1 formal UAT (33 user stories, 160 acce
 
 | Status | All | P0 | P1 |
 |---|---|---|---|
-| READY | 61 | 51 | 10 |
-| IMPLEMENTATION_PENDING | 57 | 51 | 6 |
-| BUSINESS_DECISION_BLOCKED | 27 | 20 | 7 |
+| READY | 62 | 52 | 10 |
+| IMPLEMENTATION_PENDING | 78 | 66 | 12 |
+| BUSINESS_DECISION_BLOCKED | 2 | 2 | 0 |
 | LEGAL_BLOCKED | 11 | 11 | 0 |
-| PO_CONTENT_PENDING | 0 | 0 | 0 |
+| PO_CONTENT_PENDING | 2 | 1 | 1 |
 | ENV_BLOCKED | 4 | 2 | 2 |
-| OUT_OF_SCOPE | 0 | 0 | 0 |
+| OUT_OF_SCOPE | 1 | 1 | 0 |
 
-Stories fully READY: 4 of 33 (US-01.01, US-01.04, US-01.06, US-X.01). FB-02/03/04/19/20 are PO direct acceptance and are not among the 160 AC (pack Appendix D).
+Stories fully READY: 4 of 33 (US-01.01, US-01.04, US-01.06, US-X.01). FB-02/03/04/19/20 are PO direct acceptance and are not among the 160 AC (pack Appendix D). True PO decisions remaining: 2 ([business-decisions](business-decisions.md)).
 
 ## Preliminary vs final
 
-The 06/10 preliminary count (READY 62 · PENDING 56 · BUSINESS 27 · LEGAL 11 · ENV 4) changed by:
+The 06/10 preliminary count of the first pass (READY 62 · PENDING 56 · BUSINESS 27 · LEGAL 11 · ENV 4) changed by:
 
 | AC | From | To | Why |
 |---|---|---|---|
 | US-02.09-AC02 | READY | IMPLEMENTATION_PENDING | one of its 2 buttons ("Mời thành viên") opens the flow S1-UAT-07 reworks |
 | US-02.11-AC01 | BUSINESS | IMPLEMENTATION_PENDING | S1-UAT-07 rule; the business conflict stays in BLOCKER |
-| US-02.15-AC03 | IMPLEMENTATION_PENDING | BUSINESS | UAT Appendix B allows Dự án → Startup; frozen DEC-WF02-S05-G4 fixes the type |
+| US-02.15-AC03 | IMPLEMENTATION_PENDING | BUSINESS | first pass: UAT Appendix B vs DEC-WF02-S05-G4 (reverted by the final pass) |
+
+Final pass (decision reconciliation) moved the 27 BUSINESS AC: 1 → READY (DEC-S1A-D11), 22 → IMPLEMENTATION_PENDING (UAT 02/10 newer than the 26/09 – 29/09 freezes, or website half of PD-3), 2 → PO_CONTENT_PENDING (48 fields, tab fields), 1 → OUT_OF_SCOPE (superseded by DEC-ADM-PD3), 2 stay BUSINESS (Q1, Q2). Result: READY 62 · IMPL 78 · BUSINESS 2 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1.
 
 ## Files
 
@@ -58,7 +61,7 @@ The 06/10 preliminary count (READY 62 · PENDING 56 · BUSINESS 27 · LEGAL 11 �
 |---|---|
 | [traceability.csv](traceability.csv) | 160 rows: US_ID, AC_ID, PRIORITY, RELATED_FB, IMPLEMENTATION_TASK, CURRENT_STATUS, TEST_METHOD, EXPECTED_EVIDENCE, BLOCKER, READY_FOR_UAT, AC_TEXT, EVIDENCE_REF, UAT_LINE |
 | [task-coverage](task-coverage.md) | AC per task and the cross-cutting dependencies |
-| [business-decisions](business-decisions.md) | the 27 conflicts grouped for the PO |
+| [business-decisions](business-decisions.md) | chronology, the 12 reconciled groups and the 2 true PO questions |
 | [account-ready-matrix](account-ready-matrix.md) | U1–U9, files, master data |
 | [readiness-gaps](readiness-gaps.md) | gaps and the minimum gates before S1-UAT-09B can pass |
 
