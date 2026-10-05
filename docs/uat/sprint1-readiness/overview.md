@@ -10,7 +10,7 @@ S1-UAT-09B-PREP: readiness of the Sprint 1 formal UAT (33 user stories, 160 acce
 | `1hubnetwork_feedback_sprint1.md` | FB-01 … FB-20 |
 | `docs/decisions/DECISION_LOG.md`, `docs/implementation/reports/` | frozen SOT and task evidence |
 | branch `feat/s1-uat-09-polish` (`5a13ccb`) | code = main + S1-UAT-01, 02, 08A, DB-SAFETY-01, 05, 09 |
-| branch `feat/s1-uat-07-invite` (git objects only) | S1-UAT-07 evidence; never counted as READY |
+| candidate `int/sprint1-candidate-01` (S1-CANDIDATE-INT-01) | S1-UAT-07 (incl. FIX-01) + S1-UAT-09 + these docs on `6ab6cbc`; counts below are for this candidate |
 | branch `docs/ai-ingestion-contract` | AI contract, LEGAL-AI-01 gate |
 
 ## Method
@@ -33,15 +33,15 @@ S1-UAT-09B-PREP: readiness of the Sprint 1 formal UAT (33 user stories, 160 acce
 
 | Status | All | P0 | P1 |
 |---|---|---|---|
-| READY | 62 | 52 | 10 |
-| IMPLEMENTATION_PENDING | 80 | 68 | 12 |
+| READY | 79 | 66 | 13 |
+| IMPLEMENTATION_PENDING | 63 | 54 | 9 |
 | BUSINESS_DECISION_BLOCKED | 0 | 0 | 0 |
 | LEGAL_BLOCKED | 11 | 11 | 0 |
 | PO_CONTENT_PENDING | 2 | 1 | 1 |
 | ENV_BLOCKED | 4 | 2 | 2 |
 | OUT_OF_SCOPE | 1 | 1 | 0 |
 
-Stories fully READY: 4 of 33 (US-01.01, US-01.04, US-01.06, US-X.01). FB-02/03/04/19/20 are PO direct acceptance and are not among the 160 AC (pack Appendix D). True PO decisions remaining: 0 (PD-5, PD-6 frozen 06/10, [business-decisions](business-decisions.md)).
+Stories fully READY: 8 of 33 (US-01.01, US-01.02, US-01.04, US-01.06, US-02.11, US-02.12, US-02.17, US-X.01). FB-02/03/04/19/20 are PO direct acceptance and are not among the 160 AC (pack Appendix D). True PO decisions remaining: 0 (PD-5, PD-6 frozen 06/10, [business-decisions](business-decisions.md)).
 
 ## Preliminary vs final
 
@@ -56,6 +56,8 @@ The 06/10 preliminary count of the first pass (READY 62 · PENDING 56 · BUSINES
 Final pass (decision reconciliation) moved the 27 BUSINESS AC: 1 → READY (DEC-S1A-D11), 22 → IMPLEMENTATION_PENDING (UAT 02/10 newer than the 26/09 – 29/09 freezes, or website half of PD-3), 2 → PO_CONTENT_PENDING (48 fields, tab fields), 1 → OUT_OF_SCOPE (superseded by DEC-ADM-PD3), 2 stay BUSINESS (Q1, Q2). Result: READY 62 · IMPL 78 · BUSINESS 2 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1.
 
 PO decision freeze (06/10): PD-5 and PD-6 move US-02.06-AC01 and US-02.06-AC04 to IMPLEMENTATION_PENDING. Result: READY 62 · IMPL 80 · BUSINESS 0 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1.
+
+Candidate refresh (S1-CANDIDATE-INT-01, 06/10): S1-UAT-07 + FIX-01 integrated with S1-UAT-09; full regression 1236 PASS / 0 FAIL / 29 SKIP, UAT L1-L2 19 / 19, DB 849 / 849. 17 invitation AC → READY with evidence; US-02.14-AC04 (owner never sees "Đã từ chối") and US-X.02-AC01…03 (S1-UAT-06 / 03B cases) stay pending. Result: READY 79 · IMPL 63 · BUSINESS 0 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1.
 
 ## Files
 

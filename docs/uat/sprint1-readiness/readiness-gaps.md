@@ -6,8 +6,8 @@ What stands between today and a PASS of S1-UAT-09B (Sprint 1 UAT readiness). Cou
 
 | Bucket | AC |
 |---|---|
-| READY_NOW | 62 |
-| PENDING_IMPLEMENTATION | 80 (unassigned 28 · S1-UAT-07 21 · S1-UAT-06 15 · S1-UAT-03 13 · S1-UAT-03B 10 · S1-UAT-04 2 · S1-UAT-01 1; shared AC counted once in the total) |
+| READY_NOW | 79 (candidate `int/sprint1-candidate-01`) |
+| PENDING_IMPLEMENTATION | 63 (unassigned 28 · S1-UAT-07 follow-up 1 + US-X.02 3 · S1-UAT-06 15 · S1-UAT-03 13 · S1-UAT-03B 10 · S1-UAT-04 2 · S1-UAT-01 1; shared AC counted once in the total) |
 | BUSINESS_BLOCKED | 0 (Q1, Q2 closed by PD-5, PD-6 on 06/10) |
 | LEGAL_BLOCKED | 11 (LEGAL-AI-01) |
 | PO_BLOCKED | 2 PO_CONTENT_PENDING (48 venture fields; venture tab fields) |
@@ -29,14 +29,14 @@ Also to confirm inside S1-UAT-06: venture delete (US-02.15-AC04), pitch-deck sto
 
 | # | Gate | Closes |
 |---|---|---|
-| G1 | S1-UAT-07-FIX-01 PASS_WITH_EVIDENCE → PO accepts S1-UAT-07 → integrated into the candidate → regression | 21 AC |
+| G1 | DONE in S1-CANDIDATE-INT-01 (integrated, regression GREEN); open: a follow-up for US-02.14-AC04 (owner sees "Đã từ chối") | 1 AC |
 | G2 | S1-UAT-03 implemented and accepted (FB-06, FB-07, FB-11, FB-12, FB-13) | 13 AC |
 | G3 | S1-UAT-03B implemented and accepted (one request per position, PD-1 routing, withdraw / edit / resubmit, tracking) | 10 AC |
 | G4 | S1-UAT-06 non-AI scope implemented and accepted (FB-17 tags 1–3, website / logo, "Gửi duyệt" wired to review, hide, conversion, stage labels, delete / pitch deck / 20 words) | 15 AC |
 | G5 | LEGAL-AI-01 resolved and S1-UAT-04 / S1-UAT-06 AI delivered, **or** a recorded PO decision removing AI from Sprint 1 UAT | 11 LEGAL + 2 AC |
 | G6 | PO supplies the 48-field list and venture tab fields; UAT wording amended where a newer PO decision governs (US-01.02-AC02, US-02.10-AC02/05, US-02.11-AC01) | 2 AC + text |
 | G7 | an owner and a task for the 28 unassigned AC (or a recorded PO waiver) | 28 AC |
-| G8 | PO / ChatGPT acceptance of S1-UAT-01, 02, 05, 08A, 09 | the 62 READY AC |
+| G8 | PO / ChatGPT acceptance of S1-UAT-01, 02, 05, 08A, 09 and of the S1-CANDIDATE-INT-01 candidate | the 79 READY AC |
 | G9 | one frozen Sprint 1 candidate SHA containing every accepted task, full protected regression GREEN, deployed by exact SHA to the UAT environment | all AC |
 | G10 | UAT environment: live Google OAuth, e-mail provider, `INVITE_LINK_SECRET`, upload limit for AI routes, vocabulary items used by the AC (e.g. "Fintech"), roster import from the PO list | 4 ENV AC + execution of the rest |
 | G11 | test data U2, U4–U9 and files prepared on the UAT environment ([account-ready-matrix](account-ready-matrix.md)) | execution of every AC |
