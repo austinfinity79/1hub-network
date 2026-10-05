@@ -19,9 +19,10 @@ import pg from 'pg'
 
 import { importRoster } from './roster-lib.mjs'
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ??
-  'postgresql://hubnetwork:hubnetwork_local_dev@localhost:55432/hubnetwork_p0'
+import { requireDatabaseUrl } from './db-target.mjs'
+
+// DB-SAFETY-01: writes rows, so the database is always named; no shared-DB fallback.
+const DATABASE_URL = requireDatabaseUrl('roster import')
 
 async function main() {
   const args = process.argv.slice(2)

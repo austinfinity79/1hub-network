@@ -206,12 +206,14 @@ Prerequisites: Node.js 22, pnpm 11 (pin trong `mise.toml`), Docker Compose, Play
 pnpm install
 pnpm exec playwright install chromium   # chỉ cần cho visual suite
 cp .env.example .env.local              # điền giá trị local
+export DATABASE_URL=postgresql://…/hubnetwork_<task>   # DB riêng, bắt buộc
 pnpm db:setup                           # start PostgreSQL, migrate, seed
 pnpm dev                                # http://localhost:3000
 ```
 
 - PostgreSQL chạy trong Docker ở host port `55432` (`compose.yaml`).
 - `scripts/db.mjs` và `pnpm test:db` đọc `DATABASE_URL` từ shell, không đọc `.env.local`.
+- `migrate`, `seed`, `reset` (và `pnpm test:db`, visual suite) bắt buộc `DATABASE_URL` export rõ ràng, không còn mặc định; `reset` trên DB dùng chung `hubnetwork_p0` cần thêm `--confirm-shared-db=hubnetwork_p0` (CLAUDE.md §15, DB-SAFETY-01).
 - Không bao giờ commit secret.
 
 ## 8. Testing & Visual QA / Test thế nào?

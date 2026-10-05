@@ -35,13 +35,14 @@ import { chromium, request as http } from '@playwright/test'
 import pg from 'pg'
 import { PNG } from 'pngjs'
 
+import { requireDatabaseUrl } from '../db-target.mjs'
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const BASE = process.env.BASE_URL ?? 'http://localhost:3974'
 const CURRENT = process.env.CURRENT_URL ?? 'http://localhost:3972'
 const OUT = join(ROOT, 'tests/visual/actual/wf04-prod06')
-const DATABASE_URL =
-  process.env.DATABASE_URL ??
-  'postgresql://hubnetwork:hubnetwork_local_dev@localhost:55432/hubnetwork_p0'
+// DB-SAFETY-01: writes rows, so the database is always named; no shared-DB fallback.
+const DATABASE_URL = requireDatabaseUrl('wf04-visual-compare')
 const LEADER = 'leader@example.test'
 const MEMBER = 'member@example.test'
 const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'

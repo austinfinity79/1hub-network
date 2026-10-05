@@ -3,6 +3,11 @@
  *
  * Usage: node scripts/db.mjs <migrate|seed|reset|introspect|status>
  *
+ * TARGET RULE (DB-SAFETY-01, scripts/db-target.mjs): migrate, seed and reset
+ * need an explicitly exported DATABASE_URL and never fall back to a default;
+ * reset on the shared `hubnetwork_p0` also needs --confirm-shared-db=hubnetwork_p0
+ * on the command line. The target is printed before anything is written.
+ *
  * MIGRATION RULE: db/migrations/001_p0_init.sql is applied byte-for-byte, in a
  * single transaction, and is never edited. CLAUDE.md:80 requires additive
  * migrations and forbids rewriting an applied one. This runner therefore has no
@@ -19,6 +24,8 @@ import { fileURLToPath } from 'node:url'
 
 import pg from 'pg'
 
+import { DbTargetError, maskUrl, resolveDbTarget } from './db-target.mjs'
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const MIGRATIONS_DIR = join(ROOT, 'db', 'migrations')
 // seed_dev.sql is frozen evidence and stays byte-identical; it is neither read
@@ -27,9 +34,8 @@ const MIGRATIONS_DIR = join(ROOT, 'db', 'migrations')
 // second run. The deterministic fixture set supersedes it.
 const SEED_FILE = join(ROOT, 'db', 'seed', 'seed_p0_deterministic.sql')
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ??
-  'postgresql://hubnetwork:hubnetwork_local_dev@localhost:55432/hubnetwork_p0'
+/** Set once, before any command runs (see the end of this file). */
+let DATABASE_URL
 
 const LEDGER = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -190,6 +196,23 @@ const command = process.argv[2]
 if (!command || !(command in COMMANDS)) {
   console.error(`usage: node scripts/db.mjs <${Object.keys(COMMANDS).join('|')}>`)
   process.exit(1)
+}
+
+// Decided before any connection: a refusal leaves every database untouched.
+let target
+try {
+  target = resolveDbTarget(command, { env: process.env, argv: process.argv.slice(3) })
+} catch (error) {
+  if (!(error instanceof DbTargetError)) throw error
+  console.error(`db ${command} refused: ${error.message}`)
+  process.exit(2)
+}
+DATABASE_URL = target.url
+if (target.commandClass !== 'READ_ONLY') {
+  console.log(`  TARGET_DB       ${maskUrl(target.url)}`)
+  console.log(`  TARGET_HOST     ${target.host}`)
+  console.log(`  TARGET_DATABASE ${target.database}`)
+  console.log(`  COMMAND_CLASS   ${target.commandClass}`)
 }
 
 try {

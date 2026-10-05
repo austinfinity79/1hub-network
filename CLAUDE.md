@@ -189,3 +189,13 @@ Installed 2026-09-26 for remaining Phase 0 work: [docs/implementation/PROCESS_P0
 - A workflow closes only through the closing gate with a GREEN verdict. WF01 and WF02 are PROTECTED / CLOSED / GREEN.
 - Deploys use the exact approved SHA, never HEAD.
 - Speed never overrides correctness; a Design/SOT conflict is a STOP. This process changes no product decision, and §1–§13 remain in force.
+
+## 15. Database target safety — DB-SAFETY-01 (MANDATORY)
+`hubnetwork_p0` is the SHARED dev database. Two incidents changed it by mistake (S1-UAT-01: migration 018 applied; S1-UAT-05: full reset), both because a script fell back to it when `DATABASE_URL` was not actually present in the child process. `scripts/db.mjs` reads the shell environment, never `.env.local`.
+Every `db.mjs` invocation that writes (`migrate`, `seed`, `reset`) must:
+1. use an explicitly exported `DATABASE_URL` (the runner refuses without one);
+2. print and check the target database before acting (the runner prints `TARGET_DATABASE`);
+3. use the task's own isolated database by default (`hubnetwork_<task>`);
+4. never operate on `hubnetwork_p0` unless the task explicitly authorises shared-dev maintenance;
+5. for a destructive command on `hubnetwork_p0`, carry `--confirm-shared-db=hubnetwork_p0` on that command line (no environment variable can grant it).
+`pnpm test:db` refuses `hubnetwork_p0`; the visual suite and the QA / roster scripts refuse a missing `DATABASE_URL`. Report: [DB-SAFETY-01](docs/implementation/reports/DB-SAFETY-01-incident.md).

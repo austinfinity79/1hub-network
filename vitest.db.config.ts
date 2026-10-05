@@ -13,6 +13,8 @@ export default defineConfig({
     include: ['src/**/*.db-test.ts'],
     // A shared database cannot take parallel writers.
     fileParallelism: false,
+    // DB-SAFETY-01: refuses a missing DATABASE_URL or the shared dev database.
+    setupFiles: ['src/lib/db/db-test-setup.ts'],
   },
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },

@@ -45,6 +45,8 @@ import pg from 'pg'
 import pixelmatch from 'pixelmatch'
 import { PNG } from 'pngjs'
 
+import { requireDatabaseUrl } from '../db-target.mjs'
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const OUT = join(ROOT, 'tests/visual/actual/wf05-prod06')
 const LOCAL = 'postgresql://hubnetwork:hubnetwork_local_dev@localhost:55432/hubnetwork_p0'
@@ -55,7 +57,8 @@ const SIDES = {
   },
   current: {
     url: process.env.CURRENT_URL ?? 'http://localhost:3972',
-    db: process.env.DATABASE_URL ?? LOCAL,
+    // DB-SAFETY-01: the current side writes rows; no shared-DB fallback.
+    db: requireDatabaseUrl('wf05-visual-compare'),
   },
 }
 const LEADER = 'leader@example.test'

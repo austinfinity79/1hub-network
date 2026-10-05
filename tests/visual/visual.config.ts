@@ -20,6 +20,16 @@ import path from 'node:path'
 // Playwright loads this config as CommonJS, so import.meta is unavailable.
 const HERE = __dirname
 const PORT = Number(process.env.VISUAL_PORT ?? 3972)
+
+// DB-SAFETY-01: the suite writes accounts, profiles and ventures through the
+// server, so the database is always named explicitly; there is no fallback to
+// the shared dev database. Use an isolated task database.
+const DATABASE_URL = process.env.DATABASE_URL?.trim()
+if (!DATABASE_URL) {
+  throw new Error(
+    'DATABASE_URL_REQUIRED: export DATABASE_URL for an isolated database before running the visual suite.',
+  )
+}
 const BASE_URL = `http://localhost:${PORT}`
 
 export default defineConfig({
@@ -68,9 +78,7 @@ export default defineConfig({
     // The suite is the sanctioned test context, so it opts in explicitly.
     env: {
       ENABLE_DEV_ROUTES: '1',
-      DATABASE_URL:
-        process.env.DATABASE_URL ??
-        'postgresql://hubnetwork:hubnetwork_local_dev@localhost:55432/hubnetwork_p0',
+      DATABASE_URL,
     },
     url: BASE_URL,
     reuseExistingServer: true,

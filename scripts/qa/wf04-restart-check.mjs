@@ -19,13 +19,14 @@ import { fileURLToPath } from 'node:url'
 
 import pg from 'pg'
 
+import { requireDatabaseUrl } from '../db-target.mjs'
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const BASE = 'http://localhost:3972'
 const PROD = 'http://localhost:3973'
 const DB_CONTAINER = 'hubnetwork-p0-db'
-const DATABASE_URL =
-  process.env.DATABASE_URL ??
-  'postgresql://hubnetwork:hubnetwork_local_dev@localhost:55432/hubnetwork_p0'
+// DB-SAFETY-01: writes rows, so the database is always named; no shared-DB fallback.
+const DATABASE_URL = requireDatabaseUrl('wf04-restart-check')
 const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
 
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
