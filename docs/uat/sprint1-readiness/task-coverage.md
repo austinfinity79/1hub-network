@@ -18,7 +18,7 @@ How the Sprint 1 tasks cover the 160 AC ([traceability.csv](traceability.csv), c
 | S1-UAT-07 Invite flow | isolated branch, FIX-01 running | 0 | 21 | 0 | 0 | 0 | 0 | 0 | 21 |
 | S1-UAT-08 / 08A PO batch | 08A done local; FB-03/19/20 open | — | — | — | — | — | — | — | 0 (PO direct) |
 | S1-UAT-09 P1/P2 polish | done local, review pending | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 2 |
-| UNASSIGNED | no owner | 0 | 26 | 2 | 0 | 0 | 0 | 0 | 28 |
+| UNASSIGNED | no owner | 0 | 28 | 0 | 0 | 0 | 0 | 0 | 28 |
 | none (superseded by DEC-ADM-PD3) | — | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 |
 
 \* US-02.02-AC03/05 (Chính/Phụ, years): unassigned gaps in an S1-UAT-05 story, outside its delivered scope.

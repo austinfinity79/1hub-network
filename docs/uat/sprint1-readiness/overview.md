@@ -34,14 +34,14 @@ S1-UAT-09B-PREP: readiness of the Sprint 1 formal UAT (33 user stories, 160 acce
 | Status | All | P0 | P1 |
 |---|---|---|---|
 | READY | 62 | 52 | 10 |
-| IMPLEMENTATION_PENDING | 78 | 66 | 12 |
-| BUSINESS_DECISION_BLOCKED | 2 | 2 | 0 |
+| IMPLEMENTATION_PENDING | 80 | 68 | 12 |
+| BUSINESS_DECISION_BLOCKED | 0 | 0 | 0 |
 | LEGAL_BLOCKED | 11 | 11 | 0 |
 | PO_CONTENT_PENDING | 2 | 1 | 1 |
 | ENV_BLOCKED | 4 | 2 | 2 |
 | OUT_OF_SCOPE | 1 | 1 | 0 |
 
-Stories fully READY: 4 of 33 (US-01.01, US-01.04, US-01.06, US-X.01). FB-02/03/04/19/20 are PO direct acceptance and are not among the 160 AC (pack Appendix D). True PO decisions remaining: 2 ([business-decisions](business-decisions.md)).
+Stories fully READY: 4 of 33 (US-01.01, US-01.04, US-01.06, US-X.01). FB-02/03/04/19/20 are PO direct acceptance and are not among the 160 AC (pack Appendix D). True PO decisions remaining: 0 (PD-5, PD-6 frozen 06/10, [business-decisions](business-decisions.md)).
 
 ## Preliminary vs final
 
@@ -55,13 +55,15 @@ The 06/10 preliminary count of the first pass (READY 62 · PENDING 56 · BUSINES
 
 Final pass (decision reconciliation) moved the 27 BUSINESS AC: 1 → READY (DEC-S1A-D11), 22 → IMPLEMENTATION_PENDING (UAT 02/10 newer than the 26/09 – 29/09 freezes, or website half of PD-3), 2 → PO_CONTENT_PENDING (48 fields, tab fields), 1 → OUT_OF_SCOPE (superseded by DEC-ADM-PD3), 2 stay BUSINESS (Q1, Q2). Result: READY 62 · IMPL 78 · BUSINESS 2 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1.
 
+PO decision freeze (06/10): PD-5 and PD-6 move US-02.06-AC01 and US-02.06-AC04 to IMPLEMENTATION_PENDING. Result: READY 62 · IMPL 80 · BUSINESS 0 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1.
+
 ## Files
 
 | File | Content |
 |---|---|
 | [traceability.csv](traceability.csv) | 160 rows: US_ID, AC_ID, PRIORITY, RELATED_FB, IMPLEMENTATION_TASK, CURRENT_STATUS, TEST_METHOD, EXPECTED_EVIDENCE, BLOCKER, READY_FOR_UAT, AC_TEXT, EVIDENCE_REF, UAT_LINE |
 | [task-coverage](task-coverage.md) | AC per task and the cross-cutting dependencies |
-| [business-decisions](business-decisions.md) | chronology, the 12 reconciled groups and the 2 true PO questions |
+| [business-decisions](business-decisions.md) | chronology, the 12 reconciled groups and the PD-5 / PD-6 freeze |
 | [account-ready-matrix](account-ready-matrix.md) | U1–U9, files, master data |
 | [readiness-gaps](readiness-gaps.md) | gaps and the minimum gates before S1-UAT-09B can pass |
 
