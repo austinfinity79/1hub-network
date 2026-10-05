@@ -1664,3 +1664,19 @@ Guests and members. `multipart/form-data`: `type` (BUG | UX | FEATURE), `content
 | context | A11 keys only; route = path; screen / workflow / step derived from it; UA from the request header |
 | privacy | no cookie, token, header, query or form value stored; screenshot served to feedback managers only (A11) |
 
+
+# 31. Amendment A14 — Sprint1 profile consistency (2026-10-05)
+
+Source: [DEC-S1P](../decisions/DECISION_LOG.md#dec-s1p) (S1-UAT-05; FB-09, FB-10, US-01.09, US-01.12, US-02.02, US-02.03). Additive to §4.3; migration 019.
+
+### PATCH `/me/profile` — additions
+`domains` / `specializations`: arrays of tag text (FB-09), the alternative to `domain_ids` / `specialization_ids` (sending both for one field → `422` `conflicts_with_ids`). Each tag is resolved on the server: a canonical ACTIVE label (case and extra spaces ignored) links that item; otherwise an existing or new `UNNORMALIZED` item ("chưa chuẩn hóa"). `experience[]` items accept `employment_type` (≤ 40) and `location` (≤ 200), optional; absent keys keep stored values. `skill_ids` stays accepted for compatibility (FB-10: no screen sends it).
+
+## 31.1 Rules
+| Topic | Rule |
+|---|---|
+| limits | 1–5 tags per field (max on every PATCH: `too_many`; min when stage 2 is passed); a new tag 2–40 characters (`tag_length`); duplicates in one request `duplicate` |
+| vocabulary | `UNNORMALIZED` items are never listed by §7, never Library filters, never selectable by id (`VOCABULARY_ITEM_INACTIVE`), and not shown in the admin categories |
+| DTO | domain / specialisation refs carry `status` `ACTIVE` · `ARCHIVED` · `UNNORMALIZED`; experience items carry `employment_type`, `location` |
+| stage 2 | `PUT /me/onboarding/stage` `CAPABILITY` → `422 ONBOARDING_REQUIREMENTS_MISSING` (`domains` / `specializations: missing`) without one of each |
+| completion | §4.3 `GET /me/profile/completion` `groups` are the twelve Sprint 1 items (order of US-01.12), `weight` 8.33, `percent` = round(complete × 100 / 12) |
