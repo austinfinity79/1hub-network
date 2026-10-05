@@ -26,6 +26,7 @@ Current implementation state of 1hub.network Phase 0. This file changes with tas
 | WF01-S08 Onboarding complete · ACC-10 `/onboarding/complete` | REBUILT — completes nothing; next actions only for routes that exist ("Lập hồ sơ đội", "Theo dõi xác minh chức vụ HUB"); completion on entry (DEC-WF01-S08-D1) is SUPERSEDED |
 | WF01-S09 Onboarding intro · ACC-05 `/onboarding` | NEW — entry to the four stages; writes nothing; AI block drawn and inert; [DEC-L1R-D3](../decisions/DECISION_LOG.md#dec-l1r-d3) |
 | FB-01 "Góp ý" (all WF01 / WF02 screens, homepage, /about, /library) | NEW (S1-UAT-02, local, not deployed) — shared popup, `POST /feedback` into the Admin feedback store; [DEC-S1F](../decisions/DECISION_LOG.md#dec-s1f), [report](reports/S1-UAT-02-feedback.md) |
+| `/about` Humans of HUB + Hoạt động tiêu biểu | REFRESHED (S1-UAT-08A, local, not deployed) — 34 current-term people and 43 activities from the PO workbook; PO acceptance pending; [DEC-S1H](../decisions/DECISION_LOG.md#dec-s1h), [report](reports/S1-UAT-08A-about.md) |
 | WF01-S11 Reset password `/auth/reset-password` | NEW (S1-UAT-01) — new password from the e-mailed `#token=`; revokes every session; [DEC-S1A-D5](../decisions/DECISION_LOG.md#dec-s1a-d5) |
 | WF01-S10 Onboarding stage 2 · ACC-07 `/onboarding/capability` | NEW — fields, specialisations (at most five), skills from the controlled vocabulary, experience with period, links; [DEC-L1R-D4](../decisions/DECISION_LOG.md#dec-l1r-d4) |
 

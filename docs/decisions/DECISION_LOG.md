@@ -1649,6 +1649,17 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-s1f-d7"></a>DEC-S1F-D7 | **Data.** No migration: `feedback_submissions` (017) is the one store, the Admin queue reads the same rows. No analytics event: the frozen writer takes an account and WF01 / WF02 only, and the row itself is the metric (the Admin weekly summary counts it); `feedback_submitted` stays deferred |
 | <a id="dec-s1f-d8"></a>DEC-S1F-D8 | **UX.** The unsent draft survives closing and reopening (FB-01); a sent one is cleared. Success "Cảm ơn bạn đã góp ý", the person stays on the same screen. Errors keep the text; a retry of the same draft reuses its key (no duplicate), an edited draft gets a new one. Modal: initial focus on the type, Tab kept inside, Escape and "Đóng" close, focus returns to "Góp ý". In pixel captures of a screen the launcher is excluded like the boards' pill was ("not compared"); its own spec checks it |
 
+## DEC-S1H — Sprint1 About content from the PO workbook (S1-UAT-08A, PO, 05/10)
+
+<a id="dec-s1h"></a>**Status:** IMPLEMENTED 2026-10-05 on the S1-UAT-08A task contract; DIRECT PO ACCEPTANCE PENDING. Not pushed, not merged, not deployed. Report: [S1-UAT-08A](../implementation/reports/S1-UAT-08A-about.md).
+
+| ID | Decision |
+|---|---|
+| <a id="dec-s1h-d1"></a>DEC-S1H-D1 | **Source.** "Thông tin About Hub.xlsx" is the About content source: transcribed verbatim into `src/components/about/about-source.ts` (generated, workbook sha256 in its header); presentation only in `about-data.ts` (trim, line break → space, single dates zero-padded). Still static config: no CMS, table, Event / Programme / Project record or migration |
+| <a id="dec-s1h-d2"></a>DEC-S1H-D2 | **Humans.** Only "Nhiệm kỳ hiện tại" rows not marked "Bỏ" (34), ordered by "Thứ tự hiển thị"; names, titles and flags as written; a portrait only on an exact (diacritic-insensitive) name match, else the placeholder |
+| <a id="dec-s1h-d3"></a>DEC-S1H-D3 | **Org diagram.** A node's lead only from an explicit "Liên kết" link naming exactly one person with a consistent title. China (link names the Phó Chủ tịch), Singapore and Quảng Ninh (no link) stay empty; HN follows the workbook: Vũ Minh Tâm = Trưởng HUB HN, Lê Phương Thảo = Phó Chủ tịch kiêm Tổng Thư ký HUB Tổng (A4, PO frozen 05/10), superseding the ABOUT-HUB-LEAD hotfix. About presentation only: no membership, leadership, role-verification, RBAC, Admin or WF03 record changes |
+| <a id="dec-s1h-d4"></a>DEC-S1H-D4 | **Activities.** All 43 rows in workbook order with their own image (downloaded once, local WebP, 16:9); "Link liên quan (bỏ)" never transcribed or shown; missing fields "Chờ cập nhật"; malformed dates shown as written; "Chuỗi sự kiện" gets its own filter |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

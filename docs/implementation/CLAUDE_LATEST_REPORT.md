@@ -1,37 +1,37 @@
 # Claude Task Report
 
 ## Task
-S1-UAT-02 — FB-01 "Góp ý" popup, submit, context, optional screenshot / e-mail, persistence. Reports: [feature](reports/S1-UAT-02-feedback.md) · [evidence](reports/S1-UAT-02-evidence.md).
+S1-UAT-08A — `/about` Humans of HUB and Hoạt động tiêu biểu from the PO workbook "Thông tin About Hub.xlsx". Reports: [task](reports/S1-UAT-08A-about.md) · [evidence / PO pack](reports/S1-UAT-08A-evidence.md) · [humans](reports/S1-UAT-08A-humans.md) · [activities](reports/S1-UAT-08A-activities.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE — READY FOR CHATGPT/PO S1-UAT-02 REVIEW.** S1-UAT-03 not started. STOP.
+**PASS_WITH_EVIDENCE — READY FOR CHATGPT/PO S1-UAT-08A REVIEW — DIRECT_PO_ACCEPTANCE_PENDING.** No other Sprint1 task started. STOP.
 
 ## Scope implemented
-One shared launcher on the homepage, /about, /library, WF01 and the WF02 screens; native modal that keeps the page and the draft; `POST /api/v1/feedback` (multipart, Idempotency-Key required, session identity, server-derived context, 10 / hour); storage in the existing `feedback_submissions` read by the Admin queue. Decisions [DEC-S1F](../decisions/DECISION_LOG.md#dec-s1f); contract amendment A13.
+Static, config-driven About kept: workbook transcribed verbatim (`about-source.ts`), presented by `about-data.ts`. 34 current-term people in workbook order (2 "Các thế hệ trước" / "Bỏ" rows excluded); org-diagram leads only from explicit links (A4 PO-frozen: Vũ Minh Tâm = Trưởng HUB HN; Lê Phương Thảo = Phó Chủ tịch kiêm Tổng Thư ký HUB Tổng); 43 activities with local 16:9 images, organiser lines, ĐỊA ĐIỂM, "Chuỗi sự kiện" filter; "Link liên quan (bỏ)" never transcribed. Decisions [DEC-S1H](../decisions/DECISION_LOG.md#dec-s1h).
 
 ## Files changed
-New: `src/lib/feedback/{surfaces,submit}.ts` + tests, `src/components/feedback/*`, `src/app/api/v1/feedback/route.ts`, `tests/visual/specs/s1-uat-02-feedback.spec.ts`, 2 reports. Changed: root layout (mount), error codes, DECISION_LOG, API contract, P0_STATUS, pixel capture CSS, 10 specs (test drift / overlay rule).
+New: `src/components/about/about-source.ts`, `about-data.test.ts`, `public/about/activities/activity-01…43.webp`, `tests/visual/specs/s1-uat-08a-about.spec.ts`, 4 reports. Changed: `about-data.ts`, `about-client.tsx`, `about.module.css`, DECISION_LOG, P0_STATUS, this report.
 
 ## Migrations / data
-NO_SCHEMA_CHANGE (017 store reused). Isolated DB `hubnetwork_s1fb`; shared dev DB untouched (017).
+NO_SCHEMA_CHANGE. Isolated DB `hubnetwork_s1about`; shared dev DB untouched (017). No membership, leadership, role-verification, RBAC, Admin or WF03 data touched; CROSS_DOMAIN_DATA_DIFFERENCE none locally.
 
 ## Tests / build
-format, lint, typecheck, build PASS · unit 39 / 415 · DB 50 / 804 · FB-01 spec 14 / 14 · **protected regression SPEC_COUNT 93 · TEST_COUNT 1227 · PASS 1198 · FAIL 0 · SKIP 29 (opt-in) · FLAKY 0** · server log 0 unexpected 5xx.
+format, lint, typecheck, build PASS · unit 40 / 428 · DB 50 / 804 · About spec 10 / 10 · **protected regression SPEC_COUNT 94 · TEST_COUNT 1237 · PASS 1208 · FAIL 0 · SKIP 29 (opt-in) · FLAKY 0** · server log 0 unexpected 5xx, 0 hydration, 0 runtime exceptions.
 
 ## Visual QA
-Launcher and dialog in the existing design language; 1440 / 768 / 390 clean; screen pixel captures exclude the floating pill as the boards' pill was "not compared".
+Existing About layout and design system; 1440 / 768 / 390: no overflow, 16:9 banners, no clipped text. Before / after captures handed off with the task.
 
 ## Deviations / blockers
-None blocking. `feedback_submitted` analytics stays deferred (the frozen writer needs an account and WF01 / WF02); `GET /me/feedback` stays deferred (§6).
+None blocking. Open source anomalies for PO: A1–A3, A5–A10 (UNRESOLVED_SOURCE_ANOMALY); A4 RESOLVED_BY_PO.
 
 ## Git
-- Branch: `feat/s1-uat-02-feedback`; start HEAD `ade21cd`, unchanged by others during the task
-- Implementation commit: `5ec1b8f`
-- Report/final commit: the docs commit following `5ec1b8f`
+- Branch: `feat/s1-uat-08a-about`; start HEAD `ad5dc06`, unchanged by others during the task
+- Implementation commit: `679014a`
+- Report/final commit: the docs commit following `679014a`
 - Remote: `origin`
 - Push status: NOT RUN (task: no push)
 - Remote HEAD: origin/main `edd3d24`; production `78f21f2` (not touched)
 - Working tree: clean after the report commit
 
 ## Recommended next task
-ChatGPT / PO review of S1-UAT-02. S1-UAT-03 not started.
+ChatGPT / PO review and direct PO acceptance of S1-UAT-08A.

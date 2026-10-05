@@ -72,6 +72,13 @@ test.describe('organisation diagram', () => {
     await expect(
       page.locator('aside[aria-live="polite"]').filter({ hasText: 'TRƯỞNG HUB' }),
     ).toContainText('Vũ Minh Tâm')
+    // A4 (PO): the former hard-coded HN lead is gone; she keeps her workbook title.
+    await expect(
+      page.locator('aside[aria-live="polite"]').filter({ hasText: 'TRƯỞNG HUB' }),
+    ).not.toContainText(/L[eê] Ph[uư][oơ]ng Th[aả]o/)
+    await expect(page.locator('[data-human-order="2"]')).toContainText(
+      'Phó Chủ tịch kiêm Tổng Thư ký HUB Tổng',
+    )
     await diagram.getByText('CN', { exact: true }).click()
     await expect(
       page.locator('aside[aria-live="polite"]').filter({ hasText: 'TRƯỞNG HUB' }),

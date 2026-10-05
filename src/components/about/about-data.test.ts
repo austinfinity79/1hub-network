@@ -88,6 +88,15 @@ describe('organisation diagram leads', () => {
     expect(lead('THPT')).toBe('Lê Mai Anh')
   })
 
+  it('A4 (PO): Vũ Minh Tâm leads HN; Lê Phương Thảo is Tổng Thư ký, no node lead', () => {
+    expect(HUMANS.find((h) => h.name === 'Lê Phương Thảo')!.title).toBe(
+      'Phó Chủ tịch kiêm Tổng Thư ký HUB Tổng',
+    )
+    expect(HUBS.filter((h) => nameKey(h.lead?.name ?? '') === nameKey('Lê Phương Thảo'))).toEqual(
+      [],
+    )
+  })
+
   it('leaves China, Singapore and Quảng Ninh unmapped and reports the open links', () => {
     expect(lead('CN')).toBeNull()
     expect(lead('SG')).toBeNull()
