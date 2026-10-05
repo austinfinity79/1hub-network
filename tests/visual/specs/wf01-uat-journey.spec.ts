@@ -125,9 +125,15 @@ async function basic(page: Page, name = NAME) {
   await expect(page).toHaveURL('/onboarding/capability')
 }
 
-/** ACC-07: one field, so the stage stores something to resume. */
+/** ACC-07: stage 2's minimum (FB-09, S1-UAT-05): one domain and one specialisation as tags. */
 async function capability(page: Page) {
-  await page.getByRole('checkbox', { name: 'Logistics', exact: true }).check({ force: true })
+  for (const [field, text] of [
+    ['Lĩnh vực quan tâm', 'Logistics'],
+    ['Chuyên môn', 'Vận hành'],
+  ] as const) {
+    await page.getByRole('combobox', { name: field }).fill(text)
+    await page.getByRole('combobox', { name: field }).press('Enter')
+  }
   await next(page).click()
   await expect(page).toHaveURL('/onboarding/purpose')
 }
@@ -392,7 +398,7 @@ test.describe('WF01 UAT — L1 closure matrix', () => {
     )
     await page.getByRole('link', { name: 'Quay lại' }).click()
     await expect(page).toHaveURL('/onboarding/capability')
-    await expect(page.getByRole('checkbox', { name: 'Logistics', exact: true })).toBeChecked()
+    await expect(page.locator('[data-anchor="domains"] [data-tag]')).toHaveText(['Logistics'])
     await page.getByRole('link', { name: 'Quay lại' }).click()
     await expect(page).toHaveURL('/onboarding/profile')
     await expect(page.getByLabel('Họ và tên')).toHaveValue(NAME)

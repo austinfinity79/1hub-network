@@ -31,6 +31,10 @@ const MIGRATION_FILES = readdirSync(MIGRATIONS_DIR)
   .filter((name) => name.endsWith('.sql'))
   .sort()
 const BEFORE_018 = MIGRATION_FILES.filter((name) => name < M018)
+// S1-UAT-05: migrations after 018 unwind first, by their own documented rollback.
+const LATER_ROLLBACKS = MIGRATION_FILES.filter((name) => name > M018)
+  .reverse()
+  .map((name) => readFileSync(join(MIGRATIONS_DIR, name), 'utf8'))
 const FRESH = 'hubnetwork_p0_s1a_fresh'
 const UPGRADE = 'hubnetwork_p0_s1a_upgrade'
 const RECOVERY = 'hubnetwork_p0_s1a_recovery'
@@ -90,8 +94,8 @@ async function applyBefore018(client: Client): Promise<void> {
   }
 }
 
-function documentedRollback018(): string {
-  const lines = M018_SOURCE.split('\n')
+function documentedRollback018(source: string = M018_SOURCE): string {
+  const lines = source.split('\n')
   const start = lines.findIndex((line) => line.startsWith('-- ROLLBACK'))
   const body: string[] = []
   for (const line of lines.slice(start + 1)) {
@@ -174,7 +178,8 @@ describe('UPGRADE — the production schema (001 – 017) with data, then 018', 
   it('applies 018 only, keeps every row and sign-in state, new columns empty', async () => {
     const before = await snapshot(db)
     const out = runner(UPGRADE, 'migrate')
-    expect(out.match(/applied /g)).toHaveLength(1)
+    // 018 and whatever follows it; nothing before it again.
+    expect(out.match(/applied /g)).toHaveLength(MIGRATION_FILES.length - BEFORE_018.length)
     expect(out).toContain(`applied ${M018}`)
     expect(await snapshot(db)).toEqual(before)
     const { rows } = await db.query(
@@ -237,6 +242,7 @@ describe('RECOVERY — the documented rollback and a re-apply', () => {
 
   it('rolls back losslessly to the 017 schema and re-applies', async () => {
     const before = await snapshot(db)
+    for (const later of LATER_ROLLBACKS) await db.query(documentedRollback018(later))
     await db.query(documentedRollback018())
     expect(await ledger(db)).toEqual(BEFORE_018)
     expect(await tableExists(db, 'auth_identities')).toBe(false)

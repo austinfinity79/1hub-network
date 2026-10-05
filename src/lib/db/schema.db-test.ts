@@ -156,6 +156,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '016_p0_application_integrity.sql',
       '017_p0_admin_foundation.sql',
       '018_p0_password_auth.sql',
+      // S1-UAT-05 (DEC-S1P): unnormalised tags, experience type and place.
+      '019_p0_profile_sprint1.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)

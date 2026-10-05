@@ -10,6 +10,7 @@ import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
 import { decodePng, readPng } from '../pixel-qa/png'
 import { writeJsonReport } from '../pixel-qa/report'
 import { compareSegments, type Rect } from '../pixel-qa/segments'
+import { ensureCapabilityMinimum } from '../support/onboarding'
 
 /**
  * WF02-S03 — Privacy & Visibility (/me/privacy). Production.
@@ -64,6 +65,8 @@ async function completedMember(request: APIRequestContext, label = 's03'): Promi
     ).status(),
   ).toBe(200)
   await acceptCurrent(request)
+  // FB-09: stage 2 is passed only with a domain and a specialisation (S1-UAT-05).
+  await ensureCapabilityMinimum(request)
   for (const completed of ['CAPABILITY', 'ROLE']) {
     const stage = await request.put('/api/v1/me/onboarding/stage', { data: { completed } })
     expect(stage.ok()).toBe(true)

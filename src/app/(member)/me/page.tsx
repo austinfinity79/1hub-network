@@ -18,7 +18,8 @@ import { ProfileOwn } from './profile-own'
  * session account's own, read on the server: the canonical profile, the
  * server's completion, the ventures it owns or belongs to, its ACTIVE
  * leadership titles, and the vocabulary the in-place dialogs offer (ACTIVE
- * items plus the profile's own archived ones). Sections the board draws
+ * countries and regions plus the profile's own archived ones; ACTIVE domain and
+ * specialisation labels as tag suggestions). Sections the board draws
  * without a data source are not drawn (D-P1).
  */
 export const dynamic = 'force-dynamic'
@@ -37,7 +38,7 @@ export default async function Page() {
     getProfileCompletion(member.accountId),
     listOwnVentures(member.accountId),
     getOwnNetwork(member.accountId),
-    listActiveItems(['COUNTRY', 'REGION', 'SPECIALIZATION', 'SKILL']),
+    listActiveItems(['COUNTRY', 'REGION', 'DOMAIN', 'SPECIALIZATION']),
   ])
   const of = (type: string) => vocabulary.filter((item) => item.type === type)
   // The current month on the server, so the page and its client agree (no hydration drift).
@@ -61,8 +62,9 @@ export default async function Page() {
         options={{
           countries: withKept(of('COUNTRY'), profile.country ? [profile.country] : []),
           regions: withKept(of('REGION'), profile.region ? [profile.region] : []),
-          specializations: withKept(of('SPECIALIZATION'), profile.specializations),
-          skills: withKept(of('SKILL'), profile.skills),
+          // FB-09: catalogue labels the tag fields suggest; the profile keeps its own tags.
+          domains: of('DOMAIN').map((item) => item.label),
+          specializations: of('SPECIALIZATION').map((item) => item.label),
         }}
       />
     </ProfileShell>

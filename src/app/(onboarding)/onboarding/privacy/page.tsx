@@ -25,16 +25,18 @@ export const dynamic = 'force-dynamic'
 
 /** The completion groups by the name the screens give their fields. */
 const GROUP_LABELS: Record<CompletionGroup, string> = {
-  DISPLAY_NAME: 'Tên hiển thị',
   AVATAR: 'Ảnh hồ sơ',
+  FULL_NAME: 'Họ và tên',
   HEADLINE: 'Vai trò hiện tại',
-  REGION: 'Tỉnh/Thành phố',
   BIO: 'Giới thiệu ngắn',
+  LOCATION: 'Vị trí',
   DOMAIN: 'Lĩnh vực quan tâm',
-  SKILLS: 'Kỹ năng',
-  EXPERIENCE: 'Kinh nghiệm nổi bật',
-  DEVELOPMENT_GOAL: 'Mục tiêu phát triển',
-  CURRENT_NEED: 'Nhu cầu hiện tại',
+  SPECIALIZATION: 'Chuyên môn',
+  ECOSYSTEM_ROLE: 'Vai trò trong hệ sinh thái',
+  EXPERIENCE: 'Kinh nghiệm',
+  LINKEDIN: 'LinkedIn',
+  WEBSITE: 'Website/Portfolio',
+  PHONE: 'Số điện thoại',
 }
 
 const joined = (labels: string[]) => (labels.length > 0 ? labels.join(' · ') : null)
@@ -86,7 +88,6 @@ export default async function Page() {
           value: joined(profile.specializations.map((s) => s.label)),
           empty: 'Chưa chọn',
         },
-        { label: 'Kỹ năng', value: joined(profile.skills.map((s) => s.label)), empty: 'Chưa chọn' },
         {
           label: 'Kinh nghiệm',
           value: profile.experience.length > 0 ? `${profile.experience.length} mục` : null,

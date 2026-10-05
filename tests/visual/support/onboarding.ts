@@ -19,6 +19,8 @@ export const IDS = {
   danang: '20000000-0000-0000-0000-000000000002',
   chapter01: '10000000-0000-0000-0000-000000000101',
   chapter02: '10000000-0000-0000-0000-000000000102',
+  /** Seed DOMAIN "Giáo dục": stage 2's minimum (S1-UAT-05). */
+  education: '20000000-0000-0000-0000-000000000012',
 } as const
 
 const qa = (n: number) => `e7000000-0000-0000-0000-${String(n).padStart(12, '0')}`
@@ -73,10 +75,24 @@ export async function saveProfile(
   expect(response.status(), await response.text()).toBe(200)
 }
 
+/**
+ * Stage 2's minimum (FB-09, S1-UAT-05): one domain and one specialisation,
+ * canonical seed items, added only when the profile has none, so passing the
+ * stage is valid without changing what a test already chose.
+ */
+export async function ensureCapabilityMinimum(request: APIRequestContext): Promise<void> {
+  const profile = await (await request.get('/api/v1/me/profile')).json()
+  const body: Record<string, string[]> = {}
+  if (!profile.domains?.length) body.domain_ids = [IDS.education]
+  if (!profile.specializations?.length) body.specialization_ids = [QA.specialization.operations]
+  if (Object.keys(body).length > 0) await saveProfile(request, body)
+}
+
 export async function passStage(
   request: APIRequestContext,
   completed: 'CAPABILITY' | 'ROLE',
 ): Promise<void> {
+  if (completed === 'CAPABILITY') await ensureCapabilityMinimum(request)
   const response = await request.put('/api/v1/me/onboarding/stage', { data: { completed } })
   expect(response.status(), await response.text()).toBe(200)
 }
@@ -140,6 +156,11 @@ export async function onboardThroughUi(page: Page, name: string): Promise<void> 
   await page.getByLabel('Tỉnh/Thành phố').selectOption(IDS.danang)
   await page.getByRole('button', { name: 'Tiếp tục' }).click()
   await expect(page).toHaveURL('/onboarding/capability')
+  // FB-09 (S1-UAT-05): one domain and one specialisation, typed into the tag fields.
+  await page.getByRole('combobox', { name: 'Lĩnh vực quan tâm' }).fill('Giáo dục')
+  await page.getByRole('combobox', { name: 'Lĩnh vực quan tâm' }).press('Enter')
+  await page.getByRole('combobox', { name: 'Chuyên môn' }).fill('Vận hành')
+  await page.getByRole('combobox', { name: 'Chuyên môn' }).press('Enter')
   await page.getByRole('button', { name: 'Tiếp tục' }).click()
   await expect(page).toHaveURL('/onboarding/purpose')
   await page.getByRole('button', { name: 'Tiếp tục' }).click()

@@ -37,8 +37,27 @@ export async function fillBasic(accountId: string, name = 'Minimal'): Promise<vo
   })
 }
 
-/** Stages 2 and 3 passed with nothing selected, as "Tiếp tục" does. */
+/**
+ * Stage 2's minimum (FB-09, S1-UAT-05): one domain and one specialisation,
+ * the seed's canonical ones, added only when the profile has none.
+ */
+export async function ensureCapabilityMinimum(accountId: string): Promise<void> {
+  const [counts] = await query<{ domains: number; specializations: number }>(
+    `SELECT (SELECT count(*)::int FROM profile_domains d WHERE d.profile_id = p.id) AS domains,
+            (SELECT count(*)::int FROM profile_specializations s WHERE s.profile_id = p.id)
+              AS specializations
+       FROM individual_profiles p WHERE p.account_id = $1`,
+    [accountId],
+  )
+  await updateOwnProfile(accountId, {
+    ...(counts?.domains ? {} : { domain_ids: [REF.domain] }),
+    ...(counts?.specializations ? {} : { specialization_ids: [REF.specialization] }),
+  })
+}
+
+/** Stages 2 and 3 passed as "Tiếp tục" does, with stage 2's minimum in place. */
 export async function passStages(accountId: string): Promise<void> {
+  await ensureCapabilityMinimum(accountId)
   await passStage(accountId, { completed: 'CAPABILITY' })
   await passStage(accountId, { completed: 'ROLE' })
 }

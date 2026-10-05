@@ -168,6 +168,21 @@ describe('referential safety', () => {
 })
 
 describe('ordering', () => {
+  it("S1-UAT-05: members' unnormalised tags are not categories: not listed, not ordered, not edited", async () => {
+    const free = 'ad050000-0000-4000-8000-000000000009'
+    await query(
+      `INSERT INTO vocabulary_items (id, type_code, slug, label, sort_order, status)
+       VALUES ($1, 'DOMAIN', 'adm05-free', 'ADM05 free text', 0, 'UNNORMALIZED')`,
+      [free],
+    )
+    const listed = (await listCategories(P.admin.account, 'DOMAIN')).items.map((i) => i.id)
+    expect(listed).not.toContain(free)
+    // The listed ids are the whole type for ordering: the free tag is not required.
+    const result = await reorderCategories(P.admin.account, 'DOMAIN', { ids: listed }, 'adm05')
+    expect(result.items.map((i) => i.id)).toEqual(listed)
+    expect(await failure(patch('DOMAIN', free, { label: 'x' }))).toMatchObject({ status: 404 })
+  })
+
   it('reorders a whole type atomically and refuses an incomplete list', async () => {
     const all = (await listCategories(P.admin.account, 'DOMAIN')).items.map((i) => i.id)
     const reversed = [...all].reverse()

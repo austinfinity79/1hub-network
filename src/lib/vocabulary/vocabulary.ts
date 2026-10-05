@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import { ApiError } from '@/lib/api/errors'
 import { query, type Executor } from '@/lib/db/client'
 
@@ -23,7 +25,13 @@ export const VOCABULARY_TYPES = [
 ] as const
 export type VocabularyType = (typeof VOCABULARY_TYPES)[number]
 
-export type VocabularyStatus = 'ACTIVE' | 'ARCHIVED'
+/**
+ * UNNORMALIZED (migration 019, FB-09): a value a member typed that matched no
+ * canonical item, kept with the "chưa chuẩn hóa" flag for HUB to consolidate.
+ * Never listed, suggested or newly selectable by id; only linked by the member
+ * who typed it (or anyone typing the same text) through `resolveTags`.
+ */
+export type VocabularyStatus = 'ACTIVE' | 'ARCHIVED' | 'UNNORMALIZED'
 
 /** 05 §7 item shape. `code` is the stored canonical slug. */
 export type VocabularyItemDTO = {
@@ -147,4 +155,74 @@ export async function assertSelectable(
       })
     }
   }
+}
+
+/** FB-09: a tag is 2–40 characters; each field holds at most five. */
+export const TAG_LIMITS = { min: 2, max: 40, count: 5 } as const
+
+/** A typed tag as stored: Unicode NFC, trimmed, inner whitespace collapsed. */
+export const cleanTag = (label: string) => label.normalize('NFC').trim().replace(/\s+/g, ' ')
+
+/** FB-09 duplicate rule: case-insensitive, extra whitespace ignored. */
+export const tagKey = (label: string) => cleanTag(label).toLocaleLowerCase('vi')
+
+/**
+ * FB-09 — the vocabulary ids for the tags a member submitted, in order.
+ *
+ * A tag whose text is a canonical ACTIVE label (same key) links that item:
+ * canonical normalisation where the catalogue already has the value. Else an
+ * existing UNNORMALIZED item with the same key is reused, so equal free text
+ * from many members is one value for HUB to consolidate. Else a new
+ * UNNORMALIZED item is created (2–40 characters). An ARCHIVED item is reused
+ * only where the profile already links it (`keep`), as for ids.
+ */
+export async function resolveTags(
+  exec: Executor,
+  field: string,
+  type: VocabularyType,
+  labels: readonly string[],
+  keep: ReadonlySet<string> = new Set(),
+): Promise<string[]> {
+  if (labels.length === 0) return []
+  const rows = await exec<{ id: string; label: string; status: VocabularyStatus }>(
+    `SELECT id::text, label, status::text AS status FROM vocabulary_items
+      WHERE type_code = $1 ORDER BY sort_order, label, id`,
+    [type],
+  )
+  const rank = (row: { id: string; status: VocabularyStatus }) =>
+    row.status === 'ACTIVE' ? 0 : row.status === 'UNNORMALIZED' ? 1 : keep.has(row.id) ? 2 : 9
+  const byKey = new Map<string, { id: string; status: VocabularyStatus }>()
+  for (const row of rows) {
+    const key = tagKey(row.label)
+    const seen = byKey.get(key)
+    if (rank(row) < 9 && (!seen || rank(row) < rank(seen))) byKey.set(key, row)
+  }
+
+  const ids: string[] = []
+  for (const raw of labels) {
+    const label = cleanTag(raw)
+    const key = tagKey(label)
+    const found = byKey.get(key)
+    if (found) {
+      ids.push(found.id)
+      continue
+    }
+    if (label.length < TAG_LIMITS.min || label.length > TAG_LIMITS.max) {
+      throw new ApiError('PROFILE_VALIDATION_FAILED', 422, 'Tag length is not valid.', {
+        [field]: 'tag_length',
+      })
+    }
+    const slug = `u-${createHash('sha256').update(key).digest('hex').slice(0, 16)}`
+    // Two members typing the same new value at once both end on the one row.
+    const [created] = await exec<{ id: string }>(
+      `INSERT INTO vocabulary_items (type_code, slug, label, sort_order, status, metadata)
+       VALUES ($1, $2, $3, 0, 'UNNORMALIZED', '{"source":"MEMBER"}'::jsonb)
+       ON CONFLICT (type_code, slug) DO UPDATE SET updated_at = vocabulary_items.updated_at
+       RETURNING id::text`,
+      [type, slug, label],
+    )
+    byKey.set(key, { id: created!.id, status: 'UNNORMALIZED' })
+    ids.push(created!.id)
+  }
+  return ids
 }

@@ -156,6 +156,28 @@ export async function passStage(accountId: string, body: unknown): Promise<Onboa
       { [missing]: 'missing' },
     )
   }
+  // FB-09 (US-01.09): stage 2 is passed only with at least one domain and one
+  // specialisation; "Lưu và hoàn tất sau" saves without passing it.
+  if (stage === 'CAPABILITY') {
+    const [counts] = await query<{ domains: number; specializations: number }>(
+      `SELECT (SELECT count(*)::int FROM profile_domains d WHERE d.profile_id = p.id) AS domains,
+              (SELECT count(*)::int FROM profile_specializations s WHERE s.profile_id = p.id)
+                AS specializations
+         FROM individual_profiles p WHERE p.account_id = $1`,
+      [accountId],
+    )
+    const missing: Record<string, string> = {}
+    if (!counts?.domains) missing.domains = 'missing'
+    if (!counts?.specializations) missing.specializations = 'missing'
+    if (Object.keys(missing).length > 0) {
+      throw new ApiError(
+        'ONBOARDING_REQUIREMENTS_MISSING',
+        422,
+        'At least one domain and one specialisation are required.',
+        missing,
+      )
+    }
+  }
   const column = STAGE_MARKERS[stage]
   await query(
     `UPDATE individual_profiles

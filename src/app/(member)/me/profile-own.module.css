@@ -676,45 +676,11 @@
 }
 
 .pickLegend {
+  display: block;
   padding: 0;
   font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.25rem;
-}
-
-.pickList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.pick {
-  height: 2rem;
-  padding: 0 0.875rem;
-  border: 1px solid var(--line);
-  border-radius: 1rem;
-  background: var(--hub-surface);
-  font: inherit;
-  font-size: 0.8125rem;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.pick[aria-pressed='true'] {
-  border-color: var(--hub-primary);
-  background: var(--hub-primary);
-}
-
-.pick:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.pickHint {
-  margin: 0.5rem 0 0;
-  font-size: 0.75rem;
-  color: var(--muted);
 }
 
 .bannerButton:focus-visible,
@@ -725,8 +691,7 @@
 .recordEdit:focus-visible,
 .venture:focus-visible,
 .sideCreate:focus-visible,
-.sideAll:focus-visible,
-.pick:focus-visible {
+.sideAll:focus-visible {
   outline: 0.125em solid var(--color-fg-accent);
   outline-offset: 0.125em;
 }

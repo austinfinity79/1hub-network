@@ -10,8 +10,12 @@ import { expect, gap, NO_PRIVILEGE, privilege, test, uatHooks } from './uat'
 uatHooks()
 
 const PROFILE_API = '/api/v1/me/profile'
-const chip = (page: import('@playwright/test').Page, label: string) =>
-  page.getByRole('checkbox', { name: label, exact: true })
+/** FB-09 (S1-UAT-05): stage 2's fields are free-text tag controls. */
+async function addTag(page: import('@playwright/test').Page, field: string, text: string) {
+  const box = page.getByRole('combobox', { name: field })
+  await box.fill(text)
+  await box.press('Enter')
+}
 
 test('UC03 · UI+API+DB · the four stages with validation; completion server-derived; /me shows the profile', async ({
   page,
@@ -31,20 +35,24 @@ test('UC03 · UI+API+DB · the four stages with validation; completion server-de
   await page.getByRole('button', { name: 'Tiếp tục' }).click()
   await expect(page).toHaveURL('/onboarding/capability')
 
-  // CAPABILITY: fields, at most five specialisations, a malformed URL refused.
-  await chip(page, 'Logistics').check({ force: true })
-  const note = page.locator('[data-anchor="specializations"]').getByText(/ĐÃ CHỌN/)
+  // CAPABILITY: tags (FB-09), at most five specialisations, a malformed URL refused.
+  await addTag(page, 'Lĩnh vực quan tâm', 'Logistics')
+  const note = page.locator('[data-anchor="specializations"]').getByText(/ĐÃ THÊM/)
   for (const label of ['Vận hành', 'Công nghệ', 'Tài chính', 'Luật', 'Design']) {
-    await chip(page, label).check({ force: true })
+    await addTag(page, 'Chuyên môn', label)
   }
-  await expect(note).toHaveText('ĐÃ CHỌN 5/5')
-  await expect(chip(page, 'Marketing')).toBeDisabled()
+  await expect(note).toHaveText('ĐÃ THÊM 5/5')
+  await addTag(page, 'Chuyên môn', 'Marketing')
+  await expect(page.locator('[data-anchor="specializations"]').getByRole('alert')).toHaveText(
+    'Tối đa 5 mục.',
+  )
+  await page.getByRole('combobox', { name: 'Chuyên môn' }).fill('')
   const six = await page.request.patch(PROFILE_API, {
     data: { specialization_ids: [...Object.values(QA.specialization)] },
   })
   expect(six.status()).toBe(422)
   expect((await six.json()).error.fields).toEqual({ specialization_ids: 'too_many' })
-  // A value outside the controlled vocabulary is refused too.
+  // An id outside the controlled vocabulary is refused too (free text goes as text, FB-09).
   const free = await page.request.patch(PROFILE_API, {
     data: { specialization_ids: ['00000000-0000-0000-0000-000000000000'] },
   })

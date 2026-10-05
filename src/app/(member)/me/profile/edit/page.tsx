@@ -3,7 +3,7 @@ import { getOwnProfile } from '@/lib/profile/profile'
 import { getVisibility } from '@/lib/profile/visibility'
 import { listActiveItems } from '@/lib/vocabulary/vocabulary'
 
-import { ProfileEditor, type ExpertiseOption } from './profile-editor'
+import { ProfileEditor } from './profile-editor'
 
 /**
  * WF02-S02 — /me/profile/edit, Individual Profile Edit. Production.
@@ -12,8 +12,8 @@ import { ProfileEditor, type ExpertiseOption } from './profile-editor'
  *
  * Guest → /auth; onboarding not done → its resolver step (DEC-WF02-T00-D1).
  * The approved screen has its own editor header, not the member shell.
- * Vocabulary comes from the database; archived items already linked stay
- * visible and selected but are never offered anew (as WF01-S06).
+ * Domain suggestions are the ACTIVE catalogue labels; the field holds the
+ * profile's own domain tags, whatever their status (FB-09, S1-UAT-05).
  */
 export const dynamic = 'force-dynamic'
 
@@ -22,21 +22,10 @@ export default async function Page() {
   const [profile, regions, active, visibility] = await Promise.all([
     getOwnProfile(member.accountId),
     listActiveItems(['REGION']),
-    listActiveItems(['DOMAIN', 'SKILL']),
+    listActiveItems(['DOMAIN']),
     getVisibility(member.accountId),
   ])
 
-  const linked: ExpertiseOption[] = [
-    ...profile.domains.map((d) => ({ id: d.id, label: d.label, type: 'DOMAIN' as const })),
-    ...profile.skills.map((s) => ({ id: s.id, label: s.label, type: 'SKILL' as const })),
-  ]
-  const linkedIds = new Set(linked.map((o) => o.id))
-  const expertise: ExpertiseOption[] = [
-    ...linked,
-    ...active
-      .filter((item) => !linkedIds.has(item.id))
-      .map((item) => ({ id: item.id, label: item.label, type: item.type as 'DOMAIN' | 'SKILL' })),
-  ]
   const regionOptions = regions.map((r) => ({ id: r.id, label: r.label }))
   if (profile.region && !regionOptions.some((r) => r.id === profile.region!.id)) {
     regionOptions.unshift({ id: profile.region.id, label: profile.region.label })
@@ -51,7 +40,7 @@ export default async function Page() {
         headline: profile.headline ?? '',
         region_id: profile.region?.id ?? '',
         bio: profile.bio ?? '',
-        expertise: [...linkedIds],
+        domains: profile.domains.map((d) => d.label),
         experience: profile.experience.map((e) => ({
           title: e.title,
           organization_name: e.organization_name ?? '',
@@ -63,7 +52,7 @@ export default async function Page() {
         avatar_url: profile.avatar?.url ?? null,
       }}
       regions={regionOptions}
-      expertise={expertise}
+      domainOptions={active.map((item) => item.label)}
       discoverable={discovery !== 'PRIVATE'}
     />
   )

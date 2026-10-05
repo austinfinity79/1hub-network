@@ -4,6 +4,7 @@ import { useRef, useState, type FormEvent } from 'react'
 
 import { EditorHeader } from '@/components/shell/editor-header'
 import { Button, Notice, TextInput } from '@/components/ui'
+import { TagInput } from '@/components/ui/tag-input'
 import { apiRequest } from '@/lib/api/client'
 
 import styles from './profile-edit.module.css'
@@ -12,15 +13,13 @@ import styles from './profile-edit.module.css'
  * WF02-S02 — profile editor body (DEC-WF02-H1/H2, DEC-WF02-S02-D1..D7).
  *
  * Canonical IndividualProfile data only. Approved regions: headline, bio,
- * "Nhóm chuyên môn" (one picker over DOMAIN + SKILL, at most 5, as WF01-S06)
- * and links. H1 addendum: experience (or "chưa có kinh nghiệm"), development
+ * "Lĩnh vực quan tâm" (S1-UAT-05: the FB-09 tag control, 1–5 domains, free
+ * text allowed; FB-10 removed skills from what was "Nhóm chuyên môn") and links. H1 addendum: experience (or "chưa có kinh nghiệm"), development
  * goal and current need. The activity-hide panel is Future and not rendered;
  * the right column holds name, avatar and region instead (D5). "Lưu" sends
  * one PATCH with only the changed fields; the server validates everything,
  * computes completion and is the only source of saved state.
  */
-
-export type ExpertiseOption = { id: string; label: string; type: 'DOMAIN' | 'SKILL' }
 
 type Experience = { title: string; organization_name: string }
 
@@ -29,7 +28,8 @@ type State = {
   headline: string
   region_id: string
   bio: string
-  expertise: string[]
+  /** Domain tags, by label. */
+  domains: string[]
   experience: Experience[]
   no_experience_yet: boolean
   development_goal: string
@@ -39,7 +39,6 @@ type State = {
 
 type Initial = State & { avatar_url: string | null }
 
-const MAX_EXPERTISE = 5
 const MAX_LINKS = 5
 
 /** Copy for states the approved bitmap does not show; pending PO copy review (DEC-WF02-S02-D6). */
@@ -48,7 +47,8 @@ const COPY = {
   hidden: 'Đang ẩn khỏi mạng lưới',
   savedAt: 'đã lưu lúc',
   save: 'Lưu',
-  expertisePlaceholder: 'Chọn chuyên môn',
+  domainPlaceholder: 'Gõ lĩnh vực, Enter để thêm',
+  domainRequired: 'Vui lòng thêm ít nhất một lĩnh vực.',
   addLink: '+ Thêm liên kết',
   addExperience: '+ Thêm kinh nghiệm',
   removeExperience: 'Xoá',
@@ -75,16 +75,14 @@ function normaliseUrl(value: string): string {
   return /^[a-z][a-z0-9+.-]*:/i.test(text) ? text : `https://${text}`
 }
 
-function toBody(state: State, expertise: ExpertiseOption[]) {
-  const pick = (type: 'DOMAIN' | 'SKILL') =>
-    state.expertise.filter((id) => expertise.find((o) => o.id === id)?.type === type)
+function toBody(state: State) {
   return {
     display_name: state.display_name,
     headline: state.headline,
     region_id: state.region_id || null,
     bio: state.bio,
-    domain_ids: pick('DOMAIN'),
-    skill_ids: pick('SKILL'),
+    // FB-09 tags as text; skills are no longer sent (FB-10), so stored ones stay untouched.
+    domains: state.domains,
     experience: state.no_experience_yet
       ? []
       : state.experience
@@ -102,19 +100,19 @@ type FieldErrors = Partial<Record<string, string>>
 export function ProfileEditor({
   initial,
   regions,
-  expertise,
+  domainOptions,
   discoverable,
 }: {
   initial: Initial
   regions: { id: string; label: string }[]
-  expertise: ExpertiseOption[]
+  /** Catalogue labels the domain field suggests. */
+  domainOptions: string[]
   discoverable: boolean
 }) {
   const { avatar_url: initialAvatar, ...initialState } = initial
   const [state, setState] = useState<State>(initialState)
   const [saved, setSaved] = useState<State>(initialState)
   const [savedAt, setSavedAt] = useState<string>()
-  const [open, setOpen] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState(initialAvatar)
   const [uploading, setUploading] = useState(false)
   const [avatarError, setAvatarError] = useState<string>()
@@ -128,22 +126,6 @@ export function ProfileEditor({
     setState((s) => ({ ...s, [key]: value }))
     setErrors((e) => ({ ...e, [key]: undefined }))
   }
-  const labels = state.expertise
-    .map((id) => expertise.find((o) => o.id === id)?.label)
-    .filter(Boolean)
-    .join(' · ')
-
-  function toggle(id: string) {
-    set(
-      'expertise',
-      state.expertise.includes(id)
-        ? state.expertise.filter((x) => x !== id)
-        : state.expertise.length < MAX_EXPERTISE
-          ? [...state.expertise, id]
-          : state.expertise,
-    )
-  }
-
   async function onAvatar(file: File | undefined) {
     if (!file || uploading) return
     setUploading(true)
@@ -177,13 +159,14 @@ export function ProfileEditor({
     const local: FieldErrors = {}
     if (!state.display_name.trim()) local.display_name = COPY.required
     if (!state.region_id) local.region_id = COPY.required
+    if (state.domains.length === 0 && saved.domains.length > 0) local.domains = COPY.domainRequired
     if (Object.keys(local).length > 0) {
       setErrors(local)
       return
     }
     // Only what changed since the last successful save (PATCH stays partial).
-    const next = toBody(state, expertise)
-    const prev = toBody(saved, expertise)
+    const next = toBody(state)
+    const prev = toBody(saved)
     const body = Object.fromEntries(
       Object.entries(next).filter(
         ([key, value]) => JSON.stringify(value) !== JSON.stringify(prev[key as keyof typeof prev]),
@@ -285,44 +268,25 @@ export function ProfileEditor({
           </section>
 
           <section className={styles.field}>
-            <p id="pe-expertise-label" className={`type-body-sm weight-semibold ${styles.label}`}>
-              Nhóm chuyên môn
-            </p>
-            {hint('pe-expertise-hint', 'Chọn từ danh mục HUB quản lý, không gõ tự do.')}
-            <button
-              type="button"
-              className={`type-body-md ${styles.pickerBox}`}
-              aria-expanded={open}
-              aria-controls="pe-expertise-list"
-              aria-labelledby="pe-expertise-label"
-              aria-describedby="pe-expertise-hint"
-              onClick={() => setOpen((o) => !o)}
+            <label
+              id="pe-domains-label"
+              htmlFor="pe-domains"
+              className={`type-body-sm weight-semibold ${styles.label}`}
             >
-              <span className={labels ? undefined : styles.placeholder}>
-                {labels || COPY.expertisePlaceholder}
-              </span>
-            </button>
-            {open ? (
-              <ul id="pe-expertise-list" className={styles.chips} aria-label="Nhóm chuyên môn">
-                {expertise.map((o) => {
-                  const on = state.expertise.includes(o.id)
-                  return (
-                    <li key={o.id}>
-                      <button
-                        type="button"
-                        className={`type-meta-xs weight-medium ${styles.chip}`}
-                        aria-pressed={on}
-                        disabled={!on && state.expertise.length >= MAX_EXPERTISE}
-                        onClick={() => toggle(o.id)}
-                      >
-                        {o.label}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            ) : null}
-            {fieldError('domain_ids') ?? fieldError('skill_ids')}
+              Lĩnh vực quan tâm
+            </label>
+            {hint('pe-domains-hint', 'Gợi ý từ danh mục HUB; gõ giá trị khác rồi Enter để thêm.')}
+            <TagInput
+              id="pe-domains"
+              name="domains"
+              labelledBy="pe-domains-label"
+              tags={state.domains}
+              options={domainOptions}
+              placeholder={COPY.domainPlaceholder}
+              error={errors.domains}
+              boxClassName={styles.tagBox}
+              onChange={(next) => set('domains', next)}
+            />
           </section>
 
           <section className={styles.field}>

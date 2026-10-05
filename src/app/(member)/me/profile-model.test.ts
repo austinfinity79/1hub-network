@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { currentMonth, durationText, monthsBetween } from './profile-model'
+import { currentMonth, durationText, monthsBetween, suggestions } from './profile-model'
 
 describe('FP1-OWN experience durations', () => {
   it('counts both months, as the board does', () => {
@@ -16,5 +16,19 @@ describe('FP1-OWN experience durations', () => {
     // 00:30 on 1 October in Hồ Chí Minh City is still 30 September in UTC.
     expect(currentMonth(new Date('2026-09-30T17:30:00Z'))).toBe('2026-10')
     expect(currentMonth(new Date('2026-09-30T16:59:00Z'))).toBe('2026-09')
+  })
+})
+
+describe('suggestion cards (S1-UAT-05, twelve items)', () => {
+  it('the first two missing items with an edit surface; ecosystem roles have no card', () => {
+    expect(suggestions(['ECOSYSTEM_ROLE', 'PHONE', 'WEBSITE']).map((s) => s.group)).toEqual([
+      'PHONE',
+      'WEBSITE',
+    ])
+    expect(suggestions(['AVATAR', 'DOMAIN']).map((s) => [s.group, s.target])).toEqual([
+      ['AVATAR', 'editor'],
+      ['DOMAIN', 'expertise'],
+    ])
+    expect(suggestions(['ECOSYSTEM_ROLE'])).toEqual([])
   })
 })

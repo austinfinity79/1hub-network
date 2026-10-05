@@ -139,7 +139,7 @@ test.describe('WF01-S07 functional and security', () => {
     await expect(part(2).locator('dd')).toHaveText([
       'Logistics · AgriTech · Climate Tech',
       'Vận hành · Công nghệ · Tài chính',
-      'Phân tích dữ liệu · Đàm phán B2B · Pitching',
+      // FB-10 (S1-UAT-05): no "Kỹ năng" row; stored skills are not shown.
       '2 mục',
       'LinkedIn',
     ])
@@ -164,13 +164,14 @@ test.describe('WF01-S07 functional and security', () => {
     await reach(page.request, 'REVIEW', { ...BOARD, phone: '+84901234567' })
     await openReview(page)
     const server = await (await page.request.get('/api/v1/me/profile/completion')).json()
-    expect(server.percent).toBe(70)
+    // Twelve items (S1-UAT-05): 9 present; photo, ecosystem role and website missing.
+    expect(server.percent).toBe(75)
     const box = page.locator('[data-completion]')
-    await expect(box).toContainText('70%')
+    await expect(box).toContainText('75%')
     await expect(box.locator('li')).toHaveText([
       'Ảnh hồ sơ',
-      'Mục tiêu phát triển',
-      'Nhu cầu hiện tại',
+      'Vai trò trong hệ sinh thái',
+      'Website/Portfolio',
     ])
     const preview = page.locator('[data-preview]')
     await expect(preview).toContainText('Kim Chi Đặng')

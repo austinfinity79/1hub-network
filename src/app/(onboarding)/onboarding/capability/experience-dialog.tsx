@@ -14,6 +14,10 @@ import styles from './capability.module.css'
  * Title is required. Months are written "MM/YYYY" as the board draws them and
  * handed on as "YYYY-MM". The board's "Có trên HUB · tự liên kết" organisation
  * link is not drawn: organisations are free text here (no source, D-P1).
+ *
+ * S1-UAT-05: "Loại hình" and "Địa điểm", which the profile board shows on each
+ * record, are edited here too; both optional free text (no catalogue defines
+ * employment types; the place is the board's plain city text).
  */
 
 export type ExperienceRecord = {
@@ -24,7 +28,14 @@ export type ExperienceRecord = {
   /** "YYYY-MM"; '' with a start means current. */
   ended_on: string
   description: string
+  /** "Loại hình", '' when not given. */
+  employment_type: string
+  /** "Địa điểm", '' when not given. */
+  location: string
 }
+
+/** Server bounds (LIST_LIMITS): "Loại hình" 40, place 200 characters. */
+const LIMITS = { employment_type: 40, location: 200 } as const
 
 const MESSAGES = {
   title: 'Vui lòng nhập chức danh.',
@@ -76,6 +87,8 @@ export function ExperienceDialog({
   const [to, setTo] = useState(toField(record?.ended_on ?? ''))
   const [current, setCurrent] = useState(Boolean(record?.started_on && !record.ended_on))
   const [description, setDescription] = useState(record?.description ?? '')
+  const [employmentType, setEmploymentType] = useState(record?.employment_type ?? '')
+  const [location, setLocation] = useState(record?.location ?? '')
   const [errors, setErrors] = useState<{ title?: string; from?: string; to?: string }>({})
 
   useEffect(() => {
@@ -112,6 +125,8 @@ export function ExperienceDialog({
         started_on: started ?? '',
         ended_on: ended ?? '',
         description: description.trim(),
+        employment_type: employmentType.trim(),
+        location: location.trim(),
       }),
     )
   }
@@ -172,6 +187,41 @@ export function ExperienceDialog({
               value={organization}
               onChange={(e) => setOrganization(e.target.value)}
             />
+          </div>
+        </div>
+
+        <div className={`${stage.grid2} ${styles.dialogGrid}`}>
+          <div className={stage.field}>
+            <label className={stage.label} htmlFor={id('type')}>
+              Loại hình
+            </label>
+            <div className={stage.control}>
+              <input
+                id={id('type')}
+                className="ui-input"
+                name="employment_type"
+                placeholder="Ví dụ: Toàn thời gian"
+                maxLength={LIMITS.employment_type}
+                value={employmentType}
+                onChange={(e) => setEmploymentType(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className={stage.field}>
+            <label className={stage.label} htmlFor={id('place')}>
+              Địa điểm
+            </label>
+            <div className={stage.control}>
+              <input
+                id={id('place')}
+                className="ui-input"
+                name="location"
+                placeholder="Ví dụ: Đà Nẵng"
+                maxLength={LIMITS.location}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 

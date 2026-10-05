@@ -115,7 +115,7 @@ describe('activation requirements', () => {
     expect(await profileRow(accountId)).toMatchObject([{ status: 'DRAFT', completed_at: null }])
   })
 
-  it('completes below 80%, with NULL intent, no headline, expertise, avatar or bio', async () => {
+  it('completes below 80%, with NULL intent, no headline, avatar or bio', async () => {
     const accountId = await readyAccount()
     const [before] = await query<{ primary_intent: string | null; headline: string | null }>(
       'SELECT primary_intent, headline FROM individual_profiles WHERE account_id = $1',
@@ -129,7 +129,8 @@ describe('activation requirements', () => {
       completion_percent: (await getProfileCompletion(accountId)).percent,
       next: '/me',
     })
-    expect(result.completion_percent).toBe(20)
+    // Full name, location and stage 2's minimum (one domain, one specialisation): 4 of 12.
+    expect(result.completion_percent).toBe(33)
   })
 })
 
@@ -346,8 +347,8 @@ describe('HUB units named in stage 3', () => {
 describe('analytics', () => {
   it('profile_completion_changed only when the authoritative percent moves; no content', async () => {
     const accountId = await newAccount()
-    await updateOwnProfile(accountId, { display_name: 'Secret Name' })
-    await updateOwnProfile(accountId, { display_name: 'Secret Name' })
+    await updateOwnProfile(accountId, { full_name: 'Secret Name' })
+    await updateOwnProfile(accountId, { full_name: 'Secret Name' })
     await updateOwnProfile(accountId, { headline: 'Secret Headline' })
     const events = await query<{ properties: Record<string, unknown> }>(
       `SELECT properties FROM analytics_events
@@ -355,8 +356,8 @@ describe('analytics', () => {
       [accountId],
     )
     expect(events.map((e) => [e.properties.from_percent, e.properties.to_percent])).toEqual([
-      [0, 10],
-      [10, 20],
+      [0, 8],
+      [8, 17],
     ])
     expect(Object.keys(events[0]!.properties).sort()).toEqual(
       [

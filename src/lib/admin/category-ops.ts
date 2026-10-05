@@ -19,6 +19,10 @@ import { holdsPlatform } from './scope'
  * points at an item keeps it (foreign keys unchanged, labels still resolved
  * for display); `assertSelectable` only stops NEW selections of an archived
  * item. The list shows how many canonical rows use each item.
+ *
+ * S1-UAT-05: members' free-text tags (status UNNORMALIZED, FB-09) are not
+ * categories; they are left out of the list, the edit and the order, so the
+ * screen and its rules are unchanged. Consolidating them is later HUB work.
  */
 
 const forbidden = () =>
@@ -67,7 +71,8 @@ function typeOf(raw: string): VocabularyType {
 async function items(exec: Executor, type: VocabularyType): Promise<CategoryItemDTO[]> {
   const rows = await exec<Omit<CategoryItemDTO, 'in_use'>>(
     `SELECT id::text, slug AS code, label, sort_order, status::text AS status
-       FROM vocabulary_items WHERE type_code = $1 ORDER BY sort_order, label, id`,
+       FROM vocabulary_items WHERE type_code = $1 AND status <> 'UNNORMALIZED'
+      ORDER BY sort_order, label, id`,
     [type],
   )
   const usage = await exec<{ ref: string; n: number }>(USAGE, [rows.map((r) => r.id)])
@@ -130,7 +135,7 @@ export async function updateCategory(
   return inTransaction(exec, async (tx) => {
     const [row] = await tx<{ id: string; label: string; sort_order: number; status: string }>(
       `SELECT id::text, label, sort_order, status::text AS status FROM vocabulary_items
-        WHERE id = $1 AND type_code = $2 FOR UPDATE`,
+        WHERE id = $1 AND type_code = $2 AND status <> 'UNNORMALIZED' FOR UPDATE`,
       [itemId, type],
     )
     if (!row) throw notFound()
@@ -195,7 +200,8 @@ export async function reorderCategories(
 
   return withTransaction(async (tx) => {
     const current = await tx<{ id: string; sort_order: number }>(
-      `SELECT id::text, sort_order FROM vocabulary_items WHERE type_code = $1 ORDER BY id FOR UPDATE`,
+      `SELECT id::text, sort_order FROM vocabulary_items
+        WHERE type_code = $1 AND status <> 'UNNORMALIZED' ORDER BY id FOR UPDATE`,
       [type],
     )
     const known = new Set(current.map((c) => c.id))

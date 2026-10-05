@@ -26,7 +26,7 @@ const AI_TOPICS = [
   'Giới thiệu ngắn',
   'Vai trò hiện tại',
   'Lĩnh vực hoạt động',
-  'Chuyên môn và kỹ năng',
+  'Chuyên môn',
   'Kinh nghiệm nổi bật',
   'Liên kết nghề nghiệp',
 ] as const

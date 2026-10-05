@@ -2,7 +2,13 @@ import { expect, test } from '@playwright/test'
 
 import { closePool } from '../../../src/lib/db/client'
 import { writeJsonReport } from '../pixel-qa/report'
-import { applyVocabularyFixture, IDS, onboardThroughUi, signInFresh } from '../support/onboarding'
+import {
+  applyVocabularyFixture,
+  ensureCapabilityMinimum,
+  IDS,
+  onboardThroughUi,
+  signInFresh,
+} from '../support/onboarding'
 
 /**
  * WF01 four-stage onboarding — runtime health of the whole journey
@@ -60,6 +66,8 @@ test('ACC-05 → ACC-10 → /me: console, responses and assets are clean', async
     },
   })
   expect(save.status()).toBe(200)
+  // FB-09: stage 2 is passed only with a domain and a specialisation (S1-UAT-05).
+  await ensureCapabilityMinimum(page.request)
   for (const completed of ['CAPABILITY', 'ROLE']) {
     const stage = await page.request.put('/api/v1/me/onboarding/stage', { data: { completed } })
     expect(stage.status()).toBe(200)

@@ -6,7 +6,14 @@ import { updateOwnProfile } from '@/lib/profile/profile'
 
 import { completeOnboarding } from './complete'
 import { getOnboardingState, passStage, routeFor, submitPurpose } from './state'
-import { REF, acceptBoth, fillBasic, newAccount, passStages } from './testing'
+import {
+  REF,
+  acceptBoth,
+  ensureCapabilityMinimum,
+  fillBasic,
+  newAccount,
+  passStages,
+} from './testing'
 
 /**
  * The one onboarding resolver against live PostgreSQL, four-stage flow
@@ -56,8 +63,16 @@ describe('resolver', () => {
   it('CAPABILITY → ROLE → REVIEW in order; optional data does not pass a stage', async () => {
     const id = await newAccount('res')
     await fillBasic(id)
-    await updateOwnProfile(id, { domain_ids: [REF.domain], skill_ids: [REF.skill] })
+    await updateOwnProfile(id, { domain_ids: [REF.domain] })
     expect(await step(id)).toBe('CAPABILITY')
+    // FB-09 (US-01.09): stage 2 needs a domain AND a specialisation to be passed.
+    await expect(passStage(id, { completed: 'CAPABILITY' })).rejects.toMatchObject({
+      code: 'ONBOARDING_REQUIREMENTS_MISSING',
+      status: 422,
+      fields: { specializations: 'missing' },
+    })
+    expect(await step(id)).toBe('CAPABILITY')
+    await updateOwnProfile(id, { specialization_ids: [REF.specialization] })
     expect((await passStage(id, { completed: 'CAPABILITY' })).current_step).toBe('ROLE')
     expect(routeFor(await getOnboardingState(id))).toBe('/onboarding/purpose')
     expect((await passStage(id, { completed: 'ROLE' })).current_step).toBe('REVIEW')
@@ -121,6 +136,7 @@ describe('resolver', () => {
       [email],
     )) as [{ id: string }]
     await fillBasic(id)
+    await ensureCapabilityMinimum(id)
     await passStage(id, { completed: 'CAPABILITY' })
     const snapshot = async () =>
       query(

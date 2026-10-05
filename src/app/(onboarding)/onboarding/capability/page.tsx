@@ -11,30 +11,21 @@ import { CapabilityForm } from './capability-form'
  * Reference: design-reference/final/revision/L1/ACC-07__onboarding-capability__SOURCE.png
  * Decisions DEC-L1R-D3, D4.
  *
- * Every list is the controlled vocabulary's ACTIVE items plus what the profile
- * already holds, so an archived item that is selected stays visible.
+ * Suggestions are the controlled vocabulary's ACTIVE labels; the fields hold
+ * the profile's own tags, whatever their status (FB-09, S1-UAT-05).
  */
 export const dynamic = 'force-dynamic'
-
-type Ref = { id: string; label: string }
-
-/** ACTIVE items, then the profile's own items that are no longer active. */
-const withKept = (active: Ref[], kept: Ref[]) => [
-  ...active.map(({ id, label }) => ({ id, label })),
-  ...kept
-    .filter((item) => !active.some((a) => a.id === item.id))
-    .map(({ id, label }) => ({ id, label })),
-]
 
 export default async function Page() {
   const { accountId } = await requireOnboardingStage('CAPABILITY')
 
-  const [profile, domains, specializations, skills] = await Promise.all([
+  const [profile, catalogue] = await Promise.all([
     getOwnProfile(accountId),
-    listActiveItems(['DOMAIN']),
-    listActiveItems(['SPECIALIZATION']),
-    listActiveItems(['SKILL']),
+    listActiveItems(['DOMAIN', 'SPECIALIZATION']),
   ])
+  // FB-09: ACTIVE catalogue labels are suggestions only; the profile's own tags
+  // (canonical, archived or "chưa chuẩn hóa") are its current values.
+  const labels = (type: string) => catalogue.filter((i) => i.type === type).map((i) => i.label)
 
   return (
     <OnboardingShell
@@ -44,22 +35,22 @@ export default async function Page() {
     >
       <CapabilityForm
         initial={{
-          domain_ids: profile.domains.map((d) => d.id),
-          specialization_ids: profile.specializations.map((s) => s.id),
-          skill_ids: profile.skills.map((s) => s.id),
+          domains: profile.domains.map((d) => d.label),
+          specializations: profile.specializations.map((s) => s.label),
           experience: profile.experience.map((e) => ({
             title: e.title,
             organization_name: e.organization_name ?? '',
             started_on: e.started_on ?? '',
             ended_on: e.ended_on ?? '',
             description: e.description ?? '',
+            employment_type: e.employment_type ?? '',
+            location: e.location ?? '',
           })),
           no_experience_yet: profile.no_experience_yet,
           links: profile.links.map(({ label, url }) => ({ label, url })),
         }}
-        domains={withKept(domains, profile.domains)}
-        specializations={withKept(specializations, profile.specializations)}
-        skills={withKept(skills, profile.skills)}
+        domainOptions={labels('DOMAIN')}
+        specializationOptions={labels('SPECIALIZATION')}
       />
     </OnboardingShell>
   )

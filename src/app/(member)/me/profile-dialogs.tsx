@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react'
 
+import { TAG_RULES, TagInput } from '@/components/ui/tag-input'
 import type { OwnProfileDTO } from '@/lib/profile/profile'
 
 import { Field, grid2, ProfileDialog } from './profile-dialog'
@@ -9,7 +10,7 @@ import styles from './profile-own.module.css'
 
 /**
  * The FP1-OWN dialogs on the L12 pattern (DEC-L2R-D3): education, basic and
- * contact information, specialisation and skills. Each hands one PATCH body
+ * contact information, domains and specialisations. Each hands one PATCH body
  * to the page, which saves it and reads the profile again; the server
  * validates everything again.
  */
@@ -22,7 +23,8 @@ const MESSAGES = {
   start: 'Vui lòng nhập thời gian bắt đầu.',
   order: 'Thời gian kết thúc phải sau thời gian bắt đầu.',
   phone: 'Số điện thoại chưa hợp lệ.',
-  limit: 'Chọn tối đa 5 chuyên môn.',
+  domains: 'Vui lòng thêm ít nhất một lĩnh vực.',
+  specializations: 'Vui lòng thêm ít nhất một chuyên môn.',
 } as const
 
 const toField = (month: string | null) => (month ? `${month.slice(5)}/${month.slice(0, 4)}` : '')
@@ -281,79 +283,92 @@ export function BasicDialog({
   )
 }
 
+/**
+ * "Lĩnh vực và chuyên môn" (FB-09, FB-10): the same tag control as onboarding
+ * stage 2, 1–5 tags each, free text allowed; "Kỹ năng" is gone.
+ */
 export function ExpertiseDialog({
   selected,
+  domains,
   specializations,
-  skills,
   saving,
   error,
   onSave,
   onClose,
 }: {
-  selected: { specializations: string[]; skills: string[] }
-  specializations: Option[]
-  skills: Option[]
+  selected: { domains: string[]; specializations: string[] }
+  /** Catalogue labels the fields suggest. */
+  domains: string[]
+  specializations: string[]
   saving: boolean
   error?: string
   onSave: (body: Record<string, unknown>) => void
   onClose: () => void
 }) {
+  const ids = useId()
+  const [pickedDomains, setPickedDomains] = useState(selected.domains)
   const [picked, setPicked] = useState(selected.specializations)
-  const [pickedSkills, setPickedSkills] = useState(selected.skills)
-  const full = picked.length >= 5
+  const [errors, setErrors] = useState<{ domains?: string; specializations?: string }>({})
 
-  const toggle = (list: string[], id: string) =>
-    list.includes(id) ? list.filter((x) => x !== id) : [...list, id]
+  function submit() {
+    const next = {
+      domains: pickedDomains.length === 0 ? MESSAGES.domains : undefined,
+      specializations: picked.length === 0 ? MESSAGES.specializations : undefined,
+    }
+    setErrors(next)
+    if (next.domains || next.specializations) return
+    onSave({ domains: pickedDomains, specializations: picked })
+  }
 
   return (
     <ProfileDialog
       name="expertise"
-      title="Chuyên môn và kỹ năng"
+      title="Lĩnh vực và chuyên môn"
       saving={saving}
       error={error}
-      onSubmit={() => onSave({ specialization_ids: picked, skill_ids: pickedSkills })}
+      onSubmit={submit}
       onClose={onClose}
     >
-      <fieldset className={styles.pickGroup}>
-        <legend className={styles.pickLegend}>Chuyên môn · đã chọn {picked.length}/5</legend>
-        <div className={styles.pickList}>
-          {specializations.map((item) => {
-            const on = picked.includes(item.id)
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={styles.pick}
-                aria-pressed={on}
-                disabled={!on && full}
-                onClick={() => setPicked((list) => toggle(list, item.id))}
-              >
-                {item.label}
-              </button>
-            )
-          })}
-        </div>
-        {full ? <p className={styles.pickHint}>{MESSAGES.limit}</p> : null}
-      </fieldset>
-      <fieldset className={styles.pickGroup}>
-        <legend className={styles.pickLegend}>Kỹ năng</legend>
-        <div className={styles.pickList}>
-          {skills.map((item) => {
-            const on = pickedSkills.includes(item.id)
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={styles.pick}
-                aria-pressed={on}
-                onClick={() => setPickedSkills((list) => toggle(list, item.id))}
-              >
-                {item.label}
-              </button>
-            )
-          })}
-        </div>
-      </fieldset>
+      <div className={styles.pickGroup}>
+        <label id={`${ids}-domains`} htmlFor={`${ids}-domain`} className={styles.pickLegend}>
+          Lĩnh vực quan tâm · đã thêm {pickedDomains.length}/{TAG_RULES.count}
+        </label>
+        <TagInput
+          id={`${ids}-domain`}
+          name="domains"
+          labelledBy={`${ids}-domains`}
+          tags={pickedDomains}
+          options={domains}
+          placeholder="Gõ lĩnh vực, Enter để thêm"
+          error={errors.domains}
+          onChange={(next) => {
+            setPickedDomains(next)
+            setErrors((e) => ({ ...e, domains: undefined }))
+          }}
+        />
+      </div>
+      <div className={styles.pickGroup}>
+        <label
+          id={`${ids}-specializations`}
+          htmlFor={`${ids}-specialization`}
+          className={styles.pickLegend}
+        >
+          Chuyên môn · đã thêm {picked.length}/{TAG_RULES.count}
+        </label>
+        <TagInput
+          id={`${ids}-specialization`}
+          name="specializations"
+          labelledBy={`${ids}-specializations`}
+          tags={picked}
+          options={specializations}
+          placeholder="Gõ chuyên môn, Enter để thêm"
+          error={errors.specializations}
+          onChange={(next) => {
+            setPicked(next)
+            setErrors((e) => ({ ...e, specializations: undefined }))
+          }}
+        />
+      </div>
     </ProfileDialog>
   )
 }

@@ -2,7 +2,14 @@ import { trackCompletionChange } from '@/lib/analytics/analytics'
 import { ApiError } from '@/lib/api/errors'
 import { query, withTransaction, type Executor } from '@/lib/db/client'
 import { assetUrl } from '@/lib/media/avatar-storage'
-import { assertSelectable, type VocabularyStatus } from '@/lib/vocabulary/vocabulary'
+import {
+  assertSelectable,
+  cleanTag,
+  resolveTags,
+  tagKey,
+  TAG_LIMITS,
+  type VocabularyStatus,
+} from '@/lib/vocabulary/vocabulary'
 
 import { computeCompletion, loadCompletionFacts } from './completion'
 
@@ -25,6 +32,13 @@ import { computeCompletion, loadCompletionFacts } from './completion'
  *
  * Workspace (DEC-L2R-D3): `education` is writable, a list replaced as a whole
  * like experience: institution, programme and the months of the period.
+ *
+ * S1-UAT-05 (DEC-S1P): `domains` / `specializations` carry the tags as text
+ * (FB-09, free text with suggestions; 1–5 each, resolved by `resolveTags`),
+ * the alternative to `domain_ids` / `specialization_ids`; an experience record
+ * gains `employment_type` ("Loại hình") and `location` ("Địa điểm"), optional
+ * free text. `skill_ids` stays accepted for compatibility; no screen sends it
+ * since FB-10 removed "Kỹ năng".
  */
 
 export const PATCH_FIELDS = [
@@ -37,6 +51,8 @@ export const PATCH_FIELDS = [
   'bio',
   'domain_ids',
   'specialization_ids',
+  'domains',
+  'specializations',
   'skill_ids',
   'development_goal',
   'current_need',
@@ -47,12 +63,12 @@ export const PATCH_FIELDS = [
 ] as const
 
 /**
- * ACC-07 "Đã chọn n/5": at most five specialisations. Domains ("chọn nhiều")
- * and skills have no business limit on the board; theirs are technical bounds.
- * This replaces DEC-WF01-S06-D4, the limit of five over DOMAIN + SKILL together.
+ * FB-09 (S1-UAT-05): "Lĩnh vực quan tâm" and "Chuyên môn" hold 1–5 tags each;
+ * the minimum is enforced when onboarding stage 2 is passed. Skills keep their
+ * technical bound only (FB-10: no screen edits them).
  */
-export const MAX_SPECIALIZATIONS = 5
-export const MAX_DOMAINS = 40
+export const MAX_SPECIALIZATIONS = TAG_LIMITS.count
+export const MAX_DOMAINS = TAG_LIMITS.count
 export const MAX_SKILLS = 30
 
 /**
@@ -72,6 +88,8 @@ export const TEXT_LIMITS = {
 export const LIST_LIMITS = {
   experience: 20,
   experience_text: 200,
+  /** "Loại hình": short free text (PO 05/10, S1-UAT-05). */
+  experience_type: 40,
   experience_description: 2000,
   education: 20,
   education_text: 200,
@@ -90,6 +108,10 @@ export type ExperienceDTO = {
   started_on: string | null
   ended_on: string | null
   description: string | null
+  /** "Loại hình", free text (S1-UAT-05). */
+  employment_type: string | null
+  /** "Địa điểm", free text (S1-UAT-05). */
+  location: string | null
 }
 
 /** `started_on` / `ended_on` are months, "YYYY-MM"; FP1-OWN draws their years. */
@@ -226,7 +248,7 @@ export async function getOwnProfile(
     ),
     experience: await exec<ExperienceDTO>(
       `SELECT id::text, title, organization_name, to_char(started_on, 'YYYY-MM') AS started_on,
-              to_char(ended_on, 'YYYY-MM') AS ended_on, description
+              to_char(ended_on, 'YYYY-MM') AS ended_on, description, employment_type, location
          FROM profile_experience
         WHERE profile_id = $1 ORDER BY sort_order, created_at`,
       [row.id],
@@ -253,6 +275,8 @@ type ExperiencePatch = {
   started_on?: string | null
   ended_on?: string | null
   description?: string | null
+  employment_type?: string | null
+  location?: string | null
 }
 
 type Patch = {
@@ -267,6 +291,8 @@ type Patch = {
   region_id?: string | null
   domain_ids?: string[]
   specialization_ids?: string[]
+  domains?: string[]
+  specializations?: string[]
   skill_ids?: string[]
   experience?: ExperiencePatch[]
   no_experience_yet?: boolean
@@ -326,7 +352,15 @@ function linkUrl(value: unknown): string {
   return text
 }
 
-const EXPERIENCE_KEYS = ['title', 'organization_name', 'started_on', 'ended_on', 'description']
+const EXPERIENCE_KEYS = [
+  'title',
+  'organization_name',
+  'started_on',
+  'ended_on',
+  'description',
+  'employment_type',
+  'location',
+]
 const EDUCATION_KEYS = ['institution', 'programme', 'started_on', 'ended_on']
 
 /** Shape validation; no database access, so nothing can be half-written. */
@@ -371,6 +405,24 @@ export function parsePatch(body: unknown): Patch {
     }
     patch[key] = [...new Set(value.map((id) => id.toLowerCase()))]
   }
+  // FB-09 tags as text: at most five, none blank, no duplicate (case and
+  // extra whitespace ignored). Length is checked when a new value is created.
+  for (const [key, ids] of [
+    ['domains', 'domain_ids'],
+    ['specializations', 'specialization_ids'],
+  ] as const) {
+    if (!(key in input)) continue
+    if (ids in input) throw invalid(key, 'conflicts_with_ids')
+    const value = input[key]
+    if (!Array.isArray(value) || !value.every((tag) => typeof tag === 'string')) {
+      throw invalid(key, 'invalid')
+    }
+    const tags = value.map(cleanTag)
+    if (tags.some((tag) => !tag)) throw invalid(key, 'invalid')
+    if (new Set(tags.map(tagKey)).size !== tags.length) throw invalid(key, 'duplicate')
+    if (tags.length > TAG_LIMITS.count) throw invalid(key, 'too_many')
+    patch[key] = tags
+  }
   if ('experience' in input) {
     const value = input.experience
     if (!Array.isArray(value)) throw invalid('experience', 'invalid')
@@ -401,6 +453,16 @@ export function parsePatch(body: unknown): Patch {
           entry.description,
           LIST_LIMITS.experience_description,
         )
+      }
+      if ('employment_type' in entry) {
+        record.employment_type = itemText(
+          'experience',
+          entry.employment_type,
+          LIST_LIMITS.experience_type,
+        )
+      }
+      if ('location' in entry) {
+        record.location = itemText('experience', entry.location, LIST_LIMITS.experience_text)
       }
       // "YYYY-MM" compares as text; an end needs a start and cannot precede it.
       if (record.ended_on && (!record.started_on || record.ended_on < record.started_on)) {
@@ -515,10 +577,27 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
       const keep = new Set(current?.region_vocab_id ? [current.region_vocab_id] : [])
       await assertSelectable(exec, 'region_id', 'REGION', [patch.region_id.toLowerCase()], keep)
     }
-    if (patch.domain_ids) {
+    // FB-09: tags sent as text become vocabulary ids (canonical or UNNORMALIZED).
+    if (patch.domains) {
+      patch.domain_ids = await resolveTags(
+        exec,
+        'domains',
+        'DOMAIN',
+        patch.domains,
+        new Set(domains),
+      )
+    } else if (patch.domain_ids) {
       await assertSelectable(exec, 'domain_ids', 'DOMAIN', patch.domain_ids, new Set(domains))
     }
-    if (patch.specialization_ids) {
+    if (patch.specializations) {
+      patch.specialization_ids = await resolveTags(
+        exec,
+        'specializations',
+        'SPECIALIZATION',
+        patch.specializations,
+        new Set(specializations),
+      )
+    } else if (patch.specialization_ids) {
       await assertSelectable(
         exec,
         'specialization_ids',
@@ -593,7 +672,7 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
     }
     // Lists are replaced as a whole, in the given order.
     if (patch.experience) {
-      // A record sent without period or description (the WF02-S02 editor) keeps
+      // A record sent without period, description, type or place (the WF02-S02 editor) keeps
       // what the same title and organisation already stored.
       const stored = await exec<{
         title: string
@@ -601,9 +680,11 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
         started_on: string | null
         ended_on: string | null
         description: string | null
+        employment_type: string | null
+        location: string | null
       }>(
         `SELECT title, organization_name, to_char(started_on, 'YYYY-MM') AS started_on,
-                to_char(ended_on, 'YYYY-MM') AS ended_on, description
+                to_char(ended_on, 'YYYY-MM') AS ended_on, description, employment_type, location
            FROM profile_experience WHERE profile_id = $1 ORDER BY sort_order, created_at`,
         [profile!.id],
       )
@@ -612,12 +693,16 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
         const kept = stored.find(
           (row) => row.title === item.title && row.organization_name === item.organization_name,
         )
-        const pick = <K extends 'started_on' | 'ended_on' | 'description'>(key: K) =>
-          key in item ? (item[key] ?? null) : (kept?.[key] ?? null)
+        const pick = <
+          K extends 'started_on' | 'ended_on' | 'description' | 'employment_type' | 'location',
+        >(
+          key: K,
+        ) => (key in item ? (item[key] ?? null) : (kept?.[key] ?? null))
         await exec(
           `INSERT INTO profile_experience
-             (profile_id, title, organization_name, started_on, ended_on, description, sort_order)
-           VALUES ($1, $2, $3, to_date($4, 'YYYY-MM'), to_date($5, 'YYYY-MM'), $6, $7)`,
+             (profile_id, title, organization_name, started_on, ended_on, description,
+              employment_type, location, sort_order)
+           VALUES ($1, $2, $3, to_date($4, 'YYYY-MM'), to_date($5, 'YYYY-MM'), $6, $7, $8, $9)`,
           [
             profile!.id,
             item.title,
@@ -625,6 +710,8 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
             pick('started_on'),
             pick('ended_on'),
             pick('description'),
+            pick('employment_type'),
+            pick('location'),
             i,
           ],
         )

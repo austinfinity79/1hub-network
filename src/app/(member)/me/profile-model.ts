@@ -53,24 +53,32 @@ export type Suggestion = {
   target: 'basic' | 'experience' | 'expertise' | 'editor'
 }
 
-const SUGGESTIONS: Record<CompletionGroup, Omit<Suggestion, 'group'>> = {
+/**
+ * One card per completion item (S1-UAT-05, 12 items). An item with no edit
+ * surface on this page (the stage-3 ecosystem roles) has no card; it still
+ * counts in the percent and the "còn thiếu" number.
+ */
+const SUGGESTIONS: Record<CompletionGroup, Omit<Suggestion, 'group'> | null> = {
   AVATAR: { title: 'Thêm ảnh đại diện', action: 'Tải ảnh', target: 'editor' },
-  DISPLAY_NAME: { title: 'Thêm tên hiển thị', action: 'Thêm tên hiển thị', target: 'basic' },
+  FULL_NAME: { title: 'Thêm họ và tên', action: 'Thêm họ và tên', target: 'basic' },
   HEADLINE: { title: 'Thêm vai trò hiện tại', action: 'Thêm vai trò', target: 'basic' },
-  REGION: { title: 'Thêm tỉnh/thành phố', action: 'Thêm tỉnh/thành phố', target: 'basic' },
   BIO: { title: 'Thêm giới thiệu', action: 'Thêm giới thiệu', target: 'editor' },
-  DOMAIN: { title: 'Thêm lĩnh vực', action: 'Thêm lĩnh vực', target: 'editor' },
-  SKILLS: { title: 'Thêm kỹ năng', action: 'Thêm kỹ năng', target: 'expertise' },
+  LOCATION: { title: 'Thêm tỉnh/thành phố', action: 'Thêm tỉnh/thành phố', target: 'basic' },
+  DOMAIN: { title: 'Thêm lĩnh vực quan tâm', action: 'Thêm lĩnh vực', target: 'expertise' },
+  SPECIALIZATION: { title: 'Thêm chuyên môn', action: 'Thêm chuyên môn', target: 'expertise' },
+  ECOSYSTEM_ROLE: null,
   EXPERIENCE: { title: 'Thêm kinh nghiệm', action: 'Thêm kinh nghiệm', target: 'experience' },
-  DEVELOPMENT_GOAL: {
-    title: 'Thêm mục tiêu phát triển',
-    action: 'Thêm mục tiêu',
-    target: 'editor',
-  },
-  CURRENT_NEED: { title: 'Thêm nhu cầu hiện tại', action: 'Thêm nhu cầu', target: 'editor' },
+  LINKEDIN: { title: 'Thêm LinkedIn', action: 'Thêm liên kết', target: 'editor' },
+  WEBSITE: { title: 'Thêm website/portfolio', action: 'Thêm liên kết', target: 'editor' },
+  PHONE: { title: 'Thêm số điện thoại', action: 'Thêm số điện thoại', target: 'basic' },
 }
 
 /** The first two groups the server reports incomplete, in the server's order. */
 export function suggestions(missing: readonly CompletionGroup[]): Suggestion[] {
-  return missing.slice(0, 2).map((group) => ({ group, ...SUGGESTIONS[group] }))
+  return missing
+    .flatMap((group) => {
+      const card = SUGGESTIONS[group]
+      return card ? [{ group, ...card }] : []
+    })
+    .slice(0, 2)
 }

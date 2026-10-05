@@ -24,15 +24,16 @@ import styles from './profile-own.module.css'
  *
  * Drawn from the owner's own DTOs only. Pencils and "+" edit in place: the
  * L12 dialog for experience, dialogs on its pattern for education, basic and
- * contact information, specialisation and skills; introduction, avatar,
+ * contact information, domains and specialisations (FB-09 tags; "Kỹ năng"
+ * removed by FB-10); introduction, avatar,
  * links, goal and need stay on the editor (`/me/profile/edit`). Each save is
  * one PATCH /me/profile and the page is then read again from the server.
  *
  * Not drawn, having no source (D-P1): member badges, "Hồ sơ đã duyệt",
  * activity counts, "Ai đang xem hồ sơ", "Dự án trên HUB", "Tiến trình phát
  * triển", certificates, the public URL, "Xem như Guest", "Mở với", "Tài
- * nguyên"; the years and the "Chính / Phụ" marks of a specialisation, and the
- * employment type and place of an experience record. No other member can
+ * nguyên"; the years and the "Chính / Phụ" marks of a specialisation. An
+ * experience record shows its "Loại hình" and "Địa điểm" (S1-UAT-05). No other member can
  * open this page (FP1 is not built), so the banner says only what is true.
  */
 
@@ -64,9 +65,9 @@ const COPY = {
   education: 'Học vấn',
   educationEmpty: 'Chưa có học vấn.',
   expertise: 'Chuyên môn',
+  domains: 'Lĩnh vực quan tâm',
   expertiseEmpty: 'Chưa chọn chuyên môn.',
-  expertiseNote: 'Nhóm chuyên môn lấy từ danh mục do HUB quản lý, không tự gõ tự do.',
-  skills: 'Kỹ năng',
+  expertiseNote: 'Gợi ý lấy từ danh mục của HUB; giá trị bạn tự gõ được HUB gom về danh mục sau.',
   ventures: 'DỰ ÁN & STARTUP',
   venturesEmpty: 'Bạn chưa thuộc đội nào.',
   create: '+ Tạo dự án / startup',
@@ -153,6 +154,8 @@ const experienceBody = (list: OwnProfileDTO['experience']) =>
     started_on: e.started_on,
     ended_on: e.ended_on,
     description: e.description,
+    employment_type: e.employment_type,
+    location: e.location,
   }))
 
 const educationBody = (list: OwnProfileDTO['education']) =>
@@ -177,7 +180,8 @@ export function ProfileOwn({
   positions: string[]
   /** Months of each experience record, computed on the server; null without a start. */
   durations: (number | null)[]
-  options: { countries: Option[]; regions: Option[]; specializations: Option[]; skills: Option[] }
+  /** Countries and regions to pick; catalogue labels the tag fields suggest. */
+  options: { countries: Option[]; regions: Option[]; domains: string[]; specializations: string[] }
 }) {
   const router = useRouter()
   const ids = useId()
@@ -388,6 +392,7 @@ export function ProfileOwn({
                     ? [
                         `${monthText(record.started_on)} – ${record.ended_on ? monthText(record.ended_on) : COPY.now}`,
                         months !== null && months !== undefined ? durationText(months) : '',
+                        record.location ?? '',
                       ]
                         .filter(Boolean)
                         .join(' · ')
@@ -404,10 +409,18 @@ export function ProfileOwn({
                             <span className={styles.currentChip}>{COPY.current}</span>
                           ) : null}
                         </p>
-                        {record.organization_name ? (
-                          <p className={styles.recordSub}>{record.organization_name}</p>
+                        {record.organization_name || record.employment_type ? (
+                          <p className={styles.recordSub}>
+                            {[record.organization_name, record.employment_type]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </p>
                         ) : null}
-                        {period ? <p className={styles.recordMeta}>{period}</p> : null}
+                        {period ? (
+                          <p className={styles.recordMeta}>{period}</p>
+                        ) : record.location ? (
+                          <p className={styles.recordMeta}>{record.location}</p>
+                        ) : null}
                         {record.description ? (
                           <ul className={styles.bullets}>
                             {record.description
@@ -498,11 +511,11 @@ export function ProfileOwn({
                 ))}
               </ul>
             )}
-            {profile.skills.length > 0 ? (
+            {profile.domains.length > 0 ? (
               <>
-                <p className={styles.subhead}>{COPY.skills}</p>
-                <ul className={styles.chips}>
-                  {profile.skills.map((item) => (
+                <p className={styles.subhead}>{COPY.domains}</p>
+                <ul className={styles.chips} data-anchor="domains">
+                  {profile.domains.map((item) => (
                     <li key={item.id}>{item.label}</li>
                   ))}
                 </ul>
@@ -563,6 +576,8 @@ export function ProfileOwn({
                   started_on: editingRecord.started_on ?? '',
                   ended_on: editingRecord.ended_on ?? '',
                   description: editingRecord.description ?? '',
+                  employment_type: editingRecord.employment_type ?? '',
+                  location: editingRecord.location ?? '',
                 } satisfies ExperienceRecord)
               : null
           }
@@ -576,6 +591,8 @@ export function ProfileOwn({
               started_on: next.started_on || null,
               ended_on: next.ended_on || null,
               description: next.description || null,
+              employment_type: next.employment_type || null,
+              location: next.location || null,
             }
             const list =
               dialog.index === null
@@ -635,11 +652,11 @@ export function ProfileOwn({
       {dialog?.kind === 'expertise' ? (
         <ExpertiseDialog
           selected={{
-            specializations: profile.specializations.map((s) => s.id),
-            skills: profile.skills.map((s) => s.id),
+            domains: profile.domains.map((d) => d.label),
+            specializations: profile.specializations.map((s) => s.label),
           }}
+          domains={options.domains}
           specializations={options.specializations}
-          skills={options.skills}
           saving={saving}
           error={error}
           onClose={closeDialog}

@@ -49,11 +49,22 @@ async function openCapability(page: Page) {
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Năng lực và lĩnh vực hoạt động')
 }
 
-const chip = (page: Page, label: string) => page.getByRole('checkbox', { name: label, exact: true })
 const next = (page: Page) => page.getByRole('button', { name: 'Tiếp tục' })
 const domains = (page: Page) => page.locator('[data-anchor="domains"]')
 const specializations = (page: Page) => page.locator('[data-anchor="specializations"]')
-const skills = (page: Page) => page.locator('[data-anchor="skills"]')
+/** S1-UAT-05 (FB-09): the two fields are tag controls, free text with suggestions. */
+const domainField = (page: Page) => page.getByRole('combobox', { name: 'Lĩnh vực quan tâm' })
+const specializationField = (page: Page) => page.getByRole('combobox', { name: 'Chuyên môn' })
+const tags = (field: ReturnType<typeof domains>) => field.locator('[data-tag]')
+async function addTag(field: ReturnType<typeof domainField>, text: string) {
+  await field.fill(text)
+  await field.press('Enter')
+}
+/** Stage 2's minimum (FB-09): one domain and one specialisation. */
+const MINIMUM = {
+  domain_ids: [QA.domain.logistics],
+  specialization_ids: [QA.specialization.operations],
+}
 const experience = (page: Page) => page.locator('[data-anchor="experience"]')
 const dialog = (page: Page) => page.locator('dialog[data-dialog="experience"]')
 
@@ -102,7 +113,7 @@ test.describe('WF01-S10 functional and security', () => {
     })
   })
 
-  test('nothing is required: "Tiếp tục" on an empty stage records it and opens stage 3', async ({
+  test('FB-09: one domain and one specialisation are needed to continue, not to save for later', async ({
     page,
   }) => {
     const { accountId } = await signInFresh(page.request, 's10')
@@ -111,43 +122,74 @@ test.describe('WF01-S10 functional and security', () => {
     await expect(page.locator('header')).toContainText('BƯỚC 2/4 · LĨNH VỰC VÀ CHUYÊN MÔN')
     await expect(page.locator('header ol li').nth(1)).toHaveAttribute('aria-current', 'step')
     await next(page).click()
+    await expect(page).toHaveURL('/onboarding/capability')
+    await expect(domains(page).getByRole('alert')).toHaveText('Vui lòng thêm ít nhất một lĩnh vực.')
+    await expect(specializations(page).getByRole('alert')).toHaveText(
+      'Vui lòng thêm ít nhất một chuyên môn.',
+    )
+    expect((await stored(accountId))!.capability_at).toBeNull()
+    await addTag(domainField(page), 'Logistics')
+    await addTag(specializationField(page), 'Vận hành')
+    await next(page).click()
     await expect(page).toHaveURL('/onboarding/purpose')
     const row = await stored(accountId)
-    expect(row).toMatchObject({ domains: [], specializations: [], skills: [], role_at: null })
+    expect(row).toMatchObject({
+      domains: [QA.domain.logistics],
+      specializations: [QA.specialization.operations],
+      skills: [],
+      role_at: null,
+    })
     expect(row!.capability_at).toBeInstanceOf(Date)
   })
 
-  test('fields are multi-select; "+ N lĩnh vực khác" shows the rest', async ({ page }) => {
+  test('FB-09: catalogue suggestions (at most eight, archived never) and free text', async ({
+    page,
+  }) => {
     const { accountId } = await signInFresh(page.request, 's10')
     await reach(page.request, 'CAPABILITY')
     await openCapability(page)
-    await expect(domains(page).getByRole('checkbox')).toHaveCount(8)
-    await expect(domains(page).getByRole('button', { name: '+ 28 lĩnh vực khác' })).toBeVisible()
-    await expect(chip(page, 'Lĩnh vực QA lưu trữ')).toHaveCount(0)
-    for (const label of ['Logistics', 'AgriTech', 'Climate Tech', 'AI', 'Fintech', 'EdTech']) {
-      await chip(page, label).check({ force: true })
-    }
-    await chip(page, 'Fintech').uncheck({ force: true })
-    await domains(page).getByRole('button', { name: '+ 28 lĩnh vực khác' }).click()
-    await expect(domains(page).getByRole('checkbox')).toHaveCount(36)
-    await chip(page, 'Lĩnh vực QA 09').check({ force: true })
+    await domainField(page).fill('Lĩnh vực QA')
+    await expect(page.getByRole('option')).toHaveCount(8)
+    await expect(page.getByRole('option', { name: 'Lĩnh vực QA lưu trữ' })).toHaveCount(0)
+    await page.getByRole('option', { name: 'Lĩnh vực QA 09' }).click()
+    await domainField(page).fill('climate')
+    await page.getByRole('option', { name: 'Climate Tech' }).click()
+    await addTag(domainField(page), 'Kinh tế tuần hoàn')
+    await expect(tags(domains(page))).toHaveText([
+      'Lĩnh vực QA 09',
+      'Climate Tech',
+      'Kinh tế tuần hoàn',
+    ])
+    await domains(page).getByRole('button', { name: 'Bỏ Climate Tech' }).click()
+    await addTag(specializationField(page), 'Vận hành')
     await next(page).click()
     await expect(page).toHaveURL('/onboarding/purpose')
-    expect((await stored(accountId))!.domains).toHaveLength(6)
+    const profile = await (await page.request.get(PROFILE_API)).json()
+    expect(
+      profile.domains.map((d: { label: string; status: string }) => [d.label, d.status]),
+    ).toEqual(
+      expect.arrayContaining([
+        ['Lĩnh vực QA 09', 'ACTIVE'],
+        ['Kinh tế tuần hoàn', 'UNNORMALIZED'],
+      ]),
+    )
+    expect((await stored(accountId))!.domains).toHaveLength(2)
   })
 
-  test('at most five specialisations, on the screen and on the server', async ({ page }) => {
+  test('at most five tags per field, on the screen and on the server', async ({ page }) => {
     const { accountId } = await signInFresh(page.request, 's10')
     await reach(page.request, 'CAPABILITY')
     await openCapability(page)
-    const note = specializations(page).getByText(/ĐÃ CHỌN/)
-    await expect(note).toHaveText('ĐÃ CHỌN 0/5')
+    const note = specializations(page).getByText(/ĐÃ THÊM/)
+    await expect(note).toHaveText('ĐÃ THÊM 0/5')
     for (const label of ['Vận hành', 'Công nghệ', 'Tài chính', 'Luật', 'Design']) {
-      await chip(page, label).check({ force: true })
+      await addTag(specializationField(page), label)
     }
-    await expect(note).toHaveText('ĐÃ CHỌN 5/5')
-    await expect(chip(page, 'Marketing')).toBeDisabled()
-    await expect(chip(page, 'Luật')).toBeEnabled()
+    await expect(note).toHaveText('ĐÃ THÊM 5/5')
+    await addTag(specializationField(page), 'Marketing')
+    await expect(specializations(page).getByRole('alert')).toHaveText('Tối đa 5 mục.')
+    await expect(tags(specializations(page))).toHaveCount(5)
+    await specializationField(page).fill('')
 
     const six = await page.request.patch(PROFILE_API, {
       data: { specialization_ids: Object.values(QA.specialization) },
@@ -155,65 +197,54 @@ test.describe('WF01-S10 functional and security', () => {
     expect(six.status()).toBe(422)
     expect((await six.json()).error.fields).toEqual({ specialization_ids: 'too_many' })
 
+    await addTag(domainField(page), 'Logistics')
     await next(page).click()
     await expect(page).toHaveURL('/onboarding/purpose')
     expect((await stored(accountId))!.specializations).toHaveLength(5)
   })
 
-  test('skills are picked from the vocabulary; free text is not stored', async ({ page }) => {
-    const { accountId } = await signInFresh(page.request, 's10')
+  test('FB-10: no skill field; the API keeps validating skill ids for compatibility', async ({
+    page,
+  }) => {
+    await signInFresh(page.request, 's10')
     await reach(page.request, 'CAPABILITY')
     await openCapability(page)
-    const input = page.getByLabel('Kỹ năng')
-    await skills(page).getByRole('button', { name: '+ Phân tích dữ liệu' }).click()
-    await input.fill('pitch')
-    await input.press('Enter')
-    await expect(skills(page).locator('[data-skill]')).toHaveText([/Phân tích dữ liệu/, /Pitching/])
-    await input.fill('Kỹ năng tự bịa')
-    await input.press('Enter')
-    await expect(page.getByText('Vui lòng chọn kỹ năng trong danh mục chuẩn.')).toBeVisible()
-    await expect(skills(page).locator('[data-skill]')).toHaveCount(2)
-    // Unsaved free text blocks the save rather than being dropped silently.
-    await next(page).click()
-    await expect(page).toHaveURL('/onboarding/capability')
-    await input.fill('')
-    await skills(page).getByRole('button', { name: 'Bỏ Phân tích dữ liệu' }).click()
-    await next(page).click()
-    await expect(page).toHaveURL('/onboarding/purpose')
-    expect((await stored(accountId))!.skills).toEqual([QA.skill.pitching])
-    // The API takes ids only.
+    await expect(page.locator('[data-anchor="skills"]')).toHaveCount(0)
+    await expect(page.getByText('Kỹ năng', { exact: true })).toHaveCount(0)
     const text = await page.request.patch(PROFILE_API, { data: { skill_ids: ['Pitching'] } })
     expect(text.status()).toBe(422)
   })
 
-  test('a skill typed and not yet confirmed is saved with the stage', async ({ page }) => {
+  test('a tag typed and not yet confirmed is added when the field is left, so it is saved', async ({
+    page,
+  }) => {
     const { accountId } = await signInFresh(page.request, 's10')
     await reach(page.request, 'CAPABILITY')
     await openCapability(page)
-    await skills(page).getByRole('button', { name: '+ Phân tích dữ liệu' }).click()
-    await page.getByLabel('Kỹ năng').fill('pitch')
+    await addTag(domainField(page), 'Logistics')
+    await specializationField(page).fill('Vận hành')
     await next(page).click()
     await expect(page).toHaveURL('/onboarding/purpose')
-    expect((await stored(accountId))!.skills).toEqual([QA.skill.data, QA.skill.pitching].sort())
+    expect((await stored(accountId))!.specializations).toEqual([QA.specialization.operations])
   })
 
   test('the browser’s Back shows what was saved; saving again loses nothing', async ({ page }) => {
     const { accountId } = await signInFresh(page.request, 's10')
     await reach(page.request, 'CAPABILITY')
     await openCapability(page)
-    await chip(page, 'Logistics').check({ force: true })
-    await skills(page).getByRole('button', { name: '+ Phân tích dữ liệu' }).click()
+    await addTag(domainField(page), 'Logistics')
+    await addTag(specializationField(page), 'Vận hành')
     await next(page).click()
     await expect(page).toHaveURL('/onboarding/purpose')
     await page.goBack()
     await expect(page).toHaveURL('/onboarding/capability')
-    await expect(chip(page, 'Logistics')).toBeChecked()
-    await expect(skills(page).locator('[data-skill]')).toHaveText([/Phân tích dữ liệu/])
+    await expect(tags(domains(page))).toHaveText(['Logistics'])
+    await expect(tags(specializations(page))).toHaveText(['Vận hành'])
     await page.locator('header').getByRole('button', { name: 'Lưu và hoàn tất sau' }).click()
     await expect(page).toHaveURL('/')
     expect(await stored(accountId)).toMatchObject({
       domains: [QA.domain.logistics],
-      skills: [QA.skill.data],
+      specializations: [QA.specialization.operations],
     })
   })
 
@@ -240,12 +271,15 @@ test.describe('WF01-S10 functional and security', () => {
     await dialog(page).getByLabel('Tôi đang làm ở đây').check()
     await expect(dialog(page).getByLabel('Đến')).toBeDisabled()
     await dialog(page).getByLabel('Mô tả').fill('Dẫn đội 6 người.')
+    // S1-UAT-05: "Loại hình" and "Địa điểm", optional free text.
+    await dialog(page).getByLabel('Loại hình').fill('Toàn thời gian')
+    await dialog(page).getByLabel('Địa điểm').fill('Đà Nẵng')
     await dialog(page).getByRole('button', { name: 'Lưu' }).click()
     await expect(dialog(page)).toHaveCount(0)
     // The focus returns to the control that opened the dialog.
     await expect(experience(page).getByRole('button', { name: '+ Thêm kinh nghiệm' })).toBeFocused()
     await expect(experience(page).locator('li')).toHaveText([
-      /Đồng sáng lập · CEO — Tracely\s*2022 – nay/,
+      /Đồng sáng lập · CEO — Tracely\s*2022 – nay · Toàn thời gian · Đà Nẵng/,
     ])
     // Nothing is stored until the stage is saved.
     expect((await (await page.request.get(PROFILE_API)).json()).experience).toEqual([])
@@ -260,7 +294,10 @@ test.describe('WF01-S10 functional and security', () => {
       dialog(page).getByText('Thời gian kết thúc phải sau thời gian bắt đầu.'),
     ).toBeVisible()
     await dialog(page).getByLabel('Đến').fill('06/2024')
+    await expect(dialog(page).getByLabel('Loại hình')).toHaveValue('Toàn thời gian')
     await dialog(page).getByRole('button', { name: 'Lưu' }).click()
+    await addTag(domainField(page), 'Logistics')
+    await addTag(specializationField(page), 'Vận hành')
     await next(page).click()
     await expect(page).toHaveURL('/onboarding/purpose')
     expect((await (await page.request.get(PROFILE_API)).json()).experience).toMatchObject([
@@ -270,13 +307,15 @@ test.describe('WF01-S10 functional and security', () => {
         started_on: '2022-02',
         ended_on: '2024-06',
         description: 'Dẫn đội 6 người.',
+        employment_type: 'Toàn thời gian',
+        location: 'Đà Nẵng',
       },
     ])
   })
 
   test('"Bỏ", "Xoá mục này" and "Huỷ" in the experience list', async ({ page }) => {
     await signInFresh(page.request, 's10')
-    await reach(page.request, 'CAPABILITY', { experience: BOARD.experience })
+    await reach(page.request, 'CAPABILITY', { experience: BOARD.experience, ...MINIMUM })
     await openCapability(page)
     await expect(experience(page).locator('li')).toHaveCount(2)
     await experience(page).getByRole('button', { name: 'Sửa Đồng sáng lập · CEO' }).click()
@@ -297,7 +336,7 @@ test.describe('WF01-S10 functional and security', () => {
 
   test('links are stored absolute; a script address is refused', async ({ page }) => {
     await signInFresh(page.request, 's10')
-    await reach(page.request, 'CAPABILITY')
+    await reach(page.request, 'CAPABILITY', MINIMUM)
     await openCapability(page)
     await page.getByLabel('LinkedIn').fill('linkedin.com/in/dangkimchi')
     await page.getByLabel('Website/Portfolio').fill('javascript:alert(1)')
@@ -321,7 +360,7 @@ test.describe('WF01-S10 functional and security', () => {
     const { accountId } = await signInFresh(page.request, 's10')
     await reach(page.request, 'CAPABILITY')
     await openCapability(page)
-    await chip(page, 'Logistics').check({ force: true })
+    await addTag(domainField(page), 'Logistics')
     await page
       .locator('[data-anchor="footer"]')
       .getByRole('button', { name: 'Lưu và hoàn tất sau' })
@@ -333,7 +372,7 @@ test.describe('WF01-S10 functional and security', () => {
     })
     await page.goto('/me')
     await expect(page).toHaveURL('/onboarding/capability')
-    await expect(chip(page, 'Logistics')).toBeChecked()
+    await expect(tags(domains(page))).toHaveText(['Logistics'])
     await page.getByRole('link', { name: 'Quay lại' }).click()
     await expect(page).toHaveURL('/onboarding/profile')
   })
@@ -363,16 +402,25 @@ test.describe('WF01-S10 functional and security', () => {
     await reach(page.request, 'CAPABILITY')
     await openCapability(page)
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
-    await expect(page.getByRole('group', { name: 'Lĩnh vực quan tâm' })).toBeVisible()
-    await expect(page.getByRole('group', { name: 'Chuyên môn' })).toBeVisible()
-    await chip(page, 'Logistics').focus()
-    await page.keyboard.press('Space')
-    await expect(chip(page, 'Logistics')).toBeChecked()
-    expect(
-      await chip(page, 'Logistics').evaluate(
-        (el) => getComputedStyle(el.closest('label')!).outlineStyle,
-      ),
-    ).not.toBe('none')
+    // Each tag field is a labelled combobox driving a listbox (FB-09).
+    const field = domainField(page)
+    await expect(field).toHaveAttribute('aria-autocomplete', 'list')
+    await expect(specializationField(page)).toBeVisible()
+    await field.focus()
+    await page.keyboard.type('logis')
+    await page.keyboard.press('ArrowDown')
+    await expect(page.getByRole('option', { name: 'Logistics' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    await expect(field).toHaveAttribute('aria-activedescendant', /.+/)
+    await page.keyboard.press('Enter')
+    await expect(tags(domains(page))).toHaveText(['Logistics'])
+    expect(await field.evaluate((el) => getComputedStyle(el.parentElement!).outlineStyle)).not.toBe(
+      'none',
+    )
+    await page.keyboard.press('Backspace')
+    await expect(tags(domains(page))).toHaveCount(0)
     // The dialog takes the focus and gives it up on Escape.
     await experience(page).getByRole('button', { name: '+ Thêm kinh nghiệm' }).click()
     await expect(dialog(page)).toBeVisible()
@@ -393,7 +441,6 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
     guideTop: 353,
     domainsTop: 495,
     specializationsTop: 663,
-    skillsTop: 788,
     experienceTop: 951,
     linksTop: 1223,
     ruleTop: 1359,
@@ -414,12 +461,11 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
     const exclude = await page.evaluate(() =>
       [
         ...document.querySelectorAll(
-          '[data-anchor="domains"] label, [data-anchor="domains"] button, [data-anchor="specializations"] label, [data-anchor="skills"] > div, [data-anchor="experience"] li, [data-anchor="links"] input, [data-anchor="links"] label',
+          '[data-anchor="domains"] > div:last-child, [data-anchor="specializations"] > div:last-child, [data-anchor="domains"] [aria-live], [data-anchor="specializations"] [aria-live], [data-anchor="experience"] li, [data-anchor="links"] input, [data-anchor="links"] label',
         ),
       ].map((el) => {
         const r = el.getBoundingClientRect()
-        // The control keeps its border in the comparison; only its inside is left out.
-        const inset = el.matches('[data-anchor="skills"] > div') ? 3 : -3
+        const inset = -3
         return {
           x: r.x + inset,
           y: r.y + scrollY + inset,
@@ -456,11 +502,6 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
           dy: (await at('specializations')) - REF.specializationsTop,
         },
         {
-          name: 'skills',
-          reference: { x: 310, y: 784, width: 820, height: 146 },
-          dy: (await at('skills')) - REF.skillsTop,
-        },
-        {
           name: 'experience-head',
           reference: { x: 310, y: 945, width: 820, height: 62 },
           dy: (await at('experience')) - REF.experienceTop,
@@ -485,6 +526,11 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
         {
           class: 'INTENTIONAL-SCOPE',
           reason:
+            'S1-UAT-05 (FB-09, FB-10, DEC-S1P): the domain and specialisation chip rows are the free-text tag controls with their "ĐÃ THÊM n/5" counts, and the skill block is gone; those regions are excluded and the sections below are compared at their own anchors',
+        },
+        {
+          class: 'INTENTIONAL-SCOPE',
+          reason:
             'D-A1: no AI provider, so the AI banner, the dashed suggested chip and the "AI đề xuất" tint and marks on chips, tags, records and the LinkedIn field are not drawn; the regions they occupy are compared by position only',
         },
         {
@@ -495,14 +541,13 @@ test.describe('WF01-S10 pixel QA (ACC-07)', () => {
       ],
     })
 
-    // Geometry of what the mask above leaves out: chips, tags and records keep the board's size.
+    // Geometry of what the mask above leaves out: the tag controls take the old controls'
+    // column, records and link fields keep the board's size.
     const box = async (selector: string) => {
       const b = (await page.locator(selector).first().boundingBox())!
       return { x: Math.round(b.x), width: Math.round(b.width), height: Math.round(b.height) }
     }
-    expect(await box('[data-anchor="domains"] label')).toMatchObject({ x: 351, height: 33 })
-    expect(await box('[data-anchor="domains"] label:nth-of-type(3)')).toMatchObject({ width: 120 })
-    expect(await box('[data-skill]')).toMatchObject({ x: 364, height: 27 })
+    expect(await box('[data-anchor="domains"] [data-tag]')).toMatchObject({ x: 364, height: 27 })
     expect(await box('[data-anchor="experience"] li')).toEqual({ x: 351, width: 738, height: 69 })
     expect(await box('[data-anchor="links"] input')).toMatchObject({
       x: 351,

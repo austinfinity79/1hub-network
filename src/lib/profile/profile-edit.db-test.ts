@@ -14,7 +14,6 @@ import { getOwnProfile, updateOwnProfile } from './profile'
  */
 
 const REGION = '20000000-0000-0000-0000-000000000002'
-const DOMAIN = '20000000-0000-0000-0000-000000000011'
 const SKILL = '20000000-0000-0000-0000-000000000021'
 const CHAPTER_01 = '10000000-0000-0000-0000-000000000101'
 const PNG = Buffer.from(
@@ -48,39 +47,49 @@ async function refusal(promise: Promise<unknown>): Promise<Record<string, unknow
 const percent = async (id: string) => (await getProfileCompletion(id)).percent
 
 describe('WF02-S02 profile edit', () => {
-  it('completion matrix 0 → 10 → 70 → 80 → 90 → 100 from canonical groups', async () => {
+  it('completion matrix over the twelve items, from the editor and dialog payloads', async () => {
     const id = await account()
     expect(await percent(id)).toBe(0)
-    await updateOwnProfile(id, { display_name: 'Chi' })
-    expect(await percent(id)).toBe(10)
+    await updateOwnProfile(id, { full_name: 'Đặng Kim Chi', display_name: 'Chi' })
+    expect(await percent(id)).toBe(8)
     await updateOwnProfile(id, {
       headline: 'Founder',
       region_id: REGION,
       bio: 'Bio',
-      domain_ids: [DOMAIN],
+      domains: ['Giáo dục'],
+      specializations: ['Vận hành'],
       skill_ids: [SKILL],
     })
-    expect(await percent(id)).toBe(60)
+    // Skills, goal and need add nothing (FB-10): 6 of 12.
+    expect(await percent(id)).toBe(50)
+    await updateOwnProfile(id, { development_goal: 'G', current_need: 'N' })
+    expect(await percent(id)).toBe(50)
     await updateOwnProfile(id, {
       experience: [{ title: 'Product Manager', organization_name: 'Tracely' }],
     })
-    expect(await percent(id)).toBe(70)
-    await updateOwnProfile(id, { development_goal: 'Xây sản phẩm khu vực công' })
-    expect(await percent(id)).toBe(80)
-    await updateOwnProfile(id, { current_need: 'Tìm cố vấn' })
-    expect(await percent(id)).toBe(90)
+    expect(await percent(id)).toBe(58)
+    await updateOwnProfile(id, {
+      links: [{ url: 'https://www.linkedin.com/in/chi' }, { url: 'https://chi.dev' }],
+    })
+    expect(await percent(id)).toBe(75)
+    await updateOwnProfile(id, { phone: '0901234567' })
+    expect(await percent(id)).toBe(83)
     const asset = await saveAvatarAsset(id, PNG, 'image/png')
     await query('UPDATE individual_profiles SET avatar_asset_id = $2 WHERE account_id = $1', [
       id,
       asset,
     ])
+    expect(await percent(id)).toBe(92)
+    await query(
+      `INSERT INTO profile_declared_roles (profile_id, role_code)
+       SELECT id, 'INNOVATOR' FROM individual_profiles WHERE account_id = $1`,
+      [id],
+    )
     expect(await percent(id)).toBe(100)
-    // Clearing a group lowers it again (valid clearing).
-    await updateOwnProfile(id, { current_need: null, development_goal: '   ' })
-    expect(await percent(id)).toBe(80)
-    const dto = await getOwnProfile(id)
-    expect(dto.completion.percent).toBe(80)
-    expect(dto.development_goal).toBeNull()
+    // Clearing items lowers it again (valid clearing).
+    await updateOwnProfile(id, { phone: null, links: [{ url: 'https://chi.dev' }] })
+    expect(await percent(id)).toBe(83)
+    expect((await getOwnProfile(id)).completion.percent).toBe(83)
   })
 
   it('experience list replaces as a whole; NO_EXPERIENCE_YET completes group 8; never both', async () => {
@@ -293,9 +302,10 @@ describe('WF02-S02 profile edit', () => {
       )[0]!.n
     const before = await count()
     await updateOwnProfile(id, { display_name: 'Chi' })
-    await updateOwnProfile(id, { development_goal: null })
-    expect(await count()).toBe(before)
+    // A field that is not one of the twelve items moves nothing (FB-10).
     await updateOwnProfile(id, { development_goal: 'G' })
+    expect(await count()).toBe(before)
+    await updateOwnProfile(id, { headline: 'Founder' })
     expect(await count()).toBe(before + 1)
   })
 

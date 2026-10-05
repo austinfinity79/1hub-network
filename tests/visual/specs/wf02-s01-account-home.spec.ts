@@ -102,7 +102,8 @@ async function suggestionsMatchServer(page: Page) {
     await card
       .locator('[data-suggestion]')
       .evaluateAll((els) => els.map((el) => el.getAttribute('data-suggestion'))),
-  ).toEqual(server.missing.slice(0, 2))
+    // S1-UAT-05: the stage-3 ecosystem role counts but has no card on this page.
+  ).toEqual(server.missing.filter((g: string) => g !== 'ECOSYSTEM_ROLE').slice(0, 2))
   return server
 }
 
@@ -227,9 +228,11 @@ test.describe('WF02-S01 content', () => {
     await expect(education).toContainText('Đại học Bách khoa Đà Nẵng')
     await expect(education).toContainText('Kỹ sư')
     await expect(education).toContainText('2012 – 2016')
+    // FB-10 (S1-UAT-05): specialisations and domains are shown; stored skills are not.
     const expertise = section(page, 'expertise')
-    for (const item of [...dto.specializations, ...dto.skills])
+    for (const item of [...dto.specializations, ...dto.domains])
       await expect(expertise).toContainText(item.label)
+    for (const item of dto.skills) await expect(expertise).not.toContainText(item.label)
 
     const side = section(page, 'ventures')
     const cards = side.locator('li a')
@@ -265,6 +268,8 @@ test.describe('WF02-S01 content', () => {
 
   test('empty sections and no venture show the empty texts', async ({ page }) => {
     await completedAccount(page.request, 's01-empty')
+    // Stage 2 now needs one domain and one specialisation (FB-09); a member may clear them later.
+    await saveProfile(page.request, { domain_ids: [], specialization_ids: [] })
     await openProfile(page)
     await expect(section(page, 'about')).toContainText('Chưa có giới thiệu.')
     await expect(section(page, 'experience')).toContainText('Chưa có kinh nghiệm.')
@@ -275,7 +280,7 @@ test.describe('WF02-S01 content', () => {
   })
 
   test('suggestions follow the server’s completion and leave at 100%', async ({ page }) => {
-    await completedAccount(page.request, 's01-suggest')
+    const me = await completedAccount(page.request, 's01-suggest')
     await openProfile(page)
     const first = await suggestionsMatchServer(page)
     expect(first.missing.slice(0, 2)).toEqual(['AVATAR', 'HEADLINE'])
@@ -296,7 +301,9 @@ test.describe('WF02-S01 content', () => {
     await expect(dialog).toHaveCount(0)
     await expect(card.locator('[data-suggestion="HEADLINE"]')).toHaveCount(0)
     const second = await suggestionsMatchServer(page)
-    expect(second.percent).toBe(first.percent + 10)
+    // One of twelve equal items (S1-UAT-05).
+    const done = (percent: number) => Math.round((percent * 12) / 100)
+    expect(done(second.percent)).toBe(done(first.percent) + 1)
 
     // Every group complete through the real APIs: the card is not drawn.
     const upload = await page.request.post(`${PROFILE_API}/avatar`, {
@@ -306,11 +313,15 @@ test.describe('WF02-S01 content', () => {
     await saveProfile(page.request, {
       bio: 'Giới thiệu.',
       domain_ids: [QA.domain.logistics],
-      skill_ids: [QA.skill.data],
       experience: [{ title: 'Điều phối', organization_name: null }],
-      development_goal: 'Mục tiêu',
-      current_need: 'Nhu cầu',
+      links: [{ url: 'https://linkedin.com/in/s01' }, { url: 'https://s01.example' }],
+      phone: '0901234567',
     })
+    // The ecosystem role is declared at stage 3 only; this account declared none.
+    await query(
+      `INSERT INTO profile_declared_roles (profile_id, role_code) VALUES ($1, 'INNOVATOR')`,
+      [me.profileId],
+    )
     expect((await serverCompletion(page.request)).percent).toBe(100)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(section(page, 'suggest')).toHaveCount(0)
@@ -702,42 +713,45 @@ test.describe('WF02-S01 basic and contact dialog', () => {
 })
 
 test.describe('WF02-S01 expertise dialog', () => {
-  test('at most five specialisations; skills saved with them', async ({ page }) => {
+  test('domains and specialisations as tags, at most five each; no skills (FB-09, FB-10)', async ({
+    page,
+  }) => {
     await completedAccount(page.request, 's01-exp5')
     const patches = recordPatches(page)
     await openProfile(page)
     await section(page, 'expertise').getByRole('button', { name: 'Thêm chuyên môn' }).click()
     const dialog = dialogOf(page, 'expertise')
-    await expect(page.getByRole('dialog', { name: 'Chuyên môn và kỹ năng' })).toBeVisible()
-    const specs = dialog.getByRole('group', { name: /^Chuyên môn · đã chọn/ }).getByRole('button')
-    const skills = dialog.getByRole('group', { name: 'Kỹ năng' }).getByRole('button')
-    expect(await specs.count()).toBeGreaterThanOrEqual(6)
-    await expect(dialog.getByRole('group', { name: 'Chuyên môn · đã chọn 0/5' })).toBeVisible()
-
-    for (let i = 0; i < 5; i++) await specs.nth(i).click()
-    await expect(dialog.getByRole('group', { name: 'Chuyên môn · đã chọn 5/5' })).toBeVisible()
-    await expect(dialog).toContainText('Chọn tối đa 5 chuyên môn.')
-    await expect(specs.nth(5)).toHaveAttribute('aria-pressed', 'false')
-    await expect(specs.nth(5)).toBeDisabled()
-    // Releasing one frees the others.
-    await specs.nth(4).click()
-    await expect(specs.nth(5)).toBeEnabled()
-    await specs.nth(5).click()
-    await expect(specs.nth(4)).toBeDisabled()
-    await skills.first().click()
-    await expect(skills.first()).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByRole('dialog', { name: 'Lĩnh vực và chuyên môn' })).toBeVisible()
+    await expect(dialog.getByText('Kỹ năng')).toHaveCount(0)
+    const specs = dialog.getByRole('combobox', { name: /^Chuyên môn · đã thêm/ })
+    await expect(dialog.getByText('Chuyên môn · đã thêm 1/5')).toBeVisible()
+    for (const label of ['Công nghệ', 'Tài chính', 'Luật', 'Phân tích chuỗi cung ứng']) {
+      await specs.fill(label)
+      await specs.press('Enter')
+    }
+    await expect(dialog.getByText('Chuyên môn · đã thêm 5/5')).toBeVisible()
+    await specs.fill('Marketing')
+    await specs.press('Enter')
+    await expect(dialog.getByRole('alert')).toHaveText('Tối đa 5 mục.')
+    await specs.fill('')
+    // Releasing one frees a place.
+    await dialog.getByRole('button', { name: 'Bỏ Luật' }).click()
+    await specs.fill('Marketing')
+    await specs.press('Enter')
 
     const saved = nextPatch(page)
     await dialog.getByRole('button', { name: 'Lưu' }).click()
     expect((await saved).status()).toBe(200)
     await expect(dialog).toHaveCount(0)
     expect(patches).toHaveLength(1)
-    expect(Object.keys(patches[0]!).sort()).toEqual(['skill_ids', 'specialization_ids'])
-    expect(patches[0]!.specialization_ids).toHaveLength(5)
-    expect(patches[0]!.skill_ids).toHaveLength(1)
+    expect(Object.keys(patches[0]!).sort()).toEqual(['domains', 'specializations'])
+    expect(patches[0]!.specializations).toHaveLength(5)
     const dto = await ownProfile(page.request)
     expect(dto.specializations).toHaveLength(5)
-    expect(dto.skills).toHaveLength(1)
+    expect(
+      dto.specializations.find((s: { label: string }) => s.label === 'Phân tích chuỗi cung ứng')
+        .status,
+    ).toBe('UNNORMALIZED')
     const rows = section(page, 'expertise')
     for (const item of dto.specializations) await expect(rows).toContainText(item.label)
 
@@ -855,11 +869,19 @@ test.describe('WF02-S01 keyboard', () => {
       await expect
         .poll(() => page.evaluate(() => Boolean(document.activeElement?.closest('dialog[open]'))))
         .toBe(true)
-      // Tab stays inside the modal dialog.
-      for (let i = 0; i < 12; i++) await page.keyboard.press('Tab')
-      expect(
-        await page.evaluate(() => Boolean(document.activeElement?.closest('dialog[open]'))),
-      ).toBe(true)
+      // Tab never reaches the page behind the modal dialog. A native modal lets the
+      // focus pass through the browser's own controls (activeElement = body) on its
+      // way round, so every step is checked rather than one fixed count.
+      for (let i = 0; i < 14; i++) {
+        await page.keyboard.press('Tab')
+        expect(
+          await page.evaluate(() => {
+            const el = document.activeElement
+            return !el || el === document.body || Boolean(el.closest('dialog[open]'))
+          }),
+          `${name} tab ${i + 1}`,
+        ).toBe(true)
+      }
       await page.keyboard.press('Escape')
       await expect(dialog, name).toHaveCount(0)
       await expect(opener, name).toBeFocused()

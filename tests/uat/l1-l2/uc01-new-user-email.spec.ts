@@ -19,6 +19,13 @@ import {
  */
 uatHooks()
 
+/** FB-09 (S1-UAT-05): stage 2's fields are free-text tag controls. */
+async function addTag(page: import('@playwright/test').Page, field: string, text: string) {
+  const box = page.getByRole('combobox', { name: field })
+  await box.fill(text)
+  await box.press('Enter')
+}
+
 test('UC01 · UI+API+DB · a new address signs up, onboards and lands on /me; 1 account, 1 profile, zero privilege', async ({
   page,
   browser,
@@ -41,6 +48,9 @@ test('UC01 · UI+API+DB · a new address signs up, onboards and lands on /me; 1 
   await page.getByLabel('Tỉnh/Thành phố').selectOption(IDS.danang)
   await page.getByRole('button', { name: 'Tiếp tục' }).click()
   await expect(page).toHaveURL('/onboarding/capability')
+  // FB-09 (S1-UAT-05): one domain and one specialisation to continue.
+  await addTag(page, 'Lĩnh vực quan tâm', 'Logistics')
+  await addTag(page, 'Chuyên môn', 'Vận hành')
   await page.getByRole('button', { name: 'Tiếp tục' }).click()
   await expect(page).toHaveURL('/onboarding/purpose')
   await page.getByRole('checkbox', { name: /Thành viên HUB Network/ }).check({ force: true })

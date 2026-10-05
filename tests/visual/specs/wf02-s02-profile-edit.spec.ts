@@ -10,6 +10,7 @@ import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
 import { decodePng, readPng } from '../pixel-qa/png'
 import { writeJsonReport } from '../pixel-qa/report'
 import { compareSegments, type Rect } from '../pixel-qa/segments'
+import { ensureCapabilityMinimum } from '../support/onboarding'
 
 /**
  * WF02-S02 — Profile Edit (/me/profile/edit). Production.
@@ -49,7 +50,7 @@ test.afterAll(async () => {
 
 type Member = { email: string; accountId: string; profileId: string }
 
-/** Completed WF01 member at 50%: name, headline, region, domain, skill. */
+/** Completed WF01 member at 42% (S1-UAT-05, 5 of 12): full name, headline, location, domain, specialisation. */
 async function completedMember(request: APIRequestContext, label = 's02'): Promise<Member> {
   const email = `${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`
   expect((await request.post('/dev/login', { data: { email } })).ok()).toBe(true)
@@ -78,6 +79,8 @@ async function completedMember(request: APIRequestContext, label = 's02'): Promi
       ).ok(),
     ).toBe(true)
   }
+  // FB-09: stage 2 is passed only with a domain and a specialisation (S1-UAT-05).
+  await ensureCapabilityMinimum(request)
   for (const completed of ['CAPABILITY', 'ROLE']) {
     const stage = await request.put('/api/v1/me/onboarding/stage', { data: { completed } })
     expect(stage.ok()).toBe(true)
@@ -128,11 +131,11 @@ test.describe('WF02-S02 guards', () => {
 })
 
 test.describe('WF02-S02 functional', () => {
-  test('1/10/12/13/15. H1 groups through the UI raise completion to 80% and beyond; S01 follows', async ({
+  test('1/10/12/13/15. items through the UI raise completion; goal and need add nothing; S01 follows', async ({
     page,
   }) => {
     await completedMember(page.request)
-    expect(await completion(page.request)).toBe(50)
+    expect(await completion(page.request)).toBe(42)
     await openEditor(page)
     await expect(page.getByLabel('Chức danh')).toHaveValue('QA')
     await expect(page.getByLabel('Họ và tên')).toHaveValue('Đặng Kim Chi')
@@ -154,19 +157,27 @@ test.describe('WF02-S02 functional', () => {
       'development_goal',
       'experience',
     ])
-    expect(await completion(page.request)).toBe(80)
+    // Bio and experience: 7 of 12; the development goal is not an item (FB-10).
+    expect(await completion(page.request)).toBe(58)
     await expect(page.locator('[data-status]')).toContainText('đã lưu lúc')
 
     await page.getByLabel('Nhu cầu hiện tại').fill('Tìm cố vấn sản phẩm')
+    await page.getByRole('textbox', { name: 'Liên kết ngoài' }).first().fill('linkedin.com/in/chi')
+    await page.getByRole('button', { name: '+ Thêm liên kết' }).click()
+    await page.getByRole('textbox', { name: 'Liên kết ngoài' }).nth(1).fill('https://chi.example')
     await save(page)
-    expect(await completion(page.request)).toBe(90)
+    // LinkedIn and a website: 9 of 12.
+    expect(await completion(page.request)).toBe(75)
 
     // /me is FP1-OWN (DEC-L2R-D1): its suggestion card reads the same server completion.
     await page.goto('/me', { waitUntil: 'networkidle' })
     const suggest = page.locator('[data-anchor="suggest"]')
-    await expect(suggest).toContainText('Hồ sơ hoàn thiện 90% · còn thiếu 1 mục')
-    await expect(suggest.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '90')
-    await expect(suggest.locator('[data-suggestion]')).toHaveAttribute('data-suggestion', 'AVATAR')
+    await expect(suggest).toContainText('Hồ sơ hoàn thiện 75% · còn thiếu 3 mục')
+    await expect(suggest.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '75')
+    await expect(suggest.locator('[data-suggestion]').first()).toHaveAttribute(
+      'data-suggestion',
+      'AVATAR',
+    )
   })
 
   test('11/16. NO_EXPERIENCE_YET completes group 8; clearing lowers completion', async ({
@@ -176,12 +187,12 @@ test.describe('WF02-S02 functional', () => {
     await openEditor(page)
     await page.getByLabel('Tôi chưa có kinh nghiệm làm việc').check()
     await save(page)
-    expect(await completion(page.request)).toBe(60)
+    expect(await completion(page.request)).toBe(50)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(page.getByLabel('Tôi chưa có kinh nghiệm làm việc')).toBeChecked()
     await page.getByLabel('Tôi chưa có kinh nghiệm làm việc').uncheck()
     await save(page)
-    expect(await completion(page.request)).toBe(50)
+    expect(await completion(page.request)).toBe(42)
   })
 
   test('2/3/4/5/6. scalars, region and expertise edits persist', async ({ page }) => {
@@ -189,19 +200,21 @@ test.describe('WF02-S02 functional', () => {
     await openEditor(page)
     await page.getByLabel('Chức danh').fill('Đồng sáng lập · CEO')
     await page.getByLabel('Tỉnh / thành phố').selectOption(REGION_2)
-    await page.getByRole('button', { name: 'Nhóm chuyên môn' }).click()
-    const chips = page.getByRole('list', { name: 'Nhóm chuyên môn' }).getByRole('button')
-    // Deselect the current two, pick one other.
-    for (const chip of await chips.all()) {
-      if ((await chip.getAttribute('aria-pressed')) === 'true') await chip.click()
-    }
-    await chips.nth(2).click()
+    // FB-09 (S1-UAT-05): "Lĩnh vực quan tâm" is the tag control; replace the current domain.
+    const field = page.getByRole('combobox', { name: 'Lĩnh vực quan tâm' })
+    for (const remove of await page.locator('[data-tag] button').all()) await remove.click()
+    await field.fill('Kinh tế tuần hoàn')
+    await field.press('Enter')
     await page.getByRole('textbox', { name: 'Liên kết ngoài' }).first().fill('linkedin.com/in/chi')
     expect((await save(page)).status()).toBe(200)
     const dto = await (await page.request.get(PROFILE_API)).json()
     expect(dto.headline).toBe('Đồng sáng lập · CEO')
     expect(dto.region.id).toBe(REGION_2)
-    expect(dto.domains.length + dto.skills.length).toBe(1)
+    expect(dto.domains.map((d: { label: string; status: string }) => [d.label, d.status])).toEqual([
+      ['Kinh tế tuần hoàn', 'UNNORMALIZED'],
+    ])
+    // FB-10: the editor never sends skills, so stored ones stay as they were.
+    expect(dto.skills).toHaveLength(1)
     expect(dto.links.map((l: { url: string }) => l.url)).toEqual(['https://linkedin.com/in/chi'])
     await page.reload({ waitUntil: 'networkidle' })
     await expect(page.getByLabel('Chức danh')).toHaveValue('Đồng sáng lập · CEO')
@@ -233,7 +246,7 @@ test.describe('WF02-S02 functional', () => {
       .setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: PNG_1X1 })
     expect((await upload).ok()).toBe(true)
     await expect(page.getByRole('img', { name: 'Ảnh đại diện hiện tại' })).toBeVisible()
-    expect(await completion(page.request)).toBe(60)
+    expect(await completion(page.request)).toBe(50)
     // 25. a refused file shows an error and changes nothing.
     const refused = page.waitForResponse((r) => r.url().endsWith('/api/v1/me/profile/avatar'))
     await page
@@ -241,7 +254,7 @@ test.describe('WF02-S02 functional', () => {
       .setInputFiles({ name: 'x.txt', mimeType: 'text/plain', buffer: Buffer.from('nope') })
     expect((await refused).status()).toBe(422)
     await expect(page.getByText('Chỉ nhận ảnh PNG, JPEG hoặc WebP.')).toBeVisible()
-    expect(await completion(page.request)).toBe(60)
+    expect(await completion(page.request)).toBe(50)
   })
 
   test('8/9/18. archived or wrong-type vocabulary and invalid links fail atomically', async ({
@@ -303,7 +316,8 @@ test.describe('WF02-S02 functional', () => {
     await expect(page.getByLabel('Mục tiêu phát triển')).toHaveValue('Giữ lại')
     await page.unroute('**/api/v1/me/profile')
     expect((await save(page)).status()).toBe(200)
-    expect(await completion(page.request)).toBe(60)
+    // The development goal is not one of the twelve items.
+    expect(await completion(page.request)).toBe(42)
   })
 
   test('20. logout/login keeps the saved profile', async ({ page }) => {
@@ -408,6 +422,13 @@ test.describe('WF02-S02 pixel QA', () => {
       }
       return rects
     })
+    // S1-UAT-05 (FB-09): the domains are tag chips where the board writes them as one line.
+    const tagChips: Rect[] = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-tag]')].map((el) => {
+        const r = el.getBoundingClientRect()
+        return { x: r.x - 2, y: r.y - 2, width: r.width + 4, height: r.height + 4 }
+      }),
+    )
     const REF_TEXT: Rect[] = [
       { x: 60, y: 20, width: 260, height: 46 }, // name + status
       { x: 60, y: 112, width: 300, height: 20 },
@@ -433,6 +454,7 @@ test.describe('WF02-S02 pixel QA', () => {
       ],
       [
         ...textMask,
+        ...tagChips,
         ...REF_TEXT,
         PUBLIC_BUTTON,
         { x: 970, y: 434 + noteDy, width: 395, height: 76 }, // note text (reworded)
@@ -444,6 +466,12 @@ test.describe('WF02-S02 pixel QA', () => {
       state: qaConfigFor('WF02-S02')!.state,
       full_page: { rule: full.full_page_rule, below_reference: full.below_reference },
       intentional: [
+        {
+          class: 'INTENTIONAL-SCOPE',
+          reference_region: { x: 60, y: 334, width: 880, height: 120 },
+          reason:
+            'S1-UAT-05 (FB-09, FB-10, DEC-S1P): "Nhóm chuyên môn" (domains + skills, one line) is the "Lĩnh vực quan tâm" tag control; the box keeps the approved metrics, the label, hint and chips differ',
+        },
         {
           class: 'INTENTIONAL-P0-SCOPE',
           reference_region: PUBLIC_BUTTON,

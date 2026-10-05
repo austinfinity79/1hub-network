@@ -7,6 +7,7 @@ import { listVocabularyItems } from '@/lib/vocabulary/vocabulary'
 
 import {
   COMPLETION_GROUPS,
+  GROUP_WEIGHT,
   computeCompletion,
   getProfileCompletion,
   loadCompletionFacts,
@@ -73,97 +74,198 @@ const rejects = (accountId: string, body: unknown, code: string, field?: string)
     ...(field ? { fields: expect.objectContaining({ [field]: expect.any(String) }) } : {}),
   })
 
-describe('completion service — ten groups, ten points each', () => {
-  it('lists exactly the frozen groups, HEADLINE third, no NETWORK_CONTEXT', () => {
+describe('completion service — twelve equal items (S1-UAT-05, FB-10)', () => {
+  it('lists exactly the twelve Sprint 1 items, in the US-01.12 order', () => {
     expect([...COMPLETION_GROUPS]).toEqual([
-      'DISPLAY_NAME',
       'AVATAR',
+      'FULL_NAME',
       'HEADLINE',
-      'REGION',
       'BIO',
+      'LOCATION',
       'DOMAIN',
-      'SKILLS',
+      'SPECIALIZATION',
+      'ECOSYSTEM_ROLE',
       'EXPERIENCE',
-      'DEVELOPMENT_GOAL',
-      'CURRENT_NEED',
+      'LINKEDIN',
+      'WEBSITE',
+      'PHONE',
     ])
+    expect(GROUP_WEIGHT).toBe(8.33)
   })
 
   it('no profile scores 0%', async () => {
     expect((await getProfileCompletion(await newAccount())).percent).toBe(0)
   })
 
-  it('adds 10 points per group, 0% to 100%, one group at a time', async () => {
+  it('adds one equal share per item, 0% to 100%, then loses it item by item', async () => {
     const accountId = await newAccount()
     await query('INSERT INTO individual_profiles (account_id) VALUES ($1)', [accountId])
     const pid = await profileId(accountId)
     const set = (sql: string, params: unknown[] = []) => query(sql, [pid, ...params])
-    const steps: (() => Promise<unknown>)[] = [
-      () => set(`UPDATE individual_profiles SET display_name = 'A' WHERE id = $1`),
-      async () => {
-        const asset = await saveAvatarAsset(
-          accountId,
-          new Uint8Array([0xff, 0xd8, 0xff, 0]),
-          'image/jpeg',
-        )
-        await set('UPDATE individual_profiles SET avatar_asset_id = $2 WHERE id = $1', [asset])
-      },
-      () => set(`UPDATE individual_profiles SET headline = 'H' WHERE id = $1`),
-      () => set('UPDATE individual_profiles SET region_vocab_id = $2 WHERE id = $1', [V.region]),
-      () => set(`UPDATE individual_profiles SET bio = 'B' WHERE id = $1`),
-      () => set('INSERT INTO profile_domains VALUES ($1, $2)', [V.d1]),
-      () => set('INSERT INTO profile_skills VALUES ($1, $2)', [V.s1]),
-      () => set('UPDATE individual_profiles SET no_experience_yet = true WHERE id = $1'),
-      () => set(`UPDATE individual_profiles SET development_goal = 'G' WHERE id = $1`),
-      () => set(`UPDATE individual_profiles SET current_need = 'N' WHERE id = $1`),
+    const steps: [() => Promise<unknown>, () => Promise<unknown>][] = [
+      [
+        async () => {
+          const asset = await saveAvatarAsset(
+            accountId,
+            new Uint8Array([0xff, 0xd8, 0xff, 0]),
+            'image/jpeg',
+          )
+          await set('UPDATE individual_profiles SET avatar_asset_id = $2 WHERE id = $1', [asset])
+        },
+        () => set('UPDATE individual_profiles SET avatar_asset_id = NULL WHERE id = $1'),
+      ],
+      [
+        () => set(`UPDATE individual_profiles SET full_name = 'A B' WHERE id = $1`),
+        () => set('UPDATE individual_profiles SET full_name = NULL WHERE id = $1'),
+      ],
+      [
+        () => set(`UPDATE individual_profiles SET headline = 'H' WHERE id = $1`),
+        () => set('UPDATE individual_profiles SET headline = NULL WHERE id = $1'),
+      ],
+      [
+        () => set(`UPDATE individual_profiles SET bio = 'B' WHERE id = $1`),
+        () => set('UPDATE individual_profiles SET bio = NULL WHERE id = $1'),
+      ],
+      [
+        () => set('UPDATE individual_profiles SET region_vocab_id = $2 WHERE id = $1', [V.region]),
+        () => set('UPDATE individual_profiles SET region_vocab_id = NULL WHERE id = $1'),
+      ],
+      [
+        () => set('INSERT INTO profile_domains VALUES ($1, $2)', [V.d1]),
+        () => set('DELETE FROM profile_domains WHERE profile_id = $1'),
+      ],
+      [
+        () => set('INSERT INTO profile_specializations VALUES ($1, $2)', [V.p1]),
+        () => set('DELETE FROM profile_specializations WHERE profile_id = $1'),
+      ],
+      [
+        () =>
+          set(
+            `INSERT INTO profile_declared_roles (profile_id, role_code) VALUES ($1, 'INNOVATOR')`,
+          ),
+        () => set('DELETE FROM profile_declared_roles WHERE profile_id = $1'),
+      ],
+      [
+        () => set(`INSERT INTO profile_experience (profile_id, title) VALUES ($1, 'Role')`),
+        () => set('DELETE FROM profile_experience WHERE profile_id = $1'),
+      ],
+      [
+        () =>
+          set(
+            `INSERT INTO profile_links (profile_id, url) VALUES ($1, 'https://www.linkedin.com/in/x')`,
+          ),
+        () => set(`DELETE FROM profile_links WHERE profile_id = $1 AND url LIKE '%linkedin%'`),
+      ],
+      [
+        () => set(`INSERT INTO profile_links (profile_id, url) VALUES ($1, 'https://example.vn')`),
+        () => set(`DELETE FROM profile_links WHERE profile_id = $1 AND url LIKE '%example%'`),
+      ],
+      [
+        () => set(`UPDATE individual_profiles SET phone = '+84901234567' WHERE id = $1`),
+        () => set('UPDATE individual_profiles SET phone = NULL WHERE id = $1'),
+      ],
     ]
+    const percent = (n: number) => Math.round((n * 100) / 12)
     expect((await getProfileCompletion(accountId)).percent).toBe(0)
-    for (const [i, step] of steps.entries()) {
-      await step()
+    for (const [i, [add]] of steps.entries()) {
+      await add()
       const completion = await getProfileCompletion(accountId)
-      expect(completion.percent, COMPLETION_GROUPS[i]).toBe((i + 1) * 10)
+      expect(completion.percent, COMPLETION_GROUPS[i]).toBe(percent(i + 1))
       expect(completion.groups[i]).toEqual({
         code: COMPLETION_GROUPS[i],
         complete: true,
-        weight: 10,
+        weight: GROUP_WEIGHT,
       })
     }
+    expect((await getProfileCompletion(accountId)).percent).toBe(100)
+    for (const [i, [, remove]] of steps.entries()) {
+      await remove()
+      const completion = await getProfileCompletion(accountId)
+      expect(completion.percent, `without ${COMPLETION_GROUPS[i]}`).toBe(percent(11 - i))
+      expect(completion.groups[i]!.complete).toBe(false)
+    }
+  })
+
+  it('US-01.12: missing photo, website and phone → 75%, exactly those three missing', async () => {
+    const accountId = await newAccount()
+    await updateOwnProfile(accountId, {
+      full_name: 'Nguyễn An',
+      display_name: 'An',
+      headline: 'CEO',
+      bio: 'Bio',
+      region_id: V.region,
+      domain_ids: [V.d1],
+      specialization_ids: [V.p1],
+      experience: [{ title: 'Founder', organization_name: 'X' }],
+      links: [{ url: 'https://linkedin.com/in/an', label: 'LinkedIn' }],
+    })
+    await query(
+      `INSERT INTO profile_declared_roles (profile_id, role_code) VALUES ($1, 'STARTUP_FOUNDER')`,
+      [await profileId(accountId)],
+    )
+    const completion = await getProfileCompletion(accountId)
+    expect(completion.percent).toBe(75)
+    expect(completion.groups.filter((g) => !g.complete).map((g) => g.code)).toEqual([
+      'AVATAR',
+      'WEBSITE',
+      'PHONE',
+    ])
   })
 
   it('whitespace-only text does not count', () => {
     const base = computeCompletion({
-      display_name: '   ',
+      full_name: '   ',
       avatar_valid: false,
       headline: '\n',
-      region_valid: false,
       bio: ' ',
+      region_valid: false,
       domain_count: 0,
-      skill_count: 0,
+      specialization_count: 0,
+      declared_role_count: 0,
       experience_count: 0,
       no_experience_yet: false,
-      development_goal: '',
-      current_need: null,
+      link_urls: [],
+      phone: ' ',
     })
     expect(base.percent).toBe(0)
   })
 
-  it('DOMAIN and SKILLS are independent groups', async () => {
+  it('LinkedIn and website are told apart by the URL, not the label', () => {
+    const only = (link_urls: string[]) =>
+      computeCompletion({
+        full_name: null,
+        avatar_valid: false,
+        headline: null,
+        bio: null,
+        region_valid: false,
+        domain_count: 0,
+        specialization_count: 0,
+        declared_role_count: 0,
+        experience_count: 0,
+        no_experience_yet: false,
+        link_urls,
+        phone: null,
+      })
+        .groups.filter((g) => g.complete)
+        .map((g) => g.code)
+    expect(only(['https://vn.linkedin.com/in/x'])).toEqual(['LINKEDIN'])
+    expect(only(['https://github.com/x'])).toEqual(['WEBSITE'])
+    expect(only(['https://notlinkedin.com/x'])).toEqual(['WEBSITE'])
+    expect(only(['https://linkedin.com/in/x', 'https://x.dev'])).toEqual(['LINKEDIN', 'WEBSITE'])
+  })
+
+  it('skills, goal, need and education never count (FB-10; education is a suggestion)', async () => {
     const accountId = await newAccount()
-    await updateOwnProfile(accountId, { domain_ids: [V.d1] })
-    let groups = (await getProfileCompletion(accountId)).groups
-    expect(groups.find((g) => g.code === 'DOMAIN')!.complete).toBe(true)
-    expect(groups.find((g) => g.code === 'SKILLS')!.complete).toBe(false)
-
-    await updateOwnProfile(accountId, { domain_ids: [], skill_ids: [V.s1] })
-    groups = (await getProfileCompletion(accountId)).groups
-    expect(groups.find((g) => g.code === 'DOMAIN')!.complete).toBe(false)
-    expect(groups.find((g) => g.code === 'SKILLS')!.complete).toBe(true)
-
-    await updateOwnProfile(accountId, { domain_ids: [V.d1], skill_ids: [V.s1] })
-    groups = (await getProfileCompletion(accountId)).groups
-    expect(
-      groups.filter((g) => g.code === 'DOMAIN' || g.code === 'SKILLS').every((g) => g.complete),
-    ).toBe(true)
+    await updateOwnProfile(accountId, {
+      display_name: 'X',
+      skill_ids: [V.s1],
+      development_goal: 'G',
+      current_need: 'N',
+      education: [{ institution: 'ĐH Bách khoa', programme: 'CNTT' }],
+    })
+    const completion = await getProfileCompletion(accountId)
+    expect(completion.percent).toBe(0)
+    expect(completion.completed_groups).toBe(0)
   })
 
   it('EXPERIENCE: nothing → incomplete; no_experience_yet or a record → complete', async () => {
@@ -191,7 +293,7 @@ describe('completion service — ten groups, ten points each', () => {
     await query('INSERT INTO profile_domains VALUES ($1, $2)', [pid, V.dOld])
     await query('INSERT INTO profile_skills VALUES ($1, $2)', [pid, V.sOld])
     const done = (await getProfileCompletion(accountId)).groups.filter((g) => g.complete)
-    expect(done.map((g) => g.code)).toEqual(['DISPLAY_NAME', 'REGION', 'DOMAIN', 'SKILLS'])
+    expect(done.map((g) => g.code)).toEqual(['LOCATION', 'DOMAIN'])
   })
 
   it('a dangling or foreign avatar id is not a valid asset', async () => {
@@ -211,9 +313,9 @@ describe('completion service — ten groups, ten points each', () => {
     expect(profile.completion).toEqual({
       percent: completion.percent,
       completed_groups: completion.completed_groups,
-      total_groups: 10,
+      total_groups: 12,
     })
-    expect(completion.percent).toBe(30)
+    expect(completion.percent).toBe(17)
   })
 })
 
@@ -303,13 +405,19 @@ describe('PATCH /me/profile rules', () => {
     expect(dto.domains.map((d) => d.status).sort()).toEqual(['ACTIVE', 'ARCHIVED'])
   })
 
-  it('ACC-07: at most 5 specialisations; domains and skills are not counted together', async () => {
+  it('FB-09: at most 5 domains and 5 specialisations; skills are not counted with them', async () => {
     const accountId = await newAccount()
     await rejects(
       accountId,
       { specialization_ids: [V.p1, V.p2, V.p3, V.p4, V.p5, V.p6] },
       'PROFILE_VALIDATION_FAILED',
       'specialization_ids',
+    )
+    await rejects(
+      accountId,
+      { domain_ids: [V.d1, V.d2, V.d3, V.d4, V.d5, V.d6] },
+      'PROFILE_VALIDATION_FAILED',
+      'domain_ids',
     )
     expect(await loadCompletionFacts(accountId)).toBeNull()
     await updateOwnProfile(accountId, {
@@ -328,8 +436,8 @@ describe('PATCH /me/profile rules', () => {
       'PROFILE_VALIDATION_FAILED',
       'specialization_ids',
     )
-    // Specialisations are not a completion group.
-    expect(dto.completion.percent).toBe(20)
+    // Domains and specialisations are one item each; skills are none (FB-10): 2 / 12.
+    expect(dto.completion.percent).toBe(17)
   })
 
   it('is atomic: a failure leaves scalars and both relations untouched', async () => {
@@ -391,8 +499,8 @@ describe('stage 1 fields (ACC-06)', () => {
       country: { id: V.country, status: 'ACTIVE' },
       region: { id: V.region },
     })
-    // Full name, country and phone are not completion groups.
-    expect(dto.completion.percent).toBe(30)
+    // Full name, headline, location and phone: 4 of the 12 items (country is not one).
+    expect(dto.completion.percent).toBe(33)
 
     await updateOwnProfile(accountId, { phone: '  ' })
     expect((await getOwnProfile(accountId)).phone).toBeNull()
