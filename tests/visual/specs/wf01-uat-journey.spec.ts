@@ -138,15 +138,24 @@ async function capability(page: Page) {
   await expect(page).toHaveURL('/onboarding/purpose')
 }
 
-/** ACC-08: one role; with `unit`, the HUB role and its unit. */
+/** A catalogue unit's id (S1-UAT-03, Appendix E). */
+const unitId = async (name: string) =>
+  (await query<{ id: string }>('SELECT id::text FROM organizations WHERE name = $1', [name]))[0]!.id
+
+/**
+ * ACC-08: one role; with `unit` (a catalogue Chapter's name), the HUB role and
+ * one position there: Chủ tịch since 01/2024, current (US-01.11, S1-UAT-03).
+ */
 async function role(page: Page, unit?: string) {
   await page.getByRole('checkbox', { name: /Innovator/ }).check({ force: true })
   if (unit) {
     await page.getByRole('checkbox', { name: /Thành viên HUB Network/ }).check({ force: true })
     const panel = page.locator('[data-anchor="hub"]')
-    await panel.getByLabel('Đơn vị').selectOption(unit)
-    await panel.getByLabel('Chức vụ').fill('Trưởng chapter')
-    await panel.getByLabel('Thời gian').fill('2024 – nay')
+    await panel.getByLabel('Cấp đơn vị').selectOption({ label: 'HUB Network Chapter' })
+    await panel.getByLabel('Đơn vị', { exact: true }).selectOption({ label: unit })
+    await panel.getByLabel('Chức vụ').selectOption({ label: 'Chủ tịch' })
+    await panel.getByLabel('Từ', { exact: true }).fill('01/2024')
+    await panel.getByLabel('Tôi đang trong nhiệm kỳ hoạt động').check()
   }
   await next(page).click()
   await expect(page).toHaveURL('/onboarding/privacy')
@@ -386,16 +395,14 @@ test.describe('WF01 UAT — L1 closure matrix', () => {
     await refresh('/onboarding/capability', 2)
     await capability(page)
     await refresh('/onboarding/purpose', 3)
-    await role(page, IDS.chapter02)
+    await role(page, 'HUB Network Đà Nẵng')
     await refresh('/onboarding/privacy', 4)
 
     // Going back shows what each stage stored.
     await page.getByRole('link', { name: 'Quay lại' }).click()
     await expect(page).toHaveURL('/onboarding/purpose')
     await expect(page.getByRole('checkbox', { name: /Innovator/ })).toBeChecked()
-    await expect(page.locator('[data-anchor="hub"]').getByLabel('Chức vụ')).toHaveValue(
-      'Trưởng chapter',
-    )
+    await expect(page.locator('[data-anchor="hub"]').getByLabel('Chức vụ')).toHaveValue('CHAIR')
     await page.getByRole('link', { name: 'Quay lại' }).click()
     await expect(page).toHaveURL('/onboarding/capability')
     await expect(page.locator('[data-anchor="domains"] [data-tag]')).toHaveText(['Logistics'])
@@ -473,15 +480,16 @@ test.describe('WF01 UAT — L1 closure matrix', () => {
     await intro(page)
     await basic(page)
     await capability(page)
-    await role(page, IDS.chapter01)
+    await role(page, 'HUB Network Hà Nội')
     const id = await accountId(email)
+    const hanoi = await unitId('HUB Network Hà Nội')
 
     const closed = async (when: string) => {
       const session = await sessionOf(page.request)
       expect(session.capabilities ?? [], when).toEqual([])
       expect(session.managed_scopes ?? [], when).toEqual([])
       expect(await granted(id), when).toEqual({ leadership: 0, assignments: 0 })
-      const ops = `/api/v1/ops/organizations/${IDS.chapter01}`
+      const ops = `/api/v1/ops/organizations/${hanoi}`
       // Headers and query naming a role or a unit are not authority.
       for (const path of [
         '/api/v1/ops/organizations',
@@ -491,7 +499,7 @@ test.describe('WF01 UAT — L1 closure matrix', () => {
         const response = await page.request.get(path, {
           headers: {
             'x-role': 'PLATFORM_ADMIN',
-            'x-org-id': IDS.chapter01,
+            'x-org-id': hanoi,
             'x-capabilities': 'membership:confirm',
           },
         })
@@ -511,15 +519,15 @@ test.describe('WF01 UAT — L1 closure matrix', () => {
     await done(page)
     expect(await memberships(id)).toEqual([
       {
-        organization_id: IDS.chapter01,
+        organization_id: hanoi,
         state: 'PENDING_APPROVAL',
         source: 'SELF_DECLARED',
-        claimed_position: 'Trưởng chapter',
-        claimed_period: '2024 – nay',
+        claimed_position: 'Chủ tịch',
+        claimed_period: '01/2024 – Hiện tại',
       },
     ])
     await closed('after completion')
-    for (const route of ['/ops/network', `/ops/org/${IDS.chapter01}`]) {
+    for (const route of ['/ops/network', `/ops/org/${hanoi}`]) {
       expect((await page.goto(route))?.status(), route).toBe(404)
     }
 
@@ -527,8 +535,8 @@ test.describe('WF01 UAT — L1 closure matrix', () => {
     await page.goto('/onboarding/complete', { waitUntil: 'networkidle' })
     await page.getByRole('link', { name: 'Xem trạng thái' }).click()
     await expect(page).toHaveURL('/me/roles')
-    await expect(page.locator('main')).toContainText('Chapter 01')
-    await expect(page.locator('main')).not.toContainText(/Đã xác minh|Trưởng chapter/)
+    await expect(page.locator('main')).toContainText('HUB Network Hà Nội')
+    await expect(page.locator('main')).not.toContainText(/Đã xác minh|Chủ tịch/)
   })
 
   test('G. the visibility chosen at the review persists and filters what others can read', async ({
@@ -685,7 +693,8 @@ test.describe('WF01 frozen P0 requirements (audit follow-up)', () => {
       `INSERT INTO membership_bootstrap
          (email_normalized, organization_id, membership_state, leadership_role_label, source_batch)
        VALUES ($1, $3, 'ACTIVE', NULL, 'uat-audit'), ($2, $3, 'ACTIVE', 'Chapter Leader', 'uat-audit')`,
-      [member, leader, IDS.chapter01],
+      // A catalogue unit, so the journey can name it (S1-UAT-03).
+      [member, leader, await unitId('HUB Network Hà Nội')],
     )
     const relations = async (email: string) =>
       query<{ kind: string; state: string; label: string | null }>(
@@ -706,10 +715,14 @@ test.describe('WF01 frozen P0 requirements (audit follow-up)', () => {
     expect(await relations(member)).toEqual([{ kind: 'membership', state: 'ACTIVE', label: null }])
     const id = await accountId(member)
     // Naming the unit the roster already confirmed files no second request.
-    await journey(page, IDS.chapter01)
+    await journey(page, 'HUB Network Hà Nội')
     expect(await state(id)).toMatchObject({ profiles: 1, status: 'ACTIVE' })
     expect(await memberships(id)).toMatchObject([
-      { organization_id: IDS.chapter01, state: 'ACTIVE', claimed_position: null },
+      {
+        organization_id: await unitId('HUB Network Hà Nội'),
+        state: 'ACTIVE',
+        claimed_position: null,
+      },
     ])
     // Signing in again attaches nothing new.
     await logout(context)
@@ -762,7 +775,7 @@ test.describe('WF01 frozen P0 requirements (audit follow-up)', () => {
   }) => {
     const email = newEmail('funnel')
     const token = await signInThroughUi(page, email)
-    await journey(page, IDS.chapter02)
+    await journey(page, 'HUB Network Đà Nẵng')
     const id = await accountId(email)
     const rows = await query<{ event_name: string; properties: Record<string, unknown> }>(
       `SELECT event_name, properties FROM analytics_events WHERE account_id = $1 ORDER BY occurred_at, id`,
@@ -781,7 +794,7 @@ test.describe('WF01 frozen P0 requirements (audit follow-up)', () => {
     // One account correlates the funnel; no personal or secret content.
     expect(rows.every((r) => r.properties.account_id === id)).toBe(true)
     const text = JSON.stringify(rows)
-    for (const secret of [email, token, NAME, 'Trưởng chapter', 'INNOVATOR', 'TERMS', '@']) {
+    for (const secret of [email, token, NAME, 'Chủ tịch', 'INNOVATOR', 'TERMS', '@']) {
       expect(text, secret).not.toContain(secret)
     }
   })

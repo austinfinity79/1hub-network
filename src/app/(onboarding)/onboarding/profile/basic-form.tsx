@@ -5,6 +5,17 @@ import { useId, useRef, useState, type FormEvent } from 'react'
 import { Inert } from '@/components/onboarding/inert'
 import { Button, Notice, Surface } from '@/components/ui'
 import { apiRequest } from '@/lib/api/client'
+import {
+  isVietnam,
+  LOCATION_TEXT_MAX,
+  locationBody,
+  locationErrors,
+  OTHER,
+  OTHER_LABEL,
+  withCountry,
+  type LocationOption,
+  type LocationValue,
+} from '@/lib/profile/location'
 
 import { HeaderAction, Optional, Required, Select, saveMessage, useLeave } from '../parts'
 import { Spark } from '../spark'
@@ -16,7 +27,10 @@ import styles from './basic.module.css'
  * DEC-L1R-D4).
  *
  * Required, as the board marks them: full name, display name, country and
- * province. The display name defaults to the full name. E-mail is the
+ * province. Location follows US-01.07 (S1-UAT-03, DEC-S1O; lib/profile/location):
+ * eleven countries with "Khác" (typed name), Việt Nam's province list with
+ * "Khác" (typed name), a typed place (≤ 60) for any other country; a new
+ * country clears the province. The display name defaults to the full name. E-mail is the
  * account's and cannot be changed here; the phone number is private.
  * "Tiếp tục" saves and opens stage 2; "Lưu và hoàn tất sau" saves what is
  * filled and leaves. Every rule is re-checked by the server; this is UX only.
@@ -32,8 +46,7 @@ type Initial = {
   display_name: string
   headline: string
   bio: string
-  country_id: string
-  region_id: string
+  location: LocationValue
   phone: string
   avatar_url: string | null
 }
@@ -44,8 +57,6 @@ type FieldKey = 'full_name' | 'display_name' | 'country_id' | 'region_id' | 'pho
 const MESSAGES = {
   full_name: 'Vui lòng nhập họ và tên.',
   display_name: 'Vui lòng nhập tên hiển thị.',
-  country_id: 'Vui lòng chọn quốc gia hoặc khu vực.',
-  region_id: 'Vui lòng chọn tỉnh/thành phố.',
   phone: 'Số điện thoại chưa đúng định dạng.',
   avatarType: 'Chỉ nhận ảnh PNG, JPEG hoặc WebP.',
   avatarSize: 'Ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn.',
@@ -59,11 +70,14 @@ export function BasicForm({
   email,
   countries,
   regions,
+  next = '/onboarding/capability',
 }: {
   initial: Initial
   email: string
-  countries: Option[]
+  countries: LocationOption[]
   regions: Option[]
+  /** Where "Tiếp tục" goes: stage 2, or back to stage 4 after "Sửa" (US-01.12). */
+  next?: string
 }) {
   const leave = useLeave()
   const ids = useId()
@@ -71,8 +85,7 @@ export function BasicForm({
   const [displayName, setDisplayName] = useState(initial.display_name)
   const [headline, setHeadline] = useState(initial.headline)
   const [bio, setBio] = useState(initial.bio)
-  const [countryId, setCountryId] = useState(initial.country_id)
-  const [regionId, setRegionId] = useState(initial.region_id)
+  const [location, setLocation] = useState<LocationValue>(initial.location)
   const [phone, setPhone] = useState(initial.phone)
   const [avatarUrl, setAvatarUrl] = useState(initial.avatar_url)
   const [uploading, setUploading] = useState(false)
@@ -123,8 +136,9 @@ export function BasicForm({
       const missing: Partial<Record<FieldKey, string>> = {}
       if (!fullName.trim()) missing.full_name = MESSAGES.full_name
       if (!shown) missing.display_name = MESSAGES.display_name
-      if (!countryId) missing.country_id = MESSAGES.country_id
-      if (!regionId) missing.region_id = MESSAGES.region_id
+      const place = locationErrors(location, countries)
+      if (place.country) missing.country_id = place.country
+      if (place.region) missing.region_id = place.region
       setErrors(missing)
       if (Object.keys(missing).length > 0) return
     } else {
@@ -141,20 +155,25 @@ export function BasicForm({
           display_name: shown,
           headline,
           bio,
-          country_id: countryId || null,
-          region_id: regionId || null,
+          ...locationBody(location, countries),
           phone: phone.trim() || null,
         },
       })
       if (!displayName.trim()) setDisplayName(shown)
-      leave(mode === 'next' ? '/onboarding/capability' : '/')
+      leave(mode === 'next' ? next : '/')
       // Stay busy while navigating, so the mutation cannot repeat.
     } catch (caught) {
       inFlight.current = false
       setSaving(undefined)
       const fields = (caught as { fields?: Record<string, string> } | null)?.fields
       if (fields?.phone) setErrors({ phone: MESSAGES.phone })
-      else setFormError(saveMessage(caught))
+      else if (fields?.country || fields?.country_id) {
+        setErrors({
+          country_id: locationErrors(location, countries).country ?? saveMessage(caught),
+        })
+      } else if (fields?.locality || fields?.region_id) {
+        setErrors({ region_id: locationErrors(location, countries).region ?? saveMessage(caught) })
+      } else setFormError(saveMessage(caught))
     }
   }
 
@@ -389,18 +408,40 @@ export function BasicForm({
                   <Select
                     id={id('country_id')}
                     name="country_id"
-                    value={countryId}
-                    options={countries}
+                    value={location.country}
+                    options={[...countries, { id: OTHER, label: OTHER_LABEL }]}
                     placeholder="Chọn quốc gia hoặc khu vực"
                     required
                     invalid={Boolean(errors.country_id)}
                     describedBy={errors.country_id ? id('country_id-error') : undefined}
                     onChange={(value) => {
-                      setCountryId(value)
+                      setLocation((current) => withCountry(current, value))
                       clear('country_id')
+                      clear('region_id')
                     }}
                   />
                 </div>
+                {location.country === OTHER ? (
+                  <div className={`${stage.control} ${styles.typed}`}>
+                    <input
+                      id={id('country_text')}
+                      className="ui-input"
+                      name="country_text"
+                      aria-label="Tên quốc gia"
+                      placeholder="Nhập tên quốc gia"
+                      maxLength={LOCATION_TEXT_MAX}
+                      required
+                      aria-invalid={Boolean(errors.country_id) || undefined}
+                      aria-describedby={errors.country_id ? id('country_id-error') : undefined}
+                      value={location.countryText}
+                      onChange={(e) => {
+                        const countryText = e.target.value
+                        setLocation((current) => ({ ...current, countryText }))
+                        clear('country_id')
+                      }}
+                    />
+                  </div>
+                ) : null}
                 {errors.country_id ? (
                   <p id={id('country_id-error')} role="alert" className={stage.error}>
                     {errors.country_id}
@@ -413,30 +454,75 @@ export function BasicForm({
                   <Required />
                 </label>
                 <div className={stage.control}>
-                  <Select
-                    id={id('region_id')}
-                    name="region_id"
-                    value={regionId}
-                    options={regions}
-                    placeholder="Chọn tỉnh/thành phố"
-                    required
-                    // The list belongs to the chosen country.
-                    disabled={!countryId}
-                    invalid={Boolean(errors.region_id)}
-                    describedBy={errors.region_id ? id('region_id-error') : id('region_id-help')}
-                    onChange={(value) => {
-                      setRegionId(value)
-                      clear('region_id')
-                    }}
-                  />
+                  {!location.country || isVietnam(location, countries) ? (
+                    <Select
+                      id={id('region_id')}
+                      name="region_id"
+                      value={location.region}
+                      options={[...regions, { id: OTHER, label: OTHER_LABEL }]}
+                      placeholder="Chọn tỉnh/thành phố"
+                      required
+                      // The list belongs to the chosen country.
+                      disabled={!location.country}
+                      invalid={Boolean(errors.region_id)}
+                      describedBy={errors.region_id ? id('region_id-error') : id('region_id-help')}
+                      onChange={(value) => {
+                        setLocation((current) => ({ ...current, region: value, regionText: '' }))
+                        clear('region_id')
+                      }}
+                    />
+                  ) : (
+                    // Any other country: the place is typed (FB-07, ≤ 60).
+                    <input
+                      id={id('region_id')}
+                      className="ui-input"
+                      name="locality"
+                      placeholder="Nhập tên tỉnh/thành phố"
+                      maxLength={LOCATION_TEXT_MAX}
+                      required
+                      aria-invalid={Boolean(errors.region_id) || undefined}
+                      aria-describedby={
+                        errors.region_id ? id('region_id-error') : id('region_id-help')
+                      }
+                      value={location.regionText}
+                      onChange={(e) => {
+                        const regionText = e.target.value
+                        setLocation((current) => ({ ...current, regionText }))
+                        clear('region_id')
+                      }}
+                    />
+                  )}
                 </div>
+                {isVietnam(location, countries) && location.region === OTHER ? (
+                  <div className={`${stage.control} ${styles.typed}`}>
+                    <input
+                      id={id('locality')}
+                      className="ui-input"
+                      name="locality"
+                      aria-label="Tên địa phương"
+                      placeholder="Nhập tên địa phương"
+                      maxLength={LOCATION_TEXT_MAX}
+                      required
+                      aria-invalid={Boolean(errors.region_id) || undefined}
+                      aria-describedby={errors.region_id ? id('region_id-error') : undefined}
+                      value={location.regionText}
+                      onChange={(e) => {
+                        const regionText = e.target.value
+                        setLocation((current) => ({ ...current, regionText }))
+                        clear('region_id')
+                      }}
+                    />
+                  </div>
+                ) : null}
                 {errors.region_id ? (
                   <p id={id('region_id-error')} role="alert" className={stage.error}>
                     {errors.region_id}
                   </p>
                 ) : (
                   <p id={id('region_id-help')} className={stage.helper}>
-                    Danh sách thay đổi theo quốc gia đã chọn.
+                    {location.country && !isVietnam(location, countries)
+                      ? `Nhập tên địa phương, tối đa ${LOCATION_TEXT_MAX} ký tự.`
+                      : 'Danh sách thay đổi theo quốc gia đã chọn.'}
                   </p>
                 )}
               </div>

@@ -105,8 +105,9 @@ describe('WF03-S02 dashboard metrics (canonical queries only)', () => {
     )
     const after = (await getOrganizationDashboard(ADMIN, CHAPTER_02)).summary
     expect(after).toEqual(before)
-    // HUB: its direct children are the two Chapters, not Club 01 (no recursion).
-    expect((await getOrganizationDashboard(ADMIN, HUB)).summary.child_organizations).toBe(2)
+    // HUB: its direct children are the Chapters — the two fixture ones and the 13 of
+    // the canonical catalogue (S1-UAT-03) — never a CLB (no recursion).
+    expect((await getOrganizationDashboard(ADMIN, HUB)).summary.child_organizations).toBe(15)
   })
 })
 

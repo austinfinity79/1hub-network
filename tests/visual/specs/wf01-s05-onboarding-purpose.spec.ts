@@ -40,6 +40,24 @@ const role = (page: Page, name: string) => page.getByRole('checkbox', { name: ne
 const next = (page: Page) => page.getByRole('button', { name: 'Tiếp tục' })
 const panel = (page: Page) => page.locator('[data-anchor="hub"]')
 
+/** HUB Network Hà Nội, a catalogue Chapter (S1-UAT-03, Appendix E). */
+const HANOI = async () =>
+  (
+    await query<{ id: string }>(
+      `SELECT id::text FROM organizations WHERE name = 'HUB Network Hà Nội'`,
+    )
+  )[0]!.id
+
+/** A complete position row as the API takes it (US-01.11). */
+const claim = (organization_id: string, over: Record<string, unknown> = {}) => ({
+  level: 'CHAPTER',
+  organization_id,
+  position: 'MEMBER',
+  from: '2024-01',
+  current: true,
+  ...over,
+})
+
 /** What a declaration must never produce, for one account. */
 async function granted(accountId: string) {
   const [row] = await query<{ leadership: number; assignments: number }>(
@@ -71,7 +89,7 @@ test.describe('WF01-S05 functional and security', () => {
     expect((await refused.json()).error.fields).toEqual({ capability_stage: 'missing' })
   })
 
-  test('six roles, multi-select, none required', async ({ page }) => {
+  test('six roles, multi-select, at least one (US-01.10, S1-UAT-03)', async ({ page }) => {
     const { accountId } = await signInFresh(page.request, 's05')
     await reach(page.request, 'ROLE')
     await openRoles(page)
@@ -88,9 +106,16 @@ test.describe('WF01-S05 functional and security', () => {
     await expect(page.getByText('ĐÃ CHỌN 0')).toBeVisible()
     await expect(panel(page)).toHaveCount(0)
     await next(page).click()
+    await expect(
+      page.locator('[role="alert"]', { hasText: 'Vui lòng chọn ít nhất một vai trò.' }),
+    ).toBeVisible()
+    await expect(page).toHaveURL('/onboarding/purpose')
+    expect((await stored(accountId))!.role_at).toBeNull()
+    await role(page, 'Innovator').check({ force: true })
+    await next(page).click()
     await expect(page).toHaveURL('/onboarding/privacy')
     const row = await stored(accountId)
-    expect(row).toMatchObject({ roles: [], claims: [] })
+    expect(row).toMatchObject({ roles: ['INNOVATOR'], claims: [] })
     expect(row!.role_at).toBeInstanceOf(Date)
   })
 
@@ -113,35 +138,48 @@ test.describe('WF01-S05 functional and security', () => {
     expect(session.managed_scopes ?? []).toEqual([])
   })
 
-  test('F. a HUB unit is a draft "Chờ xác minh": no membership, no leadership, no permission', async ({
+  test('F. a HUB position is a draft "Chờ xác minh": no membership, no leadership, no permission', async ({
     page,
   }) => {
     const { accountId } = await signInFresh(page.request, 's05')
     await reach(page.request, 'ROLE')
+    const hanoi = await HANOI()
     await openRoles(page)
     await role(page, 'Thành viên HUB Network').check({ force: true })
     await expect(panel(page)).toBeVisible()
     await expect(panel(page).locator('[data-badge="pending"]')).toHaveText('Chờ xác minh')
     await expect(panel(page)).toContainText('không cấp quyền quản trị HUB Chapter hay CLB')
-    await panel(page).getByLabel('Đơn vị').selectOption(IDS.chapter01)
-    await panel(page).getByLabel('Chức vụ').fill('Phó trưởng chapter')
-    await panel(page).getByLabel('Thời gian').fill('2024 – nay')
+    await panel(page).getByLabel('Cấp đơn vị').selectOption({ label: 'HUB Network Chapter' })
+    await panel(page).getByLabel('Đơn vị', { exact: true }).selectOption(hanoi)
+    await panel(page).getByLabel('Chức vụ').selectOption({ label: 'Phó Chủ tịch' })
+    await panel(page).getByLabel('Từ', { exact: true }).fill('01/2024')
+    await panel(page).getByLabel('Tôi đang trong nhiệm kỳ hoạt động').check()
+    await expect(panel(page).locator('[data-claim-status="PENDING"]')).toHaveText('Chờ xác minh')
     await next(page).click()
     await expect(page).toHaveURL('/onboarding/privacy')
 
     expect(await stored(accountId)).toMatchObject({
       roles: ['HUB_MEMBER'],
       claims: [
-        { organization_id: IDS.chapter01, position: 'Phó trưởng chapter', period: '2024 – nay' },
+        {
+          level: 'CHAPTER',
+          organization_id: hanoi,
+          position: 'VICE_CHAIR',
+          board_name: null,
+          position_other: null,
+          from: '2024-01',
+          to: null,
+          current: true,
+        },
       ],
     })
     expect(await memberships(accountId)).toEqual([])
     expect(await granted(accountId)).toEqual({ leadership: 0, assignments: 0 })
 
-    // The claimed unit's operations stay closed, screen and API alike.
+    // The declared unit's operations stay closed, screen and API alike.
     const session = await (await page.request.get('/api/v1/session')).json()
     expect(session.capabilities ?? []).toEqual([])
-    const ops = `/api/v1/ops/organizations/${IDS.chapter01}`
+    const ops = `/api/v1/ops/organizations/${hanoi}`
     for (const path of [`${ops}/members`, `${ops}/dashboard`]) {
       expect([403, 404], path).toContain((await page.request.get(path)).status())
     }
@@ -167,54 +205,71 @@ test.describe('WF01-S05 functional and security', () => {
     expect(await stored(accountId)).toMatchObject({ roles: ['INNOVATOR'] })
   })
 
-  test('several units: one claim per unit; a row with text needs its unit', async ({ page }) => {
+  test('several positions: a row needs level, unit, position and start; rows can be removed', async ({
+    page,
+  }) => {
     const { accountId } = await signInFresh(page.request, 's05')
     await reach(page.request, 'ROLE')
+    const hanoi = await HANOI()
     await openRoles(page)
     await role(page, 'Thành viên HUB Network').check({ force: true })
-    await panel(page).getByLabel('Chức vụ').fill('Thành viên')
+    await panel(page).getByLabel('Chức vụ').selectOption({ label: 'Thành viên' })
     await next(page).click()
-    await expect(page.getByText('Vui lòng chọn đơn vị cho vị trí này.')).toBeVisible()
+    const first = panel(page).locator('[data-claim="0"]')
+    await expect(first.getByRole('alert')).toContainText('Chọn cấp đơn vị.')
+    await expect(first.getByRole('alert')).toContainText('Nhập thời gian bắt đầu (MM/YYYY).')
     await expect(page).toHaveURL('/onboarding/purpose')
-    await panel(page).getByLabel('Đơn vị').selectOption(IDS.chapter01)
+    await first.getByLabel('Cấp đơn vị').selectOption({ label: 'HUB Network Chapter' })
+    await first.getByLabel('Đơn vị', { exact: true }).selectOption(hanoi)
+    await first.getByLabel('Từ', { exact: true }).fill('01/2024')
+    await first.getByLabel('Tôi đang trong nhiệm kỳ hoạt động').check()
 
     await panel(page)
       .getByRole('button', { name: /Thêm vị trí khác/ })
       .click()
     const second = panel(page).locator('[data-claim="1"]')
-    // A unit picked in another row is not offered again.
-    await expect(second.locator(`option[value="${IDS.chapter01}"]`)).toHaveCount(0)
-    await second.getByLabel('Đơn vị').selectOption(IDS.chapter02)
-    await second.getByLabel('Chức vụ').fill('Trưởng ban')
+    // The same unit with another term is allowed.
+    await second.getByLabel('Cấp đơn vị').selectOption({ label: 'HUB Network Chapter' })
+    await second.getByLabel('Đơn vị', { exact: true }).selectOption(hanoi)
+    await second.getByLabel('Chức vụ').selectOption({ label: 'Trưởng Ban' })
+    await second.getByLabel('Tên Ban').fill('Đối ngoại')
+    await second.getByLabel('Từ', { exact: true }).fill('01/2022')
+    await second.getByLabel('Đến', { exact: true }).fill('12/2023')
     await panel(page)
       .getByRole('button', { name: /Thêm vị trí khác/ })
       .click()
-    await panel(page)
-      .locator('[data-claim="2"]')
-      .getByRole('button', { name: 'Bỏ vị trí này' })
-      .click()
+    await panel(page).getByRole('button', { name: 'Bỏ vị trí 3' }).click()
     await expect(panel(page).locator('[data-claim]')).toHaveCount(2)
     await next(page).click()
     await expect(page).toHaveURL('/onboarding/privacy')
     expect((await stored(accountId))!.claims).toEqual([
-      { organization_id: IDS.chapter01, position: 'Thành viên', period: null },
-      { organization_id: IDS.chapter02, position: 'Trưởng ban', period: null },
+      claim(hanoi, { board_name: null, position_other: null, to: null }),
+      claim(hanoi, {
+        position: 'HEAD_OF_BOARD',
+        board_name: 'Đối ngoại',
+        position_other: null,
+        from: '2022-01',
+        to: '2023-12',
+        current: false,
+      }),
     ])
   })
 
-  test('deselecting the HUB role drops the named units', async ({ page }) => {
+  test('deselecting the HUB role asks first, then drops the positions', async ({ page }) => {
     const { accountId } = await signInFresh(page.request, 's05')
     await reach(page.request, 'ROLE')
     const saved = await page.request.put(ROLES_API, {
-      data: {
-        roles: ['HUB_MEMBER', 'INNOVATOR'],
-        hub_claims: [{ organization_id: IDS.chapter01, position: 'Thành viên' }],
-      },
+      data: { roles: ['HUB_MEMBER', 'INNOVATOR'], hub_claims: [claim(await HANOI())] },
     })
     expect(saved.status()).toBe(200)
     await openRoles(page)
-    await expect(panel(page).getByLabel('Chức vụ')).toHaveValue('Thành viên')
-    await role(page, 'Thành viên HUB Network').uncheck({ force: true })
+    await expect(panel(page).getByLabel('Chức vụ')).toHaveValue('MEMBER')
+    // Unticking asks first (US-01.10): the box stays ticked until confirmed.
+    await role(page, 'Thành viên HUB Network').click({ force: true })
+    await page
+      .locator('[data-confirm-untick]')
+      .getByRole('button', { name: 'Bỏ chọn và xóa vị trí' })
+      .click()
     await expect(panel(page)).toHaveCount(0)
     await next(page).click()
     await expect(page).toHaveURL('/onboarding/privacy')
@@ -235,21 +290,15 @@ test.describe('WF01-S05 functional and security', () => {
         { roles: ['HUB_COMMUNITY_LEADER'] },
         { roles: ['HUB_MEMBER'], role_code: 'PLATFORM_ADMIN' },
         { roles: ['HUB_MEMBER'], capabilities: ['membership:confirm'] },
-        { roles: ['INNOVATOR'], hub_claims: [{ organization_id: IDS.chapter01 }] },
+        { roles: ['INNOVATOR'], hub_claims: [claim(IDS.chapter01)] },
+        { roles: ['HUB_MEMBER'], hub_claims: [claim(IDS.chapter01, { state: 'ACTIVE' })] },
         {
           roles: ['HUB_MEMBER'],
-          hub_claims: [{ organization_id: IDS.chapter01, state: 'ACTIVE' }],
+          hub_claims: [claim(IDS.chapter01, { source: 'ORGANIZATION_VERIFIED' })],
         },
-        {
-          roles: ['HUB_MEMBER'],
-          hub_claims: [{ organization_id: IDS.chapter01, source: 'ORGANIZATION_VERIFIED' }],
-        },
-        { roles: ['HUB_MEMBER'], hub_claims: [{ organization_id: hidden!.id }] },
-        { roles: ['HUB_MEMBER'], hub_claims: [{ organization_id: 'chapter-01' }] },
-        {
-          roles: ['HUB_MEMBER'],
-          hub_claims: [{ organization_id: IDS.chapter01 }, { organization_id: IDS.chapter01 }],
-        },
+        { roles: ['HUB_MEMBER'], hub_claims: [claim(hidden!.id)] },
+        { roles: ['HUB_MEMBER'], hub_claims: [claim('chapter-01')] },
+        { roles: ['HUB_MEMBER'], hub_claims: [claim(IDS.chapter01), claim(IDS.chapter01)] },
       ]) {
         const response = await page.request.put(ROLES_API, { data })
         expect(response.status(), JSON.stringify(data)).toBe(422)
@@ -327,15 +376,25 @@ test.describe('WF01-S05 functional and security', () => {
     await expect(panel(page).getByRole('heading', { level: 2 })).toHaveText(
       'Vị trí tại HUB Network',
     )
-    for (const label of ['Đơn vị', 'Chức vụ', 'Thời gian']) {
-      await expect(panel(page).getByLabel(label), label).toHaveCount(1)
+    for (const label of ['Cấp đơn vị', 'Đơn vị', 'Chức vụ', 'Từ', 'Đến']) {
+      await expect(panel(page).getByLabel(label, { exact: true }), label).toHaveCount(1)
     }
+    await expect(panel(page).getByLabel('Tôi đang trong nhiệm kỳ hoạt động')).toHaveCount(1)
   })
 })
 
 test.describe('WF01-S05 pixel QA (ACC-08)', () => {
   /** ACC-08, measured once. */
-  const REF = { cardTop: 113, rolesTop: 262, hubTop: 611, infoTop: 898, ruleTop: 996 } as const
+  // hubAddTop: the "+ Thêm vị trí khác" line (S1-UAT-03 compares the panel's head and
+  // foot apart, since the declaration rows between them are taller than the board's).
+  const REF = {
+    cardTop: 113,
+    rolesTop: 262,
+    hubTop: 611,
+    hubAddTop: 774,
+    infoTop: 898,
+    ruleTop: 996,
+  } as const
 
   test('1440×900: header, role cards, HUB panel, note and footer match ACC-08', async ({
     page,
@@ -345,9 +404,7 @@ test.describe('WF01-S05 pixel QA (ACC-08)', () => {
     const saved = await page.request.put(ROLES_API, {
       data: {
         roles: ['HUB_MEMBER', 'INNOVATOR', 'STARTUP_FOUNDER'],
-        hub_claims: [
-          { organization_id: IDS.chapter01, position: 'Phó trưởng chapter', period: '2024 – nay' },
-        ],
+        hub_claims: [claim(await HANOI(), { position: 'VICE_CHAIR' })],
       },
     })
     expect(saved.status()).toBe(200)
@@ -372,9 +429,14 @@ test.describe('WF01-S05 pixel QA (ACC-08)', () => {
           dy: (await at('roles')) - REF.rolesTop,
         },
         {
-          name: 'hub-panel',
-          reference: { x: 310, y: 600, width: 820, height: 280 },
+          name: 'hub-head',
+          reference: { x: 310, y: 600, width: 820, height: 90 },
           dy: (await at('hub')) - REF.hubTop,
+        },
+        {
+          name: 'hub-foot',
+          reference: { x: 310, y: 768, width: 820, height: 104 },
+          dy: (await at('hub-add')) - REF.hubAddTop,
         },
         {
           name: 'note',
@@ -392,6 +454,11 @@ test.describe('WF01-S05 pixel QA (ACC-08)', () => {
           class: 'INTENTIONAL-SCOPE',
           reason:
             'D-A1: no AI provider, so the "AI đề xuất" mark on a suggested role is not drawn; "Góp ý" is hidden for Alpha (PO decision 30/09), so its pill is not compared',
+        },
+        {
+          class: 'INTENTIONAL-BUSINESS',
+          reason:
+            'US-01.11 / FB-11..13 (S1-UAT-03, DEC-S1O): a declaration row has Cấp đơn vị, Đơn vị (Chapter ▸ CLB), Chức vụ (+ Tên Ban / Ghi rõ), Từ – Đến and "Tôi đang trong nhiệm kỳ hoạt động", where the board draws Đơn vị · Chức vụ · Thời gian; the rows are not compared — the panel head and its foot (add link, note) are, each at its own offset',
         },
       ],
     })

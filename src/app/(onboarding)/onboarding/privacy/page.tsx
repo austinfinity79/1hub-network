@@ -1,8 +1,10 @@
 import { OnboardingShell } from '@/components/shell/onboarding-shell'
 import { getLegalState } from '@/lib/legal/legal'
 import { requireOnboardingStage } from '@/lib/onboarding/guard'
-import { getDeclaredRoles } from '@/lib/onboarding/roles'
+import { LEVEL_LABELS, PENDING_LABEL } from '@/lib/onboarding/hub-position'
+import { getDeclaredRoles, type HubClaimDTO } from '@/lib/onboarding/roles'
 import { getProfileCompletion, type CompletionGroup } from '@/lib/profile/completion'
+import { locationLabel } from '@/lib/profile/location'
 import { getOwnProfile } from '@/lib/profile/profile'
 import { getVisibility } from '@/lib/profile/visibility'
 
@@ -41,6 +43,20 @@ const GROUP_LABELS: Record<CompletionGroup, string> = {
 
 const joined = (labels: string[]) => (labels.length > 0 ? labels.join(' · ') : null)
 
+/** "Trưởng Ban Truyền thông · HUB Network Hà Nội ▸ HIEC … · 01/2024 – Hiện tại". */
+const positionLine = (claim: HubClaimDTO) =>
+  [
+    claim.title,
+    claim.level === 'HUB'
+      ? LEVEL_LABELS.HUB
+      : claim.chapter
+        ? `${claim.chapter.name} ▸ ${claim.organization.name}`
+        : claim.organization.name,
+    claim.period,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
 export default async function Page() {
   const { accountId } = await requireOnboardingStage('REVIEW')
 
@@ -56,14 +72,14 @@ export default async function Page() {
   const parts: ReviewPart[] = [
     {
       title: 'Thông tin cơ bản',
-      href: '/onboarding/profile',
+      href: '/onboarding/profile?from=review',
       rows: [
         { label: 'Họ và tên', value: profile.full_name, empty: 'Chưa có' },
         { label: 'Tên hiển thị', value: profile.display_name, empty: 'Chưa có' },
         { label: 'Vai trò hiện tại', value: profile.headline, empty: 'Chưa có' },
         {
           label: 'Vị trí',
-          value: [profile.region?.label, profile.country?.label].filter(Boolean).join(', ') || null,
+          value: locationLabel(profile),
           empty: 'Chưa có',
         },
         { label: 'Ảnh hồ sơ', value: profile.avatar ? 'Đã tải lên' : null, empty: 'Chưa có' },
@@ -76,7 +92,7 @@ export default async function Page() {
     },
     {
       title: 'Lĩnh vực và chuyên môn',
-      href: '/onboarding/capability',
+      href: '/onboarding/capability?from=review',
       rows: [
         {
           label: 'Lĩnh vực',
@@ -111,18 +127,18 @@ export default async function Page() {
           ),
           empty: 'Chưa chọn',
         },
-        // Shown only when a unit was named; the position stays "Chờ xác minh".
+        // Shown only when positions were declared (US-01.11 order, HUB Tổng →
+        // Chapter → CLB, current first), each "Chờ xác minh" (S1-UAT-03).
         ...(declared.hub_claims.length > 0
           ? [
               {
                 label: 'Vị trí tại HUB',
-                value: declared.hub_claims
-                  .map(
-                    (c) =>
-                      `${[c.position, c.organization.name].filter(Boolean).join(' · ')} — Chờ xác minh`,
-                  )
-                  .join('; '),
+                value: null,
                 empty: '',
+                list: declared.hub_claims.map((c) => ({
+                  text: positionLine(c),
+                  status: PENDING_LABEL,
+                })),
               },
             ]
           : []),

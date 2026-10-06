@@ -111,34 +111,84 @@ describe('declared roles', () => {
   })
 })
 
+/** A complete S1-UAT-03 position row (US-01.11); overrides change one field. */
+const claim = (over: Record<string, unknown>) => ({
+  level: 'CHAPTER',
+  organization_id: CHAPTER_01,
+  position: 'MEMBER',
+  from: '2024-01',
+  current: true,
+  ...over,
+})
+
 describe('HUB units', () => {
-  it('are kept as a draft with position and period; no membership exists yet', async () => {
+  it('are kept as a draft with level, position and term; no membership exists yet', async () => {
     const accountId = await newAccount('role')
     const saved = await saveDeclaredRoles(accountId, {
       roles: ['HUB_MEMBER'],
       hub_claims: [
-        { organization_id: CHAPTER_01, position: '  Phó trưởng chapter ', period: '2024 – nay' },
-        { organization_id: CLUB_01, position: '', period: null },
-        { organization_id: HUB.toUpperCase() },
+        claim({
+          level: 'CLB',
+          organization_id: CLUB_01,
+          position: 'OTHER',
+          position_other: ' Cố vấn ',
+        }),
+        claim({ position: 'VICE_CHAIR', from: '2023-02' }),
+        claim({
+          level: 'HUB',
+          organization_id: HUB.toUpperCase(),
+          position: 'HEAD_OF_BOARD',
+          board_name: 'Đối ngoại',
+          current: false,
+          from: '2021-01',
+          to: '2022-12',
+        }),
       ],
     })
     expect(saved).toEqual({
       roles: ['HUB_MEMBER'],
       hub_claims: [
         {
-          organization: { id: CHAPTER_01, name: 'Chapter 01', type: 'CHAPTER' },
-          position: 'Phó trưởng chapter',
-          period: '2024 – nay',
-        },
-        {
-          organization: { id: CLUB_01, name: 'Club 01', type: 'CLB' },
-          position: null,
-          period: null,
-        },
-        {
+          level: 'HUB',
           organization: { id: HUB, name: 'HUB Network', type: 'HUB' },
-          position: null,
-          period: null,
+          chapter: null,
+          position: 'HEAD_OF_BOARD',
+          board_name: 'Đối ngoại',
+          position_other: null,
+          from: '2021-01',
+          to: '2022-12',
+          current: false,
+          status: 'PENDING',
+          title: 'Trưởng Ban Đối ngoại',
+          period: '01/2021 – 12/2022',
+        },
+        {
+          level: 'CHAPTER',
+          organization: { id: CHAPTER_01, name: 'Chapter 01', type: 'CHAPTER' },
+          chapter: null,
+          position: 'VICE_CHAIR',
+          board_name: null,
+          position_other: null,
+          from: '2023-02',
+          to: null,
+          current: true,
+          status: 'PENDING',
+          title: 'Phó Chủ tịch',
+          period: '02/2023 – Hiện tại',
+        },
+        {
+          level: 'CLB',
+          organization: { id: CLUB_01, name: 'Club 01', type: 'CLB' },
+          chapter: { id: CHAPTER_01, name: 'Chapter 01', type: 'CHAPTER' },
+          position: 'OTHER',
+          board_name: null,
+          position_other: 'Cố vấn',
+          from: '2024-01',
+          to: null,
+          current: true,
+          status: 'PENDING',
+          title: 'Cố vấn',
+          period: '01/2024 – Hiện tại',
         },
       ],
     })
@@ -148,15 +198,9 @@ describe('HUB units', () => {
 
   it('leave with the HUB role: deselecting it needs the units removed', async () => {
     const accountId = await newAccount('role')
-    await saveDeclaredRoles(accountId, {
-      roles: ['HUB_MEMBER'],
-      hub_claims: [{ organization_id: CHAPTER_01 }],
-    })
+    await saveDeclaredRoles(accountId, { roles: ['HUB_MEMBER'], hub_claims: [claim({})] })
     await expect(
-      saveDeclaredRoles(accountId, {
-        roles: ['INNOVATOR'],
-        hub_claims: [{ organization_id: CHAPTER_01 }],
-      }),
+      saveDeclaredRoles(accountId, { roles: ['INNOVATOR'], hub_claims: [claim({})] }),
     ).rejects.toMatchObject({ fields: { hub_claims: 'requires_hub_member' } })
     expect(await saveDeclaredRoles(accountId, { roles: ['INNOVATOR'] })).toEqual({
       roles: ['INNOVATOR'],
@@ -168,32 +212,45 @@ describe('HUB units', () => {
     const accountId = await newAccount('role')
     const draft = await org('CHAPTER', 'DRAFT')
     const company = await org('COMPANY', 'PUBLISHED')
-    for (const organization_id of [
-      draft,
-      company,
-      '10000000-0000-0000-0000-00000000ffff',
-      'chapter-01',
-      42,
-      null,
-    ]) {
+    for (const organization_id of [draft, company, '10000000-0000-0000-0000-00000000ffff']) {
       await expect(
-        saveDeclaredRoles(accountId, { roles: ['HUB_MEMBER'], hub_claims: [{ organization_id }] }),
+        saveDeclaredRoles(accountId, {
+          roles: ['HUB_MEMBER'],
+          hub_claims: [claim({ organization_id })],
+        }),
       ).rejects.toMatchObject({
         code: 'PROFILE_VALIDATION_FAILED',
         fields: { hub_claims: 'organization_not_available' },
       })
     }
+    for (const organization_id of ['chapter-01', 42, null]) {
+      await expect(
+        saveDeclaredRoles(accountId, {
+          roles: ['HUB_MEMBER'],
+          hub_claims: [claim({ organization_id })],
+        }),
+      ).rejects.toMatchObject({ fields: { hub_claims: 'organization_required' } })
+    }
     expect(await stored(accountId)).toMatchObject({ roles: 0, claims: 0, memberships: 0 })
   })
 
   it.each([
-    [[{ organization_id: CHAPTER_01 }, { organization_id: CHAPTER_01 }], 'duplicate_organization'],
-    [Array.from({ length: 6 }, () => ({ organization_id: CHAPTER_01 })), 'too_many'],
-    [[{ organization_id: CHAPTER_01, position: 'x'.repeat(201) }], 'too_long'],
-    [[{ organization_id: CHAPTER_01, period: 'x'.repeat(101) }], 'too_long'],
-    [[{ organization_id: CHAPTER_01, state: 'ACTIVE' }], 'invalid'],
-    [[{ organization_id: CHAPTER_01, role_code: 'HUB_COMMUNITY_LEADER' }], 'invalid'],
-    [[{ organization_id: CHAPTER_01, position: 7 }], 'invalid'],
+    [[claim({}), claim({ from: '2024-03' })], 'duplicate_position'],
+    [
+      Array.from({ length: 11 }, (_, i) =>
+        claim({ current: false, from: `20${10 + i}-01`, to: `20${10 + i}-02` }),
+      ),
+      'too_many',
+    ],
+    [[claim({ position: 'HEAD_OF_BOARD', board_name: 'x'.repeat(61) })], 'too_long'],
+    [[claim({ position: 'OTHER', position_other: 'x'.repeat(61) })], 'too_long'],
+    [[claim({ state: 'ACTIVE' })], 'invalid'],
+    [[claim({ role_code: 'HUB_COMMUNITY_LEADER' })], 'invalid'],
+    [[claim({ position: 7 })], 'position_required'],
+    [
+      [{ organization_id: CHAPTER_01, position: 'Trưởng chapter', period: '2024 – nay' }],
+      'invalid',
+    ],
     ['chapter-01', 'invalid'],
   ] as const)('refuse %j', async (hub_claims, reason) => {
     const accountId = await newAccount('role')
@@ -209,7 +266,7 @@ describe('authorization', () => {
     const accountId = await newAccount('role')
     await saveDeclaredRoles(accountId, {
       roles: [...DECLARED_ROLES],
-      hub_claims: [{ organization_id: CHAPTER_01, position: 'Trưởng chapter' }],
+      hub_claims: [claim({ position: 'CHAIR' })],
     })
     const actor = await resolveActor(accountId)
     expect(deriveCapabilities(actor)).toEqual([])
@@ -228,10 +285,7 @@ describe('authorization', () => {
 
   it('after onboarding is complete the declaration cannot be rewritten here', async () => {
     const accountId = await readyAccount('role')
-    await saveDeclaredRoles(accountId, {
-      roles: ['HUB_MEMBER'],
-      hub_claims: [{ organization_id: CHAPTER_01 }],
-    })
+    await saveDeclaredRoles(accountId, { roles: ['HUB_MEMBER'], hub_claims: [claim({})] })
     await completeOnboarding(accountId, 'r')
     await expect(
       saveDeclaredRoles(accountId, { roles: ['INNOVATOR'], hub_claims: [] }),

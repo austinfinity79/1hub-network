@@ -35,6 +35,7 @@
 
 .table {
   /* Narrower than its columns, the table scrolls sideways instead of clipping them (IA-P2-03). */
+  container-type: inline-size;
   overflow-x: auto;
   overflow-y: hidden;
   border: 1px solid #e5e1e1;
@@ -45,10 +46,17 @@
 .row {
   position: relative;
   display: grid;
-  grid-template-columns: 14.625rem 12.375rem 7.875rem 11.25rem 10.125rem minmax(0, 1fr);
+  /* The name column never outgrows the table's visible width, so a long unit
+     name (the Appendix E CLBs, S1-UAT-03) wraps where it can be reached even
+     when the table scrolls sideways (IA-P2-03, narrow screens). */
+  grid-template-columns:
+    min(14.625rem, calc(100cqw - 1.75rem)) 12.375rem 7.875rem 11.25rem 10.125rem
+    minmax(0, 1fr);
   align-items: center;
-  height: 2.75rem;
-  padding-left: 1.125rem;
+  /* A minimum, not a fixed height: a wrapped name grows its row instead of
+     spilling over the next one. */
+  min-height: 2.75rem;
+  padding: 0.375rem 0 0.375rem 1.125rem;
 }
 
 .row + .row {
@@ -56,7 +64,7 @@
 }
 
 .head {
-  height: 2.1875rem;
+  min-height: 2.1875rem;
   background: #f7f5f5;
 }
 
@@ -75,6 +83,8 @@
 .name {
   color: #251011;
   text-decoration: none;
+  /* A long word ("Entrepreneurship") breaks rather than outgrowing its column. */
+  overflow-wrap: anywhere;
 }
 
 /* The whole row selects the organization; the link stays the accessible target. */

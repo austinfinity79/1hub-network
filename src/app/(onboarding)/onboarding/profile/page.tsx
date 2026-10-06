@@ -1,6 +1,7 @@
 import { OnboardingShell } from '@/components/shell/onboarding-shell'
 import { getAccountEmail, getAccountSignupName } from '@/lib/auth/account'
 import { requireOnboardingStage } from '@/lib/onboarding/guard'
+import { initialLocation, VIETNAM_SLUG } from '@/lib/profile/location'
 import { getOwnProfile } from '@/lib/profile/profile'
 import { listActiveItems } from '@/lib/vocabulary/vocabulary'
 
@@ -13,22 +14,38 @@ import { BasicForm } from './basic-form'
  * Decisions DEC-L1R-D3, D4. The route is the one WF01-S06 used.
  *
  * Countries and provinces come from the controlled vocabulary (COUNTRY,
- * REGION): the ACTIVE items plus the profile's own item when it is no longer
- * active, so a stored choice stays visible. The e-mail is the account's own,
- * read on the server.
+ * REGION; the canonical catalogue of S1-UAT-03): the ACTIVE items, plus the
+ * profile's own item when it is ARCHIVED, so a stored choice stays visible. A
+ * typed name (UNNORMALIZED) shows as "Khác" with its text (US-01.07). The
+ * e-mail is the account's own, read on the server.
  */
 export const dynamic = 'force-dynamic'
 
-type Ref = { id: string; label: string }
+type Ref = { id: string; label: string; slug?: string; status?: string }
 
-/** ACTIVE items, then the profile's own item when it is no longer active. */
+/**
+ * ACTIVE items (Việt Nam marked; slugs stay on the server), then the
+ * profile's own item when it is ARCHIVED (not a typed name).
+ */
 const withKept = (active: Ref[], kept: Ref | null) => [
-  ...active.map(({ id, label }) => ({ id, label })),
-  ...(kept && !active.some((a) => a.id === kept.id) ? [{ id: kept.id, label: kept.label }] : []),
+  ...active.map(({ id, label, slug }) => ({
+    id,
+    label,
+    ...(slug === VIETNAM_SLUG ? { vietnam: true } : {}),
+  })),
+  ...(kept && kept.status === 'ARCHIVED' && !active.some((a) => a.id === kept.id)
+    ? [{ id: kept.id, label: kept.label }]
+    : []),
 ]
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { accountId } = await requireOnboardingStage('BASIC')
+  // "Sửa" on stage 4 returns there after "Tiếp tục" (US-01.12).
+  const fromReview = (await searchParams).from === 'review'
 
   const [profile, countries, regions, email, signupName] = await Promise.all([
     getOwnProfile(accountId),
@@ -37,6 +54,8 @@ export default async function Page() {
     getAccountEmail(accountId),
     getAccountSignupName(accountId),
   ])
+  const countryOptions = withKept(countries, profile.country)
+  const regionOptions = withKept(regions, profile.region)
 
   return (
     <OnboardingShell
@@ -52,14 +71,14 @@ export default async function Page() {
           display_name: profile.display_name ?? '',
           headline: profile.headline ?? '',
           bio: profile.bio ?? '',
-          country_id: profile.country?.id ?? '',
-          region_id: profile.region?.id ?? '',
+          location: initialLocation(profile, countryOptions, regionOptions),
           phone: profile.phone ?? '',
           avatar_url: profile.avatar?.url ?? null,
         }}
         email={email ?? ''}
-        countries={withKept(countries, profile.country)}
-        regions={withKept(regions, profile.region)}
+        countries={countryOptions}
+        regions={regionOptions}
+        next={fromReview ? '/onboarding/privacy' : '/onboarding/capability'}
       />
     </OnboardingShell>
   )

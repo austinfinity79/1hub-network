@@ -73,11 +73,14 @@ export function CapabilityForm({
   initial,
   domainOptions,
   specializationOptions,
+  next = '/onboarding/purpose',
 }: {
   initial: Initial
   /** Canonical labels the tag fields suggest. */
   domainOptions: string[]
   specializationOptions: string[]
+  /** Where "Tiếp tục" goes: stage 3, or back to stage 4 after "Sửa" (US-01.12). */
+  next?: string
 }) {
   const leave = useLeave()
   const ids = useId()
@@ -92,13 +95,15 @@ export function CapabilityForm({
   const [website, setWebsite] = useState(initial.links.find((l) => l.label === WEBSITE)?.url ?? '')
   const [linkError, setLinkError] = useState<string>()
   const [formError, setFormError] = useState<string>()
-  const [saving, setSaving] = useState<'next' | 'later'>()
+  const [saving, setSaving] = useState<'next' | 'later' | 'back'>()
   // A ref, not state: a second submit can land before React re-renders.
   const inFlight = useRef(false)
 
   const id = (name: string) => `${ids}-${name}`
 
-  async function save(mode: 'next' | 'later') {
+  // US-01.09: "Quay lại" saves what is entered (as "Lưu và hoàn tất sau"), so
+  // stage 1 and back to stage 2 finds it unchanged.
+  async function save(mode: 'next' | 'later' | 'back') {
     if (inFlight.current) return
     setFormError(undefined)
     setLinkError(undefined)
@@ -149,7 +154,7 @@ export function CapabilityForm({
           body: { completed: 'CAPABILITY' },
         })
       }
-      leave(mode === 'next' ? '/onboarding/purpose' : '/')
+      leave(mode === 'next' ? next : mode === 'back' ? '/onboarding/profile' : '/')
       // Stay busy while navigating, so the mutation cannot repeat.
     } catch (caught) {
       inFlight.current = false
@@ -347,6 +352,11 @@ export function CapabilityForm({
               className="ui-button"
               data-variant="secondary"
               data-nav="back"
+              aria-disabled={busy || undefined}
+              onClick={(event) => {
+                event.preventDefault()
+                void save('back')
+              }}
             >
               <span>Quay lại</span>
             </Link>

@@ -3,6 +3,17 @@
 import { useId, useState } from 'react'
 
 import { TAG_RULES, TagInput } from '@/components/ui/tag-input'
+import {
+  initialLocation,
+  isVietnam,
+  LOCATION_TEXT_MAX,
+  locationBody,
+  locationErrors,
+  OTHER,
+  OTHER_LABEL,
+  withCountry,
+  type LocationValue,
+} from '@/lib/profile/location'
 import type { OwnProfileDTO } from '@/lib/profile/profile'
 
 import { Field, grid2, ProfileDialog } from './profile-dialog'
@@ -15,7 +26,7 @@ import styles from './profile-own.module.css'
  * validates everything again.
  */
 
-export type Option = { id: string; label: string }
+export type Option = { id: string; label: string; vietnam?: boolean }
 
 const MESSAGES = {
   required: 'Trường này là bắt buộc.',
@@ -161,8 +172,10 @@ export function BasicDialog({
   const [fullName, setFullName] = useState(profile.full_name ?? '')
   const [displayName, setDisplayName] = useState(profile.display_name ?? '')
   const [headline, setHeadline] = useState(profile.headline ?? '')
-  const [countryId, setCountryId] = useState(profile.country?.id ?? '')
-  const [regionId, setRegionId] = useState(profile.region?.id ?? '')
+  // US-01.07 (S1-UAT-03): the same location rule as onboarding stage 1.
+  const [location, setLocation] = useState<LocationValue>(() =>
+    initialLocation(profile, countries, regions),
+  )
   const [phone, setPhone] = useState(profile.phone ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -170,8 +183,9 @@ export function BasicDialog({
     const next: Record<string, string> = {}
     if (!fullName.trim()) next.full_name = MESSAGES.required
     if (!displayName.trim()) next.display_name = MESSAGES.required
-    if (!countryId) next.country_id = MESSAGES.required
-    if (!regionId) next.region_id = MESSAGES.required
+    const place = locationErrors(location, countries)
+    if (place.country) next.country_id = place.country
+    if (place.region) next.region_id = place.region
     if (phone.trim() && !/^\+?[\d\s.-]{8,20}$/.test(phone.trim())) next.phone = MESSAGES.phone
     setErrors(next)
     if (Object.keys(next).length > 0) return
@@ -179,8 +193,7 @@ export function BasicDialog({
       full_name: fullName,
       display_name: displayName,
       headline,
-      country_id: countryId,
-      region_id: regionId,
+      ...locationBody(location, countries),
       phone: phone.trim() || null,
     })
   }
@@ -251,22 +264,64 @@ export function BasicDialog({
         <Field id={`${ids}-country`} label="Quốc gia/Khu vực" error={errors.country_id}>
           {select(
             `${ids}-country`,
-            countryId,
-            countries,
+            location.country,
+            [...countries, { id: OTHER, label: OTHER_LABEL }],
             'Chọn quốc gia',
-            setCountryId,
+            (value) => setLocation((current) => withCountry(current, value)),
             errors.country_id,
           )}
+          {location.country === OTHER ? (
+            <input
+              id={`${ids}-country-text`}
+              className={`ui-input ${styles.typed}`}
+              aria-label="Tên quốc gia"
+              placeholder="Nhập tên quốc gia"
+              maxLength={LOCATION_TEXT_MAX}
+              value={location.countryText}
+              onChange={(e) => {
+                const countryText = e.target.value
+                setLocation((current) => ({ ...current, countryText }))
+              }}
+            />
+          ) : null}
         </Field>
         <Field id={`${ids}-region`} label="Tỉnh/Thành phố" error={errors.region_id}>
-          {select(
-            `${ids}-region`,
-            regionId,
-            regions,
-            'Chọn tỉnh/thành phố',
-            setRegionId,
-            errors.region_id,
+          {location.country && !isVietnam(location, countries) ? (
+            <input
+              id={`${ids}-region`}
+              className="ui-input"
+              placeholder="Nhập tên tỉnh/thành phố"
+              maxLength={LOCATION_TEXT_MAX}
+              value={location.regionText}
+              onChange={(e) => {
+                const regionText = e.target.value
+                setLocation((current) => ({ ...current, regionText }))
+              }}
+            />
+          ) : (
+            select(
+              `${ids}-region`,
+              location.region,
+              [...regions, { id: OTHER, label: OTHER_LABEL }],
+              'Chọn tỉnh/thành phố',
+              (value) => setLocation((current) => ({ ...current, region: value, regionText: '' })),
+              errors.region_id,
+            )
           )}
+          {isVietnam(location, countries) && location.region === OTHER ? (
+            <input
+              id={`${ids}-locality`}
+              className={`ui-input ${styles.typed}`}
+              aria-label="Tên địa phương"
+              placeholder="Nhập tên địa phương"
+              maxLength={LOCATION_TEXT_MAX}
+              value={location.regionText}
+              onChange={(e) => {
+                const regionText = e.target.value
+                setLocation((current) => ({ ...current, regionText }))
+              }}
+            />
+          ) : null}
         </Field>
       </div>
       <Field id={`${ids}-phone`} label="Số điện thoại · chỉ bạn thấy" error={errors.phone}>

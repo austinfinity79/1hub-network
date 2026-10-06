@@ -88,11 +88,26 @@ export async function ensureCapabilityMinimum(request: APIRequestContext): Promi
   if (Object.keys(body).length > 0) await saveProfile(request, body)
 }
 
+/**
+ * Stage 3's minimum (US-01.10, S1-UAT-03): one declared role, added only when
+ * the profile has none, so passing the stage is valid without changing what a
+ * test already chose.
+ */
+export async function ensureRoleMinimum(request: APIRequestContext): Promise<void> {
+  const declared = await (await request.get('/api/v1/me/onboarding/roles')).json()
+  if (declared.roles?.length) return
+  const response = await request.put('/api/v1/me/onboarding/roles', {
+    data: { roles: ['INNOVATION_ENTHUSIAST'], hub_claims: [] },
+  })
+  expect(response.status(), await response.text()).toBe(200)
+}
+
 export async function passStage(
   request: APIRequestContext,
   completed: 'CAPABILITY' | 'ROLE',
 ): Promise<void> {
   if (completed === 'CAPABILITY') await ensureCapabilityMinimum(request)
+  if (completed === 'ROLE') await ensureRoleMinimum(request)
   const response = await request.put('/api/v1/me/onboarding/stage', { data: { completed } })
   expect(response.status(), await response.text()).toBe(200)
 }
@@ -163,6 +178,8 @@ export async function onboardThroughUi(page: Page, name: string): Promise<void> 
   await page.getByRole('combobox', { name: 'Chuyên môn' }).press('Enter')
   await page.getByRole('button', { name: 'Tiếp tục' }).click()
   await expect(page).toHaveURL('/onboarding/purpose')
+  // US-01.10 (S1-UAT-03): stage 3 needs one role.
+  await page.getByRole('checkbox', { name: /Quan tâm đến đổi mới sáng tạo/ }).check({ force: true })
   await page.getByRole('button', { name: 'Tiếp tục' }).click()
   await expect(page).toHaveURL('/onboarding/privacy')
   await page.getByRole('checkbox', { name: /Tôi đồng ý/ }).check({ force: true })

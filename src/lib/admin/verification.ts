@@ -1,7 +1,6 @@
 import { ApiError } from '@/lib/api/errors'
 import type { Actor } from '@/lib/authz/actor'
 import type { Executor } from '@/lib/db/client'
-import { CLAIM_LIMITS } from '@/lib/onboarding/roles'
 import { OPS_ORGANIZATION_TYPES } from '@/lib/ops/organizations'
 import { organizationScope, type OrganizationScope } from '@/lib/ops/scope'
 
@@ -58,9 +57,13 @@ export function canTransitionVerification(
   return VERIFICATION_TRANSITIONS[from]?.[to] === by
 }
 
-/** Position text reuses the onboarding claim bound; the reason is a technical bound. */
+/**
+ * Technical bounds. The position text keeps the bound the onboarding claim had
+ * when this was written (200); S1-UAT-03 bounds the typed parts of a new
+ * declaration to 60 (hub-position.ts), which a printed title stays within.
+ */
 export const VERIFICATION_LIMITS = {
-  positionTitle: CLAIM_LIMITS.position,
+  positionTitle: 200,
   rejectReason: 500,
 } as const
 

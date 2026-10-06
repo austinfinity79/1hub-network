@@ -480,3 +480,23 @@
     margin-bottom: 0.625rem;
   }
 }
+
+/* US-01.11/12 (S1-UAT-03): the declared HUB positions, in order, each "Chờ xác minh". */
+.positions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.positions li + li {
+  margin-top: 0.375rem;
+}
+
+.positionStatus {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #8a5a00;
+  white-space: nowrap;
+}

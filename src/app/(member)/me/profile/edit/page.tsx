@@ -1,6 +1,7 @@
 import { requireMember } from '@/lib/member/guard'
 import { getOwnProfile } from '@/lib/profile/profile'
 import { getVisibility } from '@/lib/profile/visibility'
+import { OTHER, VIETNAM_SLUG } from '@/lib/profile/location'
 import { listActiveItems } from '@/lib/vocabulary/vocabulary'
 
 import { ProfileEditor } from './profile-editor'
@@ -19,17 +20,29 @@ export const dynamic = 'force-dynamic'
 
 export default async function Page() {
   const member = await requireMember()
-  const [profile, regions, active, visibility] = await Promise.all([
+  const [profile, regions, countries, active, visibility] = await Promise.all([
     getOwnProfile(member.accountId),
     listActiveItems(['REGION']),
+    listActiveItems(['COUNTRY']),
     listActiveItems(['DOMAIN']),
     getVisibility(member.accountId),
   ])
 
   const regionOptions = regions.map((r) => ({ id: r.id, label: r.label }))
-  if (profile.region && !regionOptions.some((r) => r.id === profile.region!.id)) {
+  if (
+    profile.region?.status === 'ARCHIVED' &&
+    !regionOptions.some((r) => r.id === profile.region!.id)
+  ) {
     regionOptions.unshift({ id: profile.region.id, label: profile.region.label })
   }
+  // US-01.07 (S1-UAT-03): Việt Nam picks from the list ("Khác" types a name);
+  // any other country types the place. The country itself is edited on /me.
+  const vietnam =
+    !profile.country ||
+    countries.some((c) => c.id === profile.country!.id && c.slug === VIETNAM_SLUG)
+  const typedRegion = Boolean(
+    profile.region && !regionOptions.some((r) => r.id === profile.region!.id),
+  )
   const discovery =
     visibility.groups.find((g) => g.group_code === 'PROFILE_DISCOVERY')?.level ?? 'NETWORK_ONLY'
 
@@ -38,7 +51,8 @@ export default async function Page() {
       initial={{
         display_name: profile.display_name ?? '',
         headline: profile.headline ?? '',
-        region_id: profile.region?.id ?? '',
+        region_id: typedRegion ? (vietnam ? OTHER : '') : (profile.region?.id ?? ''),
+        region_text: typedRegion ? profile.region!.label : '',
         bio: profile.bio ?? '',
         domains: profile.domains.map((d) => d.label),
         experience: profile.experience.map((e) => ({
@@ -52,6 +66,7 @@ export default async function Page() {
         avatar_url: profile.avatar?.url ?? null,
       }}
       regions={regionOptions}
+      regionTyped={!vietnam}
       domainOptions={active.map((item) => item.label)}
       discoverable={discovery !== 'PRIVATE'}
     />

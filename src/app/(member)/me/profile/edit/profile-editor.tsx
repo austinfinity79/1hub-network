@@ -6,6 +6,7 @@ import { EditorHeader } from '@/components/shell/editor-header'
 import { Button, Notice, TextInput } from '@/components/ui'
 import { TagInput } from '@/components/ui/tag-input'
 import { apiRequest } from '@/lib/api/client'
+import { LOCATION_TEXT_MAX, OTHER, OTHER_LABEL } from '@/lib/profile/location'
 
 import styles from './profile-edit.module.css'
 
@@ -26,7 +27,10 @@ type Experience = { title: string; organization_name: string }
 type State = {
   display_name: string
   headline: string
+  /** A REGION id, OTHER ("Khác", typed), or ''. */
   region_id: string
+  /** The typed place: Việt Nam's "Khác", or any other country (US-01.07). */
+  region_text: string
   bio: string
   /** Domain tags, by label. */
   domains: string[]
@@ -64,6 +68,8 @@ const COPY = {
   avatarFailed: 'Chưa tải được ảnh. Vui lòng thử lại.',
   changeAvatar: 'Đổi ảnh',
   regionPlaceholder: 'Chọn tỉnh / thành phố',
+  regionTyped: 'Nhập tên tỉnh / thành phố',
+  localityPlaceholder: 'Nhập tên địa phương',
   noteTitle: 'LIÊN HỆ NẰM Ở CÀI ĐẶT, KHÔNG Ở ĐÂY',
   noteBody:
     'Email đăng nhập thuộc tài khoản, không phải một ô trong hồ sơ, và không hiển thị cho người khác.',
@@ -75,11 +81,15 @@ function normaliseUrl(value: string): string {
   return /^[a-z][a-z0-9+.-]*:/i.test(text) ? text : `https://${text}`
 }
 
-function toBody(state: State) {
+function toBody(state: State, regionTyped: boolean) {
+  const typed = regionTyped || state.region_id === OTHER
   return {
     display_name: state.display_name,
     headline: state.headline,
-    region_id: state.region_id || null,
+    // US-01.07: a listed province by id, a typed place by name (≤ 60).
+    ...(typed && state.region_text.trim()
+      ? { locality: state.region_text.trim() }
+      : { region_id: typed ? null : state.region_id || null }),
     bio: state.bio,
     // FB-09 tags as text; skills are no longer sent (FB-10), so stored ones stay untouched.
     domains: state.domains,
@@ -100,11 +110,14 @@ type FieldErrors = Partial<Record<string, string>>
 export function ProfileEditor({
   initial,
   regions,
+  regionTyped,
   domainOptions,
   discoverable,
 }: {
   initial: Initial
   regions: { id: string; label: string }[]
+  /** The profile's country is not Việt Nam: the place is typed (US-01.07). */
+  regionTyped: boolean
   /** Catalogue labels the domain field suggests. */
   domainOptions: string[]
   discoverable: boolean
@@ -158,15 +171,16 @@ export function ProfileEditor({
     if (inFlight.current) return
     const local: FieldErrors = {}
     if (!state.display_name.trim()) local.display_name = COPY.required
-    if (!state.region_id) local.region_id = COPY.required
+    const typedPlace = regionTyped || state.region_id === OTHER
+    if (typedPlace ? !state.region_text.trim() : !state.region_id) local.region_id = COPY.required
     if (state.domains.length === 0 && saved.domains.length > 0) local.domains = COPY.domainRequired
     if (Object.keys(local).length > 0) {
       setErrors(local)
       return
     }
     // Only what changed since the last successful save (PATCH stays partial).
-    const next = toBody(state)
-    const prev = toBody(saved)
+    const next = toBody(state, regionTyped)
+    const prev = toBody(saved, regionTyped)
     const body = Object.fromEntries(
       Object.entries(next).filter(
         ([key, value]) => JSON.stringify(value) !== JSON.stringify(prev[key as keyof typeof prev]),
@@ -468,20 +482,46 @@ export function ProfileEditor({
             <label htmlFor="pe-region" className={`type-body-sm weight-semibold ${styles.label}`}>
               Tỉnh / thành phố
             </label>
-            <select
-              id="pe-region"
-              className={`type-body-md ${styles.select}`}
-              value={state.region_id}
-              aria-invalid={Boolean(errors.region_id)}
-              onChange={(e) => set('region_id', e.target.value)}
-            >
-              <option value="">{COPY.regionPlaceholder}</option>
-              {regions.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
+            {regionTyped ? (
+              <TextInput
+                id="pe-region"
+                value={state.region_text}
+                maxLength={LOCATION_TEXT_MAX}
+                placeholder={COPY.regionTyped}
+                invalid={Boolean(errors.region_id)}
+                onChange={(e) => set('region_text', e.target.value)}
+              />
+            ) : (
+              <select
+                id="pe-region"
+                className={`type-body-md ${styles.select}`}
+                value={state.region_id}
+                aria-invalid={Boolean(errors.region_id)}
+                onChange={(e) => {
+                  set('region_id', e.target.value)
+                  set('region_text', '')
+                }}
+              >
+                <option value="">{COPY.regionPlaceholder}</option>
+                {regions.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.label}
+                  </option>
+                ))}
+                <option value={OTHER}>{OTHER_LABEL}</option>
+              </select>
+            )}
+            {!regionTyped && state.region_id === OTHER ? (
+              <TextInput
+                id="pe-locality"
+                aria-label="Tên địa phương"
+                value={state.region_text}
+                maxLength={LOCATION_TEXT_MAX}
+                placeholder={COPY.localityPlaceholder}
+                invalid={Boolean(errors.region_id)}
+                onChange={(e) => set('region_text', e.target.value)}
+              />
+            ) : null}
             {fieldError('region_id')}
           </section>
 

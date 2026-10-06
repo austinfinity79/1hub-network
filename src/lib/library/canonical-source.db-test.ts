@@ -91,7 +91,8 @@ describe('listPublicStartups — the canonical predicate in SQL', () => {
     expect(by('WF06 An Khang')).toMatchObject({
       ventureId: fx.ventures['WF06 An Khang'],
       stage: { id: LIBRARY_FX.stage.GROWTH, code: 'GROWTH', label: 'Tăng trưởng' },
-      region: { id: LIBRARY_FX.region.hanoi, label: 'Hà Nội' },
+      // The canonical catalogue's label (S1-UAT-03, Appendix E).
+      region: { id: LIBRARY_FX.region.hanoi, label: 'TP. Hà Nội' },
       domains: [{ id: LIBRARY_FX.domain.govtech, label: 'Công nghệ khu vực công' }],
     })
     // Domains in vocabulary order (sort_order, then label).

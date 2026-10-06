@@ -130,7 +130,14 @@ describe('WF03-T00 canonical hierarchy (organization_relationships only)', () =>
     expect(parents.get(CHAPTER_01)).toEqual({ kind: 'PARENT', parentId: HUB })
     expect(parents.get(CHAPTER_02)).toEqual({ kind: 'PARENT', parentId: HUB })
     expect(parents.get(CLUB_01)).toEqual({ kind: 'PARENT', parentId: CHAPTER_01 })
-    expect(await childrenOf(query, HUB)).toEqual([CHAPTER_01, CHAPTER_02].sort())
+    // The canonical catalogue's 13 Chapters (S1-UAT-03) hang under the same HUB.
+    const catalogue = await query<{ id: string }>(
+      `SELECT id::text FROM organizations WHERE type = 'CHAPTER' AND metadata->>'catalog' = 'S1_APPENDIX_E'`,
+    )
+    expect(catalogue).toHaveLength(13)
+    expect(await childrenOf(query, HUB)).toEqual(
+      [CHAPTER_01, CHAPTER_02, ...catalogue.map((c) => c.id)].sort(),
+    )
   })
 
   it('never reads parent_id; a second ACTIVE parent is refused by the database (009)', async () => {

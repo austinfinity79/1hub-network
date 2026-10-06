@@ -40,10 +40,14 @@ const PROFILE = {
   links: [{ label: 'LinkedIn', url: 'https://linkedin.com/in/dangkimchi' }],
 }
 
+/** A complete position row (US-01.11, S1-UAT-03). */
 const CLAIM = {
+  level: 'CHAPTER',
   organization_id: IDS.chapter01,
-  position: 'Phó trưởng chapter',
-  period: '2024 – nay',
+  position: 'HEAD_OF_BOARD',
+  board_name: 'Truyền thông',
+  from: '2024-01',
+  current: true,
 }
 
 type Screen = {

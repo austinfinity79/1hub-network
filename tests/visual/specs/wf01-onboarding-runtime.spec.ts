@@ -5,6 +5,7 @@ import { writeJsonReport } from '../pixel-qa/report'
 import {
   applyVocabularyFixture,
   ensureCapabilityMinimum,
+  ensureRoleMinimum,
   IDS,
   onboardThroughUi,
   signInFresh,
@@ -68,6 +69,7 @@ test('ACC-05 → ACC-10 → /me: console, responses and assets are clean', async
   expect(save.status()).toBe(200)
   // FB-09: stage 2 is passed only with a domain and a specialisation (S1-UAT-05).
   await ensureCapabilityMinimum(page.request)
+  await ensureRoleMinimum(page.request) // US-01.10: stage 3's minimum (S1-UAT-03)
   for (const completed of ['CAPABILITY', 'ROLE']) {
     const stage = await page.request.put('/api/v1/me/onboarding/stage', { data: { completed } })
     expect(stage.status()).toBe(200)

@@ -221,11 +221,26 @@ test.describe('WF03-S01 pixel QA', () => {
     const screen = findScreen(screens, 'WF03-S01')
     const reports = await runScreenQa(page, screen, qaConfigFor('WF03-S01')!, {
       // Test-only fifth operational organization, so the table has the drawn 5 rows.
-      beforeNavigate: async () => {
+      beforeNavigate: async (p) => {
         await query(
           `INSERT INTO organizations (id, type, slug, name, status) VALUES ($1, 'CLB', 's01-pixel-club', 'Club QA', 'PUBLISHED') ON CONFLICT (id) DO NOTHING`,
           [PIXEL_ORG],
         )
+        // The board draws the fixture units only: the canonical catalogue's 68 units
+        // (S1-UAT-03, Appendix E) are left out of this capture's list, never the DB.
+        const catalogue = new Set(
+          (
+            await query<{ id: string }>(
+              `SELECT id::text FROM organizations WHERE metadata->>'catalog' = 'S1_APPENDIX_E' AND type <> 'HUB'`,
+            )
+          ).map((r) => r.id),
+        )
+        await p.route('**/api/v1/ops/organizations*', async (route) => {
+          const response = await route.fetch()
+          const body = await response.json()
+          body.items = body.items.filter((item: { id: string }) => !catalogue.has(item.id))
+          await route.fulfill({ response, json: body })
+        })
       },
       afterLoad: async (p) => {
         await expect(rows(p)).toHaveCount(5)

@@ -2,6 +2,7 @@ import { query, withTransaction } from '@/lib/db/client'
 import { acceptConsent, getCurrentDocuments } from '@/lib/legal/legal'
 import { updateOwnProfile } from '@/lib/profile/profile'
 
+import { saveDeclaredRoles } from './roles'
 import { passStage } from './state'
 
 /**
@@ -55,10 +56,27 @@ export async function ensureCapabilityMinimum(accountId: string): Promise<void> 
   })
 }
 
-/** Stages 2 and 3 passed as "Tiếp tục" does, with stage 2's minimum in place. */
+/**
+ * Stage 3's minimum (US-01.10, S1-UAT-03): one declared role, added only when
+ * the profile has none (with no role there can be no HUB position to keep).
+ */
+export async function ensureRoleMinimum(accountId: string): Promise<void> {
+  const [row] = await query<{ roles: number }>(
+    `SELECT count(r.*)::int AS roles FROM individual_profiles p
+       LEFT JOIN profile_declared_roles r ON r.profile_id = p.id
+      WHERE p.account_id = $1`,
+    [accountId],
+  )
+  if (!row?.roles) {
+    await saveDeclaredRoles(accountId, { roles: ['INNOVATION_ENTHUSIAST'], hub_claims: [] })
+  }
+}
+
+/** Stages 2 and 3 passed as "Tiếp tục" does, with each stage's minimum in place. */
 export async function passStages(accountId: string): Promise<void> {
   await ensureCapabilityMinimum(accountId)
   await passStage(accountId, { completed: 'CAPABILITY' })
+  await ensureRoleMinimum(accountId)
   await passStage(accountId, { completed: 'ROLE' })
 }
 

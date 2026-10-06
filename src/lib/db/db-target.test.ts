@@ -39,11 +39,12 @@ function run(args: string[], databaseUrl?: string) {
 }
 
 describe('command classes', () => {
-  it('reset is destructive, migrate and seed mutate, status and introspect read', () => {
+  it('reset is destructive, migrate, seed and catalog mutate, status and introspect read', () => {
     expect(COMMAND_CLASS).toEqual({
       reset: 'DESTRUCTIVE',
       migrate: 'MUTATING',
       seed: 'MUTATING',
+      catalog: 'MUTATING',
       status: 'READ_ONLY',
       introspect: 'READ_ONLY',
     })
@@ -58,7 +59,7 @@ describe('A: a destructive or mutating command without DATABASE_URL fails closed
     expect(code(() => resolveDbTarget('reset', { env: { DATABASE_URL: '  ' } }))).toBe(
       'DATABASE_URL_REQUIRED_FOR_DESTRUCTIVE_DB_COMMAND',
     )
-    for (const command of ['migrate', 'seed']) {
+    for (const command of ['migrate', 'seed', 'catalog']) {
       expect(code(() => resolveDbTarget(command, { env: {} }))).toBe(
         'DATABASE_URL_REQUIRED_FOR_MUTATING_DB_COMMAND',
       )
@@ -66,7 +67,7 @@ describe('A: a destructive or mutating command without DATABASE_URL fails closed
   })
 
   it('runner exits 2 before connecting, writing nothing', () => {
-    for (const command of ['reset', 'migrate', 'seed']) {
+    for (const command of ['reset', 'migrate', 'seed', 'catalog']) {
       const result = run([command])
       expect(result.status, command).toBe(2)
       expect(result.stderr).toMatch(/DATABASE_URL_REQUIRED_FOR_(DESTRUCTIVE|MUTATING)_DB_COMMAND/)

@@ -6,7 +6,7 @@ import { getLegalState, LEGAL_TYPES } from '@/lib/legal/legal'
 import { fileClaimedMemberships } from '@/lib/network/membership-request'
 import { computeCompletion, loadCompletionFacts } from '@/lib/profile/completion'
 
-import type { StoredClaim } from './roles'
+import { claimFilings, type StoredClaim } from './roles'
 
 /**
  * POST /me/onboarding/complete — 05 §4.6, sent by "Hoàn tất hồ sơ" on ACC-09
@@ -117,7 +117,7 @@ export async function completeOnboarding(
     await fileClaimedMemberships(exec, {
       accountId,
       profileId: profile.id,
-      claims: profile.claims,
+      claims: claimFilings(profile.claims),
       requestId,
     })
     if (profile.status === 'DRAFT') {

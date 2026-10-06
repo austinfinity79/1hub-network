@@ -196,7 +196,8 @@ test.describe('WF05-S02 project / startup detail', () => {
     await expect(overview(page, 'type')).toHaveText('Startup')
     await expect(overview(page, 'status')).toHaveText('Đang hoạt động')
     await expect(overview(page, 'summary')).toHaveText('Nền tảng số cho hợp tác xã.')
-    await expect(overview(page, 'region')).toHaveText('Hà Nội')
+    // The canonical catalogue's label (S1-UAT-03, Appendix E).
+    await expect(overview(page, 'region')).toHaveText('TP. Hà Nội')
     await expect(overview(page, 'domains')).toHaveText('Công nghệ khu vực công, Giáo dục')
     await expect(page.locator('[data-team-count]')).toHaveText('2 thành viên')
     await expect(page.locator('[data-team-row]')).toHaveText([

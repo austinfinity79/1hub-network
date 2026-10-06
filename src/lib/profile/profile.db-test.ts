@@ -23,6 +23,8 @@ import { getOwnProfile, updateOwnProfile } from './profile'
 
 const run = `${Date.now()}${Math.random().toString(36).slice(2, 6)}`
 const V: Record<string, string> = {}
+/** Việt Nam (migration 010), the country of the listed provinces (US-01.07). */
+const VIETNAM = '21000000-0000-0000-0000-000000000001'
 
 async function item(key: string, type: string, status = 'ACTIVE') {
   const [row] = await query<{ id: string }>(
@@ -485,7 +487,8 @@ describe('stage 1 fields (ACC-06)', () => {
       phone: '+84 (0)90-123.4567',
     })
     expect(await step()).toBe('BASIC')
-    await updateOwnProfile(accountId, { country_id: V.country!.toUpperCase() })
+    // S1-UAT-03 (US-01.07): a listed province is Việt Nam's, so the country is Việt Nam.
+    await updateOwnProfile(accountId, { country_id: VIETNAM.toUpperCase() })
     expect(await step()).toBe('BASIC')
     await updateOwnProfile(accountId, { region_id: V.region })
     expect(await step()).toBe('CAPABILITY')
@@ -496,7 +499,7 @@ describe('stage 1 fields (ACC-06)', () => {
       full_name: 'Đặng Kim Chi',
       display_name: 'Kim Chi Đặng',
       phone: '+840901234567',
-      country: { id: V.country, status: 'ACTIVE' },
+      country: { id: VIETNAM, status: 'ACTIVE' },
       region: { id: V.region },
     })
     // Full name, headline, location and phone: 4 of the 12 items (country is not one).

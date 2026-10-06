@@ -761,3 +761,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* US-01.07 (S1-UAT-03): a typed country or place under its "Khác" select. */
+.typed {
+  margin-top: 0.5rem;
+}

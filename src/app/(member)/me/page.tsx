@@ -2,6 +2,7 @@ import { ProfileShell } from '@/components/shell/workspace-shell'
 import { requireMember } from '@/lib/member/guard'
 import { getOwnNetwork } from '@/lib/network/network'
 import { getProfileCompletion } from '@/lib/profile/completion'
+import { VIETNAM_SLUG } from '@/lib/profile/location'
 import { getOwnProfile } from '@/lib/profile/profile'
 import { listOwnVentures } from '@/lib/venture/venture'
 import { listActiveItems } from '@/lib/vocabulary/vocabulary'
@@ -24,11 +25,19 @@ import { ProfileOwn } from './profile-own'
  */
 export const dynamic = 'force-dynamic'
 
-type Ref = { id: string; label: string }
+type Ref = { id: string; label: string; slug?: string; status?: string }
 
 const withKept = (active: Ref[], kept: Ref[]) => [
-  ...active.map(({ id, label }) => ({ id, label })),
-  ...kept.filter((k) => !active.some((a) => a.id === k.id)).map(({ id, label }) => ({ id, label })),
+  // Việt Nam is marked for the location rule (US-01.07); slugs stay on the server.
+  ...active.map(({ id, label, slug }) => ({
+    id,
+    label,
+    ...(slug === VIETNAM_SLUG ? { vietnam: true } : {}),
+  })),
+  // An ARCHIVED choice stays offered; a typed name (UNNORMALIZED) shows as "Khác" (US-01.07).
+  ...kept
+    .filter((k) => k.status === 'ARCHIVED' && !active.some((a) => a.id === k.id))
+    .map(({ id, label }) => ({ id, label })),
 ]
 
 export default async function Page() {

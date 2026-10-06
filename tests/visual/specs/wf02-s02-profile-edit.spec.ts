@@ -10,7 +10,7 @@ import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
 import { decodePng, readPng } from '../pixel-qa/png'
 import { writeJsonReport } from '../pixel-qa/report'
 import { compareSegments, type Rect } from '../pixel-qa/segments'
-import { ensureCapabilityMinimum } from '../support/onboarding'
+import { ensureCapabilityMinimum, ensureRoleMinimum } from '../support/onboarding'
 
 /**
  * WF02-S02 — Profile Edit (/me/profile/edit). Production.
@@ -50,7 +50,10 @@ test.afterAll(async () => {
 
 type Member = { email: string; accountId: string; profileId: string }
 
-/** Completed WF01 member at 42% (S1-UAT-05, 5 of 12): full name, headline, location, domain, specialisation. */
+/**
+ * Completed WF01 member at 50% (6 of 12): full name, headline, location, domain,
+ * specialisation (S1-UAT-05) and the one ecosystem role stage 3 needs (US-01.10, S1-UAT-03).
+ */
 async function completedMember(request: APIRequestContext, label = 's02'): Promise<Member> {
   const email = `${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`
   expect((await request.post('/dev/login', { data: { email } })).ok()).toBe(true)
@@ -81,6 +84,7 @@ async function completedMember(request: APIRequestContext, label = 's02'): Promi
   }
   // FB-09: stage 2 is passed only with a domain and a specialisation (S1-UAT-05).
   await ensureCapabilityMinimum(request)
+  await ensureRoleMinimum(request) // US-01.10: stage 3's minimum (S1-UAT-03)
   for (const completed of ['CAPABILITY', 'ROLE']) {
     const stage = await request.put('/api/v1/me/onboarding/stage', { data: { completed } })
     expect(stage.ok()).toBe(true)
@@ -135,7 +139,7 @@ test.describe('WF02-S02 functional', () => {
     page,
   }) => {
     await completedMember(page.request)
-    expect(await completion(page.request)).toBe(42)
+    expect(await completion(page.request)).toBe(50)
     await openEditor(page)
     await expect(page.getByLabel('Chức danh')).toHaveValue('QA')
     await expect(page.getByLabel('Họ và tên')).toHaveValue('Đặng Kim Chi')
@@ -157,8 +161,8 @@ test.describe('WF02-S02 functional', () => {
       'development_goal',
       'experience',
     ])
-    // Bio and experience: 7 of 12; the development goal is not an item (FB-10).
-    expect(await completion(page.request)).toBe(58)
+    // Bio and experience: 8 of 12; the development goal is not an item (FB-10).
+    expect(await completion(page.request)).toBe(67)
     await expect(page.locator('[data-status]')).toContainText('đã lưu lúc')
 
     await page.getByLabel('Nhu cầu hiện tại').fill('Tìm cố vấn sản phẩm')
@@ -166,14 +170,14 @@ test.describe('WF02-S02 functional', () => {
     await page.getByRole('button', { name: '+ Thêm liên kết' }).click()
     await page.getByRole('textbox', { name: 'Liên kết ngoài' }).nth(1).fill('https://chi.example')
     await save(page)
-    // LinkedIn and a website: 9 of 12.
-    expect(await completion(page.request)).toBe(75)
+    // LinkedIn and a website: 10 of 12.
+    expect(await completion(page.request)).toBe(83)
 
     // /me is FP1-OWN (DEC-L2R-D1): its suggestion card reads the same server completion.
     await page.goto('/me', { waitUntil: 'networkidle' })
     const suggest = page.locator('[data-anchor="suggest"]')
-    await expect(suggest).toContainText('Hồ sơ hoàn thiện 75% · còn thiếu 3 mục')
-    await expect(suggest.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '75')
+    await expect(suggest).toContainText('Hồ sơ hoàn thiện 83% · còn thiếu 2 mục')
+    await expect(suggest.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '83')
     await expect(suggest.locator('[data-suggestion]').first()).toHaveAttribute(
       'data-suggestion',
       'AVATAR',
@@ -187,12 +191,12 @@ test.describe('WF02-S02 functional', () => {
     await openEditor(page)
     await page.getByLabel('Tôi chưa có kinh nghiệm làm việc').check()
     await save(page)
-    expect(await completion(page.request)).toBe(50)
+    expect(await completion(page.request)).toBe(58)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(page.getByLabel('Tôi chưa có kinh nghiệm làm việc')).toBeChecked()
     await page.getByLabel('Tôi chưa có kinh nghiệm làm việc').uncheck()
     await save(page)
-    expect(await completion(page.request)).toBe(42)
+    expect(await completion(page.request)).toBe(50)
   })
 
   test('2/3/4/5/6. scalars, region and expertise edits persist', async ({ page }) => {
@@ -246,7 +250,7 @@ test.describe('WF02-S02 functional', () => {
       .setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: PNG_1X1 })
     expect((await upload).ok()).toBe(true)
     await expect(page.getByRole('img', { name: 'Ảnh đại diện hiện tại' })).toBeVisible()
-    expect(await completion(page.request)).toBe(50)
+    expect(await completion(page.request)).toBe(58)
     // 25. a refused file shows an error and changes nothing.
     const refused = page.waitForResponse((r) => r.url().endsWith('/api/v1/me/profile/avatar'))
     await page
@@ -254,7 +258,7 @@ test.describe('WF02-S02 functional', () => {
       .setInputFiles({ name: 'x.txt', mimeType: 'text/plain', buffer: Buffer.from('nope') })
     expect((await refused).status()).toBe(422)
     await expect(page.getByText('Chỉ nhận ảnh PNG, JPEG hoặc WebP.')).toBeVisible()
-    expect(await completion(page.request)).toBe(50)
+    expect(await completion(page.request)).toBe(58)
   })
 
   test('8/9/18. archived or wrong-type vocabulary and invalid links fail atomically', async ({
@@ -317,7 +321,7 @@ test.describe('WF02-S02 functional', () => {
     await page.unroute('**/api/v1/me/profile')
     expect((await save(page)).status()).toBe(200)
     // The development goal is not one of the twelve items.
-    expect(await completion(page.request)).toBe(42)
+    expect(await completion(page.request)).toBe(50)
   })
 
   test('20. logout/login keeps the saved profile', async ({ page }) => {

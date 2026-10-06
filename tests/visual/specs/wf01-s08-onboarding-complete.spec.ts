@@ -13,6 +13,15 @@ import { IDS, reach, signInFresh, stored, watchConsole } from '../support/onboar
 const COMPLETE_API = '/api/v1/me/onboarding/complete'
 const ROLES_API = '/api/v1/me/onboarding/roles'
 
+/** A complete position row (US-01.11, S1-UAT-03), current since 01/2024. */
+const positionRow = (organization_id: string, position = 'MEMBER') => ({
+  level: 'CHAPTER',
+  organization_id,
+  position,
+  from: '2024-01',
+  current: true,
+})
+
 let consoleErrors: string[] = []
 
 test.beforeEach(async ({ page }) => {
@@ -124,7 +133,7 @@ test.describe('WF01-S08 functional and security', () => {
     const { accountId } = await signInFresh(page.request, 's08')
     await reach(page.request, 'ROLE')
     await page.request.put(ROLES_API, {
-      data: { roles: ['HUB_MEMBER'], hub_claims: [{ organization_id: IDS.chapter02 }] },
+      data: { roles: ['HUB_MEMBER'], hub_claims: [positionRow(IDS.chapter02)] },
     })
     await reach(page.request, 'REVIEW')
     const { documents } = await (await page.request.get('/api/v1/legal/current')).json()
@@ -220,9 +229,7 @@ test.describe('WF01-S08 functional and security', () => {
     await page.request.put(ROLES_API, {
       data: {
         roles: ['HUB_MEMBER'],
-        hub_claims: [
-          { organization_id: IDS.chapter01, position: 'Phó trưởng chapter', period: '2024 – nay' },
-        ],
+        hub_claims: [positionRow(IDS.chapter01, 'VICE_CHAIR')],
       },
     })
     await reach(page.request, 'DONE')
@@ -230,7 +237,7 @@ test.describe('WF01-S08 functional and security', () => {
     await expect(page.locator('[data-action-card]')).toHaveCount(2)
     const card = page.locator('[data-action-card="hub-claim"]')
     await expect(card).toContainText('Theo dõi xác minh chức vụ HUB')
-    await expect(card).toContainText('“Phó trưởng chapter”')
+    await expect(card).toContainText('“Phó Chủ tịch”')
     await expect(card).toContainText('Chapter 01')
     await expect(card).toContainText('Chờ xác minh')
     await card.getByRole('link', { name: 'Xem trạng thái' }).click()
@@ -303,7 +310,7 @@ test.describe('WF01-S08 pixel QA (ACC-10)', () => {
     await page.request.put(ROLES_API, {
       data: {
         roles: ['HUB_MEMBER'],
-        hub_claims: [{ organization_id: IDS.chapter01, position: 'Phó trưởng chapter' }],
+        hub_claims: [positionRow(IDS.chapter01, 'VICE_CHAIR')],
       },
     })
     await reach(page.request, 'DONE')

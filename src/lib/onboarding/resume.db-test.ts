@@ -5,6 +5,7 @@ import { closePool, query } from '@/lib/db/client'
 import { updateOwnProfile } from '@/lib/profile/profile'
 
 import { completeOnboarding } from './complete'
+import { saveDeclaredRoles } from './roles'
 import { getOnboardingState, passStage, routeFor, submitPurpose } from './state'
 import {
   REF,
@@ -75,6 +76,12 @@ describe('resolver', () => {
     await updateOwnProfile(id, { specialization_ids: [REF.specialization] })
     expect((await passStage(id, { completed: 'CAPABILITY' })).current_step).toBe('ROLE')
     expect(routeFor(await getOnboardingState(id))).toBe('/onboarding/purpose')
+    // US-01.10 (S1-UAT-03): stage 3 needs at least one role to be passed.
+    await expect(passStage(id, { completed: 'ROLE' })).rejects.toMatchObject({
+      code: 'ONBOARDING_REQUIREMENTS_MISSING',
+      fields: { roles: 'missing' },
+    })
+    await saveDeclaredRoles(id, { roles: ['INNOVATOR'], hub_claims: [] })
     expect((await passStage(id, { completed: 'ROLE' })).current_step).toBe('REVIEW')
     expect(routeFor(await getOnboardingState(id))).toBe('/onboarding/privacy')
   })

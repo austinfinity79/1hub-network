@@ -16,8 +16,14 @@ import { CapabilityForm } from './capability-form'
  */
 export const dynamic = 'force-dynamic'
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { accountId } = await requireOnboardingStage('CAPABILITY')
+  // "Sửa" on stage 4 returns there after "Tiếp tục" (US-01.12).
+  const fromReview = (await searchParams).from === 'review'
 
   const [profile, catalogue] = await Promise.all([
     getOwnProfile(accountId),
@@ -51,6 +57,7 @@ export default async function Page() {
         }}
         domainOptions={labels('DOMAIN')}
         specializationOptions={labels('SPECIALIZATION')}
+        next={fromReview ? '/onboarding/privacy' : '/onboarding/purpose'}
       />
     </OnboardingShell>
   )

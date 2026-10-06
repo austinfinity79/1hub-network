@@ -12,6 +12,7 @@ import {
 } from '@/lib/vocabulary/vocabulary'
 
 import { computeCompletion, loadCompletionFacts } from './completion'
+import { LOCATION_TEXT_MAX, VIETNAM_SLUG } from './location'
 
 /**
  * Own profile — GET/PATCH /me/profile (05 §4.3). Maps WF01-S06 and WF02-S02.
@@ -39,6 +40,14 @@ import { computeCompletion, loadCompletionFacts } from './completion'
  * gains `employment_type` ("Loại hình") and `location` ("Địa điểm"), optional
  * free text. `skill_ids` stays accepted for compatibility; no screen sends it
  * since FB-10 removed "Kỹ năng".
+ *
+ * S1-UAT-03 (DEC-S1O; US-01.07, FB-06, FB-07): `country` and `locality` carry a
+ * typed name (≤ 60), the alternatives to `country_id` / `region_id`: the
+ * country "Khác", a place in any country but Việt Nam, or Việt Nam's "Khác".
+ * They are stored as UNNORMALIZED items (`resolveTags`); a place typed for
+ * another country never links a Vietnamese province. A province is Việt Nam's
+ * only (`region_id: not_for_country`), and changing the country without a new
+ * province clears the old one.
  */
 
 export const PATCH_FIELDS = [
@@ -47,6 +56,8 @@ export const PATCH_FIELDS = [
   'headline',
   'country_id',
   'region_id',
+  'country',
+  'locality',
   'phone',
   'bio',
   'domain_ids',
@@ -289,6 +300,8 @@ type Patch = {
   phone?: string | null
   country_id?: string | null
   region_id?: string | null
+  country?: string
+  locality?: string
   domain_ids?: string[]
   specialization_ids?: string[]
   domains?: string[]
@@ -396,6 +409,20 @@ export function parsePatch(body: unknown): Patch {
     const value = input[key]
     if (value !== null && typeof value !== 'string') throw invalid(key, 'invalid')
     patch[key] = value || null
+  }
+  // US-01.07: a typed country or place name, instead of the id.
+  for (const [key, ids] of [
+    ['country', 'country_id'],
+    ['locality', 'region_id'],
+  ] as const) {
+    if (!(key in input)) continue
+    if (ids in input) throw invalid(key, 'conflicts_with_ids')
+    const value = input[key]
+    if (typeof value !== 'string') throw invalid(key, 'invalid')
+    const text = cleanTag(value)
+    if (!text) throw invalid(key, 'required')
+    if (text.length > LOCATION_TEXT_MAX) throw invalid(key, 'too_long')
+    patch[key] = text
   }
   for (const key of ['domain_ids', 'specialization_ids', 'skill_ids'] as const) {
     if (!(key in input)) continue
@@ -524,6 +551,72 @@ export function parsePatch(body: unknown): Patch {
 }
 
 /**
+ * US-01.07 (FB-06, FB-07; DEC-S1O): the location in a patch as ids. A typed
+ * country or place becomes a vocabulary id through `resolveTags` (an existing
+ * canonical label links that item; otherwise one UNNORMALIZED item per name).
+ * A typed place links a canonical province only for Việt Nam's "Khác"; a
+ * province is refused for any other country; a new country without a new
+ * place clears the old one.
+ */
+async function resolveLocation(
+  exec: Executor,
+  patch: Patch,
+  current: { country_vocab_id: string | null; region_vocab_id: string | null } | undefined,
+): Promise<void> {
+  const keep = (id: string | null | undefined) => new Set<string>(id ? [id] : [])
+  const typed = { length: { min: 1, max: LOCATION_TEXT_MAX } }
+  if (patch.country !== undefined) {
+    ;[patch.country_id] = await resolveTags(
+      exec,
+      'country',
+      'COUNTRY',
+      [patch.country],
+      keep(current?.country_vocab_id),
+      typed,
+    )
+  } else if (patch.country_id) {
+    await assertSelectable(
+      exec,
+      'country_id',
+      'COUNTRY',
+      [patch.country_id.toLowerCase()],
+      keep(current?.country_vocab_id),
+    )
+  }
+  const before = current?.country_vocab_id ?? null
+  const countryId = 'country_id' in patch ? (patch.country_id?.toLowerCase() ?? null) : before
+  const [country] = countryId
+    ? await exec<{ slug: string }>('SELECT slug FROM vocabulary_items WHERE id = $1', [countryId])
+    : []
+  const vietnam = country?.slug === VIETNAM_SLUG
+
+  if (patch.locality !== undefined) {
+    ;[patch.region_id] = await resolveTags(
+      exec,
+      'locality',
+      'REGION',
+      [patch.locality],
+      keep(current?.region_vocab_id),
+      { ...typed, canonical: vietnam },
+    )
+  } else if (patch.region_id) {
+    const regionId = patch.region_id.toLowerCase()
+    await assertSelectable(exec, 'region_id', 'REGION', [regionId], keep(current?.region_vocab_id))
+    if (countryId && !vietnam) {
+      const [region] = await exec<{ status: string }>(
+        'SELECT status::text AS status FROM vocabulary_items WHERE id = $1',
+        [regionId],
+      )
+      // The provinces of the list are Việt Nam's; another country's place is typed.
+      if (region?.status === 'ACTIVE') throw invalid('region_id', 'not_for_country')
+    }
+  } else if (!('region_id' in patch) && before && countryId !== before) {
+    // "Đổi Quốc gia/Khu vực → Tỉnh/Thành phố đã chọn hoặc đã gõ bị xóa."
+    patch.region_id = null
+  }
+}
+
+/**
  * Applies a partial update atomically: scalars and both relations commit
  * together or not at all, and every vocabulary id is checked before the first
  * write. Never changes status or onboarding completion (DEC-WF01-S06-D2).
@@ -551,6 +644,8 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
     if (current?.status === 'DEACTIVATED') {
       throw new ApiError('PROFILE_DEACTIVATED', 409, 'Profile is deactivated.')
     }
+    // US-01.07: resolved first, since a new country clears the province.
+    await resolveLocation(exec, patch, current)
     // DEC-WF02-S02-D4: an ACTIVE profile keeps its activation minimum (Freeze §D3).
     if (current?.status === 'ACTIVE') {
       if ('display_name' in patch && !patch.display_name) throw invalid('display_name', 'required')
@@ -569,14 +664,6 @@ export async function updateOwnProfile(accountId: string, body: unknown): Promis
     const specializations = await linked('profile_specializations')
     const skills = await linked('profile_skills')
 
-    if (patch.country_id) {
-      const keep = new Set(current?.country_vocab_id ? [current.country_vocab_id] : [])
-      await assertSelectable(exec, 'country_id', 'COUNTRY', [patch.country_id.toLowerCase()], keep)
-    }
-    if (patch.region_id) {
-      const keep = new Set(current?.region_vocab_id ? [current.region_vocab_id] : [])
-      await assertSelectable(exec, 'region_id', 'REGION', [patch.region_id.toLowerCase()], keep)
-    }
     // FB-09: tags sent as text become vocabulary ids (canonical or UNNORMALIZED).
     if (patch.domains) {
       patch.domain_ids = await resolveTags(

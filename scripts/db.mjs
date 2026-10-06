@@ -1,7 +1,7 @@
 /**
  * M0-T06A — database lifecycle commands.
  *
- * Usage: node scripts/db.mjs <migrate|seed|reset|introspect|status>
+ * Usage: node scripts/db.mjs <migrate|seed|catalog|reset|introspect|status>
  *
  * TARGET RULE (DB-SAFETY-01, scripts/db-target.mjs): migrate, seed and reset
  * need an explicitly exported DATABASE_URL and never fall back to a default;
@@ -33,6 +33,11 @@ const MIGRATIONS_DIR = join(ROOT, 'db', 'migrations')
 // non-deterministic ids and timestamps, and two inserts that duplicated on a
 // second run. The deterministic fixture set supersedes it.
 const SEED_FILE = join(ROOT, 'db', 'seed', 'seed_p0_deterministic.sql')
+// S1-UAT-03 (DEC-S1O): the Sprint 1 canonical catalogue (countries, Vietnamese
+// provinces, HUB Network Tổng · 13 Chapters · 55 CLBs). `seed` applies it after
+// the fixtures; `catalog` applies it alone, for an environment that keeps its
+// own data (UAT, production). Idempotent.
+const CATALOG_FILE = join(ROOT, 'db', 'seed', 'catalog_sprint1.sql')
 
 /** Set once, before any command runs (see the end of this file). */
 let DATABASE_URL
@@ -109,6 +114,16 @@ async function seed() {
   await withClient(async (client) => {
     await client.query(sql)
     console.log(`  seeded  ${relative(ROOT, SEED_FILE)}`)
+  })
+  await catalog()
+}
+
+async function catalog() {
+  const sql = readFileSync(CATALOG_FILE, 'utf8')
+
+  await withClient(async (client) => {
+    await client.query(sql)
+    console.log(`  applied ${relative(ROOT, CATALOG_FILE)}`)
   })
 }
 
@@ -190,7 +205,7 @@ async function introspect() {
   console.log(JSON.stringify(report, null, 2))
 }
 
-const COMMANDS = { migrate, seed, reset, status, introspect }
+const COMMANDS = { migrate, seed, catalog, reset, status, introspect }
 
 const command = process.argv[2]
 if (!command || !(command in COMMANDS)) {

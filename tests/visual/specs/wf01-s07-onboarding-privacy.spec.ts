@@ -96,10 +96,13 @@ const BOARD = {
   links: [{ label: 'LinkedIn', url: 'https://linkedin.com/in/dangkimchi' }],
 }
 
+/** A complete position row (US-01.11, S1-UAT-03): Phó Chủ tịch of Chapter 01 since 01/2024. */
 const CLAIM = {
+  level: 'CHAPTER',
   organization_id: IDS.chapter01,
-  position: 'Phó trưởng chapter',
-  period: '2024 – nay',
+  position: 'VICE_CHAIR',
+  from: '2024-01',
+  current: true,
 }
 
 test.describe('WF01-S07 functional and security', () => {
@@ -132,7 +135,7 @@ test.describe('WF01-S07 functional and security', () => {
       'Đặng Kim Chi',
       'Kim Chi Đặng',
       'Đồng sáng lập · CEO tại Tracely',
-      'Đà Nẵng, Việt Nam',
+      'TP. Đà Nẵng, Việt Nam',
       'Chưa có',
       'Chưa thêm · riêng tư',
     ])
@@ -145,15 +148,16 @@ test.describe('WF01-S07 functional and security', () => {
     ])
     await expect(part(3).locator('dd')).toHaveText([
       'Thành viên HUB Network · Innovator · Founder',
-      'Phó trưởng chapter · Chapter 01 — Chờ xác minh',
+      'Phó Chủ tịch · Chapter 01 · 01/2024 – Hiện tại Chờ xác minh',
     ])
     await expect(page.locator('[data-nav^="edit-"]')).toHaveCount(3)
     const targets = await page
       .locator('[data-nav^="edit-"]')
       .evaluateAll((els) => els.map((el) => el.getAttribute('href')))
+    // "Sửa" returns to the review after "Tiếp tục" (US-01.12, S1-UAT-03).
     expect(targets).toEqual([
-      '/onboarding/profile',
-      '/onboarding/capability',
+      '/onboarding/profile?from=review',
+      '/onboarding/capability?from=review',
       '/onboarding/purpose',
     ])
     await expect(page.locator('main')).not.toContainText(/AI đề xuất|do AI/)
@@ -164,46 +168,43 @@ test.describe('WF01-S07 functional and security', () => {
     await reach(page.request, 'REVIEW', { ...BOARD, phone: '+84901234567' })
     await openReview(page)
     const server = await (await page.request.get('/api/v1/me/profile/completion')).json()
-    // Twelve items (S1-UAT-05): 9 present; photo, ecosystem role and website missing.
-    expect(server.percent).toBe(75)
+    // Twelve items (S1-UAT-05): 10 present — stage 3 now needs a role (US-01.10,
+    // S1-UAT-03) — photo and website missing.
+    expect(server.percent).toBe(83)
     const box = page.locator('[data-completion]')
-    await expect(box).toContainText('75%')
-    await expect(box.locator('li')).toHaveText([
-      'Ảnh hồ sơ',
-      'Vai trò trong hệ sinh thái',
-      'Website/Portfolio',
-    ])
+    await expect(box).toContainText('83%')
+    await expect(box.locator('li')).toHaveText(['Ảnh hồ sơ', 'Website/Portfolio'])
     const preview = page.locator('[data-preview]')
     await expect(preview).toContainText('Kim Chi Đặng')
-    await expect(preview).toContainText('Đồng sáng lập · CEO tại Tracely · Đà Nẵng')
-    await expect(preview.locator('li')).toHaveText(['Logistics', 'AgriTech', 'Climate Tech'])
+    await expect(preview).toContainText('Đồng sáng lập · CEO tại Tracely · TP. Đà Nẵng')
+    await expect(preview.locator('ul:not([data-preview-roles]) li')).toHaveText([
+      'Logistics',
+      'AgriTech',
+      'Climate Tech',
+    ])
     const text = await preview.innerText()
     for (const hidden of ['Đặng Kim Chi', '84901234567', '@example.test']) {
       expect(text, hidden).not.toContain(hidden)
     }
-    // Nothing was declared, so the card carries no role chip.
-    await expect(preview.locator('[data-preview-roles]')).toHaveCount(0)
+    // Only the one role passing stage 3 needs (US-01.10), as descriptive text.
+    await expect(preview.locator('[data-preview-roles] li')).toHaveText([
+      'Quan tâm đến đổi mới sáng tạo',
+    ])
   })
 
   test('the preview’s role chips are descriptive text, never authority', async ({ page }) => {
     await signInFresh(page.request, 's07')
     await reach(page.request, 'ROLE')
+    // A HUB member passes stage 3 only with a position (US-01.11, S1-UAT-03).
     await page.request.put(ROLES_API, {
-      data: { roles: ['HUB_MEMBER', 'INNOVATOR', 'STARTUP_FOUNDER'] },
+      data: { roles: ['HUB_MEMBER', 'INNOVATOR', 'STARTUP_FOUNDER'], hub_claims: [CLAIM] },
     })
     await reach(page.request, 'REVIEW')
     await openReview(page)
     const chips = page.locator('[data-preview-roles] li')
-    // Without a named unit the HUB role is only self-declared.
-    await expect(chips).toHaveText(['Thành viên HUB · Tự khai', 'Innovator', 'Founder'])
-    await expect(page.locator('[data-preview] a, [data-preview] button')).toHaveCount(0)
-
-    await page.request.put(ROLES_API, {
-      data: { roles: ['HUB_MEMBER', 'INNOVATOR', 'STARTUP_FOUNDER'], hub_claims: [CLAIM] },
-    })
-    await page.reload({ waitUntil: 'networkidle' })
     await expect(chips).toHaveText(['Thành viên HUB · Chờ xác minh', 'Innovator', 'Founder'])
-    await expect(page.locator('[data-preview]')).not.toContainText(/Đã xác minh|Phó trưởng chapter/)
+    await expect(page.locator('[data-preview] a, [data-preview] button')).toHaveCount(0)
+    await expect(page.locator('[data-preview]')).not.toContainText(/Đã xác minh|Phó Chủ tịch/)
     const session = await (await page.request.get('/api/v1/session')).json()
     expect(session.capabilities ?? []).toEqual([])
     expect(session.managed_scopes ?? []).toEqual([])
@@ -353,8 +354,8 @@ test.describe('WF01-S07 functional and security', () => {
         organization_id: IDS.chapter01,
         state: 'PENDING_APPROVAL',
         source: 'SELF_DECLARED',
-        claimed_position: 'Phó trưởng chapter',
-        claimed_period: '2024 – nay',
+        claimed_position: 'Phó Chủ tịch',
+        claimed_period: '01/2024 – Hiện tại',
       },
     ])
     expect((await stored(accountId))!.claims).toEqual([])

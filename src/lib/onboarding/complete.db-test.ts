@@ -129,8 +129,9 @@ describe('activation requirements', () => {
       completion_percent: (await getProfileCompletion(accountId)).percent,
       next: '/me',
     })
-    // Full name, location and stage 2's minimum (one domain, one specialisation): 4 of 12.
-    expect(result.completion_percent).toBe(33)
+    // Full name, location, stage 2's minimum (one domain, one specialisation) and
+    // stage 3's minimum (one role, US-01.10): 5 of 12.
+    expect(result.completion_percent).toBe(42)
   })
 })
 
@@ -235,8 +236,20 @@ describe('HUB units named in stage 3', () => {
     saveDeclaredRoles(accountId, {
       roles: ['HUB_MEMBER', 'INNOVATOR'],
       hub_claims: [
-        { organization_id: CHAPTER_01, position: 'Phó trưởng chapter', period: '2024 – nay' },
-        { organization_id: CHAPTER_02 },
+        {
+          level: 'CHAPTER',
+          organization_id: CHAPTER_01,
+          position: 'VICE_CHAIR',
+          from: '2024-01',
+          current: true,
+        },
+        {
+          level: 'CHAPTER',
+          organization_id: CHAPTER_02,
+          position: 'MEMBER',
+          from: '2023-05',
+          to: '2023-12',
+        },
       ],
     })
 
@@ -253,10 +266,15 @@ describe('HUB units named in stage 3', () => {
       {
         ...pending,
         organization_id: CHAPTER_01,
-        claimed_position: 'Phó trưởng chapter',
-        claimed_period: '2024 – nay',
+        claimed_position: 'Phó Chủ tịch',
+        claimed_period: '01/2024 – Hiện tại',
       },
-      { ...pending, organization_id: CHAPTER_02, claimed_position: null, claimed_period: null },
+      {
+        ...pending,
+        organization_id: CHAPTER_02,
+        claimed_position: 'Thành viên',
+        claimed_period: '05/2023 – 12/2023',
+      },
     ]
     expect(await memberships(accountId)).toEqual(filed)
 
@@ -319,8 +337,8 @@ describe('HUB units named in stage 3', () => {
         organization_id: CHAPTER_02,
         state: 'PENDING_APPROVAL',
         source: 'SELF_DECLARED',
-        claimed_position: null,
-        claimed_period: null,
+        claimed_position: 'Thành viên',
+        claimed_period: '05/2023 – 12/2023',
         hub_declaration: true,
       },
     ])

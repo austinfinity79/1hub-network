@@ -3,7 +3,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 import { SESSION_COOKIE_NAME } from '../../../src/lib/auth/config'
 import { STEP_ROUTES } from '../../../src/lib/onboarding/state'
 import { closePool, query } from '../../../src/lib/db/client'
-import { ensureCapabilityMinimum } from '../support/onboarding'
+import { ensureCapabilityMinimum, ensureRoleMinimum } from '../support/onboarding'
 
 /**
  * M0-ENTRY-01, as amended by P0-LANDING (DEC-P0-LANDING-D1): `/` renders the
@@ -74,6 +74,7 @@ test.describe('M0-ENTRY-01 root entry', () => {
     expect((await pass('CAPABILITY')).ok()).toBe(true)
     await expectRoot(page, '/onboarding/purpose') // 5. ROLE
 
+    await ensureRoleMinimum(page.request) // US-01.10: stage 3's minimum (S1-UAT-03)
     expect((await pass('ROLE')).ok()).toBe(true)
     await expectRoot(page, '/onboarding/privacy') // 5b. REVIEW
 

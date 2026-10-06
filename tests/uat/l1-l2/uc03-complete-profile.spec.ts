@@ -73,7 +73,13 @@ test('UC03 · UI+API+DB · the four stages with validation; completion server-de
   // ROLE: declared roles and a HUB unit.
   await page.getByRole('checkbox', { name: /Innovator/ }).check({ force: true })
   await page.getByRole('checkbox', { name: /Thành viên HUB Network/ }).check({ force: true })
-  await page.locator('[data-anchor="hub"]').getByLabel('Đơn vị').selectOption(IDS.chapter02)
+  // US-01.11 (S1-UAT-03): one position at a catalogue Chapter, an earlier term.
+  const hub = page.locator('[data-anchor="hub"]')
+  await hub.getByLabel('Cấp đơn vị').selectOption({ label: 'HUB Network Chapter' })
+  await hub.getByLabel('Đơn vị', { exact: true }).selectOption({ label: 'HUB Network Đà Nẵng' })
+  await hub.getByLabel('Chức vụ').selectOption({ label: 'Thành viên' })
+  await hub.getByLabel('Từ', { exact: true }).fill('01/2022')
+  await hub.getByLabel('Đến', { exact: true }).fill('12/2023')
   await page.getByRole('button', { name: 'Tiếp tục' }).click()
   await expect(page).toHaveURL('/onboarding/privacy')
 

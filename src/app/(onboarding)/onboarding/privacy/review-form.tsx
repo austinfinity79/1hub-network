@@ -41,7 +41,16 @@ type LegalState = {
   satisfied: boolean
 }
 
-export type ReviewRow = { label: string; value: string | null; empty: string }
+/**
+ * One reviewed field. `list` shows several entries in order (US-01.11/12: the
+ * declared HUB positions, each with its status) instead of one `value`.
+ */
+export type ReviewRow = {
+  label: string
+  value: string | null
+  empty: string
+  list?: { text: string; status: string }[]
+}
 export type ReviewPart = { title: string; href: string; rows: ReviewRow[] }
 
 type Preview = {
@@ -260,9 +269,22 @@ export function ReviewForm({
                     {part.rows.map((row) => (
                       <div key={row.label} style={{ display: 'contents' }}>
                         <dt>{row.label}</dt>
-                        <dd data-empty={row.value ? undefined : 'true'}>
-                          {row.value ?? row.empty}
-                        </dd>
+                        {row.list ? (
+                          <dd>
+                            <ul className={styles.positions} data-hub-positions>
+                              {row.list.map((entry, n) => (
+                                <li key={n} data-hub-position={n}>
+                                  <span>{entry.text}</span>{' '}
+                                  <span className={styles.positionStatus}>{entry.status}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </dd>
+                        ) : (
+                          <dd data-empty={row.value ? undefined : 'true'}>
+                            {row.value ?? row.empty}
+                          </dd>
+                        )}
                       </div>
                     ))}
                   </dl>

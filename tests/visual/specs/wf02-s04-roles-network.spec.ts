@@ -10,7 +10,7 @@ import { REPO_ROOT, resolveOutputPath } from '../pixel-qa/paths'
 import { decodePng, readPng } from '../pixel-qa/png'
 import { writeJsonReport } from '../pixel-qa/report'
 import { compareSegments, type Rect } from '../pixel-qa/segments'
-import { ensureCapabilityMinimum } from '../support/onboarding'
+import { ensureCapabilityMinimum, ensureRoleMinimum } from '../support/onboarding'
 
 /**
  * WF02-S04 — Roles & Network Links (/me/roles). Production.
@@ -79,6 +79,7 @@ async function completedMember(request: APIRequestContext, label = 's04'): Promi
   }
   // FB-09: stage 2 is passed only with a domain and a specialisation (S1-UAT-05).
   await ensureCapabilityMinimum(request)
+  await ensureRoleMinimum(request) // US-01.10: stage 3's minimum (S1-UAT-03)
   for (const completed of ['CAPABILITY', 'ROLE']) {
     const stage = await request.put('/api/v1/me/onboarding/stage', { data: { completed } })
     expect(stage.ok()).toBe(true)
@@ -123,6 +124,23 @@ const rolesCard = (page: Page) => page.locator('[data-card="roles"]')
 const requestCard = (page: Page) => page.locator('[data-card="request"]')
 const select = (page: Page) => requestCard(page).getByRole('combobox')
 
+/**
+ * The selector's options outside the canonical catalogue (S1-UAT-03: 13 Chapters
+ * and 55 CLBs under the seeded HUB), after checking all 68 are offered too.
+ */
+async function fixtureOptions(page: Page): Promise<string[]> {
+  const catalogue = new Set(
+    (
+      await query<{ name: string }>(
+        `SELECT name FROM organizations WHERE metadata->>'catalog' = 'S1_APPENDIX_E' AND type <> 'HUB'`,
+      )
+    ).map((r) => r.name),
+  )
+  const all = await select(page).locator('option').allTextContents()
+  expect(all.filter((o) => catalogue.has(o))).toHaveLength(68)
+  return all.filter((o) => !catalogue.has(o))
+}
+
 async function openRoles(page: Page) {
   await page.goto('/me/roles', { waitUntil: 'networkidle' })
   await expect(rolesCard(page)).toHaveAttribute('aria-busy', 'false')
@@ -163,8 +181,13 @@ test.describe('WF02-S04 read states', () => {
     await expect(page.locator('[data-state="network-empty"]')).toHaveText(
       'Chưa có vai trò nào được ghi nhận.',
     )
-    const options = await select(page).locator('option').allTextContents()
-    expect(options).toEqual(['Chọn tổ chức', 'Chapter 01', 'Chapter 02', 'Club 01', 'HUB Network'])
+    expect(await fixtureOptions(page)).toEqual([
+      'Chọn tổ chức',
+      'Chapter 01',
+      'Chapter 02',
+      'Club 01',
+      'HUB Network',
+    ])
     const text = await page.locator('main').innerText()
     for (const banned of ['NHẬT KÝ', 'Nhật ký', 'duyệt 2', 'gán ', 'công khai'])
       expect(text, banned).not.toContain(banned)
@@ -203,11 +226,7 @@ test.describe('WF02-S04 read states', () => {
       ['leadership', 'Chapter 01 chapter Phó Chủ tịch từ 18/08/2026'],
     ])
     // Selector: blocked organisations hidden (ACTIVE, PENDING); REJECTED stays requestable.
-    expect(await select(page).locator('option').allTextContents()).toEqual([
-      'Chọn tổ chức',
-      'Club 01',
-      'HUB Network',
-    ])
+    expect(await fixtureOptions(page)).toEqual(['Chọn tổ chức', 'Club 01', 'HUB Network'])
     expect(await page.locator('main').innerText()).not.toContain('do-not-render')
     // 6/7/8: membership, pending and leadership grant nothing.
     expect(await authz(page.request)).toEqual(before)
@@ -311,11 +330,7 @@ test.describe('WF02-S04 membership request', () => {
       expect((await r.json()).error.code).toBe('MEMBERSHIP_INVALID_TRANSITION')
     }
     await openRoles(page)
-    expect(await select(page).locator('option').allTextContents()).toEqual([
-      'Chọn tổ chức',
-      'Club 01',
-      'HUB Network',
-    ])
+    expect(await fixtureOptions(page)).toEqual(['Chọn tổ chức', 'Club 01', 'HUB Network'])
     await select(page).selectOption({ label: 'Club 01' })
     await requestCard(page).getByRole('button', { name: 'Gửi yêu cầu' }).click()
     await expect(page.locator('[data-state="request-sent"]')).toBeVisible()

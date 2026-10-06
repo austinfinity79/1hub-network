@@ -9,7 +9,8 @@
  *   DESTRUCTIVE  reset              explicit DATABASE_URL required; a shared
  *                                   database also needs, on the same command
  *                                   line, --confirm-shared-db=<its name>
- *   MUTATING     migrate, seed      explicit DATABASE_URL required
+ *   MUTATING     migrate, seed,     explicit DATABASE_URL required
+ *                catalog
  *   READ_ONLY    status, introspect  may use the documented local default
  *
  * The shared-database acknowledgement is a command-line flag naming the
@@ -29,6 +30,7 @@ export const COMMAND_CLASS = {
   reset: 'DESTRUCTIVE',
   migrate: 'MUTATING',
   seed: 'MUTATING',
+  catalog: 'MUTATING',
   status: 'READ_ONLY',
   introspect: 'READ_ONLY',
 }

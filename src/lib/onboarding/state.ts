@@ -2,6 +2,7 @@ import { ApiError } from '@/lib/api/errors'
 import { query, type Executor } from '@/lib/db/client'
 
 import { isPrimaryIntent, type PrimaryIntent } from './intent'
+import { roleStageMissing } from './roles'
 
 /**
  * WF01 onboarding state — the ONE server-side resolver (DEC-L1R-D3, which
@@ -174,6 +175,19 @@ export async function passStage(accountId: string, body: unknown): Promise<Onboa
         'ONBOARDING_REQUIREMENTS_MISSING',
         422,
         'At least one domain and one specialisation are required.',
+        missing,
+      )
+    }
+  }
+  // US-01.10 / US-01.11 (S1-UAT-03): stage 3 is passed with at least one role
+  // and, for "Thành viên HUB Network", at least one complete position row.
+  if (stage === 'ROLE') {
+    const missing = await roleStageMissing(query, accountId)
+    if (Object.keys(missing).length > 0) {
+      throw new ApiError(
+        'ONBOARDING_REQUIREMENTS_MISSING',
+        422,
+        'At least one role is required; a HUB member declares at least one position.',
         missing,
       )
     }

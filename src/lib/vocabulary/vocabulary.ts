@@ -97,10 +97,14 @@ export async function listVocabularyItems(
   }
 }
 
-/** Every ACTIVE item of the given types, in canonical order (server-rendered pickers). */
+/**
+ * Every ACTIVE item of the given types, in canonical order (server-rendered
+ * pickers). The slug is included for the pickers that branch on one item
+ * (US-01.07: Việt Nam has a province list), not for the public DTO.
+ */
 export async function listActiveItems(
   types: readonly VocabularyType[],
-): Promise<(VocabularyItemDTO & { type: VocabularyType })[]> {
+): Promise<(VocabularyItemDTO & { type: VocabularyType; slug: string })[]> {
   const rows = await query<ItemRow>(
     `SELECT id::text, type_code, slug, label, status::text AS status
        FROM vocabulary_items
@@ -108,7 +112,11 @@ export async function listActiveItems(
       ORDER BY sort_order, label, id`,
     [types],
   )
-  return rows.map((row) => ({ ...toDTO(row), type: row.type_code as VocabularyType }))
+  return rows.map((row) => ({
+    ...toDTO(row),
+    type: row.type_code as VocabularyType,
+    slug: row.slug,
+  }))
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -175,6 +183,10 @@ export const tagKey = (label: string) => cleanTag(label).toLocaleLowerCase('vi')
  * from many members is one value for HUB to consolidate. Else a new
  * UNNORMALIZED item is created (2–40 characters). An ARCHIVED item is reused
  * only where the profile already links it (`keep`), as for ids.
+ *
+ * S1-UAT-03 (DEC-S1O) reuses it for typed locations: `length` sets the bounds
+ * of a new value, and `canonical: false` never links an ACTIVE item (a town
+ * typed for Singapore is not a Vietnamese province of the same name).
  */
 export async function resolveTags(
   exec: Executor,
@@ -182,7 +194,10 @@ export async function resolveTags(
   type: VocabularyType,
   labels: readonly string[],
   keep: ReadonlySet<string> = new Set(),
+  options: { length?: { min: number; max: number }; canonical?: boolean } = {},
 ): Promise<string[]> {
+  const length = options.length ?? { min: TAG_LIMITS.min, max: TAG_LIMITS.max }
+  const canonical = options.canonical ?? true
   if (labels.length === 0) return []
   const rows = await exec<{ id: string; label: string; status: VocabularyStatus }>(
     `SELECT id::text, label, status::text AS status FROM vocabulary_items
@@ -190,7 +205,15 @@ export async function resolveTags(
     [type],
   )
   const rank = (row: { id: string; status: VocabularyStatus }) =>
-    row.status === 'ACTIVE' ? 0 : row.status === 'UNNORMALIZED' ? 1 : keep.has(row.id) ? 2 : 9
+    row.status === 'ACTIVE'
+      ? canonical
+        ? 0
+        : 9
+      : row.status === 'UNNORMALIZED'
+        ? 1
+        : keep.has(row.id)
+          ? 2
+          : 9
   const byKey = new Map<string, { id: string; status: VocabularyStatus }>()
   for (const row of rows) {
     const key = tagKey(row.label)
@@ -207,7 +230,7 @@ export async function resolveTags(
       ids.push(found.id)
       continue
     }
-    if (label.length < TAG_LIMITS.min || label.length > TAG_LIMITS.max) {
+    if (label.length < length.min || label.length > length.max) {
       throw new ApiError('PROFILE_VALIDATION_FAILED', 422, 'Tag length is not valid.', {
         [field]: 'tag_length',
       })
