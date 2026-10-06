@@ -1762,6 +1762,17 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-demo-sp1-d5"></a>DEC-DEMO-SP1-D5 | **Privacy omissions on DM13.** Contact / privacy card, "+ Tạo sản phẩm", the "Vòng trong" badge and every challenge application, round or score are not rendered; "Dự án" lists the canonical ventures; "Xem tất cả N" counts and durations to "nay" are not drawn |
 | <a id="dec-demo-sp1-d6"></a>DEC-DEMO-SP1-D6 | **SP1 tabs.** Chỉ số / Cập nhật stay labels and "Xem chỉ số →" is inert until the UPDATED files 13 / 12 reach the workstation (MISSING_OPTIONAL_SP1_VISUAL_ASSET); Tổng quan copy is a read-only fixture keyed by venture id; no unapproved external website link |
 
+## DEC-THAO-NAV — Global Navigation v2 (THAO-01, PO, 07/10)
+
+<a id="dec-thao-nav"></a>**Status:** IMPLEMENTED 2026-10-07 on `feat/thao-m1-public-experience` (local; not merged, not deployed). Report: [THAO-01](../implementation/reports/THAO-01.md). No migration.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-thao-nav-d1"></a>DEC-THAO-NAV-D1 | **Route contract.** Giới thiệu → `/about` (+ About, iHUB Ventures, VNV, 1Hub), Sản phẩm → `/products`: REAL_ROUTE. Chương trình ▾ (Chương trình, cuộc thi · Sự kiện), Nhân tài, Tin tức: READ_ONLY_APPROVED plain labels (no public screen exists; DEC-AIG-D1 / DEMO-D6). No destination is invented; `PUBLIC_ROUTES` stays the single switch |
+| <a id="dec-thao-nav-d2"></a>DEC-THAO-NAV-D2 | **Menus close on a choice.** A dropdown entry or any link in the mobile panel closes it, the current page's own link included; Escape closes the panel; outside dismissal runs on `click`, so a tap after closing an in-flow menu still reaches its link |
+| <a id="dec-thao-nav-d3"></a>DEC-THAO-NAV-D3 | **VI \| EN.** Vietnamese is the only language (no EN content, `<html lang="vi">`): VI is marked current, EN unavailable ("Bản tiếng Anh — sắp có"); never a switch |
+| <a id="dec-thao-nav-d4"></a>DEC-THAO-NAV-D4 | **Single source, recorded exceptions.** `PublicHeader` is the only global nav of Home, About, Sản phẩm, Startup and Founder. Not migrated: `/library` keeps its L15 header (gated by the approved L15 baseline; its own "Thư viện / Sự kiện" bar) — REVIEW_REQUIRED_PO; `/organizations/[slug]` has an in-page anchor bar (WF03-S09), not a global nav; `/auth/*` and `/legal/*` are standalone flows |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

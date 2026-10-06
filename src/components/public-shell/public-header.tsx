@@ -21,7 +21,8 @@ import styles from './public-header.module.css'
  *   of footer column 1 (Thảo: "cột 1 là Giới thiệu và các trang ngoài").
  * - "Chương trình ▾" lists 2.1 Chương trình, cuộc thi and 2.2 Sự kiện.
  * - An entry whose screen is not built yet is plain text (PUBLIC_ROUTES).
- * - VI | EN stays inert: no EN content is supplied.
+ * - VI | EN: VI is current, EN is shown unavailable — no EN content exists
+ *   (THAO-01); it is never a fake switch.
  * - Below 1024 px the nav collapses into one disclosure panel.
  */
 
@@ -49,9 +50,22 @@ function Chevron() {
   )
 }
 
-function MenuList({ items, id }: { items: MenuItem[]; id: string }) {
+function MenuList({
+  items,
+  id,
+  onSelect,
+}: {
+  items: MenuItem[]
+  id: string
+  onSelect: () => void
+}) {
   return (
-    <ul className={styles.menu} id={id} role="list">
+    <ul
+      className={styles.menu}
+      id={id}
+      role="list"
+      onClick={(e) => (e.target as Element).closest('a') && onSelect()}
+    >
       {items.map((item) => (
         <li key={item.label}>
           <PublicAction href={item.href} className={styles.menuItem}>
@@ -88,10 +102,13 @@ function Dropdown({
       )
         setOpen(false)
     }
-    document.addEventListener('mousedown', close)
+    // THAO-01: dismiss on `click`, not `mousedown`. In the mobile panel the open
+    // menu is in the flow; closing it on mousedown moved the next entry before
+    // the pointer was released, so that tap never reached its link.
+    document.addEventListener('click', close)
     document.addEventListener('keydown', close)
     return () => {
-      document.removeEventListener('mousedown', close)
+      document.removeEventListener('click', close)
       document.removeEventListener('keydown', close)
     }
   }, [open])
@@ -128,7 +145,11 @@ function Dropdown({
       >
         <Chevron />
       </button>
-      {open ? <MenuList items={items} id={id} /> : null}
+      {open ? (
+        // THAO-01: choosing an entry closes the menu, also when it points at the
+        // current page (no navigation, so nothing would reset the state).
+        <MenuList items={items} id={id} onSelect={() => setOpen(false)} />
+      ) : null}
     </div>
   )
 }
@@ -226,6 +247,12 @@ export function PublicHeader({
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const panelId = useId()
+  useEffect(() => {
+    if (!menuOpen) return
+    const close = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false)
+    document.addEventListener('keydown', close)
+    return () => document.removeEventListener('keydown', close)
+  }, [menuOpen])
   return (
     <header
       className={`${styles.header} ${tone === 'light' ? styles.light : styles.dark}`}
@@ -251,6 +278,8 @@ export function PublicHeader({
         id={panelId}
         className={`${styles.panel} ${menuOpen ? styles.panelOpen : ''}`}
         data-open={menuOpen}
+        // THAO-01: any link in the panel closes it, the current page's link included.
+        onClick={(e) => (e.target as Element).closest('a') && setMenuOpen(false)}
       >
         <nav className={styles.nav} aria-label="Điều hướng chính">
           <Dropdown
@@ -287,8 +316,13 @@ export function PublicHeader({
           />
         </nav>
         <div className={styles.right}>
-          <span className={styles.lang} aria-disabled="true" title="Bản tiếng Anh — sắp có">
-            VI | EN
+          {/* THAO-01: Vietnamese is the only language of the product; no EN
+              content exists, so EN is shown unavailable, never as a switch. */}
+          <span className={styles.lang} role="group" aria-label="Ngôn ngữ" data-lang="vi">
+            <span aria-current="true">VI</span> |{' '}
+            <span aria-disabled="true" title="Bản tiếng Anh — sắp có">
+              EN
+            </span>
           </span>
           <Account viewer={viewer} />
         </div>
