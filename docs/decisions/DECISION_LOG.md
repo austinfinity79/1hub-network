@@ -1774,6 +1774,16 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-thao-nav-d4"></a>DEC-THAO-NAV-D4 | **Single source** (amended by THAO-01-FIX). `PublicHeader` is the only global nav of every public page: Home, About, Library, Sản phẩm, Startup, Founder. Not a global nav: `/organizations/[slug]` in-page anchor bar (WF03-S09); `/auth/*` and `/legal/*` standalone flows |
 | <a id="dec-thao-nav-d5"></a>DEC-THAO-NAV-D5 | **Library on the shared shell** (THAO-01-FIX, PO). `/library` renders `PublicHeader` in place of its L15 bar ("Thư viện", Chương trình, Sự kiện, Tin tức); the bar's 101 px slot is kept, so the L15 hero, search, metrics, tabs and directory stay where approved. L15 pixel block A-header is superseded (no longer compared); every other L15 block is unchanged. Library data and behaviour are unchanged |
 
+## DEC-THAO-FOOT — Footer v2 (THAO-02, PO, 07/10)
+
+<a id="dec-thao-foot"></a>**Status:** IMPLEMENTED 2026-10-07 on `feat/thao-m1-public-experience` (local; not merged, not deployed). Report: [THAO-02](../implementation/reports/THAO-02.md). No migration.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-thao-foot-d1"></a>DEC-THAO-FOOT-D1 | **Two link columns.** Column 1: Giới thiệu (`/about`) and the external sites iHUB Ventures, VNV, 1Hub (`ECOSYSTEM_LINKS`, new tab, `noopener noreferrer`). Column 2: Chương trình · Sản phẩm (`/products`) · Nhân tài · Tin tức; an entry without a public screen is a plain label (READ_ONLY_APPROVED). No route invented |
+| <a id="dec-thao-foot-d2"></a>DEC-THAO-FOOT-D2 | **One footer on every public page.** `PublicFooter` closes Home, About, Library, Sản phẩm, Startup and Founder; the pages whose frames draw no footer (DM08, DM10, DM13, L15) get it below their content, so every approved block above is unchanged. `home` / `about` are layout variants of the same component (DM01 / DM02), not separate footers. `/organizations/[slug]` keeps its WF03-S09 page footer |
+| <a id="dec-thao-foot-d3"></a>DEC-THAO-FOOT-D3 | **Inert newsletter.** "Nhận bản tin" has no subscription backend: the field is disabled and the button `aria-disabled`, never a fake success (unchanged) |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

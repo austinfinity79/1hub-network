@@ -658,7 +658,11 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
       Math.abs(Math.round(box.x + box.width / 2) - 867),
       'load-more centre',
     ).toBeLessThanOrEqual(2)
-    const end = await page.evaluate(() => document.documentElement.scrollHeight)
+    // THAO-02: the shared public footer follows the Library; L15 draws none, so the
+    // Library content still ends at the frame's page end, where the footer starts.
+    const end = await page
+      .locator('[data-shell="public-footer"]')
+      .evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY))
     expect(Math.abs(end - REF.pageEnd), 'page end').toBeLessThanOrEqual(2)
     await auditRevision(page, {
       name: 'PUBLIC-LIBRARY.L15-load-more',

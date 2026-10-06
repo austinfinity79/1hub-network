@@ -1,7 +1,8 @@
+import { PublicFooter } from '@/components/public-shell/public-footer'
 import { PublicHeader } from '@/components/public-shell/public-header'
 import type { LandingEntry } from '@/lib/landing/entry'
 import type { LibraryInitial } from '@/lib/library/library-bodies'
-import type { PublicViewer } from '@/lib/public/viewer'
+import type { PublicShellData } from '@/lib/public/shell-data'
 
 import { LibraryBrowser } from './library-client'
 import styles from './library.module.css'
@@ -22,15 +23,16 @@ import styles from './library.module.css'
  * THAO-01-FIX (DEC-THAO-NAV-D5): the header is the shared public header, as on
  * every public page; the former L15 bar ("Thư viện", Chương trình, Sự kiện,
  * Tin tức) is gone. Its 101 px slot is kept, so the hero below is unchanged.
+ * THAO-02: the page ends with the one public footer.
  */
 
 export function Library({
   entry,
-  viewer,
+  shell,
   initial,
 }: {
   entry: LandingEntry
-  viewer: PublicViewer
+  shell: PublicShellData
   initial: LibraryInitial
 }) {
   return (
@@ -38,12 +40,13 @@ export function Library({
       <LibraryBrowser
         header={
           <div className={styles.shell}>
-            <PublicHeader viewer={viewer} />
+            <PublicHeader viewer={shell.viewer} />
           </div>
         }
         initial={initial}
         signInHref={entry.kind === 'GUEST' ? entry.href : '/auth'}
       />
+      <PublicFooter variant="home" legal={shell.legal} />
     </div>
   )
 }

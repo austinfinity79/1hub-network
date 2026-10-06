@@ -41,7 +41,7 @@ SP1 mapping is locked by meaning (PO, 06/10): Tổng quan = file 10, Chỉ số 
 | Tin tức | plain label | Thảo: "chưa hiện ra gì" |
 | VI \| EN | inert | EN content is not supplied |
 | Đăng nhập / Tạo tài khoản | `/auth` | functional (existing entry) |
-| Footer: Giới thiệu, iHUB Ventures ↗, VNV ↗, 1Hub ↗ / Chương trình, Sản phẩm, Nhân tài, Tin tức | same targets as the header; external links from the [ecosystem list](DEMO_SOT_v1.md#sot-conflicts) once confirmed | an unconfirmed external URL renders as a plain label |
+| Footer: Giới thiệu, iHUB Ventures ↗, VNV ↗, 1Hub ↗ / Chương trình, Sản phẩm, Nhân tài, Tin tức | same targets as the header; external links from the [ecosystem list](DEMO_SOT_v1.md#sot-conflicts) once confirmed | an unconfirmed external URL renders as a plain label; on every public page since THAO-02 (DEC-THAO-FOOT) |
 
 ## Guest / auth (D)
 | Step | Guest | Signed-in |

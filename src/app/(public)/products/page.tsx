@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { Directory, type DirectoryInitial } from '@/components/products/directory'
+import { PublicFooter } from '@/components/public-shell/public-footer'
 import { PublicHeader } from '@/components/public-shell/public-header'
 import {
   STAGE_ORDER,
@@ -70,6 +71,8 @@ export default async function ProductsPage({
           initial={initial}
         />
       </div>
+      {/* THAO-02: the one public footer, as on every public page. */}
+      <PublicFooter variant="home" legal={shell.legal} />
     </div>
   )
 }

@@ -62,16 +62,13 @@ test.afterEach(() => {
 /** Nothing private or internal in a public page's markup. */
 async function expectNoPrivateData(page: Page) {
   const html = await page.content()
-  expect(html).not.toMatch(/de710000-|@example\.test/)
-  for (const text of [
-    'Email',
-    'Điện thoại',
-    'LinkedIn',
-    'Tạo sản phẩm',
-    'Phiếu điểm',
-    'Vòng trong',
-  ])
-    expect(html, text).not.toContain(text)
+  expect(html).not.toMatch(/de710000-|@example\.test|mailto:/)
+  for (const text of ['Phiếu điểm', 'Vòng trong']) expect(html, text).not.toContain(text)
+  // Contact / owner-only rows are looked for in the page's own content: the shared
+  // public footer (THAO-02) draws a public newsletter field ("Email của bạn").
+  const main = await page.locator('main').evaluate((el) => el.outerHTML)
+  for (const text of ['Email', 'Điện thoại', 'LinkedIn', 'Tạo sản phẩm'])
+    expect(main, text).not.toContain(text)
 }
 
 test.describe('startup profile (DM10 Tổng quan)', () => {

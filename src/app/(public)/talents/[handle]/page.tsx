@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 import { PublicAction } from '@/components/public-shell/public-action'
+import { PublicFooter } from '@/components/public-shell/public-footer'
 import { PublicHeader } from '@/components/public-shell/public-header'
 import { VERIFIED_DEMO_MARKER, type DemoBadge } from '@/lib/demo-0710/founders'
 import { findDemoFounder } from '@/lib/public/founder-data'
@@ -320,6 +321,8 @@ export default async function FounderPage({ params }: Params) {
           ) : null}
         </aside>
       </main>
+      {/* THAO-02: the one public footer, as on every public page. */}
+      <PublicFooter variant="home" legal={shell.legal} />
     </div>
   )
 }

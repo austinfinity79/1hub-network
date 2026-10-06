@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { PublicAction } from '@/components/public-shell/public-action'
+import { PublicFooter } from '@/components/public-shell/public-footer'
 import { PublicHeader } from '@/components/public-shell/public-header'
 import { STAGE_SHORT, findPublicStartup, type StartupPage } from '@/lib/public/directory-data'
 import { PUBLIC_ROUTES } from '@/lib/public/routes'
@@ -322,6 +323,8 @@ export default async function StartupProfilePage({ params }: Params) {
           ) : null}
         </div>
       </main>
+      {/* THAO-02: the one public footer, as on every public page. */}
+      <PublicFooter variant="home" legal={shell.legal} />
     </div>
   )
 }
