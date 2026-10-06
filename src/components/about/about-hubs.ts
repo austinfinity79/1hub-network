@@ -165,6 +165,11 @@ export function people(orders: readonly number[]): Human[] {
   return orders.map(person).filter((h): h is Human => h !== null)
 }
 
+/** THAO-04: the public page of a catalogue unit (HUB Chapter or CLB). */
+export function unitHref(slug: string): string {
+  return `/organizations/${slug}`
+}
+
 /** "Vũ Minh Tâm" → "VT": first and last word. */
 export function initials(name: string): string {
   const words = name.trim().split(/\s+/)

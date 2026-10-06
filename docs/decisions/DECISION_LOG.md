@@ -1795,6 +1795,17 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-thao-home-d3"></a>DEC-THAO-HOME-D3 | **Honest next-card glimpse.** With two or more fundraising startups the next pitch glimpses at the right edge (90 %). With one (the canonical data today) no pitch is invented: the glimpse is a link to the product directory `/products`. Arrows stay disabled below two |
 | <a id="dec-thao-home-d4"></a>DEC-THAO-HOME-D4 | **Dense directory.** "Tất cả sản phẩm trong mạng lưới" lays out at least four 300 px columns (two rows once the list is long), live count and canonical domain filters, right-aligned "Xem tất cả sản phẩm" → `/products`. The frame's 128 sample startups are data (INTENTIONAL-DATA) |
 
+## DEC-THAO-ABOUT — About HUB v2 logic / data closure (THAO-04, PO, 07/10)
+
+<a id="dec-thao-about"></a>**Status:** IMPLEMENTED 2026-10-07 on `feat/thao-m1-public-experience` (local; not merged, not deployed). Report: [THAO-04](../implementation/reports/THAO-04.md). No migration, no canonical data changed, no UI redesign.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-thao-about-d1"></a>DEC-THAO-ABOUT-D1 | **One source per fact.** Counts, unit names and CLBs come from the published catalogue (`loadAboutNetwork`), people from the S1-UAT-08A workbook. A HUB Khu vực board is headed by the catalogue name ("Ban điều hành HUB Network Hồ Chí Minh", not the chip label); the domestic structure line lists the catalogue's domestic regional HUBs (Quảng Ninh added) |
+| <a id="dec-thao-about-d2"></a>DEC-THAO-ABOUT-D2 | **Units link to their pages.** Every Chapter and CLB named on /about (HUB popup, Câu lạc bộ tab, "Xem thêm" list) links to `/organizations/[slug]`, an existing public route; the text keeps its look. Talents, events and partnership stay inert (READ_ONLY_APPROVED) |
+| <a id="dec-thao-about-d3"></a>DEC-THAO-ABOUT-D3 | **Marker overlap.** Positions stay presentation-only. A marker that overlaps a later-founded HUB's is lifted above it: Hà Nội is clickable in the Thế giới view (Quảng Ninh, 4.5 px away, opens from the Việt Nam view, its chip or Tab); Đà Nẵng is clickable at 390 px, which retires the QA-B-04 expected-failure mark |
+| <a id="dec-thao-about-d4"></a>DEC-THAO-ABOUT-D4 | **Partner wall stays illustrative.** The frame's "Chapter Cần Thơ" (no such unit) and "Chapter Đà Nẵng" (a member HUB, not a partner) become placeholders "Hiệp hội C" / "Hiệp hội D"; the repeat at a row end is hidden from assistive technology (DEC-H1-R2-D2). Real partners await PO data |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

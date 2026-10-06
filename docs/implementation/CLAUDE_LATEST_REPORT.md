@@ -1,45 +1,43 @@
 # Claude Task Report
 
 ## Task
-THAO-03 — Homepage v2, production closure and visual parity (milestone THAO-M1). Report: [THAO-03](reports/THAO-03.md). Decisions: [DEC-THAO-HOME](../decisions/DECISION_LOG.md#dec-thao-home).
+THAO-04 — About HUB v2, production logic / data closure (milestone THAO-M1). Report: [THAO-04](reports/THAO-04.md). Decisions: [DEC-THAO-ABOUT](../decisions/DECISION_LOG.md#dec-thao-about).
 
 ## Verdict
 **PASS_WITH_EVIDENCE.**
-- Hero fills the first screen; the search + CTA cluster sits at its foot; the programme strip starts after it.
-- Startup showcase and product directory match the 07/10 16:9 frame (gated segments below threshold).
-- Canonical data only; with one fundraising startup the glimpse links to `/products`.
+- Counts, unit names and CLBs from the catalogue; people from the S1-UAT-08A workbook; 7 conflicts recorded.
+- Every Chapter / CLB named on /about links to its public page; partner links verified.
+- Hà Nội marker clickable again in the Thế giới view; no UI redesign.
 - Not merged, not deployed. STOP.
 
 ## Files changed
-- `src/components/home/home.module.css`
-- `src/components/home/home-products.tsx`
-- `src/components/home/home.tsx`
-- References: `DM01H__homepage-hero-16x9__SOURCE.png`, `DM01P__homepage-products-16x9__SOURCE.png` (new)
+- `src/components/about/about.tsx`, `about-humans.tsx`, `about-map.tsx`, `about-hubs.ts`, `about.module.css`
 - Tests:
-  - `thao-03-home.spec.ts` (new)
-  - `demo-home-about-01.spec.ts` (DM01 captured at 1440 × 812)
-- Docs:
-  - DECISION_LOG
-  - FIGMA_REFERENCE_MAP, demo-0710 README
-  - P0_STATUS
-  - the report
-  - this file
+  - `thao-04-about.spec.ts` (new)
+  - `about-hubs.test.ts`
+  - `demo-qa-vertical-flow.spec.ts` (QA-B-04 expected-failure mark retired)
+- Docs: DECISION_LOG, P0_STATUS, the report, this file
 
 ## Tests / build
 | Gate | Result |
 |---|---|
-| format · lint · typecheck · build · unit | PASS · 458 / 458 |
-| thao-03-home | 13 / 13 |
-| Targeted slice | 12 specs, 160 / 160 |
+| format · lint · typecheck · build | PASS |
+| unit | 459 / 459 |
+| thao-04-about | 9 / 9 |
+| Protected slice | 14 specs, 176 / 176 |
 | UAT L1–L2 | 19 / 19 |
 
 ## Git
-- Branch: `feat/thao-m1-public-experience` (worktree `../1hub-network-thao-m1`); base `b8e9d82`.
-- Push: NOT RUN.
+- Branch: `feat/thao-m1-public-experience` (worktree `../1hub-network-thao-m1`); base `af51e42`.
+- Implementation commit / report commit: the THAO-04 commit (one commit).
+- Remote: `origin` (GitHub).
+- Push status: NOT RUN (milestone rule: no push).
+- Remote HEAD: branch not on the remote.
+- Working tree: clean after commit.
 - Main changed: NO.
 
 ## Recommended next task
-THAO-04. Not started.
+THAO-M1 QA / deploy decision. Not started.
 
 ## Related
-- [THAO-03](reports/THAO-03.md) · [P0_STATUS](P0_STATUS.md)
+- [THAO-04](reports/THAO-04.md) · [P0_STATUS](P0_STATUS.md)

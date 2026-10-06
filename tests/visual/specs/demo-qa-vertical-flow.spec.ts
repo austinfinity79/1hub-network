@@ -328,11 +328,11 @@ test.describe('responsive interactions (DEMO_RESPONSIVE_MATRIX)', () => {
   for (const width of [1440, 768, 390]) {
     test(`${width}: Thế giới map — the HUB Đà Nẵng marker can be clicked`, async ({ page }) => {
       // QA-B-04 (P2, ACCEPTED_P2_DEMO_DEBT, DEMO-QA-01): the 12 px markers of
-      // 58da5d1 keep HUB Đà Nẵng clickable down to 768 px; at phone width the
-      // four domestic HUBs of the Thế giới view still overlap (the HUB chips
-      // open each popup). Expected to fail there until a cluster design lands;
-      // an unexpected pass means the fix landed and this mark must go.
-      test.fail(width < 768, 'QA-B-04: domestic HUB markers overlap in the Thế giới view')
+      // 58da5d1 keep HUB Đà Nẵng clickable down to 768 px. THAO-04 lifts a
+      // marker above an overlapping later HUB, so Đà Nẵng is clickable at phone
+      // width too and the expected-failure mark is gone. At 390 the Thế giới
+      // view still stacks Hà Nội, TP.HCM and Quảng Ninh under it; the Việt Nam
+      // view and the HUB chips open each of them (thao-04-about).
       await page.setViewportSize({ width, height: 900 })
       await page.goto('/about', { waitUntil: 'networkidle' })
       await page.locator('[data-marker="DN"]').scrollIntoViewIfNeeded()

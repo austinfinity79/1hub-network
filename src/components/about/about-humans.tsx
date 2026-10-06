@@ -33,6 +33,8 @@ export type HumansHubTong = {
 export type HumansRegion = {
   slug: string
   short: string
+  /** Catalogue name of the unit. */
+  name: string
   place: string
   since: string
   clubCount: number
@@ -41,7 +43,7 @@ export type HumansRegion = {
   href: string
 }
 
-export type HumansClub = { hub: string; name: string }
+export type HumansClub = { hub: string; name: string; href: string }
 
 type Tab = 'TONG' | 'KHU_VUC' | 'CLB'
 
@@ -145,7 +147,7 @@ function HubTong({ data, talents }: { data: HumansHubTong; talents: string | nul
   )
 }
 
-function Regions({ regions }: { regions: HumansRegion[] }) {
+function Regions({ regions, domestic }: { regions: HumansRegion[]; domestic: string[] }) {
   const [slug, setSlug] = useState(regions[0]?.slug ?? null)
   const region = regions.find((r) => r.slug === slug) ?? regions[0]
   return (
@@ -157,7 +159,7 @@ function Regions({ regions }: { regions: HumansRegion[] }) {
       <div className={styles.structure}>
         <div className={styles.structureDomestic}>
           <p className={styles.structureLabel}>
-            HUB KHU VỰC TRONG NƯỚC · HÀ NỘI · ĐÀ NẴNG · HỒ CHÍ MINH
+            {['HUB KHU VỰC TRONG NƯỚC', ...domestic].join(' · ').toLocaleUpperCase('vi')}
           </p>
           <div className={styles.structureTop}>
             <span className={styles.structureChair}>Chủ tịch HUB Khu vực</span>
@@ -229,9 +231,7 @@ function Regions({ regions }: { regions: HumansRegion[] }) {
         <div className={styles.regionBoard} data-region={region.slug}>
           <div className={styles.tabHead}>
             <div>
-              <h3 className={styles.regionTitle}>
-                Ban điều hành {region.short.replace(/^HUB /, 'HUB Network ')}
-              </h3>
+              <h3 className={styles.regionTitle}>Ban điều hành {region.name}</h3>
               <p className={styles.tabLede}>
                 {region.place} · từ {region.since} · {region.clubCount} CLB
               </p>
@@ -289,7 +289,11 @@ function Clubs({ clubs, total }: { clubs: HumansClub[]; total: number }) {
         {shown.map((c) => (
           <li key={`${c.hub}-${c.name}`} className={styles.clubBig}>
             <p className={styles.clubHub}>{c.hub.toLocaleUpperCase('vi')}</p>
-            <p className={styles.clubBigName}>{c.name}</p>
+            <p className={styles.clubBigName}>
+              <PublicAction href={c.href} className={styles.unitLink}>
+                {c.name}
+              </PublicAction>
+            </p>
           </li>
         ))}
       </ul>
@@ -300,12 +304,14 @@ function Clubs({ clubs, total }: { clubs: HumansClub[]; total: number }) {
 export function AboutHumans({
   hubTong,
   regions,
+  domestic,
   clubs,
   clubTotal,
   talents,
 }: {
   hubTong: HumansHubTong
   regions: HumansRegion[]
+  domestic: string[]
   clubs: HumansClub[]
   clubTotal: number
   talents: string | null
@@ -328,7 +334,7 @@ export function AboutHumans({
         ))}
       </div>
       {tab === 'TONG' ? <HubTong data={hubTong} talents={talents} /> : null}
-      {tab === 'KHU_VUC' ? <Regions regions={regions} /> : null}
+      {tab === 'KHU_VUC' ? <Regions regions={regions} domestic={domestic} /> : null}
       {tab === 'CLB' ? <Clubs clubs={clubs} total={clubTotal} /> : null}
     </>
   )

@@ -23,6 +23,7 @@ import {
   initials,
   people,
   person,
+  unitHref,
 } from './about-hubs'
 import { AboutMap, type MapHub } from './about-map'
 import { VIETNAM_VIEW, WORLD_VIEW, project } from './about-map-geo'
@@ -110,8 +111,10 @@ const PARTNER_ROWS: Array<{ label: string; names: string[] }> = [
     names: [
       'Hiệp hội B',
       'Sở KH&CN',
-      'Chapter Cần Thơ',
-      'Chapter Đà Nẵng',
+      // THAO-04: the frame's "Chapter Cần Thơ" / "Chapter Đà Nẵng" named network
+      // units (one not in the catalogue, one a member HUB) as partners.
+      'Hiệp hội C',
+      'Hiệp hội D',
       'Chương trình A',
       'Chương trình A',
     ],
@@ -156,8 +159,11 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
       world: project(WORLD_VIEW, h.lon, h.lat),
       vietnam: project(VIETNAM_VIEW, h.lon, h.lat),
       board,
-      clubs: bySlug.get(h.slug)?.clubs.map((c) => c.name) ?? [],
-      href: `/organizations/${h.slug}`,
+      clubs: (bySlug.get(h.slug)?.clubs ?? []).map((c) => ({
+        name: c.name,
+        href: unitHref(c.slug),
+      })),
+      href: unitHref(h.slug),
     }
   })
   const archipelagos = ARCHIPELAGOS.map((a) => ({
@@ -167,7 +173,8 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
   }))
   const catalogue = network.chapters.map((c) => ({
     name: c.name,
-    clubs: c.clubs.map((k) => k.name),
+    href: unitHref(c.slug),
+    clubs: c.clubs.map((k) => ({ name: k.name, href: unitHref(k.slug) })),
   }))
 
   const chair = person(HUB_TONG.chair)
@@ -183,6 +190,8 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
   const regions = mapHubs.map((h) => ({
     slug: h.slug,
     short: h.short,
+    // THAO-04: the board heading names the unit as the catalogue does.
+    name: bySlug.get(h.slug)!.name,
     place: h.place,
     since: h.since,
     clubCount: h.clubs.length,
@@ -204,12 +213,17 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
         c.name.replace(/^HUB Network /, 'HUB '),
       clubs: c.clubs,
     }))
-  const clubs: Array<{ hub: string; name: string }> = []
+  const clubs: Array<{ hub: string; name: string; href: string }> = []
   for (let i = 0; lists.some((l) => i < l.clubs.length); i += 1)
     for (const l of lists) {
       const club = l.clubs[i]
-      if (club) clubs.push({ hub: l.hub, name: club.name })
+      if (club) clubs.push({ hub: l.hub, name: club.name, href: unitHref(club.slug) })
     }
+  // THAO-04: the domestic regional HUBs of the catalogue (the frame lists three).
+  const domestic = regional
+    .filter((h) => h.place.endsWith('Việt Nam'))
+    .sort((x, y) => bySlug.get(x.slug)!.order - bySlug.get(y.slug)!.order)
+    .map((h) => bySlug.get(h.slug)!.name.replace(/^HUB Network /, ''))
 
   const activities = [...ACTIVITIES.filter((a) => a.photo), ...ACTIVITIES.filter((a) => !a.photo)]
 
@@ -315,6 +329,7 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
           <AboutHumans
             hubTong={hubTong}
             regions={regions}
+            domestic={domestic}
             clubs={clubs}
             clubTotal={network.clubCount}
             talents={PUBLIC_ROUTES.talents}
@@ -407,7 +422,13 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
                 <p className={styles.partnerLabel}>{r.label}</p>
                 <ul role="list">
                   {r.names.map((n, j) => (
-                    <li key={`${n}-${j}`} className={styles.partnerChip} title={NOT_YET}>
+                    <li
+                      key={`${n}-${j}`}
+                      className={styles.partnerChip}
+                      title={NOT_YET}
+                      // The repeat the frame draws at the row end is decorative (DEC-H1-R2-D2).
+                      aria-hidden={r.names.indexOf(n) < j ? true : undefined}
+                    >
                       <span aria-hidden="true" />
                       {n}
                     </li>

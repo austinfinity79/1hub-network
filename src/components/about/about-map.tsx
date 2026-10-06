@@ -5,7 +5,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { ArrowRight, PublicAction } from '@/components/public-shell/public-action'
 
+import { MAP_H, MAP_W } from './about-map-geo'
 import styles from './about.module.css'
+
+/** Hit area of a map marker (px), as drawn by `.marker`. */
+const MARKER = 22
 
 /**
  * DM02 "Quy mô cộng đồng" map and DM03 HUB popup (Thảo: hover a HUB point for
@@ -30,13 +34,18 @@ export type MapHub = {
   world: MapPoint
   vietnam: MapPoint
   board: Array<{ name: string; title: string | null; photo: string | null; initials: string }>
-  clubs: string[]
+  /** Each CLB with its public page. */
+  clubs: Array<{ name: string; href: string }>
   href: string
 }
 
 export type MapArchipelago = { name: string; world: MapPoint; vietnam: MapPoint }
 
-export type CatalogueGroup = { name: string; clubs: string[] }
+export type CatalogueGroup = {
+  name: string
+  href: string
+  clubs: Array<{ name: string; href: string }>
+}
 
 function Avatar({
   person,
@@ -132,9 +141,13 @@ function HubPopup({ hub, onClose }: { hub: MapHub; onClose: () => void }) {
               <h4 className={styles.popupHeading}>Câu lạc bộ trực thuộc</h4>
               <ul className={styles.popupRow} role="list">
                 {hub.clubs.map((c) => (
-                  <li key={c} className={styles.clubCard}>
+                  <li key={c.href} className={styles.clubCard}>
                     <span className={styles.clubTag}>CLB</span>
-                    <p className={styles.clubName}>{c}</p>
+                    <p className={styles.clubName}>
+                      <PublicAction href={c.href} className={styles.unitLink}>
+                        {c.name}
+                      </PublicAction>
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -169,6 +182,22 @@ export function AboutMap({
   const hovered = hubs.find((h) => h.slug === hover) ?? null
   const at = (p: MapPoint) => (p ? { left: `${p.x}%`, top: `${p.y}%` } : undefined)
   const pointOf = (h: MapHub) => (view === 'world' ? h.world : h.vietnam)
+  // THAO-04: at world scale Quảng Ninh sits 4.5 px from Hà Nội and covered its
+  // marker. Positions stay as drawn (presentation only); a HUB whose marker
+  // overlaps a later HUB's is lifted above it, so the earlier one stays
+  // clickable. The later one is reached in the Việt Nam view, by chip or Tab.
+  const lifted = (h: MapHub) => {
+    const p = pointOf(h)
+    return hubs.some((o) => {
+      const q = pointOf(o)
+      return (
+        p &&
+        q &&
+        o.since > h.since &&
+        Math.hypot(((p.x - q.x) * MAP_W) / 100, ((p.y - q.y) * MAP_H) / 100) < MARKER
+      )
+    })
+  }
   return (
     <>
       <div className={styles.map} data-map-view={view}>
@@ -214,7 +243,7 @@ export function AboutMap({
               key={h.slug}
               type="button"
               className={styles.marker}
-              style={at(p)}
+              style={{ ...at(p), ...(lifted(h) ? { zIndex: 2 } : null) }}
               aria-label={`${h.short} — mở giới thiệu`}
               data-marker={h.code}
               onMouseEnter={() => setHover(h.slug)}
@@ -257,12 +286,20 @@ export function AboutMap({
       {all ? (
         <div id="about-network-list" className={styles.networkList}>
           {catalogue.map((g) => (
-            <section key={g.name}>
-              <h4>{g.name}</h4>
+            <section key={g.href}>
+              <h4>
+                <PublicAction href={g.href} className={styles.unitLink}>
+                  {g.name}
+                </PublicAction>
+              </h4>
               {g.clubs.length ? (
                 <ul role="list">
                   {g.clubs.map((c) => (
-                    <li key={c}>{c}</li>
+                    <li key={c.href}>
+                      <PublicAction href={c.href} className={styles.unitLink}>
+                        {c.name}
+                      </PublicAction>
+                    </li>
                   ))}
                 </ul>
               ) : (

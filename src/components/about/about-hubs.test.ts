@@ -3,7 +3,15 @@ import { describe, expect, it } from 'vitest'
 import { markOf, tileOf } from '@/lib/public/home-data'
 
 import { HUMANS } from './about-data'
-import { ARCHIPELAGOS, HUB_TONG, PLACE_SINCE, REGIONAL_HUBS, initials, people } from './about-hubs'
+import {
+  ARCHIPELAGOS,
+  HUB_TONG,
+  PLACE_SINCE,
+  REGIONAL_HUBS,
+  initials,
+  people,
+  unitHref,
+} from './about-hubs'
 import { VIETNAM_VIEW, WORLD_VIEW, project } from './about-map-geo'
 
 /** DEMO-HOME-ABOUT-01 — About v2 presentation of the HUB network (DM02–DM05). */
@@ -76,6 +84,13 @@ describe('map projection', () => {
       expect(Math.abs((p.x / 100) * 1312 - x)).toBeLessThan(4)
       expect(Math.abs((p.y / 100) * 640 - y)).toBeLessThan(4)
     }
+  })
+
+  it('links a catalogue unit to its public page by slug (THAO-04)', () => {
+    expect(unitHref('hub-network-da-nang')).toBe('/organizations/hub-network-da-nang')
+    expect(unitHref('clb-da-nang-clb-khoi-nghiep-kinh-te')).toBe(
+      '/organizations/clb-da-nang-clb-khoi-nghiep-kinh-te',
+    )
   })
 
   it('shows Hoàng Sa and Trường Sa in both views', () => {
