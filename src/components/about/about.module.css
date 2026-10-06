@@ -1809,3 +1809,42 @@ a.ecoRow:hover .ecoName {
     align-items: flex-start;
   }
 }
+
+/*
+ * QA-B-04: below 1024 px the map is scaled down while a 22 px marker is not,
+ * so neighbouring markers covered each other. A 12 px marker keeps every
+ * Việt Nam view marker reachable down to 390 px. The four domestic HUBs of
+ * the Thế giới view sit within a few px at every width (as DM02 draws them);
+ * the HUB chips under the map open each of them (ACCEPTED_P2_DEMO_DEBT).
+ */
+@media (max-width: 1023px) {
+  .marker {
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(
+      circle,
+      #fc523c 0 3px,
+      rgb(252 82 60 / 0.35) 3.5px 5.5px,
+      transparent 6px
+    );
+  }
+
+  .marker:hover,
+  .marker:focus-visible {
+    background: radial-gradient(
+      circle,
+      #ffffff 0 3px,
+      rgb(252 82 60 / 0.6) 3.5px 5.5px,
+      transparent 6px
+    );
+  }
+}
+
+/* QA-B-04: on a phone the view switch covered the northern markers (HN, QN). */
+@media (max-width: 720px) {
+  .mapTabs {
+    top: auto;
+    bottom: 8px;
+    left: 8px;
+  }
+}

@@ -461,7 +461,9 @@
 }
 
 .years {
+  flex: none;
   margin-left: auto;
+  white-space: nowrap;
   font-size: 14px;
   color: #6f5f60;
 }
@@ -630,6 +632,7 @@
 
   .entries > li {
     gap: 12px;
+    padding-bottom: 12px;
   }
 
   .mark {

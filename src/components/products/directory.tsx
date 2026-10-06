@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 
 import type { DirectoryPlace, DirectoryStartup } from '@/lib/public/directory-data'
 import type { StartupStage } from '@/lib/library/startup-adapter'
@@ -10,6 +10,9 @@ import type { StartupStage } from '@/lib/library/startup-adapter'
 import { PublicAction } from '@/components/public-shell/public-action'
 
 import styles from './directory.module.css'
+
+const PLACEHOLDER = 'Tìm theo tên sản phẩm, lĩnh vực hoặc nhà sáng lập...'
+const PLACEHOLDER_SHORT = 'Tìm theo tên sản phẩm, lĩnh vực...'
 
 /**
  * DEMO-DIR2-01 — DM08 "Sản phẩm" directory body: hero count, search and quick
@@ -75,6 +78,16 @@ export function Directory({
 }) {
   const router = useRouter()
   const [draft, setDraft] = useState(initial.q)
+  // QA-B-06: below 1024 px the DM08 placeholder does not fit the field; a
+  // shorter one is set after hydration (same first render on server and client).
+  const [placeholder, setPlaceholder] = useState(PLACEHOLDER)
+  useEffect(() => {
+    const narrow = window.matchMedia('(max-width: 1023px)')
+    const apply = () => setPlaceholder(narrow.matches ? PLACEHOLDER_SHORT : PLACEHOLDER)
+    apply()
+    narrow.addEventListener('change', apply)
+    return () => narrow.removeEventListener('change', apply)
+  }, [])
   const [q, setQ] = useState(initial.q)
   const [domains, setDomains] = useState<string[]>(initial.domains)
   const [stages, setStages] = useState<StartupStage[]>(initial.stages)
@@ -225,7 +238,7 @@ export function Directory({
             maxLength={120}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Tìm theo tên sản phẩm, lĩnh vực hoặc nhà sáng lập..."
+            placeholder={placeholder}
             aria-label="Từ khoá"
             autoComplete="off"
           />

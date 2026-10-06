@@ -74,6 +74,8 @@ function Team({ team }: { team: StartupPage['team'] }) {
           <>
             <span className={styles.face} aria-hidden="true">
               {initials(m.name, 'first-last')}
+              {/* QA-B-05: a visible cue that the row opens the founder profile. */}
+              {m.href ? <span className={styles.memberGo}>→</span> : null}
             </span>
             <span className={styles.who}>
               <strong>{m.name}</strong>

@@ -124,6 +124,10 @@
   opacity: 1;
 }
 
+.input {
+  text-overflow: ellipsis;
+}
+
 .input::-webkit-search-cancel-button {
   appearance: none;
 }

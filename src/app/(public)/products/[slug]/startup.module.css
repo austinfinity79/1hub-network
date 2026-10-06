@@ -387,11 +387,34 @@
   border-radius: 14px;
 }
 
-a.member:hover strong {
+a.member {
+  box-shadow: inset 0 0 0 1px #f3c3bb;
+}
+
+a.member:hover strong,
+a.member:focus-visible strong {
   text-decoration: underline;
 }
 
+.memberGo {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  line-height: 1;
+  color: #ffffff;
+  background: var(--coral);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+}
+
 .face {
+  position: relative;
   display: inline-flex;
   flex: none;
   align-items: center;
