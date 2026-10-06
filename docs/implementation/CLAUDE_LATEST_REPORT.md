@@ -1,27 +1,26 @@
 # Claude Task Report
 
 ## Task
-THAO-02 — Footer v2, production closure (milestone THAO-M1). Report: [THAO-02](reports/THAO-02.md). Decisions: [DEC-THAO-FOOT](../decisions/DECISION_LOG.md#dec-thao-foot).
+THAO-03 — Homepage v2, production closure and visual parity (milestone THAO-M1). Report: [THAO-03](reports/THAO-03.md). Decisions: [DEC-THAO-HOME](../decisions/DECISION_LOG.md#dec-thao-home).
 
 ## Verdict
 **PASS_WITH_EVIDENCE.**
-- One footer with two link columns on Home, About, Library, Sản phẩm, Startup and Founder.
-- Canonical routes and verified external URLs only; plain labels where no screen exists.
+- Hero fills the first screen; the search + CTA cluster sits at its foot; the programme strip starts after it.
+- Startup showcase and product directory match the 07/10 16:9 frame (gated segments below threshold).
+- Canonical data only; with one fundraising startup the glimpse links to `/products`.
 - Not merged, not deployed. STOP.
 
 ## Files changed
-- `src/app/(public)/products/page.tsx`
-- `src/app/(public)/products/[slug]/page.tsx`
-- `src/app/(public)/talents/[handle]/page.tsx`
-- `src/app/(public)/library/page.tsx`
-- `src/components/library/library.tsx`
+- `src/components/home/home.module.css`
+- `src/components/home/home-products.tsx`
+- `src/components/home/home.tsx`
+- References: `DM01H__homepage-hero-16x9__SOURCE.png`, `DM01P__homepage-products-16x9__SOURCE.png` (new)
 - Tests:
-  - `thao-02-footer.spec.ts` (new)
-  - `demo-sp1-founder-01.spec.ts`
-  - `public-library.spec.ts`
+  - `thao-03-home.spec.ts` (new)
+  - `demo-home-about-01.spec.ts` (DM01 captured at 1440 × 812)
 - Docs:
   - DECISION_LOG
-  - SCREEN_ROUTE_MAP
+  - FIGMA_REFERENCE_MAP, demo-0710 README
   - P0_STATUS
   - the report
   - this file
@@ -29,15 +28,18 @@ THAO-02 — Footer v2, production closure (milestone THAO-M1). Report: [THAO-02]
 ## Tests / build
 | Gate | Result |
 |---|---|
-| format · lint · typecheck · build | PASS |
-| thao-02-footer | 6 / 6 |
-| Protected slice | 15 specs green after the footer-aware updates |
+| format · lint · typecheck · build · unit | PASS · 458 / 458 |
+| thao-03-home | 13 / 13 |
+| Targeted slice | 12 specs, 160 / 160 |
 | UAT L1–L2 | 19 / 19 |
 
 ## Git
-- Branch: `feat/thao-m1-public-experience` (worktree `../1hub-network-thao-m1`); base `c0965e1`.
+- Branch: `feat/thao-m1-public-experience` (worktree `../1hub-network-thao-m1`); base `b8e9d82`.
 - Push: NOT RUN.
 - Main changed: NO.
 
 ## Recommended next task
-THAO-03 (Homepage). Not started.
+THAO-04. Not started.
+
+## Related
+- [THAO-03](reports/THAO-03.md) · [P0_STATUS](P0_STATUS.md)

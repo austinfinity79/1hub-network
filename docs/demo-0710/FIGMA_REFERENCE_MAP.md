@@ -18,6 +18,8 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). The source is the PO pack `hub New Design
 | DM11 | `DM11__startup-metrics__SOURCE.png` | **UPDATED** `13. SP Tab chỉ số.png` (PO latest) | PENDING | PENDING: the updated file is not yet on the workstation |
 | DM12 | `DM12__startup-updates__SOURCE.png` | **UPDATED** `12. Tab cập nhật.png` (PO latest) | PENDING | PENDING: the updated file is not yet on the workstation |
 | DM13 | `DM13__founder-profile__SOURCE.png` | `14. NT1 - Nhân tài - Chi tiết hồ sơ cá nhân.png` | 1440×3142 | `fac7899a7c339d496ab702b8163d778c812a05a3037f1023f1d0e9b1b35c474e` |
+| DM01H | `DM01H__homepage-hero-16x9__SOURCE.png` | PO 07/10 `HOME · Trang chủ/Hero 16_9 · video chiến dịch (tự chuyển 8s).png` (THAO-03) | 1440×810 | `b3e74d71e05229ff9c96ca9a7a71f245dd0f2d3c13d9940ebcb80d61857e7ec8` |
+| DM01P | `DM01P__homepage-products-16x9__SOURCE.png` | PO 07/10 `HOME · Trang chủ/Sản phẩm · gói trong 1 khung 16_9 (1440×810).png` (THAO-03) | 1440×810 | `1b2b00e08fe8cba7f491538098be99c0ad8d60c5f022fb0cb91f9c31f5f0ed5e` |
 
 **SP1 semantic lock (PO, 06/10).** Tổng quan = DM10 (file 10); Chỉ số = DM11 (UPDATED file 13); Cập nhật = DM12 (UPDATED file 12); Founder Profile = DM13 (file 14). Meaning decides, not file numbers.
 

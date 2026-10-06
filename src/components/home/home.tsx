@@ -196,7 +196,7 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
       </section>
 
       <div className={styles.ventures}>
-        <InvestorCarousel startups={startups} />
+        <InvestorCarousel startups={startups} total={startups.length} />
         <ProductGrid startups={startups} />
       </div>
 

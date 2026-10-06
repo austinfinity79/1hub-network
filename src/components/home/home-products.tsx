@@ -90,8 +90,13 @@ export function SectorList({ startups }: { startups: HomeStartup[] }) {
   )
 }
 
-/** "Startup sẵn sàng gặp nhà đầu tư": one card at a time, the next one peeking. */
-export function InvestorCarousel({ startups }: { startups: HomeStartup[] }) {
+/**
+ * "Startup sẵn sàng gặp nhà đầu tư": one card at a time, the next one peeking
+ * at the right edge (THAO-03-V2). With a single fundraising startup there is
+ * no next pitch to show, and none is invented: the glimpse is the product
+ * directory (a real route), so the row still reads as a carousel.
+ */
+export function InvestorCarousel({ startups, total }: { startups: HomeStartup[]; total: number }) {
   const ready = startups.filter((s) => s.investorReady)
   const [at, setAt] = useState(0)
   const count = ready.length
@@ -190,6 +195,18 @@ export function InvestorCarousel({ startups }: { startups: HomeStartup[] }) {
             )
           })
         )}
+        {count === 1 ? (
+          <PublicAction
+            href={PUBLIC_ROUTES.products}
+            className={`${styles.pitchPeek} ${styles.pitchMore}`}
+            cta="investors-more"
+            label={`Xem tất cả ${total} sản phẩm`}
+          >
+            <span className={styles.pitchArt}>
+              <span>Tất cả sản phẩm</span>
+            </span>
+          </PublicAction>
+        ) : null}
       </div>
     </section>
   )
@@ -227,7 +244,10 @@ export function ProductGrid({ startups }: { startups: HomeStartup[] }) {
       <ul
         className={styles.tiles}
         role="list"
-        style={{ '--cols': Math.max(1, Math.ceil(tiles.length / 2)) } as CSSProperties}
+        // THAO-03-V2: at least four 300 px columns, so a short list spans the
+        // section like the frame instead of leaving its right half empty; a long
+        // one flows into two rows that scroll sideways.
+        style={{ '--cols': Math.max(4, Math.ceil(tiles.length / 2)) } as CSSProperties}
       >
         {tiles.map((s) => (
           <li key={s.key} className={styles.tile}>

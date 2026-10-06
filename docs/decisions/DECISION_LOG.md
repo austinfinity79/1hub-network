@@ -1784,6 +1784,17 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-thao-foot-d2"></a>DEC-THAO-FOOT-D2 | **One footer on every public page.** `PublicFooter` closes Home, About, Library, Sản phẩm, Startup and Founder; the pages whose frames draw no footer (DM08, DM10, DM13, L15) get it below their content, so every approved block above is unchanged. `home` / `about` are layout variants of the same component (DM01 / DM02), not separate footers. `/organizations/[slug]` keeps its WF03-S09 page footer |
 | <a id="dec-thao-foot-d3"></a>DEC-THAO-FOOT-D3 | **Inert newsletter.** "Nhận bản tin" has no subscription backend: the field is disabled and the button `aria-disabled`, never a fake success (unchanged) |
 
+## DEC-THAO-HOME — Homepage v2 hero and startup showcase (THAO-03, PO, 07/10)
+
+<a id="dec-thao-home"></a>**Status:** IMPLEMENTED 2026-10-07 on `feat/thao-m1-public-experience` (local; not merged, not deployed). Report: [THAO-03](../implementation/reports/THAO-03.md). Visual SOT: the PO's 07/10 16:9 frames DM01H / DM01P ([map](../demo-0710/FIGMA_REFERENCE_MAP.md)). No migration.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-thao-home-d1"></a>DEC-THAO-HOME-D1 | **Full-screen hero.** The hero is `max(812px, 100svh)`; the search + intents cluster is anchored 73 px above the hero bottom (its place in the 812 px frame), so the programme strip always starts after the hero. Below 1024 px the hero keeps its auto height. Copy, nav contract, search and CTAs unchanged. DM01 is now captured at 1440 × 812, the frame height |
+| <a id="dec-thao-home-d2"></a>DEC-THAO-HOME-D2 | **Pitch card per DM01P.** 420 px card, grey edge, deeper shadow left visible below the section (`overflow-x: clip`); the frame's type sizes for the heading, pills, title and metric row; metric columns follow their values |
+| <a id="dec-thao-home-d3"></a>DEC-THAO-HOME-D3 | **Honest next-card glimpse.** With two or more fundraising startups the next pitch glimpses at the right edge (90 %). With one (the canonical data today) no pitch is invented: the glimpse is a link to the product directory `/products`. Arrows stay disabled below two |
+| <a id="dec-thao-home-d4"></a>DEC-THAO-HOME-D4 | **Dense directory.** "Tất cả sản phẩm trong mạng lưới" lays out at least four 300 px columns (two rows once the list is long), live count and canonical domain filters, right-aligned "Xem tất cả sản phẩm" → `/products`. The frame's 128 sample startups are data (INTENTIONAL-DATA) |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

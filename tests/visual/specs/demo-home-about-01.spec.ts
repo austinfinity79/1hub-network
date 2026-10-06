@@ -464,6 +464,9 @@ const FOOTER = '[data-shell="public-footer"]'
 
 test.describe('pixel QA 1440 × DPR1', () => {
   test('DM01 Homepage v2', async ({ page }) => {
+    // THAO-03 (DEC-THAO-HOME-D1): the hero fills the first screen, at least the
+    // frame's 812 px; captured at the frame height so the hero block lines up.
+    await page.setViewportSize({ width: 1440, height: 812 })
     await page.goto('/', { waitUntil: 'networkidle' })
     await compareBlocks(
       page,
