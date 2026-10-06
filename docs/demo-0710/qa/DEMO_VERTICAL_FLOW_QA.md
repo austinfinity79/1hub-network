@@ -16,10 +16,10 @@ DEMO-QA-PREP-B (06/10, Claude B, `qa/demo-support-0710` on `4c9e7b7`). The autom
 | 3 | "Sản phẩm" CTA works | `/` → `/products` | header link named "Sản phẩm" (a plain label on BASE, `PUBLIC_ROUTES.products = null`) | AWAITING (DIR2) | `3–5` |
 | 4 | Directory loads | `/products` | URL `/products`; clean page | AWAITING (DIR2) | `3–5` |
 | 5 | Demo cards render | `/products` | "Tracely", "AgriTrace", "Kho Lạnh Miền Tây" visible; no `de710000-…c*` id in HTML | AWAITING (DIR2) | `3–5` |
-| 6 | Startup → Detail | `/products/tracely` | Tracely card "Xem hồ sơ" → URL `/products/tracely`; h1 contains "Tracely" | AWAITING (DIR2 interim → SP1) | `6–9` |
-| 7 | Detail has a Founder | `/products/tracely` | link named "Đặng Kim Chi" (DM13 team, SOT C7) | AWAITING (SP1-FOUNDER) | `6–9` |
-| 8 | Founder → Profile | `/talents/de710000-…b1` | URL `/talents/<profile id>`; h1 contains "Đặng Kim Chi" | AWAITING (SP1-FOUNDER) | `6–9` |
-| 9 | DEMO verified state | `/talents/…b1` | text "Đã xác thực danh tính qua 1Hub" (DEMO-D10); Lý Gia Bảo (`…b5`) shows it, Võ Thanh Hà (`…b6`) does not; other id → 404 | AWAITING (SP1-FOUNDER) | `6–9`, `direct URLs` |
+| 6 | Startup → Detail | `/products/tracely` | Tracely card "Xem hồ sơ" → URL `/products/tracely`; h1 contains "Tracely" | AWAITING (DIR2 interim → SP1) | `6–11` |
+| 7 | Detail has a Founder | `/products/tracely` | link named "Đặng Kim Chi" (DM13 team, SOT C7); a non-founder member (Phạm Quốc Việt) is not a link | AWAITING (SP1-FOUNDER) | `6–11` |
+| 8 | Founder → Profile | `/talents/dang-kim-chi` | URL is the fixed handle (DEC-DEMO-SP1-D1); h1 contains "Đặng Kim Chi"; a profile UUID is 404 | AWAITING (SP1-FOUNDER) | `6–11` |
+| 9 | DEMO verified state | `/talents/dang-kim-chi` | `[data-verified="demo"][data-demo="DEMO-0710"]` "Đã xác thực danh tính qua 1Hub" (DEMO-D10); `ly-gia-bao` shows it, `vo-thanh-ha` / `nguyen-minh-anh` do not; unknown handle → 404 | AWAITING (SP1-FOUNDER) | `6–11`, `direct URLs` |
 | 10 | About opens | `/about` | header Giới thiệu → `/about`; `[data-screen="PUBLIC-ABOUT"][data-revision="DM02"]`; refresh holds | BASE | `10–11` |
 | 11 | Home returns | `/` | logo → `/`; Back → `/about` | BASE | `10–11` |
 
@@ -34,7 +34,10 @@ Every page also checks: no `href="#"`, empty or `javascript:` link (DEMO-D6); no
 
 The spec applies `db/seed/demo_0710.sql` in `beforeAll` and removes the demo rows in `afterAll`, as `demo-home-about-01` does.
 
-## To confirm at SYNC (observed in A `7dd5230`, not accepted)
+## SYNC result (DEMO-QA-B-SYNC, candidate `f309520`)
+All AWAITING steps PASS with `DEMO_QA_SYNC=1`; the founder route follows DEC-DEMO-SP1-D1 (`/talents/[handle]`). Final run 27 / 27 as expected (25 PASS, 2 expected-fail for QA-B-04). Report: [DEMO-QA-B-SYNC](../../implementation/reports/DEMO-QA-B-SYNC.md).
+
+## Confirmed at SYNC (first observed in A `7dd5230`)
 | Item | Note |
 |---|---|
 | `PUBLIC_ROUTES.products` | `/products` in `7dd5230` |
