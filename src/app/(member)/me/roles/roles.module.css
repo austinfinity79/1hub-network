@@ -160,6 +160,18 @@
   margin-top: 0.75rem;
 }
 
+/* Below desktop (DEC-MSHELL-D3): a <select> sizes to its longest option, and
+   the Sprint 1 catalogue's long organisation names made it ~700px wide; as a
+   flex item it could not shrink (min-width: auto), so the page scrolled
+   sideways. It now fits the column. 1440 is unchanged. */
+@media (max-width: 1023px) {
+  .field,
+  .select {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
 /* Below 768px (P1 mobile hotfix, DEC-MSHELL-D2): the 210px name column and the
    right-aligned trust text no longer fit beside each other, so a row stacks:
    name, then chip and role, then the trust line. Content and order unchanged;

@@ -1379,6 +1379,7 @@ Superseded records (traceable conflicts C-01…C-14 in [conflict-audit.md](../de
 |---|---|
 | <a id="dec-mshell-d1"></a>DEC-MSHELL-D1 | **Shared fix.** The existing adaptation is the member shell's default; the `responsive` opt-in is removed. Below 1024 px the gutters narrow; below 768 px the header wraps and the sidebar stacks above the content (the WF05-S01 pattern, no drawer, no new navigation). At 1024 px and wider nothing changes |
 | <a id="dec-mshell-d2"></a>DEC-MSHELL-D2 | **`/me/roles` rows below 768 px.** The measured four-column row (210 px name column, right-aligned trust text) stacks: name, then chip and role, then the trust line, left-aligned. Same content and order; the 1440 grid is unchanged |
+| <a id="dec-mshell-d3"></a>DEC-MSHELL-D3 | **`/me/roles` request form below 1024 px** (OPS-WORKTREE-INTEGRATE-CLEANUP-01, when the hotfix was integrated on the Sprint 1 base). The organisation `<select>` sized to the longest catalogue name (~700 px) and could not shrink as a flex item; below desktop the field and select may shrink to the column (`min-width: 0`, `max-width: 100%`). Layout only; 1440 unchanged |
 
 ## DEC-H1-R2 — Homepage aligned to the latest export (TASK 22-HOMEPAGE-FINAL-ALIGN)
 
