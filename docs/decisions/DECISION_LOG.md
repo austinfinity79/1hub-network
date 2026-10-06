@@ -1700,6 +1700,17 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-s1h-d3"></a>DEC-S1H-D3 | **Org diagram.** A node's lead only from an explicit "Liên kết" link naming exactly one person with a consistent title. China (link names the Phó Chủ tịch), Singapore and Quảng Ninh (no link) stay empty; HN follows the workbook: Vũ Minh Tâm = Trưởng HUB HN, Lê Phương Thảo = Phó Chủ tịch kiêm Tổng Thư ký HUB Tổng (A4, PO frozen 05/10), superseding the ABOUT-HUB-LEAD hotfix. About presentation only: no membership, leadership, role-verification, RBAC, Admin or WF03 record changes |
 | <a id="dec-s1h-d4"></a>DEC-S1H-D4 | **Activities.** All 43 rows in workbook order with their own image (downloaded once, local WebP, 16:9); "Link liên quan (bỏ)" never transcribed or shown; missing fields "Chờ cập nhật"; malformed dates shown as written; "Chuỗi sự kiện" gets its own filter |
 
+## DEC-DEMO — 07/10 demo SOT freeze (DEMO-SOT-00, PO, 06/10)
+
+<a id="dec-demo"></a>**Status:** FROZEN 2026-10-06 (documentation only) on the DEMO-SOT-00 task contract and the PO pack `hub New Design 7:10`; DEMO-D9 PENDING PO. The full record is [DEMO_SOT_v1](../demo-0710/DEMO_SOT_v1.md); this entry is the traceable conflict record for the closed decisions it supersedes ([matrix](../demo-0710/SUPERSESSION_MATRIX.md)). No runtime code, no migration.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-demo-d1"></a>DEC-DEMO-D1 | **Presentation authority.** The PO pack (13 screens / states, `design-reference/final/demo-0710/`) supersedes the Homepage H1 r2 and the S1-UAT-08A About presentation (DEC-H1-D2/D3, DEC-H1-R2-D1, DEC-2809-D1, DEC-S1H layout). S1-UAT-08A data, the DEC-H1-D1 entry rule and DEC-AIG-D1 (plain label for an unbuilt target) stay |
+| <a id="dec-demo-d2"></a>DEC-DEMO-D2 | **Public product routes.** `/products`, `/products/[slug]` (+ `/metrics`, `/updates`) and `/talents/[profileId]` (demo allow-list only) are authorised for the demo; this supersedes DEC-W6P-D01's "no new public venture discovery / nav entry" for the demo scope. Semantic names govern; DIR numbers never rename a concept |
+| <a id="dec-demo-d3"></a>DEC-DEMO-D3 | **Demo-only states.** "Đã xác thực danh tính qua 1Hub", metrics, updates and HUB badges on demo profiles are read-only fixtures; CCCD / 1Hub verification, investor / GP / LP access, metric visibility, the updates engine, Follow, Connect and Dataroom stay post-demo (DEC-P0-LANDING-D2 unchanged) |
+| <a id="dec-demo-d4"></a>DEC-DEMO-D4 | **Typography (PENDING PO).** Proposed: extend [DEC-HD-12](#dec-hd-12) to DM02–DM13; until approved, those screens are not implemented |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

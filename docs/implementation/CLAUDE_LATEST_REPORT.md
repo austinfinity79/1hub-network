@@ -1,40 +1,48 @@
 # Claude Task Report
 
 ## Task
-S1-UAT-03 — Sprint 1 onboarding corrections: US-01.07 location (FB-06, FB-07), FB-09 / FB-10 recheck, US-01.10 role minimum, US-01.11 HUB position declarations (FB-11, FB-12, FB-13), US-01.12 review. Reports: [task](reports/S1-UAT-03-onboarding.md) · [evidence](reports/S1-UAT-03-evidence.md).
+DEMO-SOT-00 — freeze the 07/10 demo SOT, visual baseline and route / data contract. Report: [DEMO-SOT-00](reports/DEMO-SOT-00.md). SOT: [DEMO_SOT_v1](../demo-0710/DEMO_SOT_v1.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE — READY FOR CHATGPT/PO REVIEW.** S1-UAT-03B (requests per position, routing, withdrawal) not implemented, not started. Not pushed, not merged, not deployed. STOP.
+**FROZEN — documentation only.** One decision is pending PO approval: DEMO-D9, which extends Space Grotesk (DEC-HD-12) to the demo screens. DEMO-HOME-ABOUT-01 is not started. Not pushed, not merged, not deployed. STOP.
 
 ## Scope implemented
-One location rule for stage 1, /me and the profile editor (11 countries, Việt Nam list + "Khác", typed place ≤ 60, new country clears the province); stage 3 needs a role; HUB positions with level, catalogue unit (CLB under its Chapter), five positions (+ Tên Ban / Ghi rõ), MM/YYYY term or current, 1–10 rows, overlap guard, ordered HUB → Chapter → CLB, "Chờ xác minh", nothing granted; review lists them in order; "Sửa" returns to the review; stage 2 "Quay lại" saves. Canonical catalogue from Appendix E. Decisions [DEC-S1O](../decisions/DECISION_LOG.md#dec-s1o); contract amendment A17.
+- Screen / route map, Thảo ↔ Figma numbering, nav and CTA rules, guest journey.
+- Figma reference map with SHA-256, pixel and responsive rules, missing design states.
+- Data contract: reuse plus fixtures, 3 startups and 6 fictional profiles, no migration.
+- Supersession matrix (screens, decisions, stale specs) and post-demo exclusions.
+- DEC-DEMO in the decision log.
 
 ## Files changed
-New: `db/seed/catalog_sprint1.sql`, `src/lib/profile/location.ts`, `src/lib/onboarding/hub-position.ts`, their unit tests, `sprint1-onboarding.db-test.ts`, `s1-uat-03-onboarding.spec.ts`, 2 reports. Changed: `db.mjs` (+ `catalog`), `db-target.mjs`, profile / roles / state / complete / vocabulary domain, stage 1–4 pages and forms, /me dialog, profile editor, `/ops/network` CSS, `verification.ts` (bound kept at 200); tests (DB helper and 7 suites, `db-target` unit test, e2e helpers, 14 specs, UAT uc01 / uc03); DECISION_LOG, API contract, P0_STATUS, readiness docs.
+- New: `docs/demo-0710/*` (6), `design-reference/final/demo-0710/*` (13 PNG + README), `reports/DEMO-SOT-00.md`.
+- Changed: `DECISION_LOG.md`, `P0_STATUS.md`, this report.
 
 ## Migrations / data
-No migration. Catalogue data step `node scripts/db.mjs catalog` (idempotent; `seed` runs it). Applied to `hubnetwork_s1uat03` only; shared `hubnetwork_p0` untouched (017).
+None. No database touched.
 
 ## Tests / build
-format, lint, typecheck, build PASS · unit 44 / 454 · DB 57 / 873 · S1-UAT-03 spec 10 / 10 · UAT L1-L2 19 / 19 · full protected regression 108 specs / 1295 tests / 1266 PASS / 0 FAIL / 29 SKIP / 0 FLAKY · seed idempotent · restart persistence PASS.
+Not applicable (no runtime change). `prettier --check` on the changed docs: see the commit.
 
 ## Visual QA
-1440 / 768 / 390: stage 1 typed location, stage 3 with ten rows, stage 4 — no overflow, CTAs inside. ACC-08 pixel PASS with the declaration rows recorded INTENTIONAL-BUSINESS (head and foot compared).
-
-## Readiness
-READY 96 · IMPLEMENTATION_PENDING 46 · BUSINESS 0 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1 = 160.
+Not applicable. 13 reference frames recorded as baselines; the existing baselines are untouched.
 
 ## Deviations / blockers
-None blocking. PO review: ACC-08 row layout (UAT fields); catalogue delivered as a data step (live placeholder units untouched, not offered); completion still files one membership request per unit until S1-UAT-03B; `/ops/network` rows grow with long names.
+- **Blocker:** DEMO-D9 (typography) needs PO approval.
+- **For PO:** SOT conflicts C1–C11. Among them:
+  - the ecosystem count 5 / 6 / 7 (visual list of 7 used, business list open);
+  - the "Chỉ số" frame duplicated (DM11 provisional);
+  - the Tracely team names;
+  - "Chuyên môn" vs FB-10;
+  - a fictional founder with a real chapter badge.
 
 ## Git
-- Branch: `feat/sprint1-completion` (worktree `../1hub-network-sprint1-completion`); start HEAD `392d99e`, unchanged by others
-- Implementation commit: `a613d80`
-- Report/final commit: the docs commit after it
+- Branch: `feat/sprint1-completion` (worktree `../1hub-network-sprint1-completion`); start HEAD `afa5bea`, unchanged by others
+- Implementation commit: none (documentation task)
+- Report/final commit: the DEMO-SOT-00 docs commit
 - Remote: `origin`
 - Push status: NOT RUN (task: no push)
-- Remote HEAD: origin/main `edd3d24` (unchanged); candidate `int/sprint1-candidate-01` `d497da2` (untouched)
-- Working tree: clean after the report commit
+- Remote HEAD: origin/main `edd3d24` (unchanged)
+- Working tree: clean after the commit
 
 ## Recommended next task
-ChatGPT / PO review of S1-UAT-03. S1-UAT-03B not started.
+PO approval of DEMO-D9, then DEMO-HOME-ABOUT-01. Not started.
