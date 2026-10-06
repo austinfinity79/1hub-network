@@ -372,11 +372,11 @@ test.describe('FB-14 — invitation detail in the workspace shell', () => {
 })
 
 test.describe('US-02.14 — decline (S1-UAT-07-FIX-02)', () => {
-  test('the invitee declines; the owner sees "Đã từ chối" after a reload and can invite again', async ({
+  test('the invitee declines; the owner sees "Đã từ chối" after a reload and a new sign-in, and can invite again', async ({
     page,
     browser,
   }) => {
-    const { venture } = await ownerWithVenture(page, 's1i-decline')
+    const { owner, venture } = await ownerWithVenture(page, 's1i-decline')
     const invitee = await member(browser, 's1i-decline-r')
     const { membership_id } = await invite(page.request, venture.id, {
       email: invitee.account.email,
@@ -411,6 +411,25 @@ test.describe('US-02.14 — decline (S1-UAT-07-FIX-02)', () => {
     await expect(page.locator('[data-row-kind="PENDING_INVITATION"]')).toHaveCount(0)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(declined).toHaveCount(1)
+
+    // Kept on the server: a new sign-in of each side sees the same state.
+    const signedInAgain = async (email: string) => {
+      const context = await browser.newContext({ baseURL: test.info().project.use.baseURL })
+      const again = await context.newPage()
+      watchConsole(again, consoleErrors)
+      expect((await again.request.post('/dev/login', { data: { email } })).ok()).toBe(true)
+      return { context, page: again }
+    }
+    const ownerAgain = await signedInAgain(owner.email)
+    await ownerAgain.page.goto(`/projects/${venture.id}/team`, { waitUntil: 'networkidle' })
+    await expect(ownerAgain.page.locator('[data-row-kind="DECLINED_INVITATION"]')).toHaveCount(1)
+    const inviteeAgain = await signedInAgain(invitee.account.email)
+    const open = await (
+      await inviteeAgain.page.request.get('/api/v1/me/venture-invitations')
+    ).json()
+    expect(open.items).toEqual([])
+    expect(await memberships(venture.id, invitee.account.profileId)).toEqual([])
+    await Promise.all([ownerAgain.context.close(), inviteeAgain.context.close()])
 
     // "có thể mời lại": the usual form; the new invitation replaces the declined line.
     await page.getByRole('button', { name: 'Mời thành viên' }).click()
