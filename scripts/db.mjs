@@ -1,7 +1,7 @@
 /**
  * M0-T06A — database lifecycle commands.
  *
- * Usage: node scripts/db.mjs <migrate|seed|catalog|reset|introspect|status>
+ * Usage: node scripts/db.mjs <migrate|seed|catalog|demo|reset|introspect|status>
  *
  * TARGET RULE (DB-SAFETY-01, scripts/db-target.mjs): migrate, seed and reset
  * need an explicitly exported DATABASE_URL and never fall back to a default;
@@ -38,6 +38,11 @@ const SEED_FILE = join(ROOT, 'db', 'seed', 'seed_p0_deterministic.sql')
 // the fixtures; `catalog` applies it alone, for an environment that keeps its
 // own data (UAT, production). Idempotent.
 const CATALOG_FILE = join(ROOT, 'db', 'seed', 'catalog_sprint1.sql')
+
+// DEMO-0710 (docs/demo-0710/DEMO_DATA_CONTRACT.md): the deterministic demo
+// ventures of the 07/10 demo. Never part of `seed`; `demo` applies it alone,
+// after the catalogue, on a demo / visual-QA database only. Idempotent.
+const DEMO_FILE = join(ROOT, 'db', 'seed', 'demo_0710.sql')
 
 /** Set once, before any command runs (see the end of this file). */
 let DATABASE_URL
@@ -127,6 +132,15 @@ async function catalog() {
   })
 }
 
+async function demo() {
+  const sql = readFileSync(DEMO_FILE, 'utf8')
+
+  await withClient(async (client) => {
+    await client.query(sql)
+    console.log(`  applied ${relative(ROOT, DEMO_FILE)}`)
+  })
+}
+
 /**
  * Drops and recreates the public schema, then migrates and seeds. Local only:
  * CLAUDE.md:80 forbids rewriting applied migrations in a real environment, and
@@ -205,7 +219,7 @@ async function introspect() {
   console.log(JSON.stringify(report, null, 2))
 }
 
-const COMMANDS = { migrate, seed, catalog, reset, status, introspect }
+const COMMANDS = { migrate, seed, catalog, demo, reset, status, introspect }
 
 const command = process.argv[2]
 if (!command || !(command in COMMANDS)) {

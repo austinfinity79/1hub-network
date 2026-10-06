@@ -24,9 +24,8 @@ vi.mock('@/lib/onboarding/state', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/onboarding/state')>()
   return { ...actual, getOnboardingState: async () => mocks.state }
 })
-vi.mock('@/lib/db/client', () => ({ query: async () => [] }))
 
-const { landingEntry, publicHubSlug } = await import('./entry')
+const { landingEntry } = await import('./entry')
 
 describe('P0-LANDING entry (the homepage primary CTA)', () => {
   beforeEach(() => {
@@ -58,9 +57,5 @@ describe('P0-LANDING entry (the homepage primary CTA)', () => {
     mocks.state = { completed: true, current_step: null, intent: null }
     await landingEntry('opaque-token')
     expect(mocks.token).toHaveBeenCalledWith('opaque-token')
-  })
-
-  it('no published HUB → no network link', async () => {
-    expect(await publicHubSlug()).toBeNull()
   })
 })

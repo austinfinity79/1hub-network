@@ -1,507 +1,448 @@
-import Link from 'next/link'
+import Image from 'next/image'
 
-import type { LandingEntry } from '@/lib/landing/entry'
-
-import { Arrow, Cta, NavLabel, type Action } from '../landing/landing-parts'
-import landing from '../landing/landing.module.css'
+import type { AboutNetwork } from '@/lib/public/about-network'
+import { ECOSYSTEM_LINKS, FACEBOOK_URL, PUBLIC_ROUTES } from '@/lib/public/routes'
+import type { PublicShellData } from '@/lib/public/shell-data'
 
 import {
-  AboutMotion,
-  ActivitiesStrip,
-  ClosingGlow,
-  HumansStrip,
-  OrgDiagram,
-  TimelineTrack,
-} from './about-client'
+  ArrowRight,
+  ArrowUpRight,
+  NOT_YET,
+  PublicAction,
+} from '@/components/public-shell/public-action'
+import { PublicFooter } from '@/components/public-shell/public-footer'
+import { PublicHeader } from '@/components/public-shell/public-header'
+
+import { ACTIVITIES, HERO_STATS, MILESTONES, VALUES, type Human } from './about-data'
+import { AboutHumans, type HumanCard } from './about-humans'
 import {
-  HERO_CARDS,
-  HERO_STATS,
-  MISSIONS,
-  ORG_TIERS,
-  SCALE_FUNCTIONS,
-  SCALE_PHOTOS,
-  VALUES,
-} from './about-data'
-import { Photo, ScaleRing } from './about-parts'
+  ARCHIPELAGOS,
+  HUB_TONG,
+  PLACE_SINCE,
+  REGIONAL_HUBS,
+  initials,
+  people,
+  person,
+} from './about-hubs'
+import { AboutMap, type MapHub } from './about-map'
+import { VIETNAM_VIEW, WORLD_VIEW, project } from './about-map-geo'
+import { AboutMilestones } from './about-milestones'
 import styles from './about.module.css'
 
 /**
- * TASK 22-PREVIEW-ABOUT — the public About page, `/about` for every visitor.
+ * DEMO-HOME-ABOUT-01 — About HUB v2, a full rebuild against the PO frames
+ * DM02 (page), DM03 (HUB popup), DM04 / DM05 (Humans of HUB tabs).
  *
- * Reference: About.zip (Sprint 1 · DL29, 28/09): 01 Hero · 02 Sứ mệnh ·
- * 03 Giá trị cốt lõi H·U·B · 04 Quy mô mạng lưới · 05 Cơ cấu tổ chức + Humans
- * of HUB · 06 Dấu ấn phát triển · 07 Các hoạt động tiêu biểu · 08 Mỗi kết
- * nối, một khởi đầu · Footer. The header reuses the homepage bar classes
- * (landing.module.css, read-only) so both public pages match.
- *
- * Calls to action go to a real destination or are inert with a reason
- * (`Cta`, DEC-P0-SHELL-D2): "Tham gia HUB Network" is the visitor's entry
- * point (the homepage's); "Khám phá các HUB Chapter" is the published HUB's
- * public page (it lists its chapters). Everything else has no screen yet.
+ * Content: the S1-UAT-08A copy, people, photos, milestones and activities are
+ * reused verbatim; the frame decides the composition. Counts are canonical
+ * (catalogue: 11 regional HUBs of 13 Chapters, 55 CLBs) wherever the frame's
+ * sample numbers differ (DEMO-HOME-ABOUT-01 §4; SOT conflicts C1, C4). The
+ * ecosystem renders the frame's 7-row visual list (DEMO-D11); the business
+ * list stays open. The partner wall shows the frame's placeholders with a
+ * visible "Dữ liệu minh hoạ" label (the DEC-H1-R2 precedent).
  */
 
-function entryLabel(entry: LandingEntry): string | null {
-  if (entry.kind === 'GUEST') return null
-  return entry.onboarded ? 'Vào tài khoản của tôi' : 'Tiếp tục thiết lập tài khoản'
-}
+const FOUNDED = 2021
+const DEMO_YEAR = 2026
 
-function SectionLabel({
-  no,
-  children,
-  tone = 'red',
-}: {
-  no: string
-  children: string
-  tone?: 'red' | 'coral' | 'ink'
-}) {
-  return (
-    <p className={styles.label}>
-      <span className={styles[`labelNo_${tone}`]}>{no}</span>
-      <span className={styles.labelSlash}> / </span>
-      {children}
-    </p>
-  )
-}
+const card = (h: Human): HumanCard => ({
+  name: h.name,
+  title: h.title,
+  photo: h.photo?.src ?? null,
+  initials: initials(h.name),
+})
 
-export function About({
-  entry,
-  hubSlug,
-  legal,
-}: {
-  entry: LandingEntry
-  hubSlug: string | null
-  legal: Array<{ href: string; label: string }>
-}) {
-  const member = entryLabel(entry)
-  const join: Action = { href: entry.href }
-  const network: Action = hubSlug
-    ? { href: `/organizations/${hubSlug}` }
-    : { inert: 'NO_P0_SCREEN' }
-  const later: Action = { inert: 'NO_P0_SCREEN' }
+const ECOSYSTEM: Array<{ label: string; name: string; text: string; href: string | null }> = [
+  { label: 'XÁC THỰC', name: '1Hub', text: 'Định danh cá nhân', href: ECOSYSTEM_LINKS.oneHub },
+  {
+    label: 'CHƯƠNG TRÌNH ĐỔI MỚI SÁNG TẠO',
+    name: 'APEC Innovation Challenge',
+    text: 'Chương trình kết nối hệ sinh thái đổi mới sáng tạo 21 nền kinh tế APEC, hưởng ứng năm APEC Việt Nam 2027',
+    href: ECOSYSTEM_LINKS.apecInnovationChallenge,
+  },
+  {
+    label: 'ĐÀO TẠO · TUYỂN DỤNG',
+    name: 'iHUB Incubator',
+    text: 'Chương trình đổi mới sáng tạo, đào tạo và phát triển đội ngũ',
+    href: ECOSYSTEM_LINKS.ihubIncubator,
+  },
+  {
+    label: 'AI HỖ TRỢ',
+    name: 'AI - Cofounder',
+    text: 'Công cụ hỗ trợ hoàn thiện MVP',
+    href: ECOSYSTEM_LINKS.aiCofounder,
+  },
+  {
+    label: 'INCUBATOR',
+    name: 'Builder Camp',
+    text: 'Chương trình ươm tạo startup founder toàn cầu về Việt Nam xây dựng doanh nghiệp',
+    href: ECOSYSTEM_LINKS.builderCamp,
+  },
+  {
+    label: 'QUỸ ĐẦU TƯ',
+    name: 'iHUB Ventures',
+    text: 'Kết nối đầu tư giai đoạn đầu',
+    href: ECOSYSTEM_LINKS.ihubVentures,
+  },
+  {
+    label: 'QUỸ ĐẦU TƯ',
+    name: 'Vietnam’s National Ventures',
+    text: 'Quỹ đầu tư mạo hiểm quốc gia',
+    href: ECOSYSTEM_LINKS.vnv,
+  },
+]
+
+/** DM02 partner wall: the frame's placeholder names, shown as illustration only. */
+const PARTNER_ROWS: Array<{ label: string; names: string[] }> = [
+  {
+    label: 'HIỆP HỘI',
+    names: [
+      'Doanh nghiệp A',
+      'Doanh nghiệp B',
+      'Tập đoàn C',
+      'Công ty D',
+      'Doanh nghiệp E',
+      'Doanh nghiệp A',
+    ],
+  },
+  {
+    label: 'DOANH NGHIỆP',
+    names: [
+      'Hiệp hội B',
+      'Sở KH&CN',
+      'Chapter Cần Thơ',
+      'Chapter Đà Nẵng',
+      'Chương trình A',
+      'Chương trình A',
+    ],
+  },
+  {
+    label: 'DOANH NGHIỆP',
+    names: [
+      'Đại học A',
+      'Đại học B',
+      'CLB Khởi nghiệp',
+      'Viện C',
+      'CLB Sáng tạo',
+      'Đại học A',
+      'Đại học B',
+    ],
+  },
+]
+
+export function About({ shell, network }: { shell: PublicShellData; network: AboutNetwork }) {
+  const { viewer } = shell
+  const bySlug = new Map(network.chapters.map((c) => [c.slug, c]))
+  const regional = REGIONAL_HUBS.filter((h) => bySlug.has(h.slug))
+  const memberStat = HERO_STATS.find((s) => s.label === 'thành viên')
+  const partnerStat = HERO_STATS.find((s) => s.label.startsWith('đối tác'))
+  const stats = [
+    memberStat ? { value: memberStat.value, label: 'thành viên' } : null,
+    { value: String(regional.length), label: 'HUB khu vực' },
+    { value: String(network.clubCount), label: 'câu lạc bộ trực thuộc', data: true },
+    partnerStat ? { value: partnerStat.value, label: 'đối tác' } : null,
+    { value: String(DEMO_YEAR - FOUNDED), label: 'năm thành lập' },
+  ].filter((s): s is { value: string; label: string; data?: boolean } => s !== null)
+
+  const mapHubs: MapHub[] = regional.map((h) => {
+    const board = people(h.board).map(card)
+    return {
+      slug: h.slug,
+      code: h.code,
+      short: h.short,
+      place: h.place,
+      since: h.since,
+      initials: board[0]?.initials ?? h.code,
+      world: project(WORLD_VIEW, h.lon, h.lat),
+      vietnam: project(VIETNAM_VIEW, h.lon, h.lat),
+      board,
+      clubs: bySlug.get(h.slug)?.clubs.map((c) => c.name) ?? [],
+      href: `/organizations/${h.slug}`,
+    }
+  })
+  const archipelagos = ARCHIPELAGOS.map((a) => ({
+    name: a.name,
+    world: project(WORLD_VIEW, a.lon, a.lat),
+    vietnam: project(VIETNAM_VIEW, a.lon, a.lat),
+  }))
+  const catalogue = network.chapters.map((c) => ({
+    name: c.name,
+    clubs: c.clubs.map((k) => k.name),
+  }))
+
+  const chair = person(HUB_TONG.chair)
+  const hubTong = {
+    chair: chair ? card(chair) : null,
+    deputies: people(HUB_TONG.deputies).map(card),
+    advisors: people(HUB_TONG.advisors).map(card),
+    boards: HUB_TONG.boards.map((b) => {
+      const lead = person(b.lead)
+      return { name: b.name, lead: lead ? card(lead) : null }
+    }),
+  }
+  const regions = mapHubs.map((h) => ({
+    slug: h.slug,
+    short: h.short,
+    place: h.place,
+    since: h.since,
+    clubCount: h.clubs.length,
+    chair: h.board[0] ?? null,
+    deputies: h.board.slice(1),
+    href: h.href,
+  }))
+  // DM05 order: regional HUBs first (DM04 order), one club of each in turn, so the first cards span the HUBs.
+  const rank = (slug: string) => {
+    const i = REGIONAL_HUBS.findIndex((h) => h.slug === slug)
+    return i < 0 ? REGIONAL_HUBS.length : i
+  }
+  const lists = [...network.chapters]
+    .filter((c) => c.clubs.length)
+    .sort((x, y) => rank(x.slug) - rank(y.slug) || x.order - y.order)
+    .map((c) => ({
+      hub:
+        REGIONAL_HUBS.find((h) => h.slug === c.slug)?.short ??
+        c.name.replace(/^HUB Network /, 'HUB '),
+      clubs: c.clubs,
+    }))
+  const clubs: Array<{ hub: string; name: string }> = []
+  for (let i = 0; lists.some((l) => i < l.clubs.length); i += 1)
+    for (const l of lists) {
+      const club = l.clubs[i]
+      if (club) clubs.push({ hub: l.hub, name: club.name })
+    }
+
+  const activities = [...ACTIVITIES.filter((a) => a.photo), ...ACTIVITIES.filter((a) => !a.photo)]
 
   return (
     <div
-      className={`${landing.page} ${styles.page}`}
+      className={styles.page}
       data-screen="PUBLIC-ABOUT"
-      data-entry={entry.kind}
+      data-revision="DM02"
+      data-entry={viewer.kind}
     >
-      <AboutMotion />
-      <div className={styles.content}>
-        {/* 01 — Hero */}
-        <section className={styles.hero} data-section="hero" aria-labelledby="about-title">
-          <header className={landing.bar}>
-            <Link href="/" className={landing.brand} aria-label="HUB NETWORK — trang chủ">
-              HUB NETWORK
-            </Link>
-            <nav className={landing.nav} aria-label="Trang chủ">
-              <Link href="/about" className={styles.navActive} aria-current="page">
-                Về HUB Network
-              </Link>
-              <NavLabel>Chương trình</NavLabel>
-              <NavLabel>Sự kiện</NavLabel>
-              <Cta action={network} label="Mạng lưới đổi mới sáng tạo">
-                Mạng lưới đổi mới sáng tạo
-              </Cta>
-            </nav>
-            <div className={landing.barRight}>
-              <Cta action={{ inert: 'FUTURE' }} label="VI | EN" className={landing.lang}>
-                VI | EN
-              </Cta>
-              {member ? null : (
-                <Link href={entry.href} className={landing.login} data-cta="login">
-                  Đăng nhập
-                </Link>
-              )}
-              <Link href={entry.href} className={landing.barPill} data-cta="primary-bar">
-                {member ?? 'Tạo tài khoản'}
-              </Link>
-            </div>
-          </header>
+      <section className={styles.dark}>
+        <PublicHeader viewer={viewer} current="about" />
 
-          <div className={styles.heroCards} aria-hidden="true">
-            {HERO_CARDS.map((c, i) => (
-              <div key={c.caption} className={`${styles.heroCard} ${styles[`heroCard${i + 1}`]}`}>
-                <Photo
-                  caption={c.caption}
-                  tone={c.tone}
-                  rounded={false}
-                  photo={c.photo}
-                  sizes="(max-width: 899px) 45vw, 250px"
-                  priority
-                />
-              </div>
-            ))}
-          </div>
-
-          <p className={styles.heroEyebrow}>VIETNAMESE GLOBAL NETWORK</p>
-          <h1 id="about-title" className={styles.heroTitle}>
-            HUB
-            <br />
-            Network
-          </h1>
+        <div className={styles.hero} data-section="hero">
+          <p className={styles.eyebrowPink}>MẠNG LƯỚI NGƯỜI VIỆT TOÀN CẦU</p>
+          <h1 className={styles.heroTitle}>HUB Network</h1>
           <p className={styles.heroTagline}>
             Mạng lưới Khởi nghiệp, Đổi mới sáng tạo và Chuyển đổi số
           </p>
-          <div className={styles.heroSide}>
-            <p className={styles.heroLede}>
-              Tổ chức cộng đồng phi lợi nhuận quy tụ người Việt trẻ trên toàn cầu chung niềm đam mê
-              khởi nghiệp, đổi mới sáng tạo, cùng chia sẻ tri thức, cộng hưởng nguồn lực và kiến tạo
-              giá trị cho Việt Nam.
-            </p>
-            <div className={styles.heroActions}>
-              <Cta
-                action={join}
-                label="Tham gia HUB Network"
-                className={styles.btnInk}
-                cta="about-join"
-              >
-                Tham gia HUB Network <Arrow />
-              </Cta>
-              <Cta action={later} label="Kết nối hợp tác" className={styles.btnLine} soon>
-                Kết nối hợp tác
-              </Cta>
-            </div>
+          <p className={styles.heroLede}>
+            Tổ chức cộng đồng phi lợi nhuận quy tụ người Việt trẻ trên toàn cầu chung niềm đam mê
+            khởi nghiệp, đổi mới sáng tạo, cùng chia sẻ tri thức, cộng hưởng nguồn lực và kiến tạo
+            giá trị cho Việt Nam.
+          </p>
+          <div className={styles.heroActions}>
+            <PublicAction href={viewer.entry} className={styles.coralBtn} cta="about-join">
+              Tham gia HUB Network <ArrowUpRight />
+            </PublicAction>
+            <PublicAction href={null} className={styles.outlineBtn} cta="partnership">
+              Kết nối hợp tác
+            </PublicAction>
+            <PublicAction
+              href={FACEBOOK_URL}
+              className={styles.fbBtn}
+              label="Facebook HUB Network"
+              cta="facebook"
+            >
+              <svg viewBox="0 0 10 18" width="7" height="13" aria-hidden="true">
+                <path
+                  d="M6.5 18V9.8h2.7l.4-3.2H6.5v-2c0-.9.3-1.6 1.6-1.6h1.7V.1C9.5.1 8.5 0 7.4 0 5 0 3.3 1.5 3.3 4.2v2.4H.6v3.2h2.7V18z"
+                  fill="currentColor"
+                />
+              </svg>
+            </PublicAction>
           </div>
-          <ul className={styles.stats}>
-            {HERO_STATS.map((s) => (
-              <li key={s.label} className={styles.stat}>
-                <span className={styles.statValue}>{s.value}</span>
-                <span className={styles.statLabel}>{s.label}</span>
+          <ul className={styles.stats} role="list">
+            {stats.map((s) => (
+              <li
+                key={s.label}
+                className={styles.stat}
+                // Canonical count where the frame draws its own sample (INTENTIONAL-DATA).
+                data-pixel={s.data ? 'data' : undefined}
+              >
+                <p className={styles.statValue}>{s.value}</p>
+                <p className={styles.statLabel}>{s.label}</p>
               </li>
             ))}
           </ul>
-        </section>
+        </div>
 
-        {/* 02 — Sứ mệnh */}
-        <section
-          id="su-menh"
-          className={styles.mission}
-          data-section="mission"
-          aria-labelledby="mission-title"
-        >
-          <SectionLabel no="02">SỨ MỆNH</SectionLabel>
-          <h2 id="mission-title" className={styles.h2}>
-            Sứ mệnh
-          </h2>
-          <ol className={styles.missionList}>
-            {MISSIONS.map((m, i) => (
-              <li
-                key={m.no}
-                className={`${styles.missionRow} ${i === 0 ? styles.missionRowOpen : ''}`}
-                data-reveal="rise"
-              >
-                <span className={styles.missionNo}>{m.no}</span>
-                <p className={styles.missionTitle}>{m.title}</p>
-                <div className={styles.missionPhoto} data-reveal="open">
-                  <Photo
-                    caption={m.caption}
-                    tone={m.tone}
-                    photo={m.photo}
-                    sizes="(max-width: 1279px) 100vw, 520px"
-                  />
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        {/* 03 — Giá trị cốt lõi H·U·B */}
-        <section className={styles.values} data-section="values" aria-labelledby="values-title">
-          <SectionLabel no="03" tone="coral">
+        <section className={styles.values} data-section="values" aria-labelledby="about-values">
+          <p id="about-values" className={styles.eyebrowCoral}>
             GIÁ TRỊ CỐT LÕI
-          </SectionLabel>
-          <h2 id="values-title" className={`${styles.h2} ${styles.onDark}`}>
-            Giá trị cốt lõi
-          </h2>
-          <ul className={styles.valueList}>
-            {VALUES.map((v, i) => (
-              <li
-                key={v.letter}
-                className={`${styles.valueCard} ${i === 0 ? styles.valueCardLit : ''}`}
-              >
-                <span className={styles.valueLetter} aria-hidden="true" data-reveal="slide">
+          </p>
+          <ul className={styles.valueGrid} role="list">
+            {VALUES.map((v) => (
+              <li key={v.letter} className={styles.value}>
+                <p className={styles.valueLetter} aria-hidden="true">
                   {v.letter}
-                </span>
-                <h3 className={styles.valueName}>
-                  <span className={styles.coralText}>{v.letter}</span>
+                </p>
+                <h2 className={styles.valueTitle}>
+                  {v.letter}
                   {v.rest}
-                </h3>
+                </h2>
                 <p className={styles.valueText}>{v.text}</p>
               </li>
             ))}
           </ul>
         </section>
 
-        {/* 04 — Quy mô mạng lưới */}
-        <section
-          id="quy-mo"
-          className={styles.scale}
-          data-section="scale"
-          aria-labelledby="scale-title"
-        >
+        <section className={styles.scale} data-section="scale" aria-labelledby="about-scale">
+          <p className={styles.eyebrowCoral}>QUY MÔ CỘNG ĐỒNG</p>
           <div className={styles.scaleHead}>
-            <div>
-              <SectionLabel no="04">QUY MÔ MẠNG LƯỚI</SectionLabel>
-              <h2 id="scale-title" className={styles.h2Big}>
-                Một mạng lưới,
-                <br />
-                nhiều điểm kết nối
-              </h2>
-            </div>
-            <p className={styles.scaleLede}>
-              HUB Network phát triển theo mô hình liên kết đa tầng: thống nhất về tầm nhìn và định
-              hướng, đồng thời trao quyền để mỗi HUB chủ động phát triển cộng đồng và nguồn lực phù
-              hợp với từng khu vực và nhóm thành viên.
+            <h2 id="about-scale" className={styles.scaleTitle}>
+              {regional.length} HUB Khu vực
+            </h2>
+            <p className={styles.scaleHint}>
+              Di chuyển con trỏ chuột để xem nhanh, bấm vào các điểm sáng tương ứng để mở chi tiết
+              hồ sơ HUB Khu vực
             </p>
           </div>
-
-          <div className={styles.core}>
-            <div className={styles.coreText}>
-              <p className={styles.coreTier}>
-                <span className={styles.coreDot} aria-hidden="true" />
-                TẦNG 1 · TRUNG TÂM CỦA MẠNG LƯỚI
-              </p>
-              <h3 className={styles.coreTitle}>HUB Tổng</h3>
-              <p className={styles.coreLede}>
-                Định hướng chiến lược, kết nối nguồn lực và xây dựng hệ thống vận hành chung cho
-                toàn mạng lưới.
-              </p>
-              <ol className={styles.coreList}>
-                {SCALE_FUNCTIONS.map((f, i) => (
-                  <li key={f}>
-                    <span className={styles.coreNo}>0{i + 1}</span>
-                    {f}
-                  </li>
-                ))}
-              </ol>
-              <p className={styles.coreChips}>
-                <span>13 HUB thành viên</span>
-                <span>Gần 60 câu lạc bộ, cộng đồng</span>
-              </p>
-            </div>
-            <ScaleRing className={styles.coreRing} />
-          </div>
-
-          <div className={styles.tiers}>
-            <article className={styles.tierCard}>
-              <div className={styles.tierHead}>
-                <span className={styles.tierBig}>13</span>
-                <div>
-                  <p className={styles.tierNo}>TẦNG 2</p>
-                  <h3 className={styles.tierTitle}>HUB thành viên</h3>
-                </div>
-              </div>
-              <p className={styles.tierText}>
-                Phát triển theo khu vực địa lý; trực tiếp kết nối cộng đồng, đối tác và triển khai
-                các hoạt động phù hợp.
-              </p>
-              <div className={styles.tierPhoto}>
-                <Photo
-                  caption="ẢNH · HOẠT ĐỘNG TẠI MỘT HUB KHU VỰC"
-                  tone="warm"
-                  photo={SCALE_PHOTOS.memberHubs}
-                  sizes="(max-width: 1279px) 100vw, 660px"
-                />
-              </div>
-            </article>
-            <article className={styles.tierCard}>
-              <div className={styles.tierHead}>
-                <span className={styles.tierBig}>~60</span>
-                <div>
-                  <p className={styles.tierNo}>TẦNG 3</p>
-                  <h3 className={styles.tierTitle}>Câu lạc bộ, cộng đồng</h3>
-                </div>
-              </div>
-              <p className={styles.tierText}>
-                Kết nối gần 60 câu lạc bộ và cộng đồng về khởi nghiệp, đổi mới sáng tạo, công nghệ
-                và dữ liệu, tạo những điểm kết nối sâu tại trường học, địa phương và các nhóm chuyên
-                môn.
-              </p>
-              <div className={styles.tierPhoto}>
-                <Photo
-                  caption="ẢNH · CÂU LẠC BỘ TẠI TRƯỜNG"
-                  tone="dark"
-                  photo={SCALE_PHOTOS.clubs}
-                  sizes="(max-width: 1279px) 100vw, 660px"
-                />
-              </div>
-            </article>
-          </div>
-
-          <div className={styles.scaleActions}>
-            <Cta action={network} label="Khám phá các HUB Chapter" className={styles.btnInk}>
-              Khám phá các HUB Chapter <Arrow />
-            </Cta>
-            <Cta action={later} label="Khám phá các câu lạc bộ" className={styles.btnLineInk} soon>
-              Khám phá các câu lạc bộ <Arrow />
-            </Cta>
-          </div>
+          <AboutMap hubs={mapHubs} archipelagos={archipelagos} catalogue={catalogue} />
         </section>
 
-        {/* 05 — Cơ cấu tổ chức + Humans of HUB */}
-        <section id="co-cau" className={styles.org} data-section="org" aria-labelledby="org-title">
-          <div className={styles.orgHead}>
-            <div>
-              <p className={styles.label}>
-                <span className={styles.labelNo_coral}>CƠ CẤU TỔ CHỨC</span>
-              </p>
-              <h2 id="org-title" className={`${styles.h2} ${styles.onDark}`}>
-                Cơ cấu tổ chức
-              </h2>
-              <p className={styles.orgNote}>
-                <span className={styles.coreDot} aria-hidden="true" />
-                Đội ngũ Ban Điều hành HUB Network nhiệm kỳ hiện tại
-              </p>
-            </div>
-            <p className={styles.orgLede}>
-              Mỗi vị trí trong mạng lưới — từ HUB Tổng tới từng HUB thành viên và câu lạc bộ — cùng
-              những người đang đảm nhiệm.
-            </p>
-          </div>
-
-          <div className={styles.orgBody}>
-            <ol className={styles.orgTiers}>
-              {ORG_TIERS.map((t) => (
-                <li key={t.tier}>
-                  <p className={styles.orgTier}>{t.tier}</p>
-                  <p className={styles.orgTierTitle}>{t.title}</p>
-                  {t.note ? <p className={styles.orgTierNote}>{t.note}</p> : null}
-                </li>
-              ))}
-            </ol>
-            <OrgDiagram />
-          </div>
-          <p className={styles.orgHint}>
-            RÊ CHUỘT HOẶC CHẠM VÀO MỘT HUB ĐỂ XEM NGƯỜI PHỤ TRÁCH · VÒNG NGOÀI MANG TÍNH MINH HOẠ
-          </p>
-
-          <div id="humans" className={styles.humans}>
-            <HumansStrip later={later} />
-          </div>
-        </section>
-
-        {/* 06 — Dấu ấn phát triển */}
-        <section
-          id="dau-an"
-          className={styles.timeline}
-          data-section="timeline"
-          aria-labelledby="timeline-title"
-        >
-          <SectionLabel no="06">DẤU ẤN PHÁT TRIỂN</SectionLabel>
-          <h2 id="timeline-title" className={styles.h2}>
-            5 năm kết nối và mở rộng
+        <section className={styles.humans} data-section="humans" aria-labelledby="about-humans">
+          <p className={styles.eyebrowCoral}>HUMANS OF HUB</p>
+          <h2 id="about-humans" className={styles.humansTitle}>
+            Những người đang dẫn dắt mạng lưới
           </h2>
-          <TimelineTrack />
+          <PublicAction href={PUBLIC_ROUTES.talents} className={styles.underlineLight}>
+            Tìm thành viên <ArrowRight />
+          </PublicAction>
+          <AboutHumans
+            hubTong={hubTong}
+            regions={regions}
+            clubs={clubs}
+            clubTotal={network.clubCount}
+            talents={PUBLIC_ROUTES.talents}
+          />
+        </section>
+      </section>
+
+      <section className={styles.light}>
+        <section className={styles.ecosystem} data-section="ecosystem" aria-labelledby="about-eco">
+          <p className={styles.eyebrowRed}>
+            HỆ SINH THÁI <span>HUB</span>
+          </p>
+          <h2 id="about-eco" className={styles.lightTitle}>
+            Từ cộng đồng đến vốn đầu tư
+          </h2>
+          <ul className={styles.ecoList} role="list">
+            {ECOSYSTEM.map((e) => (
+              <li key={e.name}>
+                <PublicAction href={e.href} className={styles.ecoRow} label={e.name}>
+                  <span className={styles.ecoLabel}>{e.label}</span>
+                  <span className={styles.ecoName}>{e.name}</span>
+                  <span className={styles.ecoText}>{e.text}</span>
+                  <span className={styles.ecoArrow} aria-hidden="true">
+                    {e.href ? <ArrowUpRight /> : <ArrowRight />}
+                  </span>
+                </PublicAction>
+              </li>
+            ))}
+          </ul>
         </section>
 
-        {/* 07 — Các hoạt động tiêu biểu */}
+        <section className={styles.milestones} data-section="milestones" aria-labelledby="about-ms">
+          <p className={styles.eyebrowRed}>DẤU ẤN PHÁT TRIỂN</p>
+          <h2 id="about-ms" className={styles.lightTitle}>
+            {DEMO_YEAR - FOUNDED} năm kết nối và mở rộng
+          </h2>
+          <AboutMilestones milestones={MILESTONES} places={PLACE_SINCE} />
+        </section>
+
         <section
           className={styles.activities}
           data-section="activities"
-          aria-labelledby="activities-title"
+          aria-labelledby="about-act"
         >
-          <SectionLabel no="07">CÁC HOẠT ĐỘNG TIÊU BIỂU</SectionLabel>
-          <h2 id="activities-title" className={styles.h2Big}>
-            Các hoạt động tiêu biểu
-          </h2>
-          <p className={styles.activitiesLede}>
-            Các chương trình, sự kiện, cuộc thi HUB Network chủ trì tổ chức và phối hợp tổ chức.
-          </p>
-          <ActivitiesStrip later={later} />
+          <div className={styles.activitiesHead}>
+            <p id="about-act" className={styles.eyebrowRed}>
+              HOẠT ĐỘNG TIÊU BIỂU
+            </p>
+            <PublicAction href={PUBLIC_ROUTES.events} className={styles.underline}>
+              Xem lịch sự kiện <ArrowRight />
+            </PublicAction>
+          </div>
+          <ul className={styles.activityTrack} role="list">
+            {activities.map((a) => (
+              <li key={a.row} className={styles.activity}>
+                <div className={styles.activityArt}>
+                  {a.photo ? (
+                    <Image
+                      src={a.photo.src}
+                      alt={a.photo.alt}
+                      fill
+                      sizes="421px"
+                      style={{ objectFit: 'cover' }}
+                    />
+                  ) : null}
+                </div>
+                <p className={styles.activityMeta}>
+                  {[a.tagLabel, a.organisers[0]?.toLocaleUpperCase('vi') ?? a.time]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+                <h3 className={styles.activityTitle}>{a.title}</h3>
+              </li>
+            ))}
+          </ul>
         </section>
 
-        {/* 08 — Mỗi kết nối, một khởi đầu */}
-        <ClosingGlow>
-          <SectionLabel no="08" tone="ink">
-            THAM GIA
-          </SectionLabel>
-          <h2 className={styles.closingTitle}>
-            Mỗi kết nối, một
-            <br />
-            khởi đầu
-          </h2>
-          <div className={styles.closingFoot}>
-            <p className={styles.closingText}>
-              Dù bạn là cá nhân đang tìm kiếm cộng đồng, một tổ chức muốn mở rộng hợp tác hay một
-              đối tác mong muốn đóng góp nguồn lực, HUB Network luôn sẵn sàng cùng bạn tạo nên những
-              kết nối có ý nghĩa.
-            </p>
-            <div className={styles.closingActions}>
-              <Cta
-                action={join}
-                label="Tham gia HUB Network"
-                className={`${styles.btnInk} ${styles.magnet}`}
-                cta="about-join-closing"
-              >
-                Tham gia HUB Network <Arrow />
-              </Cta>
-              <Cta action={later} label="Kết nối hợp tác" className={styles.btnLine} soon>
-                Kết nối hợp tác
-              </Cta>
-            </div>
-          </div>
-        </ClosingGlow>
-      </div>
-
-      {/* Footer — fixed behind the page (revealed as the last section scrolls away) */}
-      <footer className={styles.footer} data-section="footer">
-        <div className={styles.footerTop}>
-          <div>
-            <p className={styles.footerBrand}>HUB NETWORK</p>
-            <p className={styles.footerText}>
-              Mạng lưới Khởi nghiệp, Đổi mới sáng tạo và Chuyển đổi số.
-            </p>
-          </div>
-          <FooterColumn title="VỀ HUB NETWORK">
-            {/* The pack has no separate vision section; "Tầm nhìn" opens the mission. */}
-            <a href="#su-menh">Tầm nhìn</a>
-            <a href="#quy-mo">Quy mô mạng lưới</a>
-            <a href="#co-cau">Cơ cấu tổ chức</a>
-            <a href="#dau-an">Dấu ấn phát triển</a>
-          </FooterColumn>
-          <FooterColumn title="MẠNG LƯỚI">
-            <Cta action={network} label="HUB Chapters">
-              HUB Chapters
-            </Cta>
-            <Cta action={later} label="Câu lạc bộ">
-              Câu lạc bộ
-            </Cta>
-            <a href="#humans">Humans of HUB</a>
-          </FooterColumn>
-          <FooterColumn title="THÔNG TIN">
-            <Cta action={later} label="Câu hỏi thường gặp">
-              Câu hỏi thường gặp
-            </Cta>
-            {legal.map((l) => (
-              <Link key={l.href} href={l.href}>
-                {l.label}
-              </Link>
+        <section
+          className={styles.partners}
+          data-section="partners"
+          aria-labelledby="about-partners"
+        >
+          <p id="about-partners" className={styles.eyebrowRed}>
+            ĐỐI TÁC ĐỒNG HÀNH CÙNG CỘNG ĐỒNG HUB BUSINESS
+            <span className={styles.illustrative}>Dữ liệu minh hoạ</span>
+          </p>
+          <div className={styles.partnerWall}>
+            {PARTNER_ROWS.map((r, i) => (
+              <div key={`${r.label}-${i}`} className={styles.partnerRow}>
+                <p className={styles.partnerLabel}>{r.label}</p>
+                <ul role="list">
+                  {r.names.map((n, j) => (
+                    <li key={`${n}-${j}`} className={styles.partnerChip} title={NOT_YET}>
+                      <span aria-hidden="true" />
+                      {n}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </FooterColumn>
-          <FooterColumn title="LIÊN HỆ">
-            {/* PO P3 cleanup: contact text, no mail action approved (as the phone below). */}
-            <span>global@1hub.network</span>
-            {/* PO decision (30/09): no approved tel: action, so the number is plain text. */}
-            <span>0936 966 001</span>
-          </FooterColumn>
-        </div>
-        <p className={styles.footerMark} aria-hidden="true">
-          HUB NETWORK
-        </p>
-        <div className={styles.footerBottom}>
-          <span>© 2026 HUB Network</span>
-          <span>1hub.network</span>
-        </div>
-      </footer>
-    </div>
-  )
-}
+          </div>
+        </section>
+      </section>
 
-function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className={styles.footerCol}>
-      <p className={styles.footerHead}>{title}</p>
-      <div className={styles.footerLinks}>{children}</div>
+      <section className={styles.band} data-section="closing" aria-labelledby="about-closing">
+        <h2 id="about-closing" className={styles.bandTitle}>
+          Cùng kiến tạo
+          <br />
+          những sáng kiến mới
+          <br />
+          cho hệ sinh thái đổi mới sáng tạo Việt Nam.
+        </h2>
+        <p className={styles.bandText}>
+          Dù bạn là cá nhân đang tìm kiếm cộng đồng, một tổ chức muốn mở rộng hợp tác hay một đối
+          tác mong muốn đóng góp nguồn lực, HUB Network luôn sẵn sàng cùng bạn tạo nên những kết nối
+          có ý nghĩa.
+        </p>
+        <div className={styles.heroActions}>
+          <PublicAction href={viewer.entry} className={styles.inkBtn} cta="closing-join">
+            Tham gia HUB Network <ArrowUpRight />
+          </PublicAction>
+          <PublicAction href={null} className={styles.inkOutline} cta="closing-partnership">
+            Kết nối hợp tác
+          </PublicAction>
+        </div>
+      </section>
+
+      <PublicFooter variant="about" legal={shell.legal} />
     </div>
   )
 }

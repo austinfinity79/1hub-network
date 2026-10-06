@@ -12,7 +12,7 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). No migration. No new canonical concept. E
 | "Đã xác thực danh tính qua 1Hub" | none: there is no identity-verification column (CCCD is Tương lai, DEC-P0-LANDING-D2) | fixture flag `identityVerifiedDemo: true` on demo profiles only, rendered with a DEMO marker in code; never written to the DB. **DEMO STATE ONLY** |
 | Regions, countries | REGION / COUNTRY catalogue (S1-UAT-03, `catalog_sprint1.sql`) | none |
 | Domains | DOMAIN vocabulary; Logistics, Nông nghiệp & AgriTech, AI and IoT are not canonical | UNNORMALIZED items (the S1-UAT-03 free-tag rule); no invented canonical id |
-| Stages | VENTURE_STAGE: idea · prototype · pilot · selling · scaled | none; demo startups use pilot and selling only |
+| Stages | VENTURE_STAGE as migrated (012): IDEA Ý tưởng · MVP · PILOT Pilot / Thử nghiệm · SELLING Đang bán · GROWTH Tăng trưởng | none; demo startups use PILOT and SELLING |
 | HUB / Chapter / CLB, popup, Humans tabs | catalogue 1 / 13 / 55 (PARENT relationships), `/organizations/[slug]` | none |
 | About copy, people, milestones, activities | S1-UAT-08A sources (`src/components/about/about-source.ts`, `public/about/`) | none; a Figma-only line is PO content and is flagged, not invented |
 

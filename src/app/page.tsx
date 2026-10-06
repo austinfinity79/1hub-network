@@ -1,30 +1,25 @@
 import type { Metadata } from 'next'
-import { cookies } from 'next/headers'
 
-import { Landing } from '@/components/landing/landing'
-import { SESSION_COOKIE_NAME, landingEntry, legalLinks, publicHubSlug } from '@/lib/landing/entry'
+import { Home } from '@/components/home/home'
+import { listHomeStartups } from '@/lib/public/home-data'
+import { publicShellData } from '@/lib/public/shell-data'
 
 /**
- * P0-LANDING — `/` is the public homepage (DEC-P0-LANDING-D1, superseding the
- * M0-ENTRY-01 redirect for `/` only). Guests and signed-in accounts both see
- * it; the primary call to action is the visitor's real entry point (/auth, or
- * the canonical onboarding resolver's route). Protected routes keep their own
- * guards and the resolver unchanged.
+ * DEMO-HOME-ABOUT-01 — `/`, Homepage v2 (DM01) for every visitor
+ * (DEC-P0-LANDING-D1 / DEC-H1-D1: public, no redirect; the entry CTA is the
+ * visitor's own entry point). It reads the visitor's entry, the current legal
+ * links and the canonical published startups. No member, count or private
+ * data beyond that.
  */
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: '1hub.network — hạ tầng dữ liệu và vận hành chung cho hệ sinh thái',
+  title: 'HUB Network — Chương trình, sản phẩm và nhân tài đổi mới sáng tạo',
   description:
-    'Một hồ sơ gốc cho mỗi người, mỗi dự án và mỗi tổ chức, được làm giàu qua hoạt động trong cộng đồng, chương trình và sự kiện.',
+    'HUB Network — mạng lưới Khởi nghiệp, Đổi mới sáng tạo và Chuyển đổi số: chương trình, sản phẩm và nhân tài của cộng đồng.',
 }
 
 export default async function RootPage() {
-  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
-  const [entry, hubSlug, legal] = await Promise.all([
-    landingEntry(token),
-    publicHubSlug(),
-    legalLinks(),
-  ])
-  return <Landing entry={entry} hubSlug={hubSlug} legal={legal} />
+  const [shell, startups] = await Promise.all([publicShellData(), listHomeStartups()])
+  return <Home shell={shell} startups={startups} />
 }

@@ -1712,6 +1712,20 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-demo-d4"></a>DEC-DEMO-D4 | **Typography (APPROVED, PO 06/10).** [DEC-HD-12](#dec-hd-12) extends to the new demo / public surfaces (DM01–DM13, shared public header / footer) where the frame uses Space Grotesk; no global retheme, admin / member / ops typography unchanged |
 | <a id="dec-demo-d5"></a>DEC-DEMO-D5 | **SP1 and Founder lock (PO 06/10).** Tabs by meaning: Tổng quan = file 10, Chỉ số = UPDATED file 13, Cập nhật = UPDATED file 12; earlier SP1 exports are obsolete. Founder Profile is accepted in PUBLIC VIEW only; its identity verification is DEMO STATE ONLY |
 
+## DEC-DEMO-HA — Public shell, Homepage v2 and About v2 (DEMO-HOME-ABOUT-01, PO, 06/10)
+
+<a id="dec-demo-ha"></a>**Status:** IMPLEMENTED 2026-10-06 (local, not pushed / merged / deployed) on the DEMO-HOME-ABOUT-01 task contract and [DEC-DEMO](#dec-demo). Report: [DEMO-HOME-ABOUT-01](../implementation/reports/DEMO-HOME-ABOUT-01.md). No migration.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-demo-ha-d1"></a>DEC-DEMO-HA-D1 | **One public shell.** `/` and `/about` share the DM01 / DM02 header and footer; a destination is a link only once its screen exists (`src/lib/public/routes.ts`), plain text otherwise (DEC-AIG-D1 kept). `/library`, `/organizations/*` keep their own headers until their screens are redrawn |
+| <a id="dec-demo-ha-d2"></a>DEC-DEMO-HA-D2 | **Homepage product blocks are live.** They list the canonical published startups (the Library predicate, DEC-W6P-D02), venture name and labels only, never an owner, id or slug; the L6 privacy test allows the published venture name on `/` as on `/library` |
+| <a id="dec-demo-ha-d3"></a>DEC-DEMO-HA-D3 | **Demo data step pulled forward.** `db/seed/demo_0710.sql` (`db.mjs demo`, MUTATING, not part of `seed`) is delivered here because DM01 needs canonical ventures; DEMO-DIR2-01 reuses it |
+| <a id="dec-demo-ha-d4"></a>DEC-DEMO-HA-D4 | **Canonical data wins** (task §4): CLB 55, Đà Nẵng 6, 11 regional HUBs, workbook people, catalogue clubs; frame samples with no source are not drawn |
+| <a id="dec-demo-ha-d5"></a>DEC-DEMO-HA-D5 | **Visual-only CTAs** keep the frame's look, never navigate, are not focusable, say "Sắp có…" (DEMO-D6); this supersedes the 01/10 dimming rule on the new public surfaces only |
+| <a id="dec-demo-ha-d6"></a>DEC-DEMO-HA-D6 | **Map.** Natural Earth (public domain) in the Miller projection fitted to DM02; one city per HUB at the frame's marker; Hoàng Sa and Trường Sa always drawn and labelled |
+| <a id="dec-demo-ha-d7"></a>DEC-DEMO-HA-D7 | **Header identity.** A signed-in viewer gets initials and own avatar only; the display name is not sent to the page |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

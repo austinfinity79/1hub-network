@@ -8,6 +8,10 @@ import styles from './landing.module.css'
 /**
  * TASK 22.1 — shared pieces of the corrected public homepage (H1).
  *
+ * DEMO-HOME-ABOUT-01: the homepage itself is rebuilt (src/components/home);
+ * these pieces and landing.module.css stay only for /library (L15), whose
+ * protected header still uses Cta and NavLabel.
+ *
  * A call to action is either a real destination (a route that exists, an
  * in-page section, an approved external site opened in a new tab, or the
  * visitor's own entry point) or INERT: it keeps its place in the approved

@@ -1,54 +1,52 @@
 # Claude Task Report
 
 ## Task
-DEMO-SOT-00 (+ DEMO-SOT-00-FIX) — freeze the 07/10 demo SOT, visual baseline and route / data contract. Report: [DEMO-SOT-00](reports/DEMO-SOT-00.md). SOT: [DEMO_SOT_v1](../demo-0710/DEMO_SOT_v1.md).
+DEMO-HOME-ABOUT-01 — full UI rebuild of the global public shell, Homepage v2 (DM01) and About HUB v2 (DM02–DM05). Report: [DEMO-HOME-ABOUT-01](reports/DEMO-HOME-ABOUT-01.md). Decisions: [DEC-DEMO-HA](../decisions/DECISION_LOG.md#dec-demo-ha).
 
 ## Verdict
-**BLOCKED** on one input only: the PO's UPDATED SP1 files (file 13 Chỉ số, file 12 Cập nhật) are not on the workstation, so DM11 / DM12 baselines could not be replaced.
-
-| Area | State |
-|---|---|
-| SP1 mapping by meaning | locked |
-| Founder Profile | PUBLIC VIEW, identity verification DEMO STATE ONLY |
-| DEMO-D9 | approved and recorded |
-| Stale SP1 copies | withdrawn |
-| DEMO-HOME-ABOUT-01 | ready, not started |
-
-Not pushed, not merged, not deployed. STOP.
+**PASS_WITH_EVIDENCE.** Every gated pixel block of DM01 and DM02 is within the DEC-H1-D5 thresholds. 768 and 390 structural checks pass. Tier B slice and UAT L1–L2 are green. DEMO-DIR2-01 is not started. Not pushed, not merged, not deployed. STOP.
 
 ## Scope implemented
-- **FIX: SP1 lock.** Tổng quan = file 10, Chỉ số = UPDATED file 13, Cập nhật = UPDATED file 12, Founder = file 14 (DEMO-D14, DEC-DEMO-D5).
-- **FIX: stale exports.** The duplicate-image conclusion is removed. The obsolete `DM11` / `DM12` PNGs are withdrawn from `design-reference/final/demo-0710/`.
-- **FIX: Founder.** PUBLIC VIEW; owner-only controls are excluded from acceptance (DEMO-D13). Identity verification is DEMO STATE ONLY (DEMO-D10).
-- **FIX: typography.** DEMO-D9 approved: Space Grotesk on the demo / public surfaces only, with no change to admin / member / ops (DEC-DEMO-D4).
-- **FIX: About counts.** Ecosystem 5 / 6 / 7, 60+ vs 55 CLB and Đà Nẵng 7 vs 6 stay documented and are not blockers with canonical data.
+- **Shared public header / footer:** HUB symbol, dropdowns, guest and member states, mobile menu. Unbuilt screens render as plain text.
+- **Homepage:** hero search, ticker, highlights, programmes, investor carousel, all products, news.
+- **About:** hero counters, H·U·B values, interactive map with Hoàng Sa / Trường Sa and the HUB popup, Humans of HUB (3 tabs), ecosystem, timeline, activities, partners, coral band.
+- **Data:** canonical catalogue, S1-UAT-08A content and live published startups.
+- **Demo data step:** `db.mjs demo`.
 
 ## Files changed
-- `docs/demo-0710/*` (6)
-- `design-reference/final/demo-0710/README.md`, plus 2 PNG removed
-- `DECISION_LOG.md`, `P0_STATUS.md`, `reports/DEMO-SOT-00.md`, this report
+- **New:** `src/components/public-shell/*`, `src/components/home/*`, About v2 components (`about.tsx`, `about-map*.tsx/ts`, `about-humans.tsx`, `about-milestones.tsx`, `about-hubs.ts`, CSS), `src/lib/public/{routes,viewer,shell-data,home-data,about-network}.ts`, `src/lib/demo-0710/ventures.ts`, `db/seed/demo_0710.sql`, `public/about/map-{world,vietnam}.svg`, `tests/visual/specs/demo-home-about-01.spec.ts`, `about-hubs.test.ts`, report.
+- **Changed:** `src/app/page.tsx`, `src/app/(public)/about/page.tsx`, `about-data.ts` (+ test), `lib/landing/entry.ts` (+ test), `scripts/db.mjs`, `scripts/db-target.mjs` (+ test), 5 visual specs, UAT `uc02`, DECISION_LOG, P0_STATUS, demo SOT docs.
+- **Removed:** the old landing and About presentation files. `landing-parts.tsx` and `landing.module.css` stay, used by `/library`.
 
 ## Migrations / data
-None. No database touched.
+- No migration.
+- New data step `node scripts/db.mjs demo`: MUTATING, idempotent, not part of `seed`.
+- Applied to `hubnetwork_s1uat03` only. The shared `hubnetwork_p0` is untouched.
 
 ## Tests / build
-Not applicable (no runtime change). `prettier --check` on the changed docs and a relative-link check: PASS.
+| Gate | Result |
+|---|---|
+| format · lint · typecheck · build | PASS |
+| Unit | 45 / 458 |
+| Tier B visual | 11 specs · 122 tests · 121 PASS · 0 FAIL · 1 SKIP · 0 FLAKY |
+| UAT L1–L2 | 19 / 19 |
+| Server log | hydration / 5xx / secret: 0 |
 
 ## Visual QA
-Not applicable. 11 baselines present (DM01–DM10, DM13); DM11 / DM12 pending the PO's files.
+Per-block metrics are in the report. DM03–DM05 were captured and reviewed. The ungated blocks differ by canonical data or the map raster (INTENTIONAL-DATA).
 
 ## Deviations / blockers
-- **Blocker:** the UPDATED SP1 files 12 / 13. They block only DEMO-SP-TABS-01 and are needed to close this item.
-- **For PO:** conflicts C1–C10 (advisory); C11 resolved.
+- **Blockers:** none.
+- **Recorded deviations:** no hero video asset; generated map raster; partner wall labelled "Dữ liệu minh hoạ"; ecosystem shows the frame's 7 rows (business list open); canonical counts replace the frame samples.
 
 ## Git
-- Branch: `feat/sprint1-completion` (worktree `../1hub-network-sprint1-completion`); start HEAD `4791f30`, unchanged by others
-- Implementation commit: none (documentation task)
-- Report/final commit: the DEMO-SOT-00-FIX docs commit
+- Branch: `feat/sprint1-completion` (worktree `../1hub-network-sprint1-completion`); start HEAD `03168ce`, unchanged by others
+- Implementation commit: the DEMO-HOME-ABOUT-01 commit
+- Report/final commit: same commit
 - Remote: `origin`
 - Push status: NOT RUN (task: no push)
 - Remote HEAD: origin/main `edd3d24` (unchanged)
 - Working tree: clean after the commit
 
 ## Recommended next task
-DEMO-HOME-ABOUT-01. Supplying the UPDATED SP1 files 12 / 13 closes the remaining SP1 item. Not started.
+DEMO-DIR2-01. Not started.

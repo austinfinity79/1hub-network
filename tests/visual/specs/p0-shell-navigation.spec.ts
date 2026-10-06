@@ -4,6 +4,7 @@ import { reach } from '../support/onboarding'
 import { signUpThroughUi } from '../support/auth'
 import { closePool, query } from '../../../src/lib/db/client'
 import { VENTURE_CORE } from '../../../src/lib/venture/testing'
+import { ECOSYSTEM_LINKS, FACEBOOK_URL } from '../../../src/lib/public/routes'
 import { writeJsonReport } from '../pixel-qa/report'
 
 /**
@@ -38,8 +39,16 @@ type Row = {
 
 const matrix: Row[] = []
 
-/** External sites a page may open (PO decision, Alpha interaction gap fix 30/09). */
-const APPROVED_EXTERNAL = ['https://ihub.ventures']
+/**
+ * External sites a page may open: the PO decision of 30/09 (Alpha interaction
+ * gap fix) and, since DEMO-HOME-ABOUT-01, the ecosystem links and the official
+ * Facebook channel given by the 07/10 demo SOT (Thảo's table; SOT conflict C2).
+ */
+const APPROVED_EXTERNAL = [
+  'https://ihub.ventures',
+  FACEBOOK_URL,
+  ...Object.values(ECOSYSTEM_LINKS).filter((u): u is string => u !== null),
+]
 let consoleErrors: string[] = []
 
 test.beforeEach(async ({ page }) => {
@@ -467,7 +476,8 @@ test.describe('P0-SHELL responsive basics', () => {
         expect(overflow, `${path} at ${width}px`).toBe(0)
       }
       await page.goto('/')
-      await expect(page.locator('[data-cta="primary-bar"]')).toBeInViewport()
+      // DEMO-HOME-ABOUT-01: below 1024 px the header entry sits in the menu; the hero entry stays in view.
+      await expect(page.locator('[data-cta="primary"]')).toBeInViewport()
     }
   })
 })

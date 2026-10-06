@@ -143,12 +143,16 @@ test.describe('L6-P discovery privacy', () => {
      * appear for anyone and its owner's name for members; the private member, the DRAFT
      * venture, e-mails and every id still never appear. Everywhere else nothing changes.
      */
+    // DEMO-HOME-ABOUT-01 (DEC-DEMO-D6): Homepage v2 lists the same published STARTUP
+    // ventures as the Library (DM01 product blocks) — the venture name only, never its owner.
     const allowed = (actor: string, url: string) =>
-      url.split('?')[0] !== '/library'
-        ? []
-        : actor === 'guest'
-          ? [`Công bố ${MARK}`]
-          : [`Công bố ${MARK}`, `Công Khai ${MARK}`]
+      url.split('?')[0] === '/'
+        ? [`Công bố ${MARK}`]
+        : url.split('?')[0] !== '/library'
+          ? []
+          : actor === 'guest'
+            ? [`Công bố ${MARK}`]
+            : [`Công bố ${MARK}`, `Công Khai ${MARK}`]
     const scrub = (body: string, actor: string, url: string) =>
       allowed(actor, url).reduce((text, name) => text.split(name).join(''), body)
 

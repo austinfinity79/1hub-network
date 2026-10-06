@@ -42,7 +42,7 @@
 | C6 | Homepage: Thảo asks for 3 sections (Chương trình · Sản phẩm · Nhân tài); DM01 draws 2 (no Nhân tài). Marquee: Thảo "Mobifone Open Challenge" vs DM01 "MBBank Open Challenge" | DM01 as drawn (presentation SOT) |
 | C7 | Tracely team: DM10 "Nguyễn An CEO / Lê Minh Tú CTO" vs DM13 / DM09 "Đặng Kim Chi CEO / Nguyễn Minh Anh" | DM13 team (journey anchor), INTENTIONAL-DATA |
 | C8 | DM13 "Chuyên môn" (expertise with years, "Chính / Phụ") vs FB-10 "no Skills anywhere" (S1-UAT-03) | fixture text only, no Skills vocabulary or field; PO to confirm |
-| C9 | Stage labels: DM08 "MVP / Tăng trưởng" vs VENTURE_STAGE "Prototype / Đã mở rộng" | canonical labels; demo startups avoid both |
+| C9 | Stage labels: DM08 "MVP / Tăng trưởng" vs VENTURE_STAGE | RESOLVED (DEMO-HOME-ABOUT-01): after migration 012 the live labels are Ý tưởng · MVP · Pilot / Thử nghiệm · Đang bán · Tăng trưởng, matching DM08 except "Pilot / Thử nghiệm" |
 | C10 | DM13 shows a fictional founder as "Phó Chủ tịch Chapter Đà Nẵng" (a real unit); DM03 / DM04 show named boards and CLBs that differ from the catalogue | badge is fixture text only; boards / CLBs come from S1-UAT-08A and the catalogue, never from frame names |
 | C11 | Space Grotesk outside the DEC-HD-12 scope | RESOLVED by DEMO-D9 (approved) |
 

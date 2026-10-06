@@ -1,15 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  ACTIVITIES,
-  HUBS,
-  HUMANS,
-  UNRESOLVED_ORG_LINKS,
-  activitiesFrom,
-  displayDate,
-  humansFrom,
-  nameKey,
-} from './about-data'
+import { ACTIVITIES, HUMANS, activitiesFrom, displayDate, humansFrom, nameKey } from './about-data'
 import { ACTIVITY_ROWS, HUMAN_ROWS } from './about-source'
 
 /** S1-UAT-08A — the About content mapped from the PO workbook, nothing invented. */
@@ -69,39 +60,6 @@ describe('Humans of HUB', () => {
         { order: 1, name: 'A', title: 'X', term: 'Khác', edit: null, orgLink: null },
       ]),
     ).toEqual([expect.objectContaining({ order: 2, name: 'B', title: null, photo: null })])
-  })
-})
-
-describe('organisation diagram leads', () => {
-  const lead = (code: string) => HUBS.find((h) => h.code === code)!.lead?.name ?? null
-
-  it('maps only explicit, consistent links', () => {
-    expect(lead('HN')).toBe('Vũ Minh Tâm')
-    expect(lead('HCM')).toBe('Huỳnh Đức')
-    expect(lead('DN')).toBe('Phạm Khánh Vân')
-    expect(lead('BIZ')).toBe('Bùi Hà Phương')
-    expect(lead('US')).toBe('Đào Việt Tùng')
-    expect(lead('UAE')).toBe('Lê Diệu Anh')
-    expect(lead('UK')).toBe('Nguyễn Mạnh Hùng')
-    expect(lead('AU')).toBe('Nguyễn Vũ Hà Vy')
-    expect(lead('EU')).toBe('Vũ Bích Diệp')
-    expect(lead('THPT')).toBe('Lê Mai Anh')
-  })
-
-  it('A4 (PO): Vũ Minh Tâm leads HN; Lê Phương Thảo is Tổng Thư ký, no node lead', () => {
-    expect(HUMANS.find((h) => h.name === 'Lê Phương Thảo')!.title).toBe(
-      'Phó Chủ tịch kiêm Tổng Thư ký HUB Tổng',
-    )
-    expect(HUBS.filter((h) => nameKey(h.lead?.name ?? '') === nameKey('Lê Phương Thảo'))).toEqual(
-      [],
-    )
-  })
-
-  it('leaves China, Singapore and Quảng Ninh unmapped and reports the open links', () => {
-    expect(lead('CN')).toBeNull()
-    expect(lead('SG')).toBeNull()
-    expect(lead('QN')).toBeNull()
-    expect(UNRESOLVED_ORG_LINKS).toEqual(['Trưởng HUB China', 'Trưởng HUB Tổng'])
   })
 })
 

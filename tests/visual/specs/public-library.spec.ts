@@ -132,14 +132,14 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     )
     await page.reload()
     await expect(page).toHaveURL(/\/library$/)
-    await page.goto('/')
-    const nav = page.getByRole('navigation', { name: 'Trang chủ' })
-    await expect(nav.getByRole('link', { name: 'Về HUB Network' })).toHaveAttribute(
-      'href',
-      '/about',
-    )
-    await nav.getByRole('link', { name: 'Mạng lưới đổi mới sáng tạo' }).click()
-    await expect(page).toHaveURL(/\/library$/)
+    // DEMO-HOME-ABOUT-01: the new header has no Library entry; the hero search
+    // ("Tất cả") still opens the Library.
+    await page.goto('/', { waitUntil: 'networkidle' })
+    await expect(page.locator('[data-nav="about"] a').first()).toHaveAttribute('href', '/about')
+    const hero = page.locator('[data-search="hero"]')
+    await hero.getByRole('searchbox').fill('logistics')
+    await hero.getByRole('button', { name: 'Tìm kiếm' }).click()
+    await expect(page).toHaveURL(/\/library\?q=logistics$/)
     expect(apiCalls, 'the Library reads no API of ours').toEqual([])
   })
 

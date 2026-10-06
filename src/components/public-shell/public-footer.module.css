@@ -1,0 +1,210 @@
+/*
+ * DEMO-HOME-ABOUT-01 — shared public footer, geometry from DM01 (home, 587 px)
+ * and DM02 (about, 636 px) at 1440 px. Space Grotesk (DEMO-D9); the wordmark
+ * uses the approved display face.
+ */
+.footer {
+  --sg: 'Space Grotesk', var(--font-ui), sans-serif;
+
+  position: relative;
+  overflow: hidden;
+  padding: 72px 64px 22px;
+  font-family: var(--sg);
+  color: #ead7d8;
+  background: #160002;
+}
+
+.footer p,
+.footer ul {
+  margin: 0;
+  padding: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 447px 447px 1fr;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+}
+
+.tagline {
+  margin-top: 7px !important;
+  font-size: 15px;
+  line-height: 20px;
+  color: #f8c2b8;
+}
+
+.about .tagline {
+  max-width: 300px;
+}
+
+.form {
+  display: flex;
+  gap: 9px;
+  margin-top: 107px;
+}
+
+.about .form {
+  margin-top: 12px;
+}
+
+.email {
+  width: 219px;
+  height: 46px;
+  padding: 0 19px;
+  font: inherit;
+  font-size: 14px;
+  color: #ead7d8;
+  background: transparent;
+  border: 1px solid #453335;
+  border-radius: 23px;
+}
+
+.email::placeholder {
+  color: #b5a1a2;
+  opacity: 1;
+}
+
+.email:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.subscribe {
+  display: inline-flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #160002;
+  background: #fc523c;
+  border-radius: 23px;
+  cursor: default;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  list-style: none;
+}
+
+.column li {
+  height: 20px;
+  line-height: 20px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  line-height: 20px;
+  color: #ead7d8;
+  text-decoration: none;
+}
+
+a.link:hover {
+  color: #ffffff;
+}
+
+.external {
+  width: 9px;
+  height: 9px;
+}
+
+.wordmark {
+  margin-top: 76px !important;
+  font-size: 128px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+  color: #fc523c;
+  transform: scaleX(0.955);
+  transform-origin: 0 50%;
+}
+
+.about .wordmark {
+  margin-top: 90px !important;
+  font-size: 225px;
+  letter-spacing: -0.057em;
+  transform: none;
+}
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 73px;
+  font-size: 13px;
+  line-height: 18px;
+  color: #f8c2b8;
+}
+
+.about .bottom {
+  margin-top: 89px;
+}
+
+.bottom a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bottom a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1023px) {
+  .footer {
+    padding: 56px 24px 22px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 32px;
+  }
+
+  .brand {
+    grid-column: 1 / -1;
+  }
+
+  .form,
+  .about .form {
+    margin-top: 20px;
+  }
+
+  .wordmark,
+  .about .wordmark {
+    margin-top: 48px !important;
+    font-size: clamp(40px, 13.6vw, 131px);
+  }
+
+  .bottom,
+  .about .bottom {
+    flex-wrap: wrap;
+    margin-top: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form {
+    flex-wrap: wrap;
+  }
+
+  .email {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+}

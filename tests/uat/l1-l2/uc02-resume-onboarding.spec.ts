@@ -82,22 +82,22 @@ test('UC02 · exceptions · entering through a CTA resumes the open stage; progr
   await page.getByRole('button', { name: 'Tiếp tục' }).click()
   await expect(page).toHaveURL('/onboarding/capability')
 
-  // The homepage's live CTA ("Tạo hồ sơ startup" → /projects/new) sends the open
-  // account to its stage, not to an error and not past onboarding.
+  // The homepage's live entry CTA (DM01 "Tham gia cộng đồng HUB Network", the
+  // resolver's route since DEMO-HOME-ABOUT-01) sends the open account to its
+  // stage, not to an error and not past onboarding.
   await page.goto('/', { waitUntil: 'networkidle' })
-  await page.locator('[data-cta="startup"]').click()
+  await page.locator('[data-cta="primary"]').click()
   await expect(page).toHaveURL('/onboarding/capability')
   await expect(page.locator('[data-anchor="domains"] [data-tag]')).toHaveCount(0)
   expect(await identity(email)).toMatchObject({ accounts: 1, profiles: 1 })
 
-  // Programme and event have no public page in Alpha: the header items are plain
-  // labels (PO decision 30/09), so nothing leads from them into onboarding.
+  // Programme and event have no public page yet: the "Chương trình" menu and its
+  // entries are not links (DEMO-D6), so nothing leads from them into onboarding.
   await page.goto('/', { waitUntil: 'networkidle' })
-  const nav = page.getByRole('navigation', { name: 'Trang chủ' })
-  for (const label of ['Chương trình', 'Sự kiện']) {
-    await expect(nav.getByText(label, { exact: true })).toHaveAttribute('data-nav-kind', 'LABEL')
+  const nav = page.getByRole('navigation', { name: 'Điều hướng chính' })
+  await nav.getByRole('button', { name: 'Mở menu Chương trình' }).click()
+  for (const label of ['Chương trình', 'Chương trình, cuộc thi', 'Sự kiện'])
     await expect(nav.getByRole('link', { name: label, exact: true })).toHaveCount(0)
-  }
   gap(
     'NOT APPLICABLE',
     'Entry from a programme / event CTA: no public programme or event page in L1 / L2; the header items are plain labels.',

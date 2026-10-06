@@ -1,15 +1,16 @@
 import type { Metadata } from 'next'
-import { cookies } from 'next/headers'
 
 import { About } from '@/components/about/about'
-import { SESSION_COOKIE_NAME, landingEntry, legalLinks, publicHubSlug } from '@/lib/landing/entry'
+import { loadAboutNetwork } from '@/lib/public/about-network'
+import { publicShellData } from '@/lib/public/shell-data'
 
 /**
- * TASK 22-PREVIEW-ABOUT — `/about`, the public "Về HUB Network" page.
+ * DEMO-HOME-ABOUT-01 — `/about`, About HUB v2 (DM02–DM05).
  *
- * Public for every visitor (no guard). It reads only what the homepage reads:
- * the visitor's own entry point for "Tham gia HUB Network", the published
- * HUB's slug and the current legal links. No member, count or private data.
+ * Public for every visitor (no guard). It reads the visitor's own entry, the
+ * current legal links and the published catalogue units (names, slugs, CLB
+ * counts). People, milestones and activities are the S1-UAT-08A sources. No
+ * member, private or account data.
  */
 export const dynamic = 'force-dynamic'
 
@@ -20,11 +21,6 @@ export const metadata: Metadata = {
 }
 
 export default async function AboutPage() {
-  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
-  const [entry, hubSlug, legal] = await Promise.all([
-    landingEntry(token),
-    publicHubSlug(),
-    legalLinks(),
-  ])
-  return <About entry={entry} hubSlug={hubSlug} legal={legal} />
+  const [shell, network] = await Promise.all([publicShellData(), loadAboutNetwork()])
+  return <About shell={shell} network={network} />
 }

@@ -5,6 +5,7 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). The PO pack (06/10/2026) supersedes the e
 - Data, guards, APIs and schema stay unless a row below says otherwise.
 - A superseded item is replaced only by the task that implements its new screen.
 - Until then, the current code remains the live behaviour.
+- DEMO-HOME-ABOUT-01 (06/10) has replaced the Homepage, About and their headers / footers ([report](../implementation/reports/DEMO-HOME-ABOUT-01.md)).
 
 ## Screens and components (F)
 | Old | Where | Status | Replaced by | Task |

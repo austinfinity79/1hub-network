@@ -45,12 +45,13 @@ test.describe('homepage search → /library?q=', () => {
       const url = new URL(r.url())
       if (url.pathname === '/library' && url.searchParams.has('q')) libraryRequests.push(r.url())
     })
-    const hero = page.getByRole('search', { name: 'Tìm trong Thư viện' })
+    // DEMO-HOME-ABOUT-01: the DM01 hero search; "Tất cả" searches the Library.
+    const hero = page.locator('[data-search="hero"]')
     const input = hero.getByRole('searchbox')
-    // PO decision (DEC-AIG-D10): the copy names the real scope, the Library.
-    await expect(input).toHaveAttribute('placeholder', 'Tìm kiếm trong Thư viện')
-    await expect(input).toHaveAccessibleName('Tìm kiếm trong Thư viện')
-    await expect(page.getByText('Tìm kiếm chương trình, sự kiện')).toHaveCount(0)
+    await expect(hero.getByRole('radio', { name: 'Tất cả' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
     await expect(input).toBeEnabled()
     await expect(input).not.toHaveAttribute('aria-disabled')
 
@@ -106,37 +107,30 @@ test.describe('homepage search → /library?q=', () => {
 })
 
 test.describe('public pages: no dead control', () => {
-  test('/ and /about: Chương trình and Sự kiện are plain labels; phone is text; ihub opens', async ({
+  test('/ and /about: Chương trình and its entries are not links; contacts are text; external pages open', async ({
     page,
   }) => {
+    // DEMO-HOME-ABOUT-01 (DEMO-D6): the new public shell; an unbuilt screen is plain text.
     for (const url of ['/', '/about']) {
       await page.goto(url, { waitUntil: 'networkidle' })
-      const nav = page.getByRole('navigation', { name: 'Trang chủ' })
-      for (const label of ['Chương trình', 'Sự kiện']) {
+      const nav = page.getByRole('navigation', { name: 'Điều hướng chính' })
+      await expect(nav.getByRole('link', { name: 'Chương trình', exact: true })).toHaveCount(0)
+      await nav.getByRole('button', { name: 'Mở menu Chương trình' }).click()
+      for (const label of ['Chương trình, cuộc thi', 'Sự kiện'])
+        await expect(nav.getByRole('link', { name: label, exact: true })).toHaveCount(0)
+      for (const label of ['Sản phẩm', 'Nhân tài', 'Tin tức']) {
         const item = nav.getByText(label, { exact: true })
         await expect(item, `${url} ${label}`).toHaveAttribute('data-nav-kind', 'LABEL')
-        await expect(item).not.toHaveAttribute('aria-disabled')
-        await expect(item).not.toHaveAttribute('title')
-        await expect(nav.getByRole('link', { name: label, exact: true })).toHaveCount(0)
       }
+      await expect(page.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(0)
+      const ihub = page
+        .locator('[data-shell="public-footer"]')
+        .getByRole('link', { name: /iHUB Ventures/ })
+      await expect(ihub).toHaveAttribute('href', 'https://deck.ihub.ventures/')
+      await expect(ihub).toHaveAttribute('target', '_blank')
+      await expect(ihub).toHaveAttribute('rel', 'noopener noreferrer')
     }
-    // The About phone number: no approved tel: action, plain text only.
-    await expect(page.getByText('0936 966 001', { exact: true })).toHaveCount(1)
-    await expect(page.locator('a[href^="tel:"]')).toHaveCount(0)
-    const phone = page.getByText('0936 966 001', { exact: true })
-    expect(await phone.evaluate((n) => n.tagName)).toBe('SPAN')
-    await expect(phone).not.toHaveAttribute('aria-disabled')
-
-    await page.goto('/', { waitUntil: 'networkidle' })
-    const ihub = page.getByRole('link', { name: /Truy cập ihub\.ventures/ })
-    await expect(ihub).toHaveAttribute('href', 'https://ihub.ventures')
-    await expect(ihub).toHaveAttribute('target', '_blank')
-    await expect(ihub).toHaveAttribute('rel', 'noopener noreferrer')
-    // "Chi tiết" is not drawn on the illustrative event and programme cards.
-    for (const section of ['events', 'programmes'])
-      await expect(
-        page.locator(`[data-section="${section}"] li`).filter({ hasText: /Chi tiết/ }),
-      ).toHaveCount(0)
+    await expect(page.getByText('global@1hub.network', { exact: true })).toHaveCount(1)
   })
 
   test('/library: every card control is real; "Góp ý" is the shared launcher', async ({ page }) => {
@@ -207,9 +201,8 @@ test.describe('sign in and return to venture creation (BD-02 return-to rule)', (
     const account = await completedAccount(page.request, 'return')
     await ensurePassword(account.email)
     await page.context().clearCookies()
-    await page.goto('/', { waitUntil: 'networkidle' })
-    await page.locator('[data-cta="startup"]').click()
-    await expect(page).toHaveURL('/auth?redirect=%2Fprojects%2Fnew')
+    // DEMO-HOME-ABOUT-01: Homepage v2 (DM01) draws no venture-creation CTA (it
+    // carried the return path); the sign-in with that return path is unchanged.
     await logInThroughUi(page, account.email, TEST_PASSWORD, '/auth?redirect=%2Fprojects%2Fnew')
     await expect(page).toHaveURL('/projects/new')
     expect(await page.evaluate((k) => localStorage.getItem(k), RETURN_KEY)).toBeNull()
@@ -252,8 +245,7 @@ test.describe('sign in and return to venture creation (BD-02 return-to rule)', (
 
   test('a signed-in member goes straight to the canonical venture creation', async ({ page }) => {
     await login(page, 'member@example.test')
-    await page.goto('/', { waitUntil: 'networkidle' })
-    await page.locator('[data-cta="startup"]').click()
+    await page.goto('/projects/new', { waitUntil: 'networkidle' })
     await expect(page).toHaveURL('/projects/new')
   })
 })
@@ -338,58 +330,23 @@ test.describe('P3 UX cleanup: what cannot be clicked no longer looks clickable',
     }
   })
 
-  test('homepage and About: planned CTAs say "Sắp có", inert items are dimmed, contacts are text', async ({
+  test('homepage and About: visual-only CTAs never navigate, are not focusable and say why', async ({
     page,
   }) => {
-    const soon = (label: string) =>
-      page.locator('[data-cta-kind="INERT"]', { hasText: label }).filter({ hasText: 'Sắp có' })
-    const plainEmail = async () => {
-      const email = page.getByText('global@1hub.network', { exact: true })
-      await expect(email).toHaveCount(1)
-      expect(await email.evaluate((n) => [n.tagName, n.getAttribute('aria-disabled')])).toEqual([
-        'SPAN',
-        null,
-      ])
-      await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0)
-    }
-    for (const [url, planned] of [
-      [
-        '/',
-        [
-          ['Xem deck', 1],
-          ['Yêu cầu truy cập', 1],
-          ['Khám phá mạng lưới', 2],
-          ['Triển khai chương trình', 1],
-        ],
-      ],
-      [
-        '/about',
-        [
-          ['Kết nối hợp tác', 2],
-          ['Khám phá các câu lạc bộ', 1],
-        ],
-      ],
-    ] as const) {
+    // DEMO-HOME-ABOUT-01 (DEMO-D6): drawn as the frame draws them, never a fake success.
+    for (const url of ['/', '/about']) {
       await page.goto(url, { waitUntil: 'networkidle' })
-      const inert = page.locator('[data-cta-kind="INERT"]')
-      expect(await inert.count(), url).toBeGreaterThan(5)
+      const inert = page.locator('[data-screen] [data-cta-kind="INERT"]')
+      expect(await inert.count(), url).toBeGreaterThan(3)
       for (const el of await inert.all()) {
-        const [opacity, cursor, tag, href] = await look(el)
-        expect(opacity, `${url} ${await el.getAttribute('aria-label')}`).toBeLessThan(0.6)
-        expect([cursor, tag, href]).toEqual(['default', 'SPAN', null])
+        const [, cursor, tag, href, tabindex] = await look(el)
+        expect([cursor, tag, href, tabindex]).toEqual(['default', 'SPAN', null, null])
+        await expect(el).toHaveAttribute('aria-disabled', 'true')
+        await expect(el).toHaveAttribute('title', /Sắp có/)
       }
-      for (const [label, n] of planned) await expect(soon(label), `${url} ${label}`).toHaveCount(n)
-      await plainEmail()
       await inert.first().click()
       await expect(page).toHaveURL(url)
     }
-    // "Khám phá cơ hội" keeps its in-page action; working links stay at full strength.
-    await page.goto('/', { waitUntil: 'networkidle' })
-    const opportunities = page.locator('[data-cta="closing-opportunities"]')
-    await expect(opportunities).toHaveAttribute('href', '#co-hoi')
-    expect((await look(opportunities))[0]).toBe(1)
-    await opportunities.click()
-    await expect(page).toHaveURL('/#co-hoi')
   })
 
   test('Library keyword chip is display only; the facet chips keep their remove action', async ({

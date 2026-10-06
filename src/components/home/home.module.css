@@ -1,0 +1,1253 @@
+/*
+ * DEMO-HOME-ABOUT-01 — Homepage v2, geometry from DM01 at 1440 px
+ * (design-reference/final/demo-0710/DM01__homepage-v2__SOURCE.png, 1440 × 4661).
+ * Space Grotesk (DEMO-D9); mono labels IBM Plex Mono 500 (DEC-H1-D4).
+ * Bands: hero 0–811, ticker 812–899, highlights 901–1579, programmes
+ * 1580–2387, ventures 2388–3197, news 3198–4073, footer 4074–4660.
+ * The narrow rules at the end keep every block readable (768 / 390).
+ */
+.page {
+  --coral: #fc523c;
+  --ink: #170002;
+  --night: #160102;
+  --canvas: #efefef;
+  --line: #d9d4d4;
+  --muted: #8a7b7c;
+  --sg: 'Space Grotesk', var(--font-ui), sans-serif;
+  --mono: var(--font-mono), monospace;
+
+  font-family: var(--sg);
+  color: var(--ink);
+  background: var(--canvas);
+  overflow-x: clip;
+}
+
+.page :where(h1, h2, h3, p, ul, dl, dd) {
+  margin: 0;
+  padding: 0;
+}
+
+.page :where(ul) {
+  list-style: none;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ hero */
+
+.hero {
+  position: relative;
+  height: 812px;
+  color: #efefef;
+  background:
+    radial-gradient(ellipse 330px 190px at 920px 390px, rgb(110 32 24 / 0.9), transparent 100%),
+    radial-gradient(ellipse 560px 330px at 900px 380px, rgb(90 16 16 / 0.75), transparent 100%),
+    radial-gradient(ellipse 760px 420px at 880px 360px, rgb(60 4 8 / 0.7), transparent 100%),
+    var(--night);
+  border-bottom: 1px solid #837879;
+}
+
+.video {
+  position: absolute;
+  top: 96px;
+  right: 58px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.videoLabel {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: #dcaaa1;
+}
+
+.videoPause {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: #ffffff;
+  border: 1px solid rgb(255 255 255 / 0.7);
+  border-radius: 50%;
+}
+
+.heroSearch {
+  position: absolute;
+  top: 609px;
+  left: 50%;
+  width: 980px;
+  max-width: calc(100% - 40px);
+  transform: translateX(-50%);
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 75px;
+  padding: 0 10px 0 12px;
+  background: #efefef;
+  border-radius: 38px;
+}
+
+.scopes {
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: 42px;
+  padding: 3px;
+  background: #e3dddd;
+  border-radius: 21px;
+}
+
+.scope {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 14px;
+  color: #6f5f60;
+  background: none;
+  border: 0;
+  border-radius: 18px;
+  cursor: pointer;
+}
+
+.scope[aria-disabled='true'] {
+  cursor: default;
+}
+
+.scopeOn {
+  color: #ffffff;
+  background: var(--ink);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 16px 0 8px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: #9a8b8c;
+  opacity: 1;
+}
+
+.searchInput::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.caret {
+  flex: none;
+  width: 2px;
+  height: 22px;
+  margin-right: 8px;
+  background: #b91610;
+}
+
+.searchGo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 55px;
+  height: 55px;
+  color: var(--ink);
+  background: var(--coral);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.search:focus-within {
+  box-shadow: 0 0 0 3px rgb(252 82 60 / 0.45);
+}
+
+.intents {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 11px;
+  margin-top: 13px;
+}
+
+.intent {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  background: #efefef;
+  border-radius: 21px;
+}
+
+.intentCoral {
+  background: var(--coral);
+}
+
+/* ------------------------------------------------------------ ticker */
+
+.ticker {
+  height: 88px;
+  overflow: hidden;
+  background: var(--canvas);
+  border-bottom: 1px solid #837879;
+}
+
+.tickerTrack {
+  display: flex;
+  width: max-content;
+  animation: home-ticker 60s linear infinite;
+}
+
+.tickerRow {
+  display: flex;
+  padding-left: 27px;
+}
+
+.tickerItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 55px;
+  padding-right: 54px;
+  font-size: 43px;
+  font-weight: 500;
+  line-height: 88px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.star {
+  width: 21px;
+  height: 21px;
+  color: #b91610;
+}
+
+@keyframes home-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tickerTrack {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------ highlights */
+
+.highlights {
+  padding: 113px 64px 119px;
+  background: var(--canvas);
+}
+
+.weekTitle {
+  font-size: 74px;
+  font-weight: 500;
+  line-height: 84px;
+  letter-spacing: -0.025em;
+}
+
+.feeds {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 41px;
+  margin-top: 46px;
+}
+
+.feedHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 11px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.feedHead h3 {
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 28px;
+}
+
+.feedAll {
+  font-size: 14px;
+  color: #6f5f60;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.feedList {
+  display: flex;
+  flex-direction: column;
+}
+
+.feedRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 0 13px;
+  border-bottom: 1px solid var(--line);
+}
+
+.feedMark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b91610;
+  background: #fef3f1;
+  border-radius: 10px;
+}
+
+.feedText {
+  flex: 1;
+  min-width: 0;
+}
+
+.feedTitle {
+  display: block;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 22px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.feedMeta {
+  margin-top: 4px !important;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted);
+}
+
+.tag {
+  flex: none;
+  padding: 2px 9px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  border-radius: 6px;
+}
+
+.tag_gold {
+  color: #b28037;
+  background: #fbf0dc;
+}
+
+.tag_amber {
+  color: #a5702d;
+  background: #f6ebd8;
+}
+
+.tag_green,
+.tagGreen {
+  color: #2e7d53;
+  background: #dcefe4;
+}
+
+.tagRed {
+  color: #ca4d48;
+  background: #fbe1dd;
+}
+
+.sectorChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+
+.sectorChip {
+  height: 26px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: none;
+  border: 1px solid #cfc8c8;
+  border-radius: 13px;
+  cursor: pointer;
+}
+
+.sectorOn {
+  color: #ffffff;
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.empty {
+  padding: 18px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ programmes */
+
+.programmes {
+  padding: 106px 64px 67px;
+  color: #ffffff;
+  background: var(--night);
+}
+
+.programmesHead {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.programmesTitle {
+  flex: 1;
+  font-size: 51px;
+  font-weight: 500;
+  line-height: 58px;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+
+.programmeFilters {
+  display: flex;
+  gap: 8px;
+}
+
+.darkChip {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 13px;
+  font-size: 13px;
+  color: #efefef;
+  border: 1px solid #4a3638;
+  border-radius: 16px;
+}
+
+.darkChipOn {
+  color: var(--ink);
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.coralCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  background: var(--coral);
+  border-radius: 21px;
+}
+
+.programmeCards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 17px;
+  margin-top: 40px;
+}
+
+.programmeCard {
+  display: flex;
+  flex-direction: column;
+  min-height: 540px;
+  padding: 21px;
+  background: #240a0b;
+  border: 1px solid #3a2224;
+  border-radius: 18px;
+}
+
+.programmeArt {
+  position: relative;
+  height: 200px;
+  border-radius: 12px;
+}
+
+.art_red {
+  --art: #b51610;
+
+  background: linear-gradient(135deg, #b51610 0%, #160102 100%);
+}
+
+.art_violet {
+  --art: #3a1d5a;
+
+  background: linear-gradient(135deg, #3a1d5a 0%, #160102 100%);
+}
+
+.art_green {
+  --art: #2f5a2d;
+
+  background: linear-gradient(135deg, #2f5a2d 0%, #160102 100%);
+}
+
+.art_maroon {
+  --art: #781d25;
+
+  background: linear-gradient(135deg, #781d25 0%, #160102 100%);
+}
+
+.programmeChips {
+  position: absolute;
+  top: 17px;
+  left: 15px;
+  display: flex;
+  gap: 5px;
+}
+
+.whiteChip,
+.coralChip,
+.softChip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  font-size: 11px;
+  border-radius: 11px;
+}
+
+.whiteChip {
+  color: var(--ink);
+  background: #ffffff;
+}
+
+.coralChip {
+  color: #ffffff;
+  background: var(--coral);
+}
+
+.softChip {
+  color: var(--ink);
+  background: #f8c2b8;
+}
+
+.programmeLogo {
+  position: absolute;
+  bottom: 16px;
+  left: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--art, #b91610);
+  background: #ffffff;
+  border-radius: 8px;
+}
+
+.programmeName {
+  margin-top: 13px !important;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.programmeText {
+  margin-top: 17px !important;
+  font-size: 13px;
+  line-height: 18px;
+  color: #d6b3ad;
+}
+
+.programmeMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 33px !important;
+  padding-top: 16px;
+  border-top: 1px solid #3d2122;
+}
+
+.programmeMeta > div {
+  display: grid;
+  grid-template-columns: 106px 1fr;
+}
+
+.programmeMeta dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  color: #a57b75;
+}
+
+.programmeMeta dd {
+  font-size: 13px;
+  line-height: 16px;
+  color: #efefef;
+}
+
+.programmeMeta .prize {
+  font-weight: 500;
+  color: var(--coral);
+}
+
+/* ------------------------------------------------------------ ventures */
+
+.ventures {
+  padding: 63px 0 56px 64px;
+  background: #ffffff;
+}
+
+.investors {
+  display: flex;
+  gap: 67px;
+  overflow: hidden;
+}
+
+.investorsSide {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 401px;
+  padding-bottom: 22px;
+}
+
+.investorsTitle {
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 54px;
+  letter-spacing: -0.02em;
+}
+
+.investorsNav {
+  display: flex;
+  gap: 12px;
+}
+
+.roundBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 49px;
+  height: 49px;
+  color: #ffffff;
+  background: var(--ink);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.roundBtn:disabled {
+  cursor: default;
+}
+
+.investorsTrack {
+  display: flex;
+  gap: 36px;
+  min-width: 0;
+}
+
+.pitch {
+  display: flex;
+  flex: none;
+  gap: 32px;
+  width: 772px;
+  height: 442px;
+  padding: 15px;
+  background: #ffffff;
+  border: 1px solid #f1d6d4;
+  border-radius: 26px;
+  box-shadow: 0 24px 48px rgb(22 1 2 / 0.12);
+}
+
+.pitchPeek {
+  flex: none;
+  width: 772px;
+  height: 442px;
+  padding: 15px;
+  background: #ffffff;
+  border: 1px solid #f1d6d4;
+  border-radius: 26px;
+}
+
+.pitchArt {
+  position: relative;
+  flex: none;
+  width: 388px;
+  height: 388px;
+  background: linear-gradient(140deg, #b81d17 0%, #5e0909 50%, #1e0204 100%);
+  border-radius: 18px;
+}
+
+.pitchPeek .pitchArt {
+  background: linear-gradient(140deg, #b89496 0%, #9a7a7c 100%);
+}
+
+.pitchArt span {
+  position: absolute;
+  left: 20px;
+  bottom: 22px;
+  font-size: 36px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.pitchBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 18px 12px 12px 0;
+}
+
+.pitchTags {
+  display: flex;
+  gap: 6px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #6f5f60;
+  background: #efefef;
+  border-radius: 11px;
+}
+
+.pillRed {
+  color: #ca4d48;
+  background: #fbe1dd;
+}
+
+.pillGreen {
+  color: #2e7d53;
+  background: #dcefe4;
+}
+
+.pitchName {
+  margin-top: 18px !important;
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 46px;
+}
+
+.pitchText {
+  margin-top: 14px !important;
+  font-size: 13.5px;
+  line-height: 21px;
+  color: #6f5f60;
+}
+
+.pitchLink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pitchStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-top: auto !important;
+  padding-top: 16px;
+  border-top: 1px solid #e3dddd;
+}
+
+.pitchStats dt {
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+.pitchStats dd {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted);
+}
+
+.catalogue {
+  margin-top: 22px;
+  padding-right: 64px;
+}
+
+.catalogueHead {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.catalogueTitle {
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 42px;
+  white-space: nowrap;
+}
+
+.count {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.catalogueChips {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lineChip {
+  height: 32px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid #cfc8c8;
+  border-radius: 17px;
+  cursor: pointer;
+}
+
+.lineChipOn {
+  color: #ffffff;
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.darkCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  text-decoration: none;
+  white-space: nowrap;
+  background: var(--ink);
+  border-radius: 21px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 1), 300px);
+  gap: 12px 16px;
+  margin-top: 11px;
+  margin-right: -64px;
+  padding-right: 64px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tile > div {
+  min-width: 0;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  height: 80px;
+  padding: 0 12px;
+  background: var(--canvas);
+  border-radius: 16px;
+}
+
+.tileMark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(140deg, #8c1a1a 0%, #3b0508 100%);
+  border-radius: 12px;
+}
+
+.tileName {
+  display: block;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.tileMeta {
+  margin-top: 2px !important;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ news */
+
+.news {
+  padding: 111px 64px 109px;
+  background: var(--canvas);
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: #b91610;
+}
+
+.newsHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.newsTitle {
+  font-size: 74px;
+  font-weight: 500;
+  line-height: 78px;
+  letter-spacing: -0.025em;
+}
+
+.newsAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 18px;
+  font-size: 15px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.newsCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 33px;
+  margin-top: 46px;
+}
+
+.newsCard {
+  padding-top: 18px;
+  border-top: 2px solid var(--ink);
+}
+
+.newsArt {
+  height: 250px;
+  border-radius: 16px;
+}
+
+.news_coral {
+  background: linear-gradient(140deg, #f05a3c 0%, #8e2316 50%, #1e0204 100%);
+}
+
+.news_plum {
+  background: linear-gradient(140deg, #8a3a5a 0%, #4c1a2a 50%, #1e0204 100%);
+}
+
+.news_amber {
+  background: linear-gradient(140deg, #c55a2a 0%, #6a2410 50%, #1e0204 100%);
+}
+
+.newsTag {
+  display: inline-flex;
+  margin-top: 9px;
+  padding: 3px 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #b91610;
+  background: #fbe1dd;
+  border-radius: 11px;
+}
+
+.newsName {
+  margin-top: 9px !important;
+  font-size: 23px;
+  font-weight: 500;
+  line-height: 29px;
+}
+
+.newsDate {
+  margin-top: 8px !important;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ narrow */
+
+@media (max-width: 1180px) {
+  .programmeCards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .programmesHead {
+    flex-wrap: wrap;
+  }
+
+  .programmesTitle {
+    flex-basis: 100%;
+    white-space: normal;
+  }
+
+  .investors {
+    flex-direction: column;
+    gap: 28px;
+    padding-right: 24px;
+  }
+
+  .investorsSide {
+    flex-direction: row;
+    align-items: flex-end;
+    width: auto;
+    gap: 24px;
+  }
+
+  .investorsTrack {
+    overflow-x: auto;
+  }
+
+  .catalogueHead {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 1023px) {
+  .hero {
+    height: auto;
+    min-height: 640px;
+    padding-bottom: 48px;
+  }
+
+  .video {
+    top: 84px;
+    right: 24px;
+  }
+
+  .heroSearch {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    max-width: none;
+    margin: 360px 24px 0;
+    transform: none;
+  }
+
+  .highlights,
+  .programmes,
+  .news {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .ventures {
+    padding-left: 24px;
+  }
+
+  .catalogue {
+    padding-right: 24px;
+  }
+
+  .feeds {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .weekTitle,
+  .newsTitle {
+    font-size: 48px;
+    line-height: 54px;
+  }
+
+  .programmesTitle,
+  .investorsTitle {
+    font-size: 40px;
+    line-height: 46px;
+  }
+
+  .newsCards {
+    grid-template-columns: 1fr;
+  }
+
+  .newsHead {
+    flex-wrap: wrap;
+  }
+
+  .pitch {
+    width: min(772px, calc(100vw - 48px));
+    height: auto;
+  }
+
+  .pitchPeek {
+    display: none;
+  }
+
+  .pitchArt {
+    width: 46%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .pitchStats dt {
+    font-size: 20px;
+    line-height: 26px;
+  }
+}
+
+@media (max-width: 720px) {
+  .hero {
+    min-height: 600px;
+  }
+
+  .heroSearch {
+    margin: 300px 16px 0;
+  }
+
+  .search {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px;
+    border-radius: 24px;
+  }
+
+  .scopes {
+    flex: 1 1 100%;
+    overflow-x: auto;
+  }
+
+  .scope {
+    flex: none;
+    padding: 0 12px;
+  }
+
+  .searchInput {
+    height: 48px;
+  }
+
+  .intent {
+    height: 44px;
+  }
+
+  .highlights,
+  .programmes,
+  .news {
+    padding: 64px 16px;
+  }
+
+  .ventures {
+    padding: 48px 0 48px 16px;
+  }
+
+  .catalogue {
+    padding-right: 16px;
+  }
+
+  .tickerItem {
+    font-size: 30px;
+    gap: 32px;
+    padding-right: 32px;
+  }
+
+  .weekTitle,
+  .newsTitle,
+  .programmesTitle,
+  .investorsTitle {
+    font-size: 34px;
+    line-height: 40px;
+  }
+
+  .catalogueTitle {
+    font-size: 24px;
+    white-space: normal;
+  }
+
+  .programmeCards {
+    grid-template-columns: 1fr;
+  }
+
+  .feedRow {
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    margin-left: 58px;
+  }
+
+  .pitch {
+    flex-direction: column;
+    width: calc(100vw - 32px);
+  }
+
+  .pitchArt {
+    width: 100%;
+    height: 220px;
+  }
+
+  .pitchStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .pitchStats dt {
+    font-size: 19px;
+    line-height: 24px;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(var(--cols, 1), 260px);
+    margin-right: -16px;
+    padding-right: 16px;
+  }
+}

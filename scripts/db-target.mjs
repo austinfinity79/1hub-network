@@ -10,7 +10,7 @@
  *                                   database also needs, on the same command
  *                                   line, --confirm-shared-db=<its name>
  *   MUTATING     migrate, seed,     explicit DATABASE_URL required
- *                catalog
+ *                catalog, demo
  *   READ_ONLY    status, introspect  may use the documented local default
  *
  * The shared-database acknowledgement is a command-line flag naming the
@@ -31,6 +31,7 @@ export const COMMAND_CLASS = {
   migrate: 'MUTATING',
   seed: 'MUTATING',
   catalog: 'MUTATING',
+  demo: 'MUTATING',
   status: 'READ_ONLY',
   introspect: 'READ_ONLY',
 }
