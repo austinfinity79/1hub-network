@@ -6,6 +6,7 @@ import { SESSION_COOKIE_NAME, landingEntry } from '@/lib/landing/entry'
 import { libraryViewer } from '@/lib/library/library-api'
 import { libraryInitial } from '@/lib/library/library-bodies'
 import { libraryQuery } from '@/lib/library/query'
+import { publicViewer } from '@/lib/public/viewer'
 
 /**
  * TASK 22-PREVIEW-LIBRARY(-FIX) / WF06-PROD-04 — `/library`, the public
@@ -30,11 +31,12 @@ export default async function LibraryPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
-  const [entry, viewer, params] = await Promise.all([
+  const [entry, shellViewer, viewer, params] = await Promise.all([
     landingEntry(token),
+    publicViewer(token),
     libraryViewer(await headers()),
     searchParams,
   ])
   const initial = await libraryInitial(viewer, libraryQuery(params.q))
-  return <Library entry={entry} initial={initial} />
+  return <Library entry={entry} viewer={shellViewer} initial={initial} />
 }

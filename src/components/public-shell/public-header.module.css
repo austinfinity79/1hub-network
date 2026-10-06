@@ -325,6 +325,11 @@ a.menuItem:hover {
     margin-right: 0;
   }
 
+  /* THAO-01-FIX: a flex row drops the spaces of "VI | EN"; keep them. */
+  .lang {
+    column-gap: 0.3em;
+  }
+
   .signup {
     min-height: 44px;
   }

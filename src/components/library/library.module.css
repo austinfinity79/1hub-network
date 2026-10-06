@@ -59,61 +59,12 @@
     #160002;
 }
 
-.bar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* THAO-01-FIX (DEC-THAO-NAV-D5): the shared public header spans the hero; its
+   slot keeps the former 101 px bar height so the hero below is unchanged. */
+.shell {
   height: 101px;
+  margin: 0 calc(-1 * var(--gutter));
   text-align: left;
-}
-
-.brand {
-  font-weight: 700;
-  font-size: 21px;
-  line-height: 24px;
-  letter-spacing: 0.025em;
-  white-space: nowrap;
-}
-
-.nav {
-  position: absolute;
-  left: 453px;
-  display: flex;
-  gap: 36px;
-  font-size: 15px;
-  line-height: 20px;
-  color: rgb(255 255 255 / 78%);
-}
-
-.navActive {
-  color: #ffffff;
-}
-
-.barRight {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  font-size: 14px;
-  line-height: 18px;
-}
-
-.lang {
-  color: rgb(255 255 255 / 78%);
-  white-space: nowrap;
-}
-
-.login {
-  display: inline-flex;
-  align-items: center;
-  height: 42px;
-  padding: 0 24px;
-  border-radius: 3px;
-  background: var(--coral);
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
 }
 
 .eyebrow {
@@ -1064,10 +1015,6 @@
 }
 
 @media (max-width: 1100px) {
-  .nav {
-    position: static;
-  }
-
   .search {
     width: 100%;
   }
@@ -1092,18 +1039,8 @@
     --gutter: 20px;
   }
 
-  .bar {
-    flex-wrap: wrap;
-    gap: 10px 18px;
+  .shell {
     height: auto;
-    padding: 18px 0;
-  }
-
-  .nav {
-    order: 3;
-    flex-wrap: wrap;
-    gap: 8px 20px;
-    width: 100%;
   }
 
   .hero {

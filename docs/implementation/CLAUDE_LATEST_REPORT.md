@@ -1,32 +1,41 @@
 # Claude Task Report
 
 ## Task
-THAO-01 — Global Navigation v2, production closure (milestone THAO-M1). Report: [THAO-01](reports/THAO-01.md). Decisions: [DEC-THAO-NAV](../decisions/DECISION_LOG.md#dec-thao-nav).
+THAO-01-FIX — close the remaining Global Navigation v2 deviations (milestone THAO-M1). Report: [THAO-01-FIX](reports/THAO-01-FIX.md). Decisions: [DEC-THAO-NAV](../decisions/DECISION_LOG.md#dec-thao-nav).
 
 ## Verdict
-**PASS_WITH_EVIDENCE.** One shared header on Home, About, Sản phẩm, Startup and Founder. Every visible entry is a real route or an approved plain label. Menus close after a choice. VI is the only language. Not merged, not deployed. STOP.
+**PASS_WITH_EVIDENCE.**
+- Giới thiệu is a direct link to `/about`; only Chương trình is a dropdown.
+- `/library` uses the shared public header; the hero below is unchanged.
+- GLOBAL_NAV_SINGLE_SOURCE = YES.
+- Not merged, not deployed. STOP.
 
 ## Files changed
 - `src/components/public-shell/public-header.tsx`
-- `tests/visual/specs/thao-01-global-nav.spec.ts` (new)
-- the report
-- DECISION_LOG, P0_STATUS, this file
+- `src/components/library/library.tsx`, `library.module.css`
+- `src/app/(public)/library/page.tsx`
+- `src/components/landing/landing-parts.tsx`, `landing.module.css` (removed, orphaned)
+- Tests:
+  - `thao-01-global-nav.spec.ts`
+  - `public-library.spec.ts`
+  - `demo-home-about-01.spec.ts`
+- Docs:
+  - DECISION_LOG
+  - SCREEN_ROUTE_MAP
+  - P0_STATUS
+  - the report
+  - this file
 
 ## Tests / build
 | Gate | Result |
 |---|---|
 | format · lint · typecheck · build | PASS |
 | Unit | 45 / 458 |
-| THAO-01 + protected slice | 8 specs, 123 / 123 |
+| Targeted + protected slice | 16 specs, 0 unexpected, 0 flaky |
 | UAT L1–L2 | 19 / 19 |
 
-## Deviations / blockers
-- **Blockers:** none.
-- **REVIEW_REQUIRED_PO:** `/library` keeps its L15 header; changing it needs the gated `A-header` block re-approved.
-
 ## Git
-- Branch: `feat/thao-m1-public-experience` (worktree `../1hub-network-thao-m1`); base `d6bc04a`.
-- Implementation / report commit: the THAO-01 commit.
+- Branch: `feat/thao-m1-public-experience` (worktree `../1hub-network-thao-m1`); base `1e95334`.
 - Push: NOT RUN.
 - Main changed: NO.
 

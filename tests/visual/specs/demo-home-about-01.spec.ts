@@ -105,8 +105,9 @@ test.describe('public shell', () => {
       )
       await expect(programmes.getByText('Sự kiện')).toHaveAttribute('aria-disabled', 'true')
       await page.keyboard.press('Escape')
-      await header.getByRole('button', { name: 'Mở menu Giới thiệu' }).click()
-      await expect(header.locator('[data-nav="about"] ul a')).toHaveCount(4)
+      // THAO-01-FIX: Giới thiệu is a direct link, only Chương trình has a menu.
+      await expect(header.getByRole('button', { name: 'Mở menu Giới thiệu' })).toHaveCount(0)
+      await expect(header.locator('[data-nav="about"] ul')).toHaveCount(0)
       await expect(header.locator('[data-cta="login"]')).toHaveAttribute('href', '/auth')
       await expect(header.locator('[data-cta="primary-bar"]')).toHaveText('Tạo tài khoản')
       await expect(header.locator('[data-cta="primary-bar"]')).toHaveAttribute('href', '/auth')
@@ -409,6 +410,17 @@ async function compareBlocks(
   }
   const pictures = [
     ...(await images(page)),
+    // THAO-01-FIX (DEC-THAO-NAV-D1, INTENTIONAL): the frames draw "Giới thiệu ▾";
+    // the frozen nav contract makes it a direct link, so the nav row (its entries
+    // shift left by the dropped chevron) is left out. thao-01-global-nav covers it.
+    ...(await page
+      .locator('header[data-shell="public"] nav[aria-label="Điều hướng chính"]')
+      .evaluateAll((els) =>
+        els.map((el) => {
+          const r = el.getBoundingClientRect()
+          return { x: r.x, y: r.y + window.scrollY, width: r.width, height: r.height }
+        }),
+      )),
     // Canonical values where the frame draws a sample (DEMO-D8 INTENTIONAL-DATA).
     ...(await page.locator('[data-pixel="data"]').evaluateAll((els) =>
       els.map((el) => {

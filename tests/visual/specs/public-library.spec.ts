@@ -143,24 +143,25 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     expect(apiCalls, 'the Library reads no API of ours').toEqual([])
   })
 
-  test('header: Thư viện is current, the items without a destination are plain labels', async ({
+  test('header: the shared public header (THAO-01-FIX); the former L15 bar is gone', async ({
     page,
   }) => {
     await page.goto('/library')
-    const nav = page.getByRole('navigation', { name: 'Thư viện' })
-    await expect(nav.getByRole('link', { name: 'Thư viện' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    )
-    // PO decision (Alpha interaction gap fix): not a link, not a disabled control, no tooltip.
-    await expect(nav.getByRole('link')).toHaveCount(1)
-    for (const label of ['Chương trình', 'Sự kiện', 'Tin tức']) {
-      const item = nav.getByText(label, { exact: true })
-      await expect(item).toHaveAttribute('data-nav-kind', 'LABEL')
-      await expect(item).not.toHaveAttribute('aria-disabled')
-      await expect(item).not.toHaveAttribute('title')
-    }
-    await expect(page.locator('[data-cta="login"]')).toHaveAttribute('href', '/auth')
+    const header = page.locator('header[data-shell="public"]')
+    await expect(header).toHaveCount(1)
+    await expect(page.getByRole('navigation', { name: 'Thư viện' })).toHaveCount(0)
+    const nav = header.getByRole('navigation', { name: 'Điều hướng chính' })
+    await expect(nav.locator(':scope > [data-nav]')).toHaveText([
+      /^Giới thiệu/,
+      /^Chương trình/,
+      /^Sản phẩm/,
+      /^Nhân tài/,
+      /^Tin tức/,
+    ])
+    // The Library is not a top-level entry, so nothing is marked current.
+    await expect(nav.locator('[aria-current="page"]')).toHaveCount(0)
+    await expect(header.locator('[data-cta="logo"]')).toHaveAttribute('href', '/')
+    await expect(header.locator('[data-cta="login"]')).toHaveAttribute('href', '/auth')
   })
 
   test('Bài toán: every dataset record, no dead CTA, derived counts, no invented values', async ({
@@ -572,7 +573,6 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
       name: 'PUBLIC-LIBRARY.L15-hero',
       reference: REFERENCE,
       segments: [
-        { name: 'A-header', reference: { x: 0, y: 0, width: 1440, height: 101 }, dy: 0 },
         { name: 'C-heading', reference: { x: 200, y: 205, width: 1040, height: 205 }, dy: 0 },
         { name: 'D-search', reference: { x: 250, y: 420, width: 940, height: 105 }, dy: 0 },
         { name: 'D-quick', reference: { x: 440, y: 532, width: 560, height: 48 }, dy: 0 },
@@ -586,6 +586,11 @@ test.describe('PUBLIC-LIBRARY pixel QA (L15, 1440 DPR1, full reference)', () => 
           class: 'content',
           reason:
             "Metric and tab counts are the data (4 open demo problems; startups and founders from startup.json), not the pack's 28 / 142 / 310; the digits are excluded, the columns, dividers and labels are compared",
+        },
+        {
+          class: 'superseded',
+          reason:
+            'A-header (y 0–101) is no longer compared: the L15 bar is replaced by the shared public header (THAO-01-FIX, DEC-THAO-NAV-D5), verified by thao-01-global-nav and the DM01 / DM08 header blocks; its 101 px slot is kept, so every block below stays at dy 0',
         },
       ],
     })

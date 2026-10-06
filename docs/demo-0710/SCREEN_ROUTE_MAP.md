@@ -34,7 +34,7 @@ SP1 mapping is locked by meaning (PO, 06/10): Tổng quan = file 10, Chỉ số 
 | Item | Target in demo | Rule |
 |---|---|---|
 | Logo | `/` | functional |
-| Giới thiệu ▾ | `/about` | functional (the open menu is not drawn, see I) |
+| Giới thiệu | `/about` | functional, direct link (no menu; THAO-01-FIX, DEC-THAO-NAV-D1) |
 | Chương trình ▾ → 2.1 / 2.2 | `/programmes` / `/events` once built; until then plain labels | no dead link (DEC-AIG-D1 pattern) |
 | Sản phẩm | `/products` | functional; current-state underline |
 | Nhân tài | `/talents` once built; until then plain label | as above |

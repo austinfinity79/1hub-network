@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState } from 'react'
 
-import { ECOSYSTEM_LINKS, PUBLIC_ROUTES } from '@/lib/public/routes'
+import { PUBLIC_ROUTES } from '@/lib/public/routes'
 import type { PublicViewer } from '@/lib/public/viewer'
 
 import { HubLogo } from './hub-logo'
@@ -11,14 +11,14 @@ import { ArrowUpRight, NavText, PublicAction } from './public-action'
 import styles from './public-header.module.css'
 
 /**
- * DEMO-HOME-ABOUT-01 — the shared header of the new public surfaces (DM01,
- * DM02; Thảo §A "Thanh điều hướng"): HUB symbol · Giới thiệu ▾ · Chương
- * trình ▾ · Sản phẩm · Nhân tài · Tin tức, then VI | EN and the visitor's
- * own entry (guest: Đăng nhập / Tạo tài khoản; signed in: Việc của tôi, bell,
- * avatar).
+ * DEMO-HOME-ABOUT-01 / THAO-01 — the one global header of every public page
+ * (DM01, DM02; Thảo §A "Thanh điều hướng"): HUB symbol · Giới thiệu ·
+ * Chương trình ▾ · Sản phẩm · Nhân tài · Tin tức, then VI | EN and the
+ * visitor's own entry (guest: Đăng nhập / Tạo tài khoản; signed in: Việc của
+ * tôi, bell, avatar).
  *
- * - "Giới thiệu" opens the About page; its menu also lists the external pages
- *   of footer column 1 (Thảo: "cột 1 là Giới thiệu và các trang ngoài").
+ * - "Giới thiệu" is a direct link to the About page (frozen Thảo #1 contract,
+ *   DEC-THAO-NAV-D1); the ecosystem sites are in the footer.
  * - "Chương trình ▾" lists 2.1 Chương trình, cuộc thi and 2.2 Sự kiện.
  * - An entry whose screen is not built yet is plain text (PUBLIC_ROUTES).
  * - VI | EN: VI is current, EN is shown unavailable — no EN content exists
@@ -29,13 +29,6 @@ import styles from './public-header.module.css'
 export type PublicSection = 'home' | 'about' | 'products' | 'talents' | 'programmes' | 'news'
 
 type MenuItem = { label: string; href: string | null; external?: boolean }
-
-const ABOUT_MENU: MenuItem[] = [
-  { label: 'Về HUB Network', href: PUBLIC_ROUTES.about },
-  { label: 'iHUB Ventures', href: ECOSYSTEM_LINKS.ihubVentures, external: true },
-  { label: 'VNV', href: ECOSYSTEM_LINKS.vnv, external: true },
-  { label: '1Hub', href: ECOSYSTEM_LINKS.oneHub, external: true },
-]
 
 const PROGRAMME_MENU: MenuItem[] = [
   { label: 'Chương trình, cuộc thi', href: PUBLIC_ROUTES.programmes },
@@ -282,11 +275,12 @@ export function PublicHeader({
         onClick={(e) => (e.target as Element).closest('a') && setMenuOpen(false)}
       >
         <nav className={styles.nav} aria-label="Điều hướng chính">
-          <Dropdown
+          {/* THAO-01-FIX (DEC-THAO-NAV-D1): Giới thiệu is a direct link; only
+              Chương trình is a dropdown. The ecosystem sites stay in the footer. */}
+          <NavEntry
             name="about"
             label="Giới thiệu"
             href={PUBLIC_ROUTES.about}
-            items={ABOUT_MENU}
             current={current === 'about'}
           />
           <Dropdown
@@ -319,7 +313,7 @@ export function PublicHeader({
           {/* THAO-01: Vietnamese is the only language of the product; no EN
               content exists, so EN is shown unavailable, never as a switch. */}
           <span className={styles.lang} role="group" aria-label="Ngôn ngữ" data-lang="vi">
-            <span aria-current="true">VI</span> |{' '}
+            <span aria-current="true">VI</span> <span aria-hidden="true">|</span>{' '}
             <span aria-disabled="true" title="Bản tiếng Anh — sắp có">
               EN
             </span>

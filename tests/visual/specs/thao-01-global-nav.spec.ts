@@ -9,13 +9,21 @@ import { REPO_ROOT } from '../pixel-qa/paths'
 /**
  * THAO-01 — Global Navigation v2 (Thảo §A, docs/demo-0710/SCREEN_ROUTE_MAP.md
  * "Navigation"): one shared public header on every page of the new public
- * shell, the top-level order Giới thiệu ▾ · Chương trình ▾ · Sản phẩm ·
- * Nhân tài · Tin tức, a real route or a plain label for every entry (no dead
+ * shell (the Library included, THAO-01-FIX), the top-level order Giới thiệu ·
+ * Chương trình ▾ · Sản phẩm · Nhân tài · Tin tức (only Chương trình is a
+ * dropdown), a real route or a plain label for every entry (no dead
  * link), the Programme dropdown, the mobile panel, the HUB mark and the
  * VI | EN state (VI only; no EN content exists).
  */
 
-const SHELL_PAGES = ['/', '/about', '/products', '/products/tracely', '/talents/dang-kim-chi']
+const SHELL_PAGES = [
+  '/',
+  '/about',
+  '/library',
+  '/products',
+  '/products/tracely',
+  '/talents/dang-kim-chi',
+]
 const TOP = ['Giới thiệu', 'Chương trình', 'Sản phẩm', 'Nhân tài', 'Tin tức']
 
 let consoleErrors: string[] = []
@@ -149,15 +157,19 @@ test.describe('Chương trình dropdown', () => {
     await expect(prog.locator('ul')).toHaveCount(0)
   })
 
-  test('Giới thiệu menu: choosing an entry closes the menu, also for the current page', async ({
+  test('only Chương trình is a dropdown: Giới thiệu is a direct link to /about', async ({
     page,
   }) => {
-    await page.goto('/about', { waitUntil: 'networkidle' })
-    const about = mainNav(page).locator('[data-nav="about"]')
-    await about.getByRole('button', { name: 'Mở menu Giới thiệu' }).click()
-    await about.getByRole('link', { name: 'Về HUB Network' }).click()
+    for (const url of SHELL_PAGES) {
+      await page.goto(url, { waitUntil: 'networkidle' })
+      const nav = mainNav(page)
+      await expect(nav.locator('button'), url).toHaveCount(1)
+      await expect(nav.getByRole('button', { name: 'Mở menu Chương trình' }), url).toHaveCount(1)
+      await expect(nav.locator('[data-nav="about"] > a'), url).toHaveAttribute('href', '/about')
+    }
+    await mainNav(page).locator('[data-nav="about"] > a').click()
     await expect(page).toHaveURL('/about')
-    await expect(about.locator('ul')).toHaveCount(0)
+    await expect(page.locator('[data-nav="about"] a')).toHaveAttribute('aria-current', 'page')
   })
 })
 
