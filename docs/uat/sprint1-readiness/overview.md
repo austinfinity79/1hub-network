@@ -33,15 +33,15 @@ S1-UAT-09B-PREP: readiness of the Sprint 1 formal UAT (33 user stories, 160 acce
 
 | Status | All | P0 | P1 |
 |---|---|---|---|
-| READY | 80 | 67 | 13 |
-| IMPLEMENTATION_PENDING | 62 | 53 | 9 |
+| READY | 96 | 83 | 13 |
+| IMPLEMENTATION_PENDING | 46 | 37 | 9 |
 | BUSINESS_DECISION_BLOCKED | 0 | 0 | 0 |
 | LEGAL_BLOCKED | 11 | 11 | 0 |
 | PO_CONTENT_PENDING | 2 | 1 | 1 |
 | ENV_BLOCKED | 4 | 2 | 2 |
 | OUT_OF_SCOPE | 1 | 1 | 0 |
 
-Stories fully READY: 9 of 33 (US-01.01, US-01.02, US-01.04, US-01.06, US-02.11, US-02.12, US-02.14, US-02.17, US-X.01). FB-02/03/04/19/20 are PO direct acceptance and are not among the 160 AC (pack Appendix D). True PO decisions remaining: 0 (PD-5, PD-6 frozen 06/10, [business-decisions](business-decisions.md)).
+Stories fully READY: 11 of 33 (US-01.01, US-01.02, US-01.04, US-01.06, US-01.07, US-01.10, US-02.11, US-02.12, US-02.14, US-02.17, US-X.01). FB-02/03/04/19/20 are PO direct acceptance and are not among the 160 AC (pack Appendix D). True PO decisions remaining: 0 (PD-5, PD-6 frozen 06/10, [business-decisions](business-decisions.md)).
 
 ## Preliminary vs final
 
@@ -60,6 +60,8 @@ PO decision freeze (06/10): PD-5 and PD-6 move US-02.06-AC01 and US-02.06-AC04 t
 Candidate refresh (S1-CANDIDATE-INT-01, 06/10): S1-UAT-07 + FIX-01 integrated with S1-UAT-09; full regression 1236 PASS / 0 FAIL / 29 SKIP, UAT L1-L2 19 / 19, DB 849 / 849. 17 invitation AC → READY with evidence; US-02.14-AC04 (owner never sees "Đã từ chối") and US-X.02-AC01…03 (S1-UAT-06 / 03B cases) stay pending. Result: READY 79 · IMPL 63 · BUSINESS 0 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1.
 
 FIX-02 refresh (S1-SINGLE-LANE-AI-CONTRACT-RECOVER-01, 06/10): S1-UAT-07-FIX-02 (`d497da2`, fast-forwarded into the candidate; full regression 1237 PASS / 0 FAIL / 29 SKIP / 0 FLAKY) delivers the owner's "Đã từ chối" line and re-invite: US-02.14-AC04 → READY. No other AC changed. Result: READY 80 · IMPL 62 · BUSINESS 0 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1.
+
+S1-UAT-03 refresh (06/10, lane `a613d80`; full regression GREEN, see [S1-UAT-03-evidence](../../implementation/reports/S1-UAT-03-evidence.md)): US-01.07-AC01…06, US-01.11-AC01…06 and AC08, plus the unassigned US-01.09-AC08, US-01.10-AC02, US-01.12-AC03 → READY (16). US-01.11-AC07/09 and US-01.13-AC01 stay S1-UAT-03B. Result: READY 96 · IMPL 46 · BUSINESS 0 · LEGAL 11 · PO content 2 · ENV 4 · OOS 1.
 
 ## Files
 

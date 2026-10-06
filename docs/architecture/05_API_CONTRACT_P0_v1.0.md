@@ -1266,9 +1266,9 @@ Maps: **WF01-S05** (ACC-08).
 }
 ```
 
-Rules:
+Rules (the claim shape and limits are amended by A17, §34):
 - `roles` is a subset of `HUB_MEMBER`, `INNOVATOR`, `STARTUP_FOUNDER`, `ORGANIZATION_REPRESENTATIVE`, `INVESTOR_REPRESENTATIVE`, `INNOVATION_ENTHUSIAST`;
-- `hub_claims` needs `HUB_MEMBER`, names requestable organizations only, one claim per organization;
+- `hub_claims` needs `HUB_MEMBER`, names requestable organizations only, one claim per organization (superseded by A17: several positions per unit, by term);
 - the call replaces the declaration as a whole and works only while onboarding is open;
 - a declaration creates no membership, leadership, RoleAssignment, capability or managed scope.
 
@@ -1718,4 +1718,31 @@ Source: [DEC-S1I-D7](../decisions/DECISION_LOG.md#dec-s1i-d7) (US-02.14 AC4, S1-
 ### POST `/ventures/{ventureId}/team/invitations/{membershipId}/decline` — changes
 
 An expired invitation → `409` (as accept). Unchanged: a repeated decline answers the same `200 { membership_id, state: "REJECTED" }`; revoked or accepted → `409`; anyone but the invited address → `404`. Audit `VENTURE_TEAM_INVITATION_REJECTED` once.
+
+# 34. Amendment A17 — Sprint1 onboarding corrections (2026-10-06)
+
+Source: [DEC-S1O](../decisions/DECISION_LOG.md#dec-s1o) (S1-UAT-03; US-01.07, US-01.09–US-01.12; FB-06, FB-07, FB-11–FB-13). No migration.
+
+### PATCH `/me/profile` — location
+`country` / `locality`: a typed name (1–60), the alternatives to `country_id` / `region_id` (both for one field → `422 conflicts_with_ids`). Stored as UNNORMALIZED COUNTRY / REGION items. A typed place links a canonical province only when the country is Việt Nam. `region_id` of a listed province with another country → `422 region_id: not_for_country`. A new country without a place clears the province (an ACTIVE profile then answers `422 region_id: required`).
+
+### PUT `/me/onboarding/roles` — claim shape
+```json
+{"roles": ["HUB_MEMBER"], "hub_claims": [
+  {"level": "CHAPTER", "organization_id": "…", "position": "HEAD_OF_BOARD", "board_name": "Truyền thông",
+   "from": "2024-01", "to": null, "current": true}
+]}
+```
+| Field | Rule (`422 hub_claims: <reason>`) |
+|---|---|
+| `level` | `HUB` · `CHAPTER` · `CLB` (`level_required`); the unit's type must match, a CLB under an active PARENT Chapter (`organization_not_available`) |
+| `position` | `CHAIR` · `VICE_CHAIR` · `HEAD_OF_BOARD` · `MEMBER` · `OTHER` (`position_required`); `board_name` / `position_other` required for the last two (`board_name_required`, `position_other_required`), ≤ 60 (`too_long`) |
+| `from` / `to` / `current` | `YYYY-MM` (`invalid_month`); `from_required`, `to_required` unless `current`, `future_month`, `end_before_start`; `current: true` stores `to: null` |
+| rows | ≤ 10 (`too_many`); same unit + position over overlapping months → `duplicate_position` |
+| status | `status`, `verified`, `verification_status` ignored; any other unknown key → `invalid` |
+
+Response rows add `level`, `chapter`, `status: "PENDING"`, `title` and `period` (printed), ordered HUB → CHAPTER → CLB, current first.
+
+### PUT `/me/onboarding/stage` `ROLE`
+`422 ONBOARDING_REQUIREMENTS_MISSING` with `roles: missing` (no role) or `hub_claims: missing | incomplete` (HUB member without a complete position).
 
