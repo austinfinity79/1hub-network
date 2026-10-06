@@ -4,21 +4,24 @@ import { notFound } from 'next/navigation'
 
 import { PublicAction } from '@/components/public-shell/public-action'
 import { PublicHeader } from '@/components/public-shell/public-header'
-import { STAGE_SHORT, findPublicStartup } from '@/lib/public/directory-data'
+import { STAGE_SHORT, findPublicStartup, type StartupPage } from '@/lib/public/directory-data'
 import { PUBLIC_ROUTES } from '@/lib/public/routes'
 import { publicShellData } from '@/lib/public/shell-data'
 
 import styles from './startup.module.css'
 
 /**
- * DEMO-DIR2-01 — `/products/[slug]`, the startup page a directory card opens.
+ * DEMO-SP1-FOUNDER-01 — `/products/[slug]`, the startup profile, tab Tổng quan
+ * (DM10, `design-reference/final/demo-0710/DM10__startup-overview__SOURCE.png`).
  *
  * Public: a canonical published startup (STARTUP · ACTIVE · PUBLIC) by its
  * canonical slug; anything else — unknown, DRAFT, PRIVATE, a PROJECT — is
- * 404, with no hint that it exists. This is the interim Tổng quan header and
- * summary in the DM10 language; the full DM10 / DM11 / DM12 page is
- * DEMO-SP1-FOUNDER-01. Team names are shown for the demo ventures only
- * (fictional people). Follow / connect are visual-only (guest → /auth).
+ * 404, with no hint that it exists. Identity, stage, place, domains, summary
+ * and team are canonical; the Tổng quan copy, quarter figures, funding,
+ * milestones and needs are the demo fixture (DEMO STATE ONLY). A team member
+ * links to their founder page only when allow-listed (DEMO-D5). Chỉ số and
+ * Cập nhật stay labels: their updated frames are not on the workstation.
+ * Follow / connect / dataroom are visual-only (guest → /auth).
  */
 export const dynamic = 'force-dynamic'
 
@@ -29,21 +32,87 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return { title: startup ? `${startup.name} — Sản phẩm · HUB Network` : 'Sản phẩm — HUB Network' }
 }
 
-export default async function StartupPage({ params }: Params) {
+function initials(name: string, pick: 'first-two' | 'first-last'): string {
+  const words = name.trim().split(/\s+/)
+  const letters =
+    words.length < 2
+      ? name.slice(0, 2)
+      : pick === 'first-two'
+        ? words[0]!.charAt(0) + words[1]!.charAt(0)
+        : words[0]!.charAt(0) + words[words.length - 1]!.charAt(0)
+  return letters.toLocaleUpperCase('vi')
+}
+
+function Label({ id, children }: { id?: string; children: string }) {
+  return (
+    <h2 id={id} className={styles.label}>
+      {children}
+    </h2>
+  )
+}
+
+function Lock() {
+  return (
+    <svg viewBox="0 0 10 12" width="10" height="12" aria-hidden="true" className={styles.lock}>
+      <path
+        d="M2.5 5V3.5a2.5 2.5 0 0 1 5 0V5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <rect x="0.5" y="5" width="9" height="6.5" rx="1.2" fill="#e8b04a" />
+    </svg>
+  )
+}
+
+function Team({ team }: { team: StartupPage['team'] }) {
+  return (
+    // Canonical team names differ from the frame's samples (INTENTIONAL-DATA).
+    <ul className={styles.team} role="list" data-pixel="data">
+      {team.map((m) => {
+        const body = (
+          <>
+            <span className={styles.face} aria-hidden="true">
+              {initials(m.name, 'first-last')}
+            </span>
+            <span className={styles.who}>
+              <strong>{m.name}</strong>
+              {m.role ? <small>{m.role}</small> : null}
+            </span>
+          </>
+        )
+        return (
+          <li key={m.name}>
+            {m.href ? (
+              <Link href={m.href} className={styles.member} data-cta="founder">
+                {body}
+              </Link>
+            ) : (
+              <span className={styles.member}>{body}</span>
+            )}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+export default async function StartupProfilePage({ params }: Params) {
   const { slug } = await params
   const [shell, startup] = await Promise.all([publicShellData(), findPublicStartup(slug)])
   if (!startup) notFound()
   const guest = shell.viewer.kind === 'GUEST'
+  const o = startup.overview
   const meta = [
     startup.since ? `Từ ${startup.since}` : null,
     startup.round,
     startup.region?.replace(/^TP\. /, ''),
   ].filter(Boolean)
-  const mark = startup.name.trim().split(/\s+/)
   return (
     <div
       className={styles.page}
       data-screen="DEMO-STARTUP"
+      data-revision="DM10"
       data-startup={startup.slug}
       data-entry={shell.viewer.kind}
     >
@@ -52,19 +121,19 @@ export default async function StartupPage({ params }: Params) {
         <Link href={PUBLIC_ROUTES.products ?? '/'} className={styles.back} data-cta="back">
           ← Sản phẩm
         </Link>
+
         <section className={styles.head} aria-labelledby="startup-name">
           <div className={styles.headTop}>
             <span className={styles.logo} aria-hidden="true">
-              {(mark.length > 1
-                ? mark[0]!.charAt(0) + mark[1]!.charAt(0)
-                : startup.name.slice(0, 2)
-              ).toLocaleUpperCase('vi')}
+              {initials(startup.name, 'first-two')}
             </span>
             <div className={styles.identity}>
-              <h1 id="startup-name">{startup.name}</h1>
-              {startup.domains[0] ? (
-                <span className={styles.domain}>{startup.domains[0]}</span>
-              ) : null}
+              <div className={styles.nameRow}>
+                <h1 id="startup-name">{startup.name}</h1>
+                {startup.domains[0] ? (
+                  <span className={styles.domain}>{startup.domains[0]}</span>
+                ) : null}
+              </div>
             </div>
             <div className={styles.side}>
               {startup.stage ? (
@@ -87,14 +156,10 @@ export default async function StartupPage({ params }: Params) {
               </div>
             </div>
           </div>
-          {startup.summary ? (
-            <div className={styles.pitch}>
-              <p className={styles.eyebrow}>
-                {startup.domains.map((d) => d.toLocaleUpperCase('vi')).join(' · ')}
-              </p>
-              <p className={styles.tagline}>{startup.summary}</p>
-            </div>
-          ) : null}
+          <div className={styles.pitch}>
+            <p className={styles.eyebrow}>{o ? o.focus : startup.domains.join(' · ')}</p>
+            <p className={styles.tagline}>{o ? o.tagline : (startup.summary ?? startup.name)}</p>
+          </div>
         </section>
 
         <nav className={styles.tabs} aria-label="Hồ sơ sản phẩm">
@@ -110,74 +175,149 @@ export default async function StartupPage({ params }: Params) {
         </nav>
 
         <div className={styles.body}>
-          <section className={styles.block} aria-labelledby="startup-about">
-            <p id="startup-about" className={styles.label}>
-              GIỚI THIỆU
-            </p>
-            <p className={styles.lead}>{startup.summary ?? 'Chưa có mô tả.'}</p>
-            {startup.headline.length ? (
-              <dl className={styles.numbers}>
-                {startup.headline.map((h) => (
-                  <div key={h.label}>
-                    <dt>{h.value}</dt>
-                    <dd>{h.label}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : null}
-            {startup.team.length ? (
+          <div className={styles.main2}>
+            {o ? (
               <>
-                <p className={styles.label}>ĐỘI NGŨ</p>
-                <ul className={styles.team} role="list">
-                  {startup.team.map((m) => (
-                    <li key={m.name}>
-                      <span className={styles.face} aria-hidden="true">
-                        {m.name
-                          .trim()
-                          .split(/\s+/)
-                          .filter((_, i, a) => i === 0 || i === a.length - 1)
-                          .map((w) => w.charAt(0))
-                          .join('')
-                          .toLocaleUpperCase('vi')}
-                      </span>
-                      <span>
-                        <strong>{m.name}</strong>
-                        {m.role ? <small>{m.role}</small> : null}
-                      </span>
+                <section className={styles.block} aria-labelledby="sp-problem">
+                  <Label id="sp-problem">Bài toán</Label>
+                  <p className={styles.lead}>{o.problem.text}</p>
+                  <dl className={styles.figures}>
+                    {o.problem.figures.map((f) => (
+                      <div key={f.label}>
+                        <dt>{f.value}</dt>
+                        <dd>{f.label}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+                <section className={styles.block} aria-labelledby="sp-solution">
+                  <Label id="sp-solution">Giải pháp</Label>
+                  <p className={styles.lead}>{o.solution.text}</p>
+                  <ul className={styles.features} role="list">
+                    {o.solution.features.map((f) => (
+                      <li key={f.title}>
+                        <h3>{f.title}</h3>
+                        <p>{f.text}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+                <section className={styles.block} aria-labelledby="sp-market">
+                  <Label id="sp-market">Thị trường</Label>
+                  <p className={styles.soft}>{o.market.text}</p>
+                  <dl className={styles.sizes}>
+                    {o.market.sizes.map((m) => (
+                      <div key={m.label}>
+                        <dt>{m.label}</dt>
+                        <dd>
+                          <strong>{m.value}</strong>
+                          <span>{m.note}</span>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <div className={styles.method}>
+                    <h3>{o.market.method.title}</h3>
+                    <p>{o.market.method.text}</p>
+                  </div>
+                </section>
+                <section className={styles.block} aria-labelledby="sp-quotes">
+                  <Label id="sp-quotes">Chia sẻ từ khách hàng</Label>
+                  <div className={styles.quotes}>
+                    {o.quotes.map((q) => (
+                      <figure key={q.source}>
+                        <blockquote>{q.text}</blockquote>
+                        <figcaption>{q.source}</figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                </section>
+              </>
+            ) : (
+              <section className={styles.block} aria-labelledby="sp-about">
+                <Label id="sp-about">Giới thiệu</Label>
+                <p className={styles.lead}>{startup.summary ?? 'Chưa có mô tả.'}</p>
+              </section>
+            )}
+            {startup.team.length ? (
+              <section className={styles.block} aria-labelledby="sp-team">
+                <Label id="sp-team">Đội ngũ</Label>
+                <Team team={startup.team} />
+              </section>
+            ) : null}
+            {o ? (
+              <section className={styles.block} aria-labelledby="sp-vision">
+                <Label id="sp-vision">Tầm nhìn</Label>
+                <p className={styles.vision}>{o.vision}</p>
+              </section>
+            ) : null}
+          </div>
+
+          {o ? (
+            <aside className={styles.rail} aria-label="Tóm tắt">
+              <section className={styles.dark} aria-labelledby="sp-quarter">
+                <Label id="sp-quarter">{o.quarter.label}</Label>
+                <dl className={styles.quarter}>
+                  {o.quarter.figures.map((f) => (
+                    <div key={f.label}>
+                      <dt>
+                        {f.value}
+                        <span className={styles.delta}>{f.delta}</span>
+                      </dt>
+                      <dd>{f.label}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <PublicAction href={null} className={styles.darkLink}>
+                  Xem chỉ số →
+                </PublicAction>
+              </section>
+              <section className={styles.card} aria-labelledby="sp-funding">
+                <Label id="sp-funding">Gọi vốn</Label>
+                <dl className={styles.rows}>
+                  {o.funding.rows.map((r) => (
+                    <div key={r.label}>
+                      <dt>{r.label}</dt>
+                      <dd>{r.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className={styles.progress} aria-hidden="true">
+                  <span style={{ width: `${Math.round(o.funding.progress * 100)}%` }} />
+                </div>
+                <PublicAction
+                  href={guest ? '/auth' : null}
+                  className={styles.dataroom}
+                  cta="dataroom"
+                >
+                  <Lock />
+                  Hồ sơ đầy đủ &amp; dataroom
+                </PublicAction>
+              </section>
+              <section className={styles.card} aria-labelledby="sp-milestones">
+                <Label id="sp-milestones">Dấu ấn</Label>
+                <ul className={styles.milestones} role="list">
+                  {o.milestones.map((m) => (
+                    <li key={m.title}>
+                      <strong>{m.title}</strong>
+                      <small>{m.meta}</small>
                     </li>
                   ))}
                 </ul>
-              </>
-            ) : null}
-          </section>
-          <aside className={styles.facts} aria-label="Thông tin">
-            <dl>
-              {startup.stage ? (
-                <div>
-                  <dt>Giai đoạn</dt>
-                  <dd>{startup.stageLabel}</dd>
-                </div>
-              ) : null}
-              {startup.region ? (
-                <div>
-                  <dt>Khu vực</dt>
-                  <dd>{startup.region}</dd>
-                </div>
-              ) : null}
-              {startup.domains.length ? (
-                <div>
-                  <dt>Lĩnh vực</dt>
-                  <dd>{startup.domains.join(', ')}</dd>
-                </div>
-              ) : null}
-              {startup.fundraising ? (
-                <div>
-                  <dt>Gọi vốn</dt>
-                  <dd>{startup.round ? `Vòng ${startup.round}` : 'Đang gọi vốn'}</dd>
-                </div>
-              ) : null}
-            </dl>
-          </aside>
+              </section>
+              <section className={styles.card} aria-labelledby="sp-needs">
+                <Label id="sp-needs">Nhu cầu</Label>
+                <ul className={styles.needs} role="list">
+                  {o.needs.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+                <PublicAction href={null} className={styles.cardLink}>
+                  Xem vị trí tuyển dụng →
+                </PublicAction>
+              </section>
+            </aside>
+          ) : null}
         </div>
       </main>
     </div>

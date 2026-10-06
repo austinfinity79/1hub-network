@@ -25,7 +25,7 @@ Fixed UUID prefix `de710000-`. All people are fictional, taken from the PO pack,
 | AgriTrace (`agritrace`) | pilot | Đồng Tháp | Nông nghiệp & AgriTech | **Lý Gia Bảo** → Đồng sáng lập (owner) |
 | Kho Lạnh Miền Tây (`kho-lanh-mien-tay`) | selling | Cần Thơ | Nông nghiệp & AgriTech, Logistics | **Võ Thanh Hà** → Nhà sáng lập · CEO (owner) |
 
-- **Journey anchor:** `/products/tracely` → Đặng Kim Chi → `/talents/<her profile id>`, with the verified mark.
+- **Journey anchor:** `/products/tracely` → Đặng Kim Chi → `/talents/dang-kim-chi` (a fixed handle, never the profile id: DEC-DEMO-SP1-D1), with the verified mark.
 - **Verified mark:** Đặng Kim Chi and Lý Gia Bảo carry the demo-verified flag. Võ Thanh Hà does not, so the unverified state is visible too.
 - **Tracely team names:** the team follows DM13 and DM09. DM10 draws "Nguyễn An · CEO / Lê Minh Tú · CTO". That difference is a [content conflict](DEMO_SOT_v1.md#sot-conflicts) and is recorded INTENTIONAL-DATA.
 - **HUB badge:** the "Phó Chủ tịch Chapter Đà Nẵng" badge on DM13 is presentation text from the fixture. It is not a membership, leadership or role record and grants nothing.

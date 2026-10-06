@@ -14,10 +14,10 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). Frozen by DEMO-SOT-00 (06/10/2026). The s
 | DM07 | Sự kiện (event directory) | EV2 v2 · Lịch sự kiện | `9. DIR2.2 - Sự kiện.png` | `/events` (reserved) | REFERENCE | not built |
 | DM08 | Sản phẩm (product / startup directory) | DIR2 · Sản phẩm | `7. DIR3 - SẢN PHẨM.png` | `/products` | MUST | built (DEMO-DIR2-01) |
 | DM09 | Nhân tài (talent directory) | DIR3 · Nhân tài | `8. DIR4 - NHÂN TÀI.png` | `/talents` (reserved) | REFERENCE / P1 | not built |
-| DM10 | Startup profile: Tổng quan | SP1 tab Tổng quan (SP1.24–27) | `10. SP1 hồ sơ sản phẩm.png` | `/products/[slug]` | MUST | interim (DEMO-DIR2-01); full in DEMO-SP1-FOUNDER-01 |
-| DM11 | Startup profile: Chỉ số | SP1 tab Chỉ số (SP1.28–29) | **UPDATED** `13. SP Tab chỉ số.png` (PO latest; file pending, see [FIGMA_REFERENCE_MAP](FIGMA_REFERENCE_MAP.md)) | `/products/[slug]/metrics` | SHOULD (read-only) | new |
-| DM12 | Startup profile: Cập nhật | SP1 tab Cập nhật (SP1.30–31) | **UPDATED** `12. Tab cập nhật.png` (PO latest; file pending) | `/products/[slug]/updates` | SHOULD (read-only) | new |
-| DM13 | Founder profile (**PUBLIC VIEW**) | FP1 (other-member view) | `14. NT1 - Nhân tài - Chi tiết hồ sơ cá nhân.png` | `/talents/[profileId]` | MUST | new (only the demo allow-list renders) |
+| DM10 | Startup profile: Tổng quan | SP1 tab Tổng quan (SP1.24–27) | `10. SP1 hồ sơ sản phẩm.png` | `/products/[slug]` | MUST | built (DEMO-SP1-FOUNDER-01) |
+| DM11 | Startup profile: Chỉ số | SP1 tab Chỉ số (SP1.28–29) | **UPDATED** `13. SP Tab chỉ số.png` (PO latest; file pending, see [FIGMA_REFERENCE_MAP](FIGMA_REFERENCE_MAP.md)) | `/products/[slug]/metrics` | SHOULD (read-only) | not built: file missing (DEC-DEMO-SP1-D6) |
+| DM12 | Startup profile: Cập nhật | SP1 tab Cập nhật (SP1.30–31) | **UPDATED** `12. Tab cập nhật.png` (PO latest; file pending) | `/products/[slug]/updates` | SHOULD (read-only) | not built: file missing (DEC-DEMO-SP1-D6) |
+| DM13 | Founder profile (**PUBLIC VIEW**) | FP1 (other-member view) | `14. NT1 - Nhân tài - Chi tiết hồ sơ cá nhân.png` | `/talents/[handle]` (DEC-DEMO-SP1-D1) | MUST | built (DEMO-SP1-FOUNDER-01; only the demo allow-list renders) |
 
 SP1 mapping is locked by meaning (PO, 06/10): Tổng quan = file 10, Chỉ số = UPDATED file 13, Cập nhật = UPDATED file 12, Founder Profile = file 14. Old file numbering never re-maps a tab.
 
@@ -48,7 +48,7 @@ SP1 mapping is locked by meaning (PO, 06/10): Tổng quan = file 10, Chỉ số 
 |---|---|---|
 | `/`, `/about`, `/products` | full view | full view, signed-in header |
 | `/products/[slug]` (+ metrics / updates) | full view of PUBLIC + ACTIVE startups | same |
-| `/talents/[profileId]` | demo allow-list only; any other id → 404 | same |
+| `/talents/[handle]` | demo allow-list only; any other handle or id → 404 | same |
 | Journey | the whole review journey runs as guest; no login is needed | — |
 
 Figma draws DM10–DM13 signed in. The guest header is the one drawn on DM01/DM02/DM08.

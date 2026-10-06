@@ -1739,6 +1739,19 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-demo-dir-d5"></a>DEC-DEMO-DIR-D5 | **No people on the directory.** Owners and members never appear on `/products`; team names appear only on the demo ventures' pages (fictional people) |
 | <a id="dec-demo-dir-d6"></a>DEC-DEMO-DIR-D6 | **Homepage handoff.** "Sản phẩm" (header, footer), "Xem tất cả", product rows and the hero search scope "Sản phẩm" route to `/products`; scope "Tất cả" keeps `/library?q=` |
 
+## DEC-DEMO-SP1 — Startup profile Tổng quan and public Founder Profile (DEMO-SP1-FOUNDER-01, PO, 06/10)
+
+<a id="dec-demo-sp1"></a>**Status:** IMPLEMENTED 2026-10-06 (local, not pushed / merged / deployed) on the DEMO-SP1-FOUNDER-01 task contract and [DEC-DEMO](#dec-demo). Report: [DEMO-SP1-FOUNDER-01](../implementation/reports/DEMO-SP1-FOUNDER-01.md). No migration.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-demo-sp1-d1"></a>DEC-DEMO-SP1-D1 | **Founder route key is a fixed handle.** `/talents/[handle]` from the demo allow-list (`src/lib/demo-0710/founders.ts`) narrows DEMO-D2's `[profileId]` so no internal id is exposed (task §5); a UUID, unknown handle or non-founder member is 404 |
+| <a id="dec-demo-sp1-d2"></a>DEC-DEMO-SP1-D2 | **Public view through the projection.** Allow-listed fictional founders are projected with `projectDiscovery` as the network sees them (DEMO-D13); their own PROFILE_DISCOVERY level applies: PRIVATE → 404 and absent from team and "Nhà sáng lập khác". Real profiles never render; the P0 "no public profile" rule is unchanged elsewhere |
+| <a id="dec-demo-sp1-d3"></a>DEC-DEMO-SP1-D3 | **Startup team respects discovery.** A member whose PROFILE_DISCOVERY is PRIVATE is not listed on `/products/[slug]`; a member links to a founder page only when allow-listed, else plain text |
+| <a id="dec-demo-sp1-d4"></a>DEC-DEMO-SP1-D4 | **Verified = fixture flag.** "Đã xác thực danh tính qua 1Hub" renders from `identityVerifiedDemo` (Đặng Kim Chi, Lý Gia Bảo) with `data-demo="DEMO-0710"`; no column, role, permission, CCCD or service call (DEMO-D10) |
+| <a id="dec-demo-sp1-d5"></a>DEC-DEMO-SP1-D5 | **Privacy omissions on DM13.** Contact / privacy card, "+ Tạo sản phẩm", the "Vòng trong" badge and every challenge application, round or score are not rendered; "Dự án" lists the canonical ventures; "Xem tất cả N" counts and durations to "nay" are not drawn |
+| <a id="dec-demo-sp1-d6"></a>DEC-DEMO-SP1-D6 | **SP1 tabs.** Chỉ số / Cập nhật stay labels and "Xem chỉ số →" is inert until the UPDATED files 13 / 12 reach the workstation (MISSING_OPTIONAL_SP1_VISUAL_ASSET); Tổng quan copy is a read-only fixture keyed by venture id; no unapproved external website link |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

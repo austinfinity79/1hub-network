@@ -1,7 +1,11 @@
 import { query } from '@/lib/db/client'
+import { founderHref } from '@/lib/demo-0710/founders'
+import { startupOverview, type StartupOverview } from '@/lib/demo-0710/startup-overview'
 import { demoVenture } from '@/lib/demo-0710/ventures'
 import { listPublicStartups, type CanonicalStartupRow } from '@/lib/library/canonical-source'
 import type { StartupStage } from '@/lib/library/startup-adapter'
+import { canSeeDiscovery } from '@/lib/profile/projection'
+import { discoveryLevelsOf } from '@/lib/profile/visibility'
 
 import { PUBLIC_ROUTES } from './routes'
 
@@ -120,9 +124,14 @@ export type StartupPage = DirectoryStartup & {
   stageLabel: string | null
   since: string | null
   round: string | null
-  headline: Array<{ value: string; label: string }>
-  /** Team of a demo venture (its canonical ACTIVE members); empty for any other venture. */
-  team: Array<{ name: string; role: string | null }>
+  /**
+   * Team of a demo venture (its canonical ACTIVE members); empty for any
+   * other venture. `href` is the founder page of an allow-listed demo
+   * founder (DEMO-D5), null otherwise (plain text).
+   */
+  team: Array<{ name: string; role: string | null; href: string | null }>
+  /** DM10 Tổng quan content of a demo venture (DEMO STATE ONLY), else null. */
+  overview: StartupOverview | null
 }
 
 /** One published startup by its canonical slug, or null (unknown, private, draft). */
@@ -134,9 +143,9 @@ export async function findPublicStartup(slug: string): Promise<StartupPage | nul
   const demo = demoVenture(row.ventureId)
   // Team names only for the demo ventures (fictional people, DEMO_DATA_CONTRACT);
   // a real venture's members are not published by this page.
-  const team = demo
-    ? await query<{ name: string; role: string | null }>(
-        `SELECT ip.display_name AS name, pm.role_label AS role
+  const members = demo
+    ? await query<{ profile_id: string; name: string; role: string | null }>(
+        `SELECT pm.profile_id::text, ip.display_name AS name, pm.role_label AS role
            FROM project_members pm
            JOIN individual_profiles ip ON ip.id = pm.profile_id AND ip.status = 'ACTIVE'
           WHERE pm.project_id = $1 AND pm.state = 'ACTIVE'
@@ -144,12 +153,21 @@ export async function findPublicStartup(slug: string): Promise<StartupPage | nul
         [row.ventureId],
       )
     : []
+  // A member whose PROFILE_DISCOVERY is PRIVATE is not listed (WF02 rule);
+  // the profile id stays here: only the name, role and founder route leave.
+  const levels = await discoveryLevelsOf(
+    query,
+    members.map((m) => m.profile_id),
+  )
+  const team = members
+    .filter((m) => canSeeDiscovery(levels.get(m.profile_id) ?? 'NETWORK_ONLY', 'NETWORK'))
+    .map((m) => ({ name: m.name, role: m.role, href: founderHref(m.profile_id) }))
   return {
     ...shape(row, meta.get(row.ventureId)!),
     stageLabel: row.stage?.label ?? null,
     since: demo?.since ?? null,
     round: demo?.round ?? null,
-    headline: demo?.headline ?? [],
     team,
+    overview: startupOverview(row.ventureId),
   }
 }

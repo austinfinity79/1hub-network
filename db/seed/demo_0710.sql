@@ -35,19 +35,21 @@ INSERT INTO user_accounts (id, email, email_normalized, status, created_at, upda
   ('de710000-0000-0000-0000-0000000000a6', 'demo0710.thanhha@example.test', 'demo0710.thanhha@example.test', 'ACTIVE', '2026-10-06T00:00:00Z', '2026-10-06T00:00:00Z')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO individual_profiles (id, account_id, status, display_name, headline, region_vocab_id, onboarding_completed_at, created_at, updated_at)
-SELECT p.id::uuid, p.account_id::uuid, 'ACTIVE', p.display_name, p.headline,
+INSERT INTO individual_profiles (id, account_id, status, display_name, headline, bio, region_vocab_id, onboarding_completed_at, created_at, updated_at)
+SELECT p.id::uuid, p.account_id::uuid, 'ACTIVE', p.display_name, p.headline, p.bio,
        (SELECT id FROM vocabulary_items WHERE type_code = 'REGION' AND slug = p.region),
        '2026-10-06T00:00:00Z', '2026-10-06T00:00:00Z', '2026-10-06T00:00:00Z'
   FROM (VALUES
-    ('de710000-0000-0000-0000-0000000000b1', 'de710000-0000-0000-0000-0000000000a1', 'Đặng Kim Chi', 'Đồng sáng lập · CEO @Tracely', 'da-nang'),
-    ('de710000-0000-0000-0000-0000000000b2', 'de710000-0000-0000-0000-0000000000a2', 'Nguyễn Minh Anh', 'Đồng sáng lập kỹ thuật · Tracely', 'da-nang'),
-    ('de710000-0000-0000-0000-0000000000b3', 'de710000-0000-0000-0000-0000000000a3', 'Phạm Quốc Việt', 'Kỹ sư backend · Tracely', 'da-nang'),
-    ('de710000-0000-0000-0000-0000000000b4', 'de710000-0000-0000-0000-0000000000a4', 'Trần Hạnh', 'Vận hành thí điểm · Tracely', 'da-nang'),
-    ('de710000-0000-0000-0000-0000000000b5', 'de710000-0000-0000-0000-0000000000a5', 'Lý Gia Bảo', 'Đồng sáng lập · AgriTrace', 'dong-thap'),
-    ('de710000-0000-0000-0000-0000000000b6', 'de710000-0000-0000-0000-0000000000a6', 'Võ Thanh Hà', 'Nhà sáng lập · CEO tại Kho Lạnh Miền Tây', 'can-tho')
-  ) AS p(id, account_id, display_name, headline, region)
-ON CONFLICT (id) DO NOTHING;
+    ('de710000-0000-0000-0000-0000000000b1', 'de710000-0000-0000-0000-0000000000a1', 'Đặng Kim Chi', 'Đồng sáng lập · CEO @Tracely', 'Tám năm làm vận hành chuỗi cung ứng trước khi lập Tracely. Quan tâm tới bài toán hao hụt chặng giao cuối và truy xuất nguồn gốc — hai thứ mà doanh nghiệp miền Trung hỏi nhiều nhất nhưng ít ai giải tới nơi.', 'da-nang'),
+    ('de710000-0000-0000-0000-0000000000b2', 'de710000-0000-0000-0000-0000000000a2', 'Nguyễn Minh Anh', 'Đồng sáng lập kỹ thuật · Tracely', NULL, 'da-nang'),
+    ('de710000-0000-0000-0000-0000000000b3', 'de710000-0000-0000-0000-0000000000a3', 'Phạm Quốc Việt', 'Kỹ sư backend · Tracely', NULL, 'da-nang'),
+    ('de710000-0000-0000-0000-0000000000b4', 'de710000-0000-0000-0000-0000000000a4', 'Trần Hạnh', 'Vận hành thí điểm · Tracely', NULL, 'da-nang'),
+    ('de710000-0000-0000-0000-0000000000b5', 'de710000-0000-0000-0000-0000000000a5', 'Lý Gia Bảo', 'Đồng sáng lập · AgriTrace', NULL, 'dong-thap'),
+    ('de710000-0000-0000-0000-0000000000b6', 'de710000-0000-0000-0000-0000000000a6', 'Võ Thanh Hà', 'Nhà sáng lập · CEO tại Kho Lạnh Miền Tây', NULL, 'can-tho')
+  ) AS p(id, account_id, display_name, headline, bio, region)
+-- The bio (DM13 "Giới thiệu") was added after the first release of this file:
+-- refreshed on re-run so an already seeded database gets it too.
+ON CONFLICT (id) DO UPDATE SET bio = EXCLUDED.bio;
 
 INSERT INTO projects (id, type, owner_profile_id, slug, name, summary, status, visibility, region_id, stage_id, owner_role_label, metadata, created_at, updated_at)
 SELECT v.id::uuid, 'STARTUP', v.owner::uuid, v.slug, v.name, v.summary, 'ACTIVE', 'PUBLIC',
