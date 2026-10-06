@@ -15,7 +15,7 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). The PO pack (06/10/2026) supersedes the e
 | About S1-UAT-08A layout: numbered sections 01–08, Sứ mệnh, Quy mô ring, OrgDiagram, Humans strip with tabs Tất cả / Nhiệm kỳ hiện tại / Các thế hệ trước, milestone and activity layouts | `src/components/about/about*.tsx` | SUPERSEDED (layout) | DM02–DM05 | DEMO-HOME-ABOUT-01 |
 | About data: HUMAN_ROWS, MILESTONES, ACTIVITY_ROWS, photos, hero copy, H·U·B values | `about-source.ts`, `about-data.ts`, `public/about/` | KEPT, reused | — | — |
 | Per-page public headers / footers (landing, about, library) | `landing.tsx`, `about.tsx`, `library.tsx` | SUPERSEDED | one shared header (logo icon, Giới thiệu ▾ · Chương trình ▾ · Sản phẩm · Nhân tài · Tin tức) and a two-column footer | DEMO-HOME-ABOUT-01 |
-| "Mạng lưới đổi mới sáng tạo" nav entry → `/library` | header | SUPERSEDED | "Sản phẩm" → `/products` | DEMO-HOME-ABOUT-01 (label); target live with DEMO-PRODUCT-01 |
+| "Mạng lưới đổi mới sáng tạo" nav entry → `/library` | header | SUPERSEDED | "Sản phẩm" → `/products` | DEMO-HOME-ABOUT-01 (label); target live with DEMO-DIR2-01 |
 | `/library` (Bài toán / Startup / Nhà sáng lập tabs) | `src/app/(public)/library` | KEPT, not in nav | DIR0–DIR3 split (Thảo); `/library` stays reachable until all directories exist | post-demo |
 | Library founder "Xem hồ sơ" inert (DEC-L15-D12), no ✓ mark (DEC-L15-D11) | `library.tsx` | KEPT for `/library` | DM08 / DM13 for the demo set | DEMO-PRODUCT-01 / DEMO-FOUNDER-01 |
 | WF05 `/demo/projects/[id]` member-only detail | `src/app/(demo)` | KEPT | public `/products/[slug]` is a separate read-only view | — |

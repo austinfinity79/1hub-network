@@ -13,8 +13,8 @@ export type PublicRouteKey =
 export const PUBLIC_ROUTES: Readonly<Record<PublicRouteKey, string | null>> = {
   home: '/',
   about: '/about',
-  /** DM08 Sản phẩm, DEMO-DIR2-01. */
-  products: null,
+  /** DM08 Sản phẩm (DEMO-DIR2-01). */
+  products: '/products',
   /** DM09 Nhân tài (reference / P1). */
   talents: null,
   /** DM06 Chương trình, cuộc thi (reference). */

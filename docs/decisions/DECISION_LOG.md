@@ -1726,6 +1726,19 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-demo-ha-d6"></a>DEC-DEMO-HA-D6 | **Map.** Natural Earth (public domain) in the Miller projection fitted to DM02; one city per HUB at the frame's marker; Hoàng Sa and Trường Sa always drawn and labelled |
 | <a id="dec-demo-ha-d7"></a>DEC-DEMO-HA-D7 | **Header identity.** A signed-in viewer gets initials and own avatar only; the display name is not sent to the page |
 
+## DEC-DEMO-DIR — Product / Startup directory (DEMO-DIR2-01, PO, 06/10)
+
+<a id="dec-demo-dir"></a>**Status:** IMPLEMENTED 2026-10-06 (local, not pushed / merged / deployed) on the DEMO-DIR2-01 task contract and [DEC-DEMO](#dec-demo). Report: [DEMO-DIR2-01](../implementation/reports/DEMO-DIR2-01.md). No migration.
+
+| ID | Decision |
+|---|---|
+| <a id="dec-demo-dir-d1"></a>DEC-DEMO-DIR-D1 | **`/products` lists canonical published startups only** (DEC-W6P-D02 via `listPublicStartups`); the canonical slug is the route key; no duplicate model and no read-model store |
+| <a id="dec-demo-dir-d2"></a>DEC-DEMO-DIR-D2 | **Interim startup page.** `/products/[slug]` renders Tổng quan in the DM10 language; anything not published is 404 with no hint. Chỉ số / Cập nhật are labels until DEMO-SP1-FOUNDER-01 |
+| <a id="dec-demo-dir-d3"></a>DEC-DEMO-DIR-D3 | **Quick chips are keyword shortcuts** (no ranking, no AI); "Tìm pilot" searches the Pilot stage |
+| <a id="dec-demo-dir-d4"></a>DEC-DEMO-DIR-D4 | **Fixture counters.** Fundraising, paying customers, portfolio, round, since and headline numbers come from the demo fixture (DEMO STATE ONLY); the title count is live |
+| <a id="dec-demo-dir-d5"></a>DEC-DEMO-DIR-D5 | **No people on the directory.** Owners and members never appear on `/products`; team names appear only on the demo ventures' pages (fictional people) |
+| <a id="dec-demo-dir-d6"></a>DEC-DEMO-DIR-D6 | **Homepage handoff.** "Sản phẩm" (header, footer), "Xem tất cả", product rows and the hero search scope "Sản phẩm" route to `/products`; scope "Tất cả" keeps `/library?q=` |
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 

@@ -118,7 +118,12 @@ test.describe('public pages: no dead control', () => {
       await nav.getByRole('button', { name: 'Mở menu Chương trình' }).click()
       for (const label of ['Chương trình, cuộc thi', 'Sự kiện'])
         await expect(nav.getByRole('link', { name: label, exact: true })).toHaveCount(0)
-      for (const label of ['Sản phẩm', 'Nhân tài', 'Tin tức']) {
+      // DEMO-DIR2-01: Sản phẩm opens /products; the other unbuilt screens stay plain text.
+      await expect(nav.getByRole('link', { name: 'Sản phẩm', exact: true })).toHaveAttribute(
+        'href',
+        '/products',
+      )
+      for (const label of ['Nhân tài', 'Tin tức']) {
         const item = nav.getByText(label, { exact: true })
         await expect(item, `${url} ${label}`).toHaveAttribute('data-nav-kind', 'LABEL')
       }

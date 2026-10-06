@@ -367,7 +367,8 @@ test('URL state: refresh, copied link, homepage search, back and forward', async
   await expect(other.locator('[data-anchor="grid"] > li h2')).toHaveText(first)
   await other.close()
   await page.goto('/', { waitUntil: 'networkidle' })
-  const hero = page.getByRole('search', { name: 'Tìm trong Thư viện' })
+  // DM01 homepage (DEMO-HOME-ABOUT-01): the hero search, scope "Tất cả", opens the Library.
+  const hero = page.locator('[data-search="hero"]')
   await hero.getByRole('searchbox').fill('WF06')
   await hero.getByRole('searchbox').press('Enter')
   await expect(page).toHaveURL('/library?q=WF06')

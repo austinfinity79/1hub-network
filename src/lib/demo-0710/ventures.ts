@@ -18,6 +18,12 @@ export type DemoVenturePresentation = {
   investorReady: boolean
   /** Headline numbers of the investor card, as drawn for Tracely (DM01 / DM10). */
   headline: Array<{ value: string; label: string }>
+  /** DM08 hero counter "có khách hàng trả phí" (DM10: paid pilot contract). */
+  payingCustomers: boolean
+  /** DM08 hero counter "trong danh mục iHUB Ventures" (DM10 "Danh mục iHUB Ventures"). */
+  portfolio: string | null
+  /** DM10 "Từ 2025". */
+  since: string | null
 }
 
 /** The `DEMO` marker: one place to find and remove every demo-only value. */
@@ -35,6 +41,9 @@ export const DEMO_VENTURES: Readonly<Record<string, DemoVenturePresentation>> = 
       { value: '-33%', label: 'hao hụt' },
       { value: '6', label: 'bưu cục dùng' },
     ],
+    payingCustomers: true,
+    portfolio: 'iHUB Ventures',
+    since: '2025',
   },
   // AgriTrace (agritrace)
   'de710000-0000-0000-0000-0000000000c2': {
@@ -43,6 +52,9 @@ export const DEMO_VENTURES: Readonly<Record<string, DemoVenturePresentation>> = 
     badge: null,
     investorReady: false,
     headline: [],
+    payingCustomers: false,
+    portfolio: null,
+    since: null,
   },
   // Kho Lạnh Miền Tây (kho-lanh-mien-tay)
   'de710000-0000-0000-0000-0000000000c3': {
@@ -51,6 +63,9 @@ export const DEMO_VENTURES: Readonly<Record<string, DemoVenturePresentation>> = 
     badge: null,
     investorReady: false,
     headline: [],
+    payingCustomers: true,
+    portfolio: null,
+    since: null,
   },
 }
 

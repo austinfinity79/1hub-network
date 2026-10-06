@@ -12,9 +12,9 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). Frozen by DEMO-SOT-00 (06/10/2026). The s
 | DM05 | About: Humans of HUB, Câu lạc bộ tab | ABT1 Humans of HUB | `5. ABT1 · trạng thái · … Câu lạc bộ.png` | `/about`, in-page tab | MUST | new state |
 | DM06 | Chương trình (programme / challenge directory) | DIR0 · Chương trình | `6. DIR2.1 · Chương trình, cuộc thi.png` | `/programmes` (reserved) | REFERENCE | not built |
 | DM07 | Sự kiện (event directory) | EV2 v2 · Lịch sự kiện | `9. DIR2.2 - Sự kiện.png` | `/events` (reserved) | REFERENCE | not built |
-| DM08 | Sản phẩm (product / startup directory) | DIR2 · Sản phẩm | `7. DIR3 - SẢN PHẨM.png` | `/products` | MUST | new |
+| DM08 | Sản phẩm (product / startup directory) | DIR2 · Sản phẩm | `7. DIR3 - SẢN PHẨM.png` | `/products` | MUST | built (DEMO-DIR2-01) |
 | DM09 | Nhân tài (talent directory) | DIR3 · Nhân tài | `8. DIR4 - NHÂN TÀI.png` | `/talents` (reserved) | REFERENCE / P1 | not built |
-| DM10 | Startup profile: Tổng quan | SP1 tab Tổng quan (SP1.24–27) | `10. SP1 hồ sơ sản phẩm.png` | `/products/[slug]` | MUST | new |
+| DM10 | Startup profile: Tổng quan | SP1 tab Tổng quan (SP1.24–27) | `10. SP1 hồ sơ sản phẩm.png` | `/products/[slug]` | MUST | interim (DEMO-DIR2-01); full in DEMO-SP1-FOUNDER-01 |
 | DM11 | Startup profile: Chỉ số | SP1 tab Chỉ số (SP1.28–29) | **UPDATED** `13. SP Tab chỉ số.png` (PO latest; file pending, see [FIGMA_REFERENCE_MAP](FIGMA_REFERENCE_MAP.md)) | `/products/[slug]/metrics` | SHOULD (read-only) | new |
 | DM12 | Startup profile: Cập nhật | SP1 tab Cập nhật (SP1.30–31) | **UPDATED** `12. Tab cập nhật.png` (PO latest; file pending) | `/products/[slug]/updates` | SHOULD (read-only) | new |
 | DM13 | Founder profile (**PUBLIC VIEW**) | FP1 (other-member view) | `14. NT1 - Nhân tài - Chi tiết hồ sơ cá nhân.png` | `/talents/[profileId]` | MUST | new (only the demo allow-list renders) |

@@ -93,7 +93,9 @@ test.describe('public shell', () => {
       await expect(header).toHaveAttribute('data-viewer', 'GUEST')
       await expect(header.locator('[data-cta="logo"]')).toHaveAttribute('href', '/')
       await expect(header.locator('[data-nav="about"] a').first()).toHaveAttribute('href', '/about')
-      for (const name of ['products', 'talents', 'news'])
+      // DEMO-DIR2-01: Sản phẩm is a link now; Nhân tài and Tin tức stay plain text.
+      await expect(header.locator('[data-nav="products"] a')).toHaveAttribute('href', '/products')
+      for (const name of ['talents', 'news'])
         await expect(header.locator(`[data-nav="${name}"] [data-nav-kind="LABEL"]`)).toHaveCount(1)
       await header.getByRole('button', { name: 'Mở menu Chương trình' }).click()
       const programmes = header.locator('[data-nav="programmes"] ul')
@@ -113,7 +115,11 @@ test.describe('public shell', () => {
         'href',
         '/about',
       )
-      await expect(footer.locator('[data-nav-kind="LABEL"]')).toHaveCount(4)
+      await expect(footer.locator('[data-nav-kind="LABEL"]')).toHaveCount(3)
+      await expect(footer.getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute(
+        'href',
+        '/products',
+      )
       await expect(footer.getByRole('link', { name: 'Điều khoản' })).toHaveCount(1)
       await expect(footer.getByRole('link', { name: 'Quyền riêng tư' })).toHaveCount(1)
       await expectLiveLinks(page, `[data-screen]`)
@@ -181,7 +187,7 @@ test.describe('Homepage v2 (DM01)', () => {
     await search.getByRole('radio', { name: 'Sản phẩm' }).click()
     await search.getByRole('searchbox').fill('logistics')
     await search.getByRole('button', { name: 'Tìm kiếm' }).click()
-    await expect(page).toHaveURL('/library?q=logistics')
+    await expect(page).toHaveURL('/products?q=logistics')
     await page.goBack()
     await expect(page).toHaveURL('/')
     await page.reload()
@@ -217,8 +223,11 @@ test.describe('Homepage v2 (DM01)', () => {
     await expect(investors).toContainText('1,2 triệu')
     const html = await page.content()
     expect(html).not.toMatch(/de710000-/)
-    // The product directory is not built yet: product names are plain text.
-    await expect(all.locator('a')).toHaveCount(0)
+    // DEMO-DIR2-01: each product opens its page in the directory.
+    await expect(all.locator('a', { hasText: 'Tracely' })).toHaveAttribute(
+      'href',
+      '/products/tracely',
+    )
   })
 
   test('programme, update and news blocks are read-only presentation', async ({ page }) => {
