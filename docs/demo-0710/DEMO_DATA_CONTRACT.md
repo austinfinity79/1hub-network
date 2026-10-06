@@ -9,7 +9,7 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). No migration. No new canonical concept. E
 | Startup header and team (DM10) | `projects` (name, slug, website, logo), `project_members` (role_label, ACTIVE) + `individual_profiles` | none |
 | Tổng quan / Chỉ số / Cập nhật content | none exists (only `projects.metadata`) | read-only code fixture keyed by project id (the WF04 pattern, DEC-WF04-T00-D1): problem, solution, market, quotes, vision, funding, milestones, needs, quarterly metrics, update log |
 | Founder profile (DM13) | `individual_profiles` through `src/lib/profile/projection.ts` (public projection, visibility filters) | code fixture for experience, education, expertise, certificates and HUB badges; allow-list of demo profile ids |
-| "Đã xác thực danh tính qua 1Hub" | none: there is no identity-verification column (CCCD is Tương lai, DEC-P0-LANDING-D2) | fixture flag `identityVerifiedDemo: true` on demo profiles only, rendered with a DEMO marker in code; never written to the DB |
+| "Đã xác thực danh tính qua 1Hub" | none: there is no identity-verification column (CCCD is Tương lai, DEC-P0-LANDING-D2) | fixture flag `identityVerifiedDemo: true` on demo profiles only, rendered with a DEMO marker in code; never written to the DB. **DEMO STATE ONLY** |
 | Regions, countries | REGION / COUNTRY catalogue (S1-UAT-03, `catalog_sprint1.sql`) | none |
 | Domains | DOMAIN vocabulary; Logistics, Nông nghiệp & AgriTech, AI and IoT are not canonical | UNNORMALIZED items (the S1-UAT-03 free-tag rule); no invented canonical id |
 | Stages | VENTURE_STAGE: idea · prototype · pilot · selling · scaled | none; demo startups use pilot and selling only |
@@ -36,7 +36,7 @@ Fixed UUID prefix `de710000-`. All people are fictional, taken from the PO pack,
 |---|---|
 | Counts | hero and filter counts are computed from live data. Drawn numbers such as "142 sản phẩm", "48 / 23 / 9" and "128" are illustrative and INTENTIONAL-DATA |
 | Homepage blocks | product blocks are live (the demo set). Programme cards, "Cập nhật chương trình", the marquee and news are static presentation copy from DM01, render non-clickable, and carry no programme record |
-| Metrics / updates | fixed quarters Q4 2025 … Q3 2026 for Tracely, copied from DM11 / DM12. "Nguồn: Đội ngũ" stays. No visibility tiers are computed; the lock row is static |
+| Metrics / updates | fixed quarters Q4 2025 … Q3 2026 for Tracely, copied from the UPDATED DM11 / DM12 frames once the files are on the workstation. "Nguồn: Đội ngũ" stays. No visibility tiers are computed; the lock row is static |
 | Missing content | anything not in this file or in S1-UAT-08A renders nothing and is never made up: CLB chủ nhiệm names, Ban chuyên môn names ("Họ tên — chờ cập nhật" in the frame), HUB popup member / event / project counts beyond the catalogue |
 | Determinism | fixed ids, fixed timestamps, idempotent upsert, no `now()` or random values; the same state hash after repeated runs (the S1-UAT-03 method) |
 

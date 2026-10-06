@@ -26,7 +26,7 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). The PO pack (06/10/2026) supersedes the e
 | DEC-AIG-D1 (Chương trình / Sự kiện plain labels) | kept as the rule for any target not yet built; the labels now sit under "Chương trình ▾" |
 | DEC-S1H-D1…D4 (About, S1-UAT-08A) | layout superseded; verbatim data kept |
 | DEC-W6P-D01 ("no new public venture discovery, no new nav entry") | superseded for the demo: `/products`, `/products/[slug]` and a "Sản phẩm" entry are authorised by the pack |
-| DEC-HD-12 (Space Grotesk on Homepage and L1–L6 only) | needs extension to DM02–DM13: [DEMO-D9](DEMO_SOT_v1.md#decisions), PO approval pending |
+| DEC-HD-12 (Space Grotesk on Homepage and L1–L6 only) | extended to the demo / public surfaces DM01–DM13 by [DEMO-D9](DEMO_SOT_v1.md#decisions) (approved); admin / member / ops unchanged |
 | DEC-P0-LANDING-D2 (1Hub / CCCD verification is Tương lai) | kept; the demo mark is a labelled DEMO state only ([out of scope](OUT_OF_SCOPE_POST_DEMO.md)) |
 
 ## Tests that the replacement makes stale

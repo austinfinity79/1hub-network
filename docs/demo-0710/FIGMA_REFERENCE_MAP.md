@@ -1,6 +1,6 @@
 # Figma reference map — 07/10 demo
 
-Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). The source is the PO pack `hub New Design 7:10` (14 PNG, 06/10/2026). The files are byte-identical copies in `design-reference/final/demo-0710/`. They are added beside the existing baselines and overwrite none.
+Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). The source is the PO pack `hub New Design 7:10` (06/10/2026) and, for SP1, the latest PO mapping (DEMO-SOT-00-FIX, 06/10). Baselines are byte-identical copies in `design-reference/final/demo-0710/`, added beside the existing baselines; none is overwritten.
 
 ## Pixel references (H)
 | ID | Baseline file | Source file | Size | SHA-256 |
@@ -15,20 +15,25 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). The source is the PO pack `hub New Design
 | DM08 | `DM08__product-directory__SOURCE.png` | `7. DIR3 - SẢN PHẨM.png` | 1440×2414 | `faeb2e8d6ea9cd830ede3ab1442a25d9e5f86fddacf569ba052359e1c61e099a` |
 | DM09 | `DM09__talent-directory__SOURCE.png` | `8. DIR4 - NHÂN TÀI.png` | 1440×2364 | `2405dc38035225902133ca4b6af63e9ece5f10f2ec55fa186a9badca7ecb3337` |
 | DM10 | `DM10__startup-overview__SOURCE.png` | `10. SP1 hồ sơ sản phẩm.png` | 1440×2085 | `afe42c3e7a18ff4410b46f2a87de790f6fda344de9c2ee9ab722e155bc467656` |
-| DM11 | `DM11__startup-metrics__SOURCE.png` | `11. Sp2.png` | 1440×1493 | `ee4f6dde0750c907b37e19cdbed4813b1c638f12523a8386a0433279a28dd47b` |
-| DM12 | `DM12__startup-updates__SOURCE.png` | `12. Tab cập nhật.png` | 1440×1489 | `bbef05d8d8a9315b2826424a460ec46607b18ab553e01637f373cb0b83dd55d1` |
+| DM11 | `DM11__startup-metrics__SOURCE.png` | **UPDATED** `13. SP Tab chỉ số.png` (PO latest) | PENDING | PENDING: the updated file is not yet on the workstation |
+| DM12 | `DM12__startup-updates__SOURCE.png` | **UPDATED** `12. Tab cập nhật.png` (PO latest) | PENDING | PENDING: the updated file is not yet on the workstation |
 | DM13 | `DM13__founder-profile__SOURCE.png` | `14. NT1 - Nhân tài - Chi tiết hồ sơ cá nhân.png` | 1440×3142 | `fac7899a7c339d496ab702b8163d778c812a05a3037f1023f1d0e9b1b35c474e` |
 
-Not copied: `13. SP Tab chỉ số.png`. It is byte-identical to file 12 and shows the Cập nhật tab, so the "updated" Chỉ số frame is missing. DM11 uses `11. Sp2.png` (an earlier export that does show the Chỉ số tab) as a **provisional** reference until the PO supplies the updated frame.
+**SP1 semantic lock (PO, 06/10).** Tổng quan = DM10 (file 10); Chỉ số = DM11 (UPDATED file 13); Cập nhật = DM12 (UPDATED file 12); Founder Profile = DM13 (file 14). Meaning decides, not file numbers.
+
+- **Obsolete:** the earlier local SP1 exports must not be used as a reference. They are `11. Sp2.png` (`ee4f6dde…`) and the earlier `12` / `13` export (`bbef05d8…`). They are withdrawn from the baseline.
+- **When the updated files arrive:** they are added as DM11 / DM12 with their SHA-256 recorded here. Pixel QA for DM11 / DM12 waits for them.
 
 ## Pixel QA rules (H)
 | Rule | Value |
 |---|---|
 | Viewport | 1440 wide, DPR 1. Long pages are captured full-page at the source height and never squashed into 900 |
 | Comparison | per-block anchors (the DEC-H1-D5 method): diff outside text < 1.5 % and beyond a ±2 px shift < 2 % per block |
+| Typography | Space Grotesk on the demo / public surfaces where the frame uses it (DEMO-D9, approved); mono labels IBM Plex Mono 500; no change to admin, member or ops surfaces |
 | Text | text that comes from demo or catalogue data (counts, names, CLB lists, stage labels) is INTENTIONAL-DATA when it differs from the drawn placeholder; layout, type and colour still count |
 | States | DM03 opens the HUB Đà Nẵng popup; DM04 / DM05 select their tab with HUB Đà Nẵng chosen in DM04; DM11 / DM12 load their route |
-| Header | DM10–DM13 compare signed in (as drawn); the guest variant is checked functionally |
+| Header | DM10–DM12 compare signed in (as drawn); the guest variant is checked functionally |
+| Founder | DM13 is accepted in **PUBLIC VIEW** only: owner-only controls ("+ Tạo sản phẩm", the privacy-setting labels of "Liên hệ & quyền riêng tư") are excluded regions and never acceptance evidence |
 | Baselines | never overwritten; a new PO frame is added as a new file and recorded here |
 
 ## Responsive targets (G)
@@ -46,8 +51,8 @@ Not copied: `13. SP Tab chỉ số.png`. It is byte-identical to file 12 and sho
 | DM02 | map asset with HUB coordinates; the Vietnam view must show Hoàng Sa and Trường Sa; the "Xem thêm" full HUB / Chapter / CLB list; real partner logos (drawn as "Doanh nghiệp A…") |
 | DM08 | empty result, loading and error states; the open "Sắp xếp" menu |
 | DM10–12 | guest header variant (derivable); empty Chỉ số / Cập nhật states for a startup without data; the "Xem vị trí tuyển dụng" overlay |
-| DM11 | the updated Chỉ số frame (see above) |
-| DM13 | a pure public-viewer frame: the drawn frame mixes owner controls ("+ Tạo sản phẩm") with the public view |
+| DM11 / DM12 | the updated PO files themselves (see above) |
+| DM13 | a frame drawn as a public viewer: the drawn frame mixes owner controls with the public view, handled by the PUBLIC VIEW lock above |
 
 ## Related
 - [DEMO_SOT_v1](DEMO_SOT_v1.md) · [SCREEN_ROUTE_MAP](SCREEN_ROUTE_MAP.md)

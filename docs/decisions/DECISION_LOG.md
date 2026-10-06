@@ -1702,14 +1702,15 @@ Open after this task: Google OAuth client credentials (external configuration; t
 
 ## DEC-DEMO — 07/10 demo SOT freeze (DEMO-SOT-00, PO, 06/10)
 
-<a id="dec-demo"></a>**Status:** FROZEN 2026-10-06 (documentation only) on the DEMO-SOT-00 task contract and the PO pack `hub New Design 7:10`; DEMO-D9 PENDING PO. The full record is [DEMO_SOT_v1](../demo-0710/DEMO_SOT_v1.md); this entry is the traceable conflict record for the closed decisions it supersedes ([matrix](../demo-0710/SUPERSESSION_MATRIX.md)). No runtime code, no migration.
+<a id="dec-demo"></a>**Status:** FROZEN 2026-10-06 (documentation only) on the DEMO-SOT-00 task contract and the PO pack `hub New Design 7:10`; amended by DEMO-SOT-00-FIX (PO audit 06/10). The full record is [DEMO_SOT_v1](../demo-0710/DEMO_SOT_v1.md); this entry is the traceable conflict record for the closed decisions it supersedes ([matrix](../demo-0710/SUPERSESSION_MATRIX.md)). No runtime code, no migration.
 
 | ID | Decision |
 |---|---|
 | <a id="dec-demo-d1"></a>DEC-DEMO-D1 | **Presentation authority.** The PO pack (13 screens / states, `design-reference/final/demo-0710/`) supersedes the Homepage H1 r2 and the S1-UAT-08A About presentation (DEC-H1-D2/D3, DEC-H1-R2-D1, DEC-2809-D1, DEC-S1H layout). S1-UAT-08A data, the DEC-H1-D1 entry rule and DEC-AIG-D1 (plain label for an unbuilt target) stay |
 | <a id="dec-demo-d2"></a>DEC-DEMO-D2 | **Public product routes.** `/products`, `/products/[slug]` (+ `/metrics`, `/updates`) and `/talents/[profileId]` (demo allow-list only) are authorised for the demo; this supersedes DEC-W6P-D01's "no new public venture discovery / nav entry" for the demo scope. Semantic names govern; DIR numbers never rename a concept |
 | <a id="dec-demo-d3"></a>DEC-DEMO-D3 | **Demo-only states.** "Đã xác thực danh tính qua 1Hub", metrics, updates and HUB badges on demo profiles are read-only fixtures; CCCD / 1Hub verification, investor / GP / LP access, metric visibility, the updates engine, Follow, Connect and Dataroom stay post-demo (DEC-P0-LANDING-D2 unchanged) |
-| <a id="dec-demo-d4"></a>DEC-DEMO-D4 | **Typography (PENDING PO).** Proposed: extend [DEC-HD-12](#dec-hd-12) to DM02–DM13; until approved, those screens are not implemented |
+| <a id="dec-demo-d4"></a>DEC-DEMO-D4 | **Typography (APPROVED, PO 06/10).** [DEC-HD-12](#dec-hd-12) extends to the new demo / public surfaces (DM01–DM13, shared public header / footer) where the frame uses Space Grotesk; no global retheme, admin / member / ops typography unchanged |
+| <a id="dec-demo-d5"></a>DEC-DEMO-D5 | **SP1 and Founder lock (PO 06/10).** Tabs by meaning: Tổng quan = file 10, Chỉ số = UPDATED file 13, Cập nhật = UPDATED file 12; earlier SP1 exports are obsolete. Founder Profile is accepted in PUBLIC VIEW only; its identity verification is DEMO STATE ONLY |
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

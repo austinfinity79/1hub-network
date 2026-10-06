@@ -15,11 +15,11 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). Frozen by DEMO-SOT-00 (06/10/2026). The s
 | DM08 | Sản phẩm (product / startup directory) | DIR2 · Sản phẩm | `7. DIR3 - SẢN PHẨM.png` | `/products` | MUST | new |
 | DM09 | Nhân tài (talent directory) | DIR3 · Nhân tài | `8. DIR4 - NHÂN TÀI.png` | `/talents` (reserved) | REFERENCE / P1 | not built |
 | DM10 | Startup profile: Tổng quan | SP1 tab Tổng quan (SP1.24–27) | `10. SP1 hồ sơ sản phẩm.png` | `/products/[slug]` | MUST | new |
-| DM11 | Startup profile: Chỉ số | SP1 tab Chỉ số (SP1.28–29) | `11. Sp2.png` (provisional, see [FIGMA_REFERENCE_MAP](FIGMA_REFERENCE_MAP.md)) | `/products/[slug]/metrics` | SHOULD (read-only) | new |
-| DM12 | Startup profile: Cập nhật | SP1 tab Cập nhật (SP1.30–31) | `12. Tab cập nhật.png` | `/products/[slug]/updates` | SHOULD (read-only) | new |
-| DM13 | Founder profile (public) | FP1 (other-member view) | `14. NT1 - Nhân tài - Chi tiết hồ sơ cá nhân.png` | `/talents/[profileId]` | MUST | new (only the demo allow-list renders) |
+| DM11 | Startup profile: Chỉ số | SP1 tab Chỉ số (SP1.28–29) | **UPDATED** `13. SP Tab chỉ số.png` (PO latest; file pending, see [FIGMA_REFERENCE_MAP](FIGMA_REFERENCE_MAP.md)) | `/products/[slug]/metrics` | SHOULD (read-only) | new |
+| DM12 | Startup profile: Cập nhật | SP1 tab Cập nhật (SP1.30–31) | **UPDATED** `12. Tab cập nhật.png` (PO latest; file pending) | `/products/[slug]/updates` | SHOULD (read-only) | new |
+| DM13 | Founder profile (**PUBLIC VIEW**) | FP1 (other-member view) | `14. NT1 - Nhân tài - Chi tiết hồ sơ cá nhân.png` | `/talents/[profileId]` | MUST | new (only the demo allow-list renders) |
 
-`13. SP Tab chỉ số.png` is byte-identical to file 12 (SHA-256 `bbef05d8…55d1`). It is not a separate screen.
+SP1 mapping is locked by meaning (PO, 06/10): Tổng quan = file 10, Chỉ số = UPDATED file 13, Cập nhật = UPDATED file 12, Founder Profile = file 14. Old file numbering never re-maps a tab.
 
 ## DIR numbering conflict
 | Concept | Thảo | Figma | Frozen route |

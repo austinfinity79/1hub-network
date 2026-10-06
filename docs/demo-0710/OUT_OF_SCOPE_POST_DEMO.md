@@ -8,9 +8,9 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). Nothing below is production-complete in t
 ## Mandatory exclusions (J)
 | Excluded capability | What the demo shows instead | Where drawn |
 |---|---|---|
-| Real CCCD / 1Hub identity verification (ID1 → ID1b → ID1c) | the fixture flag renders "Đã xác thực danh tính qua 1Hub" for allow-listed demo profiles only; no flow, no DB field, no badge for real users | DM13, DM09 |
-| Investor / GP / LP authorisation | the static lock row "Chi phí, runway và hiệu quả vốn chỉ hiện với nhà đầu tư đã xác thực." with an inert "Yêu cầu xem" | DM11 |
-| Production metric-visibility rules (Công khai / Nhà đầu tư / GP & LP per metric, SP1-MET) | the "Chỉ số chung" / "Đội chọn" tags as static text; every viewer sees the same fixture | DM11 |
+| Real CCCD / 1Hub identity verification (ID1 → ID1b → ID1c) | DEMO STATE ONLY: the fixture flag renders "Đã xác thực danh tính qua 1Hub" for allow-listed demo profiles only; no flow, no DB field, no badge for real users | DM13, DM09 |
+| Investor / GP / LP authorisation | any investor-only area of the UPDATED DM11 frame renders as static, locked presentation; its request control is inert | DM11 |
+| Production metric-visibility rules (Công khai / Nhà đầu tư / GP & LP per metric, SP1-MET) | visibility tags drawn in DM11 are static text; every viewer sees the same fixture | DM11 |
 | Automatic Updates activity engine (quarterly report, programme, connection, team, investment events) | a fixed fixture log; filters only filter the fixture | DM12 |
 | Follow production workflow ("Theo dõi") | inert, or → `/auth` for a guest | DM08, DM10–DM13 |
 | Connect production workflow ("Đề nghị kết nối", "Kết nối", OPN0–OPN4) | inert, or → `/auth` for a guest | DM10–DM13 |
