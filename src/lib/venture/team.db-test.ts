@@ -775,8 +775,12 @@ describe('WF02-S06 list and privacy (G8)', () => {
       expect(json).not.toContain(secret)
     }
     expect(json).not.toMatch(/"(email|metadata|slug|profile_id|account_id|invited_by_profile_id)"/)
-    // The owner's own view carries only the pending email it manages.
-    expect(JSON.stringify(own)).not.toContain(declined.email)
+    expect(seen.declined).toEqual([])
+    // The owner's rows carry only the pending email it manages; the declined
+    // address shows to the owner alone, as "Đã từ chối" (US-02.14 AC4,
+    // S1-UAT-07-FIX-02), never as a person or an open invitation.
+    expect(JSON.stringify(own.rows)).not.toContain(declined.email)
+    expect(own.declined.map((x) => x.email)).toEqual([declined.email])
   })
 
   it('stranger, pending invitee and removed member cannot read the team', async () => {

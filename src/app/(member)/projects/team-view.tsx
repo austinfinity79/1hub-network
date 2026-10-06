@@ -22,7 +22,9 @@ import { inviteFailure, PERMISSION_LABELS, PERMISSION_LEVELS } from './team-copy
  * owner's row menu holds "Sửa vai trò và quyền" and "Gỡ khỏi đội"; a pending
  * invitation can be cancelled. An invitation is e-mailed and nobody joins
  * before accepting. A member sees a read-only list with no pending data (G8).
- * The server enforces all of it.
+ * The server enforces all of it. S1-UAT-07-FIX-02 (US-02.14): a declined
+ * invitation shows to the owner as "Đã từ chối" until the address is invited
+ * again through the usual form.
  */
 
 /** Copy the approved bitmap does not carry; pending PO copy review (DEC-WF02-S06-D). */
@@ -58,6 +60,7 @@ const COPY = {
   created: 'Đã gửi lời mời.',
   resent: 'Đã gửi lại lời mời; hạn mới 7 ngày.',
   expired: 'Đã hết hạn',
+  declined: 'Đã từ chối',
   failed: 'Chưa thực hiện được. Vui lòng thử lại.',
   readOnly: 'Chỉ chủ sở hữu mới quản lý được đội. Bạn đang xem danh sách đội.',
   archived: 'Dự án đã lưu trữ nên đội chỉ xem được.',
@@ -468,6 +471,29 @@ export function TeamView({ team }: { team: TeamDTO }) {
               </div>
             )
           })}
+          {team.declined.map((row) => (
+            <div
+              key={row.membership_id}
+              role="row"
+              className={styles.row}
+              data-row-kind="DECLINED_INVITATION"
+            >
+              <span role="cell" className={styles.person}>
+                <span className={`${styles.avatar} ${styles.avatarPending}`} aria-hidden="true" />
+                <span className={`type-body-sm ${styles.muted}`}>{row.email}</span>
+              </span>
+              <span role="cell" className={`type-body-sm ${styles.cell}`}>
+                {row.role_label ?? '—'}
+              </span>
+              <span role="cell" className={`type-body-sm ${styles.cell}`}>
+                {PERMISSION_LABELS[row.permission]}
+              </span>
+              <span role="cell" className={`type-body-sm ${styles.cell}`}>
+                {`${COPY.declined} · ${dayMonth(row.declined_at)}`}
+              </span>
+              <span role="cell" className={styles.actions} />
+            </div>
+          ))}
         </div>
 
         <div className={styles.notes}>

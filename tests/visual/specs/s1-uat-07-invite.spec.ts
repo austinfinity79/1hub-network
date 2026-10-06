@@ -8,7 +8,8 @@ import { createVenture, freshAddress, invite } from '../support/workspace'
  * S1-UAT-07 (DEC-S1I) — team invitations: FB-18 copy link, US-02.12 invite by
  * link (receiver, join, regenerate, expiry, full team, forged level), US-02.11
  * e-mail invitation (re-send, member, batch), FB-14 invitation detail in the
- * workspace shell; 1440 / 768 / 390.
+ * workspace shell; US-02.14 decline seen by the owner (S1-UAT-07-FIX-02);
+ * 1440 / 768 / 390.
  */
 
 let consoleErrors: string[] = []
@@ -361,6 +362,67 @@ test.describe('FB-14 — invitation detail in the workspace shell', () => {
       { state: 'ACTIVE', role_label: 'Co-founder', permission: 'EDIT' },
     ])
     await invitee.context.close()
+  })
+})
+
+test.describe('US-02.14 — decline (S1-UAT-07-FIX-02)', () => {
+  test('the invitee declines; the owner sees "Đã từ chối" after a reload and can invite again', async ({
+    page,
+    browser,
+  }) => {
+    const { venture } = await ownerWithVenture(page, 's1i-decline')
+    const invitee = await member(browser, 's1i-decline-r')
+    const { membership_id } = await invite(page.request, venture.id, {
+      email: invitee.account.email,
+      role_label: 'Cố vấn',
+      permission: 'VIEW',
+    })
+
+    await invitee.page.goto(`/projects/${venture.id}/team`, { waitUntil: 'networkidle' })
+    const detail = invitee.page.locator('[data-team-invitation]')
+    await detail.getByRole('button', { name: 'Từ chối' }).click()
+    await expect(detail).toContainText('Bạn đã từ chối lời mời này.')
+    await expect(detail.getByRole('button', { name: 'Chấp nhận' })).toHaveCount(0)
+    const [row] = await query<{ state: string }>(
+      'SELECT state::text AS state FROM project_members WHERE id = $1',
+      [membership_id],
+    )
+    expect(row!.state).toBe('REJECTED')
+    // Declining again answers the same; the closed invitation cannot be accepted.
+    const base = `/api/v1/ventures/${venture.id}/team/invitations/${membership_id}`
+    expect((await invitee.page.request.post(`${base}/decline`)).status()).toBe(200)
+    expect((await invitee.page.request.post(`${base}/accept`)).status()).toBe(409)
+    expect(await memberships(venture.id, invitee.account.profileId)).toEqual([])
+
+    await page.goto(`/projects/${venture.id}/team`, { waitUntil: 'networkidle' })
+    const declined = page.locator('[data-row-kind="DECLINED_INVITATION"]')
+    await expect(declined).toHaveCount(1)
+    await expect(declined.getByRole('cell').nth(0)).toHaveText(invitee.account.email)
+    await expect(declined.getByRole('cell').nth(1)).toHaveText('Cố vấn')
+    await expect(declined.getByRole('cell').nth(2)).toHaveText('Xem')
+    await expect(declined.getByRole('cell').nth(3)).toContainText('Đã từ chối')
+    await expect(declined.getByRole('button')).toHaveCount(0)
+    await expect(page.locator('[data-row-kind="PENDING_INVITATION"]')).toHaveCount(0)
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(declined).toHaveCount(1)
+
+    // "có thể mời lại": the usual form; the new invitation replaces the declined line.
+    await page.getByRole('button', { name: 'Mời thành viên' }).click()
+    await page.locator('#team-invite-email').fill(invitee.account.email)
+    await page.getByRole('button', { name: 'Gửi lời mời' }).click()
+    await expect(page.locator('[data-state="invite-created"]')).toHaveText('Đã gửi lời mời.')
+    await expect(page.locator('[data-row-kind="PENDING_INVITATION"]')).toHaveCount(1)
+    await expect(declined).toHaveCount(0)
+
+    // A member of the team never sees declined invitations (G8).
+    const mate = await member(browser, 's1i-decline-m')
+    const join = await mate.page.request.post(
+      `/api/v1/invite-links/${(await linkPath(page, venture.id)).slice(5)}/join`,
+    )
+    expect(join.status()).toBe(200)
+    const seen = await (await mate.page.request.get(`/api/v1/ventures/${venture.id}/team`)).json()
+    expect(seen.declined).toEqual([])
+    await Promise.all([invitee.context.close(), mate.context.close()])
   })
 })
 

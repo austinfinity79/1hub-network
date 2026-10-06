@@ -1706,3 +1706,16 @@ Source: [DEC-S1I](../decisions/DECISION_LOG.md#dec-s1i) (S1-UAT-07; US-02.11, US
 
 ## 32.2 Team size
 At most 20 people: owner + active members + live pending invitations. An invitation or a join beyond it → `409 TEAM_FULL`. Audit: `VENTURE_TEAM_INVITATION_RESENT`, `VENTURE_INVITE_LINK_CREATED`, `VENTURE_INVITE_LINK_REGENERATED`, `VENTURE_TEAM_JOINED` (with `invite_link_id`).
+
+# 33. Amendment A16 — Sprint1 declined invitations (2026-10-06)
+
+Source: [DEC-S1I-D7](../decisions/DECISION_LOG.md#dec-s1i-d7) (US-02.14 AC4, S1-UAT-07-FIX-02). Additive; no migration.
+
+### GET `/ventures/{ventureId}/team` — added field
+
+`declined: { membership_id, email, role_label, permission, invited_at, declined_at }[]` — owner only (`[]` for a member): the latest declined e-mail invitation per address, while that address has no pending invitation and is not an ACTIVE member. `rows` and `counts` are unchanged.
+
+### POST `/ventures/{ventureId}/team/invitations/{membershipId}/decline` — changes
+
+An expired invitation → `409` (as accept). Unchanged: a repeated decline answers the same `200 { membership_id, state: "REJECTED" }`; revoked or accepted → `409`; anyone but the invited address → `404`. Audit `VENTURE_TEAM_INVITATION_REJECTED` once.
+

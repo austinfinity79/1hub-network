@@ -93,12 +93,30 @@ export type TeamRow =
 
 export type PendingInvitationRow = Extract<TeamRow, { kind: 'PENDING_INVITATION' }>
 
+/**
+ * US-02.14 "Từ chối → Chủ sở hữu thấy 'Đã từ chối', có thể mời lại"
+ * (S1-UAT-07-FIX-02): an e-mail invitation its recipient declined, for the
+ * owner only. The latest one per address, until that address is invited again
+ * or is an ACTIVE member. Kept apart from `rows`, which stay the people and
+ * open invitations every reader of the team relies on.
+ */
+export type DeclinedInvitation = {
+  membership_id: string
+  email: string
+  role_label: string | null
+  permission: MemberPermission
+  invited_at: string
+  declined_at: string
+}
+
 export type TeamDTO = {
   venture: { id: string; name: string; type: string; status: string }
   viewer: 'OWNER' | 'MEMBER'
   can_manage: boolean
   counts: { members: number; pending: number | null }
   rows: TeamRow[]
+  /** Owner only; `[]` for a member (G8). */
+  declined: DeclinedInvitation[]
 }
 
 export type MembershipResult = { membership_id: string; state: string }
@@ -334,6 +352,38 @@ export async function getTeam(
         [venture.id],
       )
     : []
+  const declined = owner
+    ? await exec<{
+        id: string
+        invite_email_normalized: string
+        role_label: string | null
+        permission: MemberPermission
+        invited_at: Date
+        ended_at: Date
+      }>(
+        `SELECT * FROM (
+           SELECT DISTINCT ON (r.invite_email_normalized)
+                  r.id::text, r.invite_email_normalized, r.role_label, r.permission,
+                  r.invited_at, r.ended_at
+             FROM project_members r
+            WHERE r.project_id = $1 AND r.state = 'REJECTED'
+              AND r.invite_email_normalized IS NOT NULL
+              AND NOT EXISTS (
+                    SELECT 1 FROM project_members p
+                     WHERE p.project_id = r.project_id AND p.state = 'PENDING_CONFIRMATION'
+                       AND p.invite_email_normalized = r.invite_email_normalized)
+              AND NOT EXISTS (
+                    SELECT 1 FROM project_members m
+                      JOIN individual_profiles ip ON ip.id = m.profile_id
+                      JOIN user_accounts a ON a.id = ip.account_id
+                     WHERE m.project_id = r.project_id AND m.state = 'ACTIVE'
+                       AND a.email_normalized = r.invite_email_normalized)
+            ORDER BY r.invite_email_normalized, r.ended_at DESC, r.id DESC
+         ) latest
+         ORDER BY ended_at, id`,
+        [venture.id],
+      )
+    : []
 
   const rows: TeamRow[] = [
     {
@@ -372,6 +422,14 @@ export async function getTeam(
       pending: owner ? pending.filter((p) => !p.expired).length : null,
     },
     rows,
+    declined: declined.map((d) => ({
+      membership_id: d.id,
+      email: d.invite_email_normalized,
+      role_label: d.role_label,
+      permission: d.permission,
+      invited_at: iso(d.invited_at),
+      declined_at: iso(d.ended_at),
+    })),
   }
 }
 
@@ -722,6 +780,8 @@ export async function declineInvitation(
     const { venture, row } = await recipientRow(exec, accountId, ventureId, membershipId)
     if (row.state === 'REJECTED') return { membership_id: row.id, state: 'REJECTED' }
     if (row.state !== 'PENDING_CONFIRMATION') throw conflict('This invitation is closed.')
+    // US-02.14 "Lời mời … hết hạn → không còn hiệu lực", as for accepting (FIX-02).
+    if (row.expired) throw conflict('This invitation has expired.')
     await exec(
       `UPDATE project_members SET state = 'REJECTED', ended_at = now(), updated_at = now()
         WHERE id = $1`,
