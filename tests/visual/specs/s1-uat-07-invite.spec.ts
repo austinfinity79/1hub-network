@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from '@playwright/test'
 
 import { closePool, query } from '../../../src/lib/db/client'
-import { completedAccount, watchConsole } from '../support/onboarding'
+import { applyVocabularyFixture, completedAccount, watchConsole } from '../support/onboarding'
 import { createVenture, freshAddress, invite } from '../support/workspace'
 
 /**
@@ -13,6 +13,12 @@ import { createVenture, freshAddress, invite } from '../support/workspace'
  */
 
 let consoleErrors: string[] = []
+
+// The ventures below use the QA catalogue ("Logistics"): provisioned here, so
+// the suite never relies on another spec having run first (S1-UAT-07-FIX-02).
+test.beforeAll(async () => {
+  await applyVocabularyFixture()
+})
 
 test.beforeEach(async ({ page }) => {
   consoleErrors = []
