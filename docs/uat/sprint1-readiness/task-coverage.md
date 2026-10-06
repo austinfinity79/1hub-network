@@ -15,7 +15,7 @@ How the Sprint 1 tasks cover the 160 AC ([traceability.csv](traceability.csv), c
 | S1-UAT-04 AI Profile Helper | not started | 0 | 2 | 0 | 9 | 0 | 0 | 0 | 11 |
 | S1-UAT-05 Profile consistency | done local, review pending | 10 | 2* | 0 | 0 | 0 | 1 | 0 | 13 |
 | S1-UAT-06 Project/Startup + AI | not started | 0 | 15 | 0 | 2 | 2 | 0 | 0 | 19 |
-| S1-UAT-07 Invite flow | integrated in candidate (FIX-01 incl.) | 17 | 4 | 0 | 0 | 0 | 0 | 0 | 21 |
+| S1-UAT-07 Invite flow | integrated in candidate (FIX-01, FIX-02 incl.) | 18 | 3 | 0 | 0 | 0 | 0 | 0 | 21 |
 | S1-UAT-08 / 08A PO batch | 08A done local; FB-03/19/20 open | — | — | — | — | — | — | — | 0 (PO direct) |
 | S1-UAT-09 P1/P2 polish | done local, review pending | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 2 |
 | UNASSIGNED | no owner | 0 | 28 | 0 | 0 | 0 | 0 | 0 | 28 |
@@ -23,7 +23,7 @@ How the Sprint 1 tasks cover the 160 AC ([traceability.csv](traceability.csv), c
 
 \* US-02.02-AC03/05 (Chính/Phụ, years): unassigned gaps in an S1-UAT-05 story, outside its delivered scope.
 
-S1-UAT-07 AC (17 READY in the candidate; still pending: US-02.14-AC04 owner-side "Đã từ chối", US-X.02-AC01…03 for their S1-UAT-06 / 03B cases): US-02.08-AC04, US-02.09-AC02/03/06, US-02.11-AC01…04, US-02.12-AC01…04, US-02.13-AC02, US-02.14-AC01…04, US-02.17-AC01, US-X.02-AC01…03.
+S1-UAT-07 AC (18 READY in the candidate; US-02.14-AC04 READY since S1-UAT-07-FIX-02; still pending: US-X.02-AC01…03 for their S1-UAT-06 / 03B cases): US-02.08-AC04, US-02.09-AC02/03/06, US-02.11-AC01…04, US-02.12-AC01…04, US-02.13-AC02, US-02.14-AC01…04, US-02.17-AC01, US-X.02-AC01…03.
 
 ## Cross-cutting dependencies
 
@@ -35,7 +35,7 @@ S1-UAT-07 AC (17 READY in the candidate; still pending: US-02.14-AC04 owner-side
 | RoleVerification routing | **resolved**: DEC-ADM-PD1 (PO 04/10) | US-01.11-AC05…09, US-01.13-AC01, US-02.08-AC02; U8 | S1-UAT-03B + roster import + a handler per receiving unit used in UAT |
 | HUB roster | fixture "Chapter 01 / 02" only | US-01.11-AC01/02, U8 | import of the PO list (Appendix E) via the roster tool |
 | FB-19 and PO material | FB-19 waits for PO notes / images; FB-03, FB-20 not built; FB-02/04 await PO acceptance; 48-field list and tab fields missing | 2 PO_CONTENT AC; FB items outside the 160 | PO documents, then S1-UAT-08 / 06 |
-| S1-UAT-07 integration | done in `int/sprint1-candidate-01` (S1-CANDIDATE-INT-01), regression GREEN | 17 AC now READY | a S1-UAT-07 follow-up for US-02.14-AC04 |
+| S1-UAT-07 integration | done in `int/sprint1-candidate-01` (S1-CANDIDATE-INT-01, FIX-02 `d497da2`), regression GREEN | 18 AC now READY | none for S1-UAT-07 itself |
 
 ## Related
 
