@@ -16,13 +16,13 @@ import { REPO_ROOT } from '../pixel-qa/paths'
  *
  * The founder route is the fixed handle of DEC-DEMO-SP1-D1 (it narrows
  * DEMO-D2's `[profileId]`): a profile UUID is 404 and no internal id reaches
- * a page. Steps owned by DEMO-DIR2-01 / DEMO-SP1-FOUNDER-01 run with
- * DEMO_QA_SYNC=1; without it they stay `fixme` (AWAITING_A_IMPLEMENTATION)
- * so the suite still runs on an older base. With the flag set, a missing
- * screen fails; nothing skips silently.
+ * a page. Steps owned by DEMO-DIR2-01 / DEMO-SP1-FOUNDER-01 run by default
+ * since both are on main (OPS-WORKTREE-INTEGRATE-CLEANUP-01); DEMO_QA_SYNC=0
+ * turns them back into `fixme` (AWAITING_A_IMPLEMENTATION) on an older base.
+ * A missing screen fails; nothing skips silently.
  */
 
-const SYNC = process.env.DEMO_QA_SYNC === '1'
+const SYNC = process.env.DEMO_QA_SYNC !== '0'
 const AWAITING = 'AWAITING_A_IMPLEMENTATION: set DEMO_QA_SYNC=1 at DEMO-QA-B-SYNC'
 
 /** Demo data (docs/demo-0710/DEMO_DATA_CONTRACT.md, src/lib/demo-0710/founders.ts). */
@@ -327,10 +327,12 @@ test.describe('responsive interactions (DEMO_RESPONSIVE_MATRIX)', () => {
 
   for (const width of [1440, 768, 390]) {
     test(`${width}: Thế giới map — the HUB Đà Nẵng marker can be clicked`, async ({ page }) => {
-      // QA-B-04 (P2, open): below 1024 px the HUB Quảng Ninh marker covers
-      // HUB Đà Nẵng in the Thế giới view. Expected to fail there until fixed;
+      // QA-B-04 (P2, ACCEPTED_P2_DEMO_DEBT, DEMO-QA-01): the 12 px markers of
+      // 58da5d1 keep HUB Đà Nẵng clickable down to 768 px; at phone width the
+      // four domestic HUBs of the Thế giới view still overlap (the HUB chips
+      // open each popup). Expected to fail there until a cluster design lands;
       // an unexpected pass means the fix landed and this mark must go.
-      test.fail(width < 1024, 'QA-B-04: HUB Quảng Ninh marker intercepts HUB Đà Nẵng')
+      test.fail(width < 768, 'QA-B-04: domestic HUB markers overlap in the Thế giới view')
       await page.setViewportSize({ width, height: 900 })
       await page.goto('/about', { waitUntil: 'networkidle' })
       await page.locator('[data-marker="DN"]').scrollIntoViewIfNeeded()
