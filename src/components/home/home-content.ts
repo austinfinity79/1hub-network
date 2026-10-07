@@ -31,15 +31,33 @@ export const HOME_SEARCH_SUGGESTIONS = [
 
 export type ProgrammeUpdate = {
   code: string
+  /** S2-HOME-HIGHLIGHTS-ASSETS-01: the approved mark, else null (the code is drawn). */
+  logo: string | null
   title: string
   meta: string
   tag: string
   tone: 'gold' | 'amber' | 'green'
 }
 
+/**
+ * S2-HOME-HIGHLIGHTS-ASSETS-01 — the PO's "Homepage - Nổi bật tuần này" Drive
+ * folder (1oHQqE4LfU_ojnXzoEbH4DUGKJXxIo_7t): five marks, one per row that
+ * drew initials. Optimised to 128 px WebP in public/home/highlights; sources
+ * (sha256): cập nhật-1-apec-innovation-challenge.png 6102fe9a…,
+ * cập nhật-2-qr-payment-open-challenge.png e5690a68…,
+ * cập nhật-3-logistics-2026.png 1e3bf73b…, sản phẩm-4-bloom.png 6bad5897…,
+ * sản phẩm-5-Debatium.png 7ac8c229…. Homepage only: the canonical product
+ * logos are not changed here.
+ */
+export const HIGHLIGHT_PRODUCT_LOGOS: Readonly<Record<string, string>> = {
+  bloom: '/home/highlights/bloom.webp',
+  debatium: '/home/highlights/debatium.webp',
+}
+
 export const PROGRAMME_UPDATES: ProgrammeUpdate[] = [
   {
     code: 'AP',
+    logo: '/home/highlights/apec-innovation-challenge.webp',
     title: 'APEC Innovation Challenge công bố 20 đội vào vòng trong',
     meta: 'APEC Innovation Challenge · 2 giờ trước',
     tag: 'VÒNG TRONG',
@@ -47,6 +65,7 @@ export const PROGRAMME_UPDATES: ProgrammeUpdate[] = [
   },
   {
     code: 'MB',
+    logo: '/home/highlights/qr-payment-open-challenge.webp',
     title: 'MBBank Open Challenge mở thêm bài toán thanh toán QR',
     meta: 'MB Bank · hôm qua',
     tag: 'BÀI TOÁN MỚI',
@@ -54,6 +73,7 @@ export const PROGRAMME_UPDATES: ProgrammeUpdate[] = [
   },
   {
     code: 'BĐ',
+    logo: '/home/highlights/logistics-2026.webp',
     title: 'Chuyển đổi số logistics 2026 gia hạn nộp bài đến 30/11',
     meta: 'Tổng công ty Bưu điện · 2 ngày trước',
     tag: 'GIA HẠN',

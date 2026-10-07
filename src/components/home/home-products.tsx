@@ -7,6 +7,7 @@ import { PUBLIC_ROUTES } from '@/lib/public/routes'
 
 import { ArrowRight, PublicAction } from '@/components/public-shell/public-action'
 
+import { HIGHLIGHT_PRODUCT_LOGOS } from './home-content'
 import styles from './home.module.css'
 
 /**
@@ -50,6 +51,13 @@ function Mark({
   )
 }
 
+/** S2-HOME-HIGHLIGHTS-ASSETS-01: the highlight mark when the startup has no public logo. */
+function withHighlightLogo(s: HomeStartup): HomeStartup {
+  const slug = s.href?.split('/').pop()
+  const logo = slug ? HIGHLIGHT_PRODUCT_LOGOS[slug] : undefined
+  return s.logo || !logo ? s : { ...s, logo }
+}
+
 /** "Sản phẩm theo ngành": one sector at a time, three rows. */
 export function SectorList({ startups }: { startups: HomeStartup[] }) {
   const sectors = useMemo(() => domainsOf(startups), [startups])
@@ -84,7 +92,7 @@ export function SectorList({ startups }: { startups: HomeStartup[] }) {
       <ul className={styles.feedList} role="list">
         {rows.map((s) => (
           <li key={s.key} className={styles.feedRow}>
-            <Mark startup={s} className={styles.feedMark} />
+            <Mark startup={withHighlightLogo(s)} className={styles.feedMark} />
             <div className={styles.feedText}>
               <PublicAction href={s.href} className={styles.feedTitle}>
                 {s.name}

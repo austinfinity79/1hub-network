@@ -112,9 +112,21 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
             <ul className={styles.feedList} role="list">
               {PROGRAMME_UPDATES.map((u) => (
                 <li key={u.title} className={styles.feedRow}>
-                  <span className={styles.feedMark} aria-hidden="true">
-                    {u.code}
-                  </span>
+                  {u.logo ? (
+                    // The approved mark replaces the frame's initials (INTENTIONAL-DATA, DEMO-D8).
+                    <span
+                      className={`${styles.feedMark} ${styles.markImage}`}
+                      aria-hidden="true"
+                      data-pixel="data"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- 128 px static mark */}
+                      <img src={u.logo} alt="" width={44} height={44} data-logo="highlight" />
+                    </span>
+                  ) : (
+                    <span className={styles.feedMark} aria-hidden="true">
+                      {u.code}
+                    </span>
+                  )}
                   <div className={styles.feedText}>
                     <p className={styles.feedTitle}>{u.title}</p>
                     <p className={styles.feedMeta}>{u.meta}</p>
