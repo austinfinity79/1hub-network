@@ -13,5 +13,8 @@ The homepage hero is the PO's six still artworks (video cancelled). UI only: no 
 
 A filter mistake (the worktree path contains "hero-slider") made one run select every spec: 1433 tests, 1401 pass, 29 skip, 3 failures — all in the specs fixed above. The final targeted run: 36 / 36.
 
+## Frame correction (PO reference "HUB Network Red Globe Landing Page.png")
+The first layout (frame = full width × 9/16, controls and search below) was rejected. Now one composed first screen: hero `clamp(760px, 100svh, 980px)` from 1280 px (natural height below), a size-container slider whose stage is the largest 16:9 frame that fits (`min(100cqw, (100cqh − 52px) × 16/9)`), framed (radius, shadow) on the dark hero; arrows on the hero's sides centred on the frame; counter `0N / 06` + six bars under the frame's left edge; search and intents at the hero's foot. Under 1024 px: natural height, arrows in the counter row. 1440 × 900: hero 900, frame 1022 × 575. Slider logic unchanged.
+
 ## Related
 - [HOME-LOGO-HOTFIX-01](HOME-LOGO-HOTFIX-01.md) · [CLAUDE_LATEST_REPORT](../CLAUDE_LATEST_REPORT.md)

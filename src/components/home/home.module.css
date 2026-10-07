@@ -44,9 +44,14 @@
 
 .hero {
   position: relative;
-  /* HOMEPAGE-HERO-SLIDER-01: header, the 16:9 slide frame, then the search
-     cluster; the height follows the content (no fixed first-screen height). */
-  padding-bottom: 56px;
+  /* HOMEPAGE-HERO-SLIDER-01 (frame correction, PO reference): one composed
+     first screen — header, the bounded slide stage with its arrows and
+     counter, then search and intents. The height is the viewport's, bounded;
+     never the artwork's. */
+  display: flex;
+  flex-direction: column;
+  height: clamp(760px, 100svh, 980px);
+  padding-bottom: 40px;
   color: #efefef;
   background:
     radial-gradient(ellipse 330px 190px at 920px 390px, rgb(110 32 24 / 0.9), transparent 100%),
@@ -56,10 +61,21 @@
   border-bottom: 1px solid #837879;
 }
 
-/* HOMEPAGE-HERO-SLIDER-01: one stable 16:9 frame; every slide is a complete
-   artwork shown whole (contain), stacked and cross-faded. */
+/* The slider takes the hero's free height; the stage is the largest 16:9
+   frame that fits it (container units), so the PNG never sets the height. */
 .heroSlider {
   position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 20px 120px 0;
+  container-type: size;
+}
+
+.heroStage {
+  width: min(100cqw, (100cqh - 52px) * 16 / 9);
 }
 
 .heroFrame {
@@ -68,6 +84,10 @@
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #f7f1f0;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.1),
+    0 28px 70px rgb(0 0 0 / 0.5);
 }
 
 .heroSlide {
@@ -85,42 +105,75 @@
   object-fit: contain;
 }
 
-.heroControls {
+/* Counter row under the frame, at its left edge (PO reference). */
+.heroMeta {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 18px;
-  margin-top: 20px;
-}
-
-.heroArrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  color: #ffffff;
-  background: none;
-  border: 1px solid rgb(255 255 255 / 0.7);
-  border-radius: 50%;
-  cursor: pointer;
+  height: 52px;
+  padding-top: 12px;
 }
 
 .heroCount {
-  min-width: 72px;
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: #a98b88;
+  white-space: nowrap;
+}
+
+.heroCount b {
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-align: center;
-  color: #dcaaa1;
+  color: #ffffff;
+}
+
+.heroBars {
+  display: flex;
+  gap: 8px;
+}
+
+.heroBars span {
+  width: 40px;
+  height: 3px;
+  background: rgb(255 255 255 / 0.22);
+  border-radius: 2px;
+}
+
+.heroBars .heroBarOn {
+  background: var(--coral);
+}
+
+/* Desktop: the arrows flank the frame on the hero's sides. */
+.heroArrow {
+  position: absolute;
+  top: calc(50% - 16px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  color: #ffffff;
+  background: rgb(22 1 2 / 0.35);
+  border: 1px solid rgb(255 255 255 / 0.75);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.heroPrev {
+  left: 36px;
+}
+
+.heroNext {
+  right: 36px;
 }
 
 .heroSearch {
-  /* HOMEPAGE-HERO-SLIDER-01: below the slide frame, never over the artwork. */
+  /* Inside the hero, at its foot, under the stage: never over the artwork. */
+  flex: none;
   width: 980px;
   max-width: calc(100% - 40px);
-  margin: 28px auto 0;
+  margin: 18px auto 0;
 }
 
 .search {
@@ -1179,15 +1232,65 @@
   }
 }
 
-@media (max-width: 1023px) {
+/* Small desktops: the frame is width-bound, so the hero takes its natural
+   height (no empty bands around the frame); the arrows stay on the sides. */
+@media (min-width: 1024px) and (max-width: 1279px) {
   .hero {
-    padding-bottom: 48px;
+    height: auto;
+  }
+
+  .heroSlider {
+    display: block;
+    padding: 20px 104px 0;
+    container-type: normal;
+  }
+
+  .heroStage {
+    width: 100%;
+  }
+}
+
+@media (max-width: 1023px) {
+  /* Narrow screens: natural height; the full artwork scaled to the width,
+     the arrows move into the counter row. */
+  .hero {
+    height: auto;
+    padding-bottom: 40px;
+  }
+
+  .heroSlider {
+    display: block;
+    padding: 16px 24px 0;
+    container-type: normal;
+  }
+
+  .heroStage {
+    width: 100%;
+  }
+
+  .heroFrame {
+    border-radius: 12px;
+  }
+
+  .heroMeta {
+    justify-content: center;
+  }
+
+  .heroArrow {
+    position: static;
+    width: 44px;
+    height: 44px;
+    transform: none;
+  }
+
+  .heroPrev {
+    order: -1;
   }
 
   .heroSearch {
     width: auto;
     max-width: none;
-    margin: 24px 24px 0;
+    margin: 20px 24px 0;
   }
 
   .highlights,
@@ -1252,12 +1355,20 @@
 }
 
 @media (max-width: 720px) {
-  .heroControls {
-    margin-top: 14px;
+  .heroSlider {
+    padding: 12px 16px 0;
+  }
+
+  .heroMeta {
+    gap: 12px;
+  }
+
+  .heroBars span {
+    width: 18px;
   }
 
   .heroSearch {
-    margin: 20px 16px 0;
+    margin: 16px 16px 0;
   }
 
   .search {

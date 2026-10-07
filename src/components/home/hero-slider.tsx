@@ -48,58 +48,74 @@ export function HeroSlider() {
       aria-label="HUB Network"
       data-section="hero-slider"
     >
-      <div className={styles.heroFrame}>
-        {HERO_SLIDES.map((s, i) => (
-          <div
-            key={s.src}
-            className={`${styles.heroSlide} ${i === index ? styles.heroSlideOn : ''}`}
-            role="group"
-            aria-roledescription="slide"
-            aria-label={`${pad(i + 1)} / ${pad(count)}`}
-            aria-hidden={i === index ? undefined : true}
-            data-slide={pad(i + 1)}
-            data-active={i === index ? 'true' : undefined}
+      {/* The stage: a bounded 16:9 frame sized by the space the hero leaves
+          (not by the PNG), and the counter row under it. */}
+      <div className={styles.heroStage}>
+        <div className={styles.heroFrame}>
+          {HERO_SLIDES.map((s, i) => (
+            <div
+              key={s.src}
+              className={`${styles.heroSlide} ${i === index ? styles.heroSlideOn : ''}`}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${pad(i + 1)} / ${pad(count)}`}
+              aria-hidden={i === index ? undefined : true}
+              data-slide={pad(i + 1)}
+              data-active={i === index ? 'true' : undefined}
+            >
+              <Image
+                src={s.src}
+                alt={`Slide ${i + 1}/${count}: ${s.label}`}
+                fill
+                sizes="(max-width: 1023px) 100vw, 1100px"
+                quality={90}
+                priority={i === 0}
+              />
+            </div>
+          ))}
+        </div>
+        <div className={styles.heroMeta}>
+          {/* Desktop: the arrows sit on the hero's sides, around the frame;
+              narrow screens: in this row. */}
+          <button
+            type="button"
+            className={`${styles.heroArrow} ${styles.heroPrev}`}
+            aria-label="Previous slide"
+            onClick={() => go(-1)}
           >
-            <Image
-              src={s.src}
-              alt={`Slide ${i + 1}/${count}: ${s.label}`}
-              fill
-              sizes="100vw"
-              quality={90}
-              priority={i === 0}
-            />
-          </div>
-        ))}
-      </div>
-      <div className={styles.heroControls}>
-        <button
-          type="button"
-          className={styles.heroArrow}
-          aria-label="Previous slide"
-          onClick={() => go(-1)}
-        >
-          <svg viewBox="0 0 14 12" width="14" height="12" aria-hidden="true">
-            <path
-              d="M13.5 6h-12M6.5 1l-5 5 5 5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-          </svg>
-        </button>
-        <p className={styles.heroCount} data-hero-indicator="">
-          {pad(index + 1)} / {pad(count)}
-        </p>
-        <button
-          type="button"
-          className={styles.heroArrow}
-          aria-label="Next slide"
-          onClick={() => go(1)}
-        >
-          <svg viewBox="0 0 14 12" width="14" height="12" aria-hidden="true">
-            <path d="M0.5 6h12M7.5 1l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          </svg>
-        </button>
+            <svg viewBox="0 0 14 12" width="14" height="12" aria-hidden="true">
+              <path
+                d="M13.5 6h-12M6.5 1l-5 5 5 5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+            </svg>
+          </button>
+          <p className={styles.heroCount} data-hero-indicator="">
+            <b>{pad(index + 1)}</b> / {pad(count)}
+          </p>
+          <span className={styles.heroBars} aria-hidden="true">
+            {HERO_SLIDES.map((s, i) => (
+              <span key={s.src} className={i === index ? styles.heroBarOn : undefined} />
+            ))}
+          </span>
+          <button
+            type="button"
+            className={`${styles.heroArrow} ${styles.heroNext}`}
+            aria-label="Next slide"
+            onClick={() => go(1)}
+          >
+            <svg viewBox="0 0 14 12" width="14" height="12" aria-hidden="true">
+              <path
+                d="M0.5 6h12M7.5 1l5 5-5 5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   )

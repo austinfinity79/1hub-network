@@ -94,8 +94,19 @@ test('the first slide is prioritised; the others load without a broken state', a
       .toBeGreaterThan(0)
 })
 
+// Frame correction (PO reference): the artwork sits in a bounded frame inside
+// one composed hero; the PNG never sets the hero's height.
+const box = (page: Page, selector: string) =>
+  page
+    .locator(selector)
+    .first()
+    .evaluate((el) => {
+      const r = el.getBoundingClientRect()
+      return { x: r.x, y: r.y + window.scrollY, w: r.width, h: r.height }
+    })
+
 for (const width of [1440, 1280, 1024, 768, 390]) {
-  test(`${width}: whole artwork in a stable 16:9 frame, controls usable, no overflow`, async ({
+  test(`${width}: bounded frame inside the hero, arrows, counter, search and intents`, async ({
     page,
   }) => {
     const errors: string[] = []
@@ -105,29 +116,54 @@ for (const width of [1440, 1280, 1024, 768, 390]) {
     await page.clock.install()
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/', { waitUntil: 'networkidle' })
-    const frame = (await page.locator('[data-section="hero-slider"] > div').first().boundingBox())!
-    expect(Math.round(frame.width)).toBe(width)
-    expect(Math.abs(frame.height - (width * 9) / 16)).toBeLessThanOrEqual(1)
-    // Below the header, never under it.
-    expect(Math.round(frame.y)).toBe(64)
-    for (let i = 0; i < 6; i++) {
-      const slide = page.locator(`[data-slide="0${i + 1}"] img`)
-      const box = (await slide.boundingBox())!
-      // The image box is the frame and the artwork has the frame's ratio: shown whole.
-      expect(Math.abs(box.width - frame.width)).toBeLessThanOrEqual(1)
-      expect(Math.abs(box.height - frame.height)).toBeLessThanOrEqual(1)
-      expect(await slide.evaluate((el: HTMLImageElement) => getComputedStyle(el).objectFit)).toBe(
-        'contain',
-      )
-      await expect
-        .poll(() => slide.evaluate((el: HTMLImageElement) => el.naturalWidth / el.naturalHeight))
-        .toBeCloseTo(16 / 9, 2)
+    const hero = await box(page, '[data-section="hero"]')
+    const frame = await box(page, '[data-section="hero-slider"] [data-slide]')
+    // Bounded: never the full width, 16:9, under the header.
+    expect(frame.w).toBeLessThan(width - 24)
+    expect(Math.abs(frame.h - (frame.w * 9) / 16)).toBeLessThanOrEqual(1.5)
+    expect(frame.y).toBeGreaterThanOrEqual(64)
+    if (width >= 1280) {
+      // One first screen: the hero is the viewport (bounded), the frame well within it.
+      expect(Math.round(hero.h)).toBe(900)
+      expect(frame.h).toBeLessThan(0.7 * 900)
     }
-    for (const name of ['Previous slide', 'Next slide']) {
-      const b = (await page.getByRole('button', { name }).boundingBox())!
-      expect(b.x).toBeGreaterThanOrEqual(0)
-      expect(b.x + b.width).toBeLessThanOrEqual(width)
-      expect(b.y).toBeGreaterThan(frame.y + frame.height)
+    for (let i = 0; i < 6; i++) {
+      const img = await box(page, `[data-slide="0${i + 1}"] img`)
+      expect(Math.abs(img.w - frame.w)).toBeLessThanOrEqual(1)
+      expect(Math.abs(img.h - frame.h)).toBeLessThanOrEqual(1)
+      expect(
+        await page
+          .locator(`[data-slide="0${i + 1}"] img`)
+          .evaluate((el: HTMLImageElement) => getComputedStyle(el).objectFit),
+      ).toBe('contain')
+    }
+    const prev = await box(page, '[aria-label="Previous slide"]')
+    const next = await box(page, '[aria-label="Next slide"]')
+    const count = await box(page, '[data-hero-indicator]')
+    if (width >= 1024) {
+      // Arrows flank the frame, vertically on its centre.
+      expect(prev.x + prev.w).toBeLessThanOrEqual(frame.x)
+      expect(next.x).toBeGreaterThanOrEqual(frame.x + frame.w)
+      for (const a of [prev, next])
+        expect(Math.abs(a.y + a.h / 2 - (frame.y + frame.h / 2))).toBeLessThanOrEqual(12)
+      // Counter under the frame, at its left edge.
+      expect(Math.abs(count.x - frame.x)).toBeLessThanOrEqual(2)
+    } else {
+      for (const a of [prev, next]) expect(a.y).toBeGreaterThan(frame.y + frame.h)
+    }
+    expect(count.y).toBeGreaterThan(frame.y + frame.h)
+    // Search, then the intents, inside the hero below the counter; then the ticker.
+    const search = await box(page, '[data-search="hero"]')
+    const primary = await box(page, '[data-cta="primary"]')
+    expect(search.y).toBeGreaterThan(count.y + count.h)
+    expect(primary.y).toBeGreaterThan(search.y)
+    expect(primary.y + primary.h).toBeLessThanOrEqual(hero.y + hero.h)
+    expect(Math.round((await box(page, '[data-section="ticker"]')).y)).toBe(
+      Math.round(hero.y + hero.h),
+    )
+    for (const a of [prev, next]) {
+      expect(a.x).toBeGreaterThanOrEqual(0)
+      expect(a.x + a.w).toBeLessThanOrEqual(width)
     }
     await expect(page.locator(INDICATOR)).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
@@ -137,15 +173,10 @@ for (const width of [1440, 1280, 1024, 768, 390]) {
     await expect(
       page.locator('header[data-shell="public"] a[data-cta="logo"] img[data-logo="brand"]'),
     ).toHaveCount(1)
-    // A slide change does not move the page below the frame (no layout shift):
-    // document positions, so a scroll to reach the button is not counted.
-    const docTop = () =>
-      page
-        .locator('[data-search="hero"]')
-        .evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY))
-    const before = await docTop()
+    // A slide change does not move anything (no layout shift).
+    const before = (await box(page, '[data-search="hero"]')).y
     await page.getByRole('button', { name: 'Next slide' }).click()
-    expect(await docTop()).toBe(before)
+    expect((await box(page, '[data-search="hero"]')).y).toBe(before)
     expect(errors).toEqual([])
   })
 }
