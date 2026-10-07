@@ -10,7 +10,10 @@ describe('Humans of HUB', () => {
     expect(HUMAN_ROWS).toHaveLength(36)
     expect(HUMANS).toHaveLength(34)
     expect(HUMANS.map((h) => h.order)).toEqual(Array.from({ length: 34 }, (_, i) => i + 1))
-    expect(HUMANS[0]).toMatchObject({ name: 'Trần Quang Hưng', title: 'Chủ tịch HUB Network Tổng' })
+    expect(HUMANS[0]).toMatchObject({
+      name: 'Trần Quang Hưng',
+      title: 'Chủ tịch sáng lập HUB Network',
+    })
     expect(HUMANS.at(-1)).toMatchObject({
       name: 'Trần T. Bích Ngọc',
       // A line break inside the cell is presented as a space; the words are the workbook's.

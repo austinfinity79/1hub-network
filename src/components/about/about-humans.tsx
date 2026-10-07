@@ -105,7 +105,6 @@ function HubTong({ data, talents }: { data: HumansHubTong; talents: string | nul
             <Face person={data.chair} size={104} className={styles.chairFace} />
             <p className={styles.chairName}>{data.chair.name}</p>
             <p className={styles.chairTitle}>{data.chair.title}</p>
-            <p className={styles.leaderTerm}>Nhiệm kỳ hiện tại</p>
           </div>
           <span className={styles.treeLine} aria-hidden="true" />
         </div>

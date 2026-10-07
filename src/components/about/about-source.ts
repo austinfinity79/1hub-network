@@ -26,7 +26,8 @@ export const HUMAN_ROWS: readonly HumanRow[] = [
   {
     order: 1,
     name: 'Trần Quang Hưng',
-    title: 'Chủ tịch HUB Network Tổng',
+    // CHAIRMAN-PROFILE-TEXT-HOTFIX-01: the PO's title, superseding the workbook cell.
+    title: 'Chủ tịch sáng lập HUB Network',
     term: 'Nhiệm kỳ hiện tại',
     edit: 'Đảo vị trí',
     orgLink: 'Trưởng HUB Tổng',
