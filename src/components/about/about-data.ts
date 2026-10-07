@@ -94,6 +94,10 @@ const PORTRAITS: Array<[name: string, file: string]> = [
   ['Vu Thu Hang', 'vu-thu-hang'],
   ['Vuong Bao Son', 'vuong-bao-son'],
   ['Vương Hữu Nam', 'vuong-huu-nam'],
+  // PUBLIC-CONTENT-PUBLISH-01: the refreshed workbook's org-chart sheet
+  // ("Thành viên HUB_Orgchart") ties these exact full names to their photos.
+  ['Pham Thanh Long', 'pham-thanh-long'],
+  ['Le Mai Anh', 'le-mai-anh'],
 ]
 
 /** Case- and diacritic-insensitive key; đ/Đ fold to d. Presentation lookup only. */
@@ -216,6 +220,9 @@ export const MILESTONES: Milestone[] = [
     title:
       'Được chấp thuận chủ trương thành lập Mạng lưới Đổi mới sáng tạo Dữ liệu HUB NDA thuộc Ban Đoàn – Hội, Hiệp hội Dữ liệu Quốc gia, trên cơ sở kế thừa bộ máy nhân sự và năng lực tổ chức của HUB Network.',
     caption: 'ẢNH · DẤU ẤN 11 · 2025',
+    // PUBLIC-CONTENT-PUBLISH-01: the refreshed "Dấu ấn" folder's file
+    // "About Hub - dấu ấn - 11/2025 - Cột mốc thể chế".
+    photo: about('milestone-2025-11.webp', 'Dấu ấn 11/2025, cột mốc thể chế'),
     places: [],
     badge: 'Cột mốc thể chế',
     tone: 'dark',

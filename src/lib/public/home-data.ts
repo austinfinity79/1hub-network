@@ -1,6 +1,7 @@
 import { query } from '@/lib/db/client'
 import { demoVenture } from '@/lib/demo-0710/ventures'
 import { listPublicStartups } from '@/lib/library/canonical-source'
+import { assetUrl, isAssetId } from '@/lib/media/avatar-storage'
 
 import { PUBLIC_ROUTES } from './routes'
 
@@ -31,7 +32,28 @@ export type HomeStartup = {
   region: string | null
   domains: string[]
   href: string | null
+  /** The startup's public logo (`/media/assets/:id`), else null: initials. */
+  logo: string | null
+  /** Position in the refreshed homepage list "Startup sẵn sàng gặp nhà đầu tư", else null. */
+  featured: number | null
 }
+
+/**
+ * PUBLIC-CONTENT-PUBLISH-01 — the refreshed workbook's homepage block
+ * "Startup sẵn sàng gặp nhà đầu tư" (sheet "Ảnh homepage", rows 9–19), in its
+ * order, restricted to the published safe set (HubLock, Pictor Network,
+ * UCTalent and PSI 69 are not in it). The demo startup(s) with an investor
+ * pitch stay first (Tracely, the primary journey).
+ */
+export const HOME_FEATURED_SLUGS = [
+  '1hub-smart-campus-solution',
+  'drippy',
+  'parkwave',
+  'solemate',
+  'databuckets',
+  'inverted-lambda',
+  'centauri-labs',
+] as const
 
 /** Capitals of a CamelCase name, else the first letter of each word, else its first two letters. */
 export function markOf(name: string): string {
@@ -53,17 +75,19 @@ export function tileOf(name: string): string {
 
 export async function listHomeStartups(): Promise<HomeStartup[]> {
   const rows = await listPublicStartups()
-  const slugs = new Map(
+  const meta = new Map(
     (
-      await query<{ id: string; slug: string }>(
-        'SELECT id::text, slug FROM projects WHERE id = ANY($1::uuid[])',
+      await query<{ id: string; slug: string; logo_asset_id: string | null }>(
+        'SELECT id::text, slug, logo_asset_id FROM projects WHERE id = ANY($1::uuid[])',
         [rows.map((r) => r.ventureId)],
       )
-    ).map((r) => [r.id, r.slug]),
+    ).map((r) => [r.id, r]),
   )
   return rows.map((r, i) => {
     const demo = demoVenture(r.ventureId)
-    const slug = slugs.get(r.ventureId)
+    const slug = meta.get(r.ventureId)?.slug
+    const logoId = meta.get(r.ventureId)?.logo_asset_id ?? null
+    const featured = slug ? (HOME_FEATURED_SLUGS as readonly string[]).indexOf(slug) : -1
     return {
       key: `s${i}`,
       name: r.name,
@@ -79,6 +103,8 @@ export async function listHomeStartups(): Promise<HomeStartup[]> {
       region: r.region?.label ?? null,
       domains: r.domains.map((d) => d.label),
       href: PUBLIC_ROUTES.products && slug ? `${PUBLIC_ROUTES.products}/${slug}` : null,
+      logo: isAssetId(logoId) ? assetUrl(logoId) : null,
+      featured: featured >= 0 ? featured : null,
     }
   })
 }

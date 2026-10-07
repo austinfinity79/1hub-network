@@ -26,10 +26,26 @@ function featured(startups: HomeStartup[]): HomeStartup[] {
   )
 }
 
-function Mark({ startup, className }: { startup: HomeStartup; className?: string }) {
+function Mark({
+  startup,
+  className,
+  text = startup.mark,
+}: {
+  startup: HomeStartup
+  className?: string
+  text?: string
+}) {
+  // The startup's public logo when it has one; its initials otherwise.
+  if (startup.logo)
+    return (
+      <span className={`${className ?? ''} ${styles.markImage}`} aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element -- public logo of the media route */}
+        <img src={startup.logo} alt="" data-logo="" />
+      </span>
+    )
   return (
     <span className={className} aria-hidden="true">
-      {startup.mark}
+      {text}
     </span>
   )
 }
@@ -97,7 +113,13 @@ export function SectorList({ startups }: { startups: HomeStartup[] }) {
  * directory (a real route), so the row still reads as a carousel.
  */
 export function InvestorCarousel({ startups, total }: { startups: HomeStartup[]; total: number }) {
-  const ready = startups.filter((s) => s.investorReady)
+  // The demo pitch(es) first, then the refreshed homepage list in its order.
+  const ready = [
+    ...startups.filter((s) => s.investorReady),
+    ...startups
+      .filter((s) => !s.investorReady && s.featured !== null)
+      .sort((a, b) => a.featured! - b.featured!),
+  ]
   const [at, setAt] = useState(0)
   const count = ready.length
   const go = (d: number) => setAt((i) => (count ? (i + d + count) % count : 0))
@@ -157,6 +179,12 @@ export function InvestorCarousel({ startups, total }: { startups: HomeStartup[];
                 aria-hidden={offset === 0 ? undefined : true}
               >
                 <div className={styles.pitchArt}>
+                  {s.logo ? (
+                    <span className={styles.pitchLogo} aria-hidden="true">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- public logo of the media route */}
+                      <img src={s.logo} alt="" data-logo="" />
+                    </span>
+                  ) : null}
                   <span>{s.name}</span>
                 </div>
                 {offset === 0 ? (
@@ -172,7 +200,10 @@ export function InvestorCarousel({ startups, total }: { startups: HomeStartup[];
                           {s.round.toLocaleUpperCase('vi')}
                         </span>
                       ) : null}
-                      <span className={`${styles.pill} ${styles.pillGreen}`}>ĐANG GỌI VỐN</span>
+                      {/* Only a startup recorded as fundraising carries the chip. */}
+                      {s.badge === 'GỌI VỐN' ? (
+                        <span className={`${styles.pill} ${styles.pillGreen}`}>ĐANG GỌI VỐN</span>
+                      ) : null}
                     </div>
                     <h3 className={styles.pitchName}>{s.name}</h3>
                     <p className={styles.pitchText}>{s.summary}</p>
@@ -251,9 +282,7 @@ export function ProductGrid({ startups }: { startups: HomeStartup[] }) {
       >
         {tiles.map((s) => (
           <li key={s.key} className={styles.tile}>
-            <span className={styles.tileMark} aria-hidden="true">
-              {s.tile}
-            </span>
+            <Mark startup={s} className={styles.tileMark} text={s.tile} />
             <div>
               <PublicAction href={s.href} className={styles.tileName}>
                 {s.name}

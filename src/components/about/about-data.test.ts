@@ -39,10 +39,16 @@ describe('Humans of HUB', () => {
     expect(HUMANS.find((h) => h.name === 'Bùi Hà Phương')!.photo?.src).toBe(
       '/about/humans/bui-ha-phuong.webp',
     )
-    for (const name of ['Phạm Thành Long', 'Lê Mai Anh', 'Trần T. Bích Ngọc']) {
-      expect(HUMANS.find((h) => h.name === name)!.photo, name).toBeNull()
-    }
-    expect(HUMANS.filter((h) => h.photo).length).toBe(31)
+    // PUBLIC-CONTENT-PUBLISH-01: the refreshed org-chart sheet supplies these two exact names.
+    expect(HUMANS.find((h) => h.name === 'Phạm Thành Long')!.photo?.src).toBe(
+      '/about/humans/pham-thanh-long.webp',
+    )
+    expect(HUMANS.find((h) => h.name === 'Lê Mai Anh')!.photo?.src).toBe(
+      '/about/humans/le-mai-anh.webp',
+    )
+    // "Trần T. Bích Ngọc" is not an exact match for "Trần Thị Bích Ngọc": no photo.
+    expect(HUMANS.find((h) => h.name === 'Trần T. Bích Ngọc')!.photo).toBeNull()
+    expect(HUMANS.filter((h) => h.photo).length).toBe(33)
     expect(nameKey('Đào Việt Tùng')).toBe(nameKey('Dao Viet Tung'))
   })
 

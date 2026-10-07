@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 import type { HomeStartup } from '@/lib/public/home-data'
 import { PUBLIC_ROUTES } from '@/lib/public/routes'
 import type { PublicShellData } from '@/lib/public/shell-data'
@@ -76,7 +78,8 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
           {[0, 1].map((copy) => (
             <p key={copy} className={styles.tickerRow} aria-hidden={copy === 1 ? true : undefined}>
               {HOME_TICKER.map((name) => (
-                <span key={name} className={styles.tickerItem}>
+                // The refreshed programme names are data, not the frame's sample (DEMO-D8).
+                <span key={name} className={styles.tickerItem} data-pixel="data">
                   {name}
                   <svg
                     className={styles.star}
@@ -138,12 +141,10 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
             Chương trình đổi mới sáng tạo
           </h2>
           <div className={styles.programmeFilters}>
-            {PROGRAMME_FILTERS.map((f, i) => (
-              <span
-                key={f}
-                className={`${styles.darkChip} ${i === 0 ? styles.darkChipOn : ''}`}
-                aria-disabled="true"
-              >
+            {/* PUBLIC-CONTENT-PUBLISH-01: no phase is highlighted; the cards carry
+                the sheet's own status ("Sắp công bố"), not a derived phase. */}
+            {PROGRAMME_FILTERS.map((f) => (
+              <span key={f} className={styles.darkChip} aria-disabled="true">
                 {f}
               </span>
             ))}
@@ -158,37 +159,54 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
         </div>
         <ul className={styles.programmeCards} role="list">
           {PROGRAMME_CARDS.map((p) => (
-            <li key={p.title} className={styles.programmeCard}>
-              <div className={`${styles.programmeArt} ${styles[`art_${p.tone}`]}`}>
+            <li key={p.title} className={styles.programmeCard} data-programme={p.code}>
+              <div
+                className={`${styles.programmeArt} ${styles[`art_${p.tone}`]} ${p.image ? styles.artImage : ''}`}
+                data-pixel="data"
+              >
+                {p.image ? (
+                  <Image
+                    src={p.image.src}
+                    alt={p.image.alt}
+                    fill
+                    sizes="(max-width: 720px) 90vw, (max-width: 1180px) 45vw, 320px"
+                  />
+                ) : null}
                 <div className={styles.programmeChips}>
                   <span className={styles.whiteChip}>{p.kind}</span>
                   <span className={p.statusTone === 'coral' ? styles.coralChip : styles.softChip}>
                     {p.status}
                   </span>
                 </div>
-                <span className={styles.programmeLogo} aria-hidden="true">
-                  {p.code}
-                </span>
+                {p.image ? null : (
+                  <span className={styles.programmeLogo} aria-hidden="true">
+                    {p.code}
+                  </span>
+                )}
               </div>
-              <h3 className={styles.programmeName}>{p.title}</h3>
-              <p className={styles.programmeText}>{p.description}</p>
-              <dl className={styles.programmeMeta}>
-                <div>
-                  <dt>THỜI GIAN</dt>
-                  <dd>{p.period}</dd>
-                </div>
-                <div>
-                  <dt>GIẢI THƯỞNG</dt>
-                  <dd className={styles.prize}>{p.prize}</dd>
-                </div>
-                <div>
-                  <dt>CHỦ QUẢN</dt>
-                  <dd>{p.owner}</dd>
-                </div>
-                <div>
-                  <dt>QUY MÔ</dt>
-                  <dd>{p.scale}</dd>
-                </div>
+              <h3 className={styles.programmeName} data-pixel="data">
+                {p.title}
+              </h3>
+              <p className={styles.programmeText} data-pixel="data">
+                {p.description}
+              </p>
+              <dl className={styles.programmeMeta} data-pixel="data">
+                {(
+                  [
+                    ['THỜI GIAN', p.period, ''],
+                    ['GIẢI THƯỞNG', p.prize, styles.prize],
+                    ['CHỦ QUẢN', p.owner, ''],
+                    ['QUY MÔ', p.scale, ''],
+                  ] as const
+                )
+                  // A field the source leaves empty is not drawn.
+                  .filter(([, value]) => value)
+                  .map(([label, value, className]) => (
+                    <div key={label}>
+                      <dt>{label}</dt>
+                      <dd className={className || undefined}>{value}</dd>
+                    </div>
+                  ))}
               </dl>
             </li>
           ))}
@@ -215,7 +233,19 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
         <ul className={styles.newsCards} role="list">
           {NEWS.map((n) => (
             <li key={n.title} className={styles.newsCard}>
-              <div className={`${styles.newsArt} ${styles[`news_${n.tone}`]}`} aria-hidden="true" />
+              <div
+                className={`${styles.newsArt} ${styles[`news_${n.tone}`]} ${n.image ? styles.artImage : ''}`}
+                aria-hidden="true"
+              >
+                {n.image ? (
+                  <Image
+                    src={n.image.src}
+                    alt=""
+                    fill
+                    sizes="(max-width: 720px) 90vw, (max-width: 1180px) 45vw, 420px"
+                  />
+                ) : null}
+              </div>
               <span className={styles.newsTag}>{n.tag}</span>
               <h3 className={styles.newsName}>{n.title}</h3>
               <p className={styles.newsDate}>{n.date}</p>
