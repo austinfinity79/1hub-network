@@ -1434,67 +1434,6 @@ a.ecoRow:hover .ecoName {
   line-height: 30px;
 }
 
-.partners {
-  padding: 119px 64px 119px;
-}
-
-.illustrative {
-  margin-left: 12px;
-  padding: 2px 8px;
-  font-size: 10px;
-  color: #8a7b7c;
-  border: 1px solid #cfc8c8;
-  border-radius: 8px;
-}
-
-.partnerWall {
-  margin-top: 42px;
-  border-top: 2px solid #837879;
-}
-
-.partnerRow {
-  display: flex;
-  align-items: center;
-  min-height: 92px;
-  border-bottom: 1px solid #ddd6d6;
-}
-
-.partnerLabel {
-  flex: none;
-  width: 240px;
-  font-family: var(--mono);
-  font-weight: 500;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  color: #534041;
-}
-
-.partnerRow ul {
-  display: flex;
-  gap: 15px;
-  overflow: hidden;
-}
-
-.partnerChip {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 10px;
-  height: 48px;
-  padding: 0 20px;
-  font-size: 15px;
-  color: #a39a9b;
-  border: 1px solid #cfc5c5;
-  border-radius: 12px;
-}
-
-.partnerChip span {
-  width: 16px;
-  height: 16px;
-  background: #d9d3d3;
-  border-radius: 4px;
-}
-
 /* ------------------------------------------------------------ coral band */
 
 .band {
@@ -1593,7 +1532,6 @@ a.ecoRow:hover .ecoName {
   .ecosystem,
   .milestones,
   .activities,
-  .partners,
   .band {
     padding-left: 24px;
     padding-right: 24px;
@@ -1670,17 +1608,6 @@ a.ecoRow:hover .ecoName {
     margin-top: 16px !important;
   }
 
-  .partnerRow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px 0;
-  }
-
-  .partnerRow ul {
-    flex-wrap: wrap;
-  }
-
   .popupStats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1703,7 +1630,6 @@ a.ecoRow:hover .ecoName {
   .ecosystem,
   .milestones,
   .activities,
-  .partners,
   .band {
     padding-left: 16px;
     padding-right: 16px;
@@ -1714,8 +1640,7 @@ a.ecoRow:hover .ecoName {
   }
 
   .values,
-  .milestones,
-  .partners {
+  .milestones {
     padding-top: 80px;
   }
 

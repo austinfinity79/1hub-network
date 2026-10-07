@@ -209,26 +209,31 @@ test.describe('links', () => {
     }
     const eco = page.locator('[data-section="ecosystem"] li')
     await expect(eco).toHaveCount(7)
-    await expect(eco.filter({ has: page.locator('[data-cta-kind="INERT"]') })).toHaveText([
-      /APEC Innovation Challenge/,
-      /iHUB Incubator/,
-    ])
+    // ABOUT-PARTNERS-PRESENTATION-01: a row without a supplied URL is plain
+    // text — no arrow, no INERT control, no hover target.
+    const plain = eco.filter({ has: page.locator('[data-eco="static"]') })
+    await expect(plain).toHaveText([/APEC Innovation Challenge/, /iHUB Incubator/])
+    await expect(plain.locator('svg, a, [data-cta-kind="INERT"], [title]')).toHaveCount(0)
+    await expect(eco.locator('a')).toHaveCount(5)
   })
 
-  test('partner wall: illustration only, no network unit named as a partner, repeats hidden', async ({
+  test('no placeholder partner wall: no approved partner data, nothing illustrative shown', async ({
     page,
   }) => {
+    // ABOUT-PARTNERS-PRESENTATION-01 (DEC-THAO-ABOUT-D4: real partners await PO data).
     await page.goto('/about', { waitUntil: 'networkidle' })
-    const wall = page.locator('[data-section="partners"]')
-    await expect(wall).toContainText('Dữ liệu minh hoạ')
-    await expect(wall).not.toContainText('Chapter')
-    await expect(wall.locator('a')).toHaveCount(0)
-    for (const row of await wall.locator('ul').all()) {
-      const names = await row
-        .locator('li:not([aria-hidden="true"])')
-        .evaluateAll((e) => e.map((x) => x.textContent))
-      expect(new Set(names).size, 'visible names are unique').toBe(names.length)
-    }
+    await expect(page.locator('[data-section="partners"]')).toHaveCount(0)
+    const text = await page.locator('body').innerText()
+    for (const placeholder of [
+      'Dữ liệu minh hoạ',
+      'Doanh nghiệp A',
+      'Tập đoàn C',
+      'Đại học A',
+      'Hiệp hội B',
+      'Chương trình A',
+      'ĐỐI TÁC ĐỒNG HÀNH',
+    ])
+      expect(text, placeholder).not.toContain(placeholder)
   })
 })
 

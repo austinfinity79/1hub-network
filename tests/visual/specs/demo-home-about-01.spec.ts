@@ -320,7 +320,8 @@ test.describe('About HUB v2 (DM02–DM05)', () => {
     await expect(page.locator('[data-milestone]')).toHaveCount(6)
     await expect(page.getByRole('tab', { name: '2024', selected: true })).toHaveCount(1)
     await expect(page.locator('[data-section="ecosystem"] li')).toHaveCount(7)
-    await expect(page.locator('[data-section="partners"]')).toContainText('Dữ liệu minh hoạ')
+    // ABOUT-PARTNERS-PRESENTATION-01: the placeholder partner wall is not rendered.
+    await expect(page.locator('[data-section="partners"]')).toHaveCount(0)
   })
 })
 
@@ -618,13 +619,6 @@ test.describe('pixel QA 1440 × DPR1', () => {
           anchor: sec('activities'),
           refTop: 5937,
           rect: { x: 0, y: 6020, width: 1440, height: 500 },
-          gated: false,
-        },
-        {
-          name: '11-partners',
-          anchor: sec('partners'),
-          refTop: 6494,
-          rect: { x: 0, y: 6600, width: 1440, height: 470 },
           gated: false,
         },
         {

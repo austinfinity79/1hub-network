@@ -4,12 +4,7 @@ import type { AboutNetwork } from '@/lib/public/about-network'
 import { ECOSYSTEM_LINKS, FACEBOOK_URL, PUBLIC_ROUTES } from '@/lib/public/routes'
 import type { PublicShellData } from '@/lib/public/shell-data'
 
-import {
-  ArrowRight,
-  ArrowUpRight,
-  NOT_YET,
-  PublicAction,
-} from '@/components/public-shell/public-action'
+import { ArrowRight, ArrowUpRight, PublicAction } from '@/components/public-shell/public-action'
 import { PublicFooter } from '@/components/public-shell/public-footer'
 import { PublicHeader } from '@/components/public-shell/public-header'
 
@@ -39,8 +34,11 @@ import styles from './about.module.css'
  * (catalogue: 11 regional HUBs of 13 Chapters, 55 CLBs) wherever the frame's
  * sample numbers differ (DEMO-HOME-ABOUT-01 §4; SOT conflicts C1, C4). The
  * ecosystem renders the frame's 7-row visual list (DEMO-D11); the business
- * list stays open. The partner wall shows the frame's placeholders with a
- * visible "Dữ liệu minh hoạ" label (the DEC-H1-R2 precedent).
+ * list stays open. ABOUT-PARTNERS-PRESENTATION-01: no partner list is
+ * approved (DEC-THAO-ABOUT-D4 "Real partners await PO data"), so the frame's
+ * placeholder partner wall is not rendered; an ecosystem row without a
+ * supplied URL (iHUB Incubator, APEC Innovation Challenge; DEMO_SOT C2) is a
+ * plain row, with no arrow or click affordance.
  */
 
 const FOUNDED = 2021
@@ -90,46 +88,6 @@ const ECOSYSTEM: Array<{ label: string; name: string; text: string; href: string
     name: 'Vietnam’s National Ventures',
     text: 'Quỹ đầu tư mạo hiểm quốc gia',
     href: ECOSYSTEM_LINKS.vnv,
-  },
-]
-
-/** DM02 partner wall: the frame's placeholder names, shown as illustration only. */
-const PARTNER_ROWS: Array<{ label: string; names: string[] }> = [
-  {
-    label: 'HIỆP HỘI',
-    names: [
-      'Doanh nghiệp A',
-      'Doanh nghiệp B',
-      'Tập đoàn C',
-      'Công ty D',
-      'Doanh nghiệp E',
-      'Doanh nghiệp A',
-    ],
-  },
-  {
-    label: 'DOANH NGHIỆP',
-    names: [
-      'Hiệp hội B',
-      'Sở KH&CN',
-      // THAO-04: the frame's "Chapter Cần Thơ" / "Chapter Đà Nẵng" named network
-      // units (one not in the catalogue, one a member HUB) as partners.
-      'Hiệp hội C',
-      'Hiệp hội D',
-      'Chương trình A',
-      'Chương trình A',
-    ],
-  },
-  {
-    label: 'DOANH NGHIỆP',
-    names: [
-      'Đại học A',
-      'Đại học B',
-      'CLB Khởi nghiệp',
-      'Viện C',
-      'CLB Sáng tạo',
-      'Đại học A',
-      'Đại học B',
-    ],
   },
 ]
 
@@ -348,14 +306,23 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
           <ul className={styles.ecoList} role="list">
             {ECOSYSTEM.map((e) => (
               <li key={e.name}>
-                <PublicAction href={e.href} className={styles.ecoRow} label={e.name}>
-                  <span className={styles.ecoLabel}>{e.label}</span>
-                  <span className={styles.ecoName}>{e.name}</span>
-                  <span className={styles.ecoText}>{e.text}</span>
-                  <span className={styles.ecoArrow} aria-hidden="true">
-                    {e.href ? <ArrowUpRight /> : <ArrowRight />}
-                  </span>
-                </PublicAction>
+                {e.href ? (
+                  <PublicAction href={e.href} className={styles.ecoRow} label={e.name}>
+                    <span className={styles.ecoLabel}>{e.label}</span>
+                    <span className={styles.ecoName}>{e.name}</span>
+                    <span className={styles.ecoText}>{e.text}</span>
+                    <span className={styles.ecoArrow} aria-hidden="true">
+                      <ArrowUpRight />
+                    </span>
+                  </PublicAction>
+                ) : (
+                  // No URL supplied: plain text, nothing to click (no arrow, no hover).
+                  <div className={styles.ecoRow} data-eco="static">
+                    <span className={styles.ecoLabel}>{e.label}</span>
+                    <span className={styles.ecoName}>{e.name}</span>
+                    <span className={styles.ecoText}>{e.text}</span>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -405,38 +372,6 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
               </li>
             ))}
           </ul>
-        </section>
-
-        <section
-          className={styles.partners}
-          data-section="partners"
-          aria-labelledby="about-partners"
-        >
-          <p id="about-partners" className={styles.eyebrowRed}>
-            ĐỐI TÁC ĐỒNG HÀNH CÙNG CỘNG ĐỒNG HUB BUSINESS
-            <span className={styles.illustrative}>Dữ liệu minh hoạ</span>
-          </p>
-          <div className={styles.partnerWall}>
-            {PARTNER_ROWS.map((r, i) => (
-              <div key={`${r.label}-${i}`} className={styles.partnerRow}>
-                <p className={styles.partnerLabel}>{r.label}</p>
-                <ul role="list">
-                  {r.names.map((n, j) => (
-                    <li
-                      key={`${n}-${j}`}
-                      className={styles.partnerChip}
-                      title={NOT_YET}
-                      // The repeat the frame draws at the row end is decorative (DEC-H1-R2-D2).
-                      aria-hidden={r.names.indexOf(n) < j ? true : undefined}
-                    >
-                      <span aria-hidden="true" />
-                      {n}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
         </section>
       </section>
 
