@@ -1819,6 +1819,25 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-thao-dir-d5"></a>DEC-THAO-DIR-D5 | — | THAO-05 scope | One THAO-05 delivery, in order: records, shared discovery contract, DIR2, DIR0, DIR1, DIR3, integrated QA, STOP for audit | No deploy |
 | <a id="dec-thao-dir-d6"></a>DEC-THAO-DIR-D6 | DEMO-DIR2-01 `?tinh=<label>` | One location contract | `?quoc-gia=<COUNTRY slug>&tinh=<REGION slug>` (canonical vocabulary, REGION `metadata.country`). A region outside the chosen country, or an unknown slug, is a controlled empty state; `tinh` alone implies its country; legacy `tinh=<label>` is read once and rewritten | No invented geography; filters run on server-projected data only |
 
+## DEC-THAO-SP — Startup Profile v2, M3 production slice (THAO-06, PO, 07/10)
+
+<a id="dec-thao-sp"></a>**Status:** FROZEN 2026-10-07 (PO decisions on the THAO-06 preflight, task THAO-06-IMPLEMENT); implemented on `feat/thao-m3-startup-profile`. Preflight finding: the frozen system has no model for metrics, updates, follow, connect, recruitment, dataroom, investor roles or identity verification; DEMO-SP1-FOUNDER-01 shipped Tổng quan with a demo fixture only. These rows are the conflict record; everything not named stays as frozen.
+
+| ID | Approved for M3 | Boundaries / deferred | Schema |
+|---|---|---|---|
+| <a id="dec-thao-sp-d1"></a>DEC-THAO-SP-D1 Overview team | Guests see no real-person team names. A signed-in ACTIVE account sees the owner and ACTIVE members through the PROFILE_DISCOVERY projection at NETWORK_ONLY (name, role label). The demo ventures' fictional team and the founder allow-list stay as they are, never widened | No new public-person rule ([DEC-WF02-H3](#dec-wf02-h3) kept); no profile id on the page | none |
+| <a id="dec-thao-sp-d2"></a>DEC-THAO-SP-D2 Metrics v1 | A governed catalogue: vocabulary type `VENTURE_METRIC` (admin may relabel, reorder, archive; no item created at runtime). Per venture and metric one visibility, PUBLIC or PRIVATE (new metrics start PRIVATE). Values per quarter, append-only: a correction is a new row, the latest row of a quarter is current, earlier rows stay as history. Source MANUAL only. Written by the owner or an EDIT member, published directly, every write audited. PUBLIC metrics are read where the venture is visible; PRIVATE ones by the owner and EDIT members only | No Investor / GP / LP tier, no free-form metric, no import, no approval step (none is required by a frozen primitive) | new tables `venture_metrics`, `venture_metric_values`; new vocabulary type |
+| <a id="dec-thao-sp-d3"></a>DEC-THAO-SP-D3 Updates v1 | Manual plain-text posts by the owner or an EDIT member; an authorised editor may edit or delete (soft delete) any post of the venture. Visibility inherits the venture's. Audited | No triggers, AI, import, external sync or notifications. No post-moderation primitive exists for venture content, so admin removal is not built (debt) | new table `venture_updates` |
+| <a id="dec-thao-sp-d4"></a>DEC-THAO-SP-D4 Follow v1 | A signed-in ACTIVE account follows / unfollows a visible published startup; one row per pair; "Theo dõi" / "Đang theo dõi" for the follower only | Follower count and list never exposed; no notifications; no other target type | new table `venture_follows` |
+| <a id="dec-thao-sp-d5"></a>DEC-THAO-SP-D5 Connect | — | Deferred: no messaging, introduction, contact reveal or connection graph; CTA stays inert | none |
+| <a id="dec-thao-sp-d6"></a>DEC-THAO-SP-D6 Recruitment | — | Deferred: no job / opening model; CTA stays inert | none |
+| <a id="dec-thao-sp-d7"></a>DEC-THAO-SP-D7 Investor / GP / LP, Dataroom | — | Deferred: no role, AccessGrant, storage or legal workflow; dataroom CTA stays inert | none |
+| <a id="dec-thao-sp-d8"></a>DEC-THAO-SP-D8 Identity | "Đã xác thực danh tính qua 1Hub" stays DEMO-ONLY ([DEC-DEMO-SP1-D4](#dec-demo-sp1)) | Deferred: provider, proof, lifecycle, review, revocation, retention | none |
+| <a id="dec-thao-sp-d9"></a>DEC-THAO-SP-D9 Narrative | Tổng quan renders canonical fields only (name, summary, stage, region, domains, team); the narrative fixture stays limited to the demo ventures | No new owner-editable narrative or website fields | none |
+| <a id="dec-thao-sp-d10"></a>DEC-THAO-SP-D10 Visual | Chỉ số and Cập nhật reuse the DM10 / SP1 language (header, tabs, cards, type, spacing); the UPDATED DM11 / DM12 files are unavailable | No separate visual system | none |
+
+Security boundary for every row: the server resolves the startup by its public slug and checks the viewer (session, ACTIVE account, owner / EDIT membership) on each read and write; nothing is trusted from the client. Errors use the frozen envelope (API amendment A18).
+
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)
 
