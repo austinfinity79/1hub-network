@@ -1,0 +1,126 @@
+{
+  "INTERNAL_ONLY": "Provenance of the public pictures bound by PUBLIC-CONTENT-PUBLISH-01. Drive ids are never a public URL.",
+  "assets": [
+    {
+      "drive_file_id": "18FKQnaDIGzzMbtAkzJTRJYKAM3pdlTsP",
+      "evidence": "Ảnh homepage!D3 folder · \"01-APEC Innovation Challenge 2027 (1).png\"",
+      "public_bytes": 153690,
+      "public_file": "/home/content-v2/programme-apec-innovation-challenge.webp",
+      "public_sha256": "f3689760f3b457bc34336c409720b48bbcdfe87f2c8b2e658f5178c8689269cd",
+      "source_bytes": 2769829,
+      "source_sha256": "61d1262d1302654e0666ddabef48187467550907289faaaacc808f0809f2aeea"
+    },
+    {
+      "drive_file_id": "1y5AFQDMWd3fYj2-fKOFjfL8-_HIBof5p",
+      "evidence": "Ảnh homepage!D3 folder · \"02-vpbank-innovation-challenge_1920x1080.png\"",
+      "public_bytes": 57702,
+      "public_file": "/home/content-v2/programme-vpbank-innovation-challenge.webp",
+      "public_sha256": "2d9cdc7ef35282a9478fc4f870d3685b15f980d2300896fdcf221d223d8f6c6b",
+      "source_bytes": 1602788,
+      "source_sha256": "e80f3919ea3eed060f55c2ee14d64d84ee3afd5536b7e483ffc8634befc347a9"
+    },
+    {
+      "drive_file_id": "1H-qw0B__L5vN-y4iwkjkEQj90U2WSM8s",
+      "evidence": "Ảnh homepage!D3 folder · \"03-khoi nghiep cung kawai.jpg\"",
+      "public_bytes": 71908,
+      "public_file": "/home/content-v2/programme-khoi-nghiep-cung-kawai.webp",
+      "public_sha256": "8e4de1da23df0677c3347a9e8ddbf33d579f5d881fd901c4d0f020fdbe0f3184",
+      "source_bytes": 236109,
+      "source_sha256": "8293e3149b1600fc2b97e1e2e030643811dcbc00774228b4d0600628646f7d6a"
+    },
+    {
+      "drive_file_id": "17x3wjlcEhwbJ3db6ZeaAtwFcHXUgdRa-",
+      "evidence": "Ảnh homepage!D3 folder · \"04-agritech-innovation-challenge_1920x1080.png\"",
+      "public_bytes": 117104,
+      "public_file": "/home/content-v2/programme-agritech-innovation-challenge.webp",
+      "public_sha256": "bf43bfbf6596cb501b6f25e5963ff0ddba421eab5c2e5600495d8865da847355",
+      "source_bytes": 2190626,
+      "source_sha256": "bce14062a9080b9ce6e4ac1c8c890ba4b80d3d9519f1a8b0ebef687be687dd9a"
+    },
+    {
+      "drive_file_id": "1-A4I8CUr7dYPzZcLJyf0x3i6xDTzaTTN",
+      "evidence": "Ảnh homepage!C22 folder · \"Tin tức-01-đbscl.png\"",
+      "public_bytes": 87828,
+      "public_file": "/home/content-v2/news-01-dbscl.webp",
+      "public_sha256": "e758f5d2ab270f31fa4ec6c809fa6d3a56573b1d834b44ef3b585d32af954630",
+      "source_bytes": 2058613,
+      "source_sha256": "4ed42f7ce94d518453b1da87d96cbc14b07bf241750ea64ca5b6e77d5bae3a83"
+    },
+    {
+      "drive_file_id": "1dTfV7Gj4KWqE2Nw77p6N76D0wraTlDl1",
+      "evidence": "Ảnh homepage!C22 folder · \"Tin tức-02-Cong-bo-lap-HUBQN\"",
+      "public_bytes": 151662,
+      "public_file": "/home/content-v2/news-02-hub-quang-ninh.webp",
+      "public_sha256": "9e145895f01d0542b6e029af1d2c331580919beb7598b6bd30f9c794a30efec6",
+      "source_bytes": 7873273,
+      "source_sha256": "80864bf1c06f1444a842cc5523c3d17d96b8bf01230fb8604a833388e13f2da1"
+    },
+    {
+      "drive_file_id": "1v6-EWXvMtYfeZlzrOictUbCGWLaLupTX",
+      "evidence": "Ảnh homepage!C22 folder · \"Tin tức-03-iHUBVentures công bố.png\"",
+      "public_bytes": 115954,
+      "public_file": "/home/content-v2/news-03-ihub-ventures.webp",
+      "public_sha256": "d2d69c7826280d035590bb936511198ebcdfbf42472e6392f1172fbb066de843",
+      "source_bytes": 2129859,
+      "source_sha256": "2d386e18ffc9d9d9890a013b4ba035029610f5b15fcf7b102103b62ed5d1b000"
+    },
+    {
+      "drive_file_id": "1xFqRifnrnbKoGQ7bmWUmfstvSYvJLTDd",
+      "evidence": "Tổng hợp!F13 folder · \"About Hub - dấu ấn - 11/2025 - Cột mốc thể chế\"",
+      "public_bytes": 109030,
+      "public_file": "/about/milestone-2025-11.webp",
+      "public_sha256": "3549b27a754ceb83b5e4d27ef930f670c7b72321cda3d20af7f983f274440215",
+      "source_bytes": 284334,
+      "source_sha256": "bd2e43a0e6d72a074a327d683ebe390d472e647c97d6779df65a3c0904a95de2"
+    },
+    {
+      "drive_file_id": "11R69LFiJ-iDKGHPV5AoLlYCPPOPGOHLZ",
+      "evidence": "Thành viên HUB_Orgchart row \"Phạm Thành Long\" · \"Thanh Long.png\"",
+      "public_bytes": 14760,
+      "public_file": "/about/humans/pham-thanh-long.webp",
+      "public_sha256": "9e8676d2743f1752037d593d68b6cb7ed16c0af85ef837bb3aaf89abaa9afd98",
+      "source_bytes": 1650677,
+      "source_sha256": "bd757f10389c18e64073a5264328672e400148f50d71bb8931a3ad01a94b9938"
+    },
+    {
+      "drive_file_id": "1cdqWA-QCmSf2UYPuRfrDwedef3tJA3u8",
+      "evidence": "Thành viên HUB_Orgchart row \"Lê Mai Anh\" · \"Le Mai Anh.png\"",
+      "public_bytes": 17464,
+      "public_file": "/about/humans/le-mai-anh.webp",
+      "public_sha256": "d2ee5204f36d8037632ae9ce8a3571050195ce2870f8aae383969d565c632b7d",
+      "source_bytes": 1766089,
+      "source_sha256": "a1000fa793a70168ebfab2e9919e9ae91f1e9ac8c193fb3eea29502a0e1ffabf"
+    }
+  ],
+  "held": [
+    {
+      "item": "About_Hub_dau_an_.jpg (Tổng hợp!F13 folder)",
+      "reason": "no label: cannot be tied to a milestone"
+    },
+    {
+      "item": "refreshed 2021 / 2023 / 2024 / 2025 milestone photos",
+      "reason": "identical to the pictures already published"
+    },
+    {
+      "item": "30 refreshed portraits of people already pictured",
+      "reason": "identical to the pictures already published"
+    },
+    {
+      "item": "\"Phương Phương\", \"Trần T. Bích Ngọc\"",
+      "reason": "no exact org-chart name (\"Phương Kiều Phương\", \"Trần Thị Bích Ngọc\")"
+    },
+    {
+      "item": "8 org-chart people not on the About list",
+      "reason": "About people come from the About workbook; none added"
+    },
+    {
+      "item": "11 HUB Chapter logos + cover (Tổng hợp!F15)",
+      "reason": "no About slot for chapter logos"
+    },
+    {
+      "item": "17 HUB Business logos (Tổng hợp!F14, \"logo HanoiBA\")",
+      "reason": "no names or categories; target 10 vs 17 files"
+    }
+  ],
+  "source_workbook_sha256": "4b023eaf4499162170faf8379d1de01bff5453a6535d4d260b608332264c3bfc"
+}
