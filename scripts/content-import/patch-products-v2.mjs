@@ -60,6 +60,22 @@ const FROZEN_UPDATED = [
   'parkwave',
   'solemate',
 ]
+// PO sector decisions (DEMO-CONTENT-V2-PATCH-A final closure, 07/10): applied
+// only while the refreshed source sector is exactly the decided text, and only
+// to an existing ACTIVE DOMAIN item (never created). Drippy is recorded as
+// intentionally unmapped: no relation, no write.
+const PO_SECTOR_DECISIONS = {
+  '1hub-smart-campus-solution': {
+    source_sector: 'Công nghệ giáo dục',
+    domain: 'edtech',
+    state: 'MAPPED_BY_PO_DECISION',
+  },
+  drippy: {
+    source_sector: 'Công nghệ thời trang',
+    domain: null,
+    state: 'INTENTIONALLY_UNMAPPED_P0',
+  },
+}
 const TECH_EMAIL = 'hub-network-catalogue@catalogue.invalid'
 const ISOLATED_DBS = ['hubnetwork_demo_0710', 'hubnetwork_s1uat03']
 const REFUSED_DB = /^(hubnetwork_p0|onehub.*|.*prod.*|postgres|template\d)$/
@@ -280,8 +296,18 @@ async function main() {
     previous_status: 'ACTIVE',
     v1_source_rows: a.get(s).source.rows,
   })
+  const decisionOf = (s) => {
+    const d = PO_SECTOR_DECISIONS[s]
+    if (!d) return null
+    if (!b.get(s).sectors.includes(d.source_sector))
+      fail(`${s}: refreshed sector is no longer "${d.source_sector}"; PO decision does not apply`)
+    if (d.domain && !domains.some((x) => x.slug === d.domain))
+      fail(`DOMAIN ${d.domain} is not an ACTIVE item`)
+    return d
+  }
   const trace = (s) => {
     const r = b.get(s)
+    const decision = decisionOf(s)
     const changed = ['name', 'summary', 'stage', 'sectors'].filter(
       (k) => canon(cardOf(a.get(s))[k]) !== canon(cardOf(r)[k]),
     )
@@ -301,6 +327,7 @@ async function main() {
       logo: logo
         ? { status: 'ASSET_PENDING_RUNTIME', evidence: logo.workbook_cell, match: logo.match }
         : null,
+      ...(decision?.domain ? { sector_decision: decision } : {}),
     }
   }
 
@@ -326,7 +353,14 @@ async function main() {
           name: r.name.trim(),
           summary: r.short_description.trim(),
           stageId: stages.get(r.stage.code),
-          domainIds: domainIdsOf(r.sectors, domains),
+          domainIds: [
+            ...new Set([
+              ...domainIdsOf(r.sectors, domains),
+              ...(decisionOf(s)?.domain
+                ? [domains.find((x) => x.slug === decisionOf(s).domain).id]
+                : []),
+            ]),
+          ].sort(),
         }
         if (!card.stageId) fail(`stage ${r.stage.code} missing`)
         const want = trace(s)
@@ -393,6 +427,13 @@ async function main() {
               [p.row.id, d],
             )
         } else if (p.action === 'RESTORE' || p.action === 'UNTRACE') {
+          const decided = p.row.metadata?.v2_patch?.sector_decision?.domain
+          if (decided)
+            await db.query(
+              `DELETE FROM project_domains WHERE project_id = $1 AND vocabulary_item_id =
+                 (SELECT id FROM vocabulary_items WHERE type_code = 'DOMAIN' AND slug = $2)`,
+              [p.row.id, decided],
+            )
           await db.query(
             `UPDATE projects SET status = CASE WHEN $2 THEN (metadata->'v2_patch'->>'previous_status')::project_status ELSE status END,
                     metadata = metadata - 'v2_patch'

@@ -22,13 +22,13 @@ Final listed batch: 92 (+ 3 demo ventures = 95 on `/products`). `updated_at` kep
 ## Logos
 7 EXACT matches (workbook cell → Drive file, title agrees; [evidence](internal/product-logo-evidence.json)). **BOUND** by the fix: files verified against the recorded byte size and signature, stored in the existing media store, `projects.logo_asset_id` set ([bind-product-logos.mjs](../../../scripts/content-import/bind-product-logos.mjs), `metadata.logo_binding`). Runtime: branch `fix/public-product-logos` (`ab806e5`) serves the logo of a STARTUP · ACTIVE · PUBLIC venture to guests and draws it on the card and the startup page; every other asset keeps the session rules. 6 more linked logos (HubLock, Pictor Network, UCTalent, PSI 69, AIDIA, CarOn) are outside the safe set.
 
-## Sectors (PO decision required)
-| Product | Refreshed | Persisted | ACTIVE DOMAIN items | Deterministic map |
-|---|---|---|---|---|
-| 1Hub - Smart Campus Solution | "Công nghệ giáo dục" | no domain | `edtech` "Giáo dục", `govtech` "Công nghệ khu vực công" | NO (no exact / normalised match, no alias) |
-| Drippy | "Công nghệ thời trang" | no domain | same | NO (no candidate) |
+## Sectors (PO decision, locked 07/10)
+| Product | Refreshed sector | Decision | DOMAIN relation |
+|---|---|---|---|
+| 1Hub - Smart Campus Solution | "Công nghệ giáo dục" | MAPPED_BY_PO_DECISION | `edtech` "Giáo dục" (existing ACTIVE item; trace `v2_patch.sector_decision`) |
+| Drippy | "Công nghệ thời trang" | INTENTIONALLY_UNMAPPED_P0 | none: no canonical DOMAIN exists and the PO chose not to create one in P0 |
 
-`external-domain-map.ts` maps external feed category codes (EDU → `edtech`), not free text; using it here would be a semantic classification.
+The decisions live in `PO_SECTOR_DECISIONS` of the patch tool: applied only while the refreshed sector is exactly the decided text; no DOMAIN is created, no global alias exists. `external-domain-map.ts` (external feed codes) is not used for free text.
 
 ## Other domains (audit only, [v2-domain-audit.json](v2-domain-audit.json))
 | Domain | Finding | Ready |
