@@ -111,7 +111,8 @@ test.describe('structure and route contract (1440)', () => {
     await expect(logo).toHaveCount(1)
     await expect(logo).toHaveAttribute('href', '/')
     await expect(logo).toHaveAttribute('aria-label', 'HUB Network — trang chủ')
-    await expect(logo.locator('svg')).toHaveCount(1)
+    // HOME-LOGO-HOTFIX-01: the dark header draws the PO's approved logo image.
+    await expect(logo.locator('img[data-logo="brand"]')).toHaveCount(1)
     await logo.click()
     await expect(page).toHaveURL('/')
   })

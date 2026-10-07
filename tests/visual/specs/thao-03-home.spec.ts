@@ -78,33 +78,33 @@ const bottom = (page: Page, selector: string) =>
     .evaluate((el) => Math.round(el.getBoundingClientRect().bottom + window.scrollY))
 
 test.describe('V1 hero', () => {
+  // HOMEPAGE-HERO-SLIDER-01 supersedes V1's full-screen hero: header, then the
+  // 16:9 slide frame (the PO's stills), then the search cluster; the video mark
+  // is gone (video cancelled). The slider itself: hero-slider spec.
   for (const [width, height] of [
     [1440, 812],
     [1440, 900],
     [1728, 998],
   ] as const) {
-    test(`${width}×${height}: the hero fills the first screen, the cluster sits low, the strip starts after it`, async ({
+    test(`${width}×${height}: header, 16:9 frame, search cluster, then the strip`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height })
       await page.goto('/', { waitUntil: 'networkidle' })
-      const heroBottom = await bottom(page, sec('hero'))
-      expect(heroBottom).toBe(Math.max(812, height))
-      // The search + intents cluster: 73 px above the hero bottom, as in the frame.
-      const cluster = await page
-        .locator('[data-search="hero"]')
-        .evaluate((el) => Math.round(el.parentElement!.getBoundingClientRect().bottom + scrollY))
-      expect(
-        Math.abs(cluster - (heroBottom - 73)),
-        'cluster 73 px above the hero bottom',
-      ).toBeLessThanOrEqual(1)
-      expect(await bottom(page, '[data-cta="primary"]')).toBeLessThanOrEqual(heroBottom - 72)
-      // The programme strip begins after the hero, below the first screen.
-      expect(await top(page, sec('ticker'))).toBe(heroBottom)
-      expect(heroBottom).toBeGreaterThanOrEqual(height)
-      // Shared header overlay and the VIDEO · CHƯƠNG TRÌNH mark stay in the hero.
       await expect(page.locator(`${sec('hero')} header[data-shell="public"]`)).toHaveCount(1)
-      await expect(page.getByText('VIDEO · CHƯƠNG TRÌNH')).toBeVisible()
+      const frame = (await page
+        .locator('[data-section="hero-slider"] > div')
+        .first()
+        .boundingBox())!
+      expect(Math.round(frame.y)).toBe(64)
+      expect(Math.round(frame.width)).toBe(width)
+      expect(Math.abs(frame.height - (width * 9) / 16)).toBeLessThanOrEqual(1)
+      // The search cluster sits below the frame, never over the artwork.
+      expect(await top(page, '[data-search="hero"]')).toBeGreaterThan(frame.y + frame.height)
+      const heroBottom = await bottom(page, sec('hero'))
+      expect(await bottom(page, '[data-cta="primary"]')).toBeLessThan(heroBottom)
+      expect(await top(page, sec('ticker'))).toBe(heroBottom)
+      await expect(page.getByText('VIDEO · CHƯƠNG TRÌNH')).toHaveCount(0)
     })
   }
 
@@ -333,7 +333,9 @@ test.describe('pixel QA 1440 × 812 against the 07/10 frames (DM01H, DM01P)', ()
         { name: '02-hero-cluster', reference: { x: 200, y: 590, width: 1040, height: 170 }, dy: 0 },
         { name: '03-hero-base', reference: { x: 0, y: 760, width: 1440, height: 50 }, dy: 0 },
       ],
-      ['01-hero-top', '02-hero-cluster', '03-hero-base'],
+      // HOMEPAGE-HERO-SLIDER-01: the DM01H hero is superseded by the PO's slide
+      // stills; its segments are reported only (the hero-slider spec gates it).
+      [],
     )
     run(
       'THAO-03.DM01P',

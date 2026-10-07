@@ -44,9 +44,9 @@
 
 .hero {
   position: relative;
-  /* THAO-03-V1: the campaign hero fills the first screen (at least the 16:9
-     frame's 812 px), so the programme strip starts after it. */
-  height: max(812px, 100svh);
+  /* HOMEPAGE-HERO-SLIDER-01: header, the 16:9 slide frame, then the search
+     cluster; the height follows the content (no fixed first-screen height). */
+  padding-bottom: 56px;
   color: #efefef;
   background:
     radial-gradient(ellipse 330px 190px at 920px 390px, rgb(110 32 24 / 0.9), transparent 100%),
@@ -56,43 +56,71 @@
   border-bottom: 1px solid #837879;
 }
 
-.video {
+/* HOMEPAGE-HERO-SLIDER-01: one stable 16:9 frame; every slide is a complete
+   artwork shown whole (contain), stacked and cross-faded. */
+.heroSlider {
+  position: relative;
+}
+
+.heroFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #f7f1f0;
+}
+
+.heroSlide {
   position: absolute;
-  top: 96px;
-  right: 58px;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.heroSlideOn {
+  opacity: 1;
+}
+
+.heroSlide img {
+  object-fit: contain;
+}
+
+.heroControls {
   display: flex;
   align-items: center;
-  gap: 13px;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 20px;
 }
 
-.videoLabel {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  color: #dcaaa1;
-}
-
-.videoPause {
+.heroArrow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   color: #ffffff;
+  background: none;
   border: 1px solid rgb(255 255 255 / 0.7);
   border-radius: 50%;
+  cursor: pointer;
+}
+
+.heroCount {
+  min-width: 72px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-align: center;
+  color: #dcaaa1;
 }
 
 .heroSearch {
-  position: absolute;
-  /* THAO-03-V1: anchored to the hero bottom (609 px from the top in the
-     812 px frame), so a taller hero keeps the cluster low. */
-  bottom: 73px;
-  left: 50%;
+  /* HOMEPAGE-HERO-SLIDER-01: below the slide frame, never over the artwork. */
   width: 980px;
   max-width: calc(100% - 40px);
-  transform: translateX(-50%);
+  margin: 28px auto 0;
 }
 
 .search {
@@ -260,6 +288,10 @@
 @media (prefers-reduced-motion: reduce) {
   .tickerTrack {
     animation: none;
+  }
+
+  .heroSlide {
+    transition: none;
   }
 }
 
@@ -1149,24 +1181,13 @@
 
 @media (max-width: 1023px) {
   .hero {
-    height: auto;
-    min-height: 640px;
     padding-bottom: 48px;
   }
 
-  .video {
-    top: 84px;
-    right: 24px;
-  }
-
   .heroSearch {
-    position: relative;
-    top: auto;
-    left: auto;
     width: auto;
     max-width: none;
-    margin: 360px 24px 0;
-    transform: none;
+    margin: 24px 24px 0;
   }
 
   .highlights,
@@ -1231,12 +1252,12 @@
 }
 
 @media (max-width: 720px) {
-  .hero {
-    min-height: 600px;
+  .heroControls {
+    margin-top: 14px;
   }
 
   .heroSearch {
-    margin: 300px 16px 0;
+    margin: 20px 16px 0;
   }
 
   .search {

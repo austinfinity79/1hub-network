@@ -16,6 +16,7 @@ import {
   PROGRAMME_FILTERS,
   PROGRAMME_UPDATES,
 } from './home-content'
+import { HeroSlider } from './hero-slider'
 import { InvestorCarousel, ProductGrid, SectorList } from './home-products'
 import { HomeSearch } from './home-search'
 import styles from './home.module.css'
@@ -42,14 +43,9 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
     >
       <section className={styles.hero} data-section="hero">
         <PublicHeader viewer={viewer} current="home" />
-        <div className={styles.video} aria-hidden="true">
-          <span className={styles.videoLabel}>VIDEO · CHƯƠNG TRÌNH</span>
-          <span className={styles.videoPause} title="Video chương trình — sắp có">
-            <svg viewBox="0 0 10 12" width="10" height="12">
-              <path d="M1 0h3v12H1zM6 0h3v12H6z" fill="currentColor" />
-            </svg>
-          </span>
-        </div>
+        {/* HOMEPAGE-HERO-SLIDER-01: the six approved stills replace the video
+            placeholder (video cancelled); the search cluster follows the frame. */}
+        <HeroSlider />
         <h1 className={styles.srOnly}>
           HUB Network — chương trình, sản phẩm và nhân tài đổi mới sáng tạo
         </h1>

@@ -479,7 +479,8 @@ test.describe('pixel QA 1440 × DPR1', () => {
           anchor: sec('hero'),
           refTop: 0,
           rect: { x: 0, y: 0, width: 1440, height: 811 },
-          gated: true,
+          // HOMEPAGE-HERO-SLIDER-01: superseded by the PO's slide stills; reported only.
+          gated: false,
         },
         {
           name: '02-ticker',

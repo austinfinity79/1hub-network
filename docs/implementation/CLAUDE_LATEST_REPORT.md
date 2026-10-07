@@ -1,20 +1,20 @@
 # Claude Task Report
 
 ## Task
-HOME-LOGO-HOTFIX-01 — the PO's approved white transparent logo in the dark public header, deployed to both domains. Report: [HOME-LOGO-HOTFIX-01](reports/HOME-LOGO-HOTFIX-01.md). Previous: [PUBLIC-CONTENT-PUBLISH-01](reports/PUBLIC-CONTENT-PUBLISH-01.md).
+HOMEPAGE-HERO-SLIDER-01 — the six approved hero stills as a 10 s static slider, deployed to both domains. Report: [HOMEPAGE-HERO-SLIDER-01](reports/HOMEPAGE-HERO-SLIDER-01.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE** (visual hotfix; full regression intentionally not run per PO). Light header keeps the drawn symbol until a dark variant is supplied. STOP.
+**PASS_WITH_EVIDENCE** (UI task; targeted validation). STOP.
 
 ## Tests / build
 | Gate | Result |
 |---|---|
 | format · lint · typecheck · build | PASS |
 | unit · DB | 466 / 466 · 885 / 885 |
-| Targeted | header slot, logo render, nav, mobile menu, console 0 (full regression not run, PO instruction) |
+| Targeted | hero-slider, home-logo, thao-03-home, thao-01-global-nav: 36 / 36 |
 
 ## Git
-- Branch: `fix/home-logo` (worktree `../1hub-network-home-logo`) → `main` (fast-forward).
+- Branch: `feat/homepage-hero-slider` (worktree `../1hub-network-hero-slider`) → `main` (fast-forward).
 - Implementation + report: one commit.
 - Remote: `origin` (GitHub, private). Push status: PASS (main).
 - Remote HEAD: `main` = the report commit.
@@ -24,4 +24,4 @@ HOME-LOGO-HOTFIX-01 — the PO's approved white transparent logo in the dark pub
 DEMO-CONTENT-QA. Not started.
 
 ## Related
-- [HOME-LOGO-HOTFIX-01](reports/HOME-LOGO-HOTFIX-01.md) · [P0_STATUS](P0_STATUS.md)
+- [HOMEPAGE-HERO-SLIDER-01](reports/HOMEPAGE-HERO-SLIDER-01.md) · [P0_STATUS](P0_STATUS.md)
