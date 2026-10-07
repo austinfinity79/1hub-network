@@ -4,6 +4,7 @@ import { startupOverview, type StartupOverview } from '@/lib/demo-0710/startup-o
 import { demoVenture } from '@/lib/demo-0710/ventures'
 import { listPublicStartups, type CanonicalStartupRow } from '@/lib/library/canonical-source'
 import type { StartupStage } from '@/lib/library/startup-adapter'
+import { assetUrl, isAssetId } from '@/lib/media/avatar-storage'
 import { canSeeDiscovery } from '@/lib/profile/projection'
 import { discoveryLevelsOf } from '@/lib/profile/visibility'
 
@@ -52,6 +53,8 @@ export type DirectoryStartup = {
   portfolio: string | null
   /** Search text: name, summary, domains, stage, place, demo state. */
   text: string
+  /** The current public logo (`/media/assets/:id`), else null: initials. */
+  logo: string | null
   /** Sort keys (ISO), "Hoạt động" and "Mới nhất". */
   updatedAt: string
   createdAt: string
@@ -65,6 +68,7 @@ type Meta = {
   updated_at: string
   region_slug: string | null
   country: string | null
+  logo_asset_id: string | null
 }
 
 function shape(row: CanonicalStartupRow, meta: Meta): DirectoryStartup {
@@ -95,6 +99,7 @@ function shape(row: CanonicalStartupRow, meta: Meta): DirectoryStartup {
       .filter(Boolean)
       .join(' ')
       .toLocaleLowerCase('vi'),
+    logo: isAssetId(meta.logo_asset_id) ? assetUrl(meta.logo_asset_id) : null,
     updatedAt: meta.updated_at,
     createdAt: meta.created_at,
     href: `${PUBLIC_ROUTES.products}/${meta.slug}`,
@@ -103,7 +108,7 @@ function shape(row: CanonicalStartupRow, meta: Meta): DirectoryStartup {
 
 async function metaOf(ids: string[]): Promise<Map<string, Meta>> {
   const rows = await query<Meta>(
-    `SELECT p.id::text, p.slug, p.created_at::text, p.updated_at::text,
+    `SELECT p.id::text, p.slug, p.created_at::text, p.updated_at::text, p.logo_asset_id,
             r.slug AS region_slug, r.metadata->>'country' AS country
        FROM projects p
        LEFT JOIN vocabulary_items r ON r.id = p.region_id AND r.type_code = 'REGION'

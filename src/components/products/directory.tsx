@@ -344,9 +344,17 @@ export function Directory({
               {results.slice(0, shown).map((s) => (
                 <li key={s.slug} className={styles.card} data-startup={s.slug}>
                   <div className={styles.cardHead}>
-                    <span className={styles.logo} aria-hidden="true">
-                      {cardMark(s.name)}
-                    </span>
+                    {s.logo ? (
+                      // The startup's public logo; initials when it has none.
+                      <span className={`${styles.logo} ${styles.logoImage}`} aria-hidden="true">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- public logo of the media route */}
+                        <img src={s.logo} alt="" width={52} height={52} data-logo="" />
+                      </span>
+                    ) : (
+                      <span className={styles.logo} aria-hidden="true">
+                        {cardMark(s.name)}
+                      </span>
+                    )}
                     <div className={styles.cardName}>
                       <h2>{s.name}</h2>
                       {s.region ? <p>{s.region.replace(/^TP\. /, '')}</p> : null}

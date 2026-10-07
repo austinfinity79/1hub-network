@@ -6,6 +6,7 @@ import { readSessionToken } from '@/lib/auth/session-cookie'
 import { resolveSession } from '@/lib/auth/sessions'
 import { query } from '@/lib/db/client'
 import { readAsset } from '@/lib/media/avatar-storage'
+import { isPublicProductLogo } from '@/lib/media/public-logo'
 import { discoveryLevelOf } from '@/lib/profile/visibility'
 
 /**
@@ -24,6 +25,8 @@ import { discoveryLevelOf } from '@/lib/profile/visibility'
  * - ADMIN-PROD-05: a feedback screenshot is served only to a feedback manager
  *   (`feedback:manage`) during its 90 days (PD-5) — never after, never to anyone
  *   else, its uploader included.
+ * - DEMO-CONTENT-V2-PATCH-A: the current logo of a published startup
+ *   (STARTUP · ACTIVE · PUBLIC) is public, guests included; nothing else is.
  */
 export const dynamic = 'force-dynamic'
 
@@ -43,9 +46,21 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const denied = new NextResponse(null, { status: 404 })
+  const id = (await params).id
+  // A published startup's logo is public; checked first, and only by its id.
+  if (await isPublicProductLogo(id)) {
+    const logo = await readAsset(id)
+    if (!logo) return denied
+    return new NextResponse(new Uint8Array(logo.bytes), {
+      headers: {
+        'Content-Type': logo.meta.content_type,
+        'Cache-Control': 'public, max-age=300',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    })
+  }
   const session = await resolveSession(readSessionToken(request.headers))
   if (!session) return denied
-  const id = (await params).id
   const asset = await readAsset(id)
   if (!asset) return denied
 

@@ -75,9 +75,17 @@ export function StartupFrame({
 
         <section className={styles.head} aria-labelledby="startup-name">
           <div className={styles.headTop}>
-            <span className={styles.logo} aria-hidden="true">
-              {initials(startup.name, 'first-two')}
-            </span>
+            {startup.logo ? (
+              // The startup's public logo; initials when it has none.
+              <span className={`${styles.logo} ${styles.logoImage}`} aria-hidden="true">
+                {/* eslint-disable-next-line @next/next/no-img-element -- public logo of the media route */}
+                <img src={startup.logo} alt="" width={72} height={72} data-logo="" />
+              </span>
+            ) : (
+              <span className={styles.logo} aria-hidden="true">
+                {initials(startup.name, 'first-two')}
+              </span>
+            )}
             <div className={styles.identity}>
               <div className={styles.nameRow}>
                 <h1 id="startup-name">{startup.name}</h1>

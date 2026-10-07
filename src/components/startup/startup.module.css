@@ -81,6 +81,19 @@
   border-radius: 14px;
 }
 
+.logoImage {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #ece7e7;
+}
+
+.logoImage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .identity {
   flex: 1;
   min-width: 0;
