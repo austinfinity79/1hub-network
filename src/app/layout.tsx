@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 import { FeedbackLauncher } from '@/components/feedback/feedback-launcher'
+import { RouteSkeleton } from '@/components/public-shell/route-skeleton'
 
 export const metadata: Metadata = {
   title: '1hub.network',
@@ -35,6 +36,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         {children}
+        {/* PAGE-TRANSITION-SKELETON-01: client navigations to the primary pages. */}
+        <RouteSkeleton />
         {/* S1-UAT-02 (FB-01): one "Góp ý" for every surface it is offered on. */}
         <FeedbackLauncher />
       </body>

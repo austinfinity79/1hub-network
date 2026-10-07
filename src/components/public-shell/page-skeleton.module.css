@@ -1,0 +1,620 @@
+/*
+ * PAGE-TRANSITION-SKELETON-01 — bones at the destination's first-screen
+ * geometry (measured live at 1440 / 390). Bones fade in after 100 ms (the
+ * client overlay after 80 ms), so a fast navigation never flickers; the
+ * shimmer is a compositor-only transform and stops under reduced motion.
+ */
+.page {
+  --bone: #e3dcdc;
+  --shine: rgb(255 255 255 / 0.6);
+  min-height: 100svh;
+  overflow-x: clip;
+  background: #efefef;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  opacity: 0;
+  animation: sk-in 120ms ease-out 80ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.dark {
+  --bone: rgb(255 255 255 / 0.09);
+  --shine: rgb(255 255 255 / 0.1);
+  background: #160102;
+}
+
+.bone {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--bone);
+  border-radius: 8px;
+  opacity: 0;
+  animation: sk-in 160ms ease-out 100ms forwards;
+}
+
+.bone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--shine), transparent);
+  transform: translateX(-100%);
+  animation: sk-shine 1.4s ease-in-out infinite;
+}
+
+@keyframes sk-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sk-shine {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bone {
+    opacity: 1;
+    animation: none;
+  }
+
+  .bone::after {
+    animation: none;
+  }
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.line {
+  width: 100%;
+  height: 14px;
+}
+
+.line:last-child {
+  width: 72%;
+}
+
+/* ------------------------------------------------------------ header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  height: 64px;
+  padding: 0 64px;
+}
+
+.headerLight {
+  background: #efefef;
+  border-bottom: 1px solid #ddd6d6;
+}
+
+.logo {
+  flex: none;
+  width: 33px;
+  height: 34px;
+  border-radius: 7px;
+}
+
+.nav {
+  display: flex;
+  gap: 34px;
+}
+
+.navItem {
+  width: 62px;
+  height: 12px;
+}
+
+.navEnd {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-left: auto;
+}
+
+.navCta {
+  width: 134px;
+  height: 40px;
+}
+
+/* ------------------------------------------------------------ shared pieces */
+.eyebrow {
+  width: 180px;
+  height: 12px;
+  margin-bottom: 24px;
+}
+
+.eyebrowCenter {
+  width: 120px;
+  height: 30px;
+  border-radius: 15px;
+}
+
+.titleLine {
+  height: 40px;
+}
+
+.bigLine {
+  height: 60px;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 11px;
+}
+
+.pill {
+  width: 140px;
+  height: 42px;
+  border-radius: 21px;
+}
+
+.pillWide {
+  width: 250px;
+  height: 42px;
+  border-radius: 21px;
+}
+
+.chip {
+  width: 92px;
+  height: 34px;
+  border-radius: 17px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.block {
+  height: 240px;
+  border-radius: 16px;
+}
+
+.railBlock {
+  height: 140px;
+  border-radius: 14px;
+}
+
+/* ------------------------------------------------------------ home (DM01 first screen) */
+.homeHero {
+  display: flex;
+  flex-direction: column;
+  height: clamp(560px, calc(100svh - 88px), 892px);
+  border-bottom: 1px solid #837879;
+}
+
+.homeCanvas {
+  --bone: #e3dcdc;
+  --shine: rgb(255 255 255 / 0.6);
+  position: relative;
+  flex: 1 1 auto;
+  background: #eeeeee;
+}
+
+.homeCopy {
+  position: absolute;
+  top: 18%;
+  left: 7.8%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 38%;
+}
+
+.homeArt {
+  position: absolute;
+  top: 10%;
+  right: 9%;
+  width: min(34vw, 500px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.homeFoot {
+  position: absolute;
+  right: 0;
+  bottom: 24px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 13px;
+}
+
+.search {
+  width: 980px;
+  max-width: calc(100% - 48px);
+  height: 75px;
+  border-radius: 38px;
+}
+
+.ticker {
+  display: flex;
+  align-items: center;
+  height: 88px;
+  padding: 0 24px;
+  border-bottom: 1px solid #837879;
+}
+
+.tickerLine {
+  width: 70%;
+  height: 40px;
+}
+
+/* ------------------------------------------------------------ about (DM02 dark head) */
+.aboutHero {
+  min-height: 100svh;
+}
+
+.aboutBody {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1312px;
+  margin: 0 auto;
+  padding: 120px 64px;
+}
+
+.aboutBody > .lines:first-of-type {
+  width: 70%;
+}
+
+.aboutBody > .lines:nth-of-type(2) {
+  width: 52%;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 64px;
+}
+
+.stat {
+  height: 72px;
+}
+
+/* ------------------------------------------------------------ directories (DM06 hero + rail + grid) */
+.dirHero {
+  height: 810px;
+  /* The directory hero's own glow (discovery.module.css .hero). */
+  background:
+    radial-gradient(ellipse 420px 230px at 50% 470px, rgb(120 12 18 / 0.85), transparent 100%),
+    radial-gradient(ellipse 620px 330px at 50% 450px, rgb(80 6 12 / 0.7), transparent 100%), #160102;
+}
+
+.dirHeroBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 168px 24px 0;
+}
+
+.dirEyebrow {
+  margin: 0;
+  padding: 6px 14px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #efefef;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 15px;
+}
+
+.dirTitle {
+  width: 520px;
+  max-width: 100%;
+  height: 72px;
+}
+
+.dirSearch {
+  width: 766px;
+  max-width: 100%;
+  height: 70px;
+  border-radius: 35px;
+}
+
+.dirBody {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 40px;
+  max-width: 1312px;
+  margin: 0 auto;
+  padding: 48px 64px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.card {
+  height: 428px;
+  border-radius: 20px;
+}
+
+/* ------------------------------------------------------------ startup detail (DM10) */
+.startup {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 37px 0 120px;
+}
+
+.back {
+  width: 92px;
+  height: 16px;
+}
+
+.startupHead {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-height: 300px;
+  margin-top: 26px;
+  padding: 33px 32px 32px;
+  background: #ffffff;
+  border-radius: 24px;
+}
+
+.startupId {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.startupLogo {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+}
+
+.startupName {
+  width: 420px;
+  max-width: 100%;
+  height: 40px;
+}
+
+.tabs {
+  display: flex;
+  gap: 24px;
+  margin-top: 33px;
+}
+
+.tab {
+  width: 72px;
+  height: 20px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 800px) 360px;
+  justify-content: space-between;
+  margin-top: 33px;
+}
+
+/* ------------------------------------------------------------ founder detail (DM13) */
+.founder {
+  display: grid;
+  grid-template-columns: minmax(0, 827px) 348px;
+  justify-content: space-between;
+  align-items: start;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 0 120px;
+}
+
+.founderHero {
+  display: block;
+  min-height: 708px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e6e1e1;
+  border-radius: 14px;
+}
+
+.founderCover {
+  display: block;
+  height: 208px;
+  background: linear-gradient(160deg, #8f2a20 0%, #5a040b 45%, #1d0103 100%);
+}
+
+.founderAvatar {
+  width: 152px;
+  height: 152px;
+  margin: -83px 0 0 32px;
+  border: 5px solid #ffffff;
+  border-radius: 50%;
+}
+
+.founderText {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px 32px;
+}
+
+/* ------------------------------------------------------------ narrow screens */
+@media (max-width: 1279px) {
+  .startup,
+  .founder {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .homeHero {
+    height: min(calc(64px + 56.25vw + 100px), calc(100svh - 88px));
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .dirBody {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 32px 24px;
+  }
+
+  .dirRail {
+    display: none;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .split,
+  .founder {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 720px) {
+  .header {
+    padding: 0 16px;
+  }
+
+  .navEnd .navItem {
+    display: none;
+  }
+
+  .navCta {
+    width: 28px;
+    height: 20px;
+  }
+
+  /* Phones: the artwork on top, the controls under it (as the hero does). */
+  .homeHero {
+    height: auto;
+  }
+
+  .homeCanvas {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .homeCopy {
+    display: none;
+  }
+
+  .homeArt {
+    position: static;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 0;
+  }
+
+  .homeFoot {
+    position: static;
+    padding: 68px 16px 20px;
+  }
+
+  .search {
+    max-width: 100%;
+    height: 117px;
+    border-radius: 24px;
+  }
+
+  .aboutBody {
+    padding: 48px 16px;
+  }
+
+  .aboutBody > .lines:first-of-type,
+  .aboutBody > .lines:nth-of-type(2) {
+    width: 100%;
+  }
+
+  .bigLine {
+    height: 36px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dirHero {
+    height: 780px;
+  }
+
+  .dirHeroBody {
+    padding-top: 64px;
+  }
+
+  .dirTitle {
+    height: 44px;
+  }
+
+  .dirSearch {
+    height: 110px;
+    border-radius: 24px;
+  }
+
+  .dirBody {
+    padding: 24px 16px;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .startup,
+  .founder {
+    padding: 16px;
+  }
+
+  .startupHead {
+    min-height: 586px;
+    padding: 24px 18px;
+  }
+
+  .founderHero {
+    min-height: 817px;
+  }
+
+  .founderAvatar {
+    width: 112px;
+    height: 112px;
+    margin: -60px 0 0 18px;
+  }
+
+  .founderText {
+    padding: 20px 18px;
+  }
+}

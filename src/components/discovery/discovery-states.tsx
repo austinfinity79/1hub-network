@@ -1,3 +1,5 @@
+import { PageSkeleton } from '@/components/public-shell/page-skeleton'
+
 import styles from './discovery.module.css'
 
 /**
@@ -7,17 +9,9 @@ import styles from './discovery.module.css'
  * answers 5xx for a failed read.
  */
 
+/** PAGE-TRANSITION-SKELETON-01: the shared directory skeleton (hero, rail, cards). */
 export function DiscoveryLoading({ eyebrow }: { eyebrow: string }) {
-  return (
-    <div className={styles.page} data-state="loading" aria-busy="true">
-      <section className={`${styles.hero} ${styles.heroPlain}`}>
-        <p className={styles.eyebrow}>{eyebrow}</p>
-        <p className={styles.title} role="status">
-          Đang tải…
-        </p>
-      </section>
-    </div>
-  )
+  return <PageSkeleton kind="directory" eyebrow={eyebrow} />
 }
 
 export function DiscoveryError({ noun, retryHref }: { noun: string; retryHref: string }) {
