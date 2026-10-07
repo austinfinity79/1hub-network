@@ -20,7 +20,15 @@ DEMO-CONTENT-V2-PATCH-A — incremental patch of the live v1 catalogue batch fro
 Final listed batch: 92 (+ 3 demo ventures = 95 on `/products`). `updated_at` kept, so Tracely stays on page 1.
 
 ## Logos
-7 EXACT matches (workbook cell → Drive file, title agrees; [evidence](internal/product-logo-evidence.json)). **ASSET_PENDING_RUNTIME**: no public surface renders `logo_asset_id` (cards, startup frame and homepage draw initials) and `/media/assets` answers 404 to guests, so ingesting would publish nothing. Needs a separate runtime task (public logo serving and rendering). 6 more linked logos (HubLock, Pictor Network, UCTalent, PSI 69, AIDIA, CarOn) are outside the safe set.
+7 EXACT matches (workbook cell → Drive file, title agrees; [evidence](internal/product-logo-evidence.json)). **BOUND** by the fix: files verified against the recorded byte size and signature, stored in the existing media store, `projects.logo_asset_id` set ([bind-product-logos.mjs](../../../scripts/content-import/bind-product-logos.mjs), `metadata.logo_binding`). Runtime: branch `fix/public-product-logos` (`ab806e5`) serves the logo of a STARTUP · ACTIVE · PUBLIC venture to guests and draws it on the card and the startup page; every other asset keeps the session rules. 6 more linked logos (HubLock, Pictor Network, UCTalent, PSI 69, AIDIA, CarOn) are outside the safe set.
+
+## Sectors (PO decision required)
+| Product | Refreshed | Persisted | ACTIVE DOMAIN items | Deterministic map |
+|---|---|---|---|---|
+| 1Hub - Smart Campus Solution | "Công nghệ giáo dục" | no domain | `edtech` "Giáo dục", `govtech` "Công nghệ khu vực công" | NO (no exact / normalised match, no alias) |
+| Drippy | "Công nghệ thời trang" | no domain | same | NO (no candidate) |
+
+`external-domain-map.ts` maps external feed category codes (EDU → `edtech`), not free text; using it here would be a semantic classification.
 
 ## Other domains (audit only, [v2-domain-audit.json](v2-domain-audit.json))
 | Domain | Finding | Ready |
