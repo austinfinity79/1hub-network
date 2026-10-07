@@ -1,43 +1,32 @@
 # Claude Task Report
 
 ## Task
-THAO-04 — About HUB v2, production logic / data closure (milestone THAO-M1). Report: [THAO-04](reports/THAO-04.md). Decisions: [DEC-THAO-ABOUT](../decisions/DECISION_LOG.md#dec-thao-about).
+THAO-05 — DIR0–DIR3 discovery, production closure (milestone THAO-M2). Report: [THAO-05](reports/THAO-05.md). Decisions: [DEC-THAO-DIR](../decisions/DECISION_LOG.md#dec-thao-dir).
 
 ## Verdict
 **PASS_WITH_EVIDENCE.**
-- Counts, unit names and CLBs from the catalogue; people from the S1-UAT-08A workbook; 7 conflicts recorded.
-- Every Chapter / CLB named on /about links to its public page; partner links verified.
-- Hà Nội marker clickable again in the Thế giới view; no UI redesign.
+- `/programmes` (public list), `/problems` (static dataset), `/products` (shared contract), `/talents` (guest gate, member NETWORK_ONLY).
+- Chương trình, cuộc thi and Nhân tài nav active; Sự kiện and Tin tức stay labels.
 - Not merged, not deployed. STOP.
-
-## Files changed
-- `src/components/about/about.tsx`, `about-humans.tsx`, `about-map.tsx`, `about-hubs.ts`, `about.module.css`
-- Tests:
-  - `thao-04-about.spec.ts` (new)
-  - `about-hubs.test.ts`
-  - `demo-qa-vertical-flow.spec.ts` (QA-B-04 expected-failure mark retired)
-- Docs: DECISION_LOG, P0_STATUS, the report, this file
 
 ## Tests / build
 | Gate | Result |
 |---|---|
 | format · lint · typecheck · build | PASS |
-| unit | 459 / 459 |
-| thao-04-about | 9 / 9 |
-| Protected slice | 14 specs, 176 / 176 |
+| unit · DB | 466 / 466 · 873 / 873 |
+| thao-05-discovery | 20 / 20 |
+| Full regression | 1386 tests: 1349 PASS, 29 SKIP, 8 FAIL → rerun of the 7 specs 203 / 203 |
 | UAT L1–L2 | 19 / 19 |
 
 ## Git
-- Branch: `feat/thao-m1-public-experience` (worktree `../1hub-network-thao-m1`); base `af51e42`.
-- Implementation commit / report commit: the THAO-04 commit (one commit).
-- Remote: `origin` (GitHub).
-- Push status: NOT RUN (milestone rule: no push).
+- Branch: `feat/thao-m2-discovery` (worktree `../1hub-network-thao-m2`); base `547e174`.
+- Commits: `3577bed` (decision records) and the THAO-05 implementation / report commit.
+- Remote: `origin` (GitHub). Push status: NOT RUN (no push authorised).
 - Remote HEAD: branch not on the remote.
-- Working tree: clean after commit.
-- Main changed: NO.
+- Working tree: clean after commit. Main changed: NO.
 
 ## Recommended next task
-THAO-M1 QA / deploy decision. Not started.
+THAO-M2-QA. Not started.
 
 ## Related
-- [THAO-04](reports/THAO-04.md) · [P0_STATUS](P0_STATUS.md)
+- [THAO-05](reports/THAO-05.md) · [P0_STATUS](P0_STATUS.md)

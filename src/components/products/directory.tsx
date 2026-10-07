@@ -1,46 +1,55 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 
-import type { DirectoryPlace, DirectoryStartup } from '@/lib/public/directory-data'
+import type { DirectoryStartup } from '@/lib/public/directory-data'
+import {
+  NO_LOCATION,
+  PARAM,
+  matchesLocation,
+  writeLocation,
+  type Location,
+  type Places,
+} from '@/lib/public/discovery-query'
+import { PRODUCT_SORTS, type ProductSort } from '@/lib/public/discovery-sorts'
+import { readProductView, type ProductView } from '@/lib/public/discovery-views'
 import type { StartupStage } from '@/lib/library/startup-adapter'
 
+import {
+  ActiveFilters,
+  CheckOption,
+  EmptyState,
+  LocationGroup,
+  MoreButton,
+  SortSelect,
+  locationLabel,
+  useAddress,
+  type ActiveFilter,
+  useAddressView,
+} from '@/components/discovery/discovery-parts'
+import styles from '@/components/discovery/discovery.module.css'
 import { PublicAction } from '@/components/public-shell/public-action'
-
-import styles from './directory.module.css'
 
 const PLACEHOLDER = 'Tìm theo tên sản phẩm, lĩnh vực hoặc nhà sáng lập...'
 const PLACEHOLDER_SHORT = 'Tìm theo tên sản phẩm, lĩnh vực...'
 
 /**
- * DEMO-DIR2-01 — DM08 "Sản phẩm" directory body: hero count, search and quick
- * chips, the filter rail (Lĩnh vực · Giai đoạn · Khu vực), active filters,
- * sort, cards and "Xem thêm". Everything filters the canonical published
- * startups the server passed in; the state is mirrored in the address
- * (`?q=`, `?linh-vuc=`, `?giai-doan=`, `?tinh=`) so a view can be shared and
- * the homepage search lands here. Deterministic: the same inputs give the
- * same list. No ranking or recommendation.
+ * DEMO-DIR2-01 / THAO-05 — DM08 "Sản phẩm" directory body: hero count, search
+ * and quick chips, the filter rail (Lĩnh vực · Giai đoạn · Khu vực), active
+ * filters, sort, cards and "Xem thêm". Everything filters the canonical
+ * published startups the server passed in; the state is mirrored in the
+ * address (`?q=`, `?linh-vuc=`, `?giai-doan=`, `?quoc-gia=`, `?tinh=`,
+ * `?sap-xep=`, DEC-THAO-DIR) so a view can be refreshed, shared and reached
+ * with Back. Deterministic: the same inputs give the same list. No ranking or
+ * recommendation.
  */
 
 const PAGE = 9
 
 const QUICK = ['Đang gọi vốn', 'Tìm pilot', 'Logistics', 'AgriTech', 'AI'] as const
 
-type Sort = 'activity' | 'newest' | 'name'
-const SORTS: Array<{ key: Sort; label: string }> = [
-  { key: 'activity', label: 'Hoạt động' },
-  { key: 'newest', label: 'Mới nhất' },
-  { key: 'name', label: 'Tên A–Z' },
-]
-
-export type DirectoryInitial = {
-  q: string
-  domains: string[]
-  stages: StartupStage[]
-  province: string | null
-}
+export type DirectoryInitial = ProductView
 
 const norm = (s: string) => s.trim().toLocaleLowerCase('vi')
 
@@ -55,28 +64,22 @@ function cardMark(name: string): string {
   return caps.length >= 2 ? caps.slice(0, 2).join('') : name.slice(0, 2)
 }
 
-function Check({ on }: { on: boolean }) {
-  return <span className={`${styles.box} ${on ? styles.boxOn : ''}`} aria-hidden="true" />
-}
-
 export function Directory({
   startups,
-  provinces,
-  countries,
+  places,
   stageShort,
   stageOrder,
   guest,
   initial,
 }: {
   startups: DirectoryStartup[]
-  provinces: DirectoryPlace[]
-  countries: DirectoryPlace[]
+  places: Places
   stageShort: Record<StartupStage, string>
   stageOrder: StartupStage[]
   guest: boolean
   initial: DirectoryInitial
 }) {
-  const router = useRouter()
+  const address = useAddress('/products')
   const [draft, setDraft] = useState(initial.q)
   // QA-B-06: below 1024 px the DM08 placeholder does not fit the field; a
   // shorter one is set after hydration (same first render on server and client).
@@ -91,11 +94,8 @@ export function Directory({
   const [q, setQ] = useState(initial.q)
   const [domains, setDomains] = useState<string[]>(initial.domains)
   const [stages, setStages] = useState<StartupStage[]>(initial.stages)
-  const [vietnam, setVietnam] = useState(Boolean(initial.province))
-  const [abroad, setAbroad] = useState(false)
-  const [province, setProvince] = useState<string | null>(initial.province)
-  const [country, setCountry] = useState<string | null>(null)
-  const [sort, setSort] = useState<Sort>('activity')
+  const [location, setLocation] = useState<Location>(initial.location)
+  const [sort, setSort] = useState<ProductSort>(initial.sort)
   const [shown, setShown] = useState(PAGE)
 
   const domainList = useMemo(
@@ -105,19 +105,41 @@ export function Directory({
         .sort((a, b) => b.n - a.n || a.d.localeCompare(b.d, 'vi')),
     [startups],
   )
-  const regionLabels = new Set(provinces.map((p) => p.label))
-  const inVietnam = (s: DirectoryStartup) => Boolean(s.region && regionLabels.has(s.region))
+  const placed = useMemo(
+    () => startups.map((s) => ({ country: s.country, region: s.regionSlug })),
+    [startups],
+  )
+
+  useAddressView(
+    initial,
+    (p) => readProductView(p, { domains: domainList.map((x) => x.d), stages: stageOrder, places }),
+    (v) => {
+      setDraft(v.q)
+      setQ(v.q)
+      setDomains(v.domains)
+      setStages(v.stages)
+      setLocation(v.location)
+      setSort(v.sort)
+    },
+  )
 
   function sync(next: Partial<DirectoryInitial>) {
-    const state = { q, domains, stages, province, ...next }
+    const state = { q, domains, stages, location, sort, ...next }
     const params = new URLSearchParams()
-    if (state.q) params.set('q', state.q)
+    if (state.q) params.set(PARAM.q, state.q)
     for (const d of state.domains) params.append('linh-vuc', d)
     for (const s of state.stages) params.append('giai-doan', s)
-    if (state.province) params.set('tinh', state.province)
-    const query = params.toString()
-    router.replace(query ? `/products?${query}` : '/products', { scroll: false })
+    if (!state.location.invalid) writeLocation(params, state.location)
+    if (state.sort !== 'hoat-dong') params.set(PARAM.sort, state.sort)
+    address(params)
   }
+
+  // A legacy `?tinh=<label>` (DEMO-DIR2-01) arrives normalised: rewrite the
+  // address once with the canonical slugs.
+  useEffect(() => {
+    if (initial.location.region && !initial.location.invalid) sync({})
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
+  }, [])
 
   const results = useMemo(() => {
     const terms = norm(q).split(/\s+/).filter(Boolean)
@@ -126,22 +148,19 @@ export function Directory({
         terms.every((t) => s.text.includes(t)) &&
         (!domains.length || domains.some((d) => s.domains.includes(d))) &&
         (!stages.length || (s.stage !== null && stages.includes(s.stage))) &&
-        (!vietnam || inVietnam(s)) &&
-        (!vietnam || !province || s.region === province) &&
-        // A canonical venture keeps a Vietnamese province only: none is abroad yet.
-        !abroad,
+        matchesLocation(location, { country: s.country, region: s.regionSlug }),
     )
-    const by: Record<Sort, (a: DirectoryStartup, b: DirectoryStartup) => number> = {
-      activity: (a, b) =>
+    const by: Record<ProductSort, (a: DirectoryStartup, b: DirectoryStartup) => number> = {
+      'hoat-dong': (a, b) =>
         b.updatedAt.localeCompare(a.updatedAt) || a.name.localeCompare(b.name, 'vi'),
-      newest: (a, b) =>
+      'moi-nhat': (a, b) =>
         b.createdAt.localeCompare(a.createdAt) || a.name.localeCompare(b.name, 'vi'),
-      name: (a, b) => a.name.localeCompare(b.name, 'vi'),
+      'ten-a-z': (a, b) => a.name.localeCompare(b.name, 'vi') || a.slug.localeCompare(b.slug),
     }
     return [...list].sort(by[sort])
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- inVietnam derives from provinces
-  }, [startups, q, domains, stages, vietnam, abroad, province, sort, provinces])
+  }, [startups, q, domains, stages, location, sort])
 
+  // DEMO STATE ONLY counters: only the demo ventures carry these states.
   const fundraising = startups.filter((s) => s.fundraising).length
   const paying = startups.filter((s) => s.payingCustomers).length
   const portfolio = startups.filter((s) => s.portfolio === 'iHUB Ventures').length
@@ -173,20 +192,23 @@ export function Directory({
     setShown(PAGE)
     sync({ stages: next })
   }
+  const place = (next: Location) => {
+    setLocation(next)
+    setShown(PAGE)
+    sync({ location: next })
+  }
   const clearAll = () => {
     setDraft('')
     setQ('')
     setDomains([])
     setStages([])
-    setVietnam(false)
-    setAbroad(false)
-    setProvince(null)
-    setCountry(null)
+    setLocation(NO_LOCATION)
     setShown(PAGE)
-    sync({ q: '', domains: [], stages: [], province: null })
+    sync({ q: '', domains: [], stages: [], location: NO_LOCATION })
   }
 
-  const active: Array<{ key: string; label: string; remove: () => void }> = [
+  const where = locationLabel(places, location)
+  const active: ActiveFilter[] = [
     ...(q
       ? [
           {
@@ -202,18 +224,7 @@ export function Directory({
       : []),
     ...domains.map((d) => ({ key: `d-${d}`, label: d, remove: () => toggleDomain(d) })),
     ...stages.map((s) => ({ key: `s-${s}`, label: stageShort[s], remove: () => toggleStage(s) })),
-    ...(vietnam && province
-      ? [
-          {
-            key: 'p',
-            label: province,
-            remove: () => {
-              setProvince(null)
-              sync({ province: null })
-            },
-          },
-        ]
-      : []),
+    ...(where ? [{ key: 'p', label: where, remove: () => place(NO_LOCATION) }] : []),
   ]
 
   return (
@@ -275,140 +286,54 @@ export function Directory({
           <fieldset className={styles.group}>
             <legend>LĨNH VỰC</legend>
             {domainList.map(({ d, n }) => (
-              <label key={d} className={styles.option}>
-                <input
-                  type="checkbox"
-                  checked={domains.includes(d)}
-                  onChange={() => toggleDomain(d)}
-                />
-                <Check on={domains.includes(d)} />
-                <span className={styles.optionLabel}>{d}</span>
-                <span className={styles.optionCount}>{n}</span>
-              </label>
+              <CheckOption
+                key={d}
+                label={d}
+                count={n}
+                checked={domains.includes(d)}
+                onChange={() => toggleDomain(d)}
+              />
             ))}
           </fieldset>
           <fieldset className={styles.group}>
             <legend>GIAI ĐOẠN</legend>
             {stageOrder.map((s) => (
-              <label key={s} className={styles.option}>
-                <input
-                  type="checkbox"
-                  checked={stages.includes(s)}
-                  onChange={() => toggleStage(s)}
-                />
-                <Check on={stages.includes(s)} />
-                <span className={styles.optionLabel}>{stageShort[s]}</span>
-                <span className={styles.optionCount}>
-                  {startups.filter((x) => x.stage === s).length}
-                </span>
-              </label>
+              <CheckOption
+                key={s}
+                label={stageShort[s]}
+                count={startups.filter((x) => x.stage === s).length}
+                checked={stages.includes(s)}
+                onChange={() => toggleStage(s)}
+              />
             ))}
           </fieldset>
-          <fieldset className={styles.group}>
-            <legend>KHU VỰC</legend>
-            <label className={styles.option}>
-              <input
-                type="checkbox"
-                checked={vietnam}
-                onChange={() => {
-                  setVietnam((v) => !v)
-                  setProvince(null)
-                  sync({ province: null })
-                }}
-              />
-              <Check on={vietnam} />
-              <span className={styles.optionLabel}>Việt Nam</span>
-              <span className={styles.optionCount}>{startups.filter(inVietnam).length}</span>
-            </label>
-            <label className={styles.select}>
-              <span>Tỉnh/thành:</span>
-              <select
-                value={province ?? ''}
-                disabled={!vietnam}
-                onChange={(e) => {
-                  const value = e.target.value || null
-                  setProvince(value)
-                  sync({ province: value })
-                }}
-              >
-                <option value="">Tất cả</option>
-                {provinces.map((p) => (
-                  <option key={p.slug} value={p.label}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={styles.option}>
-              <input type="checkbox" checked={abroad} onChange={() => setAbroad((v) => !v)} />
-              <Check on={abroad} />
-              <span className={styles.optionLabel}>Quốc tế</span>
-              <span className={styles.optionCount}>0</span>
-            </label>
-            <label className={styles.select}>
-              <span>Quốc gia:</span>
-              <select
-                value={country ?? ''}
-                disabled={!abroad}
-                onChange={(e) => setCountry(e.target.value || null)}
-              >
-                <option value="">Tất cả</option>
-                {countries.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </fieldset>
+          <LocationGroup places={places} rows={placed} value={location} onChange={place} />
         </aside>
 
         <div className={styles.results}>
           <div className={styles.bar}>
-            <div className={styles.active} aria-live="polite">
-              <span>Đang lọc:</span>
-              {active.length ? (
-                <>
-                  {active.map((a) => (
-                    <button
-                      key={a.key}
-                      type="button"
-                      className={styles.activeChip}
-                      onClick={a.remove}
-                      aria-label={`Bỏ lọc ${a.label}`}
-                    >
-                      {a.label} <span aria-hidden="true">×</span>
-                    </button>
-                  ))}
-                  <button type="button" className={styles.clear} onClick={clearAll}>
-                    Xoá tất cả
-                  </button>
-                </>
-              ) : (
-                <span className={styles.none}>không có</span>
-              )}
-            </div>
-            <label className={styles.sort}>
-              Sắp xếp:
-              <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-                {SORTS.map((s) => (
-                  <option key={s.key} value={s.key}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <ActiveFilters items={active} onClear={clearAll} />
+            <SortSelect
+              value={sort}
+              options={PRODUCT_SORTS}
+              onChange={(next) => {
+                setSort(next)
+                sync({ sort: next })
+              }}
+            />
           </div>
           <p className={styles.srCount} aria-live="polite">
             {results.length} sản phẩm
           </p>
           {results.length === 0 ? (
-            <div className={styles.empty} data-state="empty">
-              <p>Không có sản phẩm phù hợp với bộ lọc.</p>
-              <button type="button" className={styles.clear} onClick={clearAll}>
-                Xoá tất cả bộ lọc
-              </button>
-            </div>
+            <EmptyState
+              text={
+                location.invalid
+                  ? 'Khu vực không có trong danh mục, hoặc tỉnh/thành không thuộc quốc gia đã chọn.'
+                  : 'Không có sản phẩm phù hợp với bộ lọc.'
+              }
+              onClear={clearAll}
+            />
           ) : (
             <ul className={styles.grid} role="list">
               {results.slice(0, shown).map((s) => (
@@ -446,11 +371,11 @@ export function Directory({
               ))}
             </ul>
           )}
-          {results.length > shown ? (
-            <button type="button" className={styles.more} onClick={() => setShown((n) => n + PAGE)}>
-              Xem thêm {results.length - shown} sản phẩm
-            </button>
-          ) : null}
+          <MoreButton
+            hidden={results.length - shown}
+            noun="sản phẩm"
+            onMore={() => setShown((n) => n + PAGE)}
+          />
         </div>
       </div>
     </>

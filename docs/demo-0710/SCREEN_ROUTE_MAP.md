@@ -10,10 +10,10 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). Frozen by DEMO-SOT-00 (06/10/2026). The s
 | DM03 | About: HUB popup (HUB Đà Nẵng) | ABT1 map popup | `3. thẻ HUB.png` | `/about`, in-page dialog | MUST | new state |
 | DM04 | About: Humans of HUB, HUB Khu vực tab | ABT1 Humans of HUB | `4. ABT1 · trạng thái · … HUB Khu vực ….png` | `/about`, in-page tab | MUST | new state |
 | DM05 | About: Humans of HUB, Câu lạc bộ tab | ABT1 Humans of HUB | `5. ABT1 · trạng thái · … Câu lạc bộ.png` | `/about`, in-page tab | MUST | new state |
-| DM06 | Chương trình (programme / challenge directory) | DIR0 · Chương trình | `6. DIR2.1 · Chương trình, cuộc thi.png` | `/programmes` (reserved) | REFERENCE | not built |
+| DM06 | Chương trình (programme / challenge directory) | DIR0 · Chương trình | `6. DIR2.1 · Chương trình, cuộc thi.png` | `/programmes` | REFERENCE | built (THAO-05): public list only, DEC-THAO-DIR-D1 |
 | DM07 | Sự kiện (event directory) | EV2 v2 · Lịch sự kiện | `9. DIR2.2 - Sự kiện.png` | `/events` (reserved) | REFERENCE | not built |
 | DM08 | Sản phẩm (product / startup directory) | DIR2 · Sản phẩm | `7. DIR3 - SẢN PHẨM.png` | `/products` | MUST | built (DEMO-DIR2-01) |
-| DM09 | Nhân tài (talent directory) | DIR3 · Nhân tài | `8. DIR4 - NHÂN TÀI.png` | `/talents` (reserved) | REFERENCE / P1 | not built |
+| DM09 | Nhân tài (talent directory) | DIR3 · Nhân tài | `8. DIR4 - NHÂN TÀI.png` | `/talents` | REFERENCE / P1 | built (THAO-05): guest sign-in gate, member NETWORK_ONLY cards, DEC-THAO-DIR-D3 |
 | DM10 | Startup profile: Tổng quan | SP1 tab Tổng quan (SP1.24–27) | `10. SP1 hồ sơ sản phẩm.png` | `/products/[slug]` | MUST | built (DEMO-SP1-FOUNDER-01) |
 | DM11 | Startup profile: Chỉ số | SP1 tab Chỉ số (SP1.28–29) | **UPDATED** `13. SP Tab chỉ số.png` (PO latest; file pending, see [FIGMA_REFERENCE_MAP](FIGMA_REFERENCE_MAP.md)) | `/products/[slug]/metrics` | SHOULD (read-only) | not built: file missing (DEC-DEMO-SP1-D6) |
 | DM12 | Startup profile: Cập nhật | SP1 tab Cập nhật (SP1.30–31) | **UPDATED** `12. Tab cập nhật.png` (PO latest; file pending) | `/products/[slug]/updates` | SHOULD (read-only) | not built: file missing (DEC-DEMO-SP1-D6) |
@@ -25,7 +25,7 @@ SP1 mapping is locked by meaning (PO, 06/10): Tổng quan = file 10, Chỉ số 
 | Concept | Thảo | Figma | Frozen route |
 |---|---|---|---|
 | Chương trình | DIR0 | DIR2.1 | `/programmes` |
-| Bài toán | DIR1 | — | none in demo (`/library` keeps problems) |
+| Bài toán | DIR1 | — | `/problems` (THAO-05, static dataset, DEC-THAO-DIR-D2; `/library` keeps its tab) |
 | Sản phẩm | DIR2 | DIR3 | `/products` |
 | Nhân tài | DIR3 | DIR4 | `/talents` |
 | Sự kiện | EV2 | DIR2.2 | `/events` |
@@ -35,9 +35,9 @@ SP1 mapping is locked by meaning (PO, 06/10): Tổng quan = file 10, Chỉ số 
 |---|---|---|
 | Logo | `/` | functional |
 | Giới thiệu | `/about` | functional, direct link (no menu; THAO-01-FIX, DEC-THAO-NAV-D1) |
-| Chương trình ▾ → 2.1 / 2.2 | `/programmes` / `/events` once built; until then plain labels | no dead link (DEC-AIG-D1 pattern) |
+| Chương trình ▾ → 2.1 / 2.2 | 2.1 → `/programmes` (THAO-05); 2.2 `/events` once built, plain label until then | no dead link (DEC-AIG-D1 pattern) |
 | Sản phẩm | `/products` | functional; current-state underline |
-| Nhân tài | `/talents` once built; until then plain label | as above |
+| Nhân tài | `/talents` (THAO-05; a guest sees the sign-in gate) | DEC-THAO-DIR-D3 |
 | Tin tức | plain label | Thảo: "chưa hiện ra gì" |
 | VI \| EN | inert | EN content is not supplied |
 | Đăng nhập / Tạo tài khoản | `/auth` | functional (existing entry) |
@@ -49,6 +49,8 @@ SP1 mapping is locked by meaning (PO, 06/10): Tổng quan = file 10, Chỉ số 
 | `/`, `/about`, `/products` | full view | full view, signed-in header |
 | `/products/[slug]` (+ metrics / updates) | full view of PUBLIC + ACTIVE startups | same |
 | `/talents/[handle]` | demo allow-list only; any other handle or id → 404 | same |
+| `/programmes`, `/problems` | full view (THAO-05) | same; an eligible member also gets the apply entry |
+| `/talents` | sign-in gate only: no name, avatar, card or count | NETWORK_ONLY discovery cards; real people READ_ONLY |
 | Journey | the whole review journey runs as guest; no login is needed | — |
 
 Figma draws DM10–DM13 signed in. The guest header is the one drawn on DM01/DM02/DM08.

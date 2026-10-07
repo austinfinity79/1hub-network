@@ -20,7 +20,7 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). Nothing below is production-complete in t
 | Item | Note |
 |---|---|
 | Programme / challenge directory and detail, event directory and detail | DM06 / DM07 are reference only; routes reserved |
-| Talent directory | DM09 is reference / P1; it is built only if the PO promotes it |
+| Talent directory | Promoted by the PO on 07/10 (THAO-05, DEC-THAO-DIR-D3): `/talents` for signed-in members, a gate for guests |
 | Bài toán directory (DIR1), Tin tức, EN content | not supplied |
 | Recruitment overlay, FAQ, newsletter subscription, partner links | visual-only |
 | Owner editing on the public pages (SP1-OWN / SP1-EDIT, "+ Tạo sản phẩm") | hidden on the public view |

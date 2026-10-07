@@ -93,14 +93,18 @@ test.describe('contract and coverage', () => {
       await expect(link, label).toHaveAttribute('rel', 'noopener noreferrer')
     }
     await expect(two.getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute('href', '/products')
+    // THAO-05 (DEC-THAO-DIR): the programme list and the talent directory exist.
+    await expect(two.getByRole('link', { name: 'Chương trình' })).toHaveAttribute(
+      'href',
+      '/programmes',
+    )
+    await expect(two.getByRole('link', { name: 'Nhân tài' })).toHaveAttribute('href', '/talents')
     // READ_ONLY_APPROVED: no public screen yet (DEC-AIG-D1 / DEMO-D6).
-    for (const label of ['Chương trình', 'Nhân tài', 'Tin tức']) {
-      await expect(two.getByRole('link', { name: label }), label).toHaveCount(0)
-      await expect(two.getByText(label, { exact: true }), label).toHaveAttribute(
-        'data-nav-kind',
-        'LABEL',
-      )
-    }
+    await expect(two.getByRole('link', { name: 'Tin tức' })).toHaveCount(0)
+    await expect(two.getByText('Tin tức', { exact: true })).toHaveAttribute(
+      'data-nav-kind',
+      'LABEL',
+    )
     // Every internal footer link (legal included) resolves.
     const internal = await footer(page)
       .locator('a[href^="/"]')
@@ -130,7 +134,15 @@ test.describe('contract and coverage', () => {
       await page.keyboard.press('Tab')
     }
     expect(seen).toEqual(expected)
-    expect(seen.slice(0, 5)).toEqual(['Giới thiệu', 'iHUB Ventures', 'VNV', '1Hub', 'Sản phẩm'])
+    expect(seen.slice(0, 7)).toEqual([
+      'Giới thiệu',
+      'iHUB Ventures',
+      'VNV',
+      '1Hub',
+      'Chương trình',
+      'Sản phẩm',
+      'Nhân tài',
+    ])
   })
 })
 

@@ -22,7 +22,10 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 447px 447px 1fr;
+  /* THAO-05: the second link column keeps room for its labels near 1024 px
+     (it shrank to 57 px and "Chương trình" wrapped onto "Sản phẩm"); at
+     1440 px the columns are unchanged (447 · 447 · 418). */
+  grid-template-columns: minmax(0, 447px) minmax(0, 447px) minmax(180px, 1fr);
 }
 
 .name {

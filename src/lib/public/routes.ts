@@ -8,17 +8,19 @@
  * screen sets its route here, and every entry follows.
  */
 export type PublicRouteKey =
-  'home' | 'about' | 'products' | 'talents' | 'programmes' | 'events' | 'news'
+  'home' | 'about' | 'products' | 'talents' | 'programmes' | 'problems' | 'events' | 'news'
 
 export const PUBLIC_ROUTES: Readonly<Record<PublicRouteKey, string | null>> = {
   home: '/',
   about: '/about',
   /** DM08 Sản phẩm (DEMO-DIR2-01). */
   products: '/products',
-  /** DM09 Nhân tài (reference / P1). */
-  talents: null,
-  /** DM06 Chương trình, cuộc thi (reference). */
-  programmes: null,
+  /** DM09 Nhân tài (THAO-05, DEC-THAO-DIR-D3): a guest sees the sign-in gate. */
+  talents: '/talents',
+  /** DM06 Chương trình, cuộc thi (THAO-05, DEC-THAO-DIR-D1): the public list. */
+  programmes: '/programmes',
+  /** DIR1 Bài toán (THAO-05, DEC-THAO-DIR-D2): no nav entry; linked from /programmes. */
+  problems: '/problems',
   /** DM07 Sự kiện (reference). */
   events: null,
   /** Tin tức: no screen is supplied (Thảo, 06/10). */

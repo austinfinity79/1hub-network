@@ -1,4 +1,8 @@
 /*
+ * THAO-05 — the shared discovery layout of /programmes (DM06), /problems,
+ * /products (DM08) and /talents (DM09); the three frames share one hero, rail
+ * and card grid. Moved here from `products/directory.module.css`.
+ *
  * DEMO-DIR2-01 — Product / Startup directory, geometry from DM08 at 1440 px
  * (design-reference/final/demo-0710/DM08__product-directory__SOURCE.png,
  * 1440 × 2414): dark hero 0–809 (header included), filter rail 64–313,
@@ -524,6 +528,256 @@
   cursor: pointer;
 }
 
+/* ------------------------------------------------------------ THAO-05 shared states */
+
+/* Loading / guest-gate hero: the same band without search or counters. */
+.heroPlain {
+  height: 560px;
+}
+
+.gate {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #e3dddd;
+  border-radius: 20px;
+}
+
+.gate h2 {
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+.gate p {
+  margin-top: 12px !important;
+  font-size: 15px;
+  line-height: 22px;
+  color: #695859;
+}
+
+.gate .view {
+  width: 220px;
+  margin-top: 24px;
+}
+
+.crossLink {
+  color: #ffffff;
+  text-underline-offset: 3px;
+}
+
+/* ------------------------------------------------------------ DM06 programme card */
+
+.progCard {
+  display: flex;
+  flex-direction: column;
+  min-height: 428px;
+  padding: 20px;
+  color: #ffffff;
+  background: linear-gradient(180deg, #e2412e 0%, #8e1410 48%, #3b0508 100%);
+  border-radius: 20px;
+}
+
+.progCard[data-programme='sap-toi'] {
+  background: linear-gradient(180deg, #8e1d1a 0%, #5d0a0c 50%, #2a0305 100%);
+}
+
+.progCard[data-programme='da-ket-thuc'] {
+  background: linear-gradient(180deg, #6f2a2b 0%, #3f1213 55%, #1f0506 100%);
+}
+
+.progHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.progHost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.progHost span {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  background: rgb(255 255 255 / 0.25);
+  border-radius: 50%;
+}
+
+.progPhase {
+  flex: none;
+  padding: 3px 10px;
+  font-size: 12px;
+  background: rgb(0 0 0 / 0.25);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  border-radius: 12px;
+}
+
+.progName {
+  margin-top: auto !important;
+  padding-top: 120px;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 30px;
+}
+
+.progSummary {
+  margin-top: 10px !important;
+  font-size: 13px;
+  line-height: 19px;
+  color: #f2d3cf;
+}
+
+.progTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px !important;
+}
+
+.progTags li {
+  padding: 4px 10px;
+  font-size: 11px;
+  background: rgb(0 0 0 / 0.25);
+  border-radius: 12px;
+}
+
+.progCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 47px;
+  margin-top: 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  background: #ffffff;
+  border-radius: 24px;
+}
+
+/* ------------------------------------------------------------ DIR1 problem card */
+
+.card[data-problem] {
+  position: relative;
+  overflow: hidden;
+  padding-top: 34px;
+}
+
+/* The dataset's colour band (`bia_dai_mau_id` 1–6), across the card top. */
+.band {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 12px;
+  background: linear-gradient(90deg, #e2412e, #8e1410);
+}
+
+.band[data-cover='2'] {
+  background: linear-gradient(90deg, #f07a3a, #b23a12);
+}
+
+.band[data-cover='3'] {
+  background: linear-gradient(90deg, #8e1d1a, #3b0508);
+}
+
+.band[data-cover='4'] {
+  background: linear-gradient(90deg, #d9506b, #7e1530);
+}
+
+.band[data-cover='5'] {
+  background: linear-gradient(90deg, #6f2a2b, #2a0305);
+}
+
+.band[data-cover='6'] {
+  background: linear-gradient(90deg, #fc523c, #e2412e);
+}
+
+.problemHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.problemHead .stage {
+  margin-top: 0;
+}
+
+.problemOrg {
+  font-size: 13px;
+  line-height: 18px;
+  color: #8a7b7c;
+}
+
+.problemTitle {
+  margin-top: 12px !important;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 25px;
+}
+
+/* ------------------------------------------------------------ DM09 talent card */
+
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(140deg, #e04a3a 0%, #8c1410 55%, #3b0508 100%);
+  border-radius: 50%;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardName .headline {
+  color: #534041;
+}
+
+.ventures {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px !important;
+}
+
+.ventures li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #f4f1f1;
+  border-radius: 10px;
+}
+
+.ventures a {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.ventures span {
+  font-size: 12px;
+  color: #8a7b7c;
+}
+
 /* ------------------------------------------------------------ narrow */
 
 @media (max-width: 1180px) {
@@ -542,6 +796,10 @@
   .title {
     font-size: 40px;
     line-height: 48px;
+  }
+
+  .heroPlain {
+    min-height: 420px;
   }
 
   .stats {

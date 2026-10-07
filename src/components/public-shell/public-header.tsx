@@ -122,7 +122,12 @@ function Dropdown({
           {label}
         </Link>
       ) : (
-        <span className={styles.navItem} onMouseEnter={() => setOpen(true)}>
+        // THAO-05: the section of the current page (DM06 underlines "Chương trình ▾").
+        <span
+          className={`${styles.navItem} ${current ? styles.current : ''}`}
+          aria-current={current ? 'page' : undefined}
+          onMouseEnter={() => setOpen(true)}
+        >
           {label}
         </span>
       )}

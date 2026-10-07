@@ -1,0 +1,71 @@
+import type { Metadata } from 'next'
+
+import { DiscoveryError } from '@/components/discovery/discovery-states'
+import { Directory } from '@/components/products/directory'
+import { PublicFooter } from '@/components/public-shell/public-footer'
+import { PublicHeader } from '@/components/public-shell/public-header'
+import { STAGE_ORDER, STAGE_SHORT, listDirectoryStartups } from '@/lib/public/directory-data'
+import { loadPlaces } from '@/lib/public/discovery-places'
+import type { SearchParams } from '@/lib/public/discovery-query'
+import { readProductView } from '@/lib/public/discovery-views'
+import { publicShellData } from '@/lib/public/shell-data'
+
+import styles from '@/components/discovery/discovery.module.css'
+
+/**
+ * DEMO-DIR2-01 — `/products`, the Product / Startup directory (DM08).
+ *
+ * Public for every visitor (no guard): it lists the canonical published
+ * startups only (DEC-W6P-D02 predicate) and the catalogue places for the
+ * filter. Query parameters seed the filters (`q`, `linh-vuc`, `giai-doan`,
+ * `quoc-gia`, `tinh`, `sap-xep`; THAO-05, DEC-THAO-DIR-D6); anything unknown is
+ * ignored. A failed read renders the error state with a retry, never a 5xx.
+ */
+export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Sản phẩm — HUB Network',
+  description: 'Sản phẩm và startup trong mạng lưới HUB Network.',
+}
+
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
+  const [params, shell] = await Promise.all([searchParams, publicShellData()])
+  const data = await Promise.all([listDirectoryStartups(), loadPlaces()]).catch(() => null)
+  return (
+    <div
+      className={styles.page}
+      data-screen="DEMO-PRODUCTS"
+      data-revision="DM08"
+      data-entry={shell.viewer.kind}
+    >
+      <div className={styles.top}>
+        <PublicHeader viewer={shell.viewer} current="products" />
+        {data ? (
+          <Directory
+            startups={data[0]}
+            places={data[1]}
+            stageShort={STAGE_SHORT}
+            stageOrder={STAGE_ORDER}
+            guest={shell.viewer.kind === 'GUEST'}
+            initial={readProductView(params, {
+              domains: [...new Set(data[0].flatMap((x) => x.domains))],
+              stages: STAGE_ORDER,
+              places: data[1],
+            })}
+          />
+        ) : (
+          <div className={styles.body}>
+            <div />
+            <DiscoveryError noun="sản phẩm" retryHref="/products" />
+          </div>
+        )}
+      </div>
+      {/* THAO-02: the one public footer, as on every public page. */}
+      <PublicFooter variant="home" legal={shell.legal} />
+    </div>
+  )
+}

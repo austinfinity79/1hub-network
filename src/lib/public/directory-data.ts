@@ -18,8 +18,12 @@ import { PUBLIC_ROUTES } from './routes'
  * `listPublicStartups`; no second model, no read-model store. The canonical
  * slug is the public key of the detail route. The demo fixture adds the
  * states DM08 counts (fundraising, paying customers, portfolio) for the demo
- * ventures only (DEMO STATE ONLY). No owner, member, id or application data
- * reaches the page.
+ * ventures only (DEMO STATE ONLY): any other venture is false / null there, so
+ * no real record depends on it (THAO-05). No owner, member, id or application
+ * data reaches the page.
+ *
+ * THAO-05: each row also carries its canonical place (REGION slug and its
+ * country, DEC-THAO-DIR-D6) for the shared location filter.
  */
 
 /** Short stage names of DM08 for the canonical VENTURE_STAGE codes (migration 012). */
@@ -39,6 +43,9 @@ export type DirectoryStartup = {
   summary: string | null
   stage: StartupStage | null
   region: string | null
+  /** REGION slug and its COUNTRY slug (`metadata.country`), for the location filter. */
+  regionSlug: string | null
+  country: string | null
   domains: string[]
   fundraising: boolean
   payingCustomers: boolean
@@ -51,9 +58,14 @@ export type DirectoryStartup = {
   href: string
 }
 
-export type DirectoryPlace = { slug: string; label: string }
-
-type Meta = { id: string; slug: string; created_at: string; updated_at: string }
+type Meta = {
+  id: string
+  slug: string
+  created_at: string
+  updated_at: string
+  region_slug: string | null
+  country: string | null
+}
 
 function shape(row: CanonicalStartupRow, meta: Meta): DirectoryStartup {
   const demo = demoVenture(row.ventureId)
@@ -65,6 +77,8 @@ function shape(row: CanonicalStartupRow, meta: Meta): DirectoryStartup {
     summary: row.summary,
     stage,
     region: row.region?.label ?? null,
+    regionSlug: meta.region_slug,
+    country: meta.country,
     domains: row.domains.map((d) => d.label),
     fundraising,
     payingCustomers: demo?.payingCustomers ?? false,
@@ -89,7 +103,11 @@ function shape(row: CanonicalStartupRow, meta: Meta): DirectoryStartup {
 
 async function metaOf(ids: string[]): Promise<Map<string, Meta>> {
   const rows = await query<Meta>(
-    `SELECT id::text, slug, created_at::text, updated_at::text FROM projects WHERE id = ANY($1::uuid[])`,
+    `SELECT p.id::text, p.slug, p.created_at::text, p.updated_at::text,
+            r.slug AS region_slug, r.metadata->>'country' AS country
+       FROM projects p
+       LEFT JOIN vocabulary_items r ON r.id = p.region_id AND r.type_code = 'REGION'
+      WHERE p.id = ANY($1::uuid[])`,
     [ids],
   )
   return new Map(rows.map((r) => [r.id, r]))
@@ -102,22 +120,6 @@ export async function listDirectoryStartups(): Promise<DirectoryStartup[]> {
     const m = meta.get(r.ventureId)
     return m ? [shape(r, m)] : []
   })
-}
-
-/** The provinces and countries of the Sprint 1 catalogue, for the "Khu vực" filter. */
-export async function listDirectoryPlaces(): Promise<{
-  provinces: DirectoryPlace[]
-  countries: DirectoryPlace[]
-}> {
-  const rows = await query<{ type_code: string; slug: string; label: string }>(
-    `SELECT type_code, slug, label FROM vocabulary_items
-      WHERE type_code IN ('REGION', 'COUNTRY') AND status = 'ACTIVE'
-        AND metadata->>'catalog' = 'S1_APPENDIX_E'
-      ORDER BY type_code, sort_order, label`,
-  )
-  const pick = (type: string) =>
-    rows.filter((r) => r.type_code === type).map((r) => ({ slug: r.slug, label: r.label }))
-  return { provinces: pick('REGION'), countries: pick('COUNTRY').filter((c) => c.slug !== 'vn') }
 }
 
 export type StartupPage = DirectoryStartup & {

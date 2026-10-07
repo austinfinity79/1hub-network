@@ -93,16 +93,16 @@ test.describe('public shell', () => {
       await expect(header).toHaveAttribute('data-viewer', 'GUEST')
       await expect(header.locator('[data-cta="logo"]')).toHaveAttribute('href', '/')
       await expect(header.locator('[data-nav="about"] a').first()).toHaveAttribute('href', '/about')
-      // DEMO-DIR2-01: Sản phẩm is a link now; Nhân tài and Tin tức stay plain text.
+      // DEMO-DIR2-01: Sản phẩm is a link; THAO-05 (DEC-THAO-DIR): Nhân tài and
+      // Chương trình, cuộc thi too. Tin tức and Sự kiện stay plain text.
       await expect(header.locator('[data-nav="products"] a')).toHaveAttribute('href', '/products')
-      for (const name of ['talents', 'news'])
-        await expect(header.locator(`[data-nav="${name}"] [data-nav-kind="LABEL"]`)).toHaveCount(1)
+      await expect(header.locator('[data-nav="talents"] a')).toHaveAttribute('href', '/talents')
+      await expect(header.locator('[data-nav="news"] [data-nav-kind="LABEL"]')).toHaveCount(1)
       await header.getByRole('button', { name: 'Mở menu Chương trình' }).click()
       const programmes = header.locator('[data-nav="programmes"] ul')
-      await expect(programmes.getByText('Chương trình, cuộc thi')).toHaveAttribute(
-        'aria-disabled',
-        'true',
-      )
+      await expect(
+        programmes.getByRole('link', { name: 'Chương trình, cuộc thi' }),
+      ).toHaveAttribute('href', '/programmes')
       await expect(programmes.getByText('Sự kiện')).toHaveAttribute('aria-disabled', 'true')
       await page.keyboard.press('Escape')
       // THAO-01-FIX: Giới thiệu is a direct link, only Chương trình has a menu.
@@ -116,7 +116,8 @@ test.describe('public shell', () => {
         'href',
         '/about',
       )
-      await expect(footer.locator('[data-nav-kind="LABEL"]')).toHaveCount(3)
+      // THAO-05: only Tin tức is still a label in the footer.
+      await expect(footer.locator('[data-nav-kind="LABEL"]')).toHaveCount(1)
       await expect(footer.getByRole('link', { name: 'Sản phẩm' })).toHaveAttribute(
         'href',
         '/products',
@@ -233,12 +234,12 @@ test.describe('Homepage v2 (DM01)', () => {
 
   test('programme, update and news blocks are read-only presentation', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
-    for (const scope of [
-      '[data-block="programme-updates"]',
-      '[data-section="programmes"] ul',
-      '[data-section="news"] ul',
-    ])
+    for (const scope of ['[data-section="programmes"] ul', '[data-section="news"] ul'])
       await expect(page.locator(`${scope} a`)).toHaveCount(0)
+    // THAO-05: the block's "Xem tất cả" opens the programme list; its rows stay text.
+    const updates = page.locator('[data-block="programme-updates"] a')
+    await expect(updates).toHaveCount(1)
+    await expect(updates).toHaveAttribute('href', '/programmes')
     await expect(page.locator('[data-section="programmes"] li')).toHaveCount(4)
     await expect(page.locator('[data-section="news"] li')).toHaveCount(3)
   })

@@ -162,15 +162,19 @@ test.describe('WF04 runtime fixture dependency = 0 (contract §15)', () => {
 })
 
 test.describe('WF04 route boundaries and the OpsShell entry (restored by WF04-PROD-04-FIX)', () => {
-  test('unbuilt WF04 routes and any public programme page are the ordinary 404', async ({
+  test('unbuilt WF04 routes and any public programme detail are the ordinary 404', async ({
     page,
   }) => {
     for (const email of [null, LEADER]) {
       await page.context().clearCookies()
       if (email) await login(page.request, email)
-      for (const path of ['/programmes', `/programmes/${SEED_PROGRAMME}`]) {
-        expect((await page.goto(path))?.status(), `${email ?? 'guest'} ${path}`).toBe(404)
-      }
+      // THAO-05 (DEC-THAO-DIR-D1): `/programmes` is now the public list; still no
+      // public programme detail page.
+      expect((await page.goto('/programmes'))?.status(), `${email ?? 'guest'} list`).toBe(200)
+      expect(
+        (await page.goto(`/programmes/${SEED_PROGRAMME}`))?.status(),
+        `${email ?? 'guest'} detail`,
+      ).toBe(404)
     }
     for (const path of [
       routes.setup(SEED_CHALLENGE, 'unknown'),

@@ -107,26 +107,31 @@ test.describe('homepage search → /library?q=', () => {
 })
 
 test.describe('public pages: no dead control', () => {
-  test('/ and /about: Chương trình and its entries are not links; contacts are text; external pages open', async ({
+  test('/ and /about: unbuilt destinations are not links; contacts are text; external pages open', async ({
     page,
   }) => {
     // DEMO-HOME-ABOUT-01 (DEMO-D6): the new public shell; an unbuilt screen is plain text.
+    // THAO-05 (DEC-THAO-DIR): Chương trình, cuộc thi and Nhân tài now have their screens.
     for (const url of ['/', '/about']) {
       await page.goto(url, { waitUntil: 'networkidle' })
       const nav = page.getByRole('navigation', { name: 'Điều hướng chính' })
       await expect(nav.getByRole('link', { name: 'Chương trình', exact: true })).toHaveCount(0)
       await nav.getByRole('button', { name: 'Mở menu Chương trình' }).click()
-      for (const label of ['Chương trình, cuộc thi', 'Sự kiện'])
-        await expect(nav.getByRole('link', { name: label, exact: true })).toHaveCount(0)
-      // DEMO-DIR2-01: Sản phẩm opens /products; the other unbuilt screens stay plain text.
+      await expect(
+        nav.getByRole('link', { name: 'Chương trình, cuộc thi', exact: true }),
+      ).toHaveAttribute('href', '/programmes')
+      await expect(nav.getByRole('link', { name: 'Sự kiện', exact: true })).toHaveCount(0)
+      // DEMO-DIR2-01: Sản phẩm opens /products; THAO-05: Nhân tài opens /talents.
       await expect(nav.getByRole('link', { name: 'Sản phẩm', exact: true })).toHaveAttribute(
         'href',
         '/products',
       )
-      for (const label of ['Nhân tài', 'Tin tức']) {
-        const item = nav.getByText(label, { exact: true })
-        await expect(item, `${url} ${label}`).toHaveAttribute('data-nav-kind', 'LABEL')
-      }
+      await expect(nav.getByRole('link', { name: 'Nhân tài', exact: true })).toHaveAttribute(
+        'href',
+        '/talents',
+      )
+      const news = nav.getByText('Tin tức', { exact: true })
+      await expect(news, `${url} Tin tức`).toHaveAttribute('data-nav-kind', 'LABEL')
       await expect(page.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(0)
       const ihub = page
         .locator('[data-shell="public-footer"]')
@@ -342,7 +347,8 @@ test.describe('P3 UX cleanup: what cannot be clicked no longer looks clickable',
     for (const url of ['/', '/about']) {
       await page.goto(url, { waitUntil: 'networkidle' })
       const inert = page.locator('[data-screen] [data-cta-kind="INERT"]')
-      expect(await inert.count(), url).toBeGreaterThan(3)
+      // THAO-05: the programme and talent CTAs became links; the rest stay drawn and inert.
+      expect(await inert.count(), url).toBeGreaterThanOrEqual(3)
       for (const el of await inert.all()) {
         const [, cursor, tag, href, tabindex] = await look(el)
         expect([cursor, tag, href, tabindex]).toEqual(['default', 'SPAN', null, null])

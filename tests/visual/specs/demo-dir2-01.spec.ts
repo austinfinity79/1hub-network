@@ -188,9 +188,10 @@ test.describe('directory: search, filters, sort', () => {
     await rail.getByLabel('Tỉnh/thành:').selectOption({ label: 'Đồng Tháp' })
     await expect(cards(page)).toHaveCount(1)
     await expect(cards(page).first()).toHaveAttribute('data-startup', 'agritrace')
-    await expect(page).toHaveURL(/tinh=%C4%90%E1%BB%93ng\+Th%C3%A1p/)
+    // THAO-05 (DEC-THAO-DIR-D6): the address names the place by its canonical slugs.
+    await expect(page).toHaveURL(/quoc-gia=vn&tinh=dong-thap/)
     await page.getByRole('button', { name: 'Xoá tất cả' }).click()
-    await page.getByLabel('Sắp xếp:').selectOption('name')
+    await page.getByLabel('Sắp xếp:').selectOption('ten-a-z')
     const names = await cards(page).locator('h2').allInnerTexts()
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'vi')))
   })

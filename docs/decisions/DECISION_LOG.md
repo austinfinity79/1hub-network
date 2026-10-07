@@ -1808,7 +1808,7 @@ Open after this task: Google OAuth client credentials (external configuration; t
 
 ## DEC-THAO-DIR — Discovery DIR0–DIR3 (THAO-05, PO, 07/10)
 
-<a id="dec-thao-dir"></a>**Status:** FROZEN 2026-10-07 (PO decisions on the THAO-05 blockers Q1–Q5, task THAO-05-RESUME); implemented on `feat/thao-m2-discovery`. Conflict record: Thảo's rebaseline asks for four public directories; three met closed decisions. These rows override older decisions **only where stated**; privacy, lifecycle, RBAC and canonical-data rules are otherwise unchanged.
+<a id="dec-thao-dir"></a>**Status:** FROZEN 2026-10-07 (PO decisions on the THAO-05 blockers Q1–Q5, task THAO-05-RESUME); IMPLEMENTED the same day on `feat/thao-m2-discovery` (local; not merged, not deployed). Report: [THAO-05](../implementation/reports/THAO-05.md). Conflict record: Thảo's rebaseline asks for four public directories; three met closed decisions. These rows override older decisions **only where stated**; privacy, lifecycle, RBAC and canonical-data rules are otherwise unchanged.
 
 | ID | Old decision | Conflict | PO decision 07/10 (now allowed) | Unchanged |
 |---|---|---|---|---|

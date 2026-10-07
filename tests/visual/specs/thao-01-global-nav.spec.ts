@@ -86,13 +86,13 @@ test.describe('structure and route contract (1440)', () => {
     // REAL_ROUTE
     await expect(nav.locator('[data-nav="about"] > a')).toHaveAttribute('href', '/about')
     await expect(nav.locator('[data-nav="products"] a')).toHaveAttribute('href', '/products')
-    for (const href of ['/about', '/products'])
+    // THAO-05 (DEC-THAO-DIR-D3): Nhân tài has its screen.
+    await expect(nav.locator('[data-nav="talents"] a')).toHaveAttribute('href', '/talents')
+    for (const href of ['/about', '/products', '/talents'])
       expect((await page.request.get(href)).status(), href).toBe(200)
     // READ_ONLY_APPROVED: no screen yet (DEC-AIG-D1 / DEMO-D6) — text, never a link.
-    for (const name of ['talents', 'news']) {
-      await expect(nav.locator(`[data-nav="${name}"] a`), name).toHaveCount(0)
-      await expect(nav.locator(`[data-nav="${name}"] [data-nav-kind="LABEL"]`), name).toHaveCount(1)
-    }
+    await expect(nav.locator('[data-nav="news"] a')).toHaveCount(0)
+    await expect(nav.locator('[data-nav="news"] [data-nav-kind="LABEL"]')).toHaveCount(1)
     await expect(nav.locator('[data-nav="programmes"] > a')).toHaveCount(0)
     // Superseded top-level entries and the old product dropdown.
     const top = await nav.locator(':scope > [data-nav]').allInnerTexts()
@@ -132,7 +132,7 @@ test.describe('structure and route contract (1440)', () => {
 })
 
 test.describe('Chương trình dropdown', () => {
-  test('desktop: opens on click, every entry is a plain label, Escape / outside click close it; keyboard reaches it', async ({
+  test('desktop: opens on click, entries follow the route contract, Escape / outside click close it; keyboard reaches it', async ({
     page,
   }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
@@ -142,9 +142,14 @@ test.describe('Chương trình dropdown', () => {
     await expect(toggle).toHaveAttribute('aria-expanded', 'true')
     const entries = prog.locator('ul li')
     await expect(entries).toHaveText(['Chương trình, cuộc thi', 'Sự kiện'])
-    // No public programme / event screen exists: visual-only, never a dead link.
-    await expect(prog.locator('ul a')).toHaveCount(0)
-    await expect(prog.locator('ul [data-cta-kind="INERT"]')).toHaveCount(2)
+    // THAO-05 (DEC-THAO-DIR-D1): the programme list exists; no event screen yet,
+    // so Sự kiện stays visual-only, never a dead link.
+    await expect(prog.locator('ul a')).toHaveCount(1)
+    await expect(prog.getByRole('link', { name: 'Chương trình, cuộc thi' })).toHaveAttribute(
+      'href',
+      '/programmes',
+    )
+    await expect(prog.locator('ul [data-cta-kind="INERT"]')).toHaveText(['Sự kiện'])
     await page.keyboard.press('Escape')
     await expect(prog.locator('ul')).toHaveCount(0)
     await toggle.click()

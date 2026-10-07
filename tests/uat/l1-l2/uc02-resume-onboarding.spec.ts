@@ -91,16 +91,20 @@ test('UC02 · exceptions · entering through a CTA resumes the open stage; progr
   await expect(page.locator('[data-anchor="domains"] [data-tag]')).toHaveCount(0)
   expect(await identity(email)).toMatchObject({ accounts: 1, profiles: 1 })
 
-  // Programme and event have no public page yet: the "Chương trình" menu and its
-  // entries are not links (DEMO-D6), so nothing leads from them into onboarding.
+  // THAO-05 (DEC-THAO-DIR-D1): "Chương trình, cuộc thi" opens the public
+  // programme list; it is a public page, so an open account reaches it as is,
+  // without being sent into onboarding or to an error. Events have no page yet.
   await page.goto('/', { waitUntil: 'networkidle' })
   const nav = page.getByRole('navigation', { name: 'Điều hướng chính' })
   await nav.getByRole('button', { name: 'Mở menu Chương trình' }).click()
-  for (const label of ['Chương trình', 'Chương trình, cuộc thi', 'Sự kiện'])
+  for (const label of ['Chương trình', 'Sự kiện'])
     await expect(nav.getByRole('link', { name: label, exact: true })).toHaveCount(0)
+  await nav.getByRole('link', { name: 'Chương trình, cuộc thi', exact: true }).click()
+  await expect(page).toHaveURL('/programmes')
+  await expect(page.locator('[data-screen="PUBLIC-PROGRAMMES"]')).toBeVisible()
   gap(
     'NOT APPLICABLE',
-    'Entry from a programme / event CTA: no public programme or event page in L1 / L2; the header items are plain labels.',
+    'Entry from an event CTA: no public event page in L1 / L2; "Sự kiện" is a plain label.',
   )
   // The guest return to "Tạo hồ sơ startup" after sign-in / onboarding (BD-02 rule) is
   // covered by tests/visual/specs/alpha-interaction-gaps.spec.ts.
