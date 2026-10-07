@@ -94,9 +94,10 @@ test('the first slide is prioritised; the others load without a broken state', a
       .toBeGreaterThan(0)
 })
 
-// Full-fill overlay correction (PO reference): one bounded hero; the artwork
-// fills its canvas edge to edge (no card, no side crop); the arrows float on
-// the canvas sides, the counter, search and intents sit over its lower part.
+// Screen-1 composition (PO SOT): header, the hero — the stills filling its
+// canvas (no card, no side crop, no distortion), the arrows on its sides, the
+// counter, search and intents over its lower part — then the ticker, which
+// ends the first desktop screen; "Nổi bật tuần này" starts below the fold.
 const box = (page: Page, selector: string) =>
   page
     .locator(selector)
@@ -106,11 +107,17 @@ const box = (page: Page, selector: string) =>
       return { x: r.x, y: r.y + window.scrollY, w: r.width, h: r.height }
     })
 
-// The stills' content ends by 81 % of their height; below it they are empty.
-const CONTENT_END = 0.81
+// The stills' key content (text, cards) ends by 72 % of their height.
+const CONTENT_END = 0.72
 
-for (const width of [1440, 1280, 1024, 768, 390]) {
-  test(`${width}: artwork fills the hero canvas; arrows, counter, search and intents over it`, async ({
+for (const [width, height] of [
+  [1440, 900],
+  [1280, 800],
+  [1024, 768],
+  [768, 900],
+  [390, 844],
+] as const) {
+  test(`${width}×${height}: screen 1 — artwork, arrows, counter, search, intents, ticker`, async ({
     page,
   }) => {
     const errors: string[] = []
@@ -118,17 +125,24 @@ for (const width of [1440, 1280, 1024, 768, 390]) {
       if (m.type() === 'error') errors.push(m.text())
     })
     await page.clock.install()
-    await page.setViewportSize({ width, height: 900 })
+    await page.setViewportSize({ width, height })
     await page.goto('/', { waitUntil: 'networkidle' })
     const hero = await box(page, '[data-section="hero"]')
     const canvas = await box(page, '[data-section="hero-slider"]')
-    // Bounded: one first screen at most, the canvas right under the header.
-    expect(hero.h).toBeLessThanOrEqual(900)
+    const ticker = await box(page, '[data-section="ticker"]')
     expect([Math.round(canvas.x), Math.round(canvas.w), Math.round(canvas.y)]).toEqual([
       0,
       width,
       64,
     ])
+    expect(Math.round(ticker.y)).toBe(Math.round(hero.y + hero.h))
+    if (width >= 1024) {
+      // Desktop: the ticker is the last element of the first screen.
+      expect(Math.round(ticker.y + ticker.h)).toBe(height)
+      expect((await box(page, '#home-week')).y).toBeGreaterThanOrEqual(height)
+    } else {
+      expect(hero.h).toBeLessThanOrEqual(height)
+    }
     // No card: the canvas wears the stills' own edge colour, nothing framed.
     const look = await page
       .locator('[data-section="hero-slider"]')
@@ -138,15 +152,17 @@ for (const width of [1440, 1280, 1024, 768, 390]) {
         getComputedStyle(el.querySelector('[data-slide]')!.parentElement!).boxShadow,
       ])
     expect(look).toEqual(['rgb(238, 238, 238)', '0px', 'none'])
+    const art = await box(page, '[data-slide="01"] img')
     for (let i = 0; i < 6; i++) {
-      // Full width, 16:9, from the canvas top: never distorted, never side-cropped.
-      const img = await box(page, `[data-slide="0${i + 1}"] img`)
-      expect(Math.round(img.x)).toBe(0)
-      expect(Math.round(img.w)).toBe(width)
-      expect(Math.abs(img.h - (width * 9) / 16)).toBeLessThanOrEqual(1)
-      expect(Math.round(img.y)).toBe(Math.round(canvas.y))
+      // 16:9 from the canvas top, centred, never wider than the canvas: no
+      // distortion, no side crop; at most a narrow #eeeeee margin each side.
+      expect(await box(page, `[data-slide="0${i + 1}"] img`)).toEqual(art)
     }
-    const slideEnd = canvas.y + (width * 9) / 16
+    expect(Math.abs(art.h - (art.w * 9) / 16)).toBeLessThanOrEqual(1)
+    expect(Math.round(art.y)).toBe(64)
+    expect(Math.abs(art.x + art.w / 2 - width / 2)).toBeLessThanOrEqual(1)
+    expect(art.w).toBeLessThanOrEqual(width)
+    expect(art.w).toBeGreaterThanOrEqual(0.9 * width)
     const prev = await box(page, '[aria-label="Previous slide"]')
     const next = await box(page, '[aria-label="Next slide"]')
     const count = await box(page, '[data-hero-indicator]')
@@ -158,23 +174,21 @@ for (const width of [1440, 1280, 1024, 768, 390]) {
       expect(width - (next.x + next.w)).toBeLessThanOrEqual(32)
       for (const a of [prev, next])
         expect(Math.abs(a.y + a.h / 2 - (canvas.y + canvas.h / 2))).toBeLessThanOrEqual(2)
-      // Counter, search and intents over the artwork's lower part, below its content.
-      expect(search.y).toBeLessThan(slideEnd)
-      expect(search.y).toBeGreaterThanOrEqual(canvas.y + CONTENT_END * ((width * 9) / 16))
+      // Counter, search and intents over the artwork's lower part, below its key content.
+      expect(search.y).toBeLessThan(art.y + art.h)
+      expect(search.y).toBeGreaterThanOrEqual(art.y + CONTENT_END * art.h)
+      // The counter sits on the stills' text column.
+      expect(Math.abs(count.x - (art.x + 0.078 * art.w))).toBeLessThanOrEqual(2)
     } else {
       // Phones: the arrows join the counter row under the artwork.
       for (const a of [prev, next])
         expect(Math.abs(a.y + a.h / 2 - (count.y + count.h / 2))).toBeLessThanOrEqual(2)
-      expect(count.y).toBeGreaterThanOrEqual(slideEnd)
+      expect(count.y).toBeGreaterThanOrEqual(art.y + art.h)
     }
-    expect(count.x).toBeGreaterThanOrEqual(0)
     expect(search.y).toBeGreaterThan(count.y + count.h)
     expect(primary.y).toBeGreaterThan(search.y)
-    // Everything inside the canvas, before the hero ends; then the ticker.
+    // Everything inside the canvas, before the hero ends.
     expect(primary.y + primary.h).toBeLessThanOrEqual(canvas.y + canvas.h)
-    expect(Math.round((await box(page, '[data-section="ticker"]')).y)).toBe(
-      Math.round(hero.y + hero.h),
-    )
     for (const a of [prev, next]) {
       expect(a.x).toBeGreaterThanOrEqual(0)
       expect(a.x + a.w).toBeLessThanOrEqual(width)

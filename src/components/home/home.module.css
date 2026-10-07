@@ -44,14 +44,14 @@
 
 .hero {
   position: relative;
-  /* HOMEPAGE-HERO-SLIDER-01 (full-fill overlay correction, PO reference): one
-     hero — the header, then the slide canvas filled edge to edge by the
-     artwork, with the arrows, counter, search and intents laid over it. The
-     height is bounded by the viewport and the width (the artwork's 16:9 plus
-     room for the lower overlay), never set by the PNG. */
+  /* HOMEPAGE-HERO-SLIDER-01 (screen-1 composition, PO SOT): header, the
+     slide canvas with the arrows, counter, search and intents laid over it,
+     then the 88 px ticker closes the first screen (DM01 bands: hero 0–811,
+     ticker 812–899 at 1440 × 900). The viewport sets the height, bounded;
+     never the PNG. */
   display: flex;
   flex-direction: column;
-  height: clamp(760px, min(100svh, 64px + 56.25vw + 100px), 980px);
+  height: clamp(560px, calc(100svh - 88px), 892px);
   color: #efefef;
   background: var(--night);
   border-bottom: 1px solid #837879;
@@ -67,15 +67,21 @@
   min-height: 0;
   overflow: hidden;
   background: #eeeeee;
+  container-type: size;
+  /* The artwork's width: the full canvas, unless the canvas is too short for
+     the stills' content (their top 72 %) to clear the search and intents
+     (160 px), then narrower — its edges melt into the same #eeeeee. */
+  --art-w: min(100cqw, (100cqh - 160px) * 16 / 9 / 0.72);
 }
-/* Full width, 16:9, from the top: no side crop; where the canvas is shorter
-   the empty foot of the still (below its content) is what goes. */
+/* 16:9 from the top, centred: no side crop, no distortion; only the stills'
+   empty foot (below their content) is clipped by the canvas. */
 .heroStack {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 100%;
+  left: 50%;
+  width: var(--art-w);
   aspect-ratio: 16 / 9;
+  transform: translateX(-50%);
 }
 .heroSlide {
   position: absolute;
@@ -122,14 +128,14 @@
   z-index: 1;
   padding: 0 0 24px;
 }
-/* Counter and progress on the stills' text column (7.8 % of the width). */
+/* Counter and progress on the stills' text column (7.8 % of the artwork). */
 .heroMeta {
   display: flex;
   align-items: center;
   gap: 18px;
   height: 20px;
   margin-bottom: 14px;
-  padding-left: 7.8%;
+  padding-left: calc((100cqw - var(--art-w)) / 2 + var(--art-w) * 0.078);
 }
 .heroCount {
   font-family: var(--mono);
@@ -1233,7 +1239,7 @@
 @media (max-width: 1023px) {
   /* Tablets: the same composition, scaled with the width. */
   .hero {
-    height: calc(64px + 56.25vw + 100px);
+    height: min(calc(64px + 56.25vw + 100px), calc(100svh - 88px));
   }
 
   .heroArrow {
@@ -1320,6 +1326,7 @@
   .heroSlider {
     display: grid;
     flex: none;
+    container-type: normal;
     grid-template-areas:
       'stack stack stack'
       'prev meta next'
@@ -1331,7 +1338,10 @@
 
   .heroStack {
     position: relative;
+    left: 0;
     grid-area: stack;
+    width: 100%;
+    transform: none;
   }
 
   .heroOverlay {
