@@ -27,5 +27,11 @@ The programme directory must not be filled with invented records: PROGRAMME-PRES
 ## Pitch names to confirm (original section D)
 Product "Tracely" · founder "Đặng Kim Chi" · programmes: per PROGRAMME-PRESENTATION-DATA-01 · event: none (PD-EVT) · APEC URL: APEC-LINK-01.
 
+## Status update — 642c143 (appended)
+- Programme directory: DONE (`d9726f3`) — the four homepage programmes, source-backed; no demo / sample wording visible.
+- Member walkthrough profile: Vũ Tuấn Anh (`/talents/vu-tuan-anh`, NETWORK_ONLY, real person from the approved source row), for steps 10M–11.
+- APEC target `http://apec.1hub.cloud/` known; not linked until the site is live (APEC-LINK-01).
+- Event: out of P0 / N/A per PO. Decks and About partner wall: open, tracked separately.
+
 ## Related
 - [RUNBOOK_SOT](RUNBOOK_SOT.md) · [ACCOUNTS](ACCOUNTS.md) · [PRECHECK](PRECHECK.md) · [FINAL_ACCEPTANCE_REPORT](FINAL_ACCEPTANCE_REPORT.md)

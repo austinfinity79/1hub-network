@@ -69,5 +69,18 @@ None found. Every app link, route, filter, redirect and auth state behaved as sp
 3. Precheck per [PRECHECK](PRECHECK.md) on the exact approved SHA.
 4. Rerun final acceptance against RUNBOOK_SOT v2; FINAL READY = every KEEP / UPDATE / CHANGE_ACTOR row PASS and the removed rows recorded as approved.
 
+## Status update — 642c143 (appended; findings above are unchanged, as recorded on 57c1f14)
+| Item | Status on `642c14399ca9459882d18e0340f8ea3d1a73f8c2` | Basis |
+|---|---|---|
+| Production SHA | `642c143` live on both domains (container label; healthy) | read on the live host |
+| Programme (CP-1, PO-2, steps 04–05) | **DONE** — PROGRAMME-PRESENTATION-DATA-01 (`d9726f3`): `/programmes` lists the four source-backed programmes, fixture removed; visible-text scan finds 0 "demo / mẫu / Internal Alpha" on both domains | commit report + live GET |
+| Member account (EX-3, steps 10M–11) | **DONE, PO LOGIN PASS** — TALENT-TUAN-ANH-MEMBER-ACCOUNT-01 (`642c143`), username `vutuananh`; guest `/talents/vu-tuan-anh` → 404 (NETWORK_ONLY) | commit report; PO login result as reported by the PO, not re-run by this lane |
+| APEC (PO-1, step 17) | Target known: `http://apec.1hub.cloud/`. Step 17 stays **BLOCKED** until the APEC site is live and the link is wired (APEC-LINK-01) | PO input |
+| Event (SM-1, steps 06–07) | **OUT OF P0 / N/A** per PO direction | PO direction |
+| External decks (EX-1, EX-2, steps 19–20) | **OPEN** — tracked separately (FINAL-ACCESS-PREP-01) | — |
+| About partner wall (CP-2, CP-3) | **OPEN** — tracked separately (ABOUT-PARTNERS-PRESENTATION-01) | — |
+
+No step is re-graded here: the steps above get their new result only in the final acceptance rerun against [RUNBOOK_SOT](RUNBOOK_SOT.md).
+
 ## Related
 - [RUNBOOK_SOT](RUNBOOK_SOT.md) · [RUNBOOK_RESULT](RUNBOOK_RESULT.md) · [PRESENTATION_DATA](PRESENTATION_DATA.md) · [ACCOUNTS](ACCOUNTS.md) · [PRECHECK](PRECHECK.md) · [evidence/](evidence/)

@@ -17,5 +17,8 @@ The six fictional profiles of `db/seed/demo_0710.sql` (Đặng Kim Chi, Nguyễn
 - Visible name and profile fields natural; does not impersonate a real person.
 - Verified before the rerun: sign-in works on the presenter machine, `/talents` lists rows, filters respond, no private field visible.
 
+## Status update — 642c143 (appended)
+The member row above was NOT READY when this file was written (`57c1f14`). Since `642c143` the walkthrough MEMBER account exists: identifier username `vutuananh`, display name Vũ Tuấn Anh (approved source row "Nhân tài chi tiết" 4), ordinary ACTIVE account, profile NETWORK_ONLY; readiness **READY — PO LOGIN PASS** (reported by the PO). Credential handed over out of band; none in Git ([TALENT-TUAN-ANH-MEMBER-ACCOUNT-01](../../implementation/reports/TALENT-TUAN-ANH-MEMBER-ACCOUNT-01.md)). The external deck viewer row stays NOT READY (FINAL-ACCESS-PREP-01).
+
 ## Related
 - [PRESENTATION_DATA](PRESENTATION_DATA.md) · [PRECHECK](PRECHECK.md) · [RUNBOOK_SOT](RUNBOOK_SOT.md)
