@@ -44,138 +44,135 @@
 
 .hero {
   position: relative;
-  /* HOMEPAGE-HERO-SLIDER-01 (frame correction, PO reference): one composed
-     first screen — header, the bounded slide stage with its arrows and
-     counter, then search and intents. The height is the viewport's, bounded;
-     never the artwork's. */
+  /* HOMEPAGE-HERO-SLIDER-01 (full-fill overlay correction, PO reference): one
+     hero — the header, then the slide canvas filled edge to edge by the
+     artwork, with the arrows, counter, search and intents laid over it. The
+     height is bounded by the viewport and the width (the artwork's 16:9 plus
+     room for the lower overlay), never set by the PNG. */
   display: flex;
   flex-direction: column;
-  height: clamp(760px, 100svh, 980px);
-  padding-bottom: 40px;
+  height: clamp(760px, min(100svh, 64px + 56.25vw + 100px), 980px);
   color: #efefef;
-  background:
-    radial-gradient(ellipse 330px 190px at 920px 390px, rgb(110 32 24 / 0.9), transparent 100%),
-    radial-gradient(ellipse 560px 330px at 900px 380px, rgb(90 16 16 / 0.75), transparent 100%),
-    radial-gradient(ellipse 760px 420px at 880px 360px, rgb(60 4 8 / 0.7), transparent 100%),
-    var(--night);
+  background: var(--night);
   border-bottom: 1px solid #837879;
 }
-
-/* The slider takes the hero's free height; the stage is the largest 16:9
-   frame that fits it (container units), so the PNG never sets the height. */
+/* The canvas: the hero below the header. Its colour is the stills' own
+   (#eeeeee at every edge), so the artwork reads as the surface itself. */
 .heroSlider {
   position: relative;
   display: flex;
   flex: 1 1 auto;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-end;
   min-height: 0;
-  padding: 20px 120px 0;
-  container-type: size;
+  overflow: hidden;
+  background: #eeeeee;
 }
-
-.heroStage {
-  width: min(100cqw, (100cqh - 52px) * 16 / 9);
-}
-
-.heroFrame {
-  position: relative;
+/* Full width, 16:9, from the top: no side crop; where the canvas is shorter
+   the empty foot of the still (below its content) is what goes. */
+.heroStack {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   aspect-ratio: 16 / 9;
-  overflow: hidden;
-  background: #f7f1f0;
-  border-radius: 18px;
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.1),
-    0 28px 70px rgb(0 0 0 / 0.5);
 }
-
 .heroSlide {
   position: absolute;
   inset: 0;
   opacity: 0;
   transition: opacity 500ms ease;
 }
-
 .heroSlideOn {
   opacity: 1;
 }
-
 .heroSlide img {
-  object-fit: contain;
+  object-fit: cover;
 }
-
-/* Counter row under the frame, at its left edge (PO reference). */
+/* The arrows float on the canvas sides, in the stills' empty margins. */
+.heroArrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  color: var(--ink);
+  background: rgb(255 255 255 / 0.82);
+  border: 1px solid rgb(23 0 2 / 0.14);
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgb(23 0 2 / 0.12);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+.heroArrow:hover {
+  background: #ffffff;
+}
+.heroPrev {
+  left: 24px;
+}
+.heroNext {
+  right: 24px;
+}
+/* Lower overlay: in the stills' empty foot, above the hero's bottom edge. */
+.heroOverlay {
+  position: relative;
+  z-index: 1;
+  padding: 0 0 24px;
+}
+/* Counter and progress on the stills' text column (7.8 % of the width). */
 .heroMeta {
   display: flex;
   align-items: center;
   gap: 18px;
-  height: 52px;
-  padding-top: 12px;
+  height: 20px;
+  margin-bottom: 14px;
+  padding-left: 7.8%;
 }
-
 .heroCount {
   font-family: var(--mono);
   font-size: 15px;
   letter-spacing: 0.06em;
-  color: #a98b88;
+  color: var(--muted);
   white-space: nowrap;
 }
-
 .heroCount b {
   font-weight: 500;
-  color: #ffffff;
+  color: var(--ink);
 }
-
 .heroBars {
   display: flex;
   gap: 8px;
 }
-
 .heroBars span {
   width: 40px;
   height: 3px;
-  background: rgb(255 255 255 / 0.22);
+  background: rgb(23 0 2 / 0.16);
   border-radius: 2px;
 }
-
 .heroBars .heroBarOn {
   background: var(--coral);
 }
-
-/* Desktop: the arrows flank the frame on the hero's sides. */
-.heroArrow {
-  position: absolute;
-  top: calc(50% - 16px);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  color: #ffffff;
-  background: rgb(22 1 2 / 0.35);
-  border: 1px solid rgb(255 255 255 / 0.75);
-  border-radius: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-}
-
-.heroPrev {
-  left: 36px;
-}
-
-.heroNext {
-  right: 36px;
-}
-
 .heroSearch {
-  /* Inside the hero, at its foot, under the stage: never over the artwork. */
-  flex: none;
   width: 980px;
-  max-width: calc(100% - 40px);
-  margin: 18px auto 0;
+  max-width: calc(100% - 48px);
+  margin: 0 auto;
 }
-
+/* On the light canvas the search and the light intents lift off it. */
+.heroSearch .search {
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgb(23 0 2 / 0.08),
+    0 14px 36px rgb(23 0 2 / 0.14);
+}
+.heroSearch .intent:not(.intentCoral) {
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgb(23 0 2 / 0.1),
+    0 6px 16px rgb(23 0 2 / 0.08);
+}
 .search {
   position: relative;
   display: flex;
@@ -263,7 +260,8 @@
   cursor: pointer;
 }
 
-.search:focus-within {
+.search:focus-within,
+.heroSearch .search:focus-within {
   box-shadow: 0 0 0 3px rgb(252 82 60 / 0.45);
 }
 
@@ -1232,65 +1230,23 @@
   }
 }
 
-/* Small desktops: the frame is width-bound, so the hero takes its natural
-   height (no empty bands around the frame); the arrows stay on the sides. */
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .hero {
-    height: auto;
-  }
-
-  .heroSlider {
-    display: block;
-    padding: 20px 104px 0;
-    container-type: normal;
-  }
-
-  .heroStage {
-    width: 100%;
-  }
-}
-
 @media (max-width: 1023px) {
-  /* Narrow screens: natural height; the full artwork scaled to the width,
-     the arrows move into the counter row. */
+  /* Tablets: the same composition, scaled with the width. */
   .hero {
-    height: auto;
-    padding-bottom: 40px;
-  }
-
-  .heroSlider {
-    display: block;
-    padding: 16px 24px 0;
-    container-type: normal;
-  }
-
-  .heroStage {
-    width: 100%;
-  }
-
-  .heroFrame {
-    border-radius: 12px;
-  }
-
-  .heroMeta {
-    justify-content: center;
+    height: calc(64px + 56.25vw + 100px);
   }
 
   .heroArrow {
-    position: static;
     width: 44px;
     height: 44px;
-    transform: none;
   }
 
   .heroPrev {
-    order: -1;
+    left: 14px;
   }
 
-  .heroSearch {
-    width: auto;
-    max-width: none;
-    margin: 20px 24px 0;
+  .heroNext {
+    right: 14px;
   }
 
   .highlights,
@@ -1355,12 +1311,58 @@
 }
 
 @media (max-width: 720px) {
+  /* Phones: the artwork across the top of the canvas, the controls under it
+     on the same canvas (still inside the hero); the arrows join the counter. */
+  .hero {
+    height: auto;
+  }
+
   .heroSlider {
-    padding: 12px 16px 0;
+    display: grid;
+    flex: none;
+    grid-template-areas:
+      'stack stack stack'
+      'prev meta next'
+      'search search search';
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    column-gap: 12px;
+    padding-bottom: 20px;
+  }
+
+  .heroStack {
+    position: relative;
+    grid-area: stack;
+  }
+
+  .heroOverlay {
+    display: contents;
   }
 
   .heroMeta {
+    grid-area: meta;
     gap: 12px;
+    height: 44px;
+    margin: 12px 0;
+    padding-left: 0;
+  }
+
+  .heroArrow {
+    position: static;
+    align-self: center;
+    width: 40px;
+    height: 40px;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .heroPrev {
+    grid-area: prev;
+    justify-self: end;
+  }
+
+  .heroNext {
+    grid-area: next;
+    justify-self: start;
   }
 
   .heroBars span {
@@ -1368,7 +1370,10 @@
   }
 
   .heroSearch {
-    margin: 16px 16px 0;
+    grid-area: search;
+    width: auto;
+    max-width: none;
+    margin: 0 16px;
   }
 
   .search {

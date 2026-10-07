@@ -78,16 +78,16 @@ const bottom = (page: Page, selector: string) =>
     .evaluate((el) => Math.round(el.getBoundingClientRect().bottom + window.scrollY))
 
 test.describe('V1 hero', () => {
-  // HOMEPAGE-HERO-SLIDER-01 (frame correction, PO reference): one composed
-  // first screen — header, a bounded 16:9 frame with its arrows and counter,
-  // search and intents — clamp(760 px, 100svh, 980 px) from 1280 px wide. The
-  // video mark is gone (video cancelled). The slider itself: hero-slider spec.
+  // HOMEPAGE-HERO-SLIDER-01 (full-fill overlay correction, PO reference): one
+  // hero — header, the stills filling the canvas edge to edge, the search and
+  // intents over its lower part — clamp(760 px, 100svh, 980 px) at these
+  // sizes. The video mark is gone (video cancelled). Slider: hero-slider spec.
   for (const [width, height] of [
     [1440, 812],
     [1440, 900],
     [1728, 998],
   ] as const) {
-    test(`${width}×${height}: one bounded hero with frame, search and intents, then the strip`, async ({
+    test(`${width}×${height}: one bounded hero, artwork full width, search and intents over it, then the strip`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height })
@@ -95,13 +95,18 @@ test.describe('V1 hero', () => {
       await expect(page.locator(`${sec('hero')} header[data-shell="public"]`)).toHaveCount(1)
       const heroBottom = await bottom(page, sec('hero'))
       expect(heroBottom).toBe(Math.min(Math.max(760, height), 980))
-      const frame = (await page
+      const slide = (await page
         .locator('[data-section="hero-slider"] [data-slide]')
         .first()
         .boundingBox())!
-      expect(frame.width).toBeLessThan(width - 200)
-      expect(Math.abs(frame.height - (frame.width * 9) / 16)).toBeLessThanOrEqual(1.5)
-      expect(await top(page, '[data-search="hero"]')).toBeGreaterThan(frame.y + frame.height)
+      expect([Math.round(slide.x), Math.round(slide.width), Math.round(slide.y)]).toEqual([
+        0,
+        width,
+        64,
+      ])
+      const searchTop = await top(page, '[data-search="hero"]')
+      expect(searchTop).toBeGreaterThan(64 + height / 2)
+      expect(searchTop).toBeLessThan(heroBottom)
       expect(await bottom(page, '[data-cta="primary"]')).toBeLessThanOrEqual(heroBottom)
       expect(await top(page, sec('ticker'))).toBe(heroBottom)
       await expect(page.getByText('VIDEO · CHƯƠNG TRÌNH')).toHaveCount(0)

@@ -43,30 +43,31 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
     >
       <section className={styles.hero} data-section="hero">
         <PublicHeader viewer={viewer} current="home" />
-        {/* HOMEPAGE-HERO-SLIDER-01: the six approved stills replace the video
-            placeholder (video cancelled); the search cluster follows the frame. */}
-        <HeroSlider />
         <h1 className={styles.srOnly}>
           HUB Network — chương trình, sản phẩm và nhân tài đổi mới sáng tạo
         </h1>
-        <div className={styles.heroSearch}>
-          <HomeSearch suggestions={HOME_SEARCH_SUGGESTIONS} />
-          <div className={styles.intents}>
-            <PublicAction
-              href={null}
-              className={`${styles.intent} ${styles.intentCoral}`}
-              cta="organise"
-            >
-              Tổ chức chương trình <ArrowRight />
-            </PublicAction>
-            <PublicAction href={null} className={styles.intent} cta="fundraise">
-              Gọi vốn <ArrowRight />
-            </PublicAction>
-            <PublicAction href={viewer.entry} className={styles.intent} cta="primary">
-              Tham gia cộng đồng HUB Network <ArrowRight />
-            </PublicAction>
+        {/* HOMEPAGE-HERO-SLIDER-01: the six approved stills are the hero's
+            canvas; the search and intents overlay its lower part. */}
+        <HeroSlider>
+          <div className={styles.heroSearch}>
+            <HomeSearch suggestions={HOME_SEARCH_SUGGESTIONS} />
+            <div className={styles.intents}>
+              <PublicAction
+                href={null}
+                className={`${styles.intent} ${styles.intentCoral}`}
+                cta="organise"
+              >
+                Tổ chức chương trình <ArrowRight />
+              </PublicAction>
+              <PublicAction href={null} className={styles.intent} cta="fundraise">
+                Gọi vốn <ArrowRight />
+              </PublicAction>
+              <PublicAction href={viewer.entry} className={styles.intent} cta="primary">
+                Tham gia cộng đồng HUB Network <ArrowRight />
+              </PublicAction>
+            </div>
           </div>
-        </div>
+        </HeroSlider>
       </section>
 
       <div className={styles.ticker} aria-label="Chương trình tiêu biểu" data-section="ticker">

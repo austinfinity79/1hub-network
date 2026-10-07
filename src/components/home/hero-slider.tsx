@@ -1,17 +1,19 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import styles from './home.module.css'
 
 /**
  * HOMEPAGE-HERO-SLIDER-01 — the homepage hero: the PO's six still artworks
- * (hero-still-01 … 06.png, 1920 × 1080, unmodified in public/home/hero), each a
- * complete composition shown whole in one 16:9 frame. No text is rebuilt or
- * laid over them. 01 → 06 → 01, one slide every 10 s; previous / next change
- * at once and restart the 10 s. A single timeout per shown slide: it is
- * replaced on every change and cleared on unmount, so timers never pile up.
+ * (hero-still-01 … 06.png, 1920 × 1080, unmodified in public/home/hero) are
+ * the hero's visual canvas, edge to edge (full-fill overlay correction); the
+ * arrows float on its sides and the counter, search and intents (`children`)
+ * sit in its lower part. No text is rebuilt over the artwork.
+ * 01 → 06 → 01, one slide every 10 s; previous / next change at once and
+ * restart the 10 s. A single timeout per shown slide: it is replaced on every
+ * change and cleared on unmount, so timers never pile up.
  */
 
 export const HERO_INTERVAL_MS = 10_000
@@ -28,7 +30,7 @@ export const HERO_SLIDES = [
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-export function HeroSlider() {
+export function HeroSlider({ children }: { children?: ReactNode }) {
   const [index, setIndex] = useState(0)
   const count = HERO_SLIDES.length
 
@@ -48,50 +50,59 @@ export function HeroSlider() {
       aria-label="HUB Network"
       data-section="hero-slider"
     >
-      {/* The stage: a bounded 16:9 frame sized by the space the hero leaves
-          (not by the PNG), and the counter row under it. */}
-      <div className={styles.heroStage}>
-        <div className={styles.heroFrame}>
-          {HERO_SLIDES.map((s, i) => (
-            <div
-              key={s.src}
-              className={`${styles.heroSlide} ${i === index ? styles.heroSlideOn : ''}`}
-              role="group"
-              aria-roledescription="slide"
-              aria-label={`${pad(i + 1)} / ${pad(count)}`}
-              aria-hidden={i === index ? undefined : true}
-              data-slide={pad(i + 1)}
-              data-active={i === index ? 'true' : undefined}
-            >
-              <Image
-                src={s.src}
-                alt={`Slide ${i + 1}/${count}: ${s.label}`}
-                fill
-                sizes="(max-width: 1023px) 100vw, 1100px"
-                quality={90}
-                priority={i === 0}
-              />
-            </div>
-          ))}
-        </div>
-        <div className={styles.heroMeta}>
-          {/* Desktop: the arrows sit on the hero's sides, around the frame;
-              narrow screens: in this row. */}
-          <button
-            type="button"
-            className={`${styles.heroArrow} ${styles.heroPrev}`}
-            aria-label="Previous slide"
-            onClick={() => go(-1)}
+      {/* The artwork fills the canvas: full width, 16:9, from the top; the
+          canvas height is the hero's (bounded), never the PNG's. */}
+      <div className={styles.heroStack}>
+        {HERO_SLIDES.map((s, i) => (
+          <div
+            key={s.src}
+            className={`${styles.heroSlide} ${i === index ? styles.heroSlideOn : ''}`}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${pad(i + 1)} / ${pad(count)}`}
+            aria-hidden={i === index ? undefined : true}
+            data-slide={pad(i + 1)}
+            data-active={i === index ? 'true' : undefined}
           >
-            <svg viewBox="0 0 14 12" width="14" height="12" aria-hidden="true">
-              <path
-                d="M13.5 6h-12M6.5 1l-5 5 5 5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </button>
+            <Image
+              src={s.src}
+              alt={`Slide ${i + 1}/${count}: ${s.label}`}
+              fill
+              sizes="100vw"
+              quality={90}
+              priority={i === 0}
+            />
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        className={`${styles.heroArrow} ${styles.heroPrev}`}
+        aria-label="Previous slide"
+        onClick={() => go(-1)}
+      >
+        <svg viewBox="0 0 14 12" width="14" height="12" aria-hidden="true">
+          <path
+            d="M13.5 6h-12M6.5 1l-5 5 5 5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+        </svg>
+      </button>
+      <button
+        type="button"
+        className={`${styles.heroArrow} ${styles.heroNext}`}
+        aria-label="Next slide"
+        onClick={() => go(1)}
+      >
+        <svg viewBox="0 0 14 12" width="14" height="12" aria-hidden="true">
+          <path d="M0.5 6h12M7.5 1l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+      </button>
+      {/* Lower overlay: counter and progress, then the search and intents. */}
+      <div className={styles.heroOverlay}>
+        <div className={styles.heroMeta}>
           <p className={styles.heroCount} data-hero-indicator="">
             <b>{pad(index + 1)}</b> / {pad(count)}
           </p>
@@ -100,22 +111,8 @@ export function HeroSlider() {
               <span key={s.src} className={i === index ? styles.heroBarOn : undefined} />
             ))}
           </span>
-          <button
-            type="button"
-            className={`${styles.heroArrow} ${styles.heroNext}`}
-            aria-label="Next slide"
-            onClick={() => go(1)}
-          >
-            <svg viewBox="0 0 14 12" width="14" height="12" aria-hidden="true">
-              <path
-                d="M0.5 6h12M7.5 1l5 5-5 5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </button>
         </div>
+        {children}
       </div>
     </div>
   )
