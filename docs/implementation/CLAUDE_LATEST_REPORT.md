@@ -1,31 +1,31 @@
 # Claude Task Report
 
 ## Task
-THAO-M3-QA-01 — Startup Profile v2 final milestone QA / main freeze. Report: [THAO-M3-QA-01](reports/THAO-M3-QA-01.md). Implementation: [THAO-06](reports/THAO-06.md).
+DEMO-CONTENT-V2-PATCH-A — demo content v2 (refreshed workbook), public Product logos, locked PO sector decisions. Report: [DEMO-CONTENT-V2-PATCH-A](reports/DEMO-CONTENT-V2-PATCH-A.md).
 
 ## Verdict
-**PASS_WITH_EVIDENCE.**
-- P1 fix: `/products` card "Theo dõi" wired to Follow v1 (was a dead CTA for members).
-- Migration 021 QA PASS on a throwaway database.
-- Main fast-forwarded to the candidate and tagged `thao-m3-frozen-<sha>`. Not deployed. STOP.
+**PASS_WITH_EVIDENCE** (technical; business UAT is DEMO-CONTENT-QA).
+- Demo DB `hubnetwork_demo_0710` @ 021: 92 safe cards (+3 demo), VNSPECIAL archived, 7 logos bound and public, Smart Campus → `edtech`, Drippy intentionally unmapped (P0).
+- Runtime: public logo of a published startup served to guests and rendered on card and startup page; other assets unchanged.
+- Main = the integration commit; the demo runs the exact main SHA. STOP.
 
 ## Tests / build
 | Gate | Result |
 |---|---|
 | format · lint · typecheck · build | PASS |
-| unit · DB | 466 / 466 · 883 / 883 |
-| Full regression | 1407 tests: 1378 PASS, 29 SKIP, 0 FAIL, 0 FLAKY |
+| unit · DB | 466 / 466 · 885 / 885 |
+| Full regression | 1410 tests: 1381 PASS, 29 SKIP, 0 FAIL, 0 FLAKY |
 | UAT L1–L2 | 19 / 19 |
 
 ## Git
-- Branch: `feat/thao-m3-startup-profile` → pushed to `origin` (no force).
-- Implementation commit: `f93fd85`; report / final commit: this QA commit (the frozen SHA).
-- Remote: `origin` (GitHub). Push status: PASS (feature branch, main, tag).
-- Remote HEAD: `main` = the frozen SHA.
+- Branch: `integrate/demo-content-v2` → `main` (fast-forward); feature branches `fix/public-product-logos`, `feat/demo-content-import` kept with their worktrees.
+- Implementation commits: `ab806e5` (runtime), `62246d4`…`626c928` (content tooling), merge `bc894d0`; report commit: this one.
+- Remote: `origin` (GitHub, private). Push status: PASS (main).
+- Remote HEAD: `main` = the report commit.
 - Working tree: clean after commit.
 
 ## Recommended next task
-THAO-M3-DEPLOY. Not started.
+DEMO-CONTENT-QA. Not started.
 
 ## Related
-- [THAO-M3-QA-01](reports/THAO-M3-QA-01.md) · [P0_STATUS](P0_STATUS.md)
+- [DEMO-CONTENT-V2-PATCH-A](reports/DEMO-CONTENT-V2-PATCH-A.md) · [P0_STATUS](P0_STATUS.md)
