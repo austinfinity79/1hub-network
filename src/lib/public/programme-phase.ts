@@ -4,12 +4,14 @@
  * and never written back to the canonical lifecycle (DEC-W4P-D11).
  */
 
-export type ProgrammePhase = 'dang-mo' | 'sap-toi' | 'da-ket-thuc'
+/** `sap-cong-bo`: the content pack's own status, as written (PROGRAMME-PRESENTATION-DATA-01). */
+export type ProgrammePhase = 'dang-mo' | 'sap-toi' | 'sap-cong-bo' | 'da-ket-thuc'
 
 export const PHASES: ReadonlyArray<{ key: ProgrammePhase; label: string }> = [
   { key: 'dang-mo', label: 'Đang mở' },
   { key: 'sap-toi', label: 'Sắp tới' },
   { key: 'da-ket-thuc', label: 'Đã kết thúc' },
+  { key: 'sap-cong-bo', label: 'Sắp công bố' },
 ]
 
 export type ProgrammeKind = 'challenge' | 'programme'

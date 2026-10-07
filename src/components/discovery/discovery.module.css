@@ -608,7 +608,8 @@
   border-radius: 20px;
 }
 
-.progCard[data-programme='sap-toi'] {
+.progCard[data-programme='sap-toi'],
+.progCard[data-programme='sap-cong-bo'] {
   background: linear-gradient(180deg, #8e1d1a 0%, #5d0a0c 50%, #2a0305 100%);
 }
 

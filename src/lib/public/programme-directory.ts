@@ -1,27 +1,19 @@
-import { query } from '@/lib/db/client'
-import { applicationRoutes } from '@/lib/application/routes'
-import type { LibraryViewer } from '@/lib/library/canonical-source'
+import { PROGRAMME_CARDS } from '@/components/home/home-content'
 import { fold } from '@/lib/library/startup-adapter'
 
-import { phaseOf, type ProgrammeKind, type ProgrammePhase } from './programme-phase'
+import type { ProgrammeKind, ProgrammePhase } from './programme-phase'
 
 /**
- * THAO-05 DIR0 — the public projection of the Programme aggregate for
- * `/programmes` (DEC-THAO-DIR-D1, a narrow override of DEC-W4P-D10).
+ * PROGRAMME-PRESENTATION-DATA-01 — `/programmes` lists the approved,
+ * source-backed programmes only: the refreshed workbook's programmes that the
+ * homepage already shows (`PROGRAMME_CARDS`, one source for both pages). The
+ * deployed programme rows are fixtures (Internal Alpha, "(demo)", a sample
+ * chapter) and are no longer projected publicly.
  *
- * - Visible: PUBLISHED and CLOSED; DRAFT (and the deferred ARCHIVED) never
- *   leave the server.
- * - Fields: name, type, summary, the owning organisation's public name (when
- *   that organisation is PUBLISHED), dates and a derived phase. Nothing else:
- *   no id, no metadata (journey, challenge problems), no registration form.
- * - Phase is presentation only and never written back (DEC-W4P-D11 unchanged):
- *   Đã kết thúc = CLOSED or `ends_at` passed; Sắp tới = PUBLISHED with
- *   `starts_at` in the future; Đang mở = PUBLISHED otherwise.
- * - The card's one destination is the existing L5 entry
- *   `/programmes/[programmeId]/apply`, offered only to a signed-in NETWORK
- *   viewer, for a PUBLISHED programme that has its registration form and has
- *   not ended (the apply contract's own conditions); otherwise READ_ONLY.
- *   The programme id therefore reaches that viewer only, inside that link.
+ * Every field is the sheet's value; an empty one stays empty: no dates (so no
+ * timeline and no derived phase), the sheet's own status ("Sắp công bố") as
+ * the phase, the "Chủ quản" text as the host, and no apply entry (no
+ * programme record behind the row), so each card is READ_ONLY.
  */
 
 export type DirectoryProgramme = {
@@ -42,69 +34,42 @@ export type DirectoryProgramme = {
   text: string
 }
 
-const DAY = new Intl.DateTimeFormat('vi-VN', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-  timeZone: 'Asia/Ho_Chi_Minh',
-})
+const slugOf = (text: string) =>
+  fold(text)
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
 
-function timelineOf(startsAt: Date | null, endsAt: Date | null): string | null {
-  if (startsAt && endsAt) return `${DAY.format(startsAt)} – ${DAY.format(endsAt)}`
-  if (startsAt) return `Từ ${DAY.format(startsAt)}`
-  if (endsAt) return `Đến ${DAY.format(endsAt)}`
-  return null
+/** The sheet's "Tag phân loại" → the directory type ("Cuộc thi" is a challenge). */
+const KIND_OF: Record<string, ProgrammeKind> = {
+  'Cuộc thi': 'challenge',
+  'Chương trình': 'programme',
 }
 
-type Row = {
-  id: string
-  slug: string
-  name: string
-  summary: string | null
-  type: 'PROGRAMME' | 'CHALLENGE'
-  status: 'PUBLISHED' | 'CLOSED'
-  starts_at: Date | null
-  ends_at: Date | null
-  host_slug: string | null
-  host_name: string | null
-  has_form: boolean
+/** The sheet's "Trạng thái", as written → its phase key. */
+const PHASE_OF: Record<string, ProgrammePhase> = {
+  'Sắp công bố': 'sap-cong-bo',
 }
 
-export async function listPublicProgrammes(
-  viewer: LibraryViewer,
-  now: Date = new Date(),
-): Promise<DirectoryProgramme[]> {
-  const rows = await query<Row>(
-    `SELECT p.id::text, p.slug, p.name, p.summary, p.programme_type::text AS type,
-            p.status::text AS status, p.starts_at, p.ends_at,
-            CASE WHEN o.status = 'PUBLISHED' THEN o.slug END AS host_slug,
-            CASE WHEN o.status = 'PUBLISHED' THEN o.name END AS host_name,
-            (f.programme_id IS NOT NULL) AS has_form
-       FROM programmes p
-       JOIN organizations o ON o.id = p.organization_id
-       LEFT JOIN programme_application_forms f ON f.programme_id = p.id
-      WHERE p.status IN ('PUBLISHED', 'CLOSED')
-      ORDER BY p.name, p.slug`,
-  )
-  return rows.map((r) => {
-    const startsAt = r.starts_at ? new Date(r.starts_at) : null
-    const endsAt = r.ends_at ? new Date(r.ends_at) : null
-    const phase = phaseOf(r.status, startsAt, endsAt, now)
-    const kind: ProgrammeKind = r.type === 'CHALLENGE' ? 'challenge' : 'programme'
-    const host = r.host_slug && r.host_name ? { slug: r.host_slug, name: r.host_name } : null
-    const eligible =
-      viewer === 'NETWORK' && r.status === 'PUBLISHED' && r.has_form && phase !== 'da-ket-thuc'
-    return {
-      slug: r.slug,
-      name: r.name,
-      kind,
-      summary: r.summary,
-      host,
-      phase,
-      timeline: timelineOf(startsAt, endsAt),
-      startsAt: startsAt?.toISOString() ?? null,
-      applyHref: eligible ? applicationRoutes.apply(r.id) : null,
-      text: fold([r.name, r.summary, host?.name, kind].filter(Boolean).join(' ')),
-    }
+export function listPublicProgrammes(): DirectoryProgramme[] {
+  return PROGRAMME_CARDS.flatMap((c) => {
+    const kind = KIND_OF[c.kind]
+    const phase = PHASE_OF[c.status]
+    // A row whose type or status has no directory value is left out, never guessed.
+    if (!kind || !phase) return []
+    const host = c.owner ? { slug: slugOf(c.owner), name: c.owner } : null
+    return [
+      {
+        slug: slugOf(c.title),
+        name: c.title,
+        kind,
+        summary: c.description,
+        host,
+        phase,
+        timeline: c.period,
+        startsAt: null,
+        applyHref: null,
+        text: fold([c.title, c.description, host?.name, kind].filter(Boolean).join(' ')),
+      },
+    ]
   })
 }

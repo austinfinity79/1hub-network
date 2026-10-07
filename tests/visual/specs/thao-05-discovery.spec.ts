@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import { expect, test, type Page } from '@playwright/test'
 
+import { PROGRAMME_CARDS } from '../../../src/components/home/home-content'
 import { SESSION_COOKIE_NAME } from '../../../src/lib/auth/config'
 import { createSession } from '../../../src/lib/auth/sessions'
 import { query } from '../../../src/lib/db/client'
@@ -190,61 +191,53 @@ const html = async (page: Page, url: string) => (await page.request.get(url)).te
 
 // ------------------------------------------------------------------ DIR0
 
+// PROGRAMME-PRESENTATION-DATA-01: the list is the source-backed programmes only
+// (the homepage's PROGRAMME_CARDS); no programme row — fixture or not — is
+// projected, so the deterministic seed and this spec's rows must not appear.
+const SOURCE_NAMES = PROGRAMME_CARDS.map((c) => c.title)
+const FIXTURE_WORDS = ['(demo)', 'Internal Alpha', 'Chương trình mẫu', 'Chapter 01', 'THAO05']
+
 test.describe('DIR0 /programmes', () => {
-  test('visibility: PUBLISHED and CLOSED only; phases derived; no id, draft or hidden host leaks', async ({
+  test('source-backed only: the homepage programmes, no fixture row, wording or id', async ({
     page,
   }) => {
     const body = await html(page, '/programmes')
-    expect(body).not.toContain(DRAFT_NAME)
     for (const id of [SEED_PROGRAMME, ...Object.values(FX_PROGRAMMES)])
-      expect(body, `guest sees no programme id ${id}`).not.toContain(id)
-    expect(body).not.toContain('wf06 fx org draft')
+      expect(body, `no programme id ${id}`).not.toContain(id)
     await page.goto('/programmes', { waitUntil: 'networkidle' })
-    const phase = async (name: string) =>
-      cards(page, 'programme').filter({ hasText: name }).getAttribute('data-programme')
-    expect(await phase('THAO05 Thử thách đang mở')).toBe('dang-mo')
-    expect(await phase('THAO05 Chương trình sắp tới')).toBe('sap-toi')
-    expect(await phase('THAO05 Chương trình đã qua')).toBe('da-ket-thuc')
-    expect(await phase('THAO05 Thử thách đã đóng')).toBe('da-ket-thuc')
-    // An unpublished host is not named.
-    const hidden = cards(page, 'programme').filter({ hasText: 'THAO05 Chủ quản chưa công bố' })
-    await expect(hidden.locator('[class*="progHost"]')).toHaveText('')
-    // The title counts the open ones; a guest is offered no apply entry.
-    const open = await cards(page, 'programme').evaluateAll(
-      (els) => els.filter((e) => (e as HTMLElement).dataset.programme === 'dang-mo').length,
+    const text = await page.locator('body').innerText()
+    for (const word of FIXTURE_WORDS) expect(text, word).not.toContain(word)
+    expect(text).not.toContain(DRAFT_NAME)
+    await expect(cards(page, 'programme')).toHaveCount(SOURCE_NAMES.length)
+    expect(await cards(page, 'programme').locator('h2').allInnerTexts()).toEqual(
+      [...SOURCE_NAMES].sort((a, b) => a.localeCompare(b, 'vi')),
     )
-    await expect(page.locator('h1 span')).toHaveText(String(open))
+    for (const c of PROGRAMME_CARDS) {
+      // The homepage's own values: host, description, status and type; no invented dates.
+      const card = cards(page, 'programme').filter({ hasText: c.title })
+      await expect(card).toHaveAttribute('data-programme', 'sap-cong-bo')
+      await expect(card.locator('[class*="progHost"]')).toHaveText(c.owner!)
+      await expect(card.locator('[class*="progPhase"]')).toHaveText(c.status)
+      await expect(card.locator('p')).toHaveText(c.description)
+      await expect(card.locator('[class*="progTags"] li')).toHaveText(['Challenge'])
+    }
+    // Nothing is open; no card offers an apply entry (no programme record behind it).
+    await expect(page.locator('h1 span')).toHaveText('0')
     await expect(page.locator('a[href*="/apply"]')).toHaveCount(0)
     await expect(cards(page, 'programme').locator('[data-cta-kind="INERT"]')).toHaveCount(
-      await cards(page, 'programme').count(),
+      SOURCE_NAMES.length,
     )
   })
 
-  test('member: the apply entry only for PUBLISHED + form + not ended; it resolves', async ({
+  test('member: the same source-backed list, no apply entry; the API stays guarded', async ({
     page,
     baseURL,
   }) => {
     await signIn(page, baseURL)
     await page.goto('/programmes', { waitUntil: 'networkidle' })
-    const link = (name: string) => cards(page, 'programme').filter({ hasText: name }).locator('a')
-    await expect(link('THAO05 Thử thách đang mở')).toHaveAttribute(
-      'href',
-      `/programmes/${FX_PROGRAMMES.open}/apply`,
-    )
-    await expect(link('Chương trình ươm tạo (demo)')).toHaveAttribute(
-      'href',
-      `/programmes/${SEED_PROGRAMME}/apply`,
-    )
-    for (const name of [
-      'THAO05 Chương trình sắp tới', // no form
-      'THAO05 Chương trình đã qua', // ended
-      'THAO05 Thử thách đã đóng', // CLOSED
-    ])
-      await expect(link(name), name).toHaveCount(0)
-    const res = await page.request.get(`/programmes/${FX_PROGRAMMES.open}/apply`, {
-      maxRedirects: 0,
-    })
-    expect(res.status(), 'apply entry is a real route').not.toBe(404)
+    await expect(cards(page, 'programme')).toHaveCount(SOURCE_NAMES.length)
+    await expect(page.locator('a[href*="/apply"]')).toHaveCount(0)
+    expect(await page.locator('body').innerText()).not.toContain('(demo)')
     // The management API stays behind its capability: a guest reads nothing.
     await page.context().clearCookies()
     expect((await page.request.get('/api/v1/programmes')).status()).toBeGreaterThanOrEqual(400)
@@ -253,20 +246,30 @@ test.describe('DIR0 /programmes', () => {
   test('search, filters, address, refresh, reset, empty, sort and Back', async ({ page }) => {
     await page.goto('/programmes', { waitUntil: 'networkidle' })
     const total = await cards(page, 'programme').count()
-    await page.getByRole('search').getByRole('searchbox').fill('thử thách')
+    await page.getByRole('search').getByRole('searchbox').fill('vpbank')
     await page.getByRole('button', { name: 'Tìm kiếm' }).click()
-    await expect(page).toHaveURL(/\?q=th%E1%BB%AD\+th%C3%A1ch$/)
-    await expect(cards(page, 'programme')).toHaveCount(2)
+    await expect(page).toHaveURL(/\?q=vpbank$/)
+    await expect(cards(page, 'programme')).toHaveCount(1)
     const rail = page.getByRole('complementary', { name: 'Bộ lọc' })
-    await rail.getByLabel(/^Đã kết thúc/).check()
-    await expect(page).toHaveURL(/trang-thai=da-ket-thuc/)
+    await rail.getByLabel(/^Sắp công bố/).check()
+    await expect(page).toHaveURL(/trang-thai=sap-cong-bo/)
     await expect(cards(page, 'programme')).toHaveCount(1)
     await page.reload({ waitUntil: 'networkidle' })
     await expect(cards(page, 'programme')).toHaveCount(1)
-    await expect(rail.getByLabel(/^Đã kết thúc/)).toBeChecked()
-    await rail.getByLabel(/^Challenge/).check()
-    await rail.getByLabel(/^Programme/).check()
+    await expect(rail.getByLabel(/^Sắp công bố/)).toBeChecked()
+    // A status the source has none of: the empty state, then reset.
+    await rail.getByLabel(/^Sắp công bố/).uncheck()
+    await rail.getByLabel(/^Đã kết thúc/).check()
+    await expect(page.locator('[data-state="empty"]')).toBeVisible()
+    await page.getByRole('button', { name: 'Xoá tất cả bộ lọc' }).click()
+    await expect(page).toHaveURL(/\/programmes$/)
+    await expect(cards(page, 'programme')).toHaveCount(total)
+    // Host and type facets come from the source rows.
+    await rail.getByLabel(/^Net Zero Vietnam/).check()
+    await expect(page).toHaveURL(/don-vi=net-zero-vietnam/)
     await expect(cards(page, 'programme')).toHaveCount(1)
+    await rail.getByLabel(/^Programme/).check()
+    await expect(page.locator('[data-state="empty"]')).toBeVisible()
     await page.goto('/programmes?q=khong-co-chuong-trinh-nao', { waitUntil: 'networkidle' })
     await expect(page.locator('[data-state="empty"]')).toBeVisible()
     await page.getByRole('button', { name: 'Xoá tất cả bộ lọc' }).click()

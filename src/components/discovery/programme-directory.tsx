@@ -30,8 +30,8 @@ import styles from './discovery.module.css'
 
 /**
  * THAO-05 DIR0 — `/programmes` (DM06 "Chương trình, cuộc thi"), the public
- * programme list (DEC-THAO-DIR-D1). Rows come projected from the server
- * (PUBLISHED and CLOSED only); this view searches, filters by phase, type and
+ * programme list (DEC-THAO-DIR-D1). Rows are the source-backed programmes
+ * (PROGRAMME-PRESENTATION-DATA-01); this view searches, filters by phase, type and
  * host, sorts and mirrors everything in the address (`?q=`, `?trang-thai=`,
  * `?loai=`, `?don-vi=`, `?sap-xep=`). No public detail page exists: a card
  * opens the member apply entry when the server offered one, else it is
@@ -42,7 +42,12 @@ const PAGE = 9
 
 type ProgrammeInitial = ProgrammeView
 
-const PHASE_RANK: Record<ProgrammePhase, number> = { 'dang-mo': 0, 'sap-toi': 1, 'da-ket-thuc': 2 }
+const PHASE_RANK: Record<ProgrammePhase, number> = {
+  'dang-mo': 0,
+  'sap-toi': 1,
+  'sap-cong-bo': 2,
+  'da-ket-thuc': 3,
+}
 const PHASE_LABEL = Object.fromEntries(PHASES.map((p) => [p.key, p.label])) as Record<
   ProgrammePhase,
   string
