@@ -494,8 +494,23 @@
 
 .follow {
   flex: 0 0 98px;
+  font-family: inherit;
   color: var(--ink);
+  cursor: pointer;
+  background: none;
   border: 1.5px solid var(--ink);
+}
+
+/* Follow v1: the member's own state (THAO-M3-QA-01). */
+.following {
+  flex-basis: auto;
+  padding: 0 16px;
+  color: #ffffff;
+  background: var(--ink);
+}
+
+.follow:disabled {
+  opacity: 0.6;
 }
 
 .empty {

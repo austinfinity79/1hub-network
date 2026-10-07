@@ -29,7 +29,9 @@ import {
   useAddressView,
 } from '@/components/discovery/discovery-parts'
 import styles from '@/components/discovery/discovery.module.css'
-import { PublicAction } from '@/components/public-shell/public-action'
+import { FollowButton } from '@/components/startup/follow-button'
+
+const FOLLOW_LOOK = { follow: styles.follow!, following: styles.following! }
 
 const PLACEHOLDER = 'Tìm theo tên sản phẩm, lĩnh vực hoặc nhà sáng lập...'
 const PLACEHOLDER_SHORT = 'Tìm theo tên sản phẩm, lĩnh vực...'
@@ -70,6 +72,7 @@ export function Directory({
   stageShort,
   stageOrder,
   guest,
+  followed,
   initial,
 }: {
   startups: DirectoryStartup[]
@@ -77,6 +80,8 @@ export function Directory({
   stageShort: Record<StartupStage, string>
   stageOrder: StartupStage[]
   guest: boolean
+  /** Slugs the viewer follows (their own state only; THAO-M3-QA-01). */
+  followed: string[]
   initial: DirectoryInitial
 }) {
   const address = useAddress('/products')
@@ -358,14 +363,13 @@ export function Directory({
                     <Link href={s.href} className={styles.view} data-cta="view-startup">
                       Xem hồ sơ
                     </Link>
-                    <PublicAction
-                      href={guest ? '/auth' : null}
-                      className={styles.follow}
-                      cta="follow"
-                      label="Theo dõi"
-                    >
-                      Theo dõi
-                    </PublicAction>
+                    {/* Follow v1 (DEC-THAO-SP-D4): guest → /auth, a member follows. */}
+                    <FollowButton
+                      slug={s.slug}
+                      guest={guest}
+                      initial={followed.includes(s.slug)}
+                      look={FOLLOW_LOOK}
+                    />
                   </div>
                 </li>
               ))}

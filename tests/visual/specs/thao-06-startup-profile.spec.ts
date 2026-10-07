@@ -372,6 +372,65 @@ test.describe('Follow v1 (D4)', () => {
   })
 })
 
+// ------------------------------------------------------------------ /products card
+
+test.describe('/products card Follow (THAO-M3-QA-01: no dead CTA)', () => {
+  const card = (page: Page) => page.locator(`[data-startup="${realSlug}"] [data-cta="follow"]`)
+
+  test('each member sees only their own state; guests are sent to sign in', async ({
+    page,
+    baseURL,
+    request,
+  }) => {
+    expect((await call(request, 'put', `/startups/${realSlug}/follow`, 'stranger')).status).toBe(
+      200,
+    )
+    await page.goto('/products?q=an+khang', { waitUntil: 'networkidle' })
+    await expect(card(page)).toHaveAttribute('href', '/auth')
+    await signIn(page, baseURL, 'hai')
+    await page.goto('/products?q=an+khang', { waitUntil: 'networkidle' })
+    await expect(card(page)).toHaveAttribute('aria-pressed', 'false')
+    await page.context().clearCookies()
+    await signIn(page, baseURL, 'stranger')
+    await page.goto('/products?q=an+khang', { waitUntil: 'networkidle' })
+    await expect(card(page)).toHaveAttribute('aria-pressed', 'true')
+    const html = await (await page.request.get('/products')).text()
+    expect(html).not.toMatch(/người theo dõi|followers?/i)
+    await card(page).click()
+    await expect(card(page)).toHaveText('Theo dõi')
+    expect((await call(request, 'get', `/startups/${realSlug}/follow`, 'stranger')).body).toEqual({
+      following: false,
+    })
+  })
+
+  for (const width of [1440, 1280, 1024, 768, 390]) {
+    test(`${width}: both states fit the card`, async ({ page, baseURL }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await signIn(page, baseURL, 'stranger')
+      await page.goto('/products?q=an+khang', { waitUntil: 'networkidle' })
+      for (const label of ['Theo dõi', 'Đang theo dõi']) {
+        if (label === 'Đang theo dõi') await card(page).click()
+        await expect(card(page)).toHaveText(label)
+        const box = (await card(page).boundingBox())!
+        const host = (await page.locator(`[data-startup="${realSlug}"]`).boundingBox())!
+        expect(box.x + box.width, label).toBeLessThanOrEqual(host.x + host.width + 0.5)
+        expect(box.height, label).toBeLessThanOrEqual(48)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+          width,
+        )
+        await page.screenshot({
+          path: path.join(
+            ACTUAL,
+            `thao-06-products-card-${label === 'Theo dõi' ? 'off' : 'on'}-${width}.png`,
+          ),
+        })
+      }
+      await card(page).click()
+      await expect(card(page)).toHaveText('Theo dõi')
+    })
+  }
+})
+
 // ------------------------------------------------------------------ responsive
 
 test.describe('responsive 1440 / 1280 / 1024 / 768 / 390', () => {

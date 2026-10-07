@@ -60,7 +60,7 @@ Figma draws DM10–DM13 signed in. The guest header is the one drawn on DM01/DM0
 |---|---|---|
 | DM01 | nav, search scope Sản phẩm → `/products?q=`, Tất cả → `/library?q=`, "Xem tất cả sản phẩm", product rows → `/products/[slug]`, "Tham gia cộng đồng HUB Network" → `/auth` | video pause, Chương trình / Nhân tài search scope, "Tổ chức chương trình", "Gọi vốn", programme cards and filters, news, "Nhận bản tin" |
 | DM02–05 | map point → popup, popup close, Humans tabs, "Tham gia HUB Network" → `/auth`, Facebook → `https://www.facebook.com/1hubnetwork`, "Xem chi tiết HUB Chapter" → `/organizations/[slug]` | "Kết nối hợp tác", "Xem thêm", "Tìm thành viên", "Xem thành viên …" (until `/talents`), timeline drag, partner logos, "Xem lịch sự kiện" (until `/events`) |
-| DM08 | search and filters over demo data, "Xem hồ sơ" | "Theo dõi" (guest → `/auth`), "Góp ý" keeps S1-UAT-02 behaviour |
+| DM08 | search and filters over demo data, "Xem hồ sơ"; "Theo dõi" is Follow v1 for a member (guest → `/auth`; THAO-M3-QA-01) | "Góp ý" keeps S1-UAT-02 behaviour |
 | DM10–12 | tabs, "← Sản phẩm", "Xem chỉ số", team member → founder when allow-listed, website ↗; THAO-06: "Theo dõi" for a member (guest → `/auth`), metric and update editors for owner / EDIT | "Đề nghị kết nối", "Hồ sơ đầy đủ & dataroom", "Yêu cầu xem", "Xem vị trí tuyển dụng", quarter picker, update filters (guest → `/auth` for the first two) |
 | DM13 | product rows → `/products/[slug]` | "Kết nối", "Theo dõi", "Thông tin liên hệ", "Xem tất cả …"; "+ Tạo sản phẩm" is owner-only and hidden |
 

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 
 import { DiscoveryError } from '@/components/discovery/discovery-states'
 import { Directory } from '@/components/products/directory'
@@ -9,6 +10,8 @@ import { loadPlaces } from '@/lib/public/discovery-places'
 import type { SearchParams } from '@/lib/public/discovery-query'
 import { readProductView } from '@/lib/public/discovery-views'
 import { publicShellData } from '@/lib/public/shell-data'
+import { viewerOf } from '@/lib/startup/access'
+import { followedSlugs } from '@/lib/startup/follow'
 
 import styles from '@/components/discovery/discovery.module.css'
 
@@ -20,6 +23,7 @@ import styles from '@/components/discovery/discovery.module.css'
  * filter. Query parameters seed the filters (`q`, `linh-vuc`, `giai-doan`,
  * `quoc-gia`, `tinh`, `sap-xep`; THAO-05, DEC-THAO-DIR-D6); anything unknown is
  * ignored. A failed read renders the error state with a retry, never a 5xx.
+ * A card's "Theo dõi" is Follow v1 (DEC-THAO-SP-D4; THAO-M3-QA-01).
  */
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +38,11 @@ export default async function ProductsPage({
   searchParams: Promise<SearchParams>
 }) {
   const [params, shell] = await Promise.all([searchParams, publicShellData()])
-  const data = await Promise.all([listDirectoryStartups(), loadPlaces()]).catch(() => null)
+  const data = await Promise.all([
+    listDirectoryStartups(),
+    loadPlaces(),
+    viewerOf(await headers()).then(followedSlugs),
+  ]).catch(() => null)
   return (
     <div
       className={styles.page}
@@ -51,6 +59,7 @@ export default async function ProductsPage({
             stageShort={STAGE_SHORT}
             stageOrder={STAGE_ORDER}
             guest={shell.viewer.kind === 'GUEST'}
+            followed={data[2]}
             initial={readProductView(params, {
               domains: [...new Set(data[0].flatMap((x) => x.domains))],
               stages: STAGE_ORDER,

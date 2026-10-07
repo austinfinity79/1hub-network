@@ -12,7 +12,7 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). Nothing below is production-complete in t
 | Investor / GP / LP authorisation | any investor-only area of the UPDATED DM11 frame renders as static, locked presentation; its request control is inert | DM11 |
 | Investor / GP & LP metric tiers (SP1-MET) | THAO-06 ships PUBLIC / PRIVATE per metric only (DEC-THAO-SP-D2); no investor tier | DM11 |
 | Automatic Updates activity engine (quarterly report, programme, connection, team, investment events) | THAO-06 ships manual plain-text updates only (DEC-THAO-SP-D3) | DM12 |
-| Follow beyond a startup (people, organisations), counts, lists, notifications | startup Follow v1 is live on DM10–12 (THAO-06, DEC-THAO-SP-D4); elsewhere inert, or → `/auth` for a guest | DM08, DM13 |
+| Follow beyond a startup (people, organisations), counts, lists, notifications | startup Follow v1 is live on DM08 cards and DM10–12 (THAO-06, THAO-M3-QA-01, DEC-THAO-SP-D4); a person's Follow (DM13) stays inert, or → `/auth` for a guest | DM13 |
 | Connect production workflow ("Đề nghị kết nối", "Kết nối", OPN0–OPN4) | inert, or → `/auth` for a guest | DM10–DM13 |
 | Dataroom production workflow ("Hồ sơ đầy đủ & dataroom", DRM4 / DRM5) | inert, or → `/auth` for a guest | DM10 |
 

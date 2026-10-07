@@ -12,22 +12,26 @@ import styles from './startup.module.css'
  * THAO-06 Follow v1 (DEC-THAO-SP-D4). A guest is sent to sign in, as before.
  * A signed-in member toggles their own follow; the button shows only their own
  * state ("Theo dõi" / "Đang theo dõi"), never a count or who else follows.
+ * The same control serves the startup page and the `/products` cards, each
+ * with its own look (`look`).
  */
 export function FollowButton({
   slug,
   guest,
   initial,
+  look = { follow: styles.follow!, following: styles.following! },
 }: {
   slug: string
   guest: boolean
   initial: boolean
+  look?: { follow: string; following: string }
 }) {
   const [following, setFollowing] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   if (guest)
     return (
-      <PublicAction href="/auth" className={styles.follow} cta="follow">
+      <PublicAction href="/auth" className={look.follow} cta="follow">
         Theo dõi
       </PublicAction>
     )
@@ -50,7 +54,7 @@ export function FollowButton({
     <>
       <button
         type="button"
-        className={`${styles.follow} ${following ? styles.following : ''}`}
+        className={`${look.follow} ${following ? look.following : ''}`}
         aria-pressed={following}
         disabled={busy}
         onClick={toggle}

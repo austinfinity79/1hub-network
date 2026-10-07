@@ -56,7 +56,7 @@ Screenshots: `tests/visual/actual/thao-06-*.png` (guest and owner × overview / 
 - No admin removal of venture updates: no post-moderation primitive exists (D3).
 - An unpublished (PRIVATE / DRAFT) venture has no public page, so its team manages metrics and updates by API only.
 - The 5-item starter catalogue is product content: PO to confirm labels.
-- Follow lives on the startup page only; the "Theo dõi" on `/products` cards stays inert (one entry point, D4 scope).
+- ~~The "Theo dõi" on `/products` cards stayed inert~~ — closed by [THAO-M3-QA-01](THAO-M3-QA-01.md) (wired to Follow v1).
 - DM11 / DM12 pixel baselines still wait for the UPDATED files; built in the DM10 language (D10).
 
 ## Related

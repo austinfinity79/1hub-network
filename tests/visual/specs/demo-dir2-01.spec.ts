@@ -111,7 +111,7 @@ test.describe('directory: guest browse and visibility', () => {
     await expect(page).toHaveURL('/products')
   })
 
-  test('follow / connect: a guest is sent to /auth; a member gets no fake action', async ({
+  test('follow / connect: a guest is sent to /auth; a member follows for real (THAO-M3-QA-01)', async ({
     page,
   }) => {
     await page.goto('/products?q=tracely', { waitUntil: 'networkidle' })
@@ -122,15 +122,29 @@ test.describe('directory: guest browse and visibility', () => {
     expect(
       (await page.request.post('/dev/login', { data: { email: 'member@example.test' } })).ok(),
     ).toBe(true)
+    // DEC-THAO-SP-D4: the card's "Theo dõi" is Follow v1, the same state as the
+    // startup page; never an inert drawn button. Only the member's own state shows.
     await page.goto('/products?q=tracely', { waitUntil: 'networkidle' })
-    const follow = cards(page).first().locator('[data-cta="follow"]')
-    await expect(follow).toHaveAttribute('aria-disabled', 'true')
-    await follow.click()
+    const card = cards(page).first().locator('[data-cta="follow"]')
+    await expect(card).toHaveAttribute('aria-pressed', 'false')
+    await card.click()
+    await expect(card).toHaveText('Đang theo dõi')
+    await expect(card).toHaveAttribute('aria-pressed', 'true')
     await expect(page).toHaveURL('/products?q=tracely')
-    // THAO-06 (DEC-THAO-SP-D4): the startup page carries the member's real Follow;
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(cards(page).first().locator('[data-cta="follow"]')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await page.goto('/products/tracely', { waitUntil: 'networkidle' })
+    const follow = page.locator('[data-cta="follow"]')
+    await expect(follow).toHaveAttribute('aria-pressed', 'true')
+    await follow.click()
+    await expect(follow).toHaveAttribute('aria-pressed', 'false')
+    await page.goto('/products?q=tracely', { waitUntil: 'networkidle' })
+    await expect(cards(page).first().locator('[data-cta="follow"]')).toHaveText('Theo dõi')
     // Connect stays inert (D5).
     await page.goto('/products/tracely', { waitUntil: 'networkidle' })
-    await expect(page.locator('[data-cta="follow"]')).toHaveAttribute('aria-pressed', 'false')
     await expect(page.locator('[data-cta="connect"]')).toHaveAttribute('aria-disabled', 'true')
   })
 })

@@ -33,6 +33,21 @@ export async function readFollow(
   return { following: Boolean(row) }
 }
 
+/**
+ * The published startups this viewer follows, by slug: their own state only,
+ * for the `/products` cards (THAO-M3-QA-01). Guests and inactive accounts: none.
+ */
+export async function followedSlugs(viewer: Viewer): Promise<string[]> {
+  if (!viewer.member || !viewer.accountId) return []
+  const rows = await query<{ slug: string }>(
+    `SELECT p.slug FROM venture_follows f JOIN projects p ON p.id = f.venture_id
+      WHERE f.follower_account_id = $1
+        AND p.type = 'STARTUP' AND p.status = 'ACTIVE' AND p.visibility = 'PUBLIC'`,
+    [viewer.accountId],
+  )
+  return rows.map((r) => r.slug)
+}
+
 export async function followStatus(viewer: Viewer, slug: string): Promise<FollowDTO> {
   const access = await target(viewer, slug, query)
   return readFollow(viewer, access)
