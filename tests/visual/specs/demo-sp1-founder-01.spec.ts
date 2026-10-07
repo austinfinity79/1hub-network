@@ -175,6 +175,18 @@ test.describe('journey and routing', () => {
     for (const handle of ['khong-ton-tai', 'pham-quoc-viet', 'tran-hanh', KIM_CHI, 'DANG-KIM-CHI'])
       expect((await page.request.get(`/talents/${handle}`)).status(), handle).toBe(404)
   })
+
+  test('a real, NETWORK_ONLY person on the list is 404 for a guest and never an "other founder"', async ({
+    page,
+  }) => {
+    // TALENT-TUAN-ANH-MEMBER-ACCOUNT-01: the guest gets the same 404 as an unknown handle.
+    const res = await page.request.get('/talents/vu-tuan-anh')
+    expect(res.status()).toBe(404)
+    expect(await res.text()).not.toContain('Vũ Tuấn Anh')
+    await page.goto('/talents/dang-kim-chi', { waitUntil: 'networkidle' })
+    await expect(page.locator('a[href="/talents/vu-tuan-anh"]')).toHaveCount(0)
+    expect(await page.locator('body').innerText()).not.toContain('Vũ Tuấn Anh')
+  })
 })
 
 test.describe('founder profile (DM13, PUBLIC VIEW)', () => {

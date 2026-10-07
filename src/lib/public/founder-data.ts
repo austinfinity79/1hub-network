@@ -1,5 +1,6 @@
 import { query } from '@/lib/db/client'
 import { DEMO_FOUNDERS, demoFounder, founderHref, type DemoFounder } from '@/lib/demo-0710/founders'
+import type { LibraryViewer } from '@/lib/library/canonical-source'
 import { projectDiscovery } from '@/lib/profile/projection'
 import { discoveryLevelsOf } from '@/lib/profile/visibility'
 
@@ -123,15 +124,26 @@ async function venturesOf(profileIds: string[]) {
   return out
 }
 
-export async function findDemoFounder(handle: string): Promise<FounderPage | null> {
+/**
+ * A real, NETWORK_ONLY person (`audience: 'NETWORK'`) is null for a guest
+ * (404, nothing leaks), and real people are kept out of "other founders".
+ */
+export async function findDemoFounder(
+  handle: string,
+  viewer: LibraryViewer = 'GUEST',
+): Promise<FounderPage | null> {
   const demo = demoFounder(handle)
   if (!demo) return null
+  if (demo.audience === 'NETWORK' && viewer !== 'NETWORK') return null
   const ids = Object.values(DEMO_FOUNDERS).map((f) => f.profileId)
   const [people, ventures] = await Promise.all([visiblePeople(ids), venturesOf(ids)])
   const person = people.get(demo.profileId)
   if (!person) return null
   const others = Object.values(DEMO_FOUNDERS)
-    .filter((f) => f.profileId !== demo.profileId && people.has(f.profileId))
+    .filter(
+      (f) =>
+        !demo.audience && !f.audience && f.profileId !== demo.profileId && people.has(f.profileId),
+    )
     .map((f) => {
       const v = ventures.get(f.profileId)?.[0]
       return {

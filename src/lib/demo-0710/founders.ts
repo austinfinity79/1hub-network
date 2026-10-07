@@ -15,6 +15,9 @@ import { DEMO } from './ventures'
  *   is stored, it grants no role or permission.
  * - A HUB badge is presentation text; it is not a membership, leadership or
  *   role record and grants nothing.
+ * - `audience: 'NETWORK'` marks a real person (TALENT-TUAN-ANH-MEMBER-ACCOUNT-01):
+ *   the profile is NETWORK_ONLY, so the route is 404 for a guest, and a real
+ *   person is never listed among, nor given, the demo "other founders".
  *
  * Server-side only.
  */
@@ -27,8 +30,10 @@ export type DemoBadge = {
 }
 
 export type DemoFounder = {
-  /** Canonical demo profile id (de710000-…b*). Never rendered. */
+  /** Canonical profile id. Never rendered. */
   profileId: string
+  /** 'NETWORK': a real, NETWORK_ONLY person; absent: a fictional demo founder (public). */
+  audience?: 'NETWORK'
   identityVerifiedDemo: boolean
   /** Presentation line beside the region (DM13 "Phó Chủ tịch chapter Đà Nẵng"). */
   hubRole: string | null
@@ -41,9 +46,10 @@ export type DemoFounder = {
     period: string
     points: string[]
   }>
-  education: Array<{ mark: string; school: string; degree: string; period: string }>
-  expertise: Array<{ name: string; level: 'Chính' | 'Phụ'; years: string }>
-  certificates: Array<{ mark: string; name: string; issuer: string; period: string }>
+  /** A null field is empty in the source and is not drawn. */
+  education: Array<{ mark: string; school: string; degree: string; period: string | null }>
+  expertise: Array<{ name: string; level: 'Chính' | 'Phụ' | null; years: string | null }>
+  certificates: Array<{ mark: string; name: string; issuer: string | null; period: string | null }>
 }
 
 const EMPTY = {
@@ -145,6 +151,45 @@ export const DEMO_FOUNDERS: Readonly<Record<string, DemoFounder>> = {
     profileId: 'de710000-0000-0000-0000-0000000000b5',
     identityVerifiedDemo: true,
     ...EMPTY,
+  },
+  // Vũ Tuấn Anh — a real person, NETWORK_ONLY (TALENT-TUAN-ANH-MEMBER-ACCOUNT-01).
+  // Workbook "1hub.network - Tổng hợp thông tin sprint 1 (1).xlsx" (sha256
+  // 4b023eaf…), sheet "Nhân tài chi tiết", row 4, as written. Name, title
+  // ("CMO 1hub"), region, bio and the Smart Campus membership are canonical
+  // rows. "Vai trò tại HUB Network?" = N/A: no HUB role. No avatar or cover in
+  // the source; no verification claim. Empty source cells stay empty.
+  'vu-tuan-anh': {
+    profileId: '7a1e0000-0000-4000-8000-0000000000b1',
+    audience: 'NETWORK',
+    identityVerifiedDemo: false,
+    hubRole: null,
+    badges: [],
+    tags: ['Tài chính', 'Công nghệ'],
+    experience: [
+      {
+        mark: 'ID',
+        title: 'External Affairs & Communications Associate',
+        org: 'Quỹ Đầu tư IDGX · Full-time',
+        period: '07/2025 - 02/2026',
+        points: [],
+      },
+      {
+        mark: 'IM',
+        title: 'Co-Owner & Content Operations Lead',
+        org: 'Independent Media Venture · Full-time',
+        period: '10/2021 - 12/2024',
+        points: [],
+      },
+    ],
+    education: [{ mark: 'RM', school: 'RMIT', degree: 'Cử nhân · Truyền thông', period: null }],
+    expertise: [
+      { name: 'Đầu tư', level: null, years: null },
+      { name: 'Công nghệ', level: null, years: null },
+      { name: 'Truyền thông', level: null, years: null },
+    ],
+    certificates: [
+      { mark: 'EN', name: 'English: Full Professional Proficiency', issuer: null, period: null },
+    ],
   },
 }
 

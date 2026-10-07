@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
@@ -7,6 +8,7 @@ import { PublicAction } from '@/components/public-shell/public-action'
 import { PublicFooter } from '@/components/public-shell/public-footer'
 import { PublicHeader } from '@/components/public-shell/public-header'
 import { VERIFIED_DEMO_MARKER, type DemoBadge } from '@/lib/demo-0710/founders'
+import { libraryViewer } from '@/lib/library/library-api'
 import { findDemoFounder } from '@/lib/public/founder-data'
 import { publicShellData } from '@/lib/public/shell-data'
 
@@ -18,7 +20,9 @@ import styles from './founder.module.css'
  * PUBLIC VIEW only (DEMO-D13).
  *
  * - Only the demo allow-list renders (DEMO-D5); any other handle is 404. The
- *   route key is a fixed public handle: no profile id reaches the page.
+ *   route key is a fixed public handle: no profile id reaches the page. A
+ *   real, NETWORK_ONLY person on the list renders for a signed-in NETWORK
+ *   viewer only; a guest gets the same 404 (TALENT-TUAN-ANH-MEMBER-ACCOUNT-01).
  * - Name, headline, region, bio, ventures: canonical, through the discovery
  *   projection. Experience, education, expertise, certificates, badges: the
  *   demo fixture. A section without data is not drawn.
@@ -34,7 +38,7 @@ export const dynamic = 'force-dynamic'
 type Params = { params: Promise<{ handle: string }> }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const founder = await findDemoFounder((await params).handle)
+  const founder = await findDemoFounder((await params).handle, await libraryViewer(await headers()))
   return { title: founder ? `${founder.name} — Nhân tài · HUB Network` : 'Nhân tài — HUB Network' }
 }
 
@@ -70,7 +74,12 @@ function Section({ id, title, children }: { id: string; title: string; children:
 
 export default async function FounderPage({ params }: Params) {
   const { handle } = await params
-  const [shell, founder] = await Promise.all([publicShellData(), findDemoFounder(handle)])
+  const [shell, founder] = await Promise.all([
+    publicShellData(),
+    headers()
+      .then(libraryViewer)
+      .then((viewer) => findDemoFounder(handle, viewer)),
+  ])
   if (!founder) notFound()
   const guest = shell.viewer.kind === 'GUEST'
   const d = founder.demo
@@ -230,7 +239,7 @@ export default async function FounderPage({ params }: Params) {
                     <div>
                       <h3>{e.school}</h3>
                       <p className={styles.sub}>{e.degree}</p>
-                      <p className={styles.when}>{e.period}</p>
+                      {e.period ? <p className={styles.when}>{e.period}</p> : null}
                     </div>
                   </li>
                 ))}
@@ -244,10 +253,12 @@ export default async function FounderPage({ params }: Params) {
                 {d.expertise.map((s) => (
                   <li key={s.name}>
                     <span>{s.name}</span>
-                    <span className={s.level === 'Chính' ? styles.main1 : styles.minor}>
-                      {s.level}
-                    </span>
-                    <span className={styles.years}>{s.years}</span>
+                    {s.level ? (
+                      <span className={s.level === 'Chính' ? styles.main1 : styles.minor}>
+                        {s.level}
+                      </span>
+                    ) : null}
+                    {s.years ? <span className={styles.years}>{s.years}</span> : null}
                   </li>
                 ))}
               </ul>
@@ -264,8 +275,8 @@ export default async function FounderPage({ params }: Params) {
                     </span>
                     <div>
                       <h3>{c.name}</h3>
-                      <p className={styles.sub}>{c.issuer}</p>
-                      <p className={styles.when}>{c.period}</p>
+                      {c.issuer ? <p className={styles.sub}>{c.issuer}</p> : null}
+                      {c.period ? <p className={styles.when}>{c.period}</p> : null}
                     </div>
                   </li>
                 ))}
