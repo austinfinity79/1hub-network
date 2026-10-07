@@ -1836,7 +1836,7 @@ Open after this task: Google OAuth client credentials (external configuration; t
 | <a id="dec-thao-sp-d9"></a>DEC-THAO-SP-D9 Narrative | Tổng quan renders canonical fields only (name, summary, stage, region, domains, team); the narrative fixture stays limited to the demo ventures | No new owner-editable narrative or website fields | none |
 | <a id="dec-thao-sp-d10"></a>DEC-THAO-SP-D10 Visual | Chỉ số and Cập nhật reuse the DM10 / SP1 language (header, tabs, cards, type, spacing); the UPDATED DM11 / DM12 files are unavailable | No separate visual system | none |
 
-Security boundary for every row: the server resolves the startup by its public slug and checks the viewer (session, ACTIVE account, owner / EDIT membership) on each read and write; nothing is trusted from the client. Errors use the frozen envelope (API amendment A18).
+Security boundary for every row: the server resolves the startup by its public slug and checks the viewer (session, ACTIVE account, owner / EDIT membership) on each read and write; nothing is trusted from the client. Errors use the frozen envelope (API amendment A18): `401` no session or an inactive account on a write; `404` unknown, unpublished-and-not-yours slug or a record of another venture; `403 SCOPE_FORBIDDEN` a viewer who is not the owner or an EDIT member; `409 PROFILE_DEACTIVATED` an archived venture; decision codes `422 METRIC_VALIDATION_FAILED` (metric not in the catalogue, future quarter, negative / over-precise / too large value, unknown key) and `422 UPDATE_VALIDATION_FAILED` (empty or over 2000 characters, unknown key).
 
 ## Related
 - [WF02_HUMAN_DECISION_PACKET.md](../implementation/WF02_HUMAN_DECISION_PACKET.md) — WF02 H1–H13 packet (frozen above)

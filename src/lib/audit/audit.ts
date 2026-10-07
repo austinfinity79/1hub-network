@@ -62,6 +62,13 @@ export type AuditAction =
   | 'PROGRAMME_REGISTRATION_UPDATED'
   | 'PROGRAMME_PUBLISHED'
   | 'PROGRAMME_CLOSED'
+  // THAO-06 Startup Profile v2 (DEC-THAO-SP): ids, metric slug, period, visibility
+  // and update ids only; never a metric value or an update's text.
+  | 'VENTURE_METRIC_RECORDED'
+  | 'VENTURE_METRIC_VISIBILITY_CHANGED'
+  | 'VENTURE_UPDATE_POSTED'
+  | 'VENTURE_UPDATE_EDITED'
+  | 'VENTURE_UPDATE_DELETED'
   | AdminAuditAction
 
 /**

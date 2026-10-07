@@ -15,8 +15,8 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). Frozen by DEMO-SOT-00 (06/10/2026). The s
 | DM08 | Sản phẩm (product / startup directory) | DIR2 · Sản phẩm | `7. DIR3 - SẢN PHẨM.png` | `/products` | MUST | built (DEMO-DIR2-01) |
 | DM09 | Nhân tài (talent directory) | DIR3 · Nhân tài | `8. DIR4 - NHÂN TÀI.png` | `/talents` | REFERENCE / P1 | built (THAO-05): guest sign-in gate, member NETWORK_ONLY cards, DEC-THAO-DIR-D3 |
 | DM10 | Startup profile: Tổng quan | SP1 tab Tổng quan (SP1.24–27) | `10. SP1 hồ sơ sản phẩm.png` | `/products/[slug]` | MUST | built (DEMO-SP1-FOUNDER-01) |
-| DM11 | Startup profile: Chỉ số | SP1 tab Chỉ số (SP1.28–29) | **UPDATED** `13. SP Tab chỉ số.png` (PO latest; file pending, see [FIGMA_REFERENCE_MAP](FIGMA_REFERENCE_MAP.md)) | `/products/[slug]/metrics` | SHOULD (read-only) | not built: file missing (DEC-DEMO-SP1-D6) |
-| DM12 | Startup profile: Cập nhật | SP1 tab Cập nhật (SP1.30–31) | **UPDATED** `12. Tab cập nhật.png` (PO latest; file pending) | `/products/[slug]/updates` | SHOULD (read-only) | not built: file missing (DEC-DEMO-SP1-D6) |
+| DM11 | Startup profile: Chỉ số | SP1 tab Chỉ số (SP1.28–29) | **UPDATED** `13. SP Tab chỉ số.png` (PO latest; file pending, see [FIGMA_REFERENCE_MAP](FIGMA_REFERENCE_MAP.md)) | `/products/[slug]/metrics` | SHOULD (read-only) | built THAO-06 in the DM10 language (DEC-THAO-SP-D10); no pixel baseline (file missing) |
+| DM12 | Startup profile: Cập nhật | SP1 tab Cập nhật (SP1.30–31) | **UPDATED** `12. Tab cập nhật.png` (PO latest; file pending) | `/products/[slug]/updates` | SHOULD (read-only) | built THAO-06 in the DM10 language (DEC-THAO-SP-D10); no pixel baseline (file missing) |
 | DM13 | Founder profile (**PUBLIC VIEW**) | FP1 (other-member view) | `14. NT1 - Nhân tài - Chi tiết hồ sơ cá nhân.png` | `/talents/[handle]` (DEC-DEMO-SP1-D1) | MUST | built (DEMO-SP1-FOUNDER-01; only the demo allow-list renders) |
 
 SP1 mapping is locked by meaning (PO, 06/10): Tổng quan = file 10, Chỉ số = UPDATED file 13, Cập nhật = UPDATED file 12, Founder Profile = file 14. Old file numbering never re-maps a tab.
@@ -61,7 +61,7 @@ Figma draws DM10–DM13 signed in. The guest header is the one drawn on DM01/DM0
 | DM01 | nav, search scope Sản phẩm → `/products?q=`, Tất cả → `/library?q=`, "Xem tất cả sản phẩm", product rows → `/products/[slug]`, "Tham gia cộng đồng HUB Network" → `/auth` | video pause, Chương trình / Nhân tài search scope, "Tổ chức chương trình", "Gọi vốn", programme cards and filters, news, "Nhận bản tin" |
 | DM02–05 | map point → popup, popup close, Humans tabs, "Tham gia HUB Network" → `/auth`, Facebook → `https://www.facebook.com/1hubnetwork`, "Xem chi tiết HUB Chapter" → `/organizations/[slug]` | "Kết nối hợp tác", "Xem thêm", "Tìm thành viên", "Xem thành viên …" (until `/talents`), timeline drag, partner logos, "Xem lịch sự kiện" (until `/events`) |
 | DM08 | search and filters over demo data, "Xem hồ sơ" | "Theo dõi" (guest → `/auth`), "Góp ý" keeps S1-UAT-02 behaviour |
-| DM10–12 | tabs, "← Sản phẩm", "Xem chỉ số", team member → founder when allow-listed, website ↗ | "Theo dõi", "Đề nghị kết nối", "Hồ sơ đầy đủ & dataroom", "Yêu cầu xem", "Xem vị trí tuyển dụng", quarter picker, update filters (guest → `/auth` for the first three) |
+| DM10–12 | tabs, "← Sản phẩm", "Xem chỉ số", team member → founder when allow-listed, website ↗; THAO-06: "Theo dõi" for a member (guest → `/auth`), metric and update editors for owner / EDIT | "Đề nghị kết nối", "Hồ sơ đầy đủ & dataroom", "Yêu cầu xem", "Xem vị trí tuyển dụng", quarter picker, update filters (guest → `/auth` for the first two) |
 | DM13 | product rows → `/products/[slug]` | "Kết nối", "Theo dõi", "Thông tin liên hệ", "Xem tất cả …"; "+ Tạo sản phẩm" is owner-only and hidden |
 
 ## Related

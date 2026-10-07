@@ -1,32 +1,32 @@
 # Claude Task Report
 
 ## Task
-THAO-05 — DIR0–DIR3 discovery, production closure (milestone THAO-M2). Report: [THAO-05](reports/THAO-05.md). Decisions: [DEC-THAO-DIR](../decisions/DECISION_LOG.md#dec-thao-dir).
+THAO-06 — Startup Profile v2, frozen M3 production slice (milestone THAO-M3). Report: [THAO-06](reports/THAO-06.md). Decisions: [DEC-THAO-SP](../decisions/DECISION_LOG.md#dec-thao-sp).
 
 ## Verdict
 **PASS_WITH_EVIDENCE.**
-- `/programmes` (public list), `/problems` (static dataset), `/products` (shared contract), `/talents` (guest gate, member NETWORK_ONLY).
-- Chương trình, cuộc thi and Nhân tài nav active; Sự kiện and Tin tức stay labels.
-- Not merged, not deployed. STOP.
+- Tổng quan team privacy (guest gate, member PROFILE_DISCOVERY), Chỉ số (fixed catalogue, PUBLIC / PRIVATE, append-only quarters), Cập nhật (manual plain text), startup Follow v1.
+- Connect, Recruitment, Investor / GP / LP, Dataroom, real ID verification: deferred, not implemented.
+- Migration 021 (additive) on the isolated `hubnetwork_s1uat03` only. Not merged, not deployed. STOP.
 
 ## Tests / build
 | Gate | Result |
 |---|---|
 | format · lint · typecheck · build | PASS |
-| unit · DB | 466 / 466 · 873 / 873 |
-| thao-05-discovery | 20 / 20 |
-| Full regression | 1386 tests: 1349 PASS, 29 SKIP, 8 FAIL → rerun of the 7 specs 203 / 203 |
+| unit · DB | 466 / 466 · 883 / 883 |
+| thao-06-startup-profile + updated specs | 65 / 65 |
+| Full regression | 1401 tests: 1372 PASS, 29 SKIP, 0 FAIL, 0 FLAKY |
 | UAT L1–L2 | 19 / 19 |
 
 ## Git
-- Branch: `feat/thao-m2-discovery` (worktree `../1hub-network-thao-m2`); base `547e174`.
-- Commits: `3577bed` (decision records) and the THAO-05 implementation / report commit.
+- Branch: `feat/thao-m3-startup-profile` (worktree `../1hub-network-thao-m3`); base `e7bf6ef`.
+- Commits: `80b9f12` (decision records) and the THAO-06 implementation / report commit.
 - Remote: `origin` (GitHub). Push status: NOT RUN (no push authorised).
 - Remote HEAD: branch not on the remote.
 - Working tree: clean after commit. Main changed: NO.
 
 ## Recommended next task
-THAO-M2-QA. Not started.
+THAO-M3-QA. Not started.
 
 ## Related
-- [THAO-05](reports/THAO-05.md) · [P0_STATUS](P0_STATUS.md)
+- [THAO-06](reports/THAO-06.md) · [P0_STATUS](P0_STATUS.md)

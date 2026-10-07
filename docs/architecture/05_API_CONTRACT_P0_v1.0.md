@@ -1746,3 +1746,19 @@ Response rows add `level`, `chapter`, `status: "PENDING"`, `title` and `period` 
 ### PUT `/me/onboarding/stage` `ROLE`
 `422 ONBOARDING_REQUIREMENTS_MISSING` with `roles: missing` (no role) or `hub_claims: missing | incomplete` (HUB member without a complete position).
 
+# 35. Amendment A18 — Startup Profile v2, M3 slice (2026-10-07)
+
+Source: [DEC-THAO-SP](../decisions/DECISION_LOG.md#dec-thao-sp) (THAO-06). Migration 021. The startup is addressed by its public slug; a STARTUP-type venture only. Errors and codes as listed in DEC-THAO-SP.
+
+| Endpoint | Who | Body / answer |
+|---|---|---|
+| `GET /startups/{slug}/metrics` | anyone who may see the startup | `{can_edit, metrics: [{slug, label, unit, visibility?, history: [{year, quarter, value}]}], catalogue?}`; PRIVATE metrics, `visibility` and `catalogue` for the owner / EDIT only |
+| `POST /startups/{slug}/metrics` | owner / EDIT | `{metric, year, quarter, value}`; appends a value (a correction is a new row); answers as GET |
+| `PATCH /startups/{slug}/metrics/{metric}` | owner / EDIT | `{visibility: "PUBLIC" \| "PRIVATE"}`; answers as GET |
+| `GET /startups/{slug}/updates` | anyone who may see the startup | `{can_edit, updates: [{id, body, published_at, edited}]}`, newest first, deleted excluded, no author |
+| `POST /startups/{slug}/updates` | owner / EDIT | `{body}` plain text 1–2000; answers as GET |
+| `PATCH` / `DELETE /startups/{slug}/updates/{updateId}` | owner / EDIT | `{body}` / no body; delete is soft; answers as GET |
+| `GET` / `PUT` / `DELETE /startups/{slug}/follow` | signed-in ACTIVE account; published startup | `{following}` — the caller's own state only; never a count or a list |
+
+No notification is sent by any of them.
+

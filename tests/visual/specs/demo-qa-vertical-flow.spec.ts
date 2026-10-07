@@ -242,8 +242,15 @@ test.describe('CTA / route matrix (DEMO_ROUTE_CTA_MATRIX)', () => {
     // Startup page: back, tabs, visual-only actions.
     await page.goto(DEMO.tracely, { waitUntil: 'networkidle' })
     await expect(page.locator('[data-cta="back"]')).toHaveAttribute('href', '/products')
-    for (const tab of ['Chỉ số', 'Cập nhật'])
-      await expect(page.getByRole('link', { name: tab, exact: true })).toHaveCount(0)
+    // THAO-06 (DEC-THAO-SP-D10): Chỉ số / Cập nhật are their own routes.
+    for (const [tab, path] of [
+      ['Chỉ số', 'metrics'],
+      ['Cập nhật', 'updates'],
+    ])
+      await expect(page.getByRole('link', { name: tab, exact: true })).toHaveAttribute(
+        'href',
+        `${DEMO.tracely}/${path}`,
+      )
     for (const cta of ['follow', 'connect', 'dataroom']) {
       const href = await page.locator(`[data-cta="${cta}"]`).first().getAttribute('href')
       expect([null, '/auth'], `startup ${cta}`).toContain(href)

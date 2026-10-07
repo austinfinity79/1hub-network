@@ -160,6 +160,8 @@ describe('M0-T06A PostgreSQL foundation', () => {
       '019_p0_profile_sprint1.sql',
       // S1-UAT-07 (DEC-S1I): e-mail invitation expiry and team invite links.
       '020_p0_team_invite_links.sql',
+      // THAO-06 (DEC-THAO-SP): startup metrics, updates and follows.
+      '021_p0_startup_profile_v1.sql',
     ])
     for (const row of rows) {
       expect(row.sha256).toMatch(/^[0-9a-f]{64}$/)
@@ -357,8 +359,14 @@ describe('M0-T07 seed fixture quality', () => {
       'role_verification_requests',
       'user_sessions',
       // Migration 020 (S1-UAT-07): an owner creates invite links at runtime.
+      'venture_follows',
       'venture_invite_links',
+      // Migration 021 (THAO-06): metrics, updates and follows are written by
+      // owners and members at runtime; a seeded figure would be a false one.
+      'venture_metric_values',
+      'venture_metrics',
       'venture_reviews',
+      'venture_updates',
     ])
   })
 

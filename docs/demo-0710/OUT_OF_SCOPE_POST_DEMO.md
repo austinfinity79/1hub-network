@@ -10,9 +10,9 @@ Part of [DEMO_SOT_v1](DEMO_SOT_v1.md). Nothing below is production-complete in t
 |---|---|---|
 | Real CCCD / 1Hub identity verification (ID1 → ID1b → ID1c) | DEMO STATE ONLY: the fixture flag renders "Đã xác thực danh tính qua 1Hub" for allow-listed demo profiles only; no flow, no DB field, no badge for real users | DM13, DM09 |
 | Investor / GP / LP authorisation | any investor-only area of the UPDATED DM11 frame renders as static, locked presentation; its request control is inert | DM11 |
-| Production metric-visibility rules (Công khai / Nhà đầu tư / GP & LP per metric, SP1-MET) | visibility tags drawn in DM11 are static text; every viewer sees the same fixture | DM11 |
-| Automatic Updates activity engine (quarterly report, programme, connection, team, investment events) | a fixed fixture log; filters only filter the fixture | DM12 |
-| Follow production workflow ("Theo dõi") | inert, or → `/auth` for a guest | DM08, DM10–DM13 |
+| Investor / GP & LP metric tiers (SP1-MET) | THAO-06 ships PUBLIC / PRIVATE per metric only (DEC-THAO-SP-D2); no investor tier | DM11 |
+| Automatic Updates activity engine (quarterly report, programme, connection, team, investment events) | THAO-06 ships manual plain-text updates only (DEC-THAO-SP-D3) | DM12 |
+| Follow beyond a startup (people, organisations), counts, lists, notifications | startup Follow v1 is live on DM10–12 (THAO-06, DEC-THAO-SP-D4); elsewhere inert, or → `/auth` for a guest | DM08, DM13 |
 | Connect production workflow ("Đề nghị kết nối", "Kết nối", OPN0–OPN4) | inert, or → `/auth` for a guest | DM10–DM13 |
 | Dataroom production workflow ("Hồ sơ đầy đủ & dataroom", DRM4 / DRM5) | inert, or → `/auth` for a guest | DM10 |
 

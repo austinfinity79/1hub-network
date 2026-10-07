@@ -20,6 +20,10 @@ export const CATEGORY_POLICY: Readonly<Record<string, Readonly<Record<CategoryCh
     SKILL: { create: true, label: true, order: true, archive: true },
     SPECIALIZATION: { create: true, label: true, order: true, archive: true },
     VENTURE_STAGE: { create: false, label: true, order: true, archive: false },
+    // THAO-06 (DEC-THAO-SP-D2): the governed metric catalogue; no item is created
+    // at runtime (no free-form metric), an item can be relabelled, reordered or
+    // retired (archived; existing values keep it).
+    VENTURE_METRIC: { create: false, label: true, order: true, archive: true },
   }
 
 export const CATEGORY_TYPE_CREATION_ALLOWED = false

@@ -132,37 +132,66 @@ export type StartupPage = DirectoryStartup & {
    * founder (DEMO-D5), null otherwise (plain text).
    */
   team: Array<{ name: string; role: string | null; href: string | null }>
+  /**
+   * THAO-06 (DEC-THAO-SP-D1): true when a real venture's team exists but is not
+   * shown to this viewer (a guest): the page invites sign-in, names nobody.
+   */
+  teamGated: boolean
   /** DM10 Tổng quan content of a demo venture (DEMO STATE ONLY), else null. */
   overview: StartupOverview | null
 }
 
-/** One published startup by its canonical slug, or null (unknown, private, draft). */
-export async function findPublicStartup(slug: string): Promise<StartupPage | null> {
+/**
+ * One published startup by its canonical slug, or null (unknown, private, draft).
+ *
+ * Team (THAO-06, DEC-THAO-SP-D1): the demo ventures keep their fictional team
+ * for everyone (DEMO_DATA_CONTRACT). A real venture's owner and ACTIVE members
+ * are shown to a signed-in NETWORK viewer only, through PROFILE_DISCOVERY
+ * (NETWORK_ONLY; PRIVATE, inactive or nameless people are left out); a guest
+ * sees no name. No profile id leaves the server.
+ */
+export async function findPublicStartup(
+  slug: string,
+  viewer: 'GUEST' | 'NETWORK' = 'GUEST',
+): Promise<StartupPage | null> {
   const rows = await listPublicStartups()
   const meta = await metaOf(rows.map((r) => r.ventureId))
   const row = rows.find((r) => meta.get(r.ventureId)?.slug === slug)
   if (!row) return null
   const demo = demoVenture(row.ventureId)
-  // Team names only for the demo ventures (fictional people, DEMO_DATA_CONTRACT);
-  // a real venture's members are not published by this page.
-  const members = demo
-    ? await query<{ profile_id: string; name: string; role: string | null }>(
-        `SELECT pm.profile_id::text, ip.display_name AS name, pm.role_label AS role
-           FROM project_members pm
-           JOIN individual_profiles ip ON ip.id = pm.profile_id AND ip.status = 'ACTIVE'
-          WHERE pm.project_id = $1 AND pm.state = 'ACTIVE'
-          ORDER BY pm.joined_at, pm.id`,
-        [row.ventureId],
-      )
-    : []
+  const people =
+    demo || viewer === 'NETWORK'
+      ? await query<{ profile_id: string; name: string | null; role: string | null }>(
+          `SELECT * FROM (
+             SELECT ip.id::text AS profile_id, ip.display_name AS name, p.owner_role_label AS role,
+                    0 AS rank, p.created_at AS since, ip.id::text AS tie
+               FROM projects p
+               JOIN individual_profiles ip ON ip.id = p.owner_profile_id AND ip.status = 'ACTIVE'
+               JOIN user_accounts ua ON ua.id = ip.account_id AND ua.status = 'ACTIVE'
+              WHERE p.id = $1 AND $2::boolean
+             UNION ALL
+             SELECT pm.profile_id::text, ip.display_name, pm.role_label, 1, pm.joined_at, pm.id::text
+               FROM project_members pm
+               JOIN individual_profiles ip ON ip.id = pm.profile_id AND ip.status = 'ACTIVE'
+               JOIN user_accounts ua ON ua.id = ip.account_id AND ua.status = 'ACTIVE'
+              WHERE pm.project_id = $1 AND pm.state = 'ACTIVE'
+                AND (NOT $2::boolean OR pm.profile_id <> (SELECT owner_profile_id FROM projects WHERE id = $1))
+           ) t ORDER BY rank, since, tie`,
+          // The demo ventures list their seeded members only, as before.
+          [row.ventureId, !demo],
+        )
+      : []
   // A member whose PROFILE_DISCOVERY is PRIVATE is not listed (WF02 rule);
   // the profile id stays here: only the name, role and founder route leave.
   const levels = await discoveryLevelsOf(
     query,
-    members.map((m) => m.profile_id),
+    people.map((m) => m.profile_id),
   )
-  const team = members
-    .filter((m) => canSeeDiscovery(levels.get(m.profile_id) ?? 'NETWORK_ONLY', 'NETWORK'))
+  const team = people
+    .filter(
+      (m): m is { profile_id: string; name: string; role: string | null } =>
+        Boolean(m.name) && canSeeDiscovery(levels.get(m.profile_id) ?? 'NETWORK_ONLY', 'NETWORK'),
+    )
     .map((m) => ({ name: m.name, role: m.role, href: founderHref(m.profile_id) }))
   return {
     ...shape(row, meta.get(row.ventureId)!),
@@ -170,6 +199,7 @@ export async function findPublicStartup(slug: string): Promise<StartupPage | nul
     since: demo?.since ?? null,
     round: demo?.round ?? null,
     team,
+    teamGated: !demo && viewer !== 'NETWORK',
     overview: startupOverview(row.ventureId),
   }
 }

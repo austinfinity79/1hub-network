@@ -115,6 +115,10 @@ export const DECISION_ERROR_CODES = [
   'FEEDBACK_VALIDATION_FAILED',
   // DEC-S1F-D6: 429, more than 10 feedback messages in an hour (US-X.01).
   'FEEDBACK_RATE_LIMITED',
+  // DEC-THAO-SP-D2: 422, a metric value fails its rule (metric, period, value).
+  'METRIC_VALIDATION_FAILED',
+  // DEC-THAO-SP-D3: 422, an update body fails its rule (plain text, 1–2000 characters).
+  'UPDATE_VALIDATION_FAILED',
 ] as const
 
 export type DecisionErrorCode = (typeof DECISION_ERROR_CODES)[number]

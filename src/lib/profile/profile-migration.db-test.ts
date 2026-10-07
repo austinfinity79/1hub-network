@@ -129,7 +129,9 @@ async function shape(client: Client) {
 async function snapshot(client: Client): Promise<string> {
   const { rows } = await client.query(`
     SELECT (SELECT json_agg(t ORDER BY id) FROM (SELECT id, type_code, slug, label, sort_order,
-              status::text AS status, metadata FROM vocabulary_items) t)::text AS vocabulary,
+              status::text AS status, metadata FROM vocabulary_items
+              -- Migration 021's metric catalogue: added and removed by 021 itself.
+              WHERE type_code <> 'VENTURE_METRIC') t)::text AS vocabulary,
            (SELECT json_agg(t ORDER BY id) FROM (SELECT id, profile_id, title, organization_name,
               started_on, ended_on, description, sort_order FROM profile_experience) t)::text AS experience,
            (SELECT json_agg(t ORDER BY profile_id, vocab_id) FROM profile_domains t)::text AS domains`)

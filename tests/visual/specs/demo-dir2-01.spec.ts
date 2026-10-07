@@ -127,9 +127,11 @@ test.describe('directory: guest browse and visibility', () => {
     await expect(follow).toHaveAttribute('aria-disabled', 'true')
     await follow.click()
     await expect(page).toHaveURL('/products?q=tracely')
+    // THAO-06 (DEC-THAO-SP-D4): the startup page carries the member's real Follow;
+    // Connect stays inert (D5).
     await page.goto('/products/tracely', { waitUntil: 'networkidle' })
-    for (const cta of ['follow', 'connect'])
-      await expect(page.locator(`[data-cta="${cta}"]`)).toHaveAttribute('aria-disabled', 'true')
+    await expect(page.locator('[data-cta="follow"]')).toHaveAttribute('aria-pressed', 'false')
+    await expect(page.locator('[data-cta="connect"]')).toHaveAttribute('aria-disabled', 'true')
   })
 })
 

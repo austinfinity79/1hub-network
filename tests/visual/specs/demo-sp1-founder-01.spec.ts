@@ -86,9 +86,15 @@ test.describe('startup profile (DM10 Tổng quan)', () => {
       await expect(page.getByRole('heading', { name: label, exact: true })).toBeVisible()
     const tabs = page.getByRole('navigation', { name: 'Hồ sơ sản phẩm' })
     await expect(tabs.locator('[aria-current="page"]')).toHaveText('Tổng quan')
-    // Chỉ số / Cập nhật: labels, never a dead link (updated frames not supplied).
-    await expect(tabs.locator('a')).toHaveCount(0)
-    await expect(tabs.locator('[data-nav-kind="LABEL"]')).toHaveText(['Chỉ số', 'Cập nhật'])
+    // THAO-06 (DEC-THAO-SP-D10): Chỉ số / Cập nhật are their own routes now.
+    await expect(tabs.getByRole('link', { name: 'Chỉ số' })).toHaveAttribute(
+      'href',
+      '/products/tracely/metrics',
+    )
+    await expect(tabs.getByRole('link', { name: 'Cập nhật' })).toHaveAttribute(
+      'href',
+      '/products/tracely/updates',
+    )
     const founders = page.locator('[data-cta="founder"]')
     await expect(founders).toHaveCount(2)
     await expect(founders.filter({ hasText: 'Đặng Kim Chi' })).toHaveAttribute(
@@ -103,8 +109,15 @@ test.describe('startup profile (DM10 Tổng quan)', () => {
       await expect(page.getByText(name, { exact: true })).toBeVisible()
     for (const cta of ['follow', 'connect', 'dataroom'])
       await expect(page.locator(`[data-cta="${cta}"]`)).toHaveAttribute('href', '/auth')
-    for (const name of ['Xem chỉ số →', 'Xem vị trí tuyển dụng →'])
-      await expect(page.getByText(name, { exact: true })).toHaveAttribute('aria-disabled', 'true')
+    // THAO-06: "Xem chỉ số" opens the Chỉ số tab; recruitment stays inert (DEC-THAO-SP-D6).
+    await expect(page.getByText('Xem chỉ số →', { exact: true })).toHaveAttribute(
+      'href',
+      '/products/tracely/metrics',
+    )
+    await expect(page.getByText('Xem vị trí tuyển dụng →', { exact: true })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
     await expect(page.locator('a[href="#"], a[href^="javascript:"]')).toHaveCount(0)
     await expectNoPrivateData(page)
   })
