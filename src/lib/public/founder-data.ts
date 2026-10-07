@@ -1,6 +1,7 @@
 import { query } from '@/lib/db/client'
 import { DEMO_FOUNDERS, demoFounder, founderHref, type DemoFounder } from '@/lib/demo-0710/founders'
 import type { LibraryViewer } from '@/lib/library/canonical-source'
+import { isAssetId } from '@/lib/media/avatar-storage'
 import { projectDiscovery } from '@/lib/profile/projection'
 import { discoveryLevelsOf } from '@/lib/profile/visibility'
 
@@ -34,6 +35,8 @@ export type FounderPage = {
   headline: string | null
   bio: string | null
   region: string | null
+  /** The avatar through the authorised media route (it re-checks the viewer), or null. */
+  avatarUrl: string | null
   ventures: FounderVenture[]
   /** Other allow-listed founders (DM13 "Nhà sáng lập khác"). */
   others: Array<{ name: string; href: string; line: string | null }>
@@ -45,6 +48,7 @@ type Person = {
   display_name: string | null
   headline: string | null
   bio: string | null
+  avatar_asset_id: string | null
   region_vocab_id: string | null
   region_label: string | null
 }
@@ -52,7 +56,7 @@ type Person = {
 /** Allow-listed, ACTIVE, discovery-visible demo profiles, projected field by field. */
 async function visiblePeople(profileIds: string[]) {
   const rows = await query<Person>(
-    `SELECT ip.id::text, ip.display_name, ip.headline, ip.bio, ip.region_vocab_id::text,
+    `SELECT ip.id::text, ip.display_name, ip.headline, ip.bio, ip.avatar_asset_id, ip.region_vocab_id::text,
             r.label AS region_label
        FROM individual_profiles ip
        JOIN user_accounts ua ON ua.id = ip.account_id
@@ -64,13 +68,16 @@ async function visiblePeople(profileIds: string[]) {
     query,
     rows.map((r) => r.id),
   )
-  const out = new Map<string, { name: string; headline?: string; bio?: string; region?: string }>()
+  const out = new Map<
+    string,
+    { name: string; headline?: string; bio?: string; region?: string; avatarUrl?: string }
+  >()
   for (const r of rows) {
     const card = projectDiscovery(
       {
         profile_id: r.id,
         display_name: r.display_name,
-        avatar_asset_id: null,
+        avatar_asset_id: isAssetId(r.avatar_asset_id) ? r.avatar_asset_id : null,
         headline: r.headline,
         bio: r.bio,
         domain_ids: [],
@@ -87,6 +94,7 @@ async function visiblePeople(profileIds: string[]) {
       headline: card.headline,
       bio: card.bio,
       region: card.region_id ? (r.region_label ?? undefined) : undefined,
+      avatarUrl: card.avatar_url,
     })
   }
   return out
@@ -169,6 +177,7 @@ export async function findDemoFounder(
     headline: person.headline ?? null,
     bio: person.bio ?? null,
     region: person.region ?? null,
+    avatarUrl: person.avatarUrl ?? null,
     ventures: ventures.get(demo.profileId) ?? [],
     others,
     demo: presentation,

@@ -20,7 +20,9 @@ import styles from '@/components/startup/startup.module.css'
  * summary are canonical (DEC-THAO-SP-D9). The team follows DEC-THAO-SP-D1: a
  * real venture's people only for a signed-in member, through PROFILE_DISCOVERY.
  * The Tổng quan copy, quarter figures, funding, milestones and needs are the
- * demo fixture of the demo ventures only (DEMO STATE ONLY). Chỉ số and Cập
+ * demo fixture of the demo ventures only (DEMO STATE ONLY), plus the approved
+ * source blocks of Smart Campus (PRODUCT-DETAIL-SMART-CAMPUS-01): a block a
+ * venture does not carry is not drawn. Chỉ số and Cập
  * nhật are their own routes (THAO-06). Connect, dataroom and recruitment stay
  * inert (D5–D7).
  */
@@ -104,19 +106,31 @@ export default async function StartupProfilePage({ params }: Params) {
             <>
               <section className={styles.block} aria-labelledby="sp-problem">
                 <Label id="sp-problem">Bài toán</Label>
-                <p className={styles.lead}>{o.problem.text}</p>
-                <dl className={styles.figures}>
-                  {o.problem.figures.map((f) => (
-                    <div key={f.label}>
-                      <dt>{f.value}</dt>
-                      <dd>{f.label}</dd>
-                    </div>
-                  ))}
-                </dl>
+                {o.problem.text ? <p className={styles.lead}>{o.problem.text}</p> : null}
+                {o.problem.items?.length ? (
+                  <ul className={styles.features} role="list">
+                    {o.problem.items.map((f) => (
+                      <li key={f.title}>
+                        <h3>{f.title}</h3>
+                        <p>{f.text}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {o.problem.figures.length ? (
+                  <dl className={styles.figures}>
+                    {o.problem.figures.map((f) => (
+                      <div key={f.label}>
+                        <dt>{f.value}</dt>
+                        <dd>{f.label}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
               </section>
               <section className={styles.block} aria-labelledby="sp-solution">
                 <Label id="sp-solution">Giải pháp</Label>
-                <p className={styles.lead}>{o.solution.text}</p>
+                {o.solution.text ? <p className={styles.lead}>{o.solution.text}</p> : null}
                 <ul className={styles.features} role="list">
                   {o.solution.features.map((f) => (
                     <li key={f.title}>
@@ -126,36 +140,40 @@ export default async function StartupProfilePage({ params }: Params) {
                   ))}
                 </ul>
               </section>
-              <section className={styles.block} aria-labelledby="sp-market">
-                <Label id="sp-market">Thị trường</Label>
-                <p className={styles.soft}>{o.market.text}</p>
-                <dl className={styles.sizes}>
-                  {o.market.sizes.map((m) => (
-                    <div key={m.label}>
-                      <dt>{m.label}</dt>
-                      <dd>
-                        <strong>{m.value}</strong>
-                        <span>{m.note}</span>
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-                <div className={styles.method}>
-                  <h3>{o.market.method.title}</h3>
-                  <p>{o.market.method.text}</p>
-                </div>
-              </section>
-              <section className={styles.block} aria-labelledby="sp-quotes">
-                <Label id="sp-quotes">Chia sẻ từ khách hàng</Label>
-                <div className={styles.quotes}>
-                  {o.quotes.map((q) => (
-                    <figure key={q.source}>
-                      <blockquote>{q.text}</blockquote>
-                      <figcaption>{q.source}</figcaption>
-                    </figure>
-                  ))}
-                </div>
-              </section>
+              {o.market ? (
+                <section className={styles.block} aria-labelledby="sp-market">
+                  <Label id="sp-market">Thị trường</Label>
+                  <p className={styles.soft}>{o.market.text}</p>
+                  <dl className={styles.sizes}>
+                    {o.market.sizes.map((m) => (
+                      <div key={m.label}>
+                        <dt>{m.label}</dt>
+                        <dd>
+                          <strong>{m.value}</strong>
+                          <span>{m.note}</span>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <div className={styles.method}>
+                    <h3>{o.market.method.title}</h3>
+                    <p>{o.market.method.text}</p>
+                  </div>
+                </section>
+              ) : null}
+              {o.quotes.length ? (
+                <section className={styles.block} aria-labelledby="sp-quotes">
+                  <Label id="sp-quotes">Chia sẻ từ khách hàng</Label>
+                  <div className={styles.quotes}>
+                    {o.quotes.map((q) => (
+                      <figure key={q.source}>
+                        <blockquote>{q.text}</blockquote>
+                        <figcaption>{q.source}</figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
             </>
           ) : (
             <section className={styles.block} aria-labelledby="sp-about">
@@ -190,70 +208,95 @@ export default async function StartupProfilePage({ params }: Params) {
 
         {o ? (
           <aside className={styles.rail} aria-label="Tóm tắt">
-            <section className={styles.dark} aria-labelledby="sp-quarter">
-              <Label id="sp-quarter">{o.quarter.label}</Label>
-              <dl className={styles.quarter}>
-                {o.quarter.figures.map((f) => (
-                  <div key={f.label}>
-                    <dt>
-                      {f.value}
-                      <span className={styles.delta}>{f.delta}</span>
-                    </dt>
-                    <dd>{f.label}</dd>
-                  </div>
-                ))}
-              </dl>
-              <Link
-                href={`${PUBLIC_ROUTES.products}/${startup.slug}/metrics`}
-                className={styles.darkLink}
-              >
-                Xem chỉ số →
-              </Link>
-            </section>
-            <section className={styles.card} aria-labelledby="sp-funding">
-              <Label id="sp-funding">Gọi vốn</Label>
-              <dl className={styles.rows}>
-                {o.funding.rows.map((r) => (
-                  <div key={r.label}>
-                    <dt>{r.label}</dt>
-                    <dd>{r.value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <div className={styles.progress} aria-hidden="true">
-                <span style={{ width: `${Math.round(o.funding.progress * 100)}%` }} />
-              </div>
-              <PublicAction
-                href={guest ? '/auth' : null}
-                className={styles.dataroom}
-                cta="dataroom"
-              >
-                <Lock />
-                Hồ sơ đầy đủ &amp; dataroom
-              </PublicAction>
-            </section>
-            <section className={styles.card} aria-labelledby="sp-milestones">
-              <Label id="sp-milestones">Dấu ấn</Label>
-              <ul className={styles.milestones} role="list">
-                {o.milestones.map((m) => (
-                  <li key={m.title}>
-                    <strong>{m.title}</strong>
-                    <small>{m.meta}</small>
-                  </li>
-                ))}
-              </ul>
-            </section>
-            <section className={styles.card} aria-labelledby="sp-needs">
-              <Label id="sp-needs">Nhu cầu</Label>
-              <ul className={styles.needs} role="list">
-                {o.needs.map((n) => (
-                  <li key={n}>{n}</li>
-                ))}
-              </ul>
-              <PublicAction href={null} className={styles.cardLink}>
-                Xem vị trí tuyển dụng →
-              </PublicAction>
-            </section>
+            {o.quarter ? (
+              <section className={styles.dark} aria-labelledby="sp-quarter">
+                <Label id="sp-quarter">{o.quarter.label}</Label>
+                <dl className={styles.quarter}>
+                  {o.quarter.figures.map((f) => (
+                    <div key={f.label}>
+                      <dt>
+                        {f.value}
+                        <span className={styles.delta}>{f.delta}</span>
+                      </dt>
+                      <dd>{f.label}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <Link
+                  href={`${PUBLIC_ROUTES.products}/${startup.slug}/metrics`}
+                  className={styles.darkLink}
+                >
+                  Xem chỉ số →
+                </Link>
+              </section>
+            ) : null}
+            {o.website ? (
+              <section className={styles.card} aria-labelledby="sp-website">
+                <Label id="sp-website">Website</Label>
+                <a
+                  href={o.website.href}
+                  className={styles.cardLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-cta="website"
+                >
+                  {o.website.label} ↗
+                </a>
+              </section>
+            ) : null}
+            {o.funding ? (
+              <section className={styles.card} aria-labelledby="sp-funding">
+                <Label id="sp-funding">Gọi vốn</Label>
+                <dl className={styles.rows}>
+                  {o.funding.rows.map((r) => (
+                    <div key={r.label}>
+                      <dt>{r.label}</dt>
+                      <dd>{r.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className={styles.progress} aria-hidden="true">
+                  <span style={{ width: `${Math.round(o.funding.progress * 100)}%` }} />
+                </div>
+                <PublicAction
+                  href={guest ? '/auth' : null}
+                  className={styles.dataroom}
+                  cta="dataroom"
+                >
+                  <Lock />
+                  Hồ sơ đầy đủ &amp; dataroom
+                </PublicAction>
+              </section>
+            ) : null}
+            {o.milestones.length ? (
+              <section className={styles.card} aria-labelledby="sp-milestones">
+                <Label id="sp-milestones">Dấu ấn</Label>
+                <ul className={styles.milestones} role="list">
+                  {o.milestones.map((m) => (
+                    <li key={m.title}>
+                      <strong>{m.title}</strong>
+                      <small>{m.meta}</small>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+            {o.needs.length ? (
+              <section className={styles.card} aria-labelledby="sp-needs">
+                <Label id="sp-needs">Nhu cầu</Label>
+                <ul className={styles.needs} role="list">
+                  {o.needs.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+                {o.funding ? (
+                  // The recruitment entry belongs to the demo fixture only (inert, D7).
+                  <PublicAction href={null} className={styles.cardLink}>
+                    Xem vị trí tuyển dụng →
+                  </PublicAction>
+                ) : null}
+              </section>
+            ) : null}
           </aside>
         ) : null}
       </div>

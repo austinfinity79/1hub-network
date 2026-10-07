@@ -5,6 +5,11 @@
  * venture id from `db/seed/demo_0710.sql`. No canonical field exists for any
  * of this; nothing here is a metric, funding, award or recruitment record and
  * nothing is computed or generated. Server-side only. DEMO STATE ONLY.
+ *
+ * PRODUCT-DETAIL-SMART-CAMPUS-01: a real venture may carry only its approved,
+ * source-backed blocks; every optional block it lacks (market, quarter,
+ * funding, an empty list) is simply not drawn. Its quarantined claims are not
+ * in this file at all.
  */
 
 export type DemoFigure = { value: string; label: string }
@@ -13,9 +18,17 @@ export type StartupOverview = {
   /** Mono eyebrow above the tagline. */
   focus: string
   tagline: string
-  problem: { text: string; figures: DemoFigure[] }
-  solution: { text: string; features: Array<{ title: string; text: string }> }
-  market: {
+  /** The stage as the PO fixed it for this venture, shown instead of the stage short label. */
+  stageLabel?: string
+  /** The venture's own public site, from its source. */
+  website?: { href: string; label: string }
+  problem: {
+    text: string | null
+    figures: DemoFigure[]
+    items?: Array<{ title: string; text: string }>
+  }
+  solution: { text: string | null; features: Array<{ title: string; text: string }> }
+  market?: {
     text: string
     sizes: Array<{ label: string; value: string; note: string }>
     method: { title: string; text: string }
@@ -23,11 +36,11 @@ export type StartupOverview = {
   quotes: Array<{ text: string; source: string }>
   vision: string
   /** Dark panel "Cập nhật · <quarter>": figures as the team reported them. */
-  quarter: {
+  quarter?: {
     label: string
     figures: Array<{ value: string; delta: string; label: string }>
   }
-  funding: {
+  funding?: {
     rows: Array<{ label: string; value: string }>
     /** Drawn progress, 0–1 (committed / asked). */
     progress: number
@@ -120,6 +133,55 @@ export const STARTUP_OVERVIEWS: Readonly<Record<string, StartupOverview>> = {
       'Kỹ sư dữ liệu (toàn thời gian)',
       'Giới thiệu doanh nghiệp chuyển phát miền Nam',
       'Cố vấn mở rộng thị trường',
+    ],
+  },
+  // 1Hub - Smart Campus Solution (1hub-smart-campus-solution), PRODUCT-DETAIL-SMART-CAMPUS-01.
+  // Workbook "1hub.network - Tổng hợp thông tin sprint 1 (1).xlsx" (sha256
+  // 4b023eaf…), "Sản phẩm chi tiết" r3, the USE blocks of
+  // docs/data/product-detail-readiness-audit.md, as written: slogan H, one-line
+  // description I, problem N, solution O, vision R, needs M, site B; stage
+  // "Thử nghiệm" by PO decision. Not used (quarantined or held): founding
+  // date E, funding F/K, highlights J, milestones L, market P, metrics W–Y,
+  // customer voice Q, updates Z.
+  '0e366810-36ac-4de2-923a-fe5929cb02e3': {
+    focus: 'Smart Campus Today. Smart Society Tomorrow.',
+    tagline:
+      '1Hub là nền tảng kết nối danh tính số đáng tin cậy với các tiện ích và cơ hội trong một hệ sinh thái thống nhất, bắt đầu từ đời sống sinh viên và Smart Campus.',
+    stageLabel: 'Thử nghiệm',
+    website: { href: 'https://1hub.global/en', label: '1hub.global' },
+    problem: {
+      text: null,
+      figures: [],
+      items: [
+        {
+          title: 'Retention',
+          text: 'Người dùng thiếu lý do để chủ động quay lại thường xuyên sau khi đăng ký, xác thực hoặc check-in.',
+        },
+        {
+          title: 'Use case',
+          text: 'Cần kiểm chứng những tiện ích giải quyết nhu cầu thực tế trong học tập và đời sống, giúp sinh viên thấy rõ giá trị của 1Hub.',
+        },
+      ],
+    },
+    solution: {
+      text: null,
+      features: [
+        {
+          title: 'Retention',
+          text: 'Tạo lý do quay lại qua tiến độ học tập, kết quả giao–nhận việc và theo dõi hoàn tiền; kết hợp cộng đồng và nhắc việc phù hợp.',
+        },
+        {
+          title: 'Use case',
+          text: 'Tích hợp mini-app phục vụ học tập, việc nhỏ và mua sắm trên cùng một danh tính đã xác thực, giúp sinh viên tiếp cận tiện ích thuận tiện hơn.',
+        },
+      ],
+    },
+    quotes: [],
+    vision:
+      'Từ Smart Campus đến Smart Society: giúp mỗi người được nhận diện đúng, kết nối đúng và tiếp cận những dịch vụ, quyền lợi, cơ hội phù hợp thông qua danh tính số đáng tin cậy.',
+    milestones: [],
+    needs: [
+      'Kết nối đối tác trường học và đơn vị phát triển mini-app; tìm giải pháp giúp người dùng quay lại thường xuyên, tăng tương tác và cải thiện khả năng giữ chân. Đây cũng là bài toán 1Hub công bố trên nền tảng HUB.',
     ],
   },
 }

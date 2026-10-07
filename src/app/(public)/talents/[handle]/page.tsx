@@ -102,7 +102,21 @@ export default async function FounderPage({ params }: Params) {
             <div className={styles.cover} aria-hidden="true" />
             <div className={styles.heroBody}>
               <span className={styles.avatar} aria-hidden="true">
-                {initials(founder.name)}
+                {founder.avatarUrl ? (
+                  // TALENT-TUAN-ANH-PHOTO-01: the profile's avatar, served by the
+                  // authorised media route (NETWORK_ONLY: a guest gets 404 there too).
+                  // eslint-disable-next-line @next/next/no-img-element -- authorised media route
+                  <img
+                    src={founder.avatarUrl}
+                    alt=""
+                    width={152}
+                    height={152}
+                    className={styles.avatarImage}
+                    data-avatar=""
+                  />
+                ) : (
+                  initials(founder.name)
+                )}
               </span>
               <div className={styles.nameRow}>
                 <h1 id="founder-name">{founder.name}</h1>

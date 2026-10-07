@@ -97,7 +97,8 @@ export function StartupFrame({
             <div className={styles.side}>
               {startup.stage ? (
                 <span className={styles.status}>
-                  {startup.stage === 'PILOT' ? 'Đang pilot' : STAGE_SHORT[startup.stage]}
+                  {o?.stageLabel ??
+                    (startup.stage === 'PILOT' ? 'Đang pilot' : STAGE_SHORT[startup.stage])}
                 </span>
               ) : null}
               {meta.length ? <p className={styles.meta}>{meta.join(' · ')}</p> : null}
