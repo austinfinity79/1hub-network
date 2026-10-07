@@ -388,6 +388,17 @@ async function main() {
     return
   }
 
+  // DEMO-CONTENT-V2-PATCH-A: once the v2 patch is applied, this v1 importer is
+  // superseded; re-applying v1 would resurrect removed cards and revert updates.
+  const superseded = (
+    await db.query(
+      `SELECT count(*)::int AS n FROM projects WHERE metadata->>'import_batch' = $1 AND metadata ? 'v2_patch'`,
+      [BATCH],
+    )
+  ).rows[0].n
+  if (superseded > 0 && write)
+    fail(`superseded: ${superseded} batch rows carry the v2 patch (use patch-products-v2.mjs)`)
+
   const p = await plan(db, records)
   const mapped = p.sectors.filter((s) => s.match !== 'UNMAPPED')
   const withDomain = p.items.filter((i) => i.want?.domainIds.length).length

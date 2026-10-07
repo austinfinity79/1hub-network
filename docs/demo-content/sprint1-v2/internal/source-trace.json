@@ -1,0 +1,2058 @@
+{
+  "INTERNAL_ONLY": "Never export. Pitch and source links are provenance only; URLs are fingerprinted, the source cell locates the original.",
+  "duplicates": [
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 7,
+      "name": "ParkWave",
+      "row": 87
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 8,
+      "name": "SOLEMATE",
+      "row": 88
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 25,
+      "name": "SaolaTek",
+      "row": 74
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 26,
+      "name": "Finsey",
+      "row": 75
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 27,
+      "name": "AIVOS Vision Virtual Assistant",
+      "row": 76
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 28,
+      "name": "CC - AI Rabbit as super-companion for Autism",
+      "row": 77
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 29,
+      "name": "Elocare",
+      "row": 78
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 30,
+      "name": "Pitcam",
+      "row": 79
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 31,
+      "name": "Fun Studio",
+      "row": 80
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 32,
+      "name": "1ManBiz",
+      "row": 81
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 33,
+      "name": "CoPlay",
+      "row": 82
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 34,
+      "name": "VietSoil",
+      "row": 83
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 35,
+      "name": "Markat",
+      "row": 84
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 36,
+      "name": "BunnyWallet",
+      "row": 85
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 37,
+      "name": "LifeTrack",
+      "row": 86
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 38,
+      "name": "dRobot - a hi-tech petdog",
+      "row": 90
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 39,
+      "name": "WINDOU",
+      "row": 91
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 40,
+      "name": "Finwit",
+      "row": 92
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 41,
+      "name": "GCC - Bệ phóng Startup xanh",
+      "row": 93
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 42,
+      "name": "LeoFi",
+      "row": 94
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 43,
+      "name": "Bloom",
+      "row": 95
+    },
+    {
+      "field_differences_vs_kept": [
+        "sector_raw"
+      ],
+      "kept_row": 44,
+      "name": "EcoSmart",
+      "row": 96
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 45,
+      "name": "OMILEARN",
+      "row": 97
+    },
+    {
+      "field_differences_vs_kept": [
+        "short_description"
+      ],
+      "kept_row": 46,
+      "name": "GypFoam",
+      "row": 98
+    },
+    {
+      "field_differences_vs_kept": [
+        "short_description"
+      ],
+      "kept_row": 47,
+      "name": "Knack",
+      "row": 99
+    },
+    {
+      "field_differences_vs_kept": [
+        "short_description"
+      ],
+      "kept_row": 48,
+      "name": "NatLife",
+      "row": 100
+    },
+    {
+      "field_differences_vs_kept": [
+        "short_description"
+      ],
+      "kept_row": 49,
+      "name": "COKA",
+      "row": 101
+    },
+    {
+      "field_differences_vs_kept": [
+        "short_description"
+      ],
+      "kept_row": 50,
+      "name": "PURE ALGAE",
+      "row": 102
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 51,
+      "name": "OPENSENS VELO",
+      "row": 104
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 52,
+      "name": "ZestAroma",
+      "row": 105
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 53,
+      "name": "Easy-Comm",
+      "row": 106
+    },
+    {
+      "field_differences_vs_kept": [
+        "short_description",
+        "stage_raw"
+      ],
+      "kept_row": 107,
+      "name": "Calmio",
+      "row": 54
+    },
+    {
+      "field_differences_vs_kept": [
+        "stage_raw"
+      ],
+      "kept_row": 108,
+      "name": "E-Motion",
+      "row": 55
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 56,
+      "name": "Wesolife",
+      "row": 109
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 57,
+      "name": "Insurtech - IST365",
+      "row": 110
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 58,
+      "name": "ECOSOAP",
+      "row": 111
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 59,
+      "name": "Align Health",
+      "row": 112
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 60,
+      "name": "Travie",
+      "row": 113
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 61,
+      "name": "Lover",
+      "row": 114
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 62,
+      "name": "Cenergy",
+      "row": 103
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 63,
+      "name": "ECO LEATHER - Công nghệ tạo da giả từ Cellulose",
+      "row": 115
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 64,
+      "name": "CADUCEUS",
+      "row": 116
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 65,
+      "name": "S2M - DA TỪ VỎ XOÀI",
+      "row": 117
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 66,
+      "name": "Dancemilling – Robot Development Kit",
+      "row": 118
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 67,
+      "name": "SATY RICE FARM",
+      "row": 119
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 68,
+      "name": "Career Up",
+      "row": 120
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 69,
+      "name": "Salework",
+      "row": 121
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 70,
+      "name": "TIKERA",
+      "row": 122
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 71,
+      "name": "WiSe",
+      "row": 123
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 72,
+      "name": "Banana Leather",
+      "row": 124
+    },
+    {
+      "field_differences_vs_kept": [],
+      "kept_row": 73,
+      "name": "PennyWorth",
+      "row": 125
+    }
+  ],
+  "excel_anomalies": [
+    {
+      "column": "E",
+      "displayed_value": "03/2026",
+      "expected_type": "year (Năm thành lập)",
+      "raw_value": "2026-03-01T00:00:00",
+      "recommended_action": "Thảo confirms the founding year; do not publish the month as a year",
+      "row": 3,
+      "sheet": "Sản phẩm chi tiết"
+    },
+    {
+      "column": "V",
+      "displayed_value": "% các vị trí",
+      "expected_type": "team composition metric",
+      "raw_value": "% các vị trí",
+      "recommended_action": "placeholder text in a metric field; Thảo supplies the value or the field is omitted",
+      "row": 3,
+      "sheet": "Sản phẩm chi tiết"
+    },
+    {
+      "column": "E",
+      "displayed_value": "Link",
+      "expected_type": "URL of the UI illustration",
+      "raw_value": "Link → null!A1 (merged E5:E15)",
+      "recommended_action": "broken internal hyperlink over a merged range; Thảo re-links or drops it",
+      "row": 5,
+      "sheet": "Tổng hợp"
+    }
+  ],
+  "inventory": [
+    {
+      "dimensions": "A1:J15",
+      "embedded_images": 0,
+      "flagged_cells": [
+        "A2",
+        "A3",
+        "E5"
+      ],
+      "formula_cells": [],
+      "hyperlink_cells": 12,
+      "merged_ranges": [
+        "A12:A15",
+        "A1:J1",
+        "A2:J2",
+        "A3:J3",
+        "A4:B4",
+        "A5:A6",
+        "A7:B8",
+        "A9:B10",
+        "E5:E15",
+        "F5:F6",
+        "F7:F8",
+        "F9:F10",
+        "G5:G6",
+        "H5:H6"
+      ],
+      "nonempty_rows": 15,
+      "rows": 15,
+      "sheet": "Tổng hợp"
+    },
+    {
+      "dimensions": "A1:AC1003",
+      "embedded_images": 0,
+      "flagged_cells": [
+        "K3"
+      ],
+      "formula_cells": [],
+      "hyperlink_cells": 1,
+      "merged_ranges": [
+        "A1:A2",
+        "B1:B2",
+        "C1:C2",
+        "D1:D2",
+        "E1:E2",
+        "F1:F2",
+        "G1:G2",
+        "H1:H2",
+        "I1:I2",
+        "K1:K2",
+        "L1:L2",
+        "M1:M2",
+        "N1:R1",
+        "S1:U1",
+        "V1:Y1",
+        "Z1:AB1",
+        "Z2:AB2",
+        "Z3:AB3"
+      ],
+      "nonempty_rows": 3,
+      "rows": 1003,
+      "sheet": "Sản phẩm chi tiết"
+    },
+    {
+      "dimensions": "A1:AC1004",
+      "embedded_images": 0,
+      "flagged_cells": [],
+      "formula_cells": [],
+      "hyperlink_cells": 2,
+      "merged_ranges": [
+        "A1:A2",
+        "AA1:AC1",
+        "B1:B2",
+        "C1:C2",
+        "D1:D2",
+        "E1:E2",
+        "F1:F2",
+        "G1:G2",
+        "H1:H2",
+        "I1:I2",
+        "J1:Q1",
+        "R1:T1",
+        "U1:X1",
+        "Y1:Y2",
+        "Z1:Z2"
+      ],
+      "nonempty_rows": 5,
+      "rows": 1004,
+      "sheet": "Nhân tài chi tiết"
+    },
+    {
+      "dimensions": "A1:F178",
+      "embedded_images": 0,
+      "flagged_cells": [],
+      "formula_cells": [],
+      "hyperlink_cells": 14,
+      "merged_ranges": [],
+      "nonempty_rows": 178,
+      "rows": 178,
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "dimensions": "A1:K24",
+      "embedded_images": 4,
+      "flagged_cells": [],
+      "formula_cells": [],
+      "hyperlink_cells": 13,
+      "merged_ranges": [
+        "A1:K1",
+        "A20:K20",
+        "A7:K7",
+        "B10:B19",
+        "B22:B24",
+        "B3:B6",
+        "C22:C24",
+        "D21:K24",
+        "D3:D6",
+        "I8:K19"
+      ],
+      "nonempty_rows": 24,
+      "rows": 24,
+      "sheet": "Ảnh homepage"
+    },
+    {
+      "dimensions": "A1:O45",
+      "embedded_images": 0,
+      "flagged_cells": [],
+      "formula_cells": [],
+      "hyperlink_cells": 40,
+      "merged_ranges": [
+        "A11:A12",
+        "A13:A14",
+        "A4:A5",
+        "A9:A10",
+        "B11:B12",
+        "B13:B14",
+        "B4:B5",
+        "B9:B10",
+        "C11:C12",
+        "C13:C14",
+        "C4:C5",
+        "C9:C10",
+        "D11:D12",
+        "D13:D14",
+        "D4:D5",
+        "D9:D10",
+        "E4:E5",
+        "L11:L12",
+        "L13:L14",
+        "L4:L5",
+        "L9:L10"
+      ],
+      "nonempty_rows": 45,
+      "rows": 45,
+      "sheet": "Thành viên HUB_Orgchart"
+    },
+    {
+      "dimensions": "A1:L120",
+      "embedded_images": 0,
+      "flagged_cells": [],
+      "formula_cells": [],
+      "hyperlink_cells": 40,
+      "merged_ranges": [
+        "A1:A2",
+        "B1:B2",
+        "C1:C2",
+        "D1:D2",
+        "E1:E2",
+        "F1:F2",
+        "G1:G2",
+        "H1:H2",
+        "I1:I2",
+        "J1:L1"
+      ],
+      "nonempty_rows": 120,
+      "rows": 120,
+      "sheet": "Thư viện nhân tài"
+    }
+  ],
+  "urls": [
+    {
+      "cell": "B3",
+      "class": "PUBLIC_CONTENT_URL",
+      "fingerprint": "0c17197d3b31",
+      "host": "1hub.global",
+      "role": "website",
+      "sheet": "Sản phẩm chi tiết"
+    },
+    {
+      "cell": "B10",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B100",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B101",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B102",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B103",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B104",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B105",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B106",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B107",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B108",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B109",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B11",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B110",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B111",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B112",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B113",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B114",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B115",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B116",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B117",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B118",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B119",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B12",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B120",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B121",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B122",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B123",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B124",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B125",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B126",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B127",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B128",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B129",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B13",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B130",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B131",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B132",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B133",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B134",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B135",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B136",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B137",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B138",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B139",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B14",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B140",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B141",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B142",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B143",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B144",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B145",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B146",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B147",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B148",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B149",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B15",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B150",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B151",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B152",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B153",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B154",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B155",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B156",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B157",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B158",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B159",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B16",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B160",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B161",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B162",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B163",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B164",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B165",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B166",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B167",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B168",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B169",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B17",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B170",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B171",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B172",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B173",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B174",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B175",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B176",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B177",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B178",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B18",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B19",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B2",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B20",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B21",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B22",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B23",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B24",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B25",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B26",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B27",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B28",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B29",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B3",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B30",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B31",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B32",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B33",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B34",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B35",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B36",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B37",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B38",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B39",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B4",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B40",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B41",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B42",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B43",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B44",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B45",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B46",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B47",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B48",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B49",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B5",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B50",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B51",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B52",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B53",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B54",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B55",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B56",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B57",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B58",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B59",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B6",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B60",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B61",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B62",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B63",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B64",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B65",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B66",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B67",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B68",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B69",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B7",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B70",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B71",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B72",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B73",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B74",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B75",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B76",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B77",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B78",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B79",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B8",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B80",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B81",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B82",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B83",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B84",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B85",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B86",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B87",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B88",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B89",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B9",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B90",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B91",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B92",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B93",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B94",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B95",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B96",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B97",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B98",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "B99",
+      "class": "MISSING",
+      "fingerprint": null,
+      "host": null,
+      "role": "pitch",
+      "sheet": "Thư viện sản phẩm"
+    },
+    {
+      "cell": "A2",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "25f4023d7ea5",
+      "host": "drive.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "A3",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "9af7f24b322c",
+      "host": "drive.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "E5",
+      "class": "INVALID_URL",
+      "fingerprint": "d4388697592a",
+      "host": null,
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "F11",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "36cd1df84c66",
+      "host": "docs.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "F12",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "5826134057ca",
+      "host": "drive.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "F13",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "c67b55eeba41",
+      "host": "drive.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "F14",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "337a49536623",
+      "host": "drive.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "F15",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "be62dc22a5b6",
+      "host": "drive.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "F5",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "df64433d093b",
+      "host": "docs.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "F7",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "a5d7dd2c0d7b",
+      "host": "docs.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "F9",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "f8e7bba08027",
+      "host": "docs.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    },
+    {
+      "cell": "J10",
+      "class": "INTERNAL_SOURCE_URL",
+      "fingerprint": "e39bf34e5974",
+      "host": "docs.google.com",
+      "role": "source",
+      "sheet": "Tổng hợp"
+    }
+  ]
+}
