@@ -1,0 +1,87 @@
+{
+  "CONTENT_PACK_HASH": "ae5659e58df05946ac0e1899004ca6105c6fdaa46b612fa82a17129600a28046",
+  "CONTENT_PACK_VERSION": "sprint1-content-pack-v2",
+  "EXTERNAL_SOURCE_GAPS": [
+    "PROGRAMME",
+    "EVENT",
+    "TALENT",
+    "HOMEPAGE",
+    "ABOUT"
+  ],
+  "GENERATED_AT": "2026-10-07",
+  "GENERATOR": "scripts/content-prep/sprint1_content_pack.py",
+  "MISSING_ASSET_COUNT": 129,
+  "PRODUCT_COMPLETE_COUNT": 104,
+  "PRODUCT_SELECTED_COUNT": 92,
+  "PRODUCT_SOURCE_ROWS": 177,
+  "PRODUCT_UNIQUE_COUNT": 126,
+  "PRODUCT_VALID_COUNT": 92,
+  "READY_FOR_PO_REVIEW": true,
+  "SOURCE_FILENAME": "1hub.network - Tổng hợp thông tin sprint 1 (1).xlsx",
+  "SOURCE_FILE_HASH": "4b023eaf4499162170faf8379d1de01bff5453a6535d4d260b608332264c3bfc",
+  "SOURCE_SHEETS": [
+    "Tổng hợp",
+    "Sản phẩm chi tiết",
+    "Nhân tài chi tiết",
+    "Thư viện sản phẩm",
+    "Ảnh homepage",
+    "Thành viên HUB_Orgchart",
+    "Thư viện nhân tài"
+  ],
+  "STATS": {
+    "assets": {
+      "AVAILABLE": 1,
+      "MISSING": 129,
+      "NEEDS_PO_APPROVAL": 6
+    },
+    "claims_in_descriptions": 3,
+    "duplicate_groups": 51,
+    "duplicate_rows_dropped": 51,
+    "errors": [],
+    "excel_anomalies": 3,
+    "exclusion_reasons": {
+      "MISSING_SECTOR": 2,
+      "MISSING_STAGE": 20,
+      "STAGE_ALIAS_PENDING_PO": 11,
+      "UNVERIFIED_CLAIM_IN_DESCRIPTION": 3
+    },
+    "product_complete": 104,
+    "product_excluded": 85,
+    "product_selected": 92,
+    "product_source_rows": 177,
+    "product_unique": 126,
+    "product_valid": 92,
+    "stage_counts": {
+      "MAPPED": 95,
+      "MISSING": 20,
+      "PROPOSED_PO_CONFIRM": 11
+    },
+    "stage_raw_counts": {
+      "Growth": 23,
+      "Ideation": 11,
+      "MVP": 57,
+      "Prototype": 4,
+      "Scale-up": 11,
+      "∅": 20
+    },
+    "url_classes": {
+      "INTERNAL_SOURCE_URL": 11,
+      "INVALID_URL": 1,
+      "MISSING": 177,
+      "PUBLIC_CONTENT_URL": 1
+    },
+    "warnings": [
+      "logo missing for 92 selected products (initials fallback)",
+      "location not in source for 92 selected products",
+      "website not in source for 92 selected products",
+      "11 products use stage 'Scale-up': proposed GROWTH, PO to confirm",
+      "sectors are free text (no canonical DOMAIN mapping); PO / import maps them",
+      "external sources not supplied: PROGRAMME, EVENT, TALENT, HOMEPAGE, ABOUT",
+      "assets pending approval: homepage and About image folders, featured team photos",
+      "8 duplicate groups differ in content; kept row per rule, PO to confirm"
+    ]
+  },
+  "UNVERIFIED_CLAIM_COUNT": 13,
+  "VALIDATION_ERROR_COUNT": 0,
+  "VALIDATION_WARNING_COUNT": 8
+}

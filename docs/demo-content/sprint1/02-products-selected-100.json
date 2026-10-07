@@ -1,0 +1,3312 @@
+[
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "1Hub - Smart Campus Solution",
+    "sectors": [
+      "Công nghệ giáo dục (EdTech)",
+      "Hạ tầng định danh số và thanh toán cho hệ sinh thái giáo dục",
+      "Giải pháp Smart Campus (Cơ sở giáo dục thông minh)"
+    ],
+    "short_description": "Hạ tầng định danh toàn diện cho hệ sinh thái giáo dục Việt Nam",
+    "slug": "1hub-smart-campus-solution",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 2,
+      "rows": [
+        2
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Drippy",
+    "sectors": [
+      "Thời trang và Công nghệ (FashionTech)"
+    ],
+    "short_description": "Nền tảng thời trang 3D",
+    "slug": "drippy",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 5,
+      "rows": [
+        5
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "ParkWave",
+    "sectors": [
+      "Giao thông đô thị"
+    ],
+    "short_description": "Hệ thống bãi đỗ xe thông minh",
+    "slug": "parkwave",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 7,
+      "rows": [
+        7,
+        87
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "SOLEMATE",
+    "sectors": [
+      "Công nghiệp/ Y tế"
+    ],
+    "short_description": "Giải pháp cải thiện bàn chân bẹt",
+    "slug": "solemate",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 8,
+      "rows": [
+        8,
+        88
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Databuckets",
+    "sectors": [
+      "Hạ tầng dữ liệu"
+    ],
+    "short_description": "Hạ tầng phân tích dữ liệu AI-native tốc độ cao dành cho dữ liệu quy mô lớn trên di động và web.",
+    "slug": "databuckets",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 10,
+      "rows": [
+        10
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Inverted Lambda",
+    "sectors": [
+      "Trí tuệ Nhân tạo Vật lý (Physical AI) & Robot học (Robotics)",
+      "Mạng lưới Hạ tầng Vật lý Phi tập trung (DePIN) & Web3 / Crypto"
+    ],
+    "short_description": "Hạ tầng phi tập trung mở cho Trí tuệ Nhân tạo Vật lý, kết nối robot với mạng lưới vận hành toàn cầ",
+    "slug": "inverted-lambda",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 11,
+      "rows": [
+        11
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Centauri Labs",
+    "sectors": [
+      "Trí tuệ nhân tạo",
+      "Dữ liệu lớn"
+    ],
+    "short_description": "Nền tảng thu thập và cung cấp dữ liệu thao tác thực tế chất lượng cao từ con người để huấn luyện AI vật lý và robot.",
+    "slug": "centauri-labs",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 12,
+      "rows": [
+        12
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Website AI",
+    "sectors": [
+      "Công nghệ thông tin, cụ thể là trí tuệ nhân tạo (AI)."
+    ],
+    "short_description": "Giải pháp AI xây dựng website",
+    "slug": "website-ai",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 15,
+      "rows": [
+        15
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "MiQuant",
+    "sectors": [
+      "Công nghệ tài chính"
+    ],
+    "short_description": "Nền tảng no-code phát triển và cung cấp các chiến lược đầu tư định lượng hiệu suất cao cho mọi nhà đầu tư.",
+    "slug": "miquant",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 17,
+      "rows": [
+        17
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "BA3",
+    "sectors": [
+      "Marketing, AI, thương mại điện tử"
+    ],
+    "short_description": "Nền tảng tối ưu hóa thương mại điện tử tích hợp trí tuệ nhân tạo (AI)",
+    "slug": "ba3",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 18,
+      "rows": [
+        18
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "EnerTrade",
+    "sectors": [
+      "Năng lượng"
+    ],
+    "short_description": "Hệ thống thu gom pin hỗ trợ xây dựng nguồn năng lượng tái tạo",
+    "slug": "enertrade",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 19,
+      "rows": [
+        19
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Nature Voice",
+    "sectors": [
+      "AI"
+    ],
+    "short_description": "Ứng dụng nông nghiệp AI và IoT",
+    "slug": "nature-voice",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 20,
+      "rows": [
+        20
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "VentDx",
+    "sectors": [
+      "Công nghệ y tế"
+    ],
+    "short_description": "VentDx phát triển InspiWave™ – nền tảng giám sát tim-phổi thời gian thực cho bệnh nhân thở máy tại ICU",
+    "slug": "ventdx",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 23,
+      "rows": [
+        23
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Finsey",
+    "sectors": [
+      "FinTech"
+    ],
+    "short_description": "Giải pháp công nghệ tài chính",
+    "slug": "finsey",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 26,
+      "rows": [
+        26,
+        75
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "AIVOS Vision Virtual Assistant",
+    "sectors": [
+      "AI"
+    ],
+    "short_description": "Nền tảng trợ lý ảo trí tuệ nhân tạo đa ngôn ngữ",
+    "slug": "aivos-vision-virtual-assistant",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 27,
+      "rows": [
+        27,
+        76
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "CC - AI Rabbit as super-companion for Autism",
+    "sectors": [
+      "Công nghệ hỗ trợ giáo dục và trị liệu cho người tự kỷ (Neurodiversity).",
+      "Ứng dụng trí tuệ nhân tạo (AI) trong lĩnh vực thần kinh học và hỗ trợ phát triển hệ thần kinh."
+    ],
+    "short_description": "Nền tảng AI hỗ trợ trẻ em tự kỷ",
+    "slug": "cc-ai-rabbit-as-super-companion-for-autism",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 28,
+      "rows": [
+        28,
+        77
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "Prototype"
+    },
+    "stage_source_label": "Prototype",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Pitcam",
+    "sectors": [
+      "ESG, High tech agriculture"
+    ],
+    "short_description": "Phần mềm quản lý tự động hóa và máy bay không người lái",
+    "slug": "pitcam",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 30,
+      "rows": [
+        30,
+        79
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "1ManBiz",
+    "sectors": [
+      "Mar-Tech"
+    ],
+    "short_description": "Công cụ AI Marketing",
+    "slug": "1manbiz",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 32,
+      "rows": [
+        32,
+        81
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "CoPlay",
+    "sectors": [
+      "Game/Giải trí"
+    ],
+    "short_description": "Interactive game platform cho livestream",
+    "slug": "coplay",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 33,
+      "rows": [
+        33,
+        82
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "VietSoil",
+    "sectors": [
+      "Agricultural Technology"
+    ],
+    "short_description": "Mô hình kinh tế tuần hoàn tái chế phụ phẩm nông nghiệp",
+    "slug": "vietsoil",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 34,
+      "rows": [
+        34,
+        83
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Markat",
+    "sectors": [
+      "Sàn giao dịch/Chợ dữ liệu AI"
+    ],
+    "short_description": "Website trao đổi dữ liệu AI",
+    "slug": "markat",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 35,
+      "rows": [
+        35,
+        84
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "BunnyWallet",
+    "sectors": [
+      "Crypto"
+    ],
+    "short_description": "Nền tảng ví Web3 thế hệ mới tập trung vào việc tối ưu hóa hiệu suất sử dụng vốn cho người dùng trong defi",
+    "slug": "bunnywallet",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 36,
+      "rows": [
+        36,
+        85
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "LifeTrack",
+    "sectors": [
+      "HealthTech"
+    ],
+    "short_description": "Giải pháp theo dõi sức khỏe liên tục, kết nối người bệnh, gia đình và nhân viên y tế.",
+    "slug": "lifetrack",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 37,
+      "rows": [
+        37,
+        86
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "dRobot - a hi-tech petdog",
+    "sectors": [
+      "CNTT"
+    ],
+    "short_description": "Robot thú cưng tích hợp AI phục vụ an ninh, giao tiếp và giải trí.",
+    "slug": "drobot-a-hi-tech-petdog",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 38,
+      "rows": [
+        38,
+        90
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "WINDOU",
+    "sectors": [
+      "Environment"
+    ],
+    "short_description": "Ứng dụng AI tính toán và thương mại hóa rác thải tái chế thông qua tín chỉ carbon.",
+    "slug": "windou",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 39,
+      "rows": [
+        39,
+        91
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Finwit",
+    "sectors": [
+      "Ed-Tech,FinTech,AI"
+    ],
+    "short_description": "Nền tảng AI giúp giới trẻ tiếp cận kiến thức, tin tức và công cụ hỗ trợ tài chính, đầu tư.",
+    "slug": "finwit",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 40,
+      "rows": [
+        40,
+        92
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "GCC - Bệ phóng Startup xanh",
+    "sectors": [
+      "FinTech,Blockchain"
+    ],
+    "short_description": "Nền tảng Web3 gọi vốn cộng đồng cho startup xanh, hỗ trợ xác minh và báo cáo tác động bền vững.",
+    "slug": "gcc-be-phong-startup-xanh",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 41,
+      "rows": [
+        41,
+        93
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "LeoFi",
+    "sectors": [
+      "Blockchain"
+    ],
+    "short_description": "Nền tảng DeFi tích hợp AI giúp người dùng quản lý và tối ưu tài chính trên các hệ sinh thái blockchain.",
+    "slug": "leofi",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 42,
+      "rows": [
+        42,
+        94
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Bloom",
+    "sectors": [
+      "EdTech"
+    ],
+    "short_description": "Dịch vụ chuyển đổi số giúp cá nhân và tổ chức trong giáo dục xây dựng, phân phối nội dung.",
+    "slug": "bloom",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 43,
+      "rows": [
+        43,
+        95
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "DUPLICATE_CONTENT_CONFLICT",
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "EcoSmart",
+    "sectors": [
+      "Môi trường bền vững"
+    ],
+    "short_description": "Giải pháp thùng rác thông minh cho đô thị hiện đại.",
+    "slug": "ecosmart",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 44,
+      "rows": [
+        44,
+        96
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "OMILEARN",
+    "sectors": [
+      "EdTech"
+    ],
+    "short_description": "Nền tảng EdTech ứng dụng AI giúp sinh viên tạo lộ trình học, hỏi đáp tài liệu, quiz, flashcard và ghi chú thông minh.",
+    "slug": "omilearn",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 45,
+      "rows": [
+        45,
+        97
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "DUPLICATE_CONTENT_CONFLICT",
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "GypFoam",
+    "sectors": [
+      "Vật liệu xây dựng"
+    ],
+    "short_description": "Giải pháp toàn diện cho ngành xây dựng bền vững",
+    "slug": "gypfoam",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 46,
+      "rows": [
+        46,
+        98
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "DUPLICATE_CONTENT_CONFLICT",
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Knack",
+    "sectors": [
+      "HR-Tech"
+    ],
+    "short_description": "Nền tảng kết nối tuyển dụng",
+    "slug": "knack",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 47,
+      "rows": [
+        47,
+        103
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "DUPLICATE_CONTENT_CONFLICT",
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "NatLife",
+    "sectors": [
+      "Môi trường"
+    ],
+    "short_description": "Ứng dụng công nghệ tái chế rác thải nhựa thành chất liệu bền vững phục vụ đời sống và sản xuất",
+    "slug": "natlife",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 48,
+      "rows": [
+        48,
+        106
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "DUPLICATE_CONTENT_CONFLICT",
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "PURE ALGAE",
+    "sectors": [
+      "Environment"
+    ],
+    "short_description": "Ứng dụng vi tảo hấp thụ CO2 và sản xuất bộ mỹ phẩm dưỡng da tự nhiên, chống lão hóa bền vững.",
+    "slug": "pure-algae",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 50,
+      "rows": [
+        50,
+        114
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "OPENSENS VELO",
+    "sectors": [
+      "Environment"
+    ],
+    "short_description": ": Doanh nghiệp xã hội cung cấp bộ chuyển đổi xe đạp điện và hệ sinh thái giao thông xanh tại Việt Nam.",
+    "slug": "opensens-velo",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 51,
+      "rows": [
+        51,
+        122
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "ZestAroma",
+    "sectors": [
+      "Environment"
+    ],
+    "short_description": "Giải pháp chuyển đổi phụ phẩm nông nghiệp thành sinh khối xanh, tích hợp Blockchain minh bạch ESG.",
+    "slug": "zestaroma",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 52,
+      "rows": [
+        52,
+        125
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "DUPLICATE_CONTENT_CONFLICT",
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Calmio",
+    "sectors": [
+      "Medical"
+    ],
+    "short_description": "Sản phẩm kẹo ngậm tỉnh táo ứng dụng công nghệ bọc vi nang",
+    "slug": "calmio",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 134,
+      "rows": [
+        54,
+        134
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "Prototype"
+    },
+    "stage_source_label": "Prototype",
+    "website": null
+  },
+  {
+    "flags": [
+      "DUPLICATE_CONTENT_CONFLICT",
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "E-Motion",
+    "sectors": [
+      "CNTT"
+    ],
+    "short_description": "Bộ tay lái trợ lực điện EM01 giúp biến xe lăn cơ thành xe lăn điện cho người khuyết tật",
+    "slug": "e-motion",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 136,
+      "rows": [
+        55,
+        136
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Align Health",
+    "sectors": [
+      "HealthTech,AI"
+    ],
+    "short_description": "Nền tảng AI hỗ trợ phục hồi chức năng tại nhà kết hợp giám sát từ xa của bác sĩ chuyên khoa.",
+    "slug": "align-health",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 59,
+      "rows": [
+        59,
+        153
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Travie",
+    "sectors": [
+      "CNTT,Travel"
+    ],
+    "short_description": "Ứng dụng AI cá nhân hóa lịch trình du lịch, hỗ trợ ghép nhóm chia sẻ chi phí và đi trước trả sau",
+    "slug": "travie",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 60,
+      "rows": [
+        60,
+        157
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Lover",
+    "sectors": [
+      "CNTT"
+    ],
+    "short_description": "Nền tảng kết nối và giao lưu an toàn, thuận tiện giúp người dùng tìm kiếm các mối quan hệ nghiêm túc.",
+    "slug": "lover",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 61,
+      "rows": [
+        61,
+        158
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Cenergy",
+    "sectors": [
+      "CNTT,Environment"
+    ],
+    "short_description": "Phát triển pin dòng chảy Redox (RFB) lưu trữ năng lượng dài hạn, thay thế pin Lithium-ion",
+    "slug": "cenergy",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 62,
+      "rows": [
+        62,
+        119
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "ECO LEATHER - Công nghệ tạo da giả từ Cellulose",
+    "sectors": [
+      "Medical"
+    ],
+    "short_description": "Ứng dụng công nghệ Cellulose sản xuất da giả sinh học từ xơ dừa thân thiện với môi trường.",
+    "slug": "eco-leather-cong-nghe-tao-da-gia-tu-cellulose",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 63,
+      "rows": [
+        63,
+        163
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "CADUCEUS",
+    "sectors": [
+      "Medical,Environment"
+    ],
+    "short_description": "Ứng dụng theo dõi và hỗ trợ chăm sóc sức khỏe tinh thần dành cho giới trẻ từ 18-28 tuổi.",
+    "slug": "caduceus",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 64,
+      "rows": [
+        64,
+        166
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "S2M - DA TỪ VỎ XOÀI",
+    "sectors": [
+      "Environment"
+    ],
+    "short_description": "Da sinh học từ vỏ xoài chống thấm nước, phân hủy tự nhiên, phục vụ ngành thời trang bền vững",
+    "slug": "s2m-da-tu-vo-xoai",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 65,
+      "rows": [
+        65,
+        171
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Dancemilling – Robot Development Kit",
+    "sectors": [
+      "CNTT"
+    ],
+    "short_description": "Phần mềm tối ưu vận hành, xuất chương trình và lập trình chính xác cho robot công nghiệp.",
+    "slug": "dancemilling-robot-development-kit",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 66,
+      "rows": [
+        66,
+        176
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "SATY RICE FARM",
+    "sectors": [
+      "AgriTech"
+    ],
+    "short_description": "Ứng dụng IoT và AI hỗ trợ nông dân quản lý lịch trình, dự báo thời tiết và tối ưu năng suất lúa.",
+    "slug": "saty-rice-farm",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 67,
+      "rows": [
+        67,
+        177
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Career Up",
+    "sectors": [
+      "Ed-Tech"
+    ],
+    "short_description": "Website ứng dụng AI kết hợp trắc nghiệm tính cách và tư vấn chuyên gia để định hướng ngành học.",
+    "slug": "career-up",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 68,
+      "rows": [
+        68,
+        178
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "TIKERA",
+    "sectors": [
+      "Mar-Tech,AI"
+    ],
+    "short_description": "Phần mềm AI tự động khởi tạo ý tưởng và nội dung mạng xã hội không cần kĩ năng prompt.",
+    "slug": "tikera",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 70,
+      "rows": [
+        70,
+        194
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "WiSe",
+    "sectors": [
+      "Viễn thông"
+    ],
+    "short_description": "Nền tảng phi tập trung trên Solana cho phép chia sẻ băng thông Wi-Fi để nhận thu nhập thụ động",
+    "slug": "wise",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 71,
+      "rows": [
+        71,
+        200
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Banana Leather",
+    "sectors": [
+      "Thời trang kinh tế tuần hoàn"
+    ],
+    "short_description": "Vật liệu da sinh học tái chế từ lá chuối phế thải, thay thế da PU cho thời trang bền vững.",
+    "slug": "banana-leather",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 72,
+      "rows": [
+        72,
+        201
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "PennyWorth",
+    "sectors": [
+      "Công nghệ quảng cáo (AdTech)"
+    ],
+    "short_description": "Công cụ AI hỗ trợ tìm kiếm và kết nối chuẩn xác giữa thương hiệu với những nhà sáng tạo nội dung phù hợp.",
+    "slug": "pennyworth",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 73,
+      "rows": [
+        73,
+        202
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Spine",
+    "sectors": [
+      "Công nghệ tài chính"
+    ],
+    "short_description": "Nền tảng Lending được phát triển trên hệ sinh thái Ethereum cùng với các blockchain tương thích EVM",
+    "slug": "spine",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 89,
+      "rows": [
+        89
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "VNSPECIAL - THƯƠNG MẠI VÀ QUẢNG BÁ ĐẶC SẢN VIỆT NAM TẠI THỊ TRƯỜNG TRUNG QUỐC",
+    "sectors": [
+      "E-commerce"
+    ],
+    "short_description": "Hệ sinh thái e-commerce & Blockchain quản lý, quảng bá và tiêu thụ đặc sản Việt Nam sang Trung Quốc.",
+    "slug": "vnspecial-thuong-mai-va-quang-ba-dac-san-viet-nam-tai-thi-truong-trung-quoc",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 187,
+      "rows": [
+        187
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "FITA",
+    "sectors": [
+      "Dinh dưỡng, fitness, công nghệ sức khỏe"
+    ],
+    "short_description": "Ứng dụng dinh dưỡng cá nhân hóa giúp người bận rộn lên thực đơn, tối ưu bữa ăn và kiểm soát chi phí.",
+    "slug": "fita",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 208,
+      "rows": [
+        208
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "AiSee",
+    "sectors": [
+      "Công nghệ hỗ trợ (Assistive Technology) ứng dụng Trí tuệ nhân tạo."
+    ],
+    "short_description": "Trợ lý AI giọng nói tiếng Việt giúp người khiếm thị hiểu môi trường và gọi người thân khi khẩn cấp.",
+    "slug": "aisee",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 213,
+      "rows": [
+        213
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "ZPATH",
+    "sectors": [
+      "Công nghệ giáo dục (EdTech)"
+    ],
+    "short_description": "Trợ lý AI giúp học sinh Việt Nam tính điểm, chọn ngành và tối ưu chiến lược xét tuyển đại học.",
+    "slug": "zpath",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 218,
+      "rows": [
+        218
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "MailGuard",
+    "sectors": [
+      "An ninh mạng"
+    ],
+    "short_description": "Nền tảng AI phát hiện email và tin nhắn lừa đảo tiếng Việt theo thời gian thực, cảnh báo rủi ro.",
+    "slug": "mailguard",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 223,
+      "rows": [
+        223
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Peannut.studio",
+    "sectors": [
+      "Thời trang kỹ thuật số",
+      "Công nghệ thực tế tăng cường"
+    ],
+    "short_description": "Thời trang phygital dùng Web AR biến áo streetwear thành trải nghiệm 3D tương tác, cập nhật qua cloud.",
+    "slug": "peannut-studio",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 227,
+      "rows": [
+        227
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "VietGarden",
+    "sectors": [
+      "Agritech"
+    ],
+    "short_description": "Nền tảng kết nối nông trại Việt với người tiêu dùng bằng câu chuyện thật và dữ liệu minh bạch.",
+    "slug": "vietgarden",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 233,
+      "rows": [
+        233
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "AquaNexus",
+    "sectors": [
+      "Ngư nghiệp"
+    ],
+    "short_description": "Nền tảng giám sát chất lượng nước và quản trị rủi ro cho các trại nuôi trồng thủy sản.",
+    "slug": "aquanexus",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 240,
+      "rows": [
+        240
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "LinguaSphere",
+    "sectors": [
+      "EdTech"
+    ],
+    "short_description": "Nền tảng học tiếng Nhật ứng dụng AI xây dựng lộ trình cá nhân hóa và tăng động lực cho người học.",
+    "slug": "linguasphere",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 246,
+      "rows": [
+        246
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "KCash",
+    "sectors": [
+      "Fintech, EdTech"
+    ],
+    "short_description": "Hệ sinh thái giáo dục tài chính dùng tiền mặt thật, giúp trẻ 11–14 tuổi hình thành thói quen tài chính.",
+    "slug": "kcash",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 247,
+      "rows": [
+        247
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "OpenADAS",
+    "sectors": [
+      "AutoTech / Safety Tech"
+    ],
+    "short_description": "Nền tảng ADAS mã nguồn mở biến thiết bị sẵn có thành trợ lý lái xe, cảnh báo rủi ro giao thông sớm.",
+    "slug": "openadas",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 255,
+      "rows": [
+        255
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "BrandFlow",
+    "sectors": [
+      "AdTech"
+    ],
+    "short_description": "Hệ sinh thái AI đa tác tử giúp doanh nghiệp dựng chiến lược marketing chuẩn chuyên gia trong 10 phút.",
+    "slug": "brandflow",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 256,
+      "rows": [
+        256
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "GROWTH",
+      "label": "Tăng trưởng",
+      "source_label": "Growth"
+    },
+    "stage_source_label": "Growth",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Debatium",
+    "sectors": [
+      "EdTech"
+    ],
+    "short_description": "Nền tảng ghép luyện tranh biện, đặt trọng tài và ghi nhận thành tích cho học sinh tranh biện.",
+    "slug": "debatium",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 272,
+      "rows": [
+        272
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Argo",
+    "sectors": [
+      "Công nghệ nông nghiệp"
+    ],
+    "short_description": "Nền tảng số hóa và xác thực dữ liệu thửa đất, giúp nông sản Việt đáp ứng quy định EUDR của EU.",
+    "slug": "argo",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 275,
+      "rows": [
+        275
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "KOLA",
+    "sectors": [
+      "HealthTech"
+    ],
+    "short_description": "Hệ thống camera AI giám sát quy trình rửa tay tại khoa hồi sức tích cực, giảm nhiễm khuẩn bệnh viện.",
+    "slug": "kola",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 281,
+      "rows": [
+        281
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "IDEA",
+      "label": "Ý tưởng",
+      "source_label": "Ideation"
+    },
+    "stage_source_label": "Ideation",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "CarePath",
+    "sectors": [
+      "HealthTech"
+    ],
+    "short_description": "AI Scribe tiếng Việt tự động ghi bệnh án SOAP cho bác sĩ và gửi tóm tắt cho bệnh nhân qua Zalo.",
+    "slug": "carepath",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 285,
+      "rows": [
+        285
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Zion-HUB",
+    "sectors": [
+      "Công nghệ môi trường, robot"
+    ],
+    "short_description": "Robot tự hành EcoBot thu gom rác cho văn phòng, mở nắp không tiếp xúc và kiểm soát mùi tự động.",
+    "slug": "zion-hub",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 287,
+      "rows": [
+        287
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Praxis Labs",
+    "sectors": [
+      "Physical AI, robotics, machine learning"
+    ],
+    "short_description": "Nền tảng dữ liệu và mô hình AI vật lý giúp huấn luyện, đánh giá và triển khai robot nhanh hơn.",
+    "slug": "praxis-labs",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 293,
+      "rows": [
+        293
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "MedViet AI",
+    "sectors": [
+      "AI agent, Health tech"
+    ],
+    "short_description": "Nền tảng trợ lý AI có dẫn chứng cho quy trình khám chữa bệnh và quản trị hồ sơ y tế.",
+    "slug": "medviet-ai",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 294,
+      "rows": [
+        294
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "Prototype"
+    },
+    "stage_source_label": "Prototype",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Cat Speak",
+    "sectors": [
+      "Platform, culture"
+    ],
+    "short_description": "Nền tảng cộng đồng kết nối giao tiếp đa ngôn ngữ và văn hóa toàn cầu.",
+    "slug": "cat-speak",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 306,
+      "rows": [
+        306
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "APPTHUETHO",
+    "sectors": [
+      "Platform"
+    ],
+    "short_description": "Nền tảng theo yêu cầu kết nối khách hàng với thợ sửa chữa gia dụng.",
+    "slug": "appthuetho",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 310,
+      "rows": [
+        310
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "SMARTKET",
+    "sectors": [
+      "Fintech"
+    ],
+    "short_description": "Nền tảng khuyến mãi số tập trung giúp tiết kiệm chi tiêu và thúc đẩy tiêu dùng bền vững.",
+    "slug": "smartket",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 314,
+      "rows": [
+        314
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Nền tảng 'Thuê chuyên gia' theo giờ",
+    "sectors": [
+      "Platform"
+    ],
+    "short_description": "Sàn kết nối chuyên gia giàu kinh nghiệm làm việc bán thời gian cho doanh nghiệp SME.",
+    "slug": "nen-tang-thue-chuyen-gia-theo-gio",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 315,
+      "rows": [
+        315
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "WEEUP",
+    "sectors": [
+      "Platform, HR tech"
+    ],
+    "short_description": "Nền tảng việc làm và thực tập kết nối sinh viên với doanh nghiệp và cơ hội tích lũy kinh nghiệm.",
+    "slug": "weeup",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 319,
+      "rows": [
+        319
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "CERTCHAIN",
+    "sectors": [
+      "Authentication tech"
+    ],
+    "short_description": "Nền tảng phát hành, xác thực bằng cấp số trên Cardano, kết hợp AI chống bằng giả.",
+    "slug": "certchain",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 326,
+      "rows": [
+        326
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "MEDLEDGER",
+    "sectors": [
+      "HealthTech,AI, Blockchain"
+    ],
+    "short_description": "Ứng dụng blockchain truy xuất dược phẩm và xác minh thuốc theo thời gian thực trên toàn chuỗi cung ứng.",
+    "slug": "medledger",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 327,
+      "rows": [
+        327
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "VeriChainIDS",
+    "sectors": [
+      "AI. Blockchain, cybersecurity"
+    ],
+    "short_description": "Hệ thống AI và blockchain phát hiện, cảnh báo và ứng phó mối đe dọa an ninh mạng theo thời gian thực.",
+    "slug": "verichainids",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 328,
+      "rows": [
+        328
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Nền tảng dMRV On-chain",
+    "sectors": [
+      "ESG, blockchain, AI"
+    ],
+    "short_description": "Nền tảng đo lường, báo cáo và xác minh on-chain tích hợp IoT và AI.",
+    "slug": "nen-tang-dmrv-on-chain",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 329,
+      "rows": [
+        329
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "BioFi Frontier",
+    "sectors": [
+      "ReFi, blockchain, impact startup"
+    ],
+    "short_description": "Hạ tầng tài chính số kết hợp blockchain và ReFi để mã hóa các chỉ số đa dạng sinh học.",
+    "slug": "biofi-frontier",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 330,
+      "rows": [
+        330
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "M-Carbon",
+    "sectors": [
+      "green fintech, blockchain"
+    ],
+    "short_description": "Green fintech ghi nhận hành vi sống xanh thành giá trị tài chính trên blockchain.",
+    "slug": "m-carbon",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 331,
+      "rows": [
+        331
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "WeaveCarbon",
+    "sectors": [
+      "SaaS/ESG/export"
+    ],
+    "short_description": "Nền tảng Web-SaaS B2B cung cấp hạ tầng số cho ngành dệt may Việt Nam hướng tới xuất khẩu.",
+    "slug": "weavecarbon",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 338,
+      "rows": [
+        338
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Vietspace - GEOCLEAR 3D",
+    "sectors": [
+      "Platform/Tech"
+    ],
+    "short_description": "Nền tảng định tuyến 3D cho phương tiện, sử dụng dữ liệu Drone/LiDAR để tối ưu giao hàng chặng cuối.",
+    "slug": "vietspace-geoclear-3d",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 344,
+      "rows": [
+        344
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Bandly - WiFiShare",
+    "sectors": [
+      "DePIN/Web3"
+    ],
+    "short_description": "Giao thức Wi‑Fi phi tập trung trên Solana hỗ trợ chia sẻ băng thông và thanh toán theo mức sử dụng.",
+    "slug": "bandly-wifishare",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 346,
+      "rows": [
+        346
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "Prototype"
+    },
+    "stage_source_label": "Prototype",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Fruitcare AI",
+    "sectors": [
+      "AgriTech/AI"
+    ],
+    "short_description": "Nền tảng AI dùng ảnh siêu phổ để kiểm soát chất lượng nông sản.",
+    "slug": "fruitcare-ai",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 347,
+      "rows": [
+        347
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "AIRFI",
+    "sectors": [
+      "DePIN/Web3"
+    ],
+    "short_description": "Giải pháp chia sẻ băng thông Internet phi tập trung theo mô hình DePIN trên Cardano.",
+    "slug": "airfi",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 351,
+      "rows": [
+        351
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Ứng dụng Blockchain rau củ Organic SME",
+    "sectors": [
+      "AgriTech/Blockchain"
+    ],
+    "short_description": "Nền tảng blockchain truy xuất nguồn gốc và kiểm soát phát thải CO₂ cho rau củ organic SME.",
+    "slug": "ung-dung-blockchain-rau-cu-organic-sme",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 354,
+      "rows": [
+        354
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "Auto FarmChain",
+    "sectors": [
+      "AgriTech/IoT/Robotics"
+    ],
+    "short_description": "Hạ tầng nông nghiệp AI tích hợp IoT, robot và blockchain cho mô hình nhà kính.",
+    "slug": "auto-farmchain",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 355,
+      "rows": [
+        355
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "SoftHerb Gel",
+    "sectors": [
+      "Health & Wellness/Blockchain"
+    ],
+    "short_description": "Hệ sinh thái gel dinh dưỡng từ ngải cứu, tích hợp blockchain và truy xuất nguồn gốc đa tầng.",
+    "slug": "softherb-gel",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 359,
+      "rows": [
+        359
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  },
+  {
+    "flags": [
+      "LOCATION_NOT_IN_SOURCE",
+      "LOGO_MISSING_USE_INITIALS_FALLBACK"
+    ],
+    "location": null,
+    "logo": null,
+    "name": "VIETSOUL",
+    "sectors": [
+      "CulturalTech/E-commerce"
+    ],
+    "short_description": "Nền tảng thương mại điện tử và lưu trữ văn hóa số ứng dụng AI cho làng nghề Việt Nam.",
+    "slug": "vietsoul",
+    "source": {
+      "columns": {
+        "name": "A",
+        "sectors": "E",
+        "short_description": "D",
+        "stage": "F"
+      },
+      "file_sha256": "d228690fed5c02114025ed248b1f9daee854ba54126c872fe1ebc01f04aad2f9",
+      "kept_row": 361,
+      "rows": [
+        361
+      ],
+      "sheet": "Thư viện sản phẩm"
+    },
+    "stage": {
+      "code": "MVP",
+      "label": "MVP",
+      "source_label": "MVP"
+    },
+    "stage_source_label": "MVP",
+    "website": null
+  }
+]

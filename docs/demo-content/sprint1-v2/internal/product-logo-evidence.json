@@ -1,0 +1,148 @@
+{
+  "INTERNAL_ONLY": "Drive ids are provenance; never a public URL or a DB value.",
+  "logos": [
+    {
+      "byte_size": 57795,
+      "drive_file_id": "1mn3rtbxr2luJe6wxmeVuszcCnkXfcOgn",
+      "drive_title": "1hub.png",
+      "match": "EXACT",
+      "mime_type": "image/png",
+      "name": "1Hub - Smart Campus Solution",
+      "slug": "1hub-smart-campus-solution",
+      "status": "ASSET_PENDING_RUNTIME",
+      "workbook_cell": "Thư viện sản phẩm!B2"
+    },
+    {
+      "byte_size": null,
+      "drive_file_id": "1x7XfzBb60EQ2eBVQQHMlSvVyKlObAsKk",
+      "drive_title": null,
+      "match": "NOT_IN_SAFE_SET",
+      "mime_type": null,
+      "name": "HubLock",
+      "slug": null,
+      "status": "NOT_APPLICABLE",
+      "workbook_cell": "Thư viện sản phẩm!B3"
+    },
+    {
+      "byte_size": null,
+      "drive_file_id": "1FuC8TKIS9hh_bc-4TWV-RkDyGEBLOH-E",
+      "drive_title": null,
+      "match": "NOT_IN_SAFE_SET",
+      "mime_type": null,
+      "name": "Pictor Network",
+      "slug": null,
+      "status": "NOT_APPLICABLE",
+      "workbook_cell": "Thư viện sản phẩm!B4"
+    },
+    {
+      "byte_size": 36851,
+      "drive_file_id": "1ttX4oqBXm7p7Wmf856r-l8caXqOM61km",
+      "drive_title": "drippy",
+      "match": "EXACT",
+      "mime_type": "image/jpeg",
+      "name": "Drippy",
+      "slug": "drippy",
+      "status": "ASSET_PENDING_RUNTIME",
+      "workbook_cell": "Thư viện sản phẩm!B5"
+    },
+    {
+      "byte_size": null,
+      "drive_file_id": "1tQP8-hrosdlFPOay_QrEC2UsfsPLC9mh",
+      "drive_title": null,
+      "match": "NOT_IN_SAFE_SET",
+      "mime_type": null,
+      "name": "UCTalent",
+      "slug": null,
+      "status": "NOT_APPLICABLE",
+      "workbook_cell": "Thư viện sản phẩm!B6"
+    },
+    {
+      "byte_size": 56671,
+      "drive_file_id": "1Kqp9YG2LKpO2vEssBXg-l_sldcxN9Kl8",
+      "drive_title": "ParkWave",
+      "match": "EXACT",
+      "mime_type": "image/jpeg",
+      "name": "ParkWave",
+      "slug": "parkwave",
+      "status": "ASSET_PENDING_RUNTIME",
+      "workbook_cell": "Thư viện sản phẩm!B7"
+    },
+    {
+      "byte_size": 127747,
+      "drive_file_id": "1n-oajug57Pfg989geMsW_8o9qBYO02hp",
+      "drive_title": "solemate",
+      "match": "EXACT",
+      "mime_type": "image/png",
+      "name": "SOLEMATE",
+      "slug": "solemate",
+      "status": "ASSET_PENDING_RUNTIME",
+      "workbook_cell": "Thư viện sản phẩm!B8"
+    },
+    {
+      "byte_size": null,
+      "drive_file_id": "1xQC3vEyPaz440DwA7xaUVpG4n_dBNKr_",
+      "drive_title": null,
+      "match": "NOT_IN_SAFE_SET",
+      "mime_type": null,
+      "name": "PSI 69",
+      "slug": null,
+      "status": "NOT_APPLICABLE",
+      "workbook_cell": "Thư viện sản phẩm!B9"
+    },
+    {
+      "byte_size": 17634,
+      "drive_file_id": "1xK-HJoKjzPV5jWp08H3KTDeTmW38vpXG",
+      "drive_title": "Databuckets.jpg",
+      "match": "EXACT",
+      "mime_type": "image/jpeg",
+      "name": "Databuckets",
+      "slug": "databuckets",
+      "status": "ASSET_PENDING_RUNTIME",
+      "workbook_cell": "Thư viện sản phẩm!B10"
+    },
+    {
+      "byte_size": 21512,
+      "drive_file_id": "12FDd6JWvmP5q9h4JRLtvpQ_KX41_pyvP",
+      "drive_title": "Inverted Lambda",
+      "match": "EXACT",
+      "mime_type": "image/jpeg",
+      "name": "Inverted Lambda",
+      "slug": "inverted-lambda",
+      "status": "ASSET_PENDING_RUNTIME",
+      "workbook_cell": "Thư viện sản phẩm!B11"
+    },
+    {
+      "byte_size": 66335,
+      "drive_file_id": "1jfG7CX8GE1BYHtF7yGRB2nVXghArFgbM",
+      "drive_title": "Centauri Labs",
+      "match": "EXACT",
+      "mime_type": "image/jpeg",
+      "name": "Centauri Labs",
+      "slug": "centauri-labs",
+      "status": "ASSET_PENDING_RUNTIME",
+      "workbook_cell": "Thư viện sản phẩm!B12"
+    },
+    {
+      "byte_size": null,
+      "drive_file_id": "19TqbbFgLkn7yo7O_BZLg-TbcKot66LSb",
+      "drive_title": null,
+      "match": "NOT_IN_SAFE_SET",
+      "mime_type": null,
+      "name": "AIDIA",
+      "slug": null,
+      "status": "NOT_APPLICABLE",
+      "workbook_cell": "Thư viện sản phẩm!B13"
+    },
+    {
+      "byte_size": null,
+      "drive_file_id": "153XxywUxx5-XYTIGSYDnOI9YHIYz9jJG",
+      "drive_title": null,
+      "match": "NOT_IN_SAFE_SET",
+      "mime_type": null,
+      "name": "CarOn",
+      "slug": null,
+      "status": "NOT_APPLICABLE",
+      "workbook_cell": "Thư viện sản phẩm!B14"
+    }
+  ]
+}

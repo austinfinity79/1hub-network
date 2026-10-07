@@ -1,0 +1,684 @@
+[
+  {
+    "name": "HubLock",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO"
+    ],
+    "row": 3,
+    "slug": "hublock"
+  },
+  {
+    "name": "Pictor Network",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO"
+    ],
+    "row": 4,
+    "slug": "pictor-network"
+  },
+  {
+    "name": "UCTalent",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 6,
+    "slug": "uctalent"
+  },
+  {
+    "name": "PSI 69",
+    "reasons": [
+      "UNVERIFIED_CLAIM_IN_DESCRIPTION"
+    ],
+    "row": 9,
+    "slug": "psi-69"
+  },
+  {
+    "name": "AIDIA",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO",
+      "UNVERIFIED_CLAIM_IN_DESCRIPTION"
+    ],
+    "row": 13,
+    "slug": "aidia"
+  },
+  {
+    "name": "CarOn",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO"
+    ],
+    "row": 14,
+    "slug": "caron"
+  },
+  {
+    "name": "ENFARM",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 16,
+    "slug": "enfarm"
+  },
+  {
+    "name": "Fidec",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 21,
+    "slug": "fidec"
+  },
+  {
+    "name": "Tín Chỉ Carbon Việt Nam (Carbon Credits Vietnam)",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 22,
+    "slug": "tin-chi-carbon-viet-nam-carbon-credits-vietnam"
+  },
+  {
+    "name": "Teky",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO",
+      "UNVERIFIED_CLAIM_IN_DESCRIPTION"
+    ],
+    "row": 24,
+    "slug": "teky"
+  },
+  {
+    "name": "SaolaTek",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO"
+    ],
+    "row": 25,
+    "slug": "saolatek"
+  },
+  {
+    "name": "Elocare",
+    "reasons": [
+      "MISSING_SECTOR"
+    ],
+    "row": 29,
+    "slug": "elocare"
+  },
+  {
+    "name": "Fun Studio",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO"
+    ],
+    "row": 31,
+    "slug": "fun-studio"
+  },
+  {
+    "name": "COKA",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO"
+    ],
+    "row": 49,
+    "slug": "coka"
+  },
+  {
+    "name": "Easy-Comm",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 53,
+    "slug": "easy-comm"
+  },
+  {
+    "name": "Calmio",
+    "reasons": [
+      "DUPLICATE_OF_ROW_107"
+    ],
+    "row": 54,
+    "slug": "calmio"
+  },
+  {
+    "name": "E-Motion",
+    "reasons": [
+      "DUPLICATE_OF_ROW_108"
+    ],
+    "row": 55,
+    "slug": "e-motion"
+  },
+  {
+    "name": "WESOLIFE",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO"
+    ],
+    "row": 56,
+    "slug": "wesolife"
+  },
+  {
+    "name": "Insurtech - IST365",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO"
+    ],
+    "row": 57,
+    "slug": "insurtech-ist365"
+  },
+  {
+    "name": "ECOSOAP",
+    "reasons": [
+      "MISSING_SECTOR"
+    ],
+    "row": 58,
+    "slug": "ecosoap"
+  },
+  {
+    "name": "Salework",
+    "reasons": [
+      "STAGE_ALIAS_PENDING_PO"
+    ],
+    "row": 69,
+    "slug": "salework"
+  },
+  {
+    "name": "SaolaTek",
+    "reasons": [
+      "DUPLICATE_OF_ROW_25"
+    ],
+    "row": 74,
+    "slug": "saolatek"
+  },
+  {
+    "name": "Finsey",
+    "reasons": [
+      "DUPLICATE_OF_ROW_26"
+    ],
+    "row": 75,
+    "slug": "finsey"
+  },
+  {
+    "name": "AIVOS Vision Virtual Assistant",
+    "reasons": [
+      "DUPLICATE_OF_ROW_27"
+    ],
+    "row": 76,
+    "slug": "aivos-vision-virtual-assistant"
+  },
+  {
+    "name": "CC - AI Rabbit as super-companion for Autism",
+    "reasons": [
+      "DUPLICATE_OF_ROW_28"
+    ],
+    "row": 77,
+    "slug": "cc-ai-rabbit-as-super-companion-for-autism"
+  },
+  {
+    "name": "Elocare",
+    "reasons": [
+      "DUPLICATE_OF_ROW_29"
+    ],
+    "row": 78,
+    "slug": "elocare"
+  },
+  {
+    "name": "Pitcam",
+    "reasons": [
+      "DUPLICATE_OF_ROW_30"
+    ],
+    "row": 79,
+    "slug": "pitcam"
+  },
+  {
+    "name": "Fun Studio",
+    "reasons": [
+      "DUPLICATE_OF_ROW_31"
+    ],
+    "row": 80,
+    "slug": "fun-studio"
+  },
+  {
+    "name": "1ManBiz",
+    "reasons": [
+      "DUPLICATE_OF_ROW_32"
+    ],
+    "row": 81,
+    "slug": "1manbiz"
+  },
+  {
+    "name": "CoPlay",
+    "reasons": [
+      "DUPLICATE_OF_ROW_33"
+    ],
+    "row": 82,
+    "slug": "coplay"
+  },
+  {
+    "name": "VietSoil",
+    "reasons": [
+      "DUPLICATE_OF_ROW_34"
+    ],
+    "row": 83,
+    "slug": "vietsoil"
+  },
+  {
+    "name": "Markat",
+    "reasons": [
+      "DUPLICATE_OF_ROW_35"
+    ],
+    "row": 84,
+    "slug": "markat"
+  },
+  {
+    "name": "BunnyWallet",
+    "reasons": [
+      "DUPLICATE_OF_ROW_36"
+    ],
+    "row": 85,
+    "slug": "bunnywallet"
+  },
+  {
+    "name": "LifeTrack",
+    "reasons": [
+      "DUPLICATE_OF_ROW_37"
+    ],
+    "row": 86,
+    "slug": "lifetrack"
+  },
+  {
+    "name": "ParkWave",
+    "reasons": [
+      "DUPLICATE_OF_ROW_7"
+    ],
+    "row": 87,
+    "slug": "parkwave"
+  },
+  {
+    "name": "SOLEMATE",
+    "reasons": [
+      "DUPLICATE_OF_ROW_8"
+    ],
+    "row": 88,
+    "slug": "solemate"
+  },
+  {
+    "name": "dRobot - a hi-tech petdog",
+    "reasons": [
+      "DUPLICATE_OF_ROW_38"
+    ],
+    "row": 90,
+    "slug": "drobot-a-hi-tech-petdog"
+  },
+  {
+    "name": "WINDOU",
+    "reasons": [
+      "DUPLICATE_OF_ROW_39"
+    ],
+    "row": 91,
+    "slug": "windou"
+  },
+  {
+    "name": "Finwit",
+    "reasons": [
+      "DUPLICATE_OF_ROW_40"
+    ],
+    "row": 92,
+    "slug": "finwit"
+  },
+  {
+    "name": "GCC - Bệ phóng Startup xanh",
+    "reasons": [
+      "DUPLICATE_OF_ROW_41"
+    ],
+    "row": 93,
+    "slug": "gcc-be-phong-startup-xanh"
+  },
+  {
+    "name": "LeoFi",
+    "reasons": [
+      "DUPLICATE_OF_ROW_42"
+    ],
+    "row": 94,
+    "slug": "leofi"
+  },
+  {
+    "name": "Bloom",
+    "reasons": [
+      "DUPLICATE_OF_ROW_43"
+    ],
+    "row": 95,
+    "slug": "bloom"
+  },
+  {
+    "name": "EcoSmart",
+    "reasons": [
+      "DUPLICATE_OF_ROW_44"
+    ],
+    "row": 96,
+    "slug": "ecosmart"
+  },
+  {
+    "name": "OMILEARN",
+    "reasons": [
+      "DUPLICATE_OF_ROW_45"
+    ],
+    "row": 97,
+    "slug": "omilearn"
+  },
+  {
+    "name": "GypFoam",
+    "reasons": [
+      "DUPLICATE_OF_ROW_46"
+    ],
+    "row": 98,
+    "slug": "gypfoam"
+  },
+  {
+    "name": "Knack",
+    "reasons": [
+      "DUPLICATE_OF_ROW_47"
+    ],
+    "row": 99,
+    "slug": "knack"
+  },
+  {
+    "name": "NatLife",
+    "reasons": [
+      "DUPLICATE_OF_ROW_48"
+    ],
+    "row": 100,
+    "slug": "natlife"
+  },
+  {
+    "name": "COKA",
+    "reasons": [
+      "DUPLICATE_OF_ROW_49"
+    ],
+    "row": 101,
+    "slug": "coka"
+  },
+  {
+    "name": "PURE ALGAE",
+    "reasons": [
+      "DUPLICATE_OF_ROW_50"
+    ],
+    "row": 102,
+    "slug": "pure-algae"
+  },
+  {
+    "name": "Cenergy",
+    "reasons": [
+      "DUPLICATE_OF_ROW_62"
+    ],
+    "row": 103,
+    "slug": "cenergy"
+  },
+  {
+    "name": "OPENSENS VELO",
+    "reasons": [
+      "DUPLICATE_OF_ROW_51"
+    ],
+    "row": 104,
+    "slug": "opensens-velo"
+  },
+  {
+    "name": "ZestAroma",
+    "reasons": [
+      "DUPLICATE_OF_ROW_52"
+    ],
+    "row": 105,
+    "slug": "zestaroma"
+  },
+  {
+    "name": "Easy-Comm",
+    "reasons": [
+      "DUPLICATE_OF_ROW_53"
+    ],
+    "row": 106,
+    "slug": "easy-comm"
+  },
+  {
+    "name": "Wesolife",
+    "reasons": [
+      "DUPLICATE_OF_ROW_56"
+    ],
+    "row": 109,
+    "slug": "wesolife"
+  },
+  {
+    "name": "Insurtech - IST365",
+    "reasons": [
+      "DUPLICATE_OF_ROW_57"
+    ],
+    "row": 110,
+    "slug": "insurtech-ist365"
+  },
+  {
+    "name": "ECOSOAP",
+    "reasons": [
+      "DUPLICATE_OF_ROW_58"
+    ],
+    "row": 111,
+    "slug": "ecosoap"
+  },
+  {
+    "name": "Align Health",
+    "reasons": [
+      "DUPLICATE_OF_ROW_59"
+    ],
+    "row": 112,
+    "slug": "align-health"
+  },
+  {
+    "name": "Travie",
+    "reasons": [
+      "DUPLICATE_OF_ROW_60"
+    ],
+    "row": 113,
+    "slug": "travie"
+  },
+  {
+    "name": "Lover",
+    "reasons": [
+      "DUPLICATE_OF_ROW_61"
+    ],
+    "row": 114,
+    "slug": "lover"
+  },
+  {
+    "name": "ECO LEATHER - Công nghệ tạo da giả từ Cellulose",
+    "reasons": [
+      "DUPLICATE_OF_ROW_63"
+    ],
+    "row": 115,
+    "slug": "eco-leather-cong-nghe-tao-da-gia-tu-cellulose"
+  },
+  {
+    "name": "CADUCEUS",
+    "reasons": [
+      "DUPLICATE_OF_ROW_64"
+    ],
+    "row": 116,
+    "slug": "caduceus"
+  },
+  {
+    "name": "S2M - DA TỪ VỎ XOÀI",
+    "reasons": [
+      "DUPLICATE_OF_ROW_65"
+    ],
+    "row": 117,
+    "slug": "s2m-da-tu-vo-xoai"
+  },
+  {
+    "name": "Dancemilling – Robot Development Kit",
+    "reasons": [
+      "DUPLICATE_OF_ROW_66"
+    ],
+    "row": 118,
+    "slug": "dancemilling-robot-development-kit"
+  },
+  {
+    "name": "SATY RICE FARM",
+    "reasons": [
+      "DUPLICATE_OF_ROW_67"
+    ],
+    "row": 119,
+    "slug": "saty-rice-farm"
+  },
+  {
+    "name": "Career Up",
+    "reasons": [
+      "DUPLICATE_OF_ROW_68"
+    ],
+    "row": 120,
+    "slug": "career-up"
+  },
+  {
+    "name": "Salework",
+    "reasons": [
+      "DUPLICATE_OF_ROW_69"
+    ],
+    "row": 121,
+    "slug": "salework"
+  },
+  {
+    "name": "TIKERA",
+    "reasons": [
+      "DUPLICATE_OF_ROW_70"
+    ],
+    "row": 122,
+    "slug": "tikera"
+  },
+  {
+    "name": "WiSe",
+    "reasons": [
+      "DUPLICATE_OF_ROW_71"
+    ],
+    "row": 123,
+    "slug": "wise"
+  },
+  {
+    "name": "Banana Leather",
+    "reasons": [
+      "DUPLICATE_OF_ROW_72"
+    ],
+    "row": 124,
+    "slug": "banana-leather"
+  },
+  {
+    "name": "PennyWorth",
+    "reasons": [
+      "DUPLICATE_OF_ROW_73"
+    ],
+    "row": 125,
+    "slug": "pennyworth"
+  },
+  {
+    "name": "Deep Tech Hunters",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 144,
+    "slug": "deep-tech-hunters"
+  },
+  {
+    "name": "AI Caramba",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 145,
+    "slug": "ai-caramba"
+  },
+  {
+    "name": "Tam ca Văn hoá",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 146,
+    "slug": "tam-ca-van-hoa"
+  },
+  {
+    "name": "Thảo Trí",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 147,
+    "slug": "thao-tri"
+  },
+  {
+    "name": "DOOVERSE",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 148,
+    "slug": "dooverse"
+  },
+  {
+    "name": "Mộc AI",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 149,
+    "slug": "moc-ai"
+  },
+  {
+    "name": "LostD",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 150,
+    "slug": "lostd"
+  },
+  {
+    "name": "VENI VIDI VICI (VVV)",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 151,
+    "slug": "veni-vidi-vici-vvv"
+  },
+  {
+    "name": "TRAZEN",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 152,
+    "slug": "trazen"
+  },
+  {
+    "name": "Bar of Souls",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 173,
+    "slug": "bar-of-souls"
+  },
+  {
+    "name": "Hương Rừng Pù Mát",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 174,
+    "slug": "huong-rung-pu-mat"
+  },
+  {
+    "name": "JOB ON! - Career development for a bright future",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 175,
+    "slug": "job-on-career-development-for-a-bright-future"
+  },
+  {
+    "name": "Bảo hiểm sinh học Stem Cells",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 176,
+    "slug": "bao-hiem-sinh-hoc-stem-cells"
+  },
+  {
+    "name": "JobIShare - Nền tảng công nghệ chia sẻ nhân lực khan hiếm",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 177,
+    "slug": "jobishare-nen-tang-cong-nghe-chia-se-nhan-luc-khan-hiem"
+  },
+  {
+    "name": "Broute - Giải pháp tối ưu cho phương tiện công cộng",
+    "reasons": [
+      "MISSING_STAGE"
+    ],
+    "row": 178,
+    "slug": "broute-giai-phap-toi-uu-cho-phuong-tien-cong-cong"
+  }
+]
