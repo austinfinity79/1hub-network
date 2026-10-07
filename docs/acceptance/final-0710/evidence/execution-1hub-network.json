@@ -1,0 +1,370 @@
+{
+ "steps": {
+  "1": {
+   "url": "/",
+   "status": 200,
+   "screen": "P0-LANDING",
+   "viewer": "GUEST",
+   "loginWall": false,
+   "fonts": [
+    "\"Space Grotesk\"",
+    "\"Be Vietnam Pro\"",
+    "\"IBM Plex Mono\""
+   ],
+   "broken": [],
+   "leak": null
+  },
+  "2": {
+   "url": "/",
+   "indicatorStart": "01 / 06",
+   "indicatorAfter8s": "01 / 06",
+   "videoElements": 0,
+   "geometry": {
+    "search": [
+     737,
+     812
+    ],
+    "intents": [
+     [
+      825,
+      867
+     ],
+     [
+      825,
+      867
+     ],
+     [
+      825,
+      867
+     ]
+    ],
+    "vh": 1080
+   },
+   "heroImgsLoaded": true,
+   "broken": [],
+   "leak": null
+  },
+  "3": {
+   "url": "/",
+   "ctas": [
+    {
+     "tag": "SPAN",
+     "t": "Tổ chức chương trình",
+     "href": null,
+     "cta": "organise"
+    },
+    {
+     "tag": "SPAN",
+     "t": "Gọi vốn",
+     "href": null,
+     "cta": "fundraise"
+    },
+    {
+     "tag": "A",
+     "t": "Tham gia cộng đồng HUB Network",
+     "href": "/auth",
+     "cta": "primary"
+    }
+   ],
+   "searchVisible": true,
+   "searchLanding": "/library?q=Tracely",
+   "searchResult": null,
+   "joinLanding": "/",
+   "joinScreen": "P0-LANDING",
+   "broken": [],
+   "leak": null
+  },
+  "4": {
+   "url": "/programmes",
+   "menu": [
+    {
+     "t": "",
+     "href": "/"
+    },
+    {
+     "t": "Giới thiệu",
+     "href": "/about"
+    },
+    {
+     "t": "Chương trình, cuộc thi",
+     "href": "/programmes"
+    },
+    {
+     "t": "Sản phẩm",
+     "href": "/products"
+    },
+    {
+     "t": "Nhân tài",
+     "href": "/talents"
+    },
+    {
+     "t": "Đăng nhập",
+     "href": "/auth"
+    },
+    {
+     "t": "Tạo tài khoản",
+     "href": "/auth"
+    }
+   ],
+   "landed": "/programmes",
+   "active": [],
+   "cards": [],
+   "demoMarker": [],
+   "broken": [],
+   "leak": null
+  },
+  "5": {
+   "url": "/programmes",
+   "chips": [],
+   "tries": [],
+   "afterReset": {
+    "url": "RELOAD /programmes",
+    "result": "1 chương trình đang mở Chương trìn"
+   },
+   "broken": [],
+   "leak": null
+  },
+  "6": {
+   "url": "/events",
+   "navEvent": [],
+   "directStatus": 404,
+   "text": "404 Không tìm thấy trang Đường dẫn này không tồn tại. Về trang chủ",
+   "broken": [],
+   "leak": null
+  },
+  "7": {
+   "dependsOn": 6,
+   "note": "no Event route/filter"
+  },
+  "8": {
+   "url": "/products",
+   "count": "95 sản phẩm",
+   "cards": 9,
+   "emptyCards": 0,
+   "active": [
+    "Sản phẩm"
+   ],
+   "broken": [],
+   "leak": null
+  },
+  "9": {
+   "url": "/products",
+   "sector": "5 sản phẩm",
+   "clear1": "95 sản phẩm",
+   "stage": "60 sản phẩm",
+   "clear2": "95 sản phẩm",
+   "noResult": "0 sản phẩm",
+   "emptyState": "Không có sản phẩm phù hợp với bộ lọc",
+   "afterEmptyClear": "95 sản phẩm",
+   "broken": [],
+   "leak": null
+  },
+  "10": {
+   "url": "/talents",
+   "gate": false,
+   "text": "NHÂN TÀI Đang tải…",
+   "talentCards": 0,
+   "filters": 0,
+   "privateLeak": false,
+   "broken": [],
+   "leak": null
+  },
+  "11": {
+   "dependsOn": 10,
+   "note": "guest receives no talent rows; no filter rail"
+  },
+  "12": {
+   "url": "/products",
+   "count": "95 sản phẩm",
+   "broken": [],
+   "leak": null
+  },
+  "13": {
+   "url": "/products/tracely",
+   "h1": "Tracely",
+   "sectionHeads": [
+    "Bài toán",
+    "Giải pháp",
+    "Truy vết từng chuyến",
+    "Không đổi thiết bị đầu cuối",
+    "Thị trường",
+    "Phương pháp",
+    "Chia sẻ từ khách hàng",
+    "Đội ngũ",
+    "Tầm nhìn",
+    "Cập nhật · Q3 2026",
+    "Gọi vốn",
+    "Dấu ấn",
+    "Nhu cầu"
+   ],
+   "hasSector": true,
+   "hasStage": true,
+   "linkStatus": {
+    "/products": 200,
+    "/auth": 200,
+    "/products/tracely": 200,
+    "/products/tracely/metrics": 200,
+    "/products/tracely/updates": 200,
+    "/talents/dang-kim-chi": 200,
+    "/talents/nguyen-minh-anh": 200
+   },
+   "tabs": [
+    "Tổng quan→/products/tracely",
+    "Chỉ số→/products/tracely/metrics",
+    "Cập nhật→/products/tracely/updates",
+    "Xem chỉ số →→/products/tracely/metrics"
+   ],
+   "broken": [],
+   "leak": null
+  },
+  "14": {
+   "url": "/products/tracely",
+   "members": [
+    {
+     "t": "ĐC → Đặng Kim Chi Đồng sáng lập · CEO",
+     "link": "/talents/dang-kim-chi"
+    },
+    {
+     "t": "NA → Nguyễn Minh Anh Đồng sáng lập kỹ thuật",
+     "link": "/talents/nguyen-minh-anh"
+    },
+    {
+     "t": "PV Phạm Quốc Việt Kỹ sư backend",
+     "link": null
+    },
+    {
+     "t": "TH Trần Hạnh Vận hành thí điểm",
+     "link": null
+    }
+   ],
+   "lockedForGuest": false,
+   "broken": [],
+   "leak": null
+  },
+  "15": {
+   "url": "/talents/dang-kim-chi",
+   "h1": "Đặng Kim Chi",
+   "chip": {
+    "text": "Đã xác thực danh tính qua 1Hub",
+    "verified": "demo",
+    "demo": "DEMO-0710",
+    "box": [
+     596,
+     407,
+     211,
+     25
+    ],
+    "color": "rgb(23, 0, 2)",
+    "bg": "rgba(0, 0, 0, 0)"
+   },
+   "backLinks": [
+    "Tracely→/products/tracely",
+    "TrTracelyPilot · Logistics→/products/tracely"
+   ],
+   "cccdNumberShown": false,
+   "cccdWord": false,
+   "emailOrPhone": false,
+   "text": "Giới thiệu Chương trình Sản phẩm Nhân tài Tin tức VI | EN Đăng nhập Tạo tài khoản ĐC Đặng Kim Chi Đã xác thực danh tính qua 1Hub Đồng sáng lập · CEO @Tracely Đà Nẵng Phó Chủ tịch chapter Đà Nẵng Thông tin liên hệ HUB NETWORK HUY HIỆU THÀNH VIÊN Phó Chủ tịch Chapter Đà Nẵng Thành viên từ 2024 Diễn giả Summit Đà Nẵng 2025 Cố vấn Workshop 10/2026 Vận hành chuỗi cung ứng Logistics Phân tích dữ liệu Kế",
+   "broken": [],
+   "leak": null,
+   "backLinkWorks": true
+  },
+  "16": {
+   "url": "/about",
+   "screen": "PUBLIC-ABOUT",
+   "docOverflow": 0,
+   "sections": [
+    "hero",
+    "values",
+    "scale",
+    "humans",
+    "ecosystem",
+    "milestones",
+    "activities",
+    "partners",
+    "closing"
+   ],
+   "broken": [],
+   "leak": null
+  },
+  "17": {
+   "url": "/about",
+   "newTabOpened": false,
+   "urlAfterClick": "/about",
+   "apec": [
+    {
+     "tag": "SCRIPT",
+     "href": null,
+     "cursor": "auto"
+    },
+    {
+     "tag": "SCRIPT",
+     "href": null,
+     "cursor": "auto"
+    },
+    {
+     "tag": "SCRIPT",
+     "href": null,
+     "cursor": "auto"
+    },
+    {
+     "tag": "SPAN",
+     "sec": "ecosystem",
+     "href": null,
+     "cursor": "auto"
+    }
+   ],
+   "broken": [],
+   "leak": null
+  },
+  "18": {
+   "url": "/about",
+   "stillAbout": true,
+   "pages": 1,
+   "broken": [],
+   "leak": null
+  },
+  "19": {
+   "url": "/about",
+   "popupUrl": "https://deck.ihub.ventures/login",
+   "title": "iHUB Ventures — LP Deck",
+   "textLen": 116,
+   "loadErr": null,
+   "target": "_blank",
+   "rel": "noopener noreferrer",
+   "oneHubTabStill": "/about",
+   "linkText": "iHUB Ventures",
+   "broken": [],
+   "leak": null
+  },
+  "20": {
+   "url": "/about",
+   "popupUrl": "https://vnv.ihub.ventures/access",
+   "title": "Truy cập hồ sơ · Đề xuất VNV",
+   "textLen": 387,
+   "loadErr": null,
+   "target": "_blank",
+   "rel": "noopener noreferrer",
+   "oneHubTabStill": "/about",
+   "linkText": "Vietnam’s National Ventures",
+   "broken": [],
+   "leak": null
+  },
+  "21": {
+   "url": "/",
+   "landed": "/",
+   "broken": [],
+   "leak": null
+  }
+ },
+ "bag": {
+  "console": [
+   "/events :: Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "pageerrors": [],
+  "bad": [
+   "404 /events"
+  ],
+  "failed": []
+ }
+}
