@@ -6,6 +6,8 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { PUBLIC_ROUTES } from '@/lib/public/routes'
 import type { PublicViewer } from '@/lib/public/viewer'
 
+import Image from 'next/image'
+
 import { HubLogo } from './hub-logo'
 import { ArrowUpRight, NavText, PublicAction } from './public-action'
 import styles from './public-header.module.css'
@@ -258,7 +260,23 @@ export function PublicHeader({
       data-viewer={viewer.kind}
     >
       <Link href="/" className={styles.logo} aria-label="HUB Network — trang chủ" data-cta="logo">
-        <HubLogo />
+        {tone === 'light' ? (
+          // The approved logo is white on transparency; on the light header it
+          // would vanish and may not be recoloured: the drawn symbol stays here.
+          <HubLogo />
+        ) : (
+          // HOME-LOGO-HOTFIX-01: the PO's approved artwork, unmodified
+          // (HUB_Network_FINAL_white_transparent.png, 2048², transparent).
+          <Image
+            className={styles.logoImage}
+            src="/brand/hub-network-logo-white.png"
+            alt=""
+            width={44}
+            height={44}
+            priority
+            data-logo="brand"
+          />
+        )}
       </Link>
       <button
         type="button"

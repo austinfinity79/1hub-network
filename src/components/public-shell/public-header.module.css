@@ -42,12 +42,31 @@
 }
 
 .logo {
+  position: relative;
   display: inline-flex;
   flex: none;
   width: 33px;
   height: 34px;
   margin-top: 1px;
   color: var(--logo);
+}
+
+/*
+ * HOME-LOGO-HOTFIX-01: the approved PNG has transparent padding around the
+ * mark (content 1560 × 1600 of 2048 px). Drawn at 44 px and centred on the
+ * 33 × 34 slot, the mark itself fills the slot as before; only transparent
+ * padding extends past it. The slot, and so the header layout, is unchanged.
+ */
+.logoImage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .panel {
