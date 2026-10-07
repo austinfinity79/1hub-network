@@ -1,0 +1,177 @@
+{
+  "SOURCE_FILE_HASH": "4b023eaf4499162170faf8379d1de01bff5453a6535d4d260b608332264c3bfc",
+  "about": {
+    "hub_business_folder": "DRIVE_FOLDER",
+    "hub_business_logos_target": "10 logo",
+    "hub_chapter_folder": "DRIVE_FOLDER",
+    "hub_chapters_target": "11 khu vực",
+    "milestone_folder": "DRIVE_FOLDER",
+    "milestones_target": "7 ảnh"
+  },
+  "event": {
+    "event_sheet_present": false,
+    "summary_target": "30 event tag"
+  },
+  "homepage": {
+    "news": [
+      {
+        "image": "DRIVE_FOLDER",
+        "match": "PARTIAL",
+        "row": 22
+      },
+      {
+        "image": null,
+        "match": "MISSING",
+        "row": 23
+      },
+      {
+        "image": null,
+        "match": "MISSING",
+        "row": 24
+      }
+    ],
+    "products": [
+      {
+        "in_safe_product_set": true,
+        "logo": "DRIVE_FILE",
+        "match": "READY",
+        "name": "1Hub - Smart Campus Solution",
+        "row": 9
+      },
+      {
+        "in_safe_product_set": false,
+        "logo": "DRIVE_FILE",
+        "match": "CONFLICT",
+        "name": "HubLock",
+        "row": 10
+      },
+      {
+        "in_safe_product_set": false,
+        "logo": "DRIVE_FILE",
+        "match": "CONFLICT",
+        "name": "Pictor Network",
+        "row": 11
+      },
+      {
+        "in_safe_product_set": true,
+        "logo": "DRIVE_FILE",
+        "match": "READY",
+        "name": "Drippy",
+        "row": 12
+      },
+      {
+        "in_safe_product_set": false,
+        "logo": "DRIVE_FILE",
+        "match": "CONFLICT",
+        "name": "UCTalent",
+        "row": 13
+      },
+      {
+        "in_safe_product_set": true,
+        "logo": "DRIVE_FILE",
+        "match": "READY",
+        "name": "ParkWave",
+        "row": 14
+      },
+      {
+        "in_safe_product_set": true,
+        "logo": "DRIVE_FILE",
+        "match": "READY",
+        "name": "SOLEMATE",
+        "row": 15
+      },
+      {
+        "in_safe_product_set": false,
+        "logo": "DRIVE_FILE",
+        "match": "CONFLICT",
+        "name": "PSI 69",
+        "row": 16
+      },
+      {
+        "in_safe_product_set": true,
+        "logo": "DRIVE_FILE",
+        "match": "READY",
+        "name": "Databuckets",
+        "row": 17
+      },
+      {
+        "in_safe_product_set": true,
+        "logo": "DRIVE_FILE",
+        "match": "READY",
+        "name": "Inverted Lambda",
+        "row": 18
+      },
+      {
+        "in_safe_product_set": true,
+        "logo": "DRIVE_FILE",
+        "match": "READY",
+        "name": "Centauri Labs",
+        "row": 19
+      }
+    ],
+    "programmes": [
+      {
+        "host": "APEC",
+        "image": "DRIVE_FOLDER",
+        "match": "PARTIAL",
+        "name": "APEC Innovation Challenge",
+        "period": null,
+        "row": 3,
+        "status_text": "Sắp công bố"
+      },
+      {
+        "host": "VPBank - Ngân hàng Nhà nước",
+        "image": null,
+        "match": "MISSING",
+        "name": "VPBank Innovation Challenge",
+        "period": null,
+        "row": 4,
+        "status_text": "Sắp công bố"
+      },
+      {
+        "host": "CLB Nhà doanh nhân Tương lai (TEC FTU)",
+        "image": null,
+        "match": "MISSING",
+        "name": "Cuộc thi Khởi nghiệp cùng Kawai",
+        "period": null,
+        "row": 5,
+        "status_text": "Sắp công bố"
+      },
+      {
+        "host": "Net Zero Vietnam",
+        "image": null,
+        "match": "MISSING",
+        "name": "Agritech Innovation Challenge",
+        "period": null,
+        "row": 6,
+        "status_text": "Sắp công bố"
+      }
+    ]
+  },
+  "org_chart": {
+    "groups": {
+      "ADVISOR": 1,
+      "CHAIRMAN": 1,
+      "HEAD_OF_DEPARTMENT": 3,
+      "PRESIDENT": 11,
+      "VICE_PRESIDENT": 24
+    },
+    "rows": 40,
+    "target_from_summary_sheet": "30 ảnh, tên, title tương ứng",
+    "with_photo_link": 40
+  },
+  "talent": {
+    "detail_rows": 3,
+    "detail_rows_with_avatar_and_cover": 1,
+    "public_consent_field": false,
+    "rows": 118,
+    "same_name_conflict_rows": [
+      [
+        86,
+        100
+      ]
+    ],
+    "unique_names": 117,
+    "with_avatar": 40
+  }
+}
