@@ -157,7 +157,7 @@ Legend: N name · O overview · P problem · S solution · Se sector · St stage
 | 7 | Drippy | CARD_ONLY | logo bound; sector unmapped by PO decision | needs a detail row; sector stays empty |
 | 8 | Bloom | CARD_ONLY | sector mapped (Giáo dục), no conflict, no logo | needs a detail row + logo |
 | 9 | Debatium | CARD_ONLY | sector mapped (Giáo dục), no conflict, no logo | needs a detail row + logo |
-| 10 | Linguasphere | CARD_ONLY | sector mapped (Giáo dục), no conflict, no logo | needs a detail row + logo |
+| 10 | LinguaSphere | CARD_ONLY | sector mapped (Giáo dục), no conflict, no logo | needs a detail row + logo |
 
 Ranks 2–10 are the order to request detail rows in, not pages to build now. Just outside the safe population, HubLock, Pictor Network, UCTalent, PSI 69, AIDIA and CarOn have source logos but stay excluded upstream (stage alias pending PO / unverified claim) — a PO stage-alias decision would make them the next logo-ready group.
 
