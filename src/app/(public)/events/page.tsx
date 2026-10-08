@@ -6,6 +6,7 @@ import { PublicHeader } from '@/components/public-shell/public-header'
 import { publicShellData } from '@/lib/public/shell-data'
 
 import styles from '@/components/discovery/discovery.module.css'
+import events from '@/components/events/events.module.css'
 
 /**
  * S2-PROGRAMME-EVENT-CONTENT-01 — `/events` (DM07 "Sự kiện"), the public
@@ -24,7 +25,11 @@ export default async function EventsPage() {
   const shell = await publicShellData()
   return (
     <div className={styles.page} data-screen="PUBLIC-EVENTS" data-revision="DM07">
-      <PublicHeader viewer={shell.viewer} current="programmes" tone="light" />
+      {/* S2-EVENT-REDESIGN-01: the homepage's header and approved logo (dark
+          tone, transparent) on a dark bar, as the founder page draws it. */}
+      <div className={events.bar}>
+        <PublicHeader viewer={shell.viewer} current="programmes" />
+      </div>
       <EventDirectory />
       <PublicFooter variant="home" legal={shell.legal} />
     </div>

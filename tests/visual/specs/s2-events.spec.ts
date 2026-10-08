@@ -42,7 +42,14 @@ for (const width of [1440, 390]) {
     // No action the sheet does not give.
     for (const label of ['Đăng ký', 'Thêm vào lịch', 'Xem recap', 'Theo dõi'])
       await expect(page.locator('main').getByRole('link', { name: label })).toHaveCount(0)
-    await expect(page.locator('main a')).toHaveCount(0)
+    // S2-EVENT-REDESIGN-01: the only links jump to the two sections.
+    expect(
+      await page.locator('main a').evaluateAll((as) => as.map((a) => a.getAttribute('href'))),
+    ).toEqual(['#ev-upcoming', '#ev-past'])
+    // The homepage's header logo (approved artwork), not another variant.
+    await expect(
+      page.locator('header[data-shell="public"] img[data-logo="brand"]'),
+    ).toHaveAttribute('src', /hub-network-logo-white/)
     expect(await page.locator('main').innerText()).not.toMatch(
       /Thứ (Hai|Ba|Tư|Năm|Sáu|Bảy)|Chủ nhật/,
     )

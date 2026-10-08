@@ -17,6 +17,9 @@ import styles from './events.module.css'
  * belongs to it alone); the others group by the month their day/month names;
  * past events follow, newest first. A field the sheet leaves empty is not
  * drawn, and no registration / calendar action exists (no link in source).
+ *
+ * S2-EVENT-REDESIGN-01: presentation only (PO reference DIR2.2 "Sự kiện");
+ * the segmented bar jumps to the two existing sections (no new filter).
  */
 
 const PAST_PAGE = 9
@@ -69,20 +72,20 @@ function Featured({ event }: { event: UpcomingEvent }) {
         <div className={styles.when}>
           <DateBadge date={event.date} large />
           <p>
-            <b>{event.time}</b>
-            <span>{event.venue}</span>
+            {event.time ? <b>{event.time}</b> : null}
+            {event.venue ? <span>{event.venue}</span> : null}
           </p>
         </div>
         <h2 className={styles.featuredName}>{event.name}</h2>
-        <p className={styles.featuredMeta}>{event.organizer}</p>
+        {event.organizer ? <p className={styles.featuredMeta}>{event.organizer}</p> : null}
         {event.info ? (
           <div className={styles.fill}>
             <p>
               <span>{event.info}</span>
-              {event.status ? <em>{event.status}</em> : null}
+              {event.status ? <em className={styles.statusTag}>{event.status}</em> : null}
             </p>
             {share !== null ? (
-              <span className={styles.bar} aria-hidden="true">
+              <span className={styles.track} aria-hidden="true">
                 <span style={{ width: `${Math.round(share * 100)}%` }} />
               </span>
             ) : null}
@@ -106,10 +109,10 @@ function UpcomingCard({ event }: { event: UpcomingEvent }) {
         {event.hubRole ? <p className={styles.kicker}>{event.hubRole}</p> : null}
         <h3 className={styles.cardName}>{event.name}</h3>
         <p className={styles.cardMeta}>{join([event.organizer, event.time])}</p>
-        {event.venue ? <p className={styles.cardMeta}>{event.venue}</p> : null}
+        {event.venue ? <p className={styles.cardPlace}>{event.venue}</p> : null}
         <p className={styles.cardFoot}>
-          {event.status ? <span>{event.status}</span> : null}
           {event.seats ? <em>{event.seats}</em> : null}
+          {event.status ? <span className={styles.statusTag}>{event.status}</span> : null}
         </p>
       </div>
     </li>
@@ -123,7 +126,7 @@ function PastCard({ event }: { event: PastEvent }) {
       <div>
         <h3 className={styles.pastName}>{event.name}</h3>
         <p className={styles.cardMeta}>{join([event.organizer, event.date])}</p>
-        {event.venue ? <p className={styles.cardMeta}>{event.venue}</p> : null}
+        {event.venue ? <p className={styles.pastPlace}>{event.venue}</p> : null}
       </div>
     </li>
   )
@@ -147,11 +150,19 @@ export function EventDirectory() {
 
       {featured ? <Featured event={featured} /> : null}
 
+      <nav className={styles.segments} aria-label="Phần sự kiện">
+        <a href="#ev-upcoming" className={styles.segmentOn} data-cta="events-upcoming">
+          Sắp diễn ra · {UPCOMING_EVENTS.length}
+        </a>
+        <a href="#ev-past" className={styles.segment} data-cta="events-past">
+          Đã diễn ra · {past.length}
+        </a>
+      </nav>
+
       <section aria-labelledby="ev-upcoming" data-block="upcoming">
         <h2 id="ev-upcoming" className={styles.srOnly}>
           Sắp diễn ra
         </h2>
-        <p className={styles.count}>Sắp diễn ra · {UPCOMING_EVENTS.length}</p>
         {[...months].map(([month, list]) => (
           <div key={month} className={styles.month}>
             {month ? <p className={styles.monthLabel}>THÁNG {month}</p> : null}
