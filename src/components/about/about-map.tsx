@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowRight, PublicAction } from '@/components/public-shell/public-action'
 
 import { MAP_H, MAP_W } from './about-map-geo'
+import { AboutCarousel } from './about-carousel'
 import styles from './about.module.css'
 
 /** Hit area of a map marker (px), as drawn by `.marker`. */
@@ -263,6 +264,8 @@ export function AboutMap({
           </span>
         ) : null}
       </div>
+
+      <AboutCarousel hubSlugs={hubs.map((h) => h.slug)} onOpenHub={setOpen} />
 
       <ul className={styles.hubChips} role="list" aria-label="HUB Khu vực">
         {hubs.map((h) => (

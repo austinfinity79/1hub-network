@@ -1798,3 +1798,188 @@ a.ecoRow:hover .ecoName {
     left: 8px;
   }
 }
+
+/* ------------------------------------------------------------ HUB carousel (S2-ABOUT-HUB-CAROUSEL-01, Figma 880:4401) */
+
+.carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 52px;
+}
+
+.carouselQuote {
+  margin: 0 !important;
+  font-size: 15px;
+  color: var(--pink);
+}
+
+.marquee {
+  overflow: hidden;
+  margin: 0 -64px;
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 64px,
+    #000 calc(100% - 64px),
+    transparent 100%
+  );
+}
+
+.marqueeTrack {
+  display: flex;
+  gap: 24px;
+  width: max-content;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none;
+}
+
+.toLeft {
+  animation: marquee-left 70s linear infinite;
+}
+
+.toRight {
+  animation: marquee-right 60s linear infinite;
+}
+
+.marquee:hover .marqueeTrack,
+.marquee:focus-within .marqueeTrack {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 12px));
+  }
+}
+
+@keyframes marquee-right {
+  from {
+    transform: translateX(calc(-50% - 12px));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.coverItem,
+.activityItem {
+  flex: none;
+}
+
+.coverCard {
+  position: relative;
+  display: block;
+  width: 440px;
+  height: 176px;
+  padding: 0;
+  overflow: hidden;
+  font: inherit;
+  color: #ffffff;
+  background: #2a0a0c;
+  border: 0;
+  border-radius: 16px;
+}
+
+button.coverCard {
+  cursor: pointer;
+}
+
+.coverCard img,
+.activityCard img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coverCard::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 80px;
+  background: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.55));
+}
+
+.coverLabel {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  z-index: 1;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.activityCard {
+  display: block;
+  height: 228px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.activityCard img {
+  width: auto;
+}
+
+.coverCard:focus-visible,
+.activityCard:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .marqueeTrack {
+    animation: none;
+  }
+
+  .marqueeTrack > [aria-hidden='true'] {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .marquee {
+    margin: 0 -24px;
+  }
+}
+
+@media (max-width: 720px) {
+  .carousel {
+    gap: 16px;
+    margin-top: 36px;
+  }
+
+  .marquee {
+    margin: 0 -16px;
+  }
+
+  .marqueeTrack {
+    gap: 14px;
+  }
+
+  .coverCard {
+    width: 280px;
+    height: 112px;
+  }
+
+  .coverLabel {
+    bottom: 10px;
+    left: 12px;
+    font-size: 14px;
+  }
+
+  .activityCard {
+    height: 150px;
+  }
+}
