@@ -16,10 +16,10 @@ S2-NAV-DROPDOWN-V2-01 — shared public header menus (Feedback Sprint 2 lần 3,
 | Language | VI strings only (EN copy of the Figma EN components not rendered: no EN version) |
 | Analytics | `nav_menu_open` {menu, via}, `nav_menu_select` {menu, item, type, href} as a `hub:analytics` CustomEvent |
 
-Gaps / decisions for the PO:
-- Analytics persistence: `analytics_events` exists but the frozen API contract (05 §10) has no client ingestion endpoint; events are raised in the page only (CONTRACT GAP).
-- G.02g iHUB Ventures: Figma names `ihub.ventures`; the approved link used across the site (About ecosystem, footer) is `https://deck.ihub.ventures/` — kept the approved link.
-- G.02d / G.02j: CLB1 and RC1 screens do not exist; shown without a link.
+PO decisions — CLOSED (S2-NAV-V2-PO-DECISION-CLOSE-02, 2026-10-08):
+- Analytics: the frontend events are accepted as done for Sprint 2; persistence / reporting deferred to backlog NAV-ANALYTICS-PERSISTENCE-01.
+- G.02g iHUB Ventures: keep the approved `https://deck.ihub.ventures/` (new tab, `noopener noreferrer`); not replaced by `ihub.ventures`.
+- G.02d Câu lạc bộ (CLB1) / G.02j Danh mục đầu tư (RC1): no authoritative destination — visible, non-clickable text until a destination is supplied in a separate task.
 
 Tests: `s2-nav-dropdown` (new) + nav matrix (`thao-01-global-nav`, `demo-home-about-01`, `thao-05-discovery`, `alpha-interaction-gaps`, `public-library`, `demo-qa-vertical-flow`, `s2-events`, `thao-04-about`, `s2-home-talents`, `s2-about-carousel`, `hero-slider`, `public-content-publish`): 148 / 149 — the known hero-counter typography debt only. Specs updated to the new contract (THAO-01 "Giới thiệu is a direct link" superseded).
 
