@@ -54,6 +54,17 @@ export const HIGHLIGHT_PRODUCT_LOGOS: Readonly<Record<string, string>> = {
   debatium: '/home/highlights/debatium.webp',
 }
 
+/**
+ * S2-HOME-FEATURED-BG-QUICKFIX-01 — the PO's backgrounds for two cards of
+ * "Startup sẵn sàng gặp nhà đầu tư" ("Smart Campus Spring Walkway(1).png",
+ * "Dreamy Pastel City Mapscape(1).png"), as supplied, WebP only. A card
+ * without one keeps the drawn ground.
+ */
+export const PITCH_BACKGROUNDS: Readonly<Record<string, string>> = {
+  '1hub-smart-campus-solution': '/home/pitch/smart-campus-spring-walkway.webp',
+  tracely: '/home/pitch/dreamy-pastel-city-mapscape.webp',
+}
+
 export const PROGRAMME_UPDATES: ProgrammeUpdate[] = [
   {
     code: 'AP',

@@ -8,7 +8,7 @@ import { PUBLIC_ROUTES } from '@/lib/public/routes'
 
 import { ArrowRight, PublicAction } from '@/components/public-shell/public-action'
 
-import { HIGHLIGHT_PRODUCT_LOGOS } from './home-content'
+import { HIGHLIGHT_PRODUCT_LOGOS, PITCH_BACKGROUNDS } from './home-content'
 import styles from './home.module.css'
 
 /**
@@ -188,13 +188,18 @@ export function InvestorCarousel({ startups, total }: { startups: HomeStartup[];
         ) : (
           [0, 1].slice(0, Math.min(count, 2)).map((offset) => {
             const s = ready[(at + offset) % count]!
+            const bg = s.slug ? PITCH_BACKGROUNDS[s.slug] : undefined
             return (
               <article
                 key={`${s.key}-${offset}`}
                 className={offset === 0 ? styles.pitch : styles.pitchPeek}
                 aria-hidden={offset === 0 ? undefined : true}
               >
-                <div className={styles.pitchArt}>
+                <div
+                  className={bg ? `${styles.pitchArt} ${styles.pitchArtImage}` : styles.pitchArt}
+                  style={bg ? ({ '--pitch-bg': `url("${bg}")` } as CSSProperties) : undefined}
+                  data-pitch-bg={bg}
+                >
                   {s.logo ? (
                     <span className={styles.pitchLogo} aria-hidden="true">
                       {/* eslint-disable-next-line @next/next/no-img-element -- public logo of the media route */}

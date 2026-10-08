@@ -825,6 +825,15 @@
   background: linear-gradient(140deg, #b89496 0%, #9a7a7c 100%);
 }
 
+/* S2-HOME-FEATURED-BG-QUICKFIX-01: the PO's picture as the card's ground,
+   cropped to fill; a soft foot shade keeps the white name readable. */
+.pitch .pitchArtImage,
+.pitchPeek .pitchArtImage {
+  background:
+    linear-gradient(180deg, transparent 52%, rgb(0 0 0 / 0.42) 100%),
+    var(--pitch-bg) center / cover no-repeat;
+}
+
 /* THAO-03-V2: the directory glimpse when one startup is fundraising. */
 .pitchMore {
   display: block;
