@@ -392,6 +392,20 @@ span.underlineLight {
   border-radius: 12px;
 }
 
+/* S2-ABOUT-MAP-HUB-LOGOS-01: the approved logo in the quick card. */
+.quickLogo {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #ece7e7;
+}
+
+.quickLogo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .hubChips {
   display: flex;
   gap: 17px;

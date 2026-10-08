@@ -258,8 +258,28 @@ export function AboutMap({
           ) : null
         })}
         {hovered && pointOf(hovered) ? (
-          <span className={styles.quick} style={at(pointOf(hovered))} aria-hidden="true">
-            <span className={styles.quickMark}>{hovered.initials}</span>
+          <span
+            className={styles.quick}
+            style={at(pointOf(hovered))}
+            aria-hidden="true"
+            data-quick={hovered.code}
+          >
+            {/* S2-ABOUT-MAP-HUB-LOGOS-01: the approved logo (HUB_LOGOS, exact
+                mapping only); a HUB without one keeps its initials. */}
+            {hovered.logo ? (
+              <span className={`${styles.quickMark} ${styles.quickLogo}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- 256 px static logo */}
+                <img
+                  src={hovered.logo}
+                  alt=""
+                  width={56}
+                  height={56}
+                  data-quick-logo={hovered.code}
+                />
+              </span>
+            ) : (
+              <span className={styles.quickMark}>{hovered.initials}</span>
+            )}
             {hovered.short}
           </span>
         ) : null}
