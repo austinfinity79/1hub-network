@@ -25,6 +25,26 @@ export type RegionalHub = {
   board: number[]
 }
 
+/**
+ * S2-ABOUT-ASSETS-01 — the approved chapter logos (Drive folder "Giới thiệu -
+ * Logo các HUB Chapter (bên dưới bản đồ)", 1oeOEo7Y156i4Egta-1nBddvv6b-Myzee),
+ * trimmed to 256 px WebP in public/about/hubs. Mapped by the region the artwork
+ * itself names (HANOI, HCMC, DA NANG, QUANG NINH, SINGAPORE, GREATER CHINA,
+ * THE UNITED KINGDOM, THE UNITED STATES OF AMERICA, EUROPE). HUB Úc and HUB UAE
+ * have no logo in the folder; its "High School" logo has no chip here.
+ */
+export const HUB_LOGOS: Readonly<Record<string, string>> = {
+  'hub-network-ha-noi': '/about/hubs/hn.webp',
+  'hub-network-ho-chi-minh': '/about/hubs/hcm.webp',
+  'hub-network-da-nang': '/about/hubs/dn.webp',
+  'hub-network-quang-ninh': '/about/hubs/qn.webp',
+  'hub-network-singapore': '/about/hubs/sg.webp',
+  'hub-network-trung-quoc-china': '/about/hubs/cn.webp',
+  'hub-network-vuong-quoc-anh-uk': '/about/hubs/uk.webp',
+  'hub-network-hoa-ky-usa': '/about/hubs/us.webp',
+  'hub-network-chau-au-eu': '/about/hubs/eu.webp',
+}
+
 export const REGIONAL_HUBS: RegionalHub[] = [
   {
     slug: 'hub-network-ha-noi',

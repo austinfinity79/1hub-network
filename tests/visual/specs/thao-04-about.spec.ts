@@ -286,3 +286,37 @@ test.describe('responsive 1440 / 768 / 390', () => {
     })
   }
 })
+
+test('S2-ABOUT-ASSETS-01: chapter chips draw the approved logo where one maps, initials otherwise', async ({
+  page,
+}) => {
+  await page.goto('/about', { waitUntil: 'networkidle' })
+  const chips = page.locator('ul[aria-label="HUB Khu vực"] li')
+  const mapped: Record<string, string> = {
+    'HUB Hà Nội': 'HN',
+    'HUB TP.HCM': 'HCM',
+    'HUB Đà Nẵng': 'DN',
+    'HUB Quảng Ninh': 'QN',
+    'HUB Singapore': 'SG',
+    'HUB Trung Quốc': 'CN',
+    'HUB Vương quốc Anh': 'UK',
+    'HUB Hoa Kỳ': 'US',
+    'HUB Châu Âu': 'EU',
+  }
+  const rows = await chips.evaluateAll((lis) =>
+    lis.map((li) => {
+      const img = li.querySelector('img[data-hub-logo]') as HTMLImageElement | null
+      return {
+        name: li.innerText.trim().split('\n').pop()!.trim(),
+        code: img?.dataset.hubLogo ?? null,
+        ok: img ? img.complete && img.naturalWidth > 0 : null,
+      }
+    }),
+  )
+  expect(rows.length).toBeGreaterThan(0)
+  for (const r of rows) {
+    // A chip names its HUB; only a mapped HUB carries a logo, and the right one.
+    expect(r.code, r.name).toBe(mapped[r.name] ?? null)
+    if (r.code) expect(r.ok, r.name).toBe(true)
+  }
+})

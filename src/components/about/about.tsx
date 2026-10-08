@@ -12,6 +12,7 @@ import { ACTIVITIES, HERO_STATS, MILESTONES, VALUES, type Human } from './about-
 import { AboutHumans, type HumanCard } from './about-humans'
 import {
   ARCHIPELAGOS,
+  HUB_LOGOS,
   HUB_TONG,
   PLACE_SINCE,
   REGIONAL_HUBS,
@@ -114,6 +115,7 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
       place: h.place,
       since: h.since,
       initials: board[0]?.initials ?? h.code,
+      logo: HUB_LOGOS[h.slug] ?? null,
       world: project(WORLD_VIEW, h.lon, h.lat),
       vietnam: project(VIETNAM_VIEW, h.lon, h.lat),
       board,

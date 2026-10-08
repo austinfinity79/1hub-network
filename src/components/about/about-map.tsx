@@ -31,6 +31,8 @@ export type MapHub = {
   place: string
   since: string
   initials: string
+  /** The chapter's approved logo (HUB_LOGOS), else null: the initials are drawn. */
+  logo: string | null
   world: MapPoint
   vietnam: MapPoint
   board: Array<{ name: string; title: string | null; photo: string | null; initials: string }>
@@ -266,9 +268,16 @@ export function AboutMap({
         {hubs.map((h) => (
           <li key={h.slug}>
             <button type="button" className={styles.hubChip} onClick={() => setOpen(h.slug)}>
-              <span className={styles.hubChipMark} aria-hidden="true">
-                {h.initials || h.code}
-              </span>
+              {h.logo ? (
+                <span className={`${styles.hubChipMark} ${styles.hubChipLogo}`} aria-hidden="true">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- 256 px static logo */}
+                  <img src={h.logo} alt="" width={72} height={72} data-hub-logo={h.code} />
+                </span>
+              ) : (
+                <span className={styles.hubChipMark} aria-hidden="true">
+                  {h.initials || h.code}
+                </span>
+              )}
               <span>{h.short}</span>
             </button>
           </li>

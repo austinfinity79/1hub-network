@@ -432,6 +432,18 @@ span.underlineLight {
   border-radius: 12px;
 }
 
+.hubChipLogo {
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.hubChipLogo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .lineBtn {
   display: inline-flex;
   align-items: center;
