@@ -167,7 +167,7 @@ export function TalentDirectory({
       <section className={styles.hero} data-section="directory-hero">
         <p className={styles.eyebrow}>NHÂN TÀI</p>
         {/* S2-TALENT-DIRECTORY-CLEANUP-01: the PO's wording, no count. */}
-        <h1 className={styles.title}>các nhân tài trong mạng lưới</h1>
+        <h1 className={styles.title}>Các nhân tài trong mạng lưới</h1>
         <form className={styles.search} role="search" aria-label="Tìm nhân tài" onSubmit={search}>
           <span className={styles.scope}>
             Nhân tài

@@ -466,7 +466,7 @@ test.describe('DIR3 /talents', () => {
       /CHUYÊN MÔN|KỸ NĂNG/i,
     )
     // S2-TALENT-DIRECTORY-CLEANUP-01: the PO's wording, no count and no numeric summary.
-    await expect(page.locator('h1')).toHaveText('các nhân tài trong mạng lưới')
+    await expect(page.locator('h1')).toHaveText('Các nhân tài trong mạng lưới')
     await expect(page.locator('[data-section="directory-hero"] dl')).toHaveCount(0)
   })
 

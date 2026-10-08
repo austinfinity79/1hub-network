@@ -55,5 +55,6 @@ export const ECOSYSTEM_LINKS: Readonly<Record<EcosystemKey, string | null>> = {
   builderCamp: 'https://ihub.ventures/',
   ihubVentures: 'https://deck.ihub.ventures/',
   vnv: 'https://vnv.ihub.ventures/',
-  apecInnovationChallenge: null,
+  /** S2-QUICKFIX-234-01 (PO). */
+  apecInnovationChallenge: 'https://apec.1hub.cloud/',
 }

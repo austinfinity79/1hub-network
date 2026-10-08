@@ -212,9 +212,14 @@ test.describe('links', () => {
     // ABOUT-PARTNERS-PRESENTATION-01: a row without a supplied URL is plain
     // text — no arrow, no INERT control, no hover target.
     const plain = eco.filter({ has: page.locator('[data-eco="static"]') })
-    await expect(plain).toHaveText([/APEC Innovation Challenge/, /iHUB Incubator/])
+    // S2-QUICKFIX-234-01: APEC Innovation Challenge links to the PO's URL.
+    await expect(plain).toHaveText([/iHUB Incubator/])
     await expect(plain.locator('svg, a, [data-cta-kind="INERT"], [title]')).toHaveCount(0)
-    await expect(eco.locator('a')).toHaveCount(5)
+    await expect(eco.locator('a')).toHaveCount(6)
+    await expect(eco.filter({ hasText: 'APEC Innovation Challenge' }).locator('a')).toHaveAttribute(
+      'href',
+      'https://apec.1hub.cloud/',
+    )
   })
 
   test('no placeholder partner wall: no approved partner data, nothing illustrative shown', async ({

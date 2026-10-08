@@ -72,7 +72,7 @@ test.describe('directory: guest browse and visibility', () => {
     await expect(dir).toHaveAttribute('data-entry', 'GUEST')
     const published = await publicStartups()
     // S2-PRODUCT-CATALOG-CLEANUP-01: the PO's wording, no count and no numeric summary.
-    await expect(page.locator('h1')).toHaveText('các sản phẩm trong mạng lưới')
+    await expect(page.locator('h1')).toHaveText('Các sản phẩm trong mạng lưới')
     await expect(page.locator('[data-section="directory-hero"] dl')).toHaveCount(0)
     const shown = Math.min(published.length, 9)
     await expect(cards(page)).toHaveCount(shown)

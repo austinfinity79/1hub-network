@@ -13,6 +13,7 @@ import {
   type Places,
 } from '@/lib/public/discovery-query'
 import { PRODUCT_SORTS, type ProductSort } from '@/lib/public/discovery-sorts'
+import { HIGHLIGHT_PRODUCT_SLUG } from '@/lib/public/product-detail'
 import { readProductView, type ProductView } from '@/lib/public/discovery-views'
 import type { StartupStage } from '@/lib/library/startup-adapter'
 
@@ -162,7 +163,13 @@ export function Directory({
         b.createdAt.localeCompare(a.createdAt) || a.name.localeCompare(b.name, 'vi'),
       'ten-a-z': (a, b) => a.name.localeCompare(b.name, 'vi') || a.slug.localeCompare(b.slug),
     }
-    return [...list].sort(by[sort])
+    // S2-QUICKFIX-234-01: 1Hub - Smart Campus Solution always leads (when it
+    // matches the filters), ahead of every sort and page; the rest keep their order.
+    const sorted = [...list].sort(by[sort])
+    return [
+      ...sorted.filter((s) => s.slug === HIGHLIGHT_PRODUCT_SLUG),
+      ...sorted.filter((s) => s.slug !== HIGHLIGHT_PRODUCT_SLUG),
+    ]
   }, [startups, q, domains, stages, location, sort])
 
   // DEMO STATE ONLY counters: only the demo ventures carry these states.
@@ -234,7 +241,7 @@ export function Directory({
       <section className={styles.hero} data-section="directory-hero">
         <p className={styles.eyebrow}>SẢN PHẨM</p>
         {/* S2-PRODUCT-CATALOG-CLEANUP-01: the PO's wording, no count. */}
-        <h1 className={styles.title}>các sản phẩm trong mạng lưới</h1>
+        <h1 className={styles.title}>Các sản phẩm trong mạng lưới</h1>
         <form className={styles.search} role="search" aria-label="Tìm sản phẩm" onSubmit={search}>
           <span className={styles.scope}>
             Sản phẩm
