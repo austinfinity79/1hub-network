@@ -97,6 +97,6 @@ test('the invalid source date is not shown; the header opens /events', async ({ 
   await page.goto('/programmes', { waitUntil: 'networkidle' })
   const nav = page.getByRole('navigation', { name: 'Điều hướng chính' })
   await nav.getByRole('button', { name: 'Mở menu Chương trình' }).click()
-  await nav.getByRole('link', { name: 'Sự kiện', exact: true }).click()
+  await nav.locator('[data-nav-item=\"G.03b\"]').click()
   await expect(page).toHaveURL('/events')
 })

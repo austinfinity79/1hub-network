@@ -563,19 +563,13 @@ test.describe('navigation', () => {
     const nav = page.getByRole('navigation', { name: 'Điều hướng chính' })
     await expect(nav.locator('[data-nav="talents"] a')).toHaveAttribute('href', '/talents')
     await nav.getByRole('button', { name: 'Mở menu Chương trình' }).click()
-    await expect(nav.getByRole('link', { name: 'Chương trình, cuộc thi' })).toHaveAttribute(
-      'href',
-      '/programmes',
-    )
+    await expect(nav.locator('[data-nav-item="G.03a"]')).toHaveAttribute('href', '/programmes')
     // S2-PROGRAMME-EVENT-CONTENT-01: the event screen exists.
-    await expect(nav.getByRole('link', { name: 'Sự kiện', exact: true })).toHaveAttribute(
-      'href',
-      '/events',
-    )
+    await expect(nav.locator('[data-nav-item="G.03b"]')).toHaveAttribute('href', '/events')
     await expect(nav.locator('[data-nav="news"] [data-nav-kind="LABEL"]')).toHaveCount(1)
-    await nav.getByRole('link', { name: 'Chương trình, cuộc thi' }).click()
+    await nav.locator('[data-nav-item="G.03a"]').click()
     await expect(page).toHaveURL('/programmes')
-    await expect(nav.locator('[data-nav="programmes"] > span')).toHaveAttribute(
+    await expect(nav.locator('[data-nav="programmes"] > button')).toHaveAttribute(
       'aria-current',
       'page',
     )

@@ -117,14 +117,9 @@ test.describe('public pages: no dead control', () => {
       const nav = page.getByRole('navigation', { name: 'Điều hướng chính' })
       await expect(nav.getByRole('link', { name: 'Chương trình', exact: true })).toHaveCount(0)
       await nav.getByRole('button', { name: 'Mở menu Chương trình' }).click()
-      await expect(
-        nav.getByRole('link', { name: 'Chương trình, cuộc thi', exact: true }),
-      ).toHaveAttribute('href', '/programmes')
+      await expect(nav.locator('[data-nav-item="G.03a"]')).toHaveAttribute('href', '/programmes')
       // S2-PROGRAMME-EVENT-CONTENT-01: the event screen exists.
-      await expect(nav.getByRole('link', { name: 'Sự kiện', exact: true })).toHaveAttribute(
-        'href',
-        '/events',
-      )
+      await expect(nav.locator('[data-nav-item=\"G.03b\"]')).toHaveAttribute('href', '/events')
       // DEMO-DIR2-01: Sản phẩm opens /products; THAO-05: Nhân tài opens /talents.
       await expect(nav.getByRole('link', { name: 'Sản phẩm', exact: true })).toHaveAttribute(
         'href',

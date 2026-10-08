@@ -28,7 +28,7 @@ export default async function EventsPage() {
       {/* S2-EVENT-REDESIGN-01: the homepage's header and approved logo (dark
           tone, transparent) on a dark bar, as the founder page draws it. */}
       <div className={events.bar}>
-        <PublicHeader viewer={shell.viewer} current="programmes" />
+        <PublicHeader viewer={shell.viewer} clubCount={shell.clubCount} current="programmes" />
       </div>
       <EventDirectory />
       <PublicFooter variant="home" legal={shell.legal} />

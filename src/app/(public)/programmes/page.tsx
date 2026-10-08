@@ -34,7 +34,7 @@ export default async function ProgrammesPage({
   return (
     <div className={styles.page} data-screen="PUBLIC-PROGRAMMES" data-revision="DM06">
       <div className={styles.top}>
-        <PublicHeader viewer={shell.viewer} current="programmes" />
+        <PublicHeader viewer={shell.viewer} clubCount={shell.clubCount} current="programmes" />
         <ProgrammeDirectory programmes={programmes} initial={readProgrammeView(params)} />
       </div>
       <PublicFooter variant="home" legal={shell.legal} />

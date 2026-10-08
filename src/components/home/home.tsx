@@ -52,7 +52,7 @@ export function Home({
       data-entry={viewer.kind}
     >
       <section className={styles.hero} data-section="hero">
-        <PublicHeader viewer={viewer} current="home" />
+        <PublicHeader viewer={viewer} clubCount={shell.clubCount} current="home" />
         <h1 className={styles.srOnly}>
           HUB Network — chương trình, sản phẩm và nhân tài đổi mới sáng tạo
         </h1>

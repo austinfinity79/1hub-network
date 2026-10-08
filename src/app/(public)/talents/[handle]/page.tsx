@@ -94,7 +94,7 @@ export default async function FounderPage({ params }: Params) {
     >
       {/* DM13 draws the dark bar on a light page: the dark header tone is transparent. */}
       <div className={styles.bar}>
-        <PublicHeader viewer={shell.viewer} current="talents" />
+        <PublicHeader viewer={shell.viewer} clubCount={shell.clubCount} current="talents" />
       </div>
       <main className={styles.main}>
         <div className={styles.column}>

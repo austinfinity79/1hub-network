@@ -67,7 +67,12 @@ export function StartupFrame({
       data-startup={startup.slug}
       data-entry={shell.viewer.kind}
     >
-      <PublicHeader viewer={shell.viewer} current="products" tone="light" />
+      <PublicHeader
+        viewer={shell.viewer}
+        clubCount={shell.clubCount}
+        current="products"
+        tone="light"
+      />
       <main className={styles.main}>
         <Link href={PUBLIC_ROUTES.products ?? '/'} className={styles.back} data-cta="back">
           ← Sản phẩm

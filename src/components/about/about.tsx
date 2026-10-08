@@ -195,7 +195,7 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
       data-entry={viewer.kind}
     >
       <section className={styles.dark}>
-        <PublicHeader viewer={viewer} current="about" />
+        <PublicHeader viewer={viewer} clubCount={shell.clubCount} current="about" />
 
         <div className={styles.hero} data-section="hero">
           <p className={styles.eyebrowPink}>MẠNG LƯỚI NGƯỜI VIỆT TOÀN CẦU</p>
@@ -264,7 +264,12 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
           </ul>
         </section>
 
-        <section className={styles.scale} data-section="scale" aria-labelledby="about-scale">
+        <section
+          id="ban-do"
+          className={styles.scale}
+          data-section="scale"
+          aria-labelledby="about-scale"
+        >
           <p className={styles.eyebrowCoral}>QUY MÔ CỘNG ĐỒNG</p>
           <div className={styles.scaleHead}>
             <h2 id="about-scale" className={styles.scaleTitle}>
@@ -278,7 +283,12 @@ export function About({ shell, network }: { shell: PublicShellData; network: Abo
           <AboutMap hubs={mapHubs} archipelagos={archipelagos} catalogue={catalogue} />
         </section>
 
-        <section className={styles.humans} data-section="humans" aria-labelledby="about-humans">
+        <section
+          id="humans-of-hub"
+          className={styles.humans}
+          data-section="humans"
+          aria-labelledby="about-humans"
+        >
           <p className={styles.eyebrowCoral}>HUMANS OF HUB</p>
           <h2 id="about-humans" className={styles.humansTitle}>
             Những người đang dẫn dắt mạng lưới

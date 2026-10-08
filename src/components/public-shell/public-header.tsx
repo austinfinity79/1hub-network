@@ -1,41 +1,47 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useId, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
+import { emitNavEvent, type NavMenuKey } from '@/lib/analytics/nav-events'
 import { PUBLIC_ROUTES } from '@/lib/public/routes'
 import type { PublicViewer } from '@/lib/public/viewer'
 
-import Image from 'next/image'
-
 import { HubLogo } from './hub-logo'
-import { ArrowUpRight, NavText, PublicAction } from './public-action'
+import { aboutMenu, PROGRAMME_MENU, type NavGroup, type NavItem } from './nav-menus'
+import { ArrowUpRight, NavText, NOT_YET } from './public-action'
 import styles from './public-header.module.css'
 
 /**
  * DEMO-HOME-ABOUT-01 / THAO-01 — the one global header of every public page
- * (DM01, DM02; Thảo §A "Thanh điều hướng"): HUB symbol · Giới thiệu ·
+ * (nav N1: DM01, DM02; Thảo §A "Thanh điều hướng"): HUB symbol · Giới thiệu ▾ ·
  * Chương trình ▾ · Sản phẩm · Nhân tài · Tin tức, then VI | EN and the
  * visitor's own entry (guest: Đăng nhập / Tạo tài khoản; signed in: Việc của
  * tôi, bell, avatar).
  *
- * - "Giới thiệu" is a direct link to the About page (frozen Thảo #1 contract,
- *   DEC-THAO-NAV-D1); the ecosystem sites are in the footer.
- * - "Chương trình ▾" lists 2.1 Chương trình, cuộc thi and 2.2 Sự kiện.
- * - An entry whose screen is not built yet is plain text (PUBLIC_ROUTES).
- * - VI | EN: VI is current, EN is shown unavailable — no EN content exists
- *   (THAO-01); it is never a fake switch.
- * - Below 1024 px the nav collapses into one disclosure panel.
+ * S2-NAV-DROPDOWN-V2-01 (Feedback Sprint 2 lần 3, NAV-DD-01 → 16):
+ * - only Giới thiệu and Chương trình have a menu; their trigger opens / closes
+ *   it and never navigates. Sản phẩm, Nhân tài, Tin tức stay direct links.
+ * - one menu at a time; desktop pointer: open after 150 ms over the trigger,
+ *   close 250 ms after leaving trigger + menu (one hover area, no flicker);
+ *   closes on choice, outside click, Escape (focus back on the trigger), route
+ *   change, or when the other menu opens.
+ * - keyboard: the trigger is a button (Enter / Space), ArrowDown opens and
+ *   enters the menu; Tab walks the entries and leaving the menu closes it.
+ * - below 1024 px the menus are expandable groups of the ☰ panel (no hover).
+ * - an entry pointing at the page already open scrolls (to its section or the
+ *   top) without reloading; anchors keep a shareable hash.
+ * - nav_menu_open / nav_menu_select are raised (lib/analytics/nav-events).
+ * N0 / N2 pages use their own shells: they never render this header, so they
+ * have no menu. VI | EN: VI is current, EN is shown unavailable.
  */
 
 export type PublicSection = 'home' | 'about' | 'products' | 'talents' | 'programmes' | 'news'
 
-type MenuItem = { label: string; href: string | null; external?: boolean }
-
-const PROGRAMME_MENU: MenuItem[] = [
-  { label: 'Chương trình, cuộc thi', href: PUBLIC_ROUTES.programmes },
-  { label: 'Sự kiện', href: PUBLIC_ROUTES.events },
-]
+const OPEN_DELAY = 150
+const CLOSE_DELAY = 250
 
 function Chevron() {
   return (
@@ -45,110 +51,231 @@ function Chevron() {
   )
 }
 
-function MenuList({
-  items,
-  id,
-  onSelect,
+/** Desktop pointer that hovers (the ☰ panel never opens on hover). */
+function useHoverMenus(): boolean {
+  const [hover, setHover] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)')
+    const sync = () => setHover(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+  return hover
+}
+
+function MenuEntry({
+  item,
+  menu,
+  onDone,
 }: {
-  items: MenuItem[]
-  id: string
-  onSelect: () => void
+  item: NavItem
+  menu: NavMenuKey
+  onDone: () => void
 }) {
+  const body = (
+    <>
+      <span className={styles.menuLabel}>
+        {item.label}
+        {item.kind === 'external' ? <ArrowUpRight className={styles.menuArrow} /> : null}
+        {item.kind === 'external' ? <span className={styles.srOnly}> (mở tab mới)</span> : null}
+      </span>
+      {item.description ? <span className={styles.menuText}>{item.description}</span> : null}
+    </>
+  )
+  if (item.kind === 'none' || !item.href)
+    return (
+      <span
+        className={styles.menuItem}
+        aria-disabled="true"
+        title={NOT_YET}
+        data-nav-item={item.code}
+        data-nav-kind="none"
+      >
+        {body}
+      </span>
+    )
+  const select = () =>
+    emitNavEvent({
+      name: 'nav_menu_select',
+      menu,
+      item: item.code,
+      type: item.kind as 'page' | 'anchor' | 'external',
+      href: item.href!,
+    })
+  if (item.kind === 'external')
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={styles.menuItem}
+        data-nav-item={item.code}
+        data-nav-kind="external"
+        onClick={() => {
+          select()
+          onDone()
+        }}
+      >
+        {body}
+      </a>
+    )
+  const href = item.href
   return (
-    <ul
-      className={styles.menu}
-      id={id}
-      role="list"
-      onClick={(e) => (e.target as Element).closest('a') && onSelect()}
+    <Link
+      href={href}
+      className={styles.menuItem}
+      data-nav-item={item.code}
+      data-nav-kind={item.kind}
+      onClick={(e) => {
+        select()
+        onDone()
+        // The page already open: scroll (to the section, else the top), no reload.
+        const url = new URL(href, window.location.href)
+        if (url.pathname !== window.location.pathname) return
+        e.preventDefault()
+        const target = url.hash
+          ? document.getElementById(decodeURIComponent(url.hash.slice(1)))
+          : null
+        if (url.hash) {
+          if (window.location.hash !== url.hash) window.history.pushState(null, '', url.hash)
+          target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } else {
+          if (window.location.hash) window.history.pushState(null, '', url.pathname + url.search)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+      }}
     >
-      {items.map((item) => (
-        <li key={item.label}>
-          <PublicAction href={item.href} className={styles.menuItem}>
-            {item.label}
-            {item.external ? <ArrowUpRight className={styles.menuArrow} /> : null}
-          </PublicAction>
-        </li>
-      ))}
-    </ul>
+      {body}
+    </Link>
   )
 }
 
 function Dropdown({
-  label,
-  href,
-  items,
-  current,
   name,
+  label,
+  groups,
+  current,
+  open,
+  hover,
+  pointer,
+  onOpen,
+  onClose,
 }: {
+  name: NavMenuKey
   label: string
-  href: string | null
-  items: MenuItem[]
+  groups: NavGroup[]
   current: boolean
-  name: string
+  open: boolean
+  hover: boolean
+  /** True while a pointer press is in progress (its click decides, not the blur). */
+  pointer: { current: boolean }
+  onOpen: (via: 'hover' | 'click' | 'keyboard') => void
+  onClose: () => void
 }) {
-  const [open, setOpen] = useState(false)
   const id = useId()
-  const ref = useRef<HTMLDivElement>(null)
+  const wrap = useRef<HTMLDivElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const timer = useRef<number | null>(null)
+  // Opened by the pointer: the click that usually follows keeps it open.
+  const byHover = useRef(false)
+  const clear = () => {
+    if (timer.current !== null) window.clearTimeout(timer.current)
+    timer.current = null
+  }
+  useEffect(() => clear, [])
   useEffect(() => {
     if (!open) return
-    const close = (e: MouseEvent | KeyboardEvent) => {
-      if (
-        e instanceof KeyboardEvent ? e.key === 'Escape' : !ref.current?.contains(e.target as Node)
-      )
-        setOpen(false)
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      onClose()
+      trigger.current?.focus()
     }
-    // THAO-01: dismiss on `click`, not `mousedown`. In the mobile panel the open
-    // menu is in the flow; closing it on mousedown moved the next entry before
-    // the pointer was released, so that tap never reached its link.
-    document.addEventListener('click', close)
-    document.addEventListener('keydown', close)
-    return () => {
-      document.removeEventListener('click', close)
-      document.removeEventListener('keydown', close)
-    }
-  }, [open])
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+  const visible = groups.map((g) => ({ ...g, items: g.items.filter((i) => !i.hidden) }))
   return (
     <div
-      ref={ref}
+      ref={wrap}
       className={`${styles.dropdown} ${open ? styles.dropdownOpen : ''}`}
       data-nav={name}
-      onMouseLeave={() => setOpen(false)}
+      data-menu-open={open ? 'true' : undefined}
+      onMouseEnter={() => {
+        if (!hover) return
+        clear()
+        if (!open)
+          timer.current = window.setTimeout(() => {
+            byHover.current = true
+            onOpen('hover')
+          }, OPEN_DELAY)
+      }}
+      onMouseLeave={() => {
+        if (!hover) return
+        clear()
+        if (open) timer.current = window.setTimeout(onClose, CLOSE_DELAY)
+      }}
+      onBlur={(e) => {
+        // Focus leaving trigger + menu closes it (focus is never trapped). A
+        // pointer press is left to its click: closing on its blur would reflow
+        // the ☰ panel under the pointer before the click lands (THAO-01).
+        if (pointer.current) return
+        if (open && !wrap.current?.contains(e.relatedTarget as Node | null)) onClose()
+      }}
     >
-      {href ? (
-        <Link
-          href={href}
-          className={`${styles.navItem} ${current ? styles.current : ''}`}
-          aria-current={current ? 'page' : undefined}
-          onMouseEnter={() => setOpen(true)}
-        >
-          {label}
-        </Link>
-      ) : (
-        // THAO-05: the section of the current page (DM06 underlines "Chương trình ▾").
-        <span
-          className={`${styles.navItem} ${current ? styles.current : ''}`}
-          aria-current={current ? 'page' : undefined}
-          onMouseEnter={() => setOpen(true)}
-        >
-          {label}
-        </span>
-      )}
       <button
+        ref={trigger}
         type="button"
-        className={styles.toggle}
+        className={`${styles.trigger} ${styles.navItem} ${current ? styles.current : ''}`}
         aria-expanded={open}
         aria-controls={id}
         aria-label={`Mở menu ${label}`}
-        // Hover may already have opened it: a click (or Enter) opens, Escape / outside / leave close.
-        onClick={() => setOpen(true)}
-        onMouseEnter={() => setOpen(true)}
+        aria-current={current ? 'page' : undefined}
+        onClick={(e) => {
+          clear()
+          if (open && byHover.current) {
+            byHover.current = false
+            return
+          }
+          byHover.current = false
+          // detail 0: Enter / Space on the button.
+          if (open) onClose()
+          else onOpen(e.detail === 0 ? 'keyboard' : 'click')
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== 'ArrowDown') return
+          e.preventDefault()
+          if (!open) onOpen('keyboard')
+          window.requestAnimationFrame(() =>
+            wrap.current?.querySelector<HTMLElement>('a[data-nav-item]')?.focus(),
+          )
+        }}
       >
+        {label}
         <Chevron />
       </button>
       {open ? (
-        // THAO-01: choosing an entry closes the menu, also when it points at the
-        // current page (no navigation, so nothing would reset the state).
-        <MenuList items={items} id={id} onSelect={() => setOpen(false)} />
+        <div
+          id={id}
+          className={`${styles.menuPanel} ${visible.length > 1 ? styles.menuPanelWide : ''}`}
+          data-menu={name}
+        >
+          {visible.map((g, i) => (
+            <div
+              key={g.title ?? i}
+              className={`${styles.menuGroup} ${g.tint ? styles.menuGroupTint : ''}`}
+            >
+              {g.title ? <p className={styles.menuGroupTitle}>{g.title}</p> : null}
+              <ul role="list" className={styles.menuList}>
+                {g.items.map((item) => (
+                  <li key={item.code}>
+                    <MenuEntry item={item} menu={name} onDone={onClose} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       ) : null}
     </div>
   )
@@ -240,19 +367,60 @@ export function PublicHeader({
   viewer,
   current,
   tone = 'dark',
+  clubCount = null,
 }: {
   viewer: PublicViewer
   current?: PublicSection
   tone?: 'dark' | 'light'
+  /** The canonical CLB count ("Hơn {n} CLB"); null: no count, no description. */
+  clubCount?: number | null
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [openMenu, setOpenMenu] = useState<NavMenuKey | null>(null)
   const panelId = useId()
+  const hover = useHoverMenus()
+  const nav = useRef<HTMLElement>(null)
+  const pathname = usePathname()
+  const pointer = useRef(false)
+  // Each menu closes only itself: a late close timer never shuts the other one.
+  const closeAbout = useCallback(() => setOpenMenu((m) => (m === 'about' ? null : m)), [])
+  const closeProgrammes = useCallback(() => setOpenMenu((m) => (m === 'programmes' ? null : m)), [])
+  const openOne = (menu: NavMenuKey) => (via: 'hover' | 'click' | 'keyboard') => {
+    setOpenMenu(menu)
+    emitNavEvent({ name: 'nav_menu_open', menu, via })
+  }
+  useEffect(() => {
+    const down = () => (pointer.current = true)
+    const up = () => window.setTimeout(() => (pointer.current = false), 0)
+    document.addEventListener('pointerdown', down, true)
+    document.addEventListener('pointerup', up, true)
+    document.addEventListener('pointercancel', up, true)
+    return () => {
+      document.removeEventListener('pointerdown', down, true)
+      document.removeEventListener('pointerup', up, true)
+      document.removeEventListener('pointercancel', up, true)
+    }
+  }, [])
+  // A completed navigation closes every menu and the panel.
+  useEffect(() => {
+    setOpenMenu(null)
+    setMenuOpen(false)
+  }, [pathname])
   useEffect(() => {
     if (!menuOpen) return
     const close = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false)
     document.addEventListener('keydown', close)
     return () => document.removeEventListener('keydown', close)
   }, [menuOpen])
+  useEffect(() => {
+    if (!openMenu) return
+    // THAO-01: dismiss on `click`, not `mousedown` (the ☰ panel reflows on close).
+    const outside = (e: MouseEvent) => {
+      if (!nav.current?.contains(e.target as Node)) setOpenMenu(null)
+    }
+    document.addEventListener('click', outside)
+    return () => document.removeEventListener('click', outside)
+  }, [openMenu])
   return (
     <header
       className={`${styles.header} ${tone === 'light' ? styles.light : styles.dark}`}
@@ -297,21 +465,29 @@ export function PublicHeader({
         // THAO-01: any link in the panel closes it, the current page's link included.
         onClick={(e) => (e.target as Element).closest('a') && setMenuOpen(false)}
       >
-        <nav className={styles.nav} aria-label="Điều hướng chính">
-          {/* THAO-01-FIX (DEC-THAO-NAV-D1): Giới thiệu is a direct link; only
-              Chương trình is a dropdown. The ecosystem sites stay in the footer. */}
-          <NavEntry
+        <nav ref={nav} className={styles.nav} aria-label="Điều hướng chính">
+          {/* S2-NAV-DROPDOWN-V2-01: Giới thiệu and Chương trình are menus. */}
+          <Dropdown
             name="about"
             label="Giới thiệu"
-            href={PUBLIC_ROUTES.about}
+            groups={aboutMenu(clubCount)}
             current={current === 'about'}
+            open={openMenu === 'about'}
+            hover={hover}
+            pointer={pointer}
+            onOpen={openOne('about')}
+            onClose={closeAbout}
           />
           <Dropdown
             name="programmes"
             label="Chương trình"
-            href={null}
-            items={PROGRAMME_MENU}
+            groups={PROGRAMME_MENU}
             current={current === 'programmes'}
+            open={openMenu === 'programmes'}
+            hover={hover}
+            pointer={pointer}
+            onOpen={openOne('programmes')}
+            onClose={closeProgrammes}
           />
           <NavEntry
             name="products"

@@ -9,11 +9,12 @@ import { REPO_ROOT } from '../pixel-qa/paths'
 /**
  * THAO-01 — Global Navigation v2 (Thảo §A, docs/demo-0710/SCREEN_ROUTE_MAP.md
  * "Navigation"): one shared public header on every page of the new public
- * shell (the Library included, THAO-01-FIX), the top-level order Giới thiệu ·
- * Chương trình ▾ · Sản phẩm · Nhân tài · Tin tức (only Chương trình is a
- * dropdown), a real route or a plain label for every entry (no dead
- * link), the Programme dropdown, the mobile panel, the HUB mark and the
- * VI | EN state (VI only; no EN content exists).
+ * shell (the Library included, THAO-01-FIX), the top-level order Giới thiệu ▾ ·
+ * Chương trình ▾ · Sản phẩm · Nhân tài · Tin tức (S2-NAV-DROPDOWN-V2-01: the
+ * two menus are Giới thiệu and Chương trình), a real route or a plain label
+ * for every entry (no dead link), the mobile panel, the HUB mark and the
+ * VI | EN state (VI only; no EN content exists). The menu behaviour itself is
+ * s2-nav-dropdown.spec.ts.
  */
 
 const SHELL_PAGES = [
@@ -83,8 +84,12 @@ test.describe('structure and route contract (1440)', () => {
   }) => {
     await page.goto('/products', { waitUntil: 'networkidle' })
     const nav = mainNav(page)
-    // REAL_ROUTE
-    await expect(nav.locator('[data-nav="about"] > a')).toHaveAttribute('href', '/about')
+    // REAL_ROUTE (S2-NAV-DROPDOWN-V2-01: Giới thiệu and Chương trình are menu triggers).
+    await expect(nav.locator('[data-nav="about"] > a')).toHaveCount(0)
+    await expect(nav.locator('[data-nav="about"] > button')).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
     await expect(nav.locator('[data-nav="products"] a')).toHaveAttribute('href', '/products')
     // THAO-05 (DEC-THAO-DIR-D3): Nhân tài has its screen.
     await expect(nav.locator('[data-nav="talents"] a')).toHaveAttribute('href', '/talents')
@@ -132,50 +137,21 @@ test.describe('structure and route contract (1440)', () => {
   })
 })
 
-test.describe('Chương trình dropdown', () => {
-  test('desktop: opens on click, entries follow the route contract, Escape / outside click close it; keyboard reaches it', async ({
-    page,
-  }) => {
-    await page.goto('/', { waitUntil: 'networkidle' })
-    const prog = mainNav(page).locator('[data-nav="programmes"]')
-    const toggle = prog.getByRole('button', { name: 'Mở menu Chương trình' })
-    await toggle.click()
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    const entries = prog.locator('ul li')
-    await expect(entries).toHaveText(['Chương trình, cuộc thi', 'Sự kiện'])
-    // THAO-05 (DEC-THAO-DIR-D1): the programme list; S2-PROGRAMME-EVENT-CONTENT-01:
-    // the event screen.
-    await expect(prog.locator('ul a')).toHaveCount(2)
-    await expect(prog.getByRole('link', { name: 'Chương trình, cuộc thi' })).toHaveAttribute(
-      'href',
-      '/programmes',
-    )
-    await expect(prog.getByRole('link', { name: 'Sự kiện' })).toHaveAttribute('href', '/events')
-    await page.keyboard.press('Escape')
-    await expect(prog.locator('ul')).toHaveCount(0)
-    await toggle.click()
-    await page.mouse.click(5, 880)
-    await expect(prog.locator('ul')).toHaveCount(0)
-    await toggle.focus()
-    await page.keyboard.press('Enter')
-    await expect(prog.locator('ul')).toBeVisible()
-    await page.keyboard.press('Escape')
-    await expect(prog.locator('ul')).toHaveCount(0)
-  })
-
-  test('only Chương trình is a dropdown: Giới thiệu is a direct link to /about', async ({
-    page,
-  }) => {
+test.describe('menus (S2-NAV-DROPDOWN-V2-01)', () => {
+  test('exactly two menus on every shell page: Giới thiệu and Chương trình', async ({ page }) => {
     for (const url of SHELL_PAGES) {
       await page.goto(url, { waitUntil: 'networkidle' })
       const nav = mainNav(page)
-      await expect(nav.locator('button'), url).toHaveCount(1)
+      await expect(nav.locator(':scope > [data-nav] > button'), url).toHaveCount(2)
+      await expect(nav.getByRole('button', { name: 'Mở menu Giới thiệu' }), url).toHaveCount(1)
       await expect(nav.getByRole('button', { name: 'Mở menu Chương trình' }), url).toHaveCount(1)
-      await expect(nav.locator('[data-nav="about"] > a'), url).toHaveAttribute('href', '/about')
     }
-    await mainNav(page).locator('[data-nav="about"] > a').click()
-    await expect(page).toHaveURL('/about')
-    await expect(page.locator('[data-nav="about"] a')).toHaveAttribute('aria-current', 'page')
+    // About marks its section on the trigger.
+    await page.goto('/about', { waitUntil: 'networkidle' })
+    await expect(mainNav(page).locator('[data-nav="about"] > button')).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 })
 
@@ -212,16 +188,17 @@ test.describe('responsive 1440 / 768 / 390', () => {
         expect(box.height, name).toBeGreaterThanOrEqual(44)
       }
       await expect(header(page).getByRole('group', { name: 'Ngôn ngữ' })).toBeVisible()
-      // The Programme dropdown opens inside the panel.
+      // The Programme menu opens inside the panel.
       await mainNav(page).getByRole('button', { name: 'Mở menu Chương trình' }).click()
-      await expect(mainNav(page).locator('[data-nav="programmes"] ul')).toBeVisible()
+      await expect(mainNav(page).locator('[data-menu="programmes"]')).toBeVisible()
       // The current page's own link closes the panel (no navigation happens).
       await mainNav(page).locator('[data-nav="products"] a').click()
       await expect(toggle).toHaveAttribute('aria-expanded', 'false')
       await expect(mainNav(page)).toBeHidden()
       // A route choice navigates and leaves the menu closed.
       await toggle.click()
-      await mainNav(page).locator('[data-nav="about"] > a').click()
+      await mainNav(page).getByRole('button', { name: 'Mở menu Giới thiệu' }).click()
+      await mainNav(page).locator('[data-nav-item="G.02a"]').click()
       await expect(page).toHaveURL('/about')
       await expect(burger(page)).toHaveAttribute('aria-expanded', 'false')
       // Escape closes the panel.

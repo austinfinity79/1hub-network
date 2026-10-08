@@ -52,7 +52,7 @@ export default async function TalentsPage({
       data-viewer={viewer}
     >
       <div className={styles.top}>
-        <PublicHeader viewer={shell.viewer} current="talents" />
+        <PublicHeader viewer={shell.viewer} clubCount={shell.clubCount} current="talents" />
         {viewer !== 'NETWORK' ? (
           <>
             <section className={`${styles.hero} ${styles.heroPlain}`} data-section="directory-hero">

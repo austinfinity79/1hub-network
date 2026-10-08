@@ -40,7 +40,7 @@ export function Library({
       <LibraryBrowser
         header={
           <div className={styles.shell}>
-            <PublicHeader viewer={shell.viewer} />
+            <PublicHeader viewer={shell.viewer} clubCount={shell.clubCount} />
           </div>
         }
         initial={initial}

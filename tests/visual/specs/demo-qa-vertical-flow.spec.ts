@@ -127,10 +127,10 @@ test.describe('vertical flow — base (DEMO-HOME-ABOUT-01)', () => {
     )
     await expect(header(page)).toHaveAttribute('data-viewer', 'GUEST')
     await expect(header(page).locator('[data-cta="logo"]')).toHaveAttribute('href', '/')
-    await expect(header(page).locator('[data-nav="about"] a').first()).toHaveAttribute(
-      'href',
-      '/about',
-    )
+    // S2-NAV-DROPDOWN-V2-01: Giới thiệu is a menu whose first entry opens /about.
+    await header(page).getByRole('button', { name: 'Mở menu Giới thiệu' }).click()
+    await expect(header(page).locator('[data-nav-item="G.02a"]')).toHaveAttribute('href', '/about')
+    await page.keyboard.press('Escape')
     await expectCleanPage(page)
   })
 
@@ -138,7 +138,8 @@ test.describe('vertical flow — base (DEMO-HOME-ABOUT-01)', () => {
     page,
   }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
-    await header(page).locator('[data-nav="about"] a').first().click()
+    await header(page).getByRole('button', { name: 'Mở menu Giới thiệu' }).click()
+    await header(page).locator('[data-nav-item="G.02a"]').click()
     await expect(page).toHaveURL('/about')
     await expect(page.locator('[data-screen="PUBLIC-ABOUT"]')).toHaveAttribute(
       'data-revision',
@@ -197,7 +198,8 @@ test.describe('vertical flow — products and founder (DIR2 / SP1-FOUNDER)', () 
     await expect(page).toHaveURL(DEMO.tracely)
     await page.goForward({ waitUntil: 'networkidle' })
     await expect(page).toHaveURL(DEMO.founder.path)
-    await header(page).locator('[data-nav="about"] a').first().click()
+    await header(page).getByRole('button', { name: 'Mở menu Giới thiệu' }).click()
+    await header(page).locator('[data-nav-item="G.02a"]').click()
     await expect(page).toHaveURL('/about')
     await header(page).locator('[data-cta="logo"]').click()
     await expect(page).toHaveURL('/')

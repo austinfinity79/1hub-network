@@ -135,7 +135,10 @@ test.describe('PUBLIC-LIBRARY functional', () => {
     // DEMO-HOME-ABOUT-01: the new header has no Library entry; the hero search
     // ("Tất cả") still opens the Library.
     await page.goto('/', { waitUntil: 'networkidle' })
-    await expect(page.locator('[data-nav="about"] a').first()).toHaveAttribute('href', '/about')
+    await expect(page.locator('[data-nav="about"] > button')).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
     const hero = page.locator('[data-search="hero"]')
     await hero.getByRole('searchbox').fill('logistics')
     await hero.getByRole('button', { name: 'Tìm kiếm' }).click()

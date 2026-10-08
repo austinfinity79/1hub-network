@@ -92,26 +92,25 @@ test.describe('public shell', () => {
       const header = page.locator('header[data-shell="public"]')
       await expect(header).toHaveAttribute('data-viewer', 'GUEST')
       await expect(header.locator('[data-cta="logo"]')).toHaveAttribute('href', '/')
-      await expect(header.locator('[data-nav="about"] a').first()).toHaveAttribute('href', '/about')
+      // S2-NAV-DROPDOWN-V2-01: Giới thiệu is a menu; its first entry opens /about.
+      await header.getByRole('button', { name: 'Mở menu Giới thiệu' }).click()
+      await expect(header.locator('[data-nav-item="G.02a"]')).toHaveAttribute('href', '/about')
+      await page.keyboard.press('Escape')
       // DEMO-DIR2-01: Sản phẩm is a link; THAO-05 (DEC-THAO-DIR): Nhân tài and
       // Chương trình, cuộc thi too. Tin tức and Sự kiện stay plain text.
       await expect(header.locator('[data-nav="products"] a')).toHaveAttribute('href', '/products')
       await expect(header.locator('[data-nav="talents"] a')).toHaveAttribute('href', '/talents')
       await expect(header.locator('[data-nav="news"] [data-nav-kind="LABEL"]')).toHaveCount(1)
       await header.getByRole('button', { name: 'Mở menu Chương trình' }).click()
-      const programmes = header.locator('[data-nav="programmes"] ul')
-      await expect(
-        programmes.getByRole('link', { name: 'Chương trình, cuộc thi' }),
-      ).toHaveAttribute('href', '/programmes')
-      // S2-PROGRAMME-EVENT-CONTENT-01: the event screen exists.
-      await expect(programmes.getByRole('link', { name: 'Sự kiện' })).toHaveAttribute(
+      const programmes = header.locator('[data-menu="programmes"]')
+      await expect(programmes.locator('[data-nav-item="G.03a"]')).toHaveAttribute(
         'href',
-        '/events',
+        '/programmes',
       )
+      // S2-PROGRAMME-EVENT-CONTENT-01: the event screen exists.
+      await expect(programmes.locator('[data-nav-item="G.03b"]')).toHaveAttribute('href', '/events')
       await page.keyboard.press('Escape')
-      // THAO-01-FIX: Giới thiệu is a direct link, only Chương trình has a menu.
-      await expect(header.getByRole('button', { name: 'Mở menu Giới thiệu' })).toHaveCount(0)
-      await expect(header.locator('[data-nav="about"] ul')).toHaveCount(0)
+      await expect(header.locator('[data-menu]')).toHaveCount(0)
       await expect(header.locator('[data-cta="login"]')).toHaveAttribute('href', '/auth')
       await expect(header.locator('[data-cta="primary-bar"]')).toHaveText('Tạo tài khoản')
       await expect(header.locator('[data-cta="primary-bar"]')).toHaveAttribute('href', '/auth')

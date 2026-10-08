@@ -32,7 +32,7 @@ export default async function ProblemsPage({
   return (
     <div className={styles.page} data-screen="PUBLIC-PROBLEMS">
       <div className={styles.top}>
-        <PublicHeader viewer={shell.viewer} />
+        <PublicHeader viewer={shell.viewer} clubCount={shell.clubCount} />
         <ProblemDirectory
           problems={problems}
           initial={readProblemView(params, {

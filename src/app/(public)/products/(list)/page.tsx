@@ -51,7 +51,7 @@ export default async function ProductsPage({
       data-entry={shell.viewer.kind}
     >
       <div className={styles.top}>
-        <PublicHeader viewer={shell.viewer} current="products" />
+        <PublicHeader viewer={shell.viewer} clubCount={shell.clubCount} current="products" />
         {data ? (
           <Directory
             startups={data[0]}
