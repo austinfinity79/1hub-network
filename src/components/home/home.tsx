@@ -184,7 +184,7 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
                   />
                 ) : null}
                 <div className={styles.programmeChips}>
-                  <span className={styles.whiteChip}>{p.kind}</span>
+                  {p.kind ? <span className={styles.whiteChip}>{p.kind}</span> : null}
                   <span className={p.statusTone === 'coral' ? styles.coralChip : styles.softChip}>
                     {p.status}
                   </span>
@@ -196,7 +196,13 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
                 )}
               </div>
               <h3 className={styles.programmeName} data-pixel="data">
-                {p.title}
+                {p.href ? (
+                  <PublicAction href={p.href} className={styles.programmeLink} cta="programme-site">
+                    {p.title}
+                  </PublicAction>
+                ) : (
+                  p.title
+                )}
               </h3>
               <p className={styles.programmeText} data-pixel="data">
                 {p.description}

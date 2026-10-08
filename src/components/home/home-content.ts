@@ -1,3 +1,6 @@
+import { UPCOMING_PROGRAMMES } from '@/lib/public/programme-event-source'
+import { ECOSYSTEM_LINKS } from '@/lib/public/routes'
+
 /**
  * DEMO-HOME-ABOUT-01 — static presentation copy of Homepage v2, verbatim from
  * the PO frame DM01 (design-reference/final/demo-0710). There is no public
@@ -15,7 +18,6 @@
  * update feed has no refreshed source and is unchanged.
  */
 
-/** The four refreshed homepage programmes, in the sheet's order. */
 /** S2-HOME-CONTENT-REFRESH-01: ticker text per Feedback Sprint 2 (lần 3). */
 export const HOME_TICKER = [
   'APEC Innovation Challenge',
@@ -103,8 +105,8 @@ export const PROGRAMME_UPDATES: ProgrammeUpdate[] = [
 
 export type ProgrammeCard = {
   code: string
-  /** "Tag phân loại". */
-  kind: string
+  /** "Tag phân loại"; null where the source gives none (no chip drawn). */
+  kind: string | null
   /** "Trạng thái", as written. */
   status: string
   statusTone: 'coral' | 'soft'
@@ -120,73 +122,61 @@ export type ProgrammeCard = {
   tone: 'red' | 'violet' | 'green' | 'maroon'
   /** 16:9 cover (public/), alt text. */
   image: { src: string; alt: string } | null
+  /** The approved destination of the card's title (external: new tab), or null. */
+  href: string | null
 }
 
 export const PROGRAMME_FILTERS = ['Đang mở', 'Sắp mở', 'Đã kết thúc'] as const
 
 const cover = (file: string, alt: string) => ({ src: `/home/content-v2/${file}`, alt })
 
-export const PROGRAMME_CARDS: ProgrammeCard[] = [
-  {
+/**
+ * S2-HOME-INNOVATION-PROGRAMMES-01 — the four homepage cards are the canonical
+ * programme records (UPCOMING_PROGRAMMES, the /programmes source): same names,
+ * descriptions, organisers and pictures, no second copy. APEC opens the PO's
+ * APEC Innovation Challenge site (Feedback Sprint 2 lần 3, §2).
+ */
+export const HOME_PROGRAMME_SLUGS = [
+  'apec-innovation-challenge',
+  'data-for-life',
+  'fintech-challenge-vietnam',
+  'ai-thuc-chien',
+] as const
+
+const HOME_PROGRAMME_LOOK: Record<
+  (typeof HOME_PROGRAMME_SLUGS)[number],
+  { code: string; tone: ProgrammeCard['tone']; href: string | null }
+> = {
+  'apec-innovation-challenge': {
     code: 'AP',
-    kind: 'Cuộc thi',
-    status: 'Sắp công bố',
-    statusTone: 'soft',
-    title: 'APEC Innovation Challenge',
-    description:
-      'Cuộc thi đổi mới sáng tạo khu vực gắn với Năm APEC 2027, tìm kiếm startup từ 21 nền kinh tế APEC qua các bảng do doanh nghiệp đầu ngành dẫn dắt.',
-    period: null,
-    prize: null,
-    owner: 'APEC',
-    scale: null,
     tone: 'maroon',
-    image: cover('programme-apec-innovation-challenge.webp', 'APEC Innovation Challenge 2027'),
+    href: ECOSYSTEM_LINKS.apecInnovationChallenge,
   },
-  {
-    code: 'VP',
-    kind: 'Cuộc thi',
-    status: 'Sắp công bố',
+  'data-for-life': { code: 'DL', tone: 'green', href: null },
+  'fintech-challenge-vietnam': { code: 'FC', tone: 'violet', href: null },
+  'ai-thuc-chien': { code: 'AI', tone: 'red', href: null },
+}
+
+export const PROGRAMME_CARDS: ProgrammeCard[] = HOME_PROGRAMME_SLUGS.map((slug) => {
+  const p = UPCOMING_PROGRAMMES.find((x) => x.slug === slug)
+  if (!p) throw new Error(`Homepage programme ${slug} is not in UPCOMING_PROGRAMMES`)
+  const look = HOME_PROGRAMME_LOOK[slug]
+  return {
+    code: look.code,
+    kind: p.kind,
+    status: p.status,
     statusTone: 'soft',
-    title: 'VPBank Innovation Challenge',
-    description:
-      'Thử thách đổi mới mở, tìm kiếm startup có giải pháp ngân hàng số, thanh toán và tài chính toàn diện để hợp tác thử nghiệm cùng VPBank.',
+    title: p.title,
+    description: p.description,
     period: null,
     prize: null,
-    owner: 'VPBank - Ngân hàng Nhà nước',
+    owner: p.owner,
     scale: null,
-    tone: 'green',
-    image: cover('programme-vpbank-innovation-challenge.webp', 'VPBank Innovation Challenge'),
-  },
-  {
-    code: 'KW',
-    kind: 'Cuộc thi',
-    status: 'Sắp công bố',
-    statusTone: 'soft',
-    title: 'Cuộc thi Khởi nghiệp cùng Kawai',
-    description: 'Cuộc thi khởi nghiệp lớn nhất miền Bắc với 20 năm phát triển',
-    period: null,
-    prize: null,
-    owner: 'CLB Nhà doanh nhân Tương lai (TEC FTU)',
-    scale: null,
-    tone: 'violet',
-    image: cover('programme-khoi-nghiep-cung-kawai.webp', 'Cuộc thi Khởi nghiệp cùng Kawai'),
-  },
-  {
-    code: 'AG',
-    kind: 'Cuộc thi',
-    status: 'Sắp công bố',
-    statusTone: 'soft',
-    title: 'Agritech Innovation Challenge',
-    description:
-      'Thử thách tìm kiếm giải pháp công nghệ cho nông nghiệp, từ canh tác thông minh, truy xuất nguồn gốc đến chuỗi cung ứng nông sản.',
-    period: null,
-    prize: null,
-    owner: 'Net Zero Vietnam',
-    scale: null,
-    tone: 'red',
-    image: cover('programme-agritech-innovation-challenge.webp', 'Agritech Innovation Challenge'),
-  },
-]
+    tone: look.tone,
+    image: { src: p.image, alt: p.title },
+    href: look.href,
+  }
+})
 
 export type NewsCard = {
   tag: string

@@ -237,8 +237,13 @@ test.describe('Homepage v2 (DM01)', () => {
 
   test('programme, update and news blocks are read-only presentation', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
-    for (const scope of ['[data-section="programmes"] ul', '[data-section="news"] ul'])
-      await expect(page.locator(`${scope} a`)).toHaveCount(0)
+    // S2-HOME-INNOVATION-PROGRAMMES-01: only the APEC card links (its PO site).
+    await expect(page.locator('[data-section="programmes"] ul a')).toHaveCount(1)
+    await expect(page.locator('[data-section="programmes"] ul a')).toHaveAttribute(
+      'href',
+      'https://apec.1hub.cloud/',
+    )
+    await expect(page.locator('[data-section="news"] ul a')).toHaveCount(0)
     // THAO-05: the block's "Xem tất cả" opens the programme list; its rows stay text.
     const updates = page.locator('[data-block="programme-updates"] a')
     await expect(updates).toHaveCount(1)

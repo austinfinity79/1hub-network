@@ -691,6 +691,17 @@
   line-height: 24px;
 }
 
+/* S2-HOME-INNOVATION-PROGRAMMES-01: an approved programme site link. */
+.programmeLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.programmeLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .programmeText {
   margin-top: 17px !important;
   font-size: 13px;

@@ -98,24 +98,41 @@ test('programme cards and ticker: the four refreshed programmes, source fields o
   page,
 }) => {
   await page.goto('/', { waitUntil: 'networkidle' })
+  // S2-HOME-INNOVATION-PROGRAMMES-01: the canonical records (UPCOMING_PROGRAMMES).
   const titles = [
     'APEC Innovation Challenge',
-    'VPBank Innovation Challenge',
-    'Cuộc thi Khởi nghiệp cùng Kawai',
-    'Agritech Innovation Challenge',
+    'Data for Life',
+    'Fintech Challenge Vietnam',
+    'AI Thực chiến',
   ]
   const cards = page.locator('[data-section="programmes"] li[data-programme]')
   await expect(cards.locator('h3')).toHaveText(titles)
+  const covers = [
+    'programme-apec-innovation-challenge.webp',
+    'data-for-life.webp',
+    'fintech-challenge-vietnam.webp',
+    'ai-thuc-chien.webp',
+  ]
   for (let i = 0; i < 4; i++) {
     const card = cards.nth(i)
-    await expect(card).toContainText('Cuộc thi')
+    // A type chip only where the source tags one (APEC: "Cuộc thi").
+    await expect(card.locator('[class*="whiteChip"]')).toHaveCount(i === 0 ? 1 : 0)
     await expect(card).toContainText('Sắp công bố')
+    expect(decodeURIComponent((await card.locator('img').getAttribute('src'))!)).toContain(
+      covers[i],
+    )
     // Only "Chủ quản" is in the source: no period, prize or scale is drawn.
     await expect(card.locator('dt')).toHaveText(['CHỦ QUẢN'])
     const cover = card.locator('img')
     await cover.scrollIntoViewIfNeeded()
     expect(await loaded(cover), titles[i]).toBe(true)
   }
+  // APEC opens the PO's site in a new tab; the other cards are text.
+  const apec = cards.nth(0).locator('h3 a')
+  await expect(apec).toHaveAttribute('href', 'https://apec.1hub.cloud/')
+  await expect(apec).toHaveAttribute('target', '_blank')
+  await expect(apec).toHaveAttribute('rel', 'noopener noreferrer')
+  await expect(page.locator('[data-section="programmes"] ul a')).toHaveCount(1)
   // No phase is claimed for the cards.
   await expect(page.locator('[data-section="programmes"] [aria-disabled="true"]')).toHaveCount(3)
   // S2-HOME-CONTENT-REFRESH-01: the ticker's own list (the cards are unchanged).
