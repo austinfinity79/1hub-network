@@ -713,5 +713,70 @@
    960,
    541
   ]
+ },
+ {
+  "drive_file_id": "1fWM7i1HrT8rwfTRqy55-zHOK7u-wW9wx",
+  "evidence": "Feedback sprint 2 [8_10] §4 \"Ảnh 16:9\" folder 1uKdq60wCy8EwOi9n7NV38IE1aAZa5I6j · \"dataforlife_banner.png\"",
+  "source_sha256": "724a4d37a8b4140a67dfb05875b3e8b6e8b0bf1c0e07f99e86444c991280d7e2",
+  "source_bytes": 2324171,
+  "public_file": "/programmes/upcoming/data-for-life.webp",
+  "public_sha256": "c6090330c197091cb1b5b1f27f59772bca15123513c595b6f65302ab5283a9b7",
+  "public_bytes": 64916,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1g0jlxxlBKZwv2T614kfeqAMvZWcl7LNo",
+  "evidence": "Feedback sprint 2 [8_10] §4 \"Ảnh 16:9\" folder 1uKdq60wCy8EwOi9n7NV38IE1aAZa5I6j · \"Fintech Challenge Vietnam banner.png\"",
+  "source_sha256": "80e68be6c3860de3813fd82b15468ec862690a4309f405c013f9b52c00c87b22",
+  "source_bytes": 2540156,
+  "public_file": "/programmes/upcoming/fintech-challenge-vietnam.webp",
+  "public_sha256": "7f2e4d5b815d40301bfacf003bfa1d8fee85b5cac46b920a8ad696a280765062",
+  "public_bytes": 145622,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1a241TXztasltk3ivGe8xTJFq8MCr5gwW",
+  "evidence": "Feedback sprint 2 [8_10] §4 \"Ảnh 16:9\" folder 1uKdq60wCy8EwOi9n7NV38IE1aAZa5I6j · \"aithuchien_banner.jpg\"",
+  "source_sha256": "688bd3ac44409c4d341976d731ec9924dc032459bb8b57afa6f6585c6925ae73",
+  "source_bytes": 135232,
+  "public_file": "/programmes/upcoming/ai-thuc-chien.webp",
+  "public_sha256": "d04ebb730e13901083210b089e9fb5b271c6c3243706326d7ee447bd983b5da6",
+  "public_bytes": 67794,
+  "size": [
+   1280,
+   668
+  ]
+ },
+ {
+  "drive_file_id": "1fnWyiY7bTJbG3UY0W62WOdw3524t6CSE",
+  "evidence": "Feedback sprint 2 [8_10] §4 \"Ảnh 16:9\" folder 1uKdq60wCy8EwOi9n7NV38IE1aAZa5I6j · \"global builder camp banner.png\"",
+  "source_sha256": "9893af5186bac2c9f9feee9e57ad7b15fdc54eac17fb4cf7e83d7950a1fc548f",
+  "source_bytes": 2067464,
+  "public_file": "/programmes/upcoming/global-builder-camp.webp",
+  "public_sha256": "e083f30820fbaa2299573312a568def0583bc3b20dbb95bb50bb8f89aa209dcb",
+  "public_bytes": 104494,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1hSsw-VCi_xqbTa5GAD6h8-HNA9ZVMUcs",
+  "evidence": "Feedback sprint 2 [8_10] §4 \"Ảnh 16:9\" folder 1uKdq60wCy8EwOi9n7NV38IE1aAZa5I6j · \"vietchallenge_banner.jpg\"",
+  "source_sha256": "025148153163cff8a44be51e4b39bc32d050150e824fa662daf728efbcedb2cf",
+  "source_bytes": 252310,
+  "public_file": "/programmes/upcoming/vietchallenge.webp",
+  "public_sha256": "a4a2e5336e44b96ebc441686b80cc337b11b9c84e9320efede2b62b1cf8100a9",
+  "public_bytes": 74420,
+  "size": [
+   1280,
+   672
+  ]
  }
 ]

@@ -1,7 +1,6 @@
-import { PROGRAMME_CARDS } from '@/components/home/home-content'
 import { fold } from '@/lib/library/startup-adapter'
 
-import { PAST_PROGRAMMES } from './programme-event-source'
+import { PAST_PROGRAMMES, UPCOMING_PROGRAMMES } from './programme-event-source'
 
 import type { ProgrammeKind, ProgrammePhase } from './programme-phase'
 
@@ -22,6 +21,10 @@ import type { ProgrammeKind, ProgrammePhase } from './programme-phase'
  * sheet's finished programmes ("Đã kết thúc") follow, with their own cover
  * and organisers; they have no type and no dates in the source, so none is
  * shown. The type and host filters are gone (Sprint 2 feedback).
+ *
+ * S2-PROGRAMME-CATALOG-REFRESH-01: the upcoming rows are the canonical
+ * UPCOMING_PROGRAMMES (the homepage cards reuse them); every card shows its
+ * "Lĩnh vực" where the source gives one.
  */
 
 export type DirectoryProgramme = {
@@ -35,6 +38,8 @@ export type DirectoryProgramme = {
   hosts: string[]
   /** The approved 16:9 cover, or null (never a stand-in). */
   image: string | null
+  /** "Lĩnh vực", as written; null where the source has none. */
+  domain: string | null
   phase: ProgrammePhase
   /** "dd/mm/yyyy – dd/mm/yyyy" in Viet Nam time, or null without dates. */
   timeline: string | null
@@ -45,11 +50,6 @@ export type DirectoryProgramme = {
   /** Folded search text: name, summary, organisers, type. */
   text: string
 }
-
-const slugOf = (text: string) =>
-  fold(text)
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
 
 /** The sheet's "Tag phân loại" → the directory type ("Cuộc thi" is a challenge). */
 const KIND_OF: Record<string, ProgrammeKind> = {
@@ -64,25 +64,25 @@ const PHASE_OF: Record<string, ProgrammePhase> = {
 }
 
 export function listPublicProgrammes(): DirectoryProgramme[] {
-  const current = PROGRAMME_CARDS.flatMap((c) => {
-    const kind = KIND_OF[c.kind]
+  const current = UPCOMING_PROGRAMMES.flatMap((c) => {
     const phase = PHASE_OF[c.status]
-    // A row whose type or status has no directory value is left out, never guessed.
-    if (!kind || !phase) return []
-    const hosts = c.owner ? [c.owner] : []
+    // A row whose status has no directory value is left out, never guessed.
+    if (!phase) return []
+    const kind = c.kind ? (KIND_OF[c.kind] ?? null) : null
     return [
       {
-        slug: slugOf(c.title),
+        slug: c.slug,
         name: c.title,
         kind,
         summary: c.description,
-        hosts,
-        image: c.image?.src ?? null,
+        hosts: [c.owner],
+        image: c.image,
+        domain: c.domain,
         phase,
-        timeline: c.period,
+        timeline: null,
         startsAt: null,
         applyHref: null,
-        text: fold([c.title, c.description, ...hosts, kind].filter(Boolean).join(' ')),
+        text: fold([c.title, c.description, c.owner, c.domain, kind].filter(Boolean).join(' ')),
       },
     ]
   })
@@ -93,6 +93,7 @@ export function listPublicProgrammes(): DirectoryProgramme[] {
     summary: p.description,
     hosts: p.owners,
     image: p.image,
+    domain: p.domain,
     phase: 'da-ket-thuc',
     timeline: null,
     startsAt: null,

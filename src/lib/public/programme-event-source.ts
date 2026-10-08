@@ -55,6 +55,108 @@ export type PastEvent = {
   image: string | null
 }
 
+export type UpcomingProgramme = {
+  slug: string
+  title: string
+  /** "Tag phân loại" where a source gives one; null otherwise (no type shown). */
+  kind: string | null
+  /** "Trạng thái", as written. */
+  status: string
+  /** "Đơn vị tổ chức" / "Chủ quản", as written (one string). */
+  owner: string
+  description: string
+  /** "Lĩnh vực", as written. */
+  domain: string | null
+  /** The approved 16:9 picture. */
+  image: string
+}
+
+/**
+ * S2-PROGRAMME-CATALOG-REFRESH-01 — the canonical upcoming programmes (Feedback
+ * Sprint 2 lần 3, §4): APEC and Kawai kept (sheet rows 1 and 3, homepage covers),
+ * VPBank and Agritech removed, five added from the feedback table with the
+ * banners of its "Ảnh 16:9" folder (1uKdq60…). The homepage cards reuse these
+ * records (home-content.ts HOME_PROGRAMME_SLUGS); none carries dates.
+ */
+export const UPCOMING_PROGRAMMES: UpcomingProgramme[] = [
+  {
+    slug: 'apec-innovation-challenge',
+    title: 'APEC Innovation Challenge',
+    kind: 'Cuộc thi',
+    status: 'Sắp công bố',
+    owner: 'APEC',
+    description:
+      'Cuộc thi đổi mới sáng tạo khu vực gắn với Năm APEC 2027, tìm kiếm startup từ 21 nền kinh tế APEC qua các bảng do doanh nghiệp đầu ngành dẫn dắt.',
+    domain: 'Đa lĩnh vực',
+    image: '/home/content-v2/programme-apec-innovation-challenge.webp',
+  },
+  {
+    slug: 'cuoc-thi-khoi-nghiep-cung-kawai',
+    title: 'Cuộc thi Khởi nghiệp cùng Kawai',
+    kind: 'Cuộc thi',
+    status: 'Sắp công bố',
+    owner: 'CLB Nhà doanh nhân Tương lai (TEC FTU)',
+    description: 'Cuộc thi khởi nghiệp lớn nhất miền Bắc với 20 năm phát triển',
+    domain: 'Đa lĩnh vực',
+    image: '/home/content-v2/programme-khoi-nghiep-cung-kawai.webp',
+  },
+  {
+    slug: 'data-for-life',
+    title: 'Data for Life',
+    kind: null,
+    status: 'Sắp công bố',
+    owner: 'C06, Bộ Công an',
+    description:
+      'Cuộc thi giải pháp công nghệ do Bộ Công an (C06) tổ chức, tìm kiếm ý tưởng và sản phẩm ứng dụng dữ liệu giải quyết bài toán thực tiễn cho người dân, doanh nghiệp và xã hội; mùa 4 (2026) mở rộng kết nối quốc tế cùng AI Singapore.',
+    domain: 'Dữ liệu',
+    image: '/programmes/upcoming/data-for-life.webp',
+  },
+  {
+    slug: 'fintech-challenge-vietnam',
+    title: 'Fintech Challenge Vietnam',
+    kind: null,
+    status: 'Sắp công bố',
+    owner: 'Ngân hàng Nhà nước',
+    description:
+      'Cuộc thi tìm kiếm giải pháp công nghệ tài chính giúp mở rộng tiếp cận dịch vụ ngân hàng và thúc đẩy chuyển đổi số ngành tài chính.',
+    domain: 'Tài chính',
+    image: '/programmes/upcoming/fintech-challenge-vietnam.webp',
+  },
+  {
+    slug: 'ai-thuc-chien',
+    title: 'AI Thực chiến',
+    kind: null,
+    status: 'Sắp công bố',
+    owner: 'Hiệp hội Dữ liệu Quốc gia, Đài Truyền hình Việt Nam (VTV), Trung tâm Dữ liệu Quốc gia',
+    description:
+      'Cuộc thi do Bộ Công an tổ chức, tìm kiếm giải pháp ứng dụng dữ liệu cho đời sống và xã hội.',
+    domain: 'Dữ liệu, AI',
+    image: '/programmes/upcoming/ai-thuc-chien.webp',
+  },
+  {
+    slug: 'global-builder-camp',
+    title: 'Global Builder Camp',
+    kind: null,
+    status: 'Sắp công bố',
+    owner: 'iHUB Ventures',
+    description:
+      'Bootcamp quốc tế giúp founder xây dựng sản phẩm và kết nối với mentor, nhà đầu tư.',
+    domain: 'Đa lĩnh vực',
+    image: '/programmes/upcoming/global-builder-camp.webp',
+  },
+  {
+    slug: 'vietchallenge',
+    title: 'VietChallenge',
+    kind: null,
+    status: 'Sắp công bố',
+    owner: 'VietChallenge',
+    description:
+      'Cuộc thi khởi nghiệp dành cho người Việt toàn cầu, kết nối startup với nhà đầu tư trong nước và quốc tế.',
+    domain: 'Đa lĩnh vực',
+    image: '/programmes/upcoming/vietchallenge.webp',
+  },
+]
+
 /** "Chương trình" rows with Trạng thái "Đã kết thúc", in sheet order. */
 export const PAST_PROGRAMMES: PastProgramme[] = [
   {

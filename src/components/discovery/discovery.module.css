@@ -80,6 +80,12 @@
   color: var(--coral);
 }
 
+/* S2-PROGRAMME-CATALOG-REFRESH-01: the PO's long /programmes line keeps the
+   frame's single title line (same 66 px band, search unmoved). */
+.titleLong {
+  font-size: 40px;
+}
+
 .search {
   display: flex;
   align-items: center;

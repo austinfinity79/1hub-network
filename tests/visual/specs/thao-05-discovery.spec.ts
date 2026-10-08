@@ -3,7 +3,6 @@ import path from 'node:path'
 
 import { expect, test, type Page } from '@playwright/test'
 
-import { PROGRAMME_CARDS } from '../../../src/components/home/home-content'
 import { SESSION_COOKIE_NAME } from '../../../src/lib/auth/config'
 import { createSession } from '../../../src/lib/auth/sessions'
 import { query } from '../../../src/lib/db/client'
@@ -17,7 +16,10 @@ import {
   type LibraryFixture,
 } from '../../../src/lib/library/testing'
 import { LIBRARY_PROBLEMS } from '../../../src/lib/library/problem-source'
-import { PAST_PROGRAMMES } from '../../../src/lib/public/programme-event-source'
+import {
+  PAST_PROGRAMMES,
+  UPCOMING_PROGRAMMES,
+} from '../../../src/lib/public/programme-event-source'
 import { settle } from '../pixel-qa/capture'
 import { REPO_ROOT, resolveOutputPath, resolveReferencePath } from '../pixel-qa/paths'
 import { decodePng, readPng } from '../pixel-qa/png'
@@ -193,10 +195,10 @@ const html = async (page: Page, url: string) => (await page.request.get(url)).te
 // ------------------------------------------------------------------ DIR0
 
 // PROGRAMME-PRESENTATION-DATA-01: the list is the source-backed programmes only
-// (the homepage's PROGRAMME_CARDS); no programme row — fixture or not — is
+// (S2-PROGRAMME-CATALOG-REFRESH-01: UPCOMING_PROGRAMMES); no programme row — fixture or not — is
 // projected, so the deterministic seed and this spec's rows must not appear.
 // S2-PROGRAMME-EVENT-CONTENT-01: then the sheet's finished programmes.
-const CURRENT_NAMES = PROGRAMME_CARDS.map((c) => c.title)
+const CURRENT_NAMES = UPCOMING_PROGRAMMES.map((c) => c.title)
 const PAST_NAMES = PAST_PROGRAMMES.map((p) => p.title)
 const SOURCE_NAMES = [...CURRENT_NAMES, ...PAST_NAMES]
 const byVi = (list: string[]) => [...list].sort((a, b) => a.localeCompare(b, 'vi'))
@@ -233,18 +235,34 @@ test.describe('DIR0 /programmes', () => {
       await expect(card).toHaveAttribute('data-programme', 'da-ket-thuc')
       await expect(card.locator('[class*="progPhase"]')).toHaveText('Đã kết thúc')
       await expect(card.locator('[class*="progHost"]')).toHaveText(p.owners.join(' · '))
-      await expect(card.locator('[class*="progTags"] li')).toHaveCount(0)
+      await expect(card.locator('[class*="progTags"] li')).toHaveText([p.domain!])
       await expect(card.locator('img[data-programme-cover]')).toHaveAttribute('src', p.image!)
     }
-    for (const c of PROGRAMME_CARDS) {
-      // The homepage's own values: host, description, status and type; no invented dates.
+    // S2-PROGRAMME-CATALOG-REFRESH-01: APEC + Kawai kept, VPBank / Agritech gone,
+    // five added; source values only (type only where the source tags one).
+    expect(CURRENT_NAMES).toEqual([
+      'APEC Innovation Challenge',
+      'Cuộc thi Khởi nghiệp cùng Kawai',
+      'Data for Life',
+      'Fintech Challenge Vietnam',
+      'AI Thực chiến',
+      'Global Builder Camp',
+      'VietChallenge',
+    ])
+    const shownText = await page.locator('main, body').first().innerText()
+    for (const gone of ['VPBank Innovation Challenge', 'Agritech Innovation Challenge'])
+      expect(shownText, gone).not.toContain(gone)
+    for (const c of UPCOMING_PROGRAMMES) {
       const card = cards(page, 'programme').filter({ hasText: c.title })
+      await expect(card).toHaveCount(1)
       await expect(card).toHaveAttribute('data-programme', 'sap-cong-bo')
-      await expect(card.locator('[class*="progHost"]')).toHaveText(c.owner!)
+      await expect(card.locator('[class*="progHost"]')).toHaveText(c.owner)
       await expect(card.locator('[class*="progPhase"]')).toHaveText(c.status)
       await expect(card.locator('p')).toHaveText(c.description)
-      await expect(card.locator('[class*="progTags"] li')).toHaveText(['Challenge'])
-      await expect(card.locator('img[data-programme-cover]')).toHaveAttribute('src', c.image!.src)
+      await expect(card.locator('[class*="progTags"] li')).toHaveText(
+        [c.kind ? 'Challenge' : null, c.domain].filter((x): x is string => Boolean(x)),
+      )
+      await expect(card.locator('img[data-programme-cover]')).toHaveAttribute('src', c.image)
     }
     expect(
       await page.evaluate(() =>
@@ -252,7 +270,11 @@ test.describe('DIR0 /programmes', () => {
       ),
     ).toEqual([])
     // Nothing is open; no card offers an apply entry (no programme record behind it).
-    await expect(page.locator('h1 span')).toHaveText('0')
+    // The PO's hero line; no counter cluster.
+    await expect(page.locator('h1')).toHaveText(
+      'các cuộc thi khởi nghiệp, chương trình đổi mới sáng tạo trong mạng lưới',
+    )
+    await expect(page.locator('[data-section="directory-hero"] dl')).toHaveCount(0)
     await expect(page.locator('a[href*="/apply"]')).toHaveCount(0)
     await expect(cards(page, 'programme').locator('[data-cta-kind="INERT"]')).toHaveCount(
       SOURCE_NAMES.length,
@@ -278,9 +300,9 @@ test.describe('DIR0 /programmes', () => {
   test('search, filters, address, refresh, reset, empty, sort and Back', async ({ page }) => {
     await page.goto('/programmes', { waitUntil: 'networkidle' })
     const total = await cards(page, 'programme').count()
-    await page.getByRole('search').getByRole('searchbox').fill('vpbank')
+    await page.getByRole('search').getByRole('searchbox').fill('kawai')
     await page.getByRole('button', { name: 'Tìm kiếm' }).click()
-    await expect(page).toHaveURL(/\?q=vpbank$/)
+    await expect(page).toHaveURL(/\?q=kawai$/)
     await expect(cards(page, 'programme')).toHaveCount(1)
     const rail = page.getByRole('complementary', { name: 'Bộ lọc' })
     await rail.getByLabel(/^Sắp công bố/).check()
@@ -289,7 +311,7 @@ test.describe('DIR0 /programmes', () => {
     await page.reload({ waitUntil: 'networkidle' })
     await expect(cards(page, 'programme')).toHaveCount(1)
     await expect(rail.getByLabel(/^Sắp công bố/)).toBeChecked()
-    // "vpbank" among the finished ones: the empty state, then reset.
+    // "kawai" among the finished ones: the empty state, then reset.
     await rail.getByLabel(/^Sắp công bố/).uncheck()
     await rail.getByLabel(/^Đã kết thúc/).check()
     await expect(page.locator('[data-state="empty"]')).toBeVisible()
@@ -676,15 +698,16 @@ test.describe('pixel QA 1440 × DPR1: hero gated, results reported (canonical da
         ...(await rectsOf(page, '[data-pixel="data"]')),
         ...(await rectsOf(page, 'header[data-shell="public"] nav[aria-label="Điều hướng chính"]')),
         ...(member ? [{ x: 1000, y: 0, width: 440, height: 64 }] : []),
-        // INTENTIONAL-COPY: the PO's title "Nhân tài" (S2-COPY-QUICKFIX-01)
-        // replaces the frame's counted title line: the whole line band.
-        ...(member
-          ? (await rectsOf(page, '[data-section="directory-hero"] h1')).map((r) => ({
-              ...r,
-              x: 0,
-              width: 1440,
-            }))
-          : []),
+        // INTENTIONAL-COPY: the PO's titles ("Nhân tài", S2-COPY-QUICKFIX-01;
+        // the /programmes line, S2-PROGRAMME-CATALOG-REFRESH-01) replace the
+        // frames' counted title lines: the whole line band.
+        ...(await rectsOf(page, '[data-section="directory-hero"] h1')).map((r) => ({
+          ...r,
+          x: 0,
+          width: 1440,
+        })),
+        // S2-PROGRAMME-CATALOG-REFRESH-01: the counter cluster is removed (frame y 700–790).
+        ...(member ? [] : [{ x: 0, y: 700, width: 1440, height: 100 }]),
       ]
       const results = compareSegments(
         readPng(resolveReferencePath(reference)),

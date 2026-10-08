@@ -75,9 +75,6 @@ export function ProgrammeDirectory({
   const [sort, setSort] = useState(initial.sort)
   const [shown, setShown] = useState(PAGE)
 
-  // The organisers named by the source (a stat, not a filter).
-  const hostCount = useMemo(() => new Set(programmes.flatMap((p) => p.hosts)).size, [programmes])
-
   useAddressView(initial, readProgrammeView, (v) => {
     setDraft(v.q)
     setQ(v.q)
@@ -160,8 +157,9 @@ export function ProgrammeDirectory({
     <>
       <section className={styles.hero} data-section="directory-hero">
         <p className={styles.eyebrow}>CHƯƠNG TRÌNH</p>
-        <h1 className={styles.title} data-pixel="data">
-          <span className={styles.count}>{count('dang-mo')}</span> chương trình đang mở
+        {/* S2-PROGRAMME-CATALOG-REFRESH-01: the PO's line; no counter. */}
+        <h1 className={`${styles.title} ${styles.titleLong}`}>
+          các cuộc thi khởi nghiệp, chương trình đổi mới sáng tạo trong mạng lưới
         </h1>
         <form
           className={styles.search}
@@ -207,20 +205,6 @@ export function ProgrammeDirectory({
             Bài toán →
           </Link>
         </div>
-        <dl className={styles.stats}>
-          <div>
-            <dt data-pixel="data">{count('sap-toi')}</dt>
-            <dd>chương trình sắp tới</dd>
-          </div>
-          <div>
-            <dt data-pixel="data">{count('da-ket-thuc')}</dt>
-            <dd>chương trình đã kết thúc</dd>
-          </div>
-          <div>
-            <dt data-pixel="data">{hostCount}</dt>
-            <dd>đơn vị chủ quản</dd>
-          </div>
-        </dl>
       </section>
 
       <div className={styles.body} data-section="directory">
@@ -295,6 +279,7 @@ export function ProgrammeDirectory({
                   <ul className={styles.progTags} role="list">
                     {p.timeline ? <li>{p.timeline}</li> : null}
                     {p.kind ? <li>{KIND_LABEL[p.kind]}</li> : null}
+                    {p.domain ? <li data-programme-domain="">{p.domain}</li> : null}
                   </ul>
                   <PublicAction
                     href={p.applyHref}
