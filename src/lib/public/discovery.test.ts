@@ -81,11 +81,12 @@ describe('search and views', () => {
       { domains: ['AI'], stages: ['MVP'], places: PLACES },
     )
     expect(view).toMatchObject({ domains: ['AI'], stages: ['MVP'], sort: 'hoat-dong' })
-    expect(readProgrammeView({ 'trang-thai': ['dang-mo', 'x'], loai: 'challenge' }, [])).toEqual({
+    // S2-PROGRAMME-EVENT-CONTENT-01: the type and host filters are gone.
+    expect(
+      readProgrammeView({ 'trang-thai': ['dang-mo', 'x'], loai: 'challenge', 'don-vi': 'apec' }),
+    ).toEqual({
       q: '',
       phases: ['dang-mo'],
-      kinds: ['challenge'],
-      hosts: [],
       sort: 'sap-dien-ra',
     })
     expect(pickSort('ten-a-z', PROGRAMME_SORTS, 'sap-dien-ra')).toBe('ten-a-z')

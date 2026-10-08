@@ -120,7 +120,11 @@ test.describe('public pages: no dead control', () => {
       await expect(
         nav.getByRole('link', { name: 'Chương trình, cuộc thi', exact: true }),
       ).toHaveAttribute('href', '/programmes')
-      await expect(nav.getByRole('link', { name: 'Sự kiện', exact: true })).toHaveCount(0)
+      // S2-PROGRAMME-EVENT-CONTENT-01: the event screen exists.
+      await expect(nav.getByRole('link', { name: 'Sự kiện', exact: true })).toHaveAttribute(
+        'href',
+        '/events',
+      )
       // DEMO-DIR2-01: Sản phẩm opens /products; THAO-05: Nhân tài opens /talents.
       await expect(nav.getByRole('link', { name: 'Sản phẩm', exact: true })).toHaveAttribute(
         'href',
@@ -347,8 +351,14 @@ test.describe('P3 UX cleanup: what cannot be clicked no longer looks clickable',
     for (const url of ['/', '/about']) {
       await page.goto(url, { waitUntil: 'networkidle' })
       const inert = page.locator('[data-screen] [data-cta-kind="INERT"]')
-      // THAO-05: the programme and talent CTAs became links; the rest stay drawn and inert.
-      expect(await inert.count(), url).toBeGreaterThanOrEqual(3)
+      // THAO-05: the programme and talent CTAs became links; S2-PROGRAMME-EVENT-CONTENT-01:
+      // About's "Xem lịch sự kiện" opens /events. The rest stay drawn and inert.
+      expect(await inert.count(), url).toBeGreaterThanOrEqual(2)
+      if (url === '/about')
+        await expect(page.getByRole('link', { name: /Xem lịch sự kiện/ })).toHaveAttribute(
+          'href',
+          '/events',
+        )
       for (const el of await inert.all()) {
         const [, cursor, tag, href, tabindex] = await look(el)
         expect([cursor, tag, href, tabindex]).toEqual(['default', 'SPAN', null, null])

@@ -21,7 +21,7 @@ import {
   type ProgrammeSort,
   type TalentSort,
 } from './discovery-sorts'
-import { KINDS, PHASES, type ProgrammeKind, type ProgrammePhase } from './programme-phase'
+import { PHASES, type ProgrammePhase } from './programme-phase'
 
 /**
  * THAO-05 — what each directory's address means (DEC-THAO-DIR). One pure
@@ -66,19 +66,16 @@ export function readProductView(
 export type ProgrammeView = {
   q: string
   phases: ProgrammePhase[]
-  kinds: ProgrammeKind[]
-  hosts: string[]
   sort: ProgrammeSort
 }
 
-export function readProgrammeView(params: SearchParams, hosts: string[]): ProgrammeView {
+/** S2-PROGRAMME-EVENT-CONTENT-01: no type / host filter; `?loai=` and `?don-vi=` are ignored. */
+export function readProgrammeView(params: SearchParams): ProgrammeView {
   return {
     q: one(params[PARAM.q]),
     phases: many(params['trang-thai']).filter((v): v is ProgrammePhase =>
       PHASES.some((p) => p.key === v),
     ),
-    kinds: many(params.loai).filter((v): v is ProgrammeKind => KINDS.some((k) => k.key === v)),
-    hosts: many(params['don-vi']).filter((h) => hosts.includes(h)),
     sort: pickSort(one(params[PARAM.sort], 20), PROGRAMME_SORTS, 'sap-dien-ra'),
   }
 }

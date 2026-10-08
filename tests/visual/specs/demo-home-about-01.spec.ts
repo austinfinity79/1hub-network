@@ -103,7 +103,11 @@ test.describe('public shell', () => {
       await expect(
         programmes.getByRole('link', { name: 'Chương trình, cuộc thi' }),
       ).toHaveAttribute('href', '/programmes')
-      await expect(programmes.getByText('Sự kiện')).toHaveAttribute('aria-disabled', 'true')
+      // S2-PROGRAMME-EVENT-CONTENT-01: the event screen exists.
+      await expect(programmes.getByRole('link', { name: 'Sự kiện' })).toHaveAttribute(
+        'href',
+        '/events',
+      )
       await page.keyboard.press('Escape')
       // THAO-01-FIX: Giới thiệu is a direct link, only Chương trình has a menu.
       await expect(header.getByRole('button', { name: 'Mở menu Giới thiệu' })).toHaveCount(0)

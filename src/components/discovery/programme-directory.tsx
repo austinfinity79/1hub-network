@@ -31,9 +31,10 @@ import styles from './discovery.module.css'
 /**
  * THAO-05 DIR0 — `/programmes` (DM06 "Chương trình, cuộc thi"), the public
  * programme list (DEC-THAO-DIR-D1). Rows are the source-backed programmes
- * (PROGRAMME-PRESENTATION-DATA-01); this view searches, filters by phase, type and
- * host, sorts and mirrors everything in the address (`?q=`, `?trang-thai=`,
- * `?loai=`, `?don-vi=`, `?sap-xep=`). No public detail page exists: a card
+ * (PROGRAMME-PRESENTATION-DATA-01); this view searches, filters by phase,
+ * sorts and mirrors everything in the address (`?q=`, `?trang-thai=`,
+ * `?sap-xep=`). S2-PROGRAMME-EVENT-CONTENT-01 removed the type ("Loại") and
+ * host ("Đơn vị chủ quản") filters. No public detail page exists: a card
  * opens the member apply entry when the server offered one, else it is
  * READ_ONLY.
  */
@@ -71,58 +72,31 @@ export function ProgrammeDirectory({
   const [draft, setDraft] = useState(initial.q)
   const [q, setQ] = useState(initial.q)
   const [phases, setPhases] = useState(initial.phases)
-  const [kinds, setKinds] = useState(initial.kinds)
-  const [hosts, setHosts] = useState(initial.hosts)
   const [sort, setSort] = useState(initial.sort)
   const [shown, setShown] = useState(PAGE)
 
-  const hostList = useMemo(() => {
-    const seen = new Map<string, string>()
-    for (const p of programmes) if (p.host) seen.set(p.host.slug, p.host.name)
-    return [...seen]
-      .map(([slug, name]) => ({
-        slug,
-        name,
-        n: programmes.filter((p) => p.host?.slug === slug).length,
-      }))
-      .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'vi'))
-  }, [programmes])
+  // The organisers named by the source (a stat, not a filter).
+  const hostCount = useMemo(() => new Set(programmes.flatMap((p) => p.hosts)).size, [programmes])
 
-  useAddressView(
-    initial,
-    (p) =>
-      readProgrammeView(
-        p,
-        hostList.map((h) => h.slug),
-      ),
-    (v) => {
-      setDraft(v.q)
-      setQ(v.q)
-      setPhases(v.phases)
-      setKinds(v.kinds)
-      setHosts(v.hosts)
-      setSort(v.sort)
-    },
-  )
+  useAddressView(initial, readProgrammeView, (v) => {
+    setDraft(v.q)
+    setQ(v.q)
+    setPhases(v.phases)
+    setSort(v.sort)
+  })
 
   function sync(next: Partial<ProgrammeInitial>) {
-    const s = { q, phases, kinds, hosts, sort, ...next }
+    const s = { q, phases, sort, ...next }
     const params = new URLSearchParams()
     if (s.q) params.set(PARAM.q, s.q)
     for (const v of s.phases) params.append('trang-thai', v)
-    for (const v of s.kinds) params.append('loai', v)
-    for (const v of s.hosts) params.append('don-vi', v)
     if (s.sort !== 'sap-dien-ra') params.set(PARAM.sort, s.sort)
     address(params)
   }
 
   const results = useMemo(() => {
     const list = programmes.filter(
-      (p) =>
-        matchesQuery(p.text, q) &&
-        (!phases.length || phases.includes(p.phase)) &&
-        (!kinds.length || kinds.includes(p.kind)) &&
-        (!hosts.length || (p.host !== null && hosts.includes(p.host.slug))),
+      (p) => matchesQuery(p.text, q) && (!phases.length || phases.includes(p.phase)),
     )
     const byName = (a: DirectoryProgramme, b: DirectoryProgramme) =>
       a.name.localeCompare(b.name, 'vi') || a.slug.localeCompare(b.slug)
@@ -136,14 +110,12 @@ export function ProgrammeDirectory({
       'ten-a-z': byName,
     }
     return [...list].sort(by[sort])
-  }, [programmes, q, phases, kinds, hosts, sort])
+  }, [programmes, q, phases, sort])
 
   const count = (phase: ProgrammePhase) => programmes.filter((p) => p.phase === phase).length
 
   const setAndSync = <K extends keyof ProgrammeInitial>(key: K, value: ProgrammeInitial[K]) => {
     if (key === 'phases') setPhases(value as ProgrammePhase[])
-    if (key === 'kinds') setKinds(value as ProgrammeKind[])
-    if (key === 'hosts') setHosts(value as string[])
     setShown(PAGE)
     sync({ [key]: value } as Partial<ProgrammeInitial>)
   }
@@ -159,10 +131,8 @@ export function ProgrammeDirectory({
     setDraft('')
     setQ('')
     setPhases([])
-    setKinds([])
-    setHosts([])
     setShown(PAGE)
-    sync({ q: '', phases: [], kinds: [], hosts: [] })
+    sync({ q: '', phases: [] })
   }
 
   const active: ActiveFilter[] = [
@@ -183,16 +153,6 @@ export function ProgrammeDirectory({
       key: `p-${p}`,
       label: PHASE_LABEL[p],
       remove: () => setAndSync('phases', toggle(phases, p)),
-    })),
-    ...kinds.map((k) => ({
-      key: `k-${k}`,
-      label: KIND_LABEL[k],
-      remove: () => setAndSync('kinds', toggle(kinds, k)),
-    })),
-    ...hosts.map((h) => ({
-      key: `h-${h}`,
-      label: hostList.find((x) => x.slug === h)?.name ?? h,
-      remove: () => setAndSync('hosts', toggle(hosts, h)),
     })),
   ]
 
@@ -243,17 +203,6 @@ export function ProgrammeDirectory({
               {p.label}
             </button>
           ))}
-          {KINDS.map((k) => (
-            <button
-              key={k.key}
-              type="button"
-              className={styles.quickChip}
-              aria-pressed={kinds.includes(k.key)}
-              onClick={() => setAndSync('kinds', toggle(kinds, k.key))}
-            >
-              {k.label}
-            </button>
-          ))}
           <Link href="/problems" className={styles.quickChip} data-cta="to-problems">
             Bài toán →
           </Link>
@@ -268,7 +217,7 @@ export function ProgrammeDirectory({
             <dd>chương trình đã kết thúc</dd>
           </div>
           <div>
-            <dt data-pixel="data">{hostList.length}</dt>
+            <dt data-pixel="data">{hostCount}</dt>
             <dd>đơn vị chủ quản</dd>
           </div>
         </dl>
@@ -288,32 +237,6 @@ export function ProgrammeDirectory({
               />
             ))}
           </fieldset>
-          <fieldset className={styles.group}>
-            <legend>LOẠI</legend>
-            {KINDS.map((k) => (
-              <CheckOption
-                key={k.key}
-                label={k.label}
-                count={programmes.filter((p) => p.kind === k.key).length}
-                checked={kinds.includes(k.key)}
-                onChange={() => setAndSync('kinds', toggle(kinds, k.key))}
-              />
-            ))}
-          </fieldset>
-          {hostList.length ? (
-            <fieldset className={styles.group}>
-              <legend>ĐƠN VỊ CHỦ QUẢN</legend>
-              {hostList.map((h) => (
-                <CheckOption
-                  key={h.slug}
-                  label={h.name}
-                  count={h.n}
-                  checked={hosts.includes(h.slug)}
-                  onChange={() => setAndSync('hosts', toggle(hosts, h.slug))}
-                />
-              ))}
-            </fieldset>
-          ) : null}
         </aside>
 
         <div className={styles.results}>
@@ -344,13 +267,24 @@ export function ProgrammeDirectory({
             <ul className={styles.grid} role="list">
               {results.slice(0, shown).map((p) => (
                 <li key={p.slug} className={styles.progCard} data-programme={p.phase}>
+                  {/* The approved cover only; without one the card keeps its plain ground. */}
+                  {p.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- static approved cover
+                    <img
+                      className={styles.progArt}
+                      src={p.image}
+                      alt=""
+                      loading="lazy"
+                      data-programme-cover=""
+                    />
+                  ) : null}
                   <div className={styles.progHead}>
                     {/* An unpublished host is not named, and nothing replaces it. */}
-                    <span className={styles.progHost}>
-                      {p.host ? (
+                    <span className={styles.progHost} title={p.hosts.join(' · ') || undefined}>
+                      {p.hosts.length ? (
                         <>
                           <span aria-hidden="true" />
-                          {p.host.name}
+                          <b>{p.hosts.join(' · ')}</b>
                         </>
                       ) : null}
                     </span>
@@ -360,7 +294,7 @@ export function ProgrammeDirectory({
                   {p.summary ? <p className={styles.progSummary}>{p.summary}</p> : null}
                   <ul className={styles.progTags} role="list">
                     {p.timeline ? <li>{p.timeline}</li> : null}
-                    <li>{KIND_LABEL[p.kind]}</li>
+                    {p.kind ? <li>{KIND_LABEL[p.kind]}</li> : null}
                   </ul>
                   <PublicAction
                     href={p.applyHref}

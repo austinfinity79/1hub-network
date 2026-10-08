@@ -1,6 +1,8 @@
 import { PROGRAMME_CARDS } from '@/components/home/home-content'
 import { fold } from '@/lib/library/startup-adapter'
 
+import { PAST_PROGRAMMES } from './programme-event-source'
+
 import type { ProgrammeKind, ProgrammePhase } from './programme-phase'
 
 /**
@@ -14,15 +16,25 @@ import type { ProgrammeKind, ProgrammePhase } from './programme-phase'
  * timeline and no derived phase), the sheet's own status ("Sắp công bố") as
  * the phase, the "Chủ quản" text as the host, and no apply entry (no
  * programme record behind the row), so each card is READ_ONLY.
+ *
+ * S2-PROGRAMME-EVENT-CONTENT-01: the cards carry their approved cover (the
+ * homepage covers, the same Drive files the programme sheet links), and the
+ * sheet's finished programmes ("Đã kết thúc") follow, with their own cover
+ * and organisers; they have no type and no dates in the source, so none is
+ * shown. The type and host filters are gone (Sprint 2 feedback).
  */
 
 export type DirectoryProgramme = {
   /** The public slug: React key and nothing more (no detail route). */
   slug: string
   name: string
-  kind: ProgrammeKind
+  /** The sheet's "Tag phân loại"; null where the source has none. */
+  kind: ProgrammeKind | null
   summary: string | null
-  host: { slug: string; name: string } | null
+  /** "Chủ quản" / "Đơn vị tổ chức", one organiser per entry. */
+  hosts: string[]
+  /** The approved 16:9 cover, or null (never a stand-in). */
+  image: string | null
   phase: ProgrammePhase
   /** "dd/mm/yyyy – dd/mm/yyyy" in Viet Nam time, or null without dates. */
   timeline: string | null
@@ -30,7 +42,7 @@ export type DirectoryProgramme = {
   startsAt: string | null
   /** The L5 entry for an eligible viewer, else null (READ_ONLY). */
   applyHref: string | null
-  /** Folded search text: name, summary, host, type. */
+  /** Folded search text: name, summary, organisers, type. */
   text: string
 }
 
@@ -48,28 +60,44 @@ const KIND_OF: Record<string, ProgrammeKind> = {
 /** The sheet's "Trạng thái", as written → its phase key. */
 const PHASE_OF: Record<string, ProgrammePhase> = {
   'Sắp công bố': 'sap-cong-bo',
+  'Đã kết thúc': 'da-ket-thuc',
 }
 
 export function listPublicProgrammes(): DirectoryProgramme[] {
-  return PROGRAMME_CARDS.flatMap((c) => {
+  const current = PROGRAMME_CARDS.flatMap((c) => {
     const kind = KIND_OF[c.kind]
     const phase = PHASE_OF[c.status]
     // A row whose type or status has no directory value is left out, never guessed.
     if (!kind || !phase) return []
-    const host = c.owner ? { slug: slugOf(c.owner), name: c.owner } : null
+    const hosts = c.owner ? [c.owner] : []
     return [
       {
         slug: slugOf(c.title),
         name: c.title,
         kind,
         summary: c.description,
-        host,
+        hosts,
+        image: c.image?.src ?? null,
         phase,
         timeline: c.period,
         startsAt: null,
         applyHref: null,
-        text: fold([c.title, c.description, host?.name, kind].filter(Boolean).join(' ')),
+        text: fold([c.title, c.description, ...hosts, kind].filter(Boolean).join(' ')),
       },
     ]
   })
+  const past = PAST_PROGRAMMES.map((p): DirectoryProgramme => ({
+    slug: p.slug,
+    name: p.title,
+    kind: null,
+    summary: p.description,
+    hosts: p.owners,
+    image: p.image,
+    phase: 'da-ket-thuc',
+    timeline: null,
+    startsAt: null,
+    applyHref: null,
+    text: fold([p.title, p.description, ...p.owners].filter(Boolean).join(' ')),
+  }))
+  return [...current, ...past]
 }

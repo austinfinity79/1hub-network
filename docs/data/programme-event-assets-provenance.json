@@ -1,0 +1,717 @@
+[
+ {
+  "drive_file_id": "13rXAxkFWBq9H3ttnNFTpFkGhji1dgPVH",
+  "evidence": "Chương trình!C6 · Hackathon Build@HUB 2026",
+  "source_sha256": "d8c4999106224190efd39c0b92de763788324f7243ac8ce8d519b3e39c9804e7",
+  "source_bytes": 233700,
+  "public_file": "/programmes/past/hackathon-build-hub-2026.webp",
+  "public_sha256": "84a09a6014b22cbbebb0e3ed2eb4a7d9eeec59c5110e9d7692ecfb856d909d87",
+  "public_bytes": 85182,
+  "size": [
+   1280,
+   785
+  ]
+ },
+ {
+  "drive_file_id": "1frvCX_Q5BBsyqRu7iiACPEwAnApE8Y7m",
+  "evidence": "Chương trình!C7 · Hackathon Cardano Sea 2026",
+  "source_sha256": "ceb0e87320349161284966fca20e664a22952fb81e2eaf202e81a6d0383237c8",
+  "source_bytes": 417990,
+  "public_file": "/programmes/past/hackathon-cardano-sea-2026.webp",
+  "public_sha256": "fc3e56da35e94c18f4ac638a1c5de146f804c83b513ca1f8a995cf610592a4c3",
+  "public_bytes": 142352,
+  "size": [
+   1280,
+   854
+  ]
+ },
+ {
+  "drive_file_id": "1f8vSJJZqlD1B74ZqKDa_Nk54lOx6DEwj",
+  "evidence": "Chương trình!C8 · Chương trình ươm tạo VENTUREX 2025",
+  "source_sha256": "7441d8695386db956ba13206710e1a38777923745b8a0ed3076447cc6c0d50b0",
+  "source_bytes": 253357,
+  "public_file": "/programmes/past/chuong-trinh-uom-tao-venturex-2025.webp",
+  "public_sha256": "3fb7ffbbd0c6605ef7421aa3ff747612bd4342c656f3c733e5ab4edca0b6fca1",
+  "public_bytes": 130002,
+  "size": [
+   1280,
+   853
+  ]
+ },
+ {
+  "drive_file_id": "11j1z9AWKakNYlI92xDuI6vNogn01vxZk",
+  "evidence": "Chương trình!C9 · Chương trình đào tạo HUB GENAI FUTURE FOUNDERS 2025",
+  "source_sha256": "8bf16a181029f8a2bfded957cb34055125e897d5b80892fca39973498b5a5d94",
+  "source_bytes": 457913,
+  "public_file": "/programmes/past/chuong-trinh-dao-tao-hub-genai-future-founders-2025.webp",
+  "public_sha256": "0dc7b35030faf00a76a99280c17467bdca13a289a95cc71eef2e649a53e26da9",
+  "public_bytes": 103326,
+  "size": [
+   1280,
+   659
+  ]
+ },
+ {
+  "drive_file_id": "1LFhsM1m5rhfi4DcgqdUFzwkdnzS9In-0",
+  "evidence": "Chương trình!C10 · Thử thách kinh doanh VINFAST x HUB Network Business Challenge 2025",
+  "source_sha256": "7f231101ac630a31c94e1cac8bf5fc0c35ae4d5a41b6928e47355bffc9c37bfe",
+  "source_bytes": 107121,
+  "public_file": "/programmes/past/thu-thach-kinh-doanh-vinfast-x-hub-network-business-challenge-2025.webp",
+  "public_sha256": "881cfde0fd47874a07cbdb487f2b03800ff4525646baf0c86faa4b549b5e86c2",
+  "public_bytes": 73762,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1TyQ2Rtq_UcSc1LDxhW5gorrS1VvlroYI",
+  "evidence": "Chương trình!C11 · Cuôc thi sản phẩm đổi mới sáng tạo và chuyển đổi số Thủ đô (Sao Kim) 2025",
+  "source_sha256": "8859943826ead830a5a15c747996a274bebdc2478c2451a25baae171518fee33",
+  "source_bytes": 5042672,
+  "public_file": "/programmes/past/cuoc-thi-san-pham-doi-moi-sang-tao-va-chuyen-doi-so-thu-do-sao-kim-2025.webp",
+  "public_sha256": "127613e99b5d798dfa1a0c4845c8943b7697f43ff864bba807663b64d091ef33",
+  "public_bytes": 141120,
+  "size": [
+   1280,
+   853
+  ]
+ },
+ {
+  "drive_file_id": "1QXb4Ce4kijJbWaCpmuraECjFnVZT36Le",
+  "evidence": "Chương trình!C12 · Cuộc thi khởi nghiệp Việt - Úc Crossnovation 2024",
+  "source_sha256": "00f5244333b2f7a9ccba347b2c9db762b79f43a4e97b3b6f3a836a4adfd32b48",
+  "source_bytes": 275804,
+  "public_file": "/programmes/past/cuoc-thi-khoi-nghiep-viet-uc-crossnovation-2024.webp",
+  "public_sha256": "687831863bcec1bc488fa1b2e948df7ea1a3c19e5735c6f22f02294e3f41e4ac",
+  "public_bytes": 86930,
+  "size": [
+   1280,
+   853
+  ]
+ },
+ {
+  "drive_file_id": "1oY0tZ3dedDdcQcwAvhsFuhicr3wVeuPm",
+  "evidence": "Chương trình!C13 · Thử thách Khởi nghiệp Việt toàn cầu HUB Challenge 2024",
+  "source_sha256": "9c89eb479d0ff8fc9b22f383b12f2b35673085f0b442ec893b023db062b63f7e",
+  "source_bytes": 371106,
+  "public_file": "/programmes/past/thu-thach-khoi-nghiep-viet-toan-cau-hub-challenge-2024.webp",
+  "public_sha256": "201de72c7e116119dc18540ea55940810ab80b2e85afb3743e4d62b66becf045",
+  "public_bytes": 150422,
+  "size": [
+   1280,
+   855
+  ]
+ },
+ {
+  "drive_file_id": "18oVr2T5FzI2KLwoqiuVMuMN0ITsCXBLS",
+  "evidence": "Sự kiện sắp tới!B2 folder \"Chương trình - Ảnh event sắp diễn ra\" · \"01-ihub-ventures-partners-gathering_1920x1080.png\" (STT 1)",
+  "source_sha256": "76c7336863a7b9478a0a893fa478d43a308c6424e3093514d01a8258904b1d31",
+  "source_bytes": 1137129,
+  "public_file": "/events/ihub-ventures-partners-gathering.webp",
+  "public_sha256": "5ae40263d8f53871480f9de9134fcbb894670a8c186b8b3d3313e74b0910c53c",
+  "public_bytes": 41876,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1jINYxUhfaIf24-Bv5Wqpd5SydjYcTPax",
+  "evidence": "Sự kiện sắp tới!B2 folder \"Chương trình - Ảnh event sắp diễn ra\" · \"02-young-founders-workshop_1920x1080.png\" (STT 2)",
+  "source_sha256": "89b8925fa61174fd54fa1afb673f36a527b4f8529e678bc214304eee96e06cfa",
+  "source_bytes": 126762,
+  "public_file": "/events/young-founders-workshop-tu-y-tuong-den-san-pham-dau-tien.webp",
+  "public_sha256": "3ef7be69cd7dfa9f529fca7a553129607a7d0bd1506dce621eac742cf33a31b2",
+  "public_bytes": 39626,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1jv-5tBZWehj5NOw-szPVAUuwKf6KmQfU",
+  "evidence": "Sự kiện sắp tới!B2 folder \"Chương trình - Ảnh event sắp diễn ra\" · \"03-hcm-startup-night_1920x1080.png\" (STT 3)",
+  "source_sha256": "c17db38b15f92e2d9f7f42bf2f6044383d50a6ec3fe229156ce4e22d97dde1ea",
+  "source_bytes": 417774,
+  "public_file": "/events/hcm-startup-night-ung-dung-ai-cho-doanh-nghiep-sme.webp",
+  "public_sha256": "ca6f4819cb8af8410b6d3c7c672de15875a54fc9339235574dc53d6e073ca6a4",
+  "public_bytes": 61554,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "18ZpudqGXilzR0S-EZU2hPcv7b8mPZmvw",
+  "evidence": "Sự kiện sắp tới!B2 folder \"Chương trình - Ảnh event sắp diễn ra\" · \"04-chung-ket-innoventures_1920x1080.png\" (STT 4)",
+  "source_sha256": "2df0d40c32f912223eaf3f65f739a5c522e3239865666e50a34b4d4e36e3d875",
+  "source_bytes": 184393,
+  "public_file": "/events/chung-ket-cuoc-thi-khoi-nghiep-viet-uc-innoventures.webp",
+  "public_sha256": "d5b9473c207c1ff9c00d9f3f9fd4317e115992c3dfd547a6507fc4684e8bb82b",
+  "public_bytes": 44592,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "11op68JLPEsNwo2MZ37ezcTnJ6Jo2Fhmf",
+  "evidence": "Sự kiện sắp tới!B2 folder \"Chương trình - Ảnh event sắp diễn ra\" · \"05-career-startup-day-singapore_1920x1080.png\" (STT 5)",
+  "source_sha256": "8c1c016ced857d9102d62b503d26186342771b2c6b0fbe7190d1d87203c324d4",
+  "source_bytes": 129423,
+  "public_file": "/events/career-startup-day-vietnamese-talents-in-singapore.webp",
+  "public_sha256": "40b342c2eb0d1750e3b0e3417c0f09c7fba1465132853b53e7569ba4b2d3f7b8",
+  "public_bytes": 27702,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1rcGfeYe2GWmmhkpG7K3yfTajCWPlVxjs",
+  "evidence": "Sự kiện sắp tới!B2 folder \"Chương trình - Ảnh event sắp diễn ra\" · \"06-deep-tech-demo-day_1920x1080.png\" (STT 6)",
+  "source_sha256": "d0481df0540c826f2ba3705e9052bcbea2222c4ba958060048b5a08f015f759e",
+  "source_bytes": 93913,
+  "public_file": "/events/deep-tech-demo-day-healthtech-smart-mobility.webp",
+  "public_sha256": "6d26b688a0fb998a793a932d29306e44fc4d75855359edbab0088cc37d14cb83",
+  "public_bytes": 28698,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1Cu8AUktEn0pUfO6mkupmSxSQ9M4Lhtx8",
+  "evidence": "Sự kiện sắp tới!B2 folder \"Chương trình - Ảnh event sắp diễn ra\" · \"07-hop-bao-khoi-nghiep-kawai-2027_1920x1080.png\" (STT 7)",
+  "source_sha256": "cf54068dd15fe457200c5e94f2fb2bd1d2ec07dda1ce4f3a9f8e5e8ee7548999",
+  "source_bytes": 149576,
+  "public_file": "/events/hop-bao-cuoc-thi-khoi-nghiep-cung-kawai-2027.webp",
+  "public_sha256": "ee0e3c53d7661d2d33d413172891675c38e6989cd5837601b5c32005b31b6487",
+  "public_bytes": 36176,
+  "size": [
+   1280,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1FkzRToz_ngj5ae1fuhSNK2JEWMhNVoAk",
+  "evidence": "Sự kiện đã tổ chức!B2 · SURF 2026 – Ngày hội Khởi nghiệp Đổi mới Sáng tạo Đà Nẵng",
+  "source_sha256": "c29662fee28c3dc358d5523c59b57594664667afca7e71cbf020144cc4f9c29e",
+  "source_bytes": 266251,
+  "public_file": "/events/past/surf-2026-ngay-hoi-khoi-nghiep-doi-moi-sang-tao-da-nang.webp",
+  "public_sha256": "fa4e2f7ba66dc8e6ab976f2dfddef1f90771b12ca53045314cd29d2274fcd357",
+  "public_bytes": 71410,
+  "size": [
+   960,
+   605
+  ]
+ },
+ {
+  "drive_file_id": "1JyOroYsJ6w4eYAcOOGdpccI-3mygCJfQ",
+  "evidence": "Sự kiện đã tổ chức!B3 · HUB Forum Hà Nội 2026 - Inflection Point for Innovation",
+  "source_sha256": "e1e8c65ec2037d8eb2444858b1277b1c2790bc54155d153e78d5214fc0dda271",
+  "source_bytes": 463788,
+  "public_file": "/events/past/hub-forum-ha-noi-2026-inflection-point-for-innovation.webp",
+  "public_sha256": "0221c601bfe73091027a587cf905531aaa9e6fd8ed4e525228450b61a14c9677",
+  "public_bytes": 106458,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1VcasM9-iV84JpeF-XeIETYnLBdRpC43E",
+  "evidence": "Sự kiện đã tổ chức!B4 · HUB Network China networking: Giao lưu - Kết nối - Chia sẻ Việt - Trung",
+  "source_sha256": "b06bff66cf29e25bb5d561a57fedc26e39e83ea86f5f24a30e3ac881a11439f2",
+  "source_bytes": 399634,
+  "public_file": "/events/past/hub-network-china-networking-giao-luu-ket-noi-chia-se-viet-trung.webp",
+  "public_sha256": "c77151d7a4c826b3bcbcea237dc6a594d7b6c778159e685ead63707c2e5439e3",
+  "public_bytes": 93534,
+  "size": [
+   960,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1liFkkPIeKK6k0IrSZQ1k37x4eCuzcFhM",
+  "evidence": "Sự kiện đã tổ chức!B5 · HUB Forum HCM 2026: Accelerating Startup with AI Co-founder",
+  "source_sha256": "ff2bd1cde5d8cbd5964208d990a86217e2ce793d05a4d7cdef1c438b74752851",
+  "source_bytes": 485483,
+  "public_file": "/events/past/hub-forum-hcm-2026-accelerating-startup-with-ai-co-founder.webp",
+  "public_sha256": "6010eb7302dd5bd16dcf6ce83731ddb842885d1a484be3bdac16adb055738787",
+  "public_bytes": 105534,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1dwT_k9p0qPEh2ujHZ16GkWjc4yZT3kRq",
+  "evidence": "Sự kiện đã tổ chức!B6 · HUB Forum Đà Nẵng 2026 - Startup in the Age of AI & Blockchain",
+  "source_sha256": "1de417ef91b6f6a24dcfecb044c88d33214542d0ed7e2186f70544677e7e39fc",
+  "source_bytes": 435230,
+  "public_file": "/events/past/hub-forum-da-nang-2026-startup-in-the-age-of-ai-blockchain.webp",
+  "public_sha256": "bcbffb8ec9addbb5d4630e501eedeae23c74ff06b703707fe8a6847daa0d3079",
+  "public_bytes": 105554,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1Zw9yp-AkMfQKvZycTQqwxYlS5tcmz_TS",
+  "evidence": "Sự kiện đã tổ chức!B7 · UNIVERSITY MEETUP #2 DUE",
+  "source_sha256": "c5b8a3a574e7c4b8e2a296ecb04427911ea16310bad377a132af2d945b3a2b77",
+  "source_bytes": 298474,
+  "public_file": "/events/past/university-meetup-2-due.webp",
+  "public_sha256": "202d4f0d970e7f214461ca4c5ce41a9db46fba9b380463026f39389017eb2bf8",
+  "public_bytes": 61702,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1J2J8HCqKaCRPTAQzL2PX5UF5E3OvboQZ",
+  "evidence": "Sự kiện đã tổ chức!B8 · UNITOUR MEETUP #3 HOU: \"Kích hoạt Master Chip - Định vị bản thân trong kỷ nguyên số\"",
+  "source_sha256": "dac2d055d12d447466d462d0a91d374928135c9b7a7fc46cd39e5c3a6c414d87",
+  "source_bytes": 353672,
+  "public_file": "/events/past/unitour-meetup-3-hou-kich-hoat-master-chip-dinh-vi-ban-than-trong-ky-nguyen-so.webp",
+  "public_sha256": "253fb573b7faebb4c1c5e6d6024bb9136ebffce76c01822b693311a08319cc07",
+  "public_bytes": 76276,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1f8vSJJZqlD1B74ZqKDa_Nk54lOx6DEwj",
+  "evidence": "Sự kiện đã tổ chức!B9 · Demo Day VentureX · Lễ Công bố hợp tác Vườn ươm iHUB và các đối tác",
+  "source_sha256": "7441d8695386db956ba13206710e1a38777923745b8a0ed3076447cc6c0d50b0",
+  "source_bytes": 253357,
+  "public_file": "/events/past/demo-day-venturex-le-cong-bo-hop-tac-vuon-uom-ihub-va-cac-doi-tac.webp",
+  "public_sha256": "c8b17fb0c612c57391e60cc8d0ddff27a568cf2827c27f67064a0bcd2e32a205",
+  "public_bytes": 81932,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1U-JzQPS2ai42WXPsHaRuzu7mfHdQdNYn",
+  "evidence": "Sự kiện đã tổ chức!B10 · Hội thảo \"Khởi nghiệp sáng tạo và Định hướng nghề nghiệp\"",
+  "source_sha256": "c28f19015ce277e8c757341695dfb1356cefeeb1dd96bbdc84fe5729ef37a1aa",
+  "source_bytes": 187059,
+  "public_file": "/events/past/hoi-thao-khoi-nghiep-sang-tao-va-dinh-huong-nghe-nghiep.webp",
+  "public_sha256": "2d813f9b5f7bff824c23da00498fb85ff08b591dde359ce80911d397216d5c22",
+  "public_bytes": 58182,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1yVIGA2q-LYonW-F0dCLuZtYpGjlFkwXZ",
+  "evidence": "Sự kiện đã tổ chức!B11 · HUB NETWORK YEAR END PARTY 2025",
+  "source_sha256": "180915ddbb3da65e5b35f70d482fefd7a29077dbacef7143be6784c5273bcb89",
+  "source_bytes": 215064,
+  "public_file": "/events/past/hub-network-year-end-party-2025.webp",
+  "public_sha256": "6b4b5890100cb483c62af40769a45e18922e8c4ba1dc84727f43de69ea6913c8",
+  "public_bytes": 48206,
+  "size": [
+   960,
+   638
+  ]
+ },
+ {
+  "drive_file_id": "15RZgH9e9I5a6bPfY7lDcY7-g3WfUk5Vs",
+  "evidence": "Sự kiện đã tổ chức!B12 · HUB HIGH SCHOOL 2026: SPRING ONBOARDING",
+  "source_sha256": "f95c1ffbedc20e07fc18e329011334118e5dcb5f51c20d8aad8f82cfd1c1d1d3",
+  "source_bytes": 317780,
+  "public_file": "/events/past/hub-high-school-2026-spring-onboarding.webp",
+  "public_sha256": "11289a2a768e2845997b0c3dd170e27c3915d6655a337fed0d5cd4a33eb03738",
+  "public_bytes": 81300,
+  "size": [
+   960,
+   636
+  ]
+ },
+ {
+  "drive_file_id": "1pI49mfTySgXj2IhRhxOsBO9rBCLafZlL",
+  "evidence": "Sự kiện đã tổ chức!B13 · Workshop “Khởi nghiệp trong Công nghiệp sáng tạo – Cơ hội và Thách thức",
+  "source_sha256": "29db8718b473353a45b0f0dcb25ed83babea3799acb2111479598a23c1b6646e",
+  "source_bytes": 262906,
+  "public_file": "/events/past/workshop-khoi-nghiep-trong-cong-nghiep-sang-tao-co-hoi-va-thach-thuc.webp",
+  "public_sha256": "ec36521390f3324eeb718869fe0048da881d7d94a0c371dd7b31f6b16d9b09dd",
+  "public_bytes": 72474,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1g58j8kpcHcIlkbXAk5T4EDMnDT42fVx4",
+  "evidence": "Sự kiện đã tổ chức!B14 · Ausventure Triotour #1",
+  "source_sha256": "a2fd6cf403869154e686264ab64cebdc1805cdfb784a30bf145cd6f5c1b518a7",
+  "source_bytes": 165096,
+  "public_file": "/events/past/ausventure-triotour-1.webp",
+  "public_sha256": "f8a162b7cfa33e3b1cc698165561febe7a709e51bf4a9af5e6d522d793c78f28",
+  "public_bytes": 55078,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1TDmTntNQ-Z8p_eCSbVaYVJ4ptbLUKo9a",
+  "evidence": "Sự kiện đã tổ chức!B15 · Workshop \"Nâng Tầm Tinh Hoa Việt\"",
+  "source_sha256": "00b52f2dd2036371a28a6eb08cd6b246aaa4e002ca90c1973cdadd2d68188574",
+  "source_bytes": 310527,
+  "public_file": "/events/past/workshop-nang-tam-tinh-hoa-viet.webp",
+  "public_sha256": "b51af14b7485b65f8e49632f10779327f41d41103292607da72ad95afbb34ffa",
+  "public_bytes": 62804,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1rWnnDNTWRlnpJrXYbWqX8ewP5Zqa9Pq-",
+  "evidence": "Sự kiện đã tổ chức!B16 · Ausventure Triotour #2",
+  "source_sha256": "639fe18fa32140c52790c4189fbe11c041e496196aec69a4fae806d6f1d3c756",
+  "source_bytes": 421217,
+  "public_file": "/events/past/ausventure-triotour-2.webp",
+  "public_sha256": "32fe67680a50022ae893e8fa75414910796ef71b87e33f0fd0ff1e245b524f81",
+  "public_bytes": 87052,
+  "size": [
+   960,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1q1O5ad7tGRj7bjX1KQr5E7E58fXmYIBn",
+  "evidence": "Sự kiện đã tổ chức!B17 · Privacy Builder Meetup",
+  "source_sha256": "72f4c973930debf9ffedf67c43c408ab4a75398134aad051c9fdb36b0fc70bf6",
+  "source_bytes": 146410,
+  "public_file": "/events/past/privacy-builder-meetup.webp",
+  "public_sha256": "29cab05b8d531402249caf37b38f33d4c9abce7008efd7865612d1adb4c9c4a6",
+  "public_bytes": 34198,
+  "size": [
+   960,
+   504
+  ]
+ },
+ {
+  "drive_file_id": "1_1uQURDnbZRSufIgtyYfXNBZhg-DzUmf",
+  "evidence": "Sự kiện đã tổ chức!B18 · Workshop: \"Thanh niên hành động vì đô thị: Kết hợp di sản văn hoá và hành động khí hậu\"",
+  "source_sha256": "1ede503c22a6c8cd3e7cd681be5ae5bebaa6d089803620c8958b73ca0b080ed4",
+  "source_bytes": 198694,
+  "public_file": "/events/past/workshop-thanh-nien-hanh-dong-vi-do-thi-ket-hop-di-san-van-hoa-va-hanh-dong-khi-hau.webp",
+  "public_sha256": "890985364d25dfd0ed13a4415976b6bd74635b0ca34070ecd7f16d1de739c4f2",
+  "public_bytes": 49742,
+  "size": [
+   960,
+   1280
+  ]
+ },
+ {
+  "drive_file_id": "1Ib8TdftwgQR7Srw9gacGORgZCFpPW7D1",
+  "evidence": "Sự kiện đã tổ chức!B19 · iHUB Ventures Europe Innovation Challenge - NEXUS CAMP 2026 Satellite Mini-Hackathon",
+  "source_sha256": "9edcf27bb6c461c429a0ab20268695814b9c3aca5989ffa2f6192a8b8d3b34f3",
+  "source_bytes": 89384,
+  "public_file": "/events/past/ihub-ventures-europe-innovation-challenge-nexus-camp-2026-satellite-mini-hackathon.webp",
+  "public_sha256": "e13eecd4ad22efcfaa124c5d94cc692e6831e3b61cff38a3e96b9eb5369c6fb6",
+  "public_bytes": 77496,
+  "size": [
+   960,
+   629
+  ]
+ },
+ {
+  "drive_file_id": "1zIFVJE7oerHV6Bsf3ntoF5LFa_XdG782",
+  "evidence": "Sự kiện đã tổ chức!B20 · Talkshow NetZero Youth: Sức trẻ dẫn lối chạm xanh",
+  "source_sha256": "01ef9cc1ec858c9c3ce389e8717db4ccf8f1ee34aecb640b6a7dfdeae17827c2",
+  "source_bytes": 307663,
+  "public_file": "/events/past/talkshow-netzero-youth-suc-tre-dan-loi-cham-xanh.webp",
+  "public_sha256": "81600d51913ca5398023f35295390382a4c6cb3f475e71d782b4290850bf4d7b",
+  "public_bytes": 122436,
+  "size": [
+   960,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "1ARFzkaJnlsHkl1-NgxEdz4fGXTaqBST2",
+  "evidence": "Sự kiện đã tổ chức!B21 · Incubator Summit x BlockStar Incubation Program trong khuôn khổ GM Vietnam 2025",
+  "source_sha256": "a7062a8c00624d43a3885bef7184b8a014502f6575d0e7c0aea6965973b54a12",
+  "source_bytes": 325802,
+  "public_file": "/events/past/incubator-summit-x-blockstar-incubation-program-trong-khuon-kho-gm-vietnam-2025.webp",
+  "public_sha256": "ca4a97868ca33572d80a4cb4f3582772484b8ea0de867688f59da11dbed7355d",
+  "public_bytes": 108992,
+  "size": [
+   960,
+   685
+  ]
+ },
+ {
+  "drive_file_id": "1Zb1EYvzg8g1TIJsFwrgaFH4m_gI8rr-v",
+  "evidence": "Sự kiện đã tổ chức!B22 · Chung kết Cuộc thi \"Pitch your Future: Khởi nghiệp không khó khi có AI\"",
+  "source_sha256": "31f1dcecce14b7de056db68ed10839759e4b24bffbf08e4966d46cec2618a681",
+  "source_bytes": 350857,
+  "public_file": "/events/past/chung-ket-cuoc-thi-pitch-your-future-khoi-nghiep-khong-kho-khi-co-ai.webp",
+  "public_sha256": "66a9d292a847cb380a6bf692568e1fa07a4d74ab6977b6136d2fbc1e8179c25a",
+  "public_bytes": 81744,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1LFhsM1m5rhfi4DcgqdUFzwkdnzS9In-0",
+  "evidence": "Sự kiện đã tổ chức!B23 · HUB Forum Hà Nội 2025 - The Next Challenge · Chung kết VINFAST x HUB Network Business Challenge",
+  "source_sha256": "7f231101ac630a31c94e1cac8bf5fc0c35ae4d5a41b6928e47355bffc9c37bfe",
+  "source_bytes": 107121,
+  "public_file": "/events/past/hub-forum-ha-noi-2025-the-next-challenge-chung-ket-vinfast-x-hub-network-business-challenge.webp",
+  "public_sha256": "881cfde0fd47874a07cbdb487f2b03800ff4525646baf0c86faa4b549b5e86c2",
+  "public_bytes": 73762,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1h8cDwVtKl2_oECHH5AvPRAEwTvzqFGeV",
+  "evidence": "Sự kiện đã tổ chức!B24 · Bán kết  VINFAST x HUB Network Business Challenge",
+  "source_sha256": "7865197e466f8cc00d5cd2f1b1d298d802d3bfc3ac73a7d5314bf8151cf92537",
+  "source_bytes": 148189,
+  "public_file": "/events/past/ban-ket-vinfast-x-hub-network-business-challenge.webp",
+  "public_sha256": "ce3ab2e67e86483a866f1305af82cdeddf68c216a26d1a0a9a643b4c203a1d58",
+  "public_bytes": 45308,
+  "size": [
+   960,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "103n_JcXwgMtnv6zCyoRrMxxPtTtysw5G",
+  "evidence": "Sự kiện đã tổ chức!B25 · Company Tour VINFAST x HUB Network Business Challenge",
+  "source_sha256": "7243bb387d4fe2717713c2889ae0afa2ee1808695a469677e125f789e8cb01db",
+  "source_bytes": 316159,
+  "public_file": "/events/past/company-tour-vinfast-x-hub-network-business-challenge.webp",
+  "public_sha256": "8e4c4efad69eca2fa90829fa9c116cfa1f5f011c2f1c445d7ba60b77c6d64939",
+  "public_bytes": 71150,
+  "size": [
+   960,
+   720
+  ]
+ },
+ {
+  "drive_file_id": "13hwAdTyEWWIYy80ncUw9ShViioBsqvxa",
+  "evidence": "Sự kiện đã tổ chức!B26 · HUB Forum Đà Nẵng 2025",
+  "source_sha256": "733b590d12917f40bc42b0a8d0b1618f38302c9f7ec2609c5e6fbc7a8f3d8d1d",
+  "source_bytes": 840332,
+  "public_file": "/events/past/hub-forum-da-nang-2025.webp",
+  "public_sha256": "c6078ff3f490f24b7ec46104c380be7a2c91de6c5c1402b56f11d7cfa2975d73",
+  "public_bytes": 59598,
+  "size": [
+   960,
+   458
+  ]
+ },
+ {
+  "drive_file_id": "1tTpsIzbaRBZgQUOGxJOxe1fchyMIHi0w",
+  "evidence": "Sự kiện đã tổ chức!B27 · HUB Forum HCM 2025",
+  "source_sha256": "dbc046f8dd6771bfd28ff9ef363f7ad5d02d49a0abaa952637d43fab1ff64d1f",
+  "source_bytes": 473011,
+  "public_file": "/events/past/hub-forum-hcm-2025.webp",
+  "public_sha256": "896b353b4760628d5a42600e7a918a434023b31ead45c45f1ae3e2138f11d1d1",
+  "public_bytes": 97518,
+  "size": [
+   960,
+   540
+  ]
+ },
+ {
+  "drive_file_id": "11j1z9AWKakNYlI92xDuI6vNogn01vxZk",
+  "evidence": "Sự kiện đã tổ chức!B28 · Khai giảng khóa học HUB GENAI FUTURE FOUNDERS 2025 & Phát động Chương trình ươm tạo VENTUREX 2025",
+  "source_sha256": "8bf16a181029f8a2bfded957cb34055125e897d5b80892fca39973498b5a5d94",
+  "source_bytes": 457913,
+  "public_file": "/events/past/khai-giang-khoa-hoc-hub-genai-future-founders-2025-phat-dong-chuong-trinh-uom-tao-venturex-2025.webp",
+  "public_sha256": "2e048818b2ca76e2cec1039ae47da21926776607ad1cb48a72c08cd5f3808b67",
+  "public_bytes": 71072,
+  "size": [
+   960,
+   494
+  ]
+ },
+ {
+  "drive_file_id": "1yYUNhTk4cTuo3Ch9-JHX5jTnKxGNtD_L",
+  "evidence": "Sự kiện đã tổ chức!B29 · HUB NETWORK YEAR END PARTY 2024",
+  "source_sha256": "efcbad246e2e9ace32c70d8f2a5fc8603ba82302995744cbf763b5aa73ca794e",
+  "source_bytes": 335071,
+  "public_file": "/events/past/hub-network-year-end-party-2024.webp",
+  "public_sha256": "9bc17938cd2cf29cd871782a34354fcbad1194a19bebc5bb5d017ef87cdafca4",
+  "public_bytes": 76296,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "175H3wY5FP5Zpxkv5KkWEr6F9FNHoM22U",
+  "evidence": "Sự kiện đã tổ chức!B30 · Lễ phát động HUB Challenge 2024",
+  "source_sha256": "2d89bf575756201e6023b75145e2a6373f129c1133cde0cd6e246b5fcb024b3d",
+  "source_bytes": 303798,
+  "public_file": "/events/past/le-phat-dong-hub-challenge-2024.webp",
+  "public_sha256": "2a75688e5529d5883fe94544d9e84f78aa9e69ecfc54b133aac6100ad73f789e",
+  "public_bytes": 79092,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1oY0tZ3dedDdcQcwAvhsFuhicr3wVeuPm",
+  "evidence": "Sự kiện đã tổ chức!B31 · Ngày hội đổi mới sáng tạo Thủ đô lần thứ II & Phát động Cuộc thi thử thách Khởi nghiệp Việt toàn cầu lần thứ VII",
+  "source_sha256": "9c89eb479d0ff8fc9b22f383b12f2b35673085f0b442ec893b023db062b63f7e",
+  "source_bytes": 371106,
+  "public_file": "/events/past/ngay-hoi-doi-moi-sang-tao-thu-do-lan-thu-ii-phat-dong-cuoc-thi-thu-thach-khoi-nghiep-viet-toan-cau-lan-thu-vii.webp",
+  "public_sha256": "331782a6ea016372ab71b1d247a4c5f1df8c8bd163cb3b7c8d089775769d9975",
+  "public_bytes": 100414,
+  "size": [
+   960,
+   641
+  ]
+ },
+ {
+  "drive_file_id": "1mu-WY2ayC7_XI8lBAWMWI7KuQNiSC-7s",
+  "evidence": "Sự kiện đã tổ chức!B32 · HUB Forum 2024",
+  "source_sha256": "cea0c576b77c8789808b801332849695c935e84e7c1480472ce5dc59e0cd9205",
+  "source_bytes": 765024,
+  "public_file": "/events/past/hub-forum-2024.webp",
+  "public_sha256": "95d1796f64d8485530ef2b884527792e19ed8a68baa1cb47d1c79e7a6d6be25c",
+  "public_bytes": 58786,
+  "size": [
+   768,
+   430
+  ]
+ },
+ {
+  "drive_file_id": "1bocckOPkWMbw5HQU2rHvJJhOrh2oFtDF",
+  "evidence": "Sự kiện đã tổ chức!B33 · HUB INSIDER 2024: AI: BỨT PHÁ TIỀM NĂNG Y TẾ",
+  "source_sha256": "00f2d8456bdccdac1c0f4120256445a430b92cffa0c399d32ad9841f6c50e498",
+  "source_bytes": 337715,
+  "public_file": "/events/past/hub-insider-2024-ai-but-pha-tiem-nang-y-te.webp",
+  "public_sha256": "1284405bfce0dd6059be24dea7f0fc3ee09f0fdfad57f2f2ae71c03819bf7e6a",
+  "public_bytes": 69468,
+  "size": [
+   960,
+   641
+  ]
+ },
+ {
+  "drive_file_id": "10TYgM-kwfD3X5yAL0jRmSaelzdOMS9NA",
+  "evidence": "Sự kiện đã tổ chức!B34 · HUB INSIDER 2024 - Accelerate AI Startup Spin-off from University",
+  "source_sha256": "90268a7a5957035b2cfdc7e93d58a3f1a5dce8033956de3f93fe0e36c41e7276",
+  "source_bytes": 299040,
+  "public_file": "/events/past/hub-insider-2024-accelerate-ai-startup-spin-off-from-university.webp",
+  "public_sha256": "e5c07446c719bdbeaea89f44ffeb981c067866beceee63bc88aa0862bc000a27",
+  "public_bytes": 78340,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1iUq9El34177_YOJtbKEq4s5OxxIJbXJE",
+  "evidence": "Sự kiện đã tổ chức!B35 · HUB Challenge Demo Day 2024",
+  "source_sha256": "961810ec2f6ae1e4b3d46c67b99e09cef5c38cd5905dc83912eecc4636a74f6d",
+  "source_bytes": 137383,
+  "public_file": "/events/past/hub-challenge-demo-day-2024.webp",
+  "public_sha256": "22d9bd3f2ee799ebe868cc47370061daa9f68c86c6cf637a15e78bd7f0669655",
+  "public_bytes": 34794,
+  "size": [
+   960,
+   504
+  ]
+ },
+ {
+  "drive_file_id": "19kOvJ7klhsrhx_Pz0SYuE4srjVrxN36u",
+  "evidence": "Sự kiện đã tổ chức!B36 · Founder's Friday Talkshow: Sức bền tài chính - Mở khóa tăng trưởng bền vững cho startup",
+  "source_sha256": "187bc85dfec9edc3015e2dd8b9ba798867a3232624191e12468bdf95902774c3",
+  "source_bytes": 257568,
+  "public_file": "/events/past/founder-s-friday-talkshow-suc-ben-tai-chinh-mo-khoa-tang-truong-ben-vung-cho-startup.webp",
+  "public_sha256": "381047e6e25963fe41e9ba9e212874d4b745eaabf716396c1052f9977818d785",
+  "public_bytes": 55300,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1GDNWTmGQb8NRItq88A9Vetu85jW7yNsF",
+  "evidence": "Sự kiện đã tổ chức!B37 · Founder's Friday Talkshow: Xây dựng thương hiệu cá nhân và startup",
+  "source_sha256": "fa5f0466c308c039964ce56086f5206f2e07d57a334aebdd2b510de4d255170b",
+  "source_bytes": 287697,
+  "public_file": "/events/past/founder-s-friday-talkshow-xay-dung-thuong-hieu-ca-nhan-va-startup.webp",
+  "public_sha256": "12ae6e2967d9f2d4a8ba0ac76f43444d68a80901fdb462f87a6db6453e173206",
+  "public_bytes": 65832,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1QXb4Ce4kijJbWaCpmuraECjFnVZT36Le",
+  "evidence": "Sự kiện đã tổ chức!B38 · Chung kết Cuộc thi khởi nghiệp Crossnovation 2024",
+  "source_sha256": "00f5244333b2f7a9ccba347b2c9db762b79f43a4e97b3b6f3a836a4adfd32b48",
+  "source_bytes": 275804,
+  "public_file": "/events/past/chung-ket-cuoc-thi-khoi-nghiep-crossnovation-2024.webp",
+  "public_sha256": "f65409f007431d8d13f35c6ba3d800914f0c7d967e9084d43ca84ca72ea25e00",
+  "public_bytes": 59232,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1jQh830WqiawwJwhOF08RhabTx5Dv5eGA",
+  "evidence": "Sự kiện đã tổ chức!B39 · Runway to Web Summit",
+  "source_sha256": "095d9a524493f013e1ade63455ba5385f43334fb9bdc4ca131abe9507854552f",
+  "source_bytes": 393788,
+  "public_file": "/events/past/runway-to-web-summit.webp",
+  "public_sha256": "55e88e6a692b4b4a5bd67669b703b5f199e33fe73857b5f7775f2651a1b66c26",
+  "public_bytes": 87374,
+  "size": [
+   960,
+   640
+  ]
+ },
+ {
+  "drive_file_id": "1FIa-T2F3qxxPU5eqHxVFYKfivC85F0vt",
+  "evidence": "Sự kiện đã tổ chức!B40 · HUB Forum HCMC 2024",
+  "source_sha256": "0060da83798c388d7ec34f5108077f6127842b8927afcc104f8da6b3ec6510b8",
+  "source_bytes": 256105,
+  "public_file": "/events/past/hub-forum-hcmc-2024.webp",
+  "public_sha256": "980a42bef8bdc14618f03b25281c7f5b11e2126cc75284f842477369abffae57",
+  "public_bytes": 55826,
+  "size": [
+   960,
+   641
+  ]
+ },
+ {
+  "drive_file_id": "11pB_rEWFb22HGo4WbldH-wnc30WLp8gl",
+  "evidence": "Sự kiện đã tổ chức!B41 · HUB Summit 2023",
+  "source_sha256": "3eb078db091fcd9d89d22ff1a9bb7c005904d78b663c754e98cedab9711e2121",
+  "source_bytes": 248998,
+  "public_file": "/events/past/hub-summit-2023.webp",
+  "public_sha256": "8b65f724a69bcba9084ec098743a118ee19ac573ba12a60a6955939fd3dbb3a2",
+  "public_bytes": 76240,
+  "size": [
+   960,
+   541
+  ]
+ }
+]

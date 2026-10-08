@@ -307,7 +307,7 @@ test('S2-ABOUT-ASSETS-01: chapter chips draw the approved logo where one maps, i
     lis.map((li) => {
       const img = li.querySelector('img[data-hub-logo]') as HTMLImageElement | null
       return {
-        name: li.innerText.trim().split('\n').pop()!.trim(),
+        name: (li as HTMLElement).innerText.trim().split('\n').pop()!.trim(),
         code: img?.dataset.hubLogo ?? null,
         ok: img ? img.complete && img.naturalWidth > 0 : null,
       }

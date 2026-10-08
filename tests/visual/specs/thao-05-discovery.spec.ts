@@ -17,6 +17,7 @@ import {
   type LibraryFixture,
 } from '../../../src/lib/library/testing'
 import { LIBRARY_PROBLEMS } from '../../../src/lib/library/problem-source'
+import { PAST_PROGRAMMES } from '../../../src/lib/public/programme-event-source'
 import { settle } from '../pixel-qa/capture'
 import { REPO_ROOT, resolveOutputPath, resolveReferencePath } from '../pixel-qa/paths'
 import { decodePng, readPng } from '../pixel-qa/png'
@@ -194,7 +195,11 @@ const html = async (page: Page, url: string) => (await page.request.get(url)).te
 // PROGRAMME-PRESENTATION-DATA-01: the list is the source-backed programmes only
 // (the homepage's PROGRAMME_CARDS); no programme row — fixture or not — is
 // projected, so the deterministic seed and this spec's rows must not appear.
-const SOURCE_NAMES = PROGRAMME_CARDS.map((c) => c.title)
+// S2-PROGRAMME-EVENT-CONTENT-01: then the sheet's finished programmes.
+const CURRENT_NAMES = PROGRAMME_CARDS.map((c) => c.title)
+const PAST_NAMES = PAST_PROGRAMMES.map((p) => p.title)
+const SOURCE_NAMES = [...CURRENT_NAMES, ...PAST_NAMES]
+const byVi = (list: string[]) => [...list].sort((a, b) => a.localeCompare(b, 'vi'))
 const FIXTURE_WORDS = ['(demo)', 'Internal Alpha', 'Chương trình mẫu', 'Chapter 01', 'THAO05']
 
 test.describe('DIR0 /programmes', () => {
@@ -208,10 +213,29 @@ test.describe('DIR0 /programmes', () => {
     const text = await page.locator('body').innerText()
     for (const word of FIXTURE_WORDS) expect(text, word).not.toContain(word)
     expect(text).not.toContain(DRAFT_NAME)
+    // Nine per page (unchanged), then "Xem thêm".
+    await page.getByRole('button', { name: /^Xem thêm \d+ chương trình$/ }).click()
     await expect(cards(page, 'programme')).toHaveCount(SOURCE_NAMES.length)
-    expect(await cards(page, 'programme').locator('h2').allInnerTexts()).toEqual(
-      [...SOURCE_NAMES].sort((a, b) => a.localeCompare(b, 'vi')),
-    )
+    // Default order: the announced ones first, then the finished ones (by name).
+    expect(await cards(page, 'programme').locator('h2').allInnerTexts()).toEqual([
+      ...byVi(CURRENT_NAMES),
+      ...byVi(PAST_NAMES),
+    ])
+    // S2-PROGRAMME-EVENT-CONTENT-01: no type ("Loại") or host ("Đơn vị chủ quản") filter.
+    const rail = page.getByRole('complementary', { name: 'Bộ lọc' })
+    await expect(rail.locator('legend')).toHaveText(['TRẠNG THÁI'])
+    await expect(page.locator('[data-section="directory-hero"] [aria-pressed]')).toHaveText([
+      'Đang mở',
+      'Sắp tới',
+    ])
+    for (const p of PAST_PROGRAMMES) {
+      const card = cards(page, 'programme').filter({ hasText: p.title })
+      await expect(card).toHaveAttribute('data-programme', 'da-ket-thuc')
+      await expect(card.locator('[class*="progPhase"]')).toHaveText('Đã kết thúc')
+      await expect(card.locator('[class*="progHost"]')).toHaveText(p.owners.join(' · '))
+      await expect(card.locator('[class*="progTags"] li')).toHaveCount(0)
+      await expect(card.locator('img[data-programme-cover]')).toHaveAttribute('src', p.image!)
+    }
     for (const c of PROGRAMME_CARDS) {
       // The homepage's own values: host, description, status and type; no invented dates.
       const card = cards(page, 'programme').filter({ hasText: c.title })
@@ -220,7 +244,13 @@ test.describe('DIR0 /programmes', () => {
       await expect(card.locator('[class*="progPhase"]')).toHaveText(c.status)
       await expect(card.locator('p')).toHaveText(c.description)
       await expect(card.locator('[class*="progTags"] li')).toHaveText(['Challenge'])
+      await expect(card.locator('img[data-programme-cover]')).toHaveAttribute('src', c.image!.src)
     }
+    expect(
+      await page.evaluate(() =>
+        [...document.images].filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.src),
+      ),
+    ).toEqual([])
     // Nothing is open; no card offers an apply entry (no programme record behind it).
     await expect(page.locator('h1 span')).toHaveText('0')
     await expect(page.locator('a[href*="/apply"]')).toHaveCount(0)
@@ -235,6 +265,8 @@ test.describe('DIR0 /programmes', () => {
   }) => {
     await signIn(page, baseURL)
     await page.goto('/programmes', { waitUntil: 'networkidle' })
+    // Nine per page (unchanged), then "Xem thêm".
+    await page.getByRole('button', { name: /^Xem thêm \d+ chương trình$/ }).click()
     await expect(cards(page, 'programme')).toHaveCount(SOURCE_NAMES.length)
     await expect(page.locator('a[href*="/apply"]')).toHaveCount(0)
     expect(await page.locator('body').innerText()).not.toContain('(demo)')
@@ -257,19 +289,22 @@ test.describe('DIR0 /programmes', () => {
     await page.reload({ waitUntil: 'networkidle' })
     await expect(cards(page, 'programme')).toHaveCount(1)
     await expect(rail.getByLabel(/^Sắp công bố/)).toBeChecked()
-    // A status the source has none of: the empty state, then reset.
+    // "vpbank" among the finished ones: the empty state, then reset.
     await rail.getByLabel(/^Sắp công bố/).uncheck()
     await rail.getByLabel(/^Đã kết thúc/).check()
     await expect(page.locator('[data-state="empty"]')).toBeVisible()
     await page.getByRole('button', { name: 'Xoá tất cả bộ lọc' }).click()
     await expect(page).toHaveURL(/\/programmes$/)
     await expect(cards(page, 'programme')).toHaveCount(total)
-    // Host and type facets come from the source rows.
-    await rail.getByLabel(/^Net Zero Vietnam/).check()
-    await expect(page).toHaveURL(/don-vi=net-zero-vietnam/)
-    await expect(cards(page, 'programme')).toHaveCount(1)
-    await rail.getByLabel(/^Programme/).check()
-    await expect(page.locator('[data-state="empty"]')).toBeVisible()
+    // S2-PROGRAMME-EVENT-CONTENT-01: the sheet's finished programmes.
+    await rail.getByLabel(/^Đã kết thúc/).check()
+    await expect(cards(page, 'programme')).toHaveCount(PAST_NAMES.length)
+    await rail.getByLabel(/^Đã kết thúc/).uncheck()
+    // The removed type / host filters: their old address values are ignored.
+    await page.goto('/programmes?loai=programme&don-vi=net-zero-vietnam', {
+      waitUntil: 'networkidle',
+    })
+    await expect(cards(page, 'programme')).toHaveCount(total)
     await page.goto('/programmes?q=khong-co-chuong-trinh-nao', { waitUntil: 'networkidle' })
     await expect(page.locator('[data-state="empty"]')).toBeVisible()
     await page.getByRole('button', { name: 'Xoá tất cả bộ lọc' }).click()
@@ -510,8 +545,10 @@ test.describe('navigation', () => {
       'href',
       '/programmes',
     )
-    await expect(nav.locator('[data-nav="programmes"] ul [data-cta-kind="INERT"]')).toHaveText(
-      'Sự kiện',
+    // S2-PROGRAMME-EVENT-CONTENT-01: the event screen exists.
+    await expect(nav.getByRole('link', { name: 'Sự kiện', exact: true })).toHaveAttribute(
+      'href',
+      '/events',
     )
     await expect(nav.locator('[data-nav="news"] [data-nav-kind="LABEL"]')).toHaveCount(1)
     await nav.getByRole('link', { name: 'Chương trình, cuộc thi' }).click()

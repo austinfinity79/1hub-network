@@ -1,0 +1,403 @@
+/*
+ * S2-PROGRAMME-EVENT-CONTENT-01 — `/events`, geometry from DM07 at 1440 px
+ * (design-reference/final/demo-0710/DM07__event-directory__SOURCE.png):
+ * 1312 px column, featured block 1296 × 406, three 406 px cards per row,
+ * compact "Đã diễn ra" rows. Fonts and tokens come from the discovery page
+ * (discovery.module.css .page).
+ */
+.main {
+  max-width: 1312px;
+  margin: 0 auto;
+  padding: 64px 64px 120px;
+  box-sizing: content-box;
+}
+
+.main :where(h1, h2, h3, p, ul) {
+  margin: 0;
+  padding: 0;
+}
+
+.main :where(ul) {
+  list-style: none;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.head {
+  margin-bottom: 28px;
+}
+
+.title {
+  font-size: 64px;
+  font-weight: 500;
+  line-height: 72px;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  margin-top: 14px !important;
+  font-size: 17px;
+  color: #6e6263;
+}
+
+/* ------------------------------------------------------------ featured */
+.featured {
+  display: grid;
+  grid-template-columns: minmax(0, 607px) minmax(0, 1fr);
+  gap: 40px;
+  padding: 17px 40px 17px 17px;
+  background: #ffffff;
+  border-radius: 28px;
+}
+
+.featuredArt {
+  position: relative;
+  aspect-ratio: 607 / 372;
+  overflow: hidden;
+  background: linear-gradient(160deg, #c8281e 0%, #6c0b0c 55%, #2a0305 100%);
+  border-radius: 18px;
+}
+
+.featuredImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.flag {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #ffffff;
+  border-radius: 16px;
+}
+
+.featuredBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.when {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.when p {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+}
+
+.when p span {
+  font-size: 13px;
+  color: #8a7b7c;
+}
+
+.featuredName {
+  margin-top: 22px !important;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 42px;
+}
+
+.featuredMeta {
+  margin-top: 14px !important;
+  font-size: 15px;
+  color: #8a7b7c;
+}
+
+.fill {
+  margin-top: 36px;
+}
+
+.fill p {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.fill em,
+.cardFoot em {
+  font-style: normal;
+  color: #d72d1e;
+}
+
+.bar {
+  display: block;
+  height: 5px;
+  margin-top: 12px;
+  overflow: hidden;
+  background: #ebe5e5;
+  border-radius: 3px;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: var(--coral);
+}
+
+.state {
+  margin-top: 28px !important;
+  font-size: 14px;
+  color: #d72d1e;
+}
+
+.badge,
+.badgeLarge {
+  display: inline-flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 56px;
+  line-height: 1;
+  color: var(--ink);
+  background: #f4f1f1;
+  border-radius: 10px;
+}
+
+.badge b,
+.badgeLarge b {
+  font-size: 21px;
+  font-weight: 500;
+}
+
+.badge small,
+.badgeLarge small {
+  margin-top: 5px;
+  font-size: 9px;
+}
+
+.badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+.badgeLarge {
+  width: 62px;
+  height: 62px;
+  color: #ffffff;
+  background: var(--ink);
+}
+
+/* ------------------------------------------------------------ upcoming */
+.count {
+  display: inline-block;
+  margin: 40px 0 6px !important;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #ffffff;
+  border-radius: 17px;
+}
+
+.month {
+  margin-top: 28px;
+}
+
+.monthLabel {
+  margin-bottom: 14px !important;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: #6e6263;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 11px;
+  background: #ffffff;
+  border-radius: 20px;
+}
+
+.cardArt {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: linear-gradient(160deg, #8e1d1a 0%, #5d0a0c 50%, #2a0305 100%);
+  border-radius: 14px;
+}
+
+.cardImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 16px 6px 6px;
+}
+
+.kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #d72d1e;
+  text-transform: uppercase;
+}
+
+.cardName {
+  margin-top: 6px !important;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.cardMeta {
+  margin-top: 6px !important;
+  font-size: 13px;
+  line-height: 18px;
+  color: #8a7b7c;
+}
+
+.cardFoot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto !important;
+  padding-top: 16px;
+  font-size: 13px;
+  color: #6e6263;
+}
+
+.empty {
+  padding: 40px 0;
+  color: #8a7b7c;
+}
+
+/* ------------------------------------------------------------ past */
+.recent {
+  margin-top: 72px;
+}
+
+.recentTitle {
+  margin-top: 10px !important;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 42px;
+}
+
+.recentTitle span {
+  color: var(--coral);
+}
+
+.pastGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px !important;
+}
+
+.past {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 11px;
+  background: #ffffff;
+  border-radius: 18px;
+}
+
+.past > div {
+  min-width: 0;
+}
+
+.pastImg {
+  flex: none;
+  width: 108px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.pastName {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.more {
+  display: block;
+  height: 50px;
+  margin: 40px auto 0;
+  padding: 0 32px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: none;
+  border: 1px solid #cfc5c5;
+  border-radius: 25px;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------ narrow screens */
+@media (max-width: 1023px) {
+  .main {
+    padding: 40px 24px 96px;
+  }
+
+  .featured {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding: 12px 12px 24px;
+  }
+
+  .featuredBody {
+    padding: 0 12px;
+  }
+
+  .grid,
+  .pastGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .main {
+    padding: 28px 16px 80px;
+  }
+
+  .title {
+    font-size: 40px;
+    line-height: 48px;
+  }
+
+  .featuredName,
+  .recentTitle {
+    font-size: 26px;
+    line-height: 32px;
+  }
+
+  .grid,
+  .pastGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

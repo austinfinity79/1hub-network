@@ -21,8 +21,8 @@ export const PUBLIC_ROUTES: Readonly<Record<PublicRouteKey, string | null>> = {
   programmes: '/programmes',
   /** DIR1 Bài toán (THAO-05, DEC-THAO-DIR-D2): no nav entry; linked from /programmes. */
   problems: '/problems',
-  /** DM07 Sự kiện (reference). */
-  events: null,
+  /** DM07 Sự kiện (S2-PROGRAMME-EVENT-CONTENT-01): the PO's event sheet. */
+  events: '/events',
   /** Tin tức: no screen is supplied (Thảo, 06/10). */
   news: null,
 }

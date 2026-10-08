@@ -143,14 +143,14 @@ test.describe('Chương trình dropdown', () => {
     await expect(toggle).toHaveAttribute('aria-expanded', 'true')
     const entries = prog.locator('ul li')
     await expect(entries).toHaveText(['Chương trình, cuộc thi', 'Sự kiện'])
-    // THAO-05 (DEC-THAO-DIR-D1): the programme list exists; no event screen yet,
-    // so Sự kiện stays visual-only, never a dead link.
-    await expect(prog.locator('ul a')).toHaveCount(1)
+    // THAO-05 (DEC-THAO-DIR-D1): the programme list; S2-PROGRAMME-EVENT-CONTENT-01:
+    // the event screen.
+    await expect(prog.locator('ul a')).toHaveCount(2)
     await expect(prog.getByRole('link', { name: 'Chương trình, cuộc thi' })).toHaveAttribute(
       'href',
       '/programmes',
     )
-    await expect(prog.locator('ul [data-cta-kind="INERT"]')).toHaveText(['Sự kiện'])
+    await expect(prog.getByRole('link', { name: 'Sự kiện' })).toHaveAttribute('href', '/events')
     await page.keyboard.press('Escape')
     await expect(prog.locator('ul')).toHaveCount(0)
     await toggle.click()

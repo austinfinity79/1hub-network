@@ -35,13 +35,7 @@ export default async function ProgrammesPage({
     <div className={styles.page} data-screen="PUBLIC-PROGRAMMES" data-revision="DM06">
       <div className={styles.top}>
         <PublicHeader viewer={shell.viewer} current="programmes" />
-        <ProgrammeDirectory
-          programmes={programmes}
-          initial={readProgrammeView(
-            params,
-            programmes.flatMap((p) => (p.host ? [p.host.slug] : [])),
-          )}
-        />
+        <ProgrammeDirectory programmes={programmes} initial={readProgrammeView(params)} />
       </div>
       <PublicFooter variant="home" legal={shell.legal} />
     </div>
