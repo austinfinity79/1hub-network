@@ -196,12 +196,33 @@ export async function findPublicStartup(
     query,
     people.map((m) => m.profile_id),
   )
-  const team = people
-    .filter(
-      (m): m is { profile_id: string; name: string; role: string | null } =>
-        Boolean(m.name) && canSeeDiscovery(levels.get(m.profile_id) ?? 'NETWORK_ONLY', 'NETWORK'),
-    )
+  const visible = (m: { profile_id: string; name: string | null }) =>
+    Boolean(m.name) && canSeeDiscovery(levels.get(m.profile_id) ?? 'NETWORK_ONLY', 'NETWORK')
+  const profileTeam = people
+    .filter((m): m is { profile_id: string; name: string; role: string | null } => visible(m))
     .map((m) => ({ name: m.name, role: m.role, href: founderHref(m.profile_id) }))
+  // S2-SMART-CAMPUS-DETAIL-ENRICH-01: a venture whose approved source lists its
+  // team shows that list (to the same viewers as the canonical team): a listed
+  // person with a visible profile is that member (link); one without a profile
+  // is plain text; one whose profile hides discovery is left out.
+  const overview = startupOverview(row.ventureId)
+  const hidden = new Set(people.filter((m) => m.name && !visible(m)).map((m) => m.name))
+  const team =
+    overview?.team && (demo || viewer === 'NETWORK')
+      ? [
+          ...overview.team
+            .filter((s) => !hidden.has(s.name))
+            .map(
+              (s) =>
+                profileTeam.find((m) => m.name === s.name) ?? {
+                  name: s.name,
+                  role: s.role,
+                  href: null,
+                },
+            ),
+          ...profileTeam.filter((m) => !overview.team!.some((s) => s.name === m.name)),
+        ]
+      : profileTeam
   return {
     ...shape(row, meta.get(row.ventureId)!),
     stageLabel: row.stage?.label ?? null,
@@ -209,6 +230,6 @@ export async function findPublicStartup(
     round: demo?.round ?? null,
     team,
     teamGated: !demo && viewer !== 'NETWORK',
-    overview: startupOverview(row.ventureId),
+    overview,
   }
 }

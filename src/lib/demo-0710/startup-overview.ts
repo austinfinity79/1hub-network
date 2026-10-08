@@ -22,6 +22,13 @@ export type StartupOverview = {
   stageLabel?: string
   /** The venture's own public site, from its source. */
   website?: { href: string; label: string }
+  /**
+   * S2-SMART-CAMPUS-DETAIL-ENRICH-01: the source's team list (name + role, as
+   * written, in order). Shown like the canonical team: signed-in members only
+   * (DEC-THAO-SP-D1); a person with a profile links to it, one without is plain
+   * text; no profile is created.
+   */
+  team?: Array<{ name: string; role: string }>
   problem: {
     text: string | null
     figures: DemoFigure[]
@@ -142,13 +149,19 @@ export const STARTUP_OVERVIEWS: Readonly<Record<string, StartupOverview>> = {
   // description I, problem N, solution O, vision R, needs M, site B; stage
   // "Thử nghiệm" by PO decision. Not used (quarantined or held): founding
   // date E, funding F/K, highlights J, milestones L, market P, metrics W–Y,
-  // customer voice Q, updates Z.
+  // customer voice Q, updates Z (held: dated plan / log, PO review pending).
   '0e366810-36ac-4de2-923a-fe5929cb02e3': {
     focus: 'Smart Campus Today. Smart Society Tomorrow.',
     tagline:
       '1Hub là nền tảng kết nối danh tính số đáng tin cậy với các tiện ích và cơ hội trong một hệ sinh thái thống nhất, bắt đầu từ đời sống sinh viên và Smart Campus.',
     stageLabel: 'Thử nghiệm',
     website: { href: 'https://1hub.global/en', label: '1hub.global' },
+    // "Đội ngũ" S3–U3 (name - role).
+    team: [
+      { name: 'Nguyễn Quang Dũng', role: 'Tổng Giám đốc' },
+      { name: 'Nguyễn Duy Thanh', role: 'Giám đốc Công nghệ' },
+      { name: 'Vũ Tuấn Anh', role: 'Giám đốc Marketing' },
+    ],
     problem: {
       text: null,
       figures: [],
