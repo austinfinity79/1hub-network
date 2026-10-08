@@ -72,10 +72,15 @@ test.describe('directory: guest browse and visibility', () => {
     await expect(dir).toHaveAttribute('data-entry', 'GUEST')
     const published = await publicStartups()
     // S2-PRODUCT-CATALOG-CLEANUP-01: the PO's wording, no count and no numeric summary.
-    await expect(page.locator('h1')).toHaveText('Các sản phẩm trong mạng lưới')
+    await expect(page.locator('h1')).toHaveText('Sản phẩm')
     await expect(page.locator('[data-section="directory-hero"] dl')).toHaveCount(0)
     const shown = Math.min(published.length, 9)
     await expect(cards(page)).toHaveCount(shown)
+    // S2-COPY-QUICKFIX-01: the load-more label carries no count.
+    await expect(page.getByRole('button', { name: 'xem thêm', exact: true })).toHaveCount(
+      published.length > 9 ? 1 : 0,
+    )
+    await expect(page.getByRole('button', { name: /^Xem thêm \d+/ })).toHaveCount(0)
     // Unpublished ventures (draft, private, projects) never reach the page: their
     // canonical slugs are unique (names may repeat across ventures).
     const hidden = await query<{ slug: string }>(

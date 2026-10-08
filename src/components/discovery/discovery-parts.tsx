@@ -239,14 +239,17 @@ export function MoreButton({
   hidden,
   noun,
   onMore,
+  label,
 }: {
   hidden: number
   noun: string
   onMore: () => void
+  /** A fixed label in place of "Xem thêm {n} {noun}" (S2-COPY-QUICKFIX-01: /products). */
+  label?: string
 }) {
   return hidden > 0 ? (
     <button type="button" className={styles.more} onClick={onMore}>
-      Xem thêm {hidden} {noun}
+      {label ?? `Xem thêm ${hidden} ${noun}`}
     </button>
   ) : null
 }

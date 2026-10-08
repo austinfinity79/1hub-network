@@ -466,7 +466,7 @@ test.describe('DIR3 /talents', () => {
       /CHUYÊN MÔN|KỸ NĂNG/i,
     )
     // S2-TALENT-DIRECTORY-CLEANUP-01: the PO's wording, no count and no numeric summary.
-    await expect(page.locator('h1')).toHaveText('Các nhân tài trong mạng lưới')
+    await expect(page.locator('h1')).toHaveText('Nhân tài')
     await expect(page.locator('[data-section="directory-hero"] dl')).toHaveCount(0)
   })
 
@@ -676,6 +676,15 @@ test.describe('pixel QA 1440 × DPR1: hero gated, results reported (canonical da
         ...(await rectsOf(page, '[data-pixel="data"]')),
         ...(await rectsOf(page, 'header[data-shell="public"] nav[aria-label="Điều hướng chính"]')),
         ...(member ? [{ x: 1000, y: 0, width: 440, height: 64 }] : []),
+        // INTENTIONAL-COPY: the PO's title "Nhân tài" (S2-COPY-QUICKFIX-01)
+        // replaces the frame's counted title line: the whole line band.
+        ...(member
+          ? (await rectsOf(page, '[data-section="directory-hero"] h1')).map((r) => ({
+              ...r,
+              x: 0,
+              width: 1440,
+            }))
+          : []),
       ]
       const results = compareSegments(
         readPng(resolveReferencePath(reference)),

@@ -145,7 +145,6 @@ export function EventDirectory() {
     <main className={styles.main} data-section="events">
       <header className={styles.head}>
         <h1 className={styles.title}>Sự kiện</h1>
-        <p className={styles.lede}>Mọi sự kiện của HUB và các HUB Chapter.</p>
       </header>
 
       {featured ? <Featured event={featured} /> : null}

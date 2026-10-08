@@ -51,13 +51,6 @@
   color: var(--ink);
 }
 
-.lede {
-  margin-top: 16px !important;
-  font-size: 18px;
-  line-height: 26px;
-  color: #6e6263;
-}
-
 /* ------------------------------------------------------------ featured */
 .featured {
   display: grid;
@@ -529,10 +522,6 @@
   .title {
     font-size: 44px;
     line-height: 50px;
-  }
-
-  .lede {
-    font-size: 16px;
   }
 
   .featured {

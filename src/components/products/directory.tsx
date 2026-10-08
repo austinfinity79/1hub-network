@@ -241,7 +241,7 @@ export function Directory({
       <section className={styles.hero} data-section="directory-hero">
         <p className={styles.eyebrow}>SẢN PHẨM</p>
         {/* S2-PRODUCT-CATALOG-CLEANUP-01: the PO's wording, no count. */}
-        <h1 className={styles.title}>Các sản phẩm trong mạng lưới</h1>
+        <h1 className={styles.title}>Sản phẩm</h1>
         <form className={styles.search} role="search" aria-label="Tìm sản phẩm" onSubmit={search}>
           <span className={styles.scope}>
             Sản phẩm
@@ -377,6 +377,7 @@ export function Directory({
           <MoreButton
             hidden={results.length - shown}
             noun="sản phẩm"
+            label="xem thêm"
             onMore={() => setShown((n) => n + PAGE)}
           />
         </div>
