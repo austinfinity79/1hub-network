@@ -19,6 +19,7 @@ import {
 import { HeroSlider } from './hero-slider'
 import { InvestorCarousel, ProductGrid, SectorList } from './home-products'
 import { HomeSearch } from './home-search'
+import { HomeTalents, type HomeTalent } from './home-talents'
 import styles from './home.module.css'
 
 /**
@@ -32,7 +33,16 @@ import styles from './home.module.css'
  * news (no public programme or news source in P0). Every call to action is a
  * real destination or visual-only (PublicAction).
  */
-export function Home({ shell, startups }: { shell: PublicShellData; startups: HomeStartup[] }) {
+export function Home({
+  shell,
+  startups,
+  talents,
+}: {
+  shell: PublicShellData
+  startups: HomeStartup[]
+  /** S2-HOME-TALENT-SECTION-01: null for a guest (no person reaches the page). */
+  talents: HomeTalent[] | null
+}) {
   const { viewer } = shell
   return (
     <div
@@ -234,6 +244,8 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
         <InvestorCarousel startups={startups} total={startups.length} />
         <ProductGrid startups={startups} />
       </div>
+
+      <HomeTalents people={talents} entry={viewer.entry} />
 
       <section className={styles.news} data-section="news" aria-labelledby="home-news">
         <p className={styles.eyebrow}>TIN TỨC</p>
