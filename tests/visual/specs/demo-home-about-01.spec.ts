@@ -505,7 +505,10 @@ test.describe('pixel QA 1440 × DPR1', () => {
           anchor: sec('highlights'),
           refTop: 901,
           rect: { x: 64, y: 1191, width: 636, height: 270 },
-          gated: true,
+          // INTENTIONAL-COPY (S2-HOME-CONTENT-REFRESH-01): the PO's three updates
+          // replace the frame's samples, with no time line or tag in the source;
+          // measured and reported, not gated.
+          gated: false,
         },
         {
           name: '05-sectors',

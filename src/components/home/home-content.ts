@@ -16,10 +16,11 @@
  */
 
 /** The four refreshed homepage programmes, in the sheet's order. */
+/** S2-HOME-CONTENT-REFRESH-01: ticker text per Feedback Sprint 2 (lần 3). */
 export const HOME_TICKER = [
   'APEC Innovation Challenge',
-  'VPBank Innovation Challenge',
-  'Cuộc thi Khởi nghiệp cùng Kawai',
+  'Data for Life',
+  'Fintech Challenge Vietnam',
   'Agritech Innovation Challenge',
 ] as const
 
@@ -34,8 +35,10 @@ export type ProgrammeUpdate = {
   /** S2-HOME-HIGHLIGHTS-ASSETS-01: the approved mark, else null (the code is drawn). */
   logo: string | null
   title: string
-  meta: string
-  tag: string
+  /** Null: no source line (no date / organiser is invented). */
+  meta: string | null
+  /** Null: no source status tag. */
+  tag: string | null
   tone: 'gold' | 'amber' | 'green'
 }
 
@@ -65,29 +68,35 @@ export const PITCH_BACKGROUNDS: Readonly<Record<string, string>> = {
   tracely: '/home/pitch/dreamy-pastel-city-mapscape.webp',
 }
 
+/**
+ * S2-HOME-CONTENT-REFRESH-01 — the three weekly updates, exactly as the PO
+ * wrote them; no date, organiser line, tag, CTA or link (none supplied). The
+ * APEC row keeps the approved APEC Innovation Challenge mark; the others draw
+ * their initials.
+ */
 export const PROGRAMME_UPDATES: ProgrammeUpdate[] = [
   {
     code: 'AP',
     logo: '/home/highlights/apec-innovation-challenge.webp',
-    title: 'APEC Innovation Challenge công bố 20 đội vào vòng trong',
-    meta: 'APEC Innovation Challenge · 2 giờ trước',
-    tag: 'VÒNG TRONG',
+    title: 'Họp chiến lược lãnh đạo cấp cao xem xét triển khai APEC Innovation Challenge',
+    meta: null,
+    tag: null,
     tone: 'gold',
   },
   {
-    code: 'MB',
-    logo: '/home/highlights/qr-payment-open-challenge.webp',
-    title: 'MBBank Open Challenge mở thêm bài toán thanh toán QR',
-    meta: 'MB Bank · hôm qua',
-    tag: 'BÀI TOÁN MỚI',
+    code: 'DL',
+    logo: null,
+    title: 'Data for Life Mùa 4 công bố Top 60 vào Vòng Phát triển giải pháp',
+    meta: null,
+    tag: null,
     tone: 'amber',
   },
   {
-    code: 'BĐ',
-    logo: '/home/highlights/logistics-2026.webp',
-    title: 'Chuyển đổi số logistics 2026 gia hạn nộp bài đến 30/11',
-    meta: 'Tổng công ty Bưu điện · 2 ngày trước',
-    tag: 'GIA HẠN',
+    code: 'VC',
+    logo: null,
+    title: 'Ra mắt VietChallenge Capital',
+    meta: null,
+    tag: null,
     tone: 'green',
   },
 ]

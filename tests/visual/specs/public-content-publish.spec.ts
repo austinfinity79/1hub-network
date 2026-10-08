@@ -118,9 +118,24 @@ test('programme cards and ticker: the four refreshed programmes, source fields o
   }
   // No phase is claimed for the cards.
   await expect(page.locator('[data-section="programmes"] [aria-disabled="true"]')).toHaveCount(3)
-  for (const t of titles)
+  // S2-HOME-CONTENT-REFRESH-01: the ticker's own list (the cards are unchanged).
+  for (const t of [
+    'APEC Innovation Challenge',
+    'Data for Life',
+    'Fintech Challenge Vietnam',
+    'Agritech Innovation Challenge',
+  ])
     await expect(page.locator('[data-section="ticker"] p').first()).toContainText(t)
-  await expect(page.locator('[data-section="ticker"]')).not.toContainText('MBBank')
+  for (const old of ['MBBank', 'VPBank Innovation Challenge', 'Cuộc thi Khởi nghiệp cùng Kawai'])
+    await expect(page.locator('[data-section="ticker"]')).not.toContainText(old)
+  // The weekly updates: exactly the PO's three lines, nothing invented.
+  const updates = page.locator('[data-block="programme-updates"] li')
+  await expect(updates.locator('p')).toHaveText([
+    'Họp chiến lược lãnh đạo cấp cao xem xét triển khai APEC Innovation Challenge',
+    'Data for Life Mùa 4 công bố Top 60 vào Vòng Phát triển giải pháp',
+    'Ra mắt VietChallenge Capital',
+  ])
+  await expect(updates.locator('a, [class*="tag"]')).toHaveCount(0)
 })
 
 test('news keep their text and gain the refreshed pictures', async ({ page }) => {

@@ -129,9 +129,11 @@ export function Home({ shell, startups }: { shell: PublicShellData; startups: Ho
                   )}
                   <div className={styles.feedText}>
                     <p className={styles.feedTitle}>{u.title}</p>
-                    <p className={styles.feedMeta}>{u.meta}</p>
+                    {u.meta ? <p className={styles.feedMeta}>{u.meta}</p> : null}
                   </div>
-                  <span className={`${styles.tag} ${styles[`tag_${u.tone}`]}`}>{u.tag}</span>
+                  {u.tag ? (
+                    <span className={`${styles.tag} ${styles[`tag_${u.tone}`]}`}>{u.tag}</span>
+                  ) : null}
                 </li>
               ))}
             </ul>
