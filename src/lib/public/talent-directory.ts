@@ -42,6 +42,8 @@ export type TalentCard = {
   ventures: Array<{ name: string; href: string; stage: string | null }>
   /** `/talents/[handle]` for an allow-listed demo founder, else null (READ_ONLY). */
   href: string | null
+  /** S2-TALENT-DIRECTORY-CLEANUP-01: shown first (the PO's lead talent). */
+  pinned: boolean
   text: string
 }
 
@@ -64,6 +66,28 @@ function initialsOf(name: string): string {
   return (first + last).toLocaleUpperCase('vi')
 }
 
+/**
+ * S2-TALENT-DIRECTORY-CLEANUP-01 — the directory shows real, source-backed
+ * people only. These nine profiles are seed / demo personas absent from every
+ * sheet of the Sprint 1 workbook (3 seed accounts, 6 fictional DEMO-0710
+ * founders and team): they stay in the data (founder pages, demo teams) but
+ * are never listed here.
+ */
+export const NON_REAL_TALENT_PROFILE_IDS: readonly string[] = [
+  '40000000-0000-0000-0000-000000000001', // Demo Member
+  '40000000-0000-0000-0000-000000000002', // Demo Leader
+  '40000000-0000-0000-0000-000000000005', // Demo Pending
+  'de710000-0000-0000-0000-0000000000b1', // Đặng Kim Chi (DEMO-0710)
+  'de710000-0000-0000-0000-0000000000b2', // Nguyễn Minh Anh (DEMO-0710)
+  'de710000-0000-0000-0000-0000000000b3', // Phạm Quốc Việt (DEMO-0710)
+  'de710000-0000-0000-0000-0000000000b4', // Trần Hạnh (DEMO-0710)
+  'de710000-0000-0000-0000-0000000000b5', // Lý Gia Bảo (DEMO-0710)
+  'de710000-0000-0000-0000-0000000000b6', // Võ Thanh Hà (DEMO-0710)
+]
+
+/** The lead talent, first in the directory: Vũ Tuấn Anh (TALENT-TUAN-ANH-MEMBER-ACCOUNT-01). */
+export const PINNED_TALENT_PROFILE_ID = '7a1e0000-0000-4000-8000-0000000000b1'
+
 export async function listTalents(viewer: LibraryViewer): Promise<TalentCard[] | null> {
   if (viewer !== 'NETWORK') return null
   const people = await query<ProfileRow>(
@@ -74,7 +98,8 @@ export async function listTalents(viewer: LibraryViewer): Promise<TalentCard[] |
        JOIN user_accounts ua ON ua.id = ip.account_id
        LEFT JOIN vocabulary_items r ON r.id = ip.region_vocab_id AND r.type_code = 'REGION'
        LEFT JOIN vocabulary_items c ON c.id = ip.country_vocab_id AND c.type_code = 'COUNTRY'
-      WHERE ip.status = 'ACTIVE' AND ua.status = 'ACTIVE'`,
+      WHERE ip.status = 'ACTIVE' AND ua.status = 'ACTIVE' AND NOT (ip.id = ANY($1::uuid[]))`,
+    [NON_REAL_TALENT_PROFILE_IDS],
   )
   if (people.length === 0) return []
   const ids = people.map((p) => p.id)
@@ -139,6 +164,7 @@ export async function listTalents(viewer: LibraryViewer): Promise<TalentCard[] |
       country: p.country_slug ?? (card.region_id ? p.region_country : null),
       ventures,
       href: founderHref(p.id),
+      pinned: p.id === PINNED_TALENT_PROFILE_ID,
       text: fold(
         [card.display_name, card.headline, region, ...domains, ...ventures.map((v) => v.name)]
           .filter(Boolean)

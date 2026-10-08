@@ -113,7 +113,8 @@ export function TalentDirectory({
       'co-san-pham': (a, b) =>
         Number(!a.ventures.length) - Number(!b.ventures.length) || byName(a, b),
     }
-    return [...list].sort(by[sort])
+    // A pinned card (S2-TALENT-DIRECTORY-CLEANUP-01) leads under every sort.
+    return [...list].sort((a, b) => Number(b.pinned) - Number(a.pinned) || by[sort](a, b))
   }, [talents, q, domains, location, sort])
 
   function search(e: FormEvent) {
@@ -165,9 +166,8 @@ export function TalentDirectory({
     <>
       <section className={styles.hero} data-section="directory-hero">
         <p className={styles.eyebrow}>NHÂN TÀI</p>
-        <h1 className={styles.title} data-pixel="data">
-          <span className={styles.count}>{talents.length}</span> nhân tài trong mạng lưới
-        </h1>
+        {/* S2-TALENT-DIRECTORY-CLEANUP-01: the PO's wording, no count. */}
+        <h1 className={styles.title}>các nhân tài trong mạng lưới</h1>
         <form className={styles.search} role="search" aria-label="Tìm nhân tài" onSubmit={search}>
           <span className={styles.scope}>
             Nhân tài
@@ -204,22 +204,6 @@ export function TalentDirectory({
             </button>
           ))}
         </div>
-        <dl className={styles.stats}>
-          <div>
-            <dt data-pixel="data">{talents.filter((t) => t.ventures.length).length}</dt>
-            <dd>có sản phẩm công khai</dd>
-          </div>
-          <div>
-            <dt data-pixel="data">{domainList.length}</dt>
-            <dd>lĩnh vực</dd>
-          </div>
-          <div>
-            <dt data-pixel="data">
-              {new Set(talents.map((t) => t.regionSlug).filter(Boolean)).size}
-            </dt>
-            <dd>tỉnh/thành</dd>
-          </div>
-        </dl>
       </section>
 
       <div className={styles.body} data-section="directory">

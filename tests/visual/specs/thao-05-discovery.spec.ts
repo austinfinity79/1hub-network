@@ -414,13 +414,11 @@ test.describe('DIR3 /talents', () => {
   }) => {
     await signIn(page, baseURL)
     const body = await html(page, '/talents')
-    for (const shown of [
-      'WF06 Founder Lan',
-      'WF06 Founder Hải',
-      'WF06 Thành Viên Khác',
-      ...DEMO_NAMES,
-    ])
+    for (const shown of ['WF06 Founder Lan', 'WF06 Founder Hải', 'WF06 Thành Viên Khác'])
       expect(body, shown).toContain(shown)
+    // S2-TALENT-DIRECTORY-CLEANUP-01: the demo / seed personas are never listed.
+    for (const persona of [...DEMO_NAMES, 'Demo Member', 'Demo Leader', 'Demo Pending'])
+      expect(body, persona).not.toContain(persona)
     for (const hidden of ['WF06 Founder Ẩn', 'WF06 Founder Nghỉ', 'WF06 Founder Khóa'])
       expect(body, hidden).not.toContain(hidden)
     for (const value of [FX_PRIVATE.fullName, FX_PRIVATE.phone, FX_PRIVATE.bio])
@@ -432,9 +430,9 @@ test.describe('DIR3 /talents', () => {
     await expect(page.getByRole('complementary', { name: 'Bộ lọc' })).not.toContainText(
       /CHUYÊN MÔN|KỸ NĂNG/i,
     )
-    await expect(page.locator('h1 span')).toHaveText(
-      String((await page.locator('[data-talent]').count()) + (await moreCount(page))),
-    )
+    // S2-TALENT-DIRECTORY-CLEANUP-01: the PO's wording, no count and no numeric summary.
+    await expect(page.locator('h1')).toHaveText('các nhân tài trong mạng lưới')
+    await expect(page.locator('[data-section="directory-hero"] dl')).toHaveCount(0)
   })
 
   test('member: detail only for the demo allow-list; direct handles and ids stay 404', async ({
@@ -450,7 +448,8 @@ test.describe('DIR3 /talents', () => {
     const hrefs = await cards(page, 'talent')
       .getByRole('link', { name: 'Xem hồ sơ' })
       .evaluateAll((as) => as.map((a) => a.getAttribute('href')))
-    expect(hrefs).toContain('/talents/dang-kim-chi')
+    // S2-TALENT-DIRECTORY-CLEANUP-01: the demo founders are not listed any more.
+    expect(hrefs).not.toContain('/talents/dang-kim-chi')
     for (const h of hrefs) expect(h, 'allow-listed handles only').toMatch(/^\/talents\/[a-z-]+$/)
     const handles = new Set(hrefs)
     expect(handles.size, 'one card per allow-listed founder').toBe(hrefs.length)
@@ -474,29 +473,28 @@ test.describe('DIR3 /talents', () => {
   }) => {
     await signIn(page, baseURL)
     await page.goto('/talents?quoc-gia=vn&tinh=da-nang', { waitUntil: 'networkidle' })
+    // Every card shown is in Đà Nẵng (the demo founders that lived there are no
+    // longer listed, so the list may be empty in the QA database).
     const places = await cards(page, 'talent')
       .locator('[class*="cardName"] p:last-child')
       .allInnerTexts()
-    expect(places.length).toBeGreaterThan(0)
     for (const p of places) expect(p).toBe('Đà Nẵng')
     await page.goto('/talents?quoc-gia=sg&tinh=da-nang', { waitUntil: 'networkidle' })
     await expect(page.locator('[data-state="empty"]')).toContainText('Khu vực không có')
     await page.getByRole('button', { name: 'Xoá tất cả bộ lọc' }).click()
     await expect(page).toHaveURL(/\/talents$/)
     const rail = page.getByRole('complementary', { name: 'Bộ lọc' })
-    await rail.getByLabel(/^Giáo dục/).check()
-    await expect(page).toHaveURL(/linh-vuc=Gi%C3%A1o\+d%E1%BB%A5c/)
-    const n = await cards(page, 'talent').count()
-    await page.reload({ waitUntil: 'networkidle' })
-    await expect(cards(page, 'talent')).toHaveCount(n)
+    // The first domain the listed people carry (the demo founders' "Giáo dục" left with them).
+    const domains = rail.getByRole('group', { name: /LĨNH VỰC/i }).getByRole('checkbox')
+    if (await domains.count()) {
+      await domains.first().check()
+      await expect(page).toHaveURL(/linh-vuc=/)
+      const n = await cards(page, 'talent').count()
+      await page.reload({ waitUntil: 'networkidle' })
+      await expect(cards(page, 'talent')).toHaveCount(n)
+    }
   })
 })
-
-async function moreCount(page: Page): Promise<number> {
-  const more = page.getByRole('button', { name: /^Xem thêm \d+/ })
-  if (!(await more.count())) return 0
-  return Number((await more.innerText()).match(/\d+/)![0])
-}
 
 // ------------------------------------------------------------------ nav
 
