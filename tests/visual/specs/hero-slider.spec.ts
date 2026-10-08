@@ -7,8 +7,9 @@ import { expect, test, type Page } from '@playwright/test'
 import { REPO_ROOT } from '../pixel-qa/paths'
 
 /**
- * HOMEPAGE-HERO-SLIDER-01 — the six approved stills (01 … 06, 1920 × 1080) as
- * the hero's canvas: 01 first, 10 s each, 06 → 01, previous / next restart the
+ * HOMEPAGE-HERO-SLIDER-01 — the approved stills (01 … 06, 1920 × 1080, and 07
+ * from S2-HOME-HERO-SLIDE-ASSET-01) as the hero's canvas: 01 first, 10 s each,
+ * 07 → 01, previous / next restart the
  * 10 s, one timer at a time. The clock is driven, not waited for.
  */
 
@@ -32,6 +33,47 @@ test('the six files are the approved stills, unmodified', async ({ request }) =>
       file,
     ).toBe(expected)
   }
+  // S2-HOME-HERO-SLIDE-ASSET-01: slide 07 is the supplied set, byte for byte.
+  for (const v of ['desktop', 'desktop@2x', 'mobile', 'mobile@2x'])
+    for (const ext of ['avif', 'webp', 'jpg']) {
+      const file = `hero-still-07-vi-${v}.${ext}`
+      const res = await request.get(`/home/hero/${file}`)
+      expect(res.status(), file).toBe(200)
+      expect(
+        (await res.body()).equals(readFileSync(path.join(REPO_ROOT, 'public/home/hero', file))),
+        file,
+      ).toBe(true)
+    }
+})
+
+test('slide 07 is last: the mobile set below 768 px, the desktop set above', async ({ page }) => {
+  for (const [width, want] of [
+    [1440, 'hero-still-07-vi-desktop'],
+    [390, 'hero-still-07-vi-mobile'],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/', { waitUntil: 'networkidle' })
+    const last = page.locator('[data-section="hero-slider"] [data-slide]').last()
+    await expect(last).toHaveAttribute('data-slide', '07')
+    const img = last.locator('img')
+    await expect(img).toHaveAttribute('alt', 'Slide 7/7: Dành cho quỹ đầu tư')
+    await page.getByRole('button', { name: 'Previous slide' }).click()
+    await expect(last).toHaveAttribute('data-active', 'true')
+    await expect
+      .poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth))
+      .toBeGreaterThan(0)
+    expect(await img.evaluate((el: HTMLImageElement) => el.currentSrc)).toContain(want)
+    // Same canvas box as slide 01.
+    const box = (sel: string) =>
+      page.locator(sel).evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        return [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)]
+      })
+    expect(await box('[data-slide="07"] img')).toEqual(await box('[data-slide="01"] img'))
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width,
+    )
+  }
 })
 
 test('order, loop, previous / next, indicator, 10 s rotation and timer reset', async ({ page }) => {
@@ -42,24 +84,24 @@ test('order, loop, previous / next, indicator, 10 s rotation and timer reset', a
   page.on('pageerror', (e) => errors.push(e.message))
   await page.clock.install()
   await page.goto('/', { waitUntil: 'networkidle' })
-  await expect(page.locator('[data-section="hero-slider"] [data-slide]')).toHaveCount(6)
+  await expect(page.locator('[data-section="hero-slider"] [data-slide]')).toHaveCount(7)
   expect(await active(page)).toBe('01')
-  expect((await indicator(page)).replace(/\s/g, '')).toBe('01/06')
+  expect((await indicator(page)).replace(/\s/g, '')).toBe('01/07')
 
   // Next: 01 → 02 → … → 06 → 01.
   const next = page.getByRole('button', { name: 'Next slide' })
-  for (const n of ['02', '03', '04', '05', '06', '01']) {
+  for (const n of ['02', '03', '04', '05', '06', '07', '01']) {
     await next.click()
     expect(await active(page)).toBe(n)
-    expect((await indicator(page)).replace(/\s/g, '')).toBe(`${n}/06`)
+    expect((await indicator(page)).replace(/\s/g, '')).toBe(`${n}/07`)
   }
-  // Previous: 01 → 06.
+  // Previous: 01 → 07.
   await page.getByRole('button', { name: 'Previous slide' }).click()
-  expect(await active(page)).toBe('06')
+  expect(await active(page)).toBe('07')
 
-  // Auto: 10 s per slide, 06 loops to 01.
+  // Auto: 10 s per slide, 07 loops to 01.
   await page.clock.runFor(9_900)
-  expect(await active(page)).toBe('06')
+  expect(await active(page)).toBe('07')
   await page.clock.runFor(200)
   await expect.poll(() => active(page)).toBe('01')
   await page.clock.runFor(10_000)
@@ -67,10 +109,10 @@ test('order, loop, previous / next, indicator, 10 s rotation and timer reset', a
 
   // A manual change restarts the 10 s; several clicks never stack timers.
   await page.clock.runFor(8_000)
-  for (let k = 0; k < 4; k++) await next.click()
-  expect(await active(page)).toBe('06')
+  for (let k = 0; k < 5; k++) await next.click()
+  expect(await active(page)).toBe('07')
   await page.clock.runFor(9_000)
-  expect(await active(page)).toBe('06')
+  expect(await active(page)).toBe('07')
   await page.clock.runFor(1_100)
   await expect.poll(() => active(page)).toBe('01')
   await page.clock.runFor(9_000)
@@ -81,14 +123,14 @@ test('order, loop, previous / next, indicator, 10 s rotation and timer reset', a
 test('the first slide is prioritised; the others load without a broken state', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' })
   const imgs = page.locator('[data-section="hero-slider"] img')
-  await expect(imgs).toHaveCount(6)
+  await expect(imgs).toHaveCount(7)
   // next/image `priority`: preloaded in <head>, never lazy; the others are lazy.
   await expect(
     page.locator('head link[rel="preload"][as="image"][imagesrcset*="hero-still-01"]'),
   ).toHaveCount(1)
   await expect(imgs.first()).not.toHaveAttribute('loading', 'lazy')
   await expect(imgs.nth(1)).toHaveAttribute('loading', 'lazy')
-  for (let i = 0; i < 6; i++)
+  for (let i = 0; i < 7; i++)
     await expect
       .poll(() => imgs.nth(i).evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth))
       .toBeGreaterThan(0)
@@ -153,7 +195,7 @@ for (const [width, height] of [
       ])
     expect(look).toEqual(['rgb(238, 238, 238)', '0px', 'none'])
     const art = await box(page, '[data-slide="01"] img')
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
       // 16:9 from the canvas top, centred, never wider than the canvas: no
       // distortion, no side crop; at most a narrow #eeeeee margin each side.
       expect(await box(page, `[data-slide="0${i + 1}"] img`)).toEqual(art)

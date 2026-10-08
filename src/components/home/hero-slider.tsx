@@ -11,22 +11,59 @@ import styles from './home.module.css'
  * the hero's visual canvas, edge to edge (full-fill overlay correction); the
  * arrows float on its sides and the counter, search and intents (`children`)
  * sit in its lower part. No text is rebuilt over the artwork.
- * 01 → 06 → 01, one slide every 10 s; previous / next change at once and
+ * S2-HOME-HERO-SLIDE-ASSET-01 appends 07 ("hero-still-07-vi" zip, unmodified):
+ * the supplied AVIF / WebP / JPG, desktop ≥ 768 px and mobile below, 1x / 2x,
+ * through <picture> (no re-encoding). 01 → 07 → 01, one slide every 10 s;
+ * previous / next change at once and
  * restart the 10 s. A single timeout per shown slide: it is replaced on every
  * change and cleared on unmount, so timers never pile up.
  */
 
 export const HERO_INTERVAL_MS = 10_000
 
+const H07 = '/home/hero/hero-still-07-vi'
+
+type HeroSlide = {
+  src: string
+  label: string
+  /** The supplied responsive set (desktop / mobile, AVIF / WebP, 1x / 2x). */
+  picture?: { sources: Array<{ media?: string; type: string; srcSet: string }> }
+}
+
 /** Alt text: the slide number and the label printed on the artwork itself. */
-export const HERO_SLIDES = [
+export const HERO_SLIDES: readonly HeroSlide[] = [
   { src: '/home/hero/hero-still-01.png', label: 'Dành cho đơn vị tổ chức' },
   { src: '/home/hero/hero-still-02.png', label: 'Dành cho startup và nhân tài' },
   { src: '/home/hero/hero-still-03.png', label: 'Kết nối' },
   { src: '/home/hero/hero-still-04.png', label: 'Nguồn lực' },
   { src: '/home/hero/hero-still-05.png', label: 'Ba lớp kết nối trong hệ sinh thái' },
   { src: '/home/hero/hero-still-06.png', label: 'Mạng lưới HUB Network' },
-] as const
+  {
+    src: `${H07}-desktop.jpg`,
+    label: 'Dành cho quỹ đầu tư',
+    picture: {
+      sources: [
+        {
+          media: '(max-width: 767px)',
+          type: 'image/avif',
+          srcSet: `${H07}-mobile.avif 1x, ${H07}-mobile@2x.avif 2x`,
+        },
+        {
+          media: '(max-width: 767px)',
+          type: 'image/webp',
+          srcSet: `${H07}-mobile.webp 1x, ${H07}-mobile@2x.webp 2x`,
+        },
+        {
+          media: '(max-width: 767px)',
+          type: 'image/jpeg',
+          srcSet: `${H07}-mobile.jpg 1x, ${H07}-mobile@2x.jpg 2x`,
+        },
+        { type: 'image/avif', srcSet: `${H07}-desktop.avif 1x, ${H07}-desktop@2x.avif 2x` },
+        { type: 'image/webp', srcSet: `${H07}-desktop.webp 1x, ${H07}-desktop@2x.webp 2x` },
+      ],
+    },
+  },
+]
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -64,14 +101,32 @@ export function HeroSlider({ children }: { children?: ReactNode }) {
             data-slide={pad(i + 1)}
             data-active={i === index ? 'true' : undefined}
           >
-            <Image
-              src={s.src}
-              alt={`Slide ${i + 1}/${count}: ${s.label}`}
-              fill
-              sizes="100vw"
-              quality={90}
-              priority={i === 0}
-            />
+            {s.picture ? (
+              <picture>
+                {s.picture.sources.map((p) => (
+                  <source key={p.srcSet} media={p.media} type={p.type} srcSet={p.srcSet} />
+                ))}
+                <img
+                  className={styles.heroPicture}
+                  src={s.src}
+                  srcSet={`${s.src} 1x, ${s.src.replace('.jpg', '@2x.jpg')} 2x`}
+                  width={1920}
+                  height={1080}
+                  alt={`Slide ${i + 1}/${count}: ${s.label}`}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
+            ) : (
+              <Image
+                src={s.src}
+                alt={`Slide ${i + 1}/${count}: ${s.label}`}
+                fill
+                sizes="100vw"
+                quality={90}
+                priority={i === 0}
+              />
+            )}
           </div>
         ))}
       </div>

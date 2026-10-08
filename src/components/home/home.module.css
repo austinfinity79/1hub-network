@@ -95,6 +95,13 @@
 .heroSlide img {
   object-fit: cover;
 }
+/* S2-HOME-HERO-SLIDE-ASSET-01: the <picture> slide fills like next/image fill. */
+.heroPicture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 /* The arrows float on the canvas sides, in the stills' empty margins. */
 .heroArrow {
   position: absolute;
