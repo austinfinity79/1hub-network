@@ -140,9 +140,11 @@ test.describe('journey and routing', () => {
   test('/products → Tracely → founder → public profile; refresh and back keep the route', async ({
     page,
   }) => {
+    // S2-PRODUCT-CATALOG-CLEANUP-01: Tracely's card has no detail link; its page is
+    // reached directly (the route is unchanged).
     await page.goto('/products', { waitUntil: 'networkidle' })
-    await page.locator('[data-startup="tracely"]').getByRole('link', { name: 'Xem hồ sơ' }).click()
-    await expect(page).toHaveURL('/products/tracely')
+    await expect(page.locator('[data-startup="tracely"] [data-cta="view-startup"]')).toHaveCount(0)
+    await page.goto('/products/tracely', { waitUntil: 'networkidle' })
     await page.locator('[data-cta="founder"]', { hasText: 'Đặng Kim Chi' }).click()
     await expect(page).toHaveURL('/talents/dang-kim-chi')
     await expect(page.locator('h1')).toHaveText('Đặng Kim Chi')

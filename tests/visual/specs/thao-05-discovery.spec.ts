@@ -373,8 +373,9 @@ test.describe('DIR2 /products', () => {
     await page.getByRole('search').getByRole('searchbox').fill('WF06 An Khang')
     await page.getByRole('button', { name: 'Tìm kiếm' }).click()
     await expect(cards(page, 'startup')).toHaveCount(1)
-    await cards(page, 'startup').getByRole('link', { name: 'Xem hồ sơ' }).click()
-    await expect(page).toHaveURL(/\/products\/wf06-fx-venture-/)
+    // S2-PRODUCT-CATALOG-CLEANUP-01: no detail link on a card without an approved detail.
+    await expect(cards(page, 'startup').getByRole('link', { name: 'Xem hồ sơ' })).toHaveCount(0)
+    await page.goto('/products', { waitUntil: 'networkidle' })
     await page.goBack()
     await expect(page).toHaveURL(/q=WF06\+An\+Khang/)
   })

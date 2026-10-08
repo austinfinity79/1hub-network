@@ -170,9 +170,12 @@ test.describe('vertical flow — products and founder (DIR2 / SP1-FOUNDER)', () 
   test('6–11 · Tracely → founder → DEMO verified profile → About → Home, Back holds', async ({
     page,
   }) => {
+    // S2-PRODUCT-CATALOG-CLEANUP-01: the Tracely card has no detail link; its page
+    // is reached directly (the route is unchanged).
     await page.goto('/products', { waitUntil: 'networkidle' })
     const card = page.locator('li, article').filter({ hasText: 'Tracely' }).first()
-    await card.getByRole('link', { name: /Xem hồ sơ/ }).click()
+    await expect(card.getByRole('link', { name: /Xem hồ sơ/ })).toHaveCount(0)
+    await page.goto(DEMO.tracely, { waitUntil: 'networkidle' })
     await expect(page).toHaveURL(DEMO.tracely)
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Tracely')
     await expectCleanPage(page)
@@ -300,13 +303,15 @@ test.describe('responsive interactions (DEMO_RESPONSIVE_MATRIX)', () => {
       await page.setViewportSize({ width, height: 900 })
       // Directory: a sector filter narrows the cards (Logistics: Tracely, Kho Lạnh Miền Tây).
       await page.goto('/products', { waitUntil: 'networkidle' })
-      await expect(page.locator('[data-cta="view-startup"]')).toHaveCount(3)
+      // S2-PRODUCT-CATALOG-CLEANUP-01: demo cards carry no detail link; Follow stays usable.
+      await expect(page.locator('[data-startup]')).toHaveCount(3)
+      await expect(page.locator('[data-cta="view-startup"]')).toHaveCount(0)
       await page
         .getByRole('checkbox', { name: /Logistics/ })
         .first()
         .check()
-      await expect(page.locator('[data-cta="view-startup"]')).toHaveCount(2)
-      await expectHittable(page, '[data-cta="view-startup"]', width)
+      await expect(page.locator('[data-startup]')).toHaveCount(2)
+      await expectHittable(page, '[data-startup] [data-cta="follow"]', width)
       // Startup: Tổng quan is the current tab; the founder link is reachable.
       await page.goto(DEMO.tracely, { waitUntil: 'networkidle' })
       await expect(page.getByText('Tổng quan', { exact: true }).first()).toBeVisible()

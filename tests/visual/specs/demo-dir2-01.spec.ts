@@ -71,7 +71,9 @@ test.describe('directory: guest browse and visibility', () => {
     const dir = page.locator('[data-screen="DEMO-PRODUCTS"]')
     await expect(dir).toHaveAttribute('data-entry', 'GUEST')
     const published = await publicStartups()
-    await expect(page.locator('h1')).toContainText(`${published.length} sản phẩm trong mạng lưới`)
+    // S2-PRODUCT-CATALOG-CLEANUP-01: the PO's wording, no count and no numeric summary.
+    await expect(page.locator('h1')).toHaveText('các sản phẩm trong mạng lưới')
+    await expect(page.locator('[data-section="directory-hero"] dl')).toHaveCount(0)
     const shown = Math.min(published.length, 9)
     await expect(cards(page)).toHaveCount(shown)
     // Unpublished ventures (draft, private, projects) never reach the page: their
@@ -230,20 +232,23 @@ test.describe('journey: Homepage → Sản phẩm → directory → startup', ()
     await hero.getByRole('button', { name: 'Tìm kiếm' }).click()
     await expect(page).toHaveURL('/products?q=Tracely')
     await expect(cards(page)).toHaveCount(1)
-    await cards(page).first().locator('[data-cta="view-startup"]').click()
-    await expect(page).toHaveURL('/products/tracely')
-    await expect(page.locator('h1')).toHaveText('Tracely')
-    // Every published startup card opens its page.
+    // S2-PRODUCT-CATALOG-CLEANUP-01: only a product with an approved detail (Smart Campus) links from a card.
+    // Tracely's card has no detail link; its direct route is unchanged.
+    await expect(cards(page).first().locator('[data-cta="view-startup"]')).toHaveCount(0)
+    expect((await page.request.get('/products/tracely')).status()).toBe(200)
     await page.goto('/products', { waitUntil: 'networkidle' })
     for (const href of await cards(page)
       .locator('[data-cta="view-startup"]')
       .evaluateAll((els) => els.map((e) => e.getAttribute('href')!)))
-      expect((await page.request.get(href)).status(), href).toBe(200)
-    // The homepage product rows link to the same pages.
+      expect(href).toBe('/products/1hub-smart-campus-solution')
+    // The homepage product rows follow the same rule: Tracely is plain text.
     await page.goto('/', { waitUntil: 'networkidle' })
     await expect(
       page.locator('[data-section="all-products"] a', { hasText: 'Tracely' }),
-    ).toHaveAttribute('href', '/products/tracely')
+    ).toHaveCount(0)
+    await expect(
+      page.locator('[data-section="all-products"]').getByText('Tracely', { exact: true }),
+    ).toBeVisible()
   })
 })
 
@@ -261,7 +266,9 @@ test.describe('responsive 768 / 390 (structural)', () => {
         expect(overflow, `${url} at ${width}`).toBeLessThanOrEqual(0)
       }
       await page.goto('/products?q=tracely', { waitUntil: 'networkidle' })
-      const view = cards(page).first().locator('[data-cta="view-startup"]')
+      // S2-PRODUCT-CATALOG-CLEANUP-01: Tracely's card keeps only Follow (no detail link).
+      await expect(cards(page).first().locator('[data-cta="view-startup"]')).toHaveCount(0)
+      const view = cards(page).first().locator('[data-cta="follow"]')
       await view.scrollIntoViewIfNeeded()
       const box = (await view.boundingBox())!
       expect(box.x + box.width).toBeLessThanOrEqual(width)
@@ -270,7 +277,7 @@ test.describe('responsive 768 / 390 (structural)', () => {
           document.elementFromPoint(x!, y!)?.closest('[data-cta]')?.getAttribute('data-cta'),
         [box.x + box.width / 2, box.y + box.height / 2],
       )
-      expect(hit).toBe('view-startup')
+      expect(hit).toBe('follow')
       await page
         .getByRole('complementary', { name: 'Bộ lọc' })
         .getByLabel(/^Logistics/)

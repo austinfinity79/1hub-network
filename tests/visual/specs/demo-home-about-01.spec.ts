@@ -225,11 +225,10 @@ test.describe('Homepage v2 (DM01)', () => {
     await expect(investors).toContainText('1,2 triệu')
     const html = await page.content()
     expect(html).not.toMatch(/de710000-/)
-    // DEMO-DIR2-01: each product opens its page in the directory.
-    await expect(all.locator('a', { hasText: 'Tracely' })).toHaveAttribute(
-      'href',
-      '/products/tracely',
-    )
+    // S2-PRODUCT-CATALOG-CLEANUP-01 (supersedes DEMO-DIR2-01 here): only Smart Campus
+    // links to a detail; Tracely is plain text and its direct route is unchanged.
+    await expect(all.locator('a', { hasText: 'Tracely' })).toHaveCount(0)
+    expect((await page.request.get('/products/tracely')).status()).toBe(200)
   })
 
   test('programme, update and news blocks are read-only presentation', async ({ page }) => {

@@ -3,7 +3,7 @@ import { demoVenture } from '@/lib/demo-0710/ventures'
 import { listPublicStartups } from '@/lib/library/canonical-source'
 import { assetUrl, isAssetId } from '@/lib/media/avatar-storage'
 
-import { PUBLIC_ROUTES } from './routes'
+import { productDetailHref } from './product-detail'
 
 /**
  * DEMO-HOME-ABOUT-01 — the live product blocks of Homepage v2 (DM01 "Sản
@@ -31,6 +31,9 @@ export type HomeStartup = {
   stage: string | null
   region: string | null
   domains: string[]
+  /** Canonical slug. */
+  slug: string | null
+  /** The detail page a card may open (product-detail.ts), else null: no link. */
   href: string | null
   /** The startup's public logo (`/media/assets/:id`), else null: initials. */
   logo: string | null
@@ -102,7 +105,8 @@ export async function listHomeStartups(): Promise<HomeStartup[]> {
       stage: r.stage?.label ?? null,
       region: r.region?.label ?? null,
       domains: r.domains.map((d) => d.label),
-      href: PUBLIC_ROUTES.products && slug ? `${PUBLIC_ROUTES.products}/${slug}` : null,
+      slug: slug ?? null,
+      href: productDetailHref(slug),
       logo: isAssetId(logoId) ? assetUrl(logoId) : null,
       featured: featured >= 0 ? featured : null,
     }

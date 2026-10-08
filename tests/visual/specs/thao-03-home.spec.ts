@@ -146,10 +146,8 @@ test.describe('V2 startup showcase and product directory', () => {
       .evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => [r.left, r.right]))
     for (let i = 1; i < values.length; i++)
       expect(values[i]![0]!, `metric ${i}`).toBeGreaterThan(values[i - 1]![1]! + 8)
-    await expect(pitch.getByRole('link', { name: /Xem sản phẩm/ })).toHaveAttribute(
-      'href',
-      '/products/tracely',
-    )
+    // S2-PRODUCT-CATALOG-CLEANUP-01: no detail link for a product without an approved detail.
+    await expect(pitch.getByRole('link', { name: /Xem sản phẩm/ })).toHaveCount(0)
     // One fundraising startup: arrows have nothing to page through; the glimpse is
     // the directory, a real route — no pitch is invented.
     for (const name of ['Startup trước', 'Startup tiếp theo'])
@@ -225,9 +223,6 @@ test.describe('responsive 1440 / 1280 / 1024 / 768 / 390', () => {
       const p = (await pitch.boundingBox())!
       expect(p.x, 'pitch left').toBeGreaterThanOrEqual(0)
       expect(p.width, 'pitch width').toBeGreaterThan(Math.min(300, width - 40))
-      const view = page.locator(`${sec('investors')} a`, { hasText: 'Xem sản phẩm' })
-      const v = (await view.boundingBox())!
-      expect(v.x + v.width, 'pitch CTA').toBeLessThanOrEqual(width)
       const tab = page.locator(sec('all-products')).getByRole('tab').nth(1)
       await tab.scrollIntoViewIfNeeded()
       await tab.click()

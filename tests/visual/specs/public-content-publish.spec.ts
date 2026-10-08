@@ -153,10 +153,8 @@ test('product blocks: a featured startup follows the demo pitch, logos replace i
   await expect(next).not.toContainText('ĐANG GỌI VỐN')
   await expect(next.locator('dl')).toHaveCount(0)
   await expect(next.locator('img[data-logo]')).toHaveAttribute('src', `/media/assets/${LOGO}`)
-  await expect(next.getByRole('link', { name: /Xem sản phẩm/ })).toHaveAttribute(
-    'href',
-    `/products/${FEATURED}`,
-  )
+  // S2-PRODUCT-CATALOG-CLEANUP-01: no detail link for a product without an approved detail.
+  await expect(next.getByRole('link', { name: /Xem sản phẩm/ })).toHaveCount(0)
   const tile = page
     .locator('[data-section="all-products"] li')
     .filter({ hasText: 'WF06 An Khang' })

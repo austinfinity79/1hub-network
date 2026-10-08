@@ -166,9 +166,6 @@ export function Directory({
   }, [startups, q, domains, stages, location, sort])
 
   // DEMO STATE ONLY counters: only the demo ventures carry these states.
-  const fundraising = startups.filter((s) => s.fundraising).length
-  const paying = startups.filter((s) => s.payingCustomers).length
-  const portfolio = startups.filter((s) => s.portfolio === 'iHUB Ventures').length
 
   function search(e: FormEvent) {
     e.preventDefault()
@@ -236,10 +233,8 @@ export function Directory({
     <>
       <section className={styles.hero} data-section="directory-hero">
         <p className={styles.eyebrow}>SẢN PHẨM</p>
-        {/* The count is live (INTENTIONAL-DATA in pixel QA). */}
-        <h1 className={styles.title} data-pixel="data">
-          <span className={styles.count}>{startups.length}</span> sản phẩm trong mạng lưới
-        </h1>
+        {/* S2-PRODUCT-CATALOG-CLEANUP-01: the PO's wording, no count. */}
+        <h1 className={styles.title}>các sản phẩm trong mạng lưới</h1>
         <form className={styles.search} role="search" aria-label="Tìm sản phẩm" onSubmit={search}>
           <span className={styles.scope}>
             Sản phẩm
@@ -270,20 +265,6 @@ export function Directory({
             </button>
           ))}
         </div>
-        <dl className={styles.stats}>
-          <div>
-            <dt data-pixel="data">{fundraising}</dt>
-            <dd>sản phẩm đang gọi vốn</dd>
-          </div>
-          <div>
-            <dt data-pixel="data">{paying}</dt>
-            <dd>có khách hàng trả phí</dd>
-          </div>
-          <div>
-            <dt data-pixel="data">{portfolio}</dt>
-            <dd>trong danh mục iHUB Ventures</dd>
-          </div>
-        </dl>
       </section>
 
       <div className={styles.body} data-section="directory">
@@ -368,9 +349,12 @@ export function Directory({
                     ))}
                   </ul>
                   <div className={styles.actions}>
-                    <Link href={s.href} className={styles.view} data-cta="view-startup">
-                      Xem hồ sơ
-                    </Link>
+                    {/* Only a product with an approved detail page opens one (product-detail.ts). */}
+                    {s.detailHref ? (
+                      <Link href={s.detailHref} className={styles.view} data-cta="view-startup">
+                        Xem hồ sơ
+                      </Link>
+                    ) : null}
                     {/* Follow v1 (DEC-THAO-SP-D4): guest → /auth, a member follows. */}
                     <FollowButton
                       slug={s.slug}

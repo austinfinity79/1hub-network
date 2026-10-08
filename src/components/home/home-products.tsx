@@ -3,6 +3,7 @@
 import { useMemo, useState, type CSSProperties } from 'react'
 
 import type { HomeStartup } from '@/lib/public/home-data'
+import { HIGHLIGHT_PRODUCT_SLUG } from '@/lib/public/product-detail'
 import { PUBLIC_ROUTES } from '@/lib/public/routes'
 
 import { ArrowRight, PublicAction } from '@/components/public-shell/public-action'
@@ -53,8 +54,7 @@ function Mark({
 
 /** S2-HOME-HIGHLIGHTS-ASSETS-01: the highlight mark when the startup has no public logo. */
 function withHighlightLogo(s: HomeStartup): HomeStartup {
-  const slug = s.href?.split('/').pop()
-  const logo = slug ? HIGHLIGHT_PRODUCT_LOGOS[slug] : undefined
+  const logo = s.slug ? HIGHLIGHT_PRODUCT_LOGOS[s.slug] : undefined
   return s.logo || !logo ? s : { ...s, logo }
 }
 
@@ -94,9 +94,14 @@ export function SectorList({ startups }: { startups: HomeStartup[] }) {
           <li key={s.key} className={styles.feedRow}>
             <Mark startup={withHighlightLogo(s)} className={styles.feedMark} />
             <div className={styles.feedText}>
-              <PublicAction href={s.href} className={styles.feedTitle}>
-                {s.name}
-              </PublicAction>
+              {/* A product without an approved detail is plain text (no link, no hint). */}
+              {s.href ? (
+                <PublicAction href={s.href} className={styles.feedTitle}>
+                  {s.name}
+                </PublicAction>
+              ) : (
+                <span className={styles.feedTitle}>{s.name}</span>
+              )}
               <p className={styles.feedMeta}>{[s.short, s.round].filter(Boolean).join(' · ')}</p>
             </div>
             {s.badge ? (
@@ -121,11 +126,14 @@ export function SectorList({ startups }: { startups: HomeStartup[] }) {
  * directory (a real route), so the row still reads as a carousel.
  */
 export function InvestorCarousel({ startups, total }: { startups: HomeStartup[]; total: number }) {
-  // The demo pitch(es) first, then the refreshed homepage list in its order.
+  // S2-PRODUCT-CATALOG-CLEANUP-01: the highlighted product (Smart Campus) first,
+  // then the demo pitch(es), then the refreshed homepage list in its order.
+  const lead = startups.filter((s) => s.slug === HIGHLIGHT_PRODUCT_SLUG)
   const ready = [
-    ...startups.filter((s) => s.investorReady),
+    ...lead,
+    ...startups.filter((s) => s.investorReady && !lead.includes(s)),
     ...startups
-      .filter((s) => !s.investorReady && s.featured !== null)
+      .filter((s) => !s.investorReady && s.featured !== null && !lead.includes(s))
       .sort((a, b) => a.featured! - b.featured!),
   ]
   const [at, setAt] = useState(0)
@@ -215,9 +223,11 @@ export function InvestorCarousel({ startups, total }: { startups: HomeStartup[];
                     </div>
                     <h3 className={styles.pitchName}>{s.name}</h3>
                     <p className={styles.pitchText}>{s.summary}</p>
-                    <PublicAction href={s.href} className={styles.pitchLink}>
-                      Xem sản phẩm <ArrowRight />
-                    </PublicAction>
+                    {s.href ? (
+                      <PublicAction href={s.href} className={styles.pitchLink}>
+                        Xem sản phẩm <ArrowRight />
+                      </PublicAction>
+                    ) : null}
                     {s.headline.length ? (
                       <dl className={styles.pitchStats}>
                         {s.headline.map((h) => (
@@ -292,9 +302,13 @@ export function ProductGrid({ startups }: { startups: HomeStartup[] }) {
           <li key={s.key} className={styles.tile}>
             <Mark startup={s} className={styles.tileMark} text={s.tile} />
             <div>
-              <PublicAction href={s.href} className={styles.tileName}>
-                {s.name}
-              </PublicAction>
+              {s.href ? (
+                <PublicAction href={s.href} className={styles.tileName}>
+                  {s.name}
+                </PublicAction>
+              ) : (
+                <span className={styles.tileName}>{s.name}</span>
+              )}
               <p className={styles.tileMeta}>
                 {[s.domains[0], s.round ?? s.stage].filter(Boolean).join(' · ')}
               </p>

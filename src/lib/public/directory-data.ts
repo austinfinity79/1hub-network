@@ -8,6 +8,7 @@ import { assetUrl, isAssetId } from '@/lib/media/avatar-storage'
 import { canSeeDiscovery } from '@/lib/profile/projection'
 import { discoveryLevelsOf } from '@/lib/profile/visibility'
 
+import { productDetailHref } from './product-detail'
 import { PUBLIC_ROUTES } from './routes'
 
 /**
@@ -59,6 +60,8 @@ export type DirectoryStartup = {
   updatedAt: string
   createdAt: string
   href: string
+  /** S2-PRODUCT-CATALOG-CLEANUP-01: the detail a catalogue card may open, else null (no link). */
+  detailHref: string | null
 }
 
 type Meta = {
@@ -103,6 +106,7 @@ function shape(row: CanonicalStartupRow, meta: Meta): DirectoryStartup {
     updatedAt: meta.updated_at,
     createdAt: meta.created_at,
     href: `${PUBLIC_ROUTES.products}/${meta.slug}`,
+    detailHref: productDetailHref(meta.slug),
   }
 }
 
